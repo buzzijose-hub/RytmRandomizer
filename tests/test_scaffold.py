@@ -20,8 +20,10 @@ from rytm_randomizer.commands import (
 from rytm_randomizer.constants import (
     DEFAULT_MIDI_CHANNEL,
     DEFAULT_TARGET_PAD,
+    MACHINE_CC,
     OUT_OF_SCOPE_PAD_GUARDRAIL,
     OUT_OF_SCOPE_PADS,
+    PAD1_DEFAULT_HOME,
     PAD_SELECTION_LABELS,
     PAD_TO_MIDI_CHANNEL,
     SUPPORTED_PADS,
@@ -100,6 +102,11 @@ def test_default_target_pad_and_channel_match_v134():
     assert DEFAULT_MIDI_CHANNEL == 0
 
 
+def test_existing_v134_constants_are_preserved():
+    assert MACHINE_CC == 15
+    assert PAD1_DEFAULT_HOME == "BD Hard"
+
+
 def test_pad_to_midi_channel_uses_zero_indexed_values_for_pads_1_to_4():
     assert PAD_TO_MIDI_CHANNEL == {
         1: 0,
@@ -122,7 +129,7 @@ def test_pad_selection_labels_match_v134_for_pads_1_to_4_only():
 
 def test_pad_1_default_home_is_bd_hard():
     assert PAD_1_DEFAULT_PROFILE["pad"] == 1
-    assert PAD_1_DEFAULT_PROFILE["name"] == "BD Hard"
+    assert PAD_1_DEFAULT_PROFILE["name"] == PAD1_DEFAULT_HOME
     assert PAD_1_DEFAULT_PROFILE["role"] == "default/home"
 
 
