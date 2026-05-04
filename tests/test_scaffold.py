@@ -8,6 +8,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from rytm_randomizer.commands import (
     COMMANDS,
     FORBIDDEN_ACTIONS,
+    GROUP_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     MENU_COMMANDS,
     is_guarded_main_prompt_depth,
@@ -285,3 +286,43 @@ def test_forbidden_actions_are_metadata_only_no_touch_entries():
         assert_sends_no_midi(metadata)
         assert metadata["source"] == "CONTROLLED_MUTATION_ROADMAP"
         assert_no_execution_fields(metadata)
+
+
+def test_group_commands_match_v134_four_lane_metadata_only_set():
+    expected = {"O", "X", "D", "I", "4", "Y", "V", "N", "Z"}
+    assert set(GROUP_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_group_commands_are_scaffold_only_and_not_executable():
+    for metadata in GROUP_COMMANDS.values():
+        assert metadata["scope"] == "four_pad_group"
+        assert metadata["executable"] is False
+        assert metadata["v134_reference_command"] is True
+        assert metadata["scaffold_only"] is True
+        assert_no_execution_fields(metadata)
+        assert "5" not in metadata["label"]
+        assert "6" not in metadata["label"]
+        assert "7" not in metadata["label"]
+        assert "8" not in metadata["label"]
+        assert "9" not in metadata["label"]
+        assert "10" not in metadata["label"]
+        assert "11" not in metadata["label"]
+        assert "12" not in metadata["label"]
+
+
+def test_group_command_4_is_v134_wild_mutation_not_guarded_depth():
+    assert "4" in GROUP_COMMANDS
+    assert not is_guarded_main_prompt_depth("4")
+    assert COMMANDS["4"]["type"] == "mutation"
+    assert COMMANDS["4"]["label"] == "harder / wild four-lane mutation"
+    assert COMMANDS["4"]["executable"] is False
+
+
+def test_representative_group_command_labels_match_v134_intent():
+    assert GROUP_COMMANDS["O"]["label"] == "load full 4-pad group anchors"
+    assert GROUP_COMMANDS["D"]["label"] == "deeper four-lane mutation, Pads 2-4 pushed harder"
+    assert GROUP_COMMANDS["Y"]["command_family"] == "lane_aware_page"
+    assert GROUP_COMMANDS["V"]["command_family"] == "lane_aware_page"
+    assert GROUP_COMMANDS["N"]["command_family"] == "lane_aware_page"
+    assert GROUP_COMMANDS["Z"]["label"] == "return all 4 group pads to anchors"

@@ -148,9 +148,88 @@ FORBIDDEN_ACTIONS = {
     },
 }
 
+GROUP_COMMANDS = {
+    "O": {
+        "type": "load",
+        "scope": "four_pad_group",
+        "label": "load full 4-pad group anchors",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "X": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "balanced four-lane mutate full 4-pad group",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "D": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "deeper four-lane mutation, Pads 2-4 pushed harder",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "I": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "intense / controlled chaos four-lane mutation",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "4": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "harder / wild four-lane mutation",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "Y": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "lane-aware SRC/morph mutation on all 4 group pads",
+        "command_family": "lane_aware_page",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "V": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "lane-aware filter mutation on all 4 group pads",
+        "command_family": "lane_aware_page",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "N": {
+        "type": "mutation",
+        "scope": "four_pad_group",
+        "label": "lane-aware grit mutation on all 4 group pads",
+        "command_family": "lane_aware_page",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "Z": {
+        "type": "anchor_return",
+        "scope": "four_pad_group",
+        "label": "return all 4 group pads to anchors",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+}
+
 COMMANDS = {
     **{command: {"type": "scene"} for command in SCENE_COMMANDS},
     **MENU_COMMANDS,
+    **GROUP_COMMANDS,
     **{
         command: {
             "type": "guarded_depth",
