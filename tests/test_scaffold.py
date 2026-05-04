@@ -46,6 +46,13 @@ def assert_sends_no_midi(metadata):
     assert metadata["sends_midi"] is False
 
 
+def assert_protocol_command_metadata(metadata):
+    assert metadata["executable"] is False
+    assert metadata["v134_reference_command"] is True
+    assert metadata["scaffold_only"] is True
+    assert_no_execution_fields(metadata)
+
+
 def assert_no_out_of_scope_pad_keys(mapping):
     assert not any(pad in mapping for pad in OUT_OF_SCOPE_PADS)
 
@@ -53,10 +60,7 @@ def assert_no_out_of_scope_pad_keys(mapping):
 def assert_pad_command_metadata_only(metadata, pad):
     assert metadata["pad"] == pad
     assert metadata["scope"] == f"pad_{pad}"
-    assert metadata["executable"] is False
-    assert metadata["v134_reference_command"] is True
-    assert metadata["scaffold_only"] is True
-    assert_no_execution_fields(metadata)
+    assert_protocol_command_metadata(metadata)
     assert "Pad 5" not in metadata["label"]
     assert "Pad 6" not in metadata["label"]
     assert "Pad 7" not in metadata["label"]
@@ -239,10 +243,7 @@ def test_scene_command_descriptions_match_v134_examples():
 def test_scene_commands_are_scaffold_only_and_not_executable():
     for metadata in SCENE_COMMANDS.values():
         assert metadata["scope"] == "four_pad_group"
-        assert metadata["executable"] is False
-        assert metadata["v134_reference_command"] is True
-        assert metadata["scaffold_only"] is True
-        assert_no_execution_fields(metadata)
+        assert_protocol_command_metadata(metadata)
         assert "5" not in metadata["description"]
         assert "6" not in metadata["description"]
         assert "7" not in metadata["description"]
@@ -253,11 +254,20 @@ def test_scene_commands_are_scaffold_only_and_not_executable():
         assert "12" not in metadata["description"]
 
 
+def test_commands_preserve_full_scene_metadata():
+    for command, metadata in SCENE_COMMANDS.items():
+        assert COMMANDS[command] == {
+            **metadata,
+            "type": "scene",
+        }
+
+
 def test_bare_main_prompt_depth_numbers_are_guarded():
     for command in ("1", "2", "3"):
         assert is_guarded_main_prompt_depth(command)
         assert COMMANDS[command]["type"] == "guarded_depth"
         assert_sends_no_midi(COMMANDS[command])
+        assert_protocol_command_metadata(COMMANDS[command])
 
 
 def test_main_prompt_depth_guardrail_metadata_matches_v134():
@@ -291,7 +301,7 @@ def test_menu_status_commands_match_v134_metadata_only_set():
 def test_menu_status_commands_do_not_send_midi_or_define_execution():
     for command, metadata in MENU_COMMANDS.items():
         assert_sends_no_midi(metadata)
-        assert_no_execution_fields(metadata)
+        assert_protocol_command_metadata(metadata)
         assert "5" not in metadata["label"]
         assert "6" not in metadata["label"]
         assert "7" not in metadata["label"]
@@ -307,16 +317,25 @@ def test_representative_menu_status_labels_match_v134_intent():
         "type": "menu",
         "sends_midi": False,
         "label": "show BD engine tools",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     }
     assert MENU_COMMANDS["SCN"] == {
         "type": "menu",
         "sends_midi": False,
         "label": "show scene / preset tools",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     }
     assert MENU_COMMANDS["R"] == {
         "type": "print",
         "sends_midi": False,
         "label": "print current script state",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     }
 
 
@@ -353,10 +372,7 @@ def test_group_commands_match_v134_four_lane_metadata_only_set():
 def test_group_commands_are_scaffold_only_and_not_executable():
     for metadata in GROUP_COMMANDS.values():
         assert metadata["scope"] == "four_pad_group"
-        assert metadata["executable"] is False
-        assert metadata["v134_reference_command"] is True
-        assert metadata["scaffold_only"] is True
-        assert_no_execution_fields(metadata)
+        assert_protocol_command_metadata(metadata)
         assert "5" not in metadata["label"]
         assert "6" not in metadata["label"]
         assert "7" not in metadata["label"]
@@ -477,3 +493,24 @@ def test_representative_pad4_command_labels_match_v134_intent():
     assert PAD4_COMMANDS["P4R"]["label"] == "rotate Pad 4 through BD Acoustic behavior modes"
     assert PAD4_COMMANDS["P4X"]["label"] == "safely mutate the currently loaded Pad 4 mode"
     assert PAD4_COMMANDS["P4A"]["label"] == "return Pad 4 to BD Acoustic body/accent anchor / home"
+
+
+def test_all_commands_are_non_executable_metadata_without_runtime_hooks():
+    for metadata in COMMANDS.values():
+        assert metadata["executable"] is False
+        assert_no_execution_fields(metadata)
+
+
+def test_no_out_of_scope_pads_in_command_metadata_labels():
+    for metadata in COMMANDS.values():
+        label = metadata.get("label", "")
+        description = metadata.get("description", "")
+        text = f"{label} {description}"
+        assert "Pad 5" not in text
+        assert "Pad 6" not in text
+        assert "Pad 7" not in text
+        assert "Pad 8" not in text
+        assert "Pad 9" not in text
+        assert "Pad 10" not in text
+        assert "Pad 11" not in text
+        assert "Pad 12" not in text

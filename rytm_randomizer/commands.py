@@ -17,71 +17,113 @@ MENU_COMMANDS = {
         "type": "menu",
         "sends_midi": False,
         "label": "show BD engine tools",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "FM": {
         "type": "menu/status",
         "sends_midi": False,
         "label": "show BD FM menu/status",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "PD": {
         "type": "menu/status",
         "sends_midi": False,
         "label": "show BD Plastic menu/status",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "SM": {
         "type": "menu/status",
         "sends_midi": False,
         "label": "show BD Silky menu/status",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "P2M": {
         "type": "menu",
         "sends_midi": False,
         "label": "show Pad 2 snare / secondary percussion menu",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "J": {
         "type": "print",
         "sends_midi": False,
         "label": "show 4-pad group layout",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "GM": {
         "type": "menu",
         "sends_midi": False,
         "label": "show global 4-pad mutation tools",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "SCN": {
         "type": "menu",
         "sends_midi": False,
         "label": "show scene / preset tools",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "PR": {
         "type": "print",
         "sends_midi": False,
         "label": "show selected isolated pad",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "SR": {
         "type": "menu/status",
         "sends_midi": False,
         "label": "show Pad 3 SY Raw discovery menu/status",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "P3M": {
         "type": "menu",
         "sends_midi": False,
         "label": "show Pad 3 SY Raw bass / synth-percussion menu",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "P4M": {
         "type": "menu",
         "sends_midi": False,
         "label": "show Pad 4 BD Acoustic body / accent menu",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "H": {
         "type": "print",
         "sends_midi": False,
         "label": "show current anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
     "R": {
         "type": "print",
         "sends_midi": False,
         "label": "print current script state",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
     },
 }
 
@@ -617,7 +659,13 @@ PAD4_COMMANDS = {
 }
 
 COMMANDS = {
-    **{command: {"type": "scene"} for command in SCENE_COMMANDS},
+    **{
+        command: {
+            **metadata,
+            "type": "scene",
+        }
+        for command, metadata in SCENE_COMMANDS.items()
+    },
     **MENU_COMMANDS,
     **GROUP_COMMANDS,
     **PAD1_COMMANDS,
@@ -628,6 +676,9 @@ COMMANDS = {
         command: {
             "type": "guarded_depth",
             "sends_midi": MAIN_PROMPT_DEPTH_GUARDRAIL["sends_midi"],
+            "executable": False,
+            "v134_reference_command": True,
+            "scaffold_only": True,
         }
         for command in GUARDED_MAIN_PROMPT_DEPTH_COMMANDS
     },
