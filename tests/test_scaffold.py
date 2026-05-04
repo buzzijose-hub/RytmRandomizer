@@ -30,6 +30,21 @@ from rytm_randomizer.profiles import (
 from rytm_randomizer.scenes import SCENE_COMMANDS
 
 
+FORBIDDEN_EXECUTION_FIELDS = {"handler", "callable", "execute", "function", "callback"}
+
+
+def assert_no_execution_fields(metadata):
+    assert FORBIDDEN_EXECUTION_FIELDS.isdisjoint(metadata)
+
+
+def assert_sends_no_midi(metadata):
+    assert metadata["sends_midi"] is False
+
+
+def assert_no_out_of_scope_pad_keys(mapping):
+    assert not any(pad in mapping for pad in OUT_OF_SCOPE_PADS)
+
+
 def test_pads_1_to_4_only_are_supported():
     assert SUPPORTED_PADS == (1, 2, 3, 4)
     assert OUT_OF_SCOPE_PADS == (5, 6, 7, 8, 9, 10, 11, 12)
@@ -44,9 +59,9 @@ def test_pads_5_to_12_are_explicitly_out_of_scope():
 
 
 def test_pads_5_to_12_are_absent_from_scaffold_surfaces():
-    assert not any(pad in PAD_TO_MIDI_CHANNEL for pad in OUT_OF_SCOPE_PADS)
-    assert not any(pad in PAD_SELECTION_LABELS for pad in OUT_OF_SCOPE_PADS)
-    assert not any(pad in GROUP_LAYOUT for pad in OUT_OF_SCOPE_PADS)
+    assert_no_out_of_scope_pad_keys(PAD_TO_MIDI_CHANNEL)
+    assert_no_out_of_scope_pad_keys(PAD_SELECTION_LABELS)
+    assert_no_out_of_scope_pad_keys(GROUP_LAYOUT)
     assert not any(
         profile["group_pad"] in OUT_OF_SCOPE_PADS
         for profile in GROUP_PROFILE_METADATA.values()
@@ -65,7 +80,7 @@ def test_pad_to_midi_channel_uses_zero_indexed_values_for_pads_1_to_4():
         3: 2,
         4: 3,
     }
-    assert not any(pad in PAD_TO_MIDI_CHANNEL for pad in OUT_OF_SCOPE_PADS)
+    assert_no_out_of_scope_pad_keys(PAD_TO_MIDI_CHANNEL)
 
 
 def test_pad_selection_labels_match_v134_for_pads_1_to_4_only():
@@ -75,7 +90,7 @@ def test_pad_selection_labels_match_v134_for_pads_1_to_4_only():
         3: "Pad 3 / RS slot, flexible BD/SD/RS/CP/SY/UT pool",
         4: "Pad 4 / CP slot, flexible BD/SD/RS/CP/SY/UT pool",
     }
-    assert not any(pad in PAD_SELECTION_LABELS for pad in OUT_OF_SCOPE_PADS)
+    assert_no_out_of_scope_pad_keys(PAD_SELECTION_LABELS)
 
 
 def test_pad_1_default_home_is_bd_hard():
@@ -91,7 +106,7 @@ def test_pad_3_sy_raw_cc_mapping_is_preserved():
 
 def test_group_layout_contains_only_pads_1_to_4():
     assert set(GROUP_LAYOUT) == {1, 2, 3, 4}
-    assert not any(pad in GROUP_LAYOUT for pad in OUT_OF_SCOPE_PADS)
+    assert_no_out_of_scope_pad_keys(GROUP_LAYOUT)
 
 
 def test_group_layout_matches_v134_metadata():
@@ -185,12 +200,12 @@ def test_bare_main_prompt_depth_numbers_are_guarded():
     for command in ("1", "2", "3"):
         assert is_guarded_main_prompt_depth(command)
         assert COMMANDS[command]["type"] == "guarded_depth"
-        assert COMMANDS[command]["sends_midi"] is False
+        assert_sends_no_midi(COMMANDS[command])
 
 
 def test_main_prompt_depth_guardrail_metadata_matches_v134():
     assert MAIN_PROMPT_DEPTH_GUARDRAIL["commands"] == ("1", "2", "3")
-    assert MAIN_PROMPT_DEPTH_GUARDRAIL["sends_midi"] is False
+    assert_sends_no_midi(MAIN_PROMPT_DEPTH_GUARDRAIL)
     assert "main Command prompt" in MAIN_PROMPT_DEPTH_GUARDRAIL["message"]
     assert "No MIDI was sent" in MAIN_PROMPT_DEPTH_GUARDRAIL["message"]
 
@@ -217,10 +232,9 @@ def test_menu_status_commands_match_v134_metadata_only_set():
 
 
 def test_menu_status_commands_do_not_send_midi_or_define_execution():
-    forbidden_fields = {"handler", "callable", "execute", "function", "callback"}
     for command, metadata in MENU_COMMANDS.items():
-        assert metadata["sends_midi"] is False
-        assert forbidden_fields.isdisjoint(metadata)
+        assert_sends_no_midi(metadata)
+        assert_no_execution_fields(metadata)
         assert "5" not in metadata["label"]
         assert "6" not in metadata["label"]
         assert "7" not in metadata["label"]
@@ -266,9 +280,8 @@ def test_forbidden_actions_match_controlled_mutation_roadmap():
 
 
 def test_forbidden_actions_are_metadata_only_no_touch_entries():
-    forbidden_fields = {"handler", "callable", "execute", "function", "callback"}
     for metadata in FORBIDDEN_ACTIONS.values():
         assert metadata["status"] == "forbidden_by_default"
-        assert metadata["sends_midi"] is False
+        assert_sends_no_midi(metadata)
         assert metadata["source"] == "CONTROLLED_MUTATION_ROADMAP"
-        assert forbidden_fields.isdisjoint(metadata)
+        assert_no_execution_fields(metadata)
