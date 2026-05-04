@@ -13,6 +13,7 @@ from rytm_randomizer.commands import (
 from rytm_randomizer.constants import OUT_OF_SCOPE_PADS, SUPPORTED_PADS
 from rytm_randomizer.profiles import (
     GROUP_LAYOUT,
+    GROUP_PROFILE_METADATA,
     PAD_1_DEFAULT_PROFILE,
     PAD_3_SY_RAW_CC_MAP,
 )
@@ -65,6 +66,37 @@ def test_group_layout_matches_v134_metadata():
         "zone": "body",
         "depth": "micro",
     }
+
+
+def test_group_profile_metadata_contains_only_v134_group_profiles():
+    assert set(GROUP_PROFILE_METADATA) == {"2", "3", "4", "5"}
+    assert GROUP_PROFILE_METADATA["2"] == {
+        "name": "My BD Hard",
+        "machine_value": 0,
+        "group_pad": 1,
+    }
+    assert GROUP_PROFILE_METADATA["3"] == {
+        "name": "My BD Classic",
+        "machine_value": 1,
+        "group_pad": 2,
+    }
+    assert GROUP_PROFILE_METADATA["4"] == {
+        "name": "My BD Acoustic",
+        "machine_value": 30,
+        "group_pad": 4,
+    }
+    assert GROUP_PROFILE_METADATA["5"] == {
+        "name": "Pad 3 SY Raw Mid Bass",
+        "machine_value": 32,
+        "group_pad": 3,
+    }
+
+
+def test_group_layout_profiles_are_known_metadata_only_profiles():
+    for pad, layout in GROUP_LAYOUT.items():
+        profile = GROUP_PROFILE_METADATA[layout["profile"]]
+        assert profile["group_pad"] == pad
+        assert profile["group_pad"] not in OUT_OF_SCOPE_PADS
 
 
 def test_scene_variants_exist():

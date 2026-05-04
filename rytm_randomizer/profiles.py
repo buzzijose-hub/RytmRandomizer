@@ -26,6 +26,29 @@ PAD_PROFILES = {
     },
 }
 
+GROUP_PROFILE_METADATA = {
+    "2": {
+        "name": "My BD Hard",
+        "machine_value": 0,
+        "group_pad": 1,
+    },
+    "3": {
+        "name": "My BD Classic",
+        "machine_value": 1,
+        "group_pad": 2,
+    },
+    "4": {
+        "name": "My BD Acoustic",
+        "machine_value": 30,
+        "group_pad": 4,
+    },
+    "5": {
+        "name": "Pad 3 SY Raw Mid Bass",
+        "machine_value": 32,
+        "group_pad": 3,
+    },
+}
+
 GROUP_LAYOUT = {
     1: {
         "role": "Main kick / BD Hard default",
