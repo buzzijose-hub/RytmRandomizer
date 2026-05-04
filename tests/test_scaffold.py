@@ -11,6 +11,10 @@ from rytm_randomizer.commands import (
     GROUP_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     MENU_COMMANDS,
+    PAD1_COMMANDS,
+    PAD2_COMMANDS,
+    PAD3_COMMANDS,
+    PAD4_COMMANDS,
     is_guarded_main_prompt_depth,
 )
 from rytm_randomizer.constants import (
@@ -44,6 +48,23 @@ def assert_sends_no_midi(metadata):
 
 def assert_no_out_of_scope_pad_keys(mapping):
     assert not any(pad in mapping for pad in OUT_OF_SCOPE_PADS)
+
+
+def assert_pad_command_metadata_only(metadata, pad):
+    assert metadata["pad"] == pad
+    assert metadata["scope"] == f"pad_{pad}"
+    assert metadata["executable"] is False
+    assert metadata["v134_reference_command"] is True
+    assert metadata["scaffold_only"] is True
+    assert_no_execution_fields(metadata)
+    assert "Pad 5" not in metadata["label"]
+    assert "Pad 6" not in metadata["label"]
+    assert "Pad 7" not in metadata["label"]
+    assert "Pad 8" not in metadata["label"]
+    assert "Pad 9" not in metadata["label"]
+    assert "Pad 10" not in metadata["label"]
+    assert "Pad 11" not in metadata["label"]
+    assert "Pad 12" not in metadata["label"]
 
 
 def test_pads_1_to_4_only_are_supported():
@@ -361,3 +382,98 @@ def test_representative_group_command_labels_match_v134_intent():
     assert GROUP_COMMANDS["V"]["command_family"] == "lane_aware_page"
     assert GROUP_COMMANDS["N"]["command_family"] == "lane_aware_page"
     assert GROUP_COMMANDS["Z"]["label"] == "return all 4 group pads to anchors"
+
+
+def test_pad1_commands_match_v134_metadata_only_set():
+    expected = {
+        "BR",
+        "BM",
+        "BH",
+        "BS",
+        "BC",
+        "BA",
+        "BF",
+        "FT",
+        "FK",
+        "FG",
+        "FZ",
+        "BP",
+        "PT",
+        "PK",
+        "PX",
+        "PBH",
+        "BI",
+        "ST",
+        "SK",
+        "SC",
+        "SBH",
+    }
+    assert set(PAD1_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_pad1_commands_are_scaffold_only_and_not_executable():
+    for metadata in PAD1_COMMANDS.values():
+        assert_pad_command_metadata_only(metadata, 1)
+
+
+def test_representative_pad1_command_labels_match_v134_intent():
+    assert PAD1_COMMANDS["BR"]["label"] == "rotate Pad 1 to the next profiled BD engine"
+    assert PAD1_COMMANDS["BM"]["label"] == "safely mutate the currently loaded Pad 1 BD engine"
+    assert PAD1_COMMANDS["BH"]["label"] == "load Pad 1 BD Hard anchor, primary default"
+    assert PAD1_COMMANDS["FZ"]["label"] == "return Pad 1 BD FM to anchor"
+    assert PAD1_COMMANDS["PBH"]["label"] == "return Pad 1 BD Plastic to anchor"
+    assert PAD1_COMMANDS["SBH"]["label"] == "return Pad 1 BD Silky to anchor"
+
+
+def test_pad2_commands_match_v134_metadata_only_set():
+    expected = {"P2B", "P2H", "P2C", "P2F", "P2T", "P2P", "P2G", "P2R", "P2X", "P2Z"}
+    assert set(PAD2_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_pad2_commands_are_scaffold_only_and_not_executable():
+    for metadata in PAD2_COMMANDS.values():
+        assert_pad_command_metadata_only(metadata, 2)
+
+
+def test_representative_pad2_command_labels_match_v134_intent():
+    assert PAD2_COMMANDS["P2B"]["label"] == "load Pad 2 BD Classic rolling low percussion / home"
+    assert PAD2_COMMANDS["P2G"]["label"] == "Pad 2 grit / noise discovery"
+    assert PAD2_COMMANDS["P2R"]["label"] == "rotate Pad 2 through profiled secondary-lane engines"
+    assert PAD2_COMMANDS["P2Z"]["label"] == "return current Pad 2 profile to anchor"
+
+
+def test_pad3_commands_match_v134_metadata_only_set():
+    expected = {"SW", "SL", "SB", "SX", "SA", "P3R", "P3X", "P3A"}
+    assert set(PAD3_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_pad3_commands_are_scaffold_only_and_not_executable():
+    for metadata in PAD3_COMMANDS.values():
+        assert_pad_command_metadata_only(metadata, 3)
+
+
+def test_representative_pad3_command_labels_match_v134_intent():
+    assert PAD3_COMMANDS["SW"]["label"] == "Pad 3 SY Raw Wave + Balance discovery"
+    assert PAD3_COMMANDS["SA"]["label"] == "return Pad 3 SY Raw to anchor"
+    assert PAD3_COMMANDS["P3R"]["label"] == "rotate Pad 3 through SY Raw behavior modes"
+    assert PAD3_COMMANDS["P3A"]["label"] == "return Pad 3 to SY Raw Mid Bass anchor / home"
+
+
+def test_pad4_commands_match_v134_metadata_only_set():
+    expected = {"P4R", "P4X", "P4A"}
+    assert set(PAD4_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_pad4_commands_are_scaffold_only_and_not_executable():
+    for metadata in PAD4_COMMANDS.values():
+        assert_pad_command_metadata_only(metadata, 4)
+
+
+def test_representative_pad4_command_labels_match_v134_intent():
+    assert PAD4_COMMANDS["P4R"]["label"] == "rotate Pad 4 through BD Acoustic behavior modes"
+    assert PAD4_COMMANDS["P4X"]["label"] == "safely mutate the currently loaded Pad 4 mode"
+    assert PAD4_COMMANDS["P4A"]["label"] == "return Pad 4 to BD Acoustic body/accent anchor / home"
