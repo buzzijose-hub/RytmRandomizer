@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 1b4aee3 Add passive metadata validation helpers
 - c926719 Add constants scaffold coverage
 - d56ff2f Update checkpoint after PAD_PROFILES coverage
 - 03b6a8e Add PAD_PROFILES scaffold coverage
@@ -64,8 +65,18 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - four-lane group command metadata
 - individual Pad 1-4 command metadata
 - command metadata consistency checks
+- passive command registry validation
 - scaffold metadata tests
 - Codex modularization protocol
+
+The passive validation layer includes:
+
+- rytm_randomizer/validation.py
+- tests/test_validation.py
+
+The validator is read-only/passive and validates command registry safety. It
+checks for executable: True, forbidden execution fields, missing scaffold_only /
+v134_reference_command flags, and forbidden Pads 5-12 references.
 
 Scaffold metadata tests now include PAD_PROFILES coverage:
 
@@ -95,6 +106,9 @@ read input, open ports, mutate state, or call runtime functions.
 V1.34 remains protected. No runtime execution, MIDI sending, input handling,
 command dispatch, Pads 5-12 expansion, GUI, capture, SysEx, or Analog Four
 work has been added.
+
+The passive validation layer added no MIDI sending, command dispatch, input
+handling, SysEx, capture/state, GUI, Analog Four, or hardware behavior.
 
 ## Validated Rytm Scope
 
