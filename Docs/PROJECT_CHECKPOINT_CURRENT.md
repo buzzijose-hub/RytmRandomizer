@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c926719 Add constants scaffold coverage
+- d56ff2f Update checkpoint after PAD_PROFILES coverage
 - 03b6a8e Add PAD_PROFILES scaffold coverage
 - a4a0170 Update checkpoint after command metadata refinement
 - c7d5489 Refine command metadata consistency
@@ -72,6 +74,12 @@ Scaffold metadata tests now include PAD_PROFILES coverage:
 - Pad 1 links to existing PAD_1_DEFAULT_PROFILE
 - Pad 3 remains SY Raw
 - Pad 3 uses existing PAD_3_SY_RAW_CC_MAP
+
+Scaffold metadata tests now also cover constants:
+
+- MACHINE_CC == 15
+- PAD1_DEFAULT_HOME == "BD Hard"
+- Pad 1 default profile remains aligned with PAD1_DEFAULT_HOME
 
 Command metadata consistency now covers:
 
