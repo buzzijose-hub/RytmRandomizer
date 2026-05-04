@@ -10,7 +10,14 @@ from rytm_randomizer.commands import (
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     is_guarded_main_prompt_depth,
 )
-from rytm_randomizer.constants import OUT_OF_SCOPE_PADS, SUPPORTED_PADS
+from rytm_randomizer.constants import (
+    DEFAULT_MIDI_CHANNEL,
+    DEFAULT_TARGET_PAD,
+    OUT_OF_SCOPE_PADS,
+    PAD_SELECTION_LABELS,
+    PAD_TO_MIDI_CHANNEL,
+    SUPPORTED_PADS,
+)
 from rytm_randomizer.profiles import (
     GROUP_LAYOUT,
     GROUP_PROFILE_METADATA,
@@ -23,6 +30,31 @@ from rytm_randomizer.scenes import SCENE_COMMANDS
 def test_pads_1_to_4_only_are_supported():
     assert SUPPORTED_PADS == (1, 2, 3, 4)
     assert OUT_OF_SCOPE_PADS == (5, 6, 7, 8, 9, 10, 11, 12)
+
+
+def test_default_target_pad_and_channel_match_v134():
+    assert DEFAULT_TARGET_PAD == 1
+    assert DEFAULT_MIDI_CHANNEL == 0
+
+
+def test_pad_to_midi_channel_uses_zero_indexed_values_for_pads_1_to_4():
+    assert PAD_TO_MIDI_CHANNEL == {
+        1: 0,
+        2: 1,
+        3: 2,
+        4: 3,
+    }
+    assert not any(pad in PAD_TO_MIDI_CHANNEL for pad in OUT_OF_SCOPE_PADS)
+
+
+def test_pad_selection_labels_match_v134_for_pads_1_to_4_only():
+    assert PAD_SELECTION_LABELS == {
+        1: "Pad 1 / BD slot",
+        2: "Pad 2 / SD slot, flexible BD/SD/SY/UT pool",
+        3: "Pad 3 / RS slot, flexible BD/SD/RS/CP/SY/UT pool",
+        4: "Pad 4 / CP slot, flexible BD/SD/RS/CP/SY/UT pool",
+    }
+    assert not any(pad in PAD_SELECTION_LABELS for pad in OUT_OF_SCOPE_PADS)
 
 
 def test_pad_1_default_home_is_bd_hard():
