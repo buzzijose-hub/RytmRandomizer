@@ -1,0 +1,88 @@
+{
+  "profile_name": "",
+  "source_type": "SINGLE_TRACK | FOLDER_LIBRARY | REFERENCE_PLAYLIST | USER_RELEASE_LIBRARY | LIVE_RECORDING | FACTORY_SOUND_STUDY | STYLE_DESCRIPTION_ONLY",
+  "confidence": "HIGH | MEDIUM | LOW",
+  "style_tags": [],
+  "bpm_range": [],
+  "energy_profile": "",
+  "density_profile": "",
+  "musical_findings": {
+    "tempo_groove": "",
+    "low_end_behavior": "",
+    "percussion_density": "",
+    "bass_tonal_movement": "",
+    "texture_noise": "",
+    "fx_space": "",
+    "arrangement_energy_arc": ""
+  },
+  "device_roles": {
+    "analog_rytm_mkii": {
+      "pad_1": {
+        "role": "kick / low-end foundation",
+        "mutation_direction": ""
+      },
+      "pad_2": {
+        "role": "snare / secondary percussion",
+        "mutation_direction": ""
+      },
+      "pad_3": {
+        "role": "bass / synth-percussion / SY Raw motion",
+        "mutation_direction": ""
+      },
+      "pad_4": {
+        "role": "body / impact / accent",
+        "mutation_direction": ""
+      }
+    },
+    "analog_four_mkii": {
+      "track_1": {
+        "role": "mono bass / low synth",
+        "mutation_direction": ""
+      },
+      "track_2": {
+        "role": "stab / rhythmic synth",
+        "mutation_direction": ""
+      },
+      "track_3": {
+        "role": "pad / drone / chord pressure",
+        "mutation_direction": ""
+      },
+      "track_4": {
+        "role": "FX / noise / tension",
+        "mutation_direction": ""
+      }
+    }
+  },
+  "live_safe": [],
+  "studio_discovery": [],
+  "experimental": [],
+  "locked_default": [
+    "master_volume",
+    "track_volume",
+    "clock",
+    "transport",
+    "pattern_change",
+    "program_change",
+    "project_change",
+    "kit_save_clear",
+    "unvalidated_sysex_writes"
+  ],
+  "forbidden": [],
+  "scene_behavior": [],
+  "hardware_validation_tests": [
+    "Load known anchors",
+    "Apply live-safe mutation",
+    "Confirm low-end stability",
+    "Confirm no volume spike",
+    "Confirm anchor return works",
+    "Confirm no pattern/transport/clock messages are sent",
+    "Confirm locked parameters remain untouched",
+    "Save useful results on hardware manually"
+  ],
+  "decision": {
+    "documentation_only": true,
+    "studio_discovery": false,
+    "live_safe_testing": false,
+    "code_implementation": false
+  }
+}
