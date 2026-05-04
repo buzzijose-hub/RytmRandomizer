@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c7d5489 Refine command metadata consistency
 - a87f7bb Add Codex modularization protocol
 - e3a37e3 Add individual pad command metadata scaffold
 - 90f1677 Refine scene command metadata scaffold
@@ -58,8 +59,17 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - forbidden / no-touch action metadata
 - four-lane group command metadata
 - individual Pad 1-4 command metadata
+- command metadata consistency checks
 - scaffold metadata tests
 - Codex modularization protocol
+
+Command metadata consistency now covers:
+
+- MENU_COMMANDS protocol fields
+- full passive SCENE_COMMANDS metadata preserved inside COMMANDS
+- guarded main-prompt 1/2/3 protocol fields
+- all applicable command metadata remains executable: False
+- no forbidden execution fields or runtime hooks
 
 All metadata registries are passive. They do not dispatch commands, send MIDI,
 read input, open ports, mutate state, or call runtime functions.
