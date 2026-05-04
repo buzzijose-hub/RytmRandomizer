@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Local exports / archives
+Exports/
+Backups/
+LegacyScripts/
+*.zip
+
+# Local capture / generated files
+*.log
+*.tmp
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
