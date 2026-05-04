@@ -5,7 +5,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from rytm_randomizer.commands import COMMANDS, is_guarded_main_prompt_depth
+from rytm_randomizer.commands import (
+    COMMANDS,
+    MAIN_PROMPT_DEPTH_GUARDRAIL,
+    is_guarded_main_prompt_depth,
+)
 from rytm_randomizer.constants import OUT_OF_SCOPE_PADS, SUPPORTED_PADS
 from rytm_randomizer.profiles import (
     GROUP_LAYOUT,
@@ -96,3 +100,11 @@ def test_bare_main_prompt_depth_numbers_are_guarded():
     for command in ("1", "2", "3"):
         assert is_guarded_main_prompt_depth(command)
         assert COMMANDS[command]["type"] == "guarded_depth"
+        assert COMMANDS[command]["sends_midi"] is False
+
+
+def test_main_prompt_depth_guardrail_metadata_matches_v134():
+    assert MAIN_PROMPT_DEPTH_GUARDRAIL["commands"] == ("1", "2", "3")
+    assert MAIN_PROMPT_DEPTH_GUARDRAIL["sends_midi"] is False
+    assert "main Command prompt" in MAIN_PROMPT_DEPTH_GUARDRAIL["message"]
+    assert "No MIDI was sent" in MAIN_PROMPT_DEPTH_GUARDRAIL["message"]
