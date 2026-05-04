@@ -7,6 +7,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from rytm_randomizer.commands import (
     COMMANDS,
+    FORBIDDEN_ACTIONS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     MENU_COMMANDS,
     is_guarded_main_prompt_depth,
@@ -246,3 +247,28 @@ def test_representative_menu_status_labels_match_v134_intent():
         "sends_midi": False,
         "label": "print current script state",
     }
+
+
+def test_forbidden_actions_match_controlled_mutation_roadmap():
+    expected_labels = {
+        "Master volume",
+        "Track volume",
+        "Clock",
+        "Transport",
+        "Pattern change",
+        "Program change",
+        "Project change",
+        "Kit save/clear",
+        "System commands",
+        "Unvalidated SysEx writes",
+    }
+    assert {metadata["label"] for metadata in FORBIDDEN_ACTIONS.values()} == expected_labels
+
+
+def test_forbidden_actions_are_metadata_only_no_touch_entries():
+    forbidden_fields = {"handler", "callable", "execute", "function", "callback"}
+    for metadata in FORBIDDEN_ACTIONS.values():
+        assert metadata["status"] == "forbidden_by_default"
+        assert metadata["sends_midi"] is False
+        assert metadata["source"] == "CONTROLLED_MUTATION_ROADMAP"
+        assert forbidden_fields.isdisjoint(metadata)

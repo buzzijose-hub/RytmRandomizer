@@ -85,6 +85,69 @@ MENU_COMMANDS = {
     },
 }
 
+FORBIDDEN_ACTIONS = {
+    "master_volume": {
+        "label": "Master volume",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "track_volume": {
+        "label": "Track volume",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "clock": {
+        "label": "Clock",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "transport": {
+        "label": "Transport",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "pattern_change": {
+        "label": "Pattern change",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "program_change": {
+        "label": "Program change",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "project_change": {
+        "label": "Project change",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "kit_save_clear": {
+        "label": "Kit save/clear",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "system_commands": {
+        "label": "System commands",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+    "unvalidated_sysex_writes": {
+        "label": "Unvalidated SysEx writes",
+        "status": "forbidden_by_default",
+        "sends_midi": False,
+        "source": "CONTROLLED_MUTATION_ROADMAP",
+    },
+}
+
 COMMANDS = {
     **{command: {"type": "scene"} for command in SCENE_COMMANDS},
     **MENU_COMMANDS,
