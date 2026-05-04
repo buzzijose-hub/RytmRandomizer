@@ -8,6 +8,13 @@ DEFAULT_MIDI_CHANNEL = 0
 SUPPORTED_PADS = (1, 2, 3, 4)
 OUT_OF_SCOPE_PADS = (5, 6, 7, 8, 9, 10, 11, 12)
 
+OUT_OF_SCOPE_PAD_GUARDRAIL = {
+    "pads": OUT_OF_SCOPE_PADS,
+    "status": "out_of_scope",
+    "allowed_in_scaffold": False,
+    "reason": "Pads 5-12 expansion is not part of V1.34 modularization.",
+}
+
 PAD_TO_MIDI_CHANNEL = {
     1: 0,
     2: 1,

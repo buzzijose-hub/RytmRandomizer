@@ -13,6 +13,7 @@ from rytm_randomizer.commands import (
 from rytm_randomizer.constants import (
     DEFAULT_MIDI_CHANNEL,
     DEFAULT_TARGET_PAD,
+    OUT_OF_SCOPE_PAD_GUARDRAIL,
     OUT_OF_SCOPE_PADS,
     PAD_SELECTION_LABELS,
     PAD_TO_MIDI_CHANNEL,
@@ -30,6 +31,24 @@ from rytm_randomizer.scenes import SCENE_COMMANDS
 def test_pads_1_to_4_only_are_supported():
     assert SUPPORTED_PADS == (1, 2, 3, 4)
     assert OUT_OF_SCOPE_PADS == (5, 6, 7, 8, 9, 10, 11, 12)
+
+
+def test_pads_5_to_12_are_explicitly_out_of_scope():
+    assert OUT_OF_SCOPE_PAD_GUARDRAIL["pads"] == OUT_OF_SCOPE_PADS
+    assert OUT_OF_SCOPE_PAD_GUARDRAIL["status"] == "out_of_scope"
+    assert OUT_OF_SCOPE_PAD_GUARDRAIL["allowed_in_scaffold"] is False
+    assert "Pads 5-12 expansion" in OUT_OF_SCOPE_PAD_GUARDRAIL["reason"]
+    assert set(OUT_OF_SCOPE_PAD_GUARDRAIL["pads"]).isdisjoint(SUPPORTED_PADS)
+
+
+def test_pads_5_to_12_are_absent_from_scaffold_surfaces():
+    assert not any(pad in PAD_TO_MIDI_CHANNEL for pad in OUT_OF_SCOPE_PADS)
+    assert not any(pad in PAD_SELECTION_LABELS for pad in OUT_OF_SCOPE_PADS)
+    assert not any(pad in GROUP_LAYOUT for pad in OUT_OF_SCOPE_PADS)
+    assert not any(
+        profile["group_pad"] in OUT_OF_SCOPE_PADS
+        for profile in GROUP_PROFILE_METADATA.values()
+    )
 
 
 def test_default_target_pad_and_channel_match_v134():
