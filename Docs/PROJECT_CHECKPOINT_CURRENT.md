@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 03b6a8e Add PAD_PROFILES scaffold coverage
+- a4a0170 Update checkpoint after command metadata refinement
 - c7d5489 Refine command metadata consistency
 - a87f7bb Add Codex modularization protocol
 - e3a37e3 Add individual pad command metadata scaffold
@@ -63,6 +65,14 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - scaffold metadata tests
 - Codex modularization protocol
 
+Scaffold metadata tests now include PAD_PROFILES coverage:
+
+- exact key set {1, 3}
+- no Pads 5-12
+- Pad 1 links to existing PAD_1_DEFAULT_PROFILE
+- Pad 3 remains SY Raw
+- Pad 3 uses existing PAD_3_SY_RAW_CC_MAP
+
 Command metadata consistency now covers:
 
 - MENU_COMMANDS protocol fields
@@ -75,7 +85,8 @@ All metadata registries are passive. They do not dispatch commands, send MIDI,
 read input, open ports, mutate state, or call runtime functions.
 
 V1.34 remains protected. No runtime execution, MIDI sending, input handling,
-Pads 5-12 expansion, GUI, capture, SysEx, or Analog Four work has been added.
+command dispatch, Pads 5-12 expansion, GUI, capture, SysEx, or Analog Four
+work has been added.
 
 ## Validated Rytm Scope
 
