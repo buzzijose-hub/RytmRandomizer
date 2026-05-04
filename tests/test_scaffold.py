@@ -31,6 +31,7 @@ from rytm_randomizer.profiles import (
     GROUP_PROFILE_METADATA,
     PAD_1_DEFAULT_PROFILE,
     PAD_3_SY_RAW_CC_MAP,
+    PAD_PROFILES,
 )
 from rytm_randomizer.scenes import SCENE_COMMANDS
 
@@ -128,6 +129,15 @@ def test_pad_1_default_home_is_bd_hard():
 def test_pad_3_sy_raw_cc_mapping_is_preserved():
     assert PAD_3_SY_RAW_CC_MAP["SRC Noise Level"] == 19
     assert PAD_3_SY_RAW_CC_MAP["SRC Balance"] == 23
+
+
+def test_pad_profiles_include_only_known_scaffold_profiles():
+    assert set(PAD_PROFILES) == {1, 3}
+    assert_no_out_of_scope_pad_keys(PAD_PROFILES)
+    assert PAD_PROFILES[1] is PAD_1_DEFAULT_PROFILE
+    assert PAD_PROFILES[3]["pad"] == 3
+    assert PAD_PROFILES[3]["name"] == "SY Raw"
+    assert PAD_PROFILES[3]["cc_map"] is PAD_3_SY_RAW_CC_MAP
 
 
 def test_group_layout_contains_only_pads_1_to_4():
