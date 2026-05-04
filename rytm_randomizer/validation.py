@@ -71,13 +71,13 @@ def _is_forbidden_pad_reference(path, value):
 
 
 def _contains_forbidden_pad(value):
-    if value in FORBIDDEN_PADS:
-        return True
-
     if isinstance(value, dict):
         return any(_contains_forbidden_pad(child) for child in value.values())
 
     if isinstance(value, (list, tuple, set, frozenset)):
         return any(_contains_forbidden_pad(child) for child in value)
+
+    if value in FORBIDDEN_PADS:
+        return True
 
     return False

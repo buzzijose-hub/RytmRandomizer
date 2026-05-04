@@ -65,6 +65,56 @@ def test_forbidden_pad_reference_fails_validation():
     assert "BAD: forbidden pad reference at metadata.pad" in result["errors"]
 
 
+def test_nested_forbidden_pad_list_fails_validation():
+    result = validate_command_registry(
+        {
+            "BAD": {
+                "nested": {
+                    "pads": [1, 5],
+                },
+                "executable": False,
+                "scaffold_only": True,
+                "v134_reference_command": True,
+            },
+        }
+    )
+
+    assert result["ok"] is False
+    assert "BAD: forbidden pad reference at metadata.nested.pads" in result["errors"]
+
+
+def test_forbidden_pad_text_fails_validation():
+    result = validate_command_registry(
+        {
+            "BAD": {
+                "label": "Pad 5 unsupported",
+                "executable": False,
+                "scaffold_only": True,
+                "v134_reference_command": True,
+            },
+        }
+    )
+
+    assert result["ok"] is False
+    assert "BAD: forbidden pad reference at metadata.label" in result["errors"]
+
+
+def test_forbidden_pad_scope_fails_validation():
+    result = validate_command_registry(
+        {
+            "BAD": {
+                "scope": "pad_5",
+                "executable": False,
+                "scaffold_only": True,
+                "v134_reference_command": True,
+            },
+        }
+    )
+
+    assert result["ok"] is False
+    assert "BAD: forbidden pad reference at metadata.scope" in result["errors"]
+
+
 def test_missing_scaffold_command_fields_fail_validation():
     result = validate_command_registry(
         {
@@ -84,4 +134,7 @@ if __name__ == "__main__":
     test_executable_true_fails_validation()
     test_forbidden_execution_field_fails_validation()
     test_forbidden_pad_reference_fails_validation()
+    test_nested_forbidden_pad_list_fails_validation()
+    test_forbidden_pad_text_fails_validation()
+    test_forbidden_pad_scope_fails_validation()
     test_missing_scaffold_command_fields_fail_validation()
