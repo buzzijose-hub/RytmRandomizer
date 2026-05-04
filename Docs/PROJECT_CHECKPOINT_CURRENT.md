@@ -21,6 +21,19 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a87f7bb Add Codex modularization protocol
+- e3a37e3 Add individual pad command metadata scaffold
+- 90f1677 Refine scene command metadata scaffold
+- 556a7ba Add group command metadata scaffold
+- 1130205 Clean up scaffold metadata tests
+- 35e598f Add menu command metadata scaffold
+- a0f5005 Add forbidden action guardrail metadata
+- defbf43 Add out-of-scope pad guardrail metadata
+- 8be1dfa Add validated constants metadata scaffold
+- 57d3502 Add group profile metadata scaffold
+- ae112cf Add main prompt depth guardrail metadata
+- 0b94806 Add group layout metadata scaffold
+- 3222200 Expand scene metadata scaffold
 - b1d04e6 Add initial modular scaffold and tests
 - 7de1691 Add Codex modularization task brief
 - 50b83f9 Add modularization rules
@@ -32,6 +45,27 @@ Recent checkpoint history:
 Finish behavior-preserving modularization of V1.34.
 
 No new features should be added until the modular version behaves exactly like V1.34.
+
+## Current Modular Scaffold
+
+The modular scaffold is still metadata-only. Current scaffold coverage includes:
+
+- constants / pad scope guardrails
+- out-of-scope Pads 5-12 guardrails
+- scene command metadata
+- group layout / profile metadata
+- menu / status command metadata
+- forbidden / no-touch action metadata
+- four-lane group command metadata
+- individual Pad 1-4 command metadata
+- scaffold metadata tests
+- Codex modularization protocol
+
+All metadata registries are passive. They do not dispatch commands, send MIDI,
+read input, open ports, mutate state, or call runtime functions.
+
+V1.34 remains protected. No runtime execution, MIDI sending, input handling,
+Pads 5-12 expansion, GUI, capture, SysEx, or Analog Four work has been added.
 
 ## Validated Rytm Scope
 
