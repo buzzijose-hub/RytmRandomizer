@@ -33,6 +33,29 @@ def test_scene_variants_exist():
     assert expected.issubset(COMMANDS)
 
 
+def test_v134_scene_registry_contains_only_known_scene_commands():
+    expected = {
+        "S0",
+        "S1",
+        "S1A",
+        "S1B",
+        "S2",
+        "S2A",
+        "S2B",
+        "S3",
+        "S3A",
+        "S3B",
+        "S4",
+        "S4A",
+        "S4B",
+        "S5",
+    }
+    assert set(SCENE_COMMANDS) == expected
+    assert SCENE_COMMANDS["S0"] == {"name": "Home / Clean", "action": "home"}
+    assert SCENE_COMMANDS["S4B"] == {"name": "Wild Maximum", "action": "wild_maximum"}
+    assert SCENE_COMMANDS["S5"] == {"name": "Back to Clean", "action": "clean"}
+
+
 def test_bare_main_prompt_depth_numbers_are_guarded():
     for command in ("1", "2", "3"):
         assert is_guarded_main_prompt_depth(command)
