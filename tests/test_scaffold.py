@@ -8,6 +8,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from rytm_randomizer.commands import (
     COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
+    MENU_COMMANDS,
     is_guarded_main_prompt_depth,
 )
 from rytm_randomizer.constants import (
@@ -191,3 +192,57 @@ def test_main_prompt_depth_guardrail_metadata_matches_v134():
     assert MAIN_PROMPT_DEPTH_GUARDRAIL["sends_midi"] is False
     assert "main Command prompt" in MAIN_PROMPT_DEPTH_GUARDRAIL["message"]
     assert "No MIDI was sent" in MAIN_PROMPT_DEPTH_GUARDRAIL["message"]
+
+
+def test_menu_status_commands_match_v134_metadata_only_set():
+    expected = {
+        "BD",
+        "FM",
+        "PD",
+        "SM",
+        "P2M",
+        "J",
+        "GM",
+        "SCN",
+        "PR",
+        "SR",
+        "P3M",
+        "P4M",
+        "H",
+        "R",
+    }
+    assert set(MENU_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_menu_status_commands_do_not_send_midi_or_define_execution():
+    forbidden_fields = {"handler", "callable", "execute", "function", "callback"}
+    for command, metadata in MENU_COMMANDS.items():
+        assert metadata["sends_midi"] is False
+        assert forbidden_fields.isdisjoint(metadata)
+        assert "5" not in metadata["label"]
+        assert "6" not in metadata["label"]
+        assert "7" not in metadata["label"]
+        assert "8" not in metadata["label"]
+        assert "9" not in metadata["label"]
+        assert "10" not in metadata["label"]
+        assert "11" not in metadata["label"]
+        assert "12" not in metadata["label"]
+
+
+def test_representative_menu_status_labels_match_v134_intent():
+    assert MENU_COMMANDS["BD"] == {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show BD engine tools",
+    }
+    assert MENU_COMMANDS["SCN"] == {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show scene / preset tools",
+    }
+    assert MENU_COMMANDS["R"] == {
+        "type": "print",
+        "sends_midi": False,
+        "label": "print current script state",
+    }

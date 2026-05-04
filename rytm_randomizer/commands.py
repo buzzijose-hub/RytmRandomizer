@@ -12,8 +12,82 @@ MAIN_PROMPT_DEPTH_GUARDRAIL = {
     ),
 }
 
+MENU_COMMANDS = {
+    "BD": {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show BD engine tools",
+    },
+    "FM": {
+        "type": "menu/status",
+        "sends_midi": False,
+        "label": "show BD FM menu/status",
+    },
+    "PD": {
+        "type": "menu/status",
+        "sends_midi": False,
+        "label": "show BD Plastic menu/status",
+    },
+    "SM": {
+        "type": "menu/status",
+        "sends_midi": False,
+        "label": "show BD Silky menu/status",
+    },
+    "P2M": {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show Pad 2 snare / secondary percussion menu",
+    },
+    "J": {
+        "type": "print",
+        "sends_midi": False,
+        "label": "show 4-pad group layout",
+    },
+    "GM": {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show global 4-pad mutation tools",
+    },
+    "SCN": {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show scene / preset tools",
+    },
+    "PR": {
+        "type": "print",
+        "sends_midi": False,
+        "label": "show selected isolated pad",
+    },
+    "SR": {
+        "type": "menu/status",
+        "sends_midi": False,
+        "label": "show Pad 3 SY Raw discovery menu/status",
+    },
+    "P3M": {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show Pad 3 SY Raw bass / synth-percussion menu",
+    },
+    "P4M": {
+        "type": "menu",
+        "sends_midi": False,
+        "label": "show Pad 4 BD Acoustic body / accent menu",
+    },
+    "H": {
+        "type": "print",
+        "sends_midi": False,
+        "label": "show current anchor",
+    },
+    "R": {
+        "type": "print",
+        "sends_midi": False,
+        "label": "print current script state",
+    },
+}
+
 COMMANDS = {
     **{command: {"type": "scene"} for command in SCENE_COMMANDS},
+    **MENU_COMMANDS,
     **{
         command: {
             "type": "guarded_depth",
