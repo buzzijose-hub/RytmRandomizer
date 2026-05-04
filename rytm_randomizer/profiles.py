@@ -25,3 +25,30 @@ PAD_PROFILES = {
         "cc_map": PAD_3_SY_RAW_CC_MAP,
     },
 }
+
+GROUP_LAYOUT = {
+    1: {
+        "role": "Main kick / BD Hard default",
+        "profile": "2",
+        "zone": "full",
+        "depth": "micro",
+    },
+    2: {
+        "role": "Secondary kick / rolling low percussion",
+        "profile": "3",
+        "zone": "body",
+        "depth": "groove",
+    },
+    3: {
+        "role": "SY Raw midrange bass / synth-percussion",
+        "profile": "5",
+        "zone": "lfo",
+        "depth": "groove",
+    },
+    4: {
+        "role": "Body hit / accent layer",
+        "profile": "4",
+        "zone": "body",
+        "depth": "micro",
+    },
+}

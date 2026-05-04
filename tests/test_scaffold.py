@@ -7,7 +7,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from rytm_randomizer.commands import COMMANDS, is_guarded_main_prompt_depth
 from rytm_randomizer.constants import OUT_OF_SCOPE_PADS, SUPPORTED_PADS
-from rytm_randomizer.profiles import PAD_1_DEFAULT_PROFILE, PAD_3_SY_RAW_CC_MAP
+from rytm_randomizer.profiles import (
+    GROUP_LAYOUT,
+    PAD_1_DEFAULT_PROFILE,
+    PAD_3_SY_RAW_CC_MAP,
+)
 from rytm_randomizer.scenes import SCENE_COMMANDS
 
 
@@ -25,6 +29,38 @@ def test_pad_1_default_home_is_bd_hard():
 def test_pad_3_sy_raw_cc_mapping_is_preserved():
     assert PAD_3_SY_RAW_CC_MAP["SRC Noise Level"] == 19
     assert PAD_3_SY_RAW_CC_MAP["SRC Balance"] == 23
+
+
+def test_group_layout_contains_only_pads_1_to_4():
+    assert set(GROUP_LAYOUT) == {1, 2, 3, 4}
+    assert not any(pad in GROUP_LAYOUT for pad in OUT_OF_SCOPE_PADS)
+
+
+def test_group_layout_matches_v134_metadata():
+    assert GROUP_LAYOUT[1] == {
+        "role": "Main kick / BD Hard default",
+        "profile": "2",
+        "zone": "full",
+        "depth": "micro",
+    }
+    assert GROUP_LAYOUT[2] == {
+        "role": "Secondary kick / rolling low percussion",
+        "profile": "3",
+        "zone": "body",
+        "depth": "groove",
+    }
+    assert GROUP_LAYOUT[3] == {
+        "role": "SY Raw midrange bass / synth-percussion",
+        "profile": "5",
+        "zone": "lfo",
+        "depth": "groove",
+    }
+    assert GROUP_LAYOUT[4] == {
+        "role": "Body hit / accent layer",
+        "profile": "4",
+        "zone": "body",
+        "depth": "micro",
+    }
 
 
 def test_scene_variants_exist():
