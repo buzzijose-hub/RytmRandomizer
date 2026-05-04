@@ -192,9 +192,44 @@ def test_v134_scene_registry_contains_only_known_scene_commands():
         "S5",
     }
     assert set(SCENE_COMMANDS) == expected
-    assert SCENE_COMMANDS["S0"] == {"name": "Home / Clean", "action": "home"}
-    assert SCENE_COMMANDS["S4B"] == {"name": "Wild Maximum", "action": "wild_maximum"}
-    assert SCENE_COMMANDS["S5"] == {"name": "Back to Clean", "action": "clean"}
+    assert SCENE_COMMANDS["S0"]["name"] == "Home / Clean"
+    assert SCENE_COMMANDS["S0"]["action"] == "home"
+    assert SCENE_COMMANDS["S4B"]["name"] == "Wild Maximum"
+    assert SCENE_COMMANDS["S4B"]["action"] == "wild_maximum"
+    assert SCENE_COMMANDS["S5"]["name"] == "Back to Clean"
+    assert SCENE_COMMANDS["S5"]["action"] == "clean"
+
+
+def test_scene_command_descriptions_match_v134_examples():
+    assert (
+        SCENE_COMMANDS["S0"]["description"]
+        == "Load or return all four pads to the validated anchors."
+    )
+    assert (
+        SCENE_COMMANDS["S2B"]["description"]
+        == "More filter/grit pressure on the secondary lanes while Pad 1 stays bounded."
+    )
+    assert (
+        SCENE_COMMANDS["S4B"]["description"]
+        == "The maximum V1.34 discovery scene, using the existing wild guardrails."
+    )
+
+
+def test_scene_commands_are_scaffold_only_and_not_executable():
+    for metadata in SCENE_COMMANDS.values():
+        assert metadata["scope"] == "four_pad_group"
+        assert metadata["executable"] is False
+        assert metadata["v134_reference_command"] is True
+        assert metadata["scaffold_only"] is True
+        assert_no_execution_fields(metadata)
+        assert "5" not in metadata["description"]
+        assert "6" not in metadata["description"]
+        assert "7" not in metadata["description"]
+        assert "8" not in metadata["description"]
+        assert "9" not in metadata["description"]
+        assert "10" not in metadata["description"]
+        assert "11" not in metadata["description"]
+        assert "12" not in metadata["description"]
 
 
 def test_bare_main_prompt_depth_numbers_are_guarded():
