@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e387f66 Add passive registry report generator
 - f6b10ca Add passive architecture summary
 - e7b0755 Add passive command lookup helpers
 - 748c320 Add passive scene lookup helpers
@@ -83,6 +84,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive scene lookup helpers
 - passive command lookup helpers
 - unified passive registry view
+- passive registry report generator
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -105,6 +107,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_scene_lookup.py
 - python .\tests\test_command_lookup.py
 - python .\tests\test_registry.py
+- python .\tests\test_registry_report.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -120,9 +123,26 @@ passive test suite.
 The closeout script now includes "Test: Registry" as part of the standard
 passive test suite.
 
+The closeout script now includes "Test: Registry Report" as part of the
+standard passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, command lookup, and registry tests
-passed silently; the V1.34 reference diff was empty; and git status was clean.
+and registry report tests passed silently; the V1.34 reference diff was empty;
+and git status was clean.
+
+The passive registry report generator includes:
+
+- rytm_randomizer/registry_report.py
+- tests/test_registry_report.py
+
+The report generator sits on top of the unified passive registry view. It
+generates in-memory, read-only report data for registry sections, per-section
+item counts, known sections commands/scenes/group_profiles, passive safety
+boundary summary, unsupported scope summary, and active behavior status. The
+formatted report is intended for inspection, documentation, future UI, and
+future CLI preview work only. It does not write report files, create a CLI
+command, or print during import.
 
 The unified passive registry view includes:
 
@@ -326,6 +346,11 @@ support.
 The unified passive registry view added no MIDI sending, port opening,
 dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
 support, or Pads 5-12 support. The protected V1.34 reference remains untouched.
+
+The passive registry report generator added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
+support, Pads 5-12 support, or machine/profile universe expansion. The
+protected V1.34 reference remains untouched.
 
 ## Validated Rytm Scope
 

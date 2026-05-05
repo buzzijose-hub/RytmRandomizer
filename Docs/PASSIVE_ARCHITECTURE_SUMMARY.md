@@ -29,6 +29,7 @@ The standard closeout suite currently includes:
 - scene lookup
 - command lookup
 - registry
+- registry report
 
 The closeout workflow also checks:
 
@@ -85,6 +86,44 @@ It does not:
 - add Pads 5-12 support
 
 The registry view returns copied data so callers cannot mutate source metadata.
+
+## Passive Registry Report Generator
+
+`rytm_randomizer/registry_report.py` sits on top of the unified passive registry
+view and generates in-memory, read-only report data.
+
+It reports:
+
+- registry sections
+- per-section item counts
+- known sections: commands, scenes, group_profiles
+- passive safety boundary summary
+- unsupported scope summary
+- active behavior status
+
+The formatted report is intended for:
+
+- inspection
+- documentation
+- future UI work
+- future CLI preview work
+
+It does not:
+
+- write report files
+- create a CLI command
+- print during import
+- execute commands
+- dispatch commands
+- send MIDI
+- open ports
+- mutate state or hardware
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
 
 ### Profile Lookup
 
@@ -176,7 +215,6 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- passive report generator
 - passive CLI preview only if it does not dispatch or send MIDI
 
 These layers should continue to return passive data only and must not wire into
