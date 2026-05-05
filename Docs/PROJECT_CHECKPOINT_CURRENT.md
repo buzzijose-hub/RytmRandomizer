@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 68b16e1 Harden passive metadata validation tests
 - 1b4aee3 Add passive metadata validation helpers
 - c926719 Add constants scaffold coverage
 - d56ff2f Update checkpoint after PAD_PROFILES coverage
@@ -78,6 +79,14 @@ The validator is read-only/passive and validates command registry safety. It
 checks for executable: True, forbidden execution fields, missing scaffold_only /
 v134_reference_command flags, and forbidden Pads 5-12 references.
 
+Passive metadata validation hardening:
+
+- nested forbidden pad tests exposed and fixed a TypeError
+- validation now handles nested containers before direct forbidden-pad membership checks
+- tests/test_validation.py covers nested pad lists containing forbidden Pads 5-12
+- tests/test_validation.py covers forbidden pad text such as Pad 5
+- tests/test_validation.py covers forbidden pad scope metadata such as pad_5
+
 Scaffold metadata tests now include PAD_PROFILES coverage:
 
 - exact key set {1, 3}
@@ -109,6 +118,10 @@ work has been added.
 
 The passive validation layer added no MIDI sending, command dispatch, input
 handling, SysEx, capture/state, GUI, Analog Four, or hardware behavior.
+
+The passive validation hardening added no MIDI, runtime dispatch, input
+handling, hardware state changes, SysEx, capture, GUI, Analog Four, or Pads
+5-12 support.
 
 ## Validated Rytm Scope
 
