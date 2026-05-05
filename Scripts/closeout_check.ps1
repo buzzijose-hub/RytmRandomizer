@@ -72,6 +72,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_profile_lookup.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_profile_lookup.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Scene Lookup ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_scene_lookup.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_scene_lookup.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== V1.34 Reference Diff ===" | Add-Content $summary
 git diff -- rytm_hybrid_randomizer_v134.py 2>&1 | Tee-Object -FilePath "$logDir\latest_v134_reference_diff.log" | Add-Content $summary
 
