@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- dc1ecfc Add passive registry audit reports
 - eab5898 Add passive command preview reports
 - be92ab4 Add passive command inspection helpers
 - 68b16e1 Harden passive metadata validation tests
@@ -71,8 +72,30 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive command registry validation
 - passive command inspection
 - passive command preview reports
+- passive registry audit reports
 - scaffold metadata tests
 - Codex modularization protocol
+
+The passive registry audit/report layer includes:
+
+- rytm_randomizer/audit.py
+- tests/test_audit.py
+
+The audit layer is passive/read-only and returns registry reports only. Audit
+reports include validation status, command count, category/type counts, scope
+counts, pad counts, all_non_executable, all_scaffold_only, and the fixed safety
+summary: "No MIDI would be sent. No command would execute."
+
+tests/test_audit.py covers:
+
+- real COMMANDS registry audit
+- validation ok
+- all_non_executable
+- all_scaffold_only
+- scene/group/pad scope counts
+- Pads limited to 1-4 where present
+- synthetic invalid registry validation errors
+- source metadata is not mutated
 
 The passive command preview/report layer includes:
 
@@ -167,6 +190,11 @@ The passive inspection layer added no MIDI, runtime execution, dispatch, input
 handling, SysEx, capture, GUI, Analog Four, or Pads 5-12 support.
 
 The passive preview layer added no MIDI, port opening, live randomizer, command
+execution, dispatch, input handling, state mutation, SysEx, capture, GUI,
+Analog Four, Pads 5-12 support, mutation behavior, handlers/callables, or
+runtime hooks.
+
+The passive audit layer added no MIDI, port opening, live randomizer, command
 execution, dispatch, input handling, state mutation, SysEx, capture, GUI,
 Analog Four, Pads 5-12 support, mutation behavior, handlers/callables, or
 runtime hooks.
