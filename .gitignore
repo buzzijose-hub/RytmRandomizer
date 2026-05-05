@@ -21,3 +21,5 @@ LegacyScripts/
 Thumbs.db
 .vscode/
 .idea/
+Docs/Session_Logs/*.log
+Docs/Session_Logs/latest_closeout_summary.txt
