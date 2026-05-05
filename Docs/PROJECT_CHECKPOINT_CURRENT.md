@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f6b10ca Add passive architecture summary
 - e7b0755 Add passive command lookup helpers
 - 748c320 Add passive scene lookup helpers
 - 02bd056 Add passive group profile lookup helpers
@@ -81,6 +82,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive group profile lookup helpers
 - passive scene lookup helpers
 - passive command lookup helpers
+- passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
 - scaffold metadata tests
@@ -116,6 +118,14 @@ passive test suite.
 The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, and command lookup tests passed
 silently; the V1.34 reference diff was empty; and git status was clean.
+
+The passive architecture summary includes:
+
+- Docs/PASSIVE_ARCHITECTURE_SUMMARY.md
+
+The summary documents the current passive scaffold, lookup helpers, closeout
+suite, safety boundaries, and conditions required before any hardware-facing
+layer.
 
 The passive command lookup helper includes:
 
@@ -285,6 +295,10 @@ execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
 support.
 
 The passive command lookup helper added no MIDI, ports, dispatch, command
+execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
+support.
+
+The passive architecture summary added no MIDI, ports, dispatch, command
 execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
 support.
 
