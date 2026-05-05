@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 02bd056 Add passive group profile lookup helpers
 - 54aca99 Add closeout check workflow
 - 55342e7 Add behavior-preserving extraction plan
 - dc1ecfc Add passive registry audit reports
@@ -75,6 +76,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive command inspection
 - passive command preview reports
 - passive registry audit reports
+- passive group profile lookup helpers
 - behavior-preserving extraction plan
 - closeout check workflow
 - scaffold metadata tests
@@ -92,12 +94,26 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_inspection.py
 - python .\tests\test_preview.py
 - python .\tests\test_audit.py
+- python .\tests\test_profile_lookup.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
+The closeout script now includes "Test: Profile Lookup" as part of the standard
+passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
-preview, and audit tests passed silently; the V1.34 reference diff was empty;
-and git status was clean.
+preview, audit, and profile lookup tests passed silently; the V1.34 reference
+diff was empty; and git status was clean.
+
+The passive group profile lookup helper includes:
+
+- rytm_randomizer/profile_lookup.py
+- tests/test_profile_lookup.py
+
+The helper is passive/read-only. It only looks up existing
+GROUP_PROFILE_METADATA keys "2", "3", "4", and "5". Returned metadata is copied
+to prevent source mutation, and unknown keys return passive not-found behavior.
+Pads 5-12 remain absent.
 
 The behavior-preserving extraction plan includes:
 
@@ -229,6 +245,9 @@ The passive audit layer added no MIDI, port opening, live randomizer, command
 execution, dispatch, input handling, state mutation, SysEx, capture, GUI,
 Analog Four, Pads 5-12 support, mutation behavior, handlers/callables, or
 runtime hooks.
+
+The passive group profile lookup helper added no MIDI, ports, dispatch,
+hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12 support.
 
 ## Validated Rytm Scope
 
