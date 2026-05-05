@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- be92ab4 Add passive command inspection helpers
 - 68b16e1 Harden passive metadata validation tests
 - 1b4aee3 Add passive metadata validation helpers
 - c926719 Add constants scaffold coverage
@@ -67,8 +68,27 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - individual Pad 1-4 command metadata
 - command metadata consistency checks
 - passive command registry validation
+- passive command inspection
 - scaffold metadata tests
 - Codex modularization protocol
+
+The passive command inspection layer includes:
+
+- rytm_randomizer/inspection.py
+- tests/test_inspection.py
+
+inspect_command() returns a dry-run report only. It deep-copies metadata so
+reports cannot mutate COMMANDS, calls the passive validator, and does not
+dispatch, execute, send MIDI, read input, mutate state, or touch hardware.
+
+tests/test_inspection.py covers:
+
+- known scene command S1A
+- unknown command
+- group command O
+- pad command P3A
+- synthetic invalid registry errors
+- metadata copy isolation
 
 The passive validation layer includes:
 
@@ -122,6 +142,9 @@ handling, SysEx, capture/state, GUI, Analog Four, or hardware behavior.
 The passive validation hardening added no MIDI, runtime dispatch, input
 handling, hardware state changes, SysEx, capture, GUI, Analog Four, or Pads
 5-12 support.
+
+The passive inspection layer added no MIDI, runtime execution, dispatch, input
+handling, SysEx, capture, GUI, Analog Four, or Pads 5-12 support.
 
 ## Validated Rytm Scope
 
