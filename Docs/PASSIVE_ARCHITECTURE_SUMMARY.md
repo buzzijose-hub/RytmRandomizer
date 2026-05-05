@@ -28,6 +28,7 @@ The standard closeout suite currently includes:
 - profile lookup
 - scene lookup
 - command lookup
+- registry
 
 The closeout workflow also checks:
 
@@ -41,6 +42,49 @@ Current passive lookup helpers:
 - `rytm_randomizer/profile_lookup.py`
 - `rytm_randomizer/scene_lookup.py`
 - `rytm_randomizer/command_lookup.py`
+
+## Unified Passive Registry View
+
+`rytm_randomizer/registry.py` exposes a unified read-only registry view over the
+currently scaffolded passive metadata surfaces.
+
+Current registry sections:
+
+- commands
+- scenes
+- group_profiles
+
+It exposes:
+
+- copied registry data
+- copied section data
+- copied item metadata
+- passive not-found behavior for unknown sections
+- passive not-found behavior for unknown items
+- a passive section/count summary
+
+It is intended for:
+
+- inspection
+- reporting
+- preview
+- documentation
+- future UI work
+
+It does not:
+
+- execute commands
+- dispatch commands
+- send MIDI
+- open ports
+- mutate state or hardware
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+
+The registry view returns copied data so callers cannot mutate source metadata.
 
 ### Profile Lookup
 
@@ -132,7 +176,6 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- unified read-only registry view
 - passive report generator
 - passive CLI preview only if it does not dispatch or send MIDI
 

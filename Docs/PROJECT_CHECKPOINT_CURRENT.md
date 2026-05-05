@@ -82,6 +82,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive group profile lookup helpers
 - passive scene lookup helpers
 - passive command lookup helpers
+- unified passive registry view
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -103,6 +104,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_profile_lookup.py
 - python .\tests\test_scene_lookup.py
 - python .\tests\test_command_lookup.py
+- python .\tests\test_registry.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -115,9 +117,28 @@ passive test suite.
 The closeout script now includes "Test: Command Lookup" as part of the standard
 passive test suite.
 
+The closeout script now includes "Test: Registry" as part of the standard
+passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
-preview, audit, profile lookup, scene lookup, and command lookup tests passed
-silently; the V1.34 reference diff was empty; and git status was clean.
+preview, audit, profile lookup, scene lookup, command lookup, and registry tests
+passed silently; the V1.34 reference diff was empty; and git status was clean.
+
+The unified passive registry view includes:
+
+- rytm_randomizer/registry.py
+- tests/test_registry.py
+
+The registry currently exposes copied read-only views for these sections:
+
+- commands
+- scenes
+- group_profiles
+
+The registry is passive/read-only from the caller perspective. It returns copied
+data, does not allow caller mutation of source metadata, and uses passive
+not-found behavior for unknown sections or items. It is intended for inspection,
+reporting, preview, documentation, and future UI work only.
 
 The passive architecture summary includes:
 
@@ -301,6 +322,10 @@ support.
 The passive architecture summary added no MIDI, ports, dispatch, command
 execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
 support.
+
+The unified passive registry view added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
+support, or Pads 5-12 support. The protected V1.34 reference remains untouched.
 
 ## Validated Rytm Scope
 
