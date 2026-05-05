@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 748c320 Add passive scene lookup helpers
 - 02bd056 Add passive group profile lookup helpers
 - 54aca99 Add closeout check workflow
 - 55342e7 Add behavior-preserving extraction plan
@@ -77,6 +78,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive command preview reports
 - passive registry audit reports
 - passive group profile lookup helpers
+- passive scene lookup helpers
 - behavior-preserving extraction plan
 - closeout check workflow
 - scaffold metadata tests
@@ -95,15 +97,28 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_preview.py
 - python .\tests\test_audit.py
 - python .\tests\test_profile_lookup.py
+- python .\tests\test_scene_lookup.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
 The closeout script now includes "Test: Profile Lookup" as part of the standard
 passive test suite.
 
+The closeout script now includes "Test: Scene Lookup" as part of the standard
+passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
-preview, audit, and profile lookup tests passed silently; the V1.34 reference
-diff was empty; and git status was clean.
+preview, audit, profile lookup, and scene lookup tests passed silently; the
+V1.34 reference diff was empty; and git status was clean.
+
+The passive scene lookup helper includes:
+
+- rytm_randomizer/scene_lookup.py
+- tests/test_scene_lookup.py
+
+The helper is passive/read-only. It only reads existing SCENE_COMMANDS
+metadata. Returned metadata is copied to prevent source mutation, and unknown
+scene keys return passive not-found behavior. Pads 5-12 remain absent.
 
 The passive group profile lookup helper includes:
 
@@ -248,6 +263,10 @@ runtime hooks.
 
 The passive group profile lookup helper added no MIDI, ports, dispatch,
 hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12 support.
+
+The passive scene lookup helper added no MIDI, ports, dispatch, command
+execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
+support.
 
 ## Validated Rytm Scope
 
