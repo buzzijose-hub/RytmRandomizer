@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e7b0755 Add passive command lookup helpers
 - 748c320 Add passive scene lookup helpers
 - 02bd056 Add passive group profile lookup helpers
 - 54aca99 Add closeout check workflow
@@ -79,6 +80,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive registry audit reports
 - passive group profile lookup helpers
 - passive scene lookup helpers
+- passive command lookup helpers
 - behavior-preserving extraction plan
 - closeout check workflow
 - scaffold metadata tests
@@ -98,6 +100,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_audit.py
 - python .\tests\test_profile_lookup.py
 - python .\tests\test_scene_lookup.py
+- python .\tests\test_command_lookup.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -107,9 +110,22 @@ passive test suite.
 The closeout script now includes "Test: Scene Lookup" as part of the standard
 passive test suite.
 
+The closeout script now includes "Test: Command Lookup" as part of the standard
+passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
-preview, audit, profile lookup, and scene lookup tests passed silently; the
-V1.34 reference diff was empty; and git status was clean.
+preview, audit, profile lookup, scene lookup, and command lookup tests passed
+silently; the V1.34 reference diff was empty; and git status was clean.
+
+The passive command lookup helper includes:
+
+- rytm_randomizer/command_lookup.py
+- tests/test_command_lookup.py
+
+The helper is passive/read-only. It only reads existing COMMANDS metadata.
+Returned metadata is copied to prevent source mutation, and unknown command
+keys return passive not-found behavior. No execution/handler/callable fields are
+exposed. Pads 5-12 remain absent.
 
 The passive scene lookup helper includes:
 
@@ -265,6 +281,10 @@ The passive group profile lookup helper added no MIDI, ports, dispatch,
 hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12 support.
 
 The passive scene lookup helper added no MIDI, ports, dispatch, command
+execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
+support.
+
+The passive command lookup helper added no MIDI, ports, dispatch, command
 execution, hardware mutation, SysEx, GUI, capture, Analog Four, or Pads 5-12
 support.
 
