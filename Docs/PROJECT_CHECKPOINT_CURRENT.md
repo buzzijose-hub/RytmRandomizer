@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 54aca99 Add closeout check workflow
+- 55342e7 Add behavior-preserving extraction plan
 - dc1ecfc Add passive registry audit reports
 - eab5898 Add passive command preview reports
 - be92ab4 Add passive command inspection helpers
@@ -73,8 +75,37 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive command inspection
 - passive command preview reports
 - passive registry audit reports
+- behavior-preserving extraction plan
+- closeout check workflow
 - scaffold metadata tests
 - Codex modularization protocol
+
+The closeout check workflow includes:
+
+- Scripts/closeout_check.ps1
+- Docs/Session_Logs/
+
+The closeout script runs the standard passive test suite and safety checks:
+
+- python .\tests\test_scaffold.py
+- python .\tests\test_validation.py
+- python .\tests\test_inspection.py
+- python .\tests\test_preview.py
+- python .\tests\test_audit.py
+- git diff -- rytm_hybrid_randomizer_v134.py
+- git status --short
+
+The latest clean closeout confirmed that scaffold, validation, inspection,
+preview, and audit tests passed silently; the V1.34 reference diff was empty;
+and git status was clean.
+
+The behavior-preserving extraction plan includes:
+
+- Docs/BEHAVIOR_PRESERVING_EXTRACTION_PLAN.md
+
+The plan defines the transition from passive scaffold/reporting work toward
+future pure extraction slices while keeping runtime wiring and MIDI/hardware
+behavior out of scope until separately approved.
 
 The passive registry audit/report layer includes:
 

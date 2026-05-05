@@ -6,9 +6,39 @@ New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
 $summary = "$logDir\latest_closeout_summary.txt"
 
+$venvPython = ".\.venv\Scripts\python.exe"
+$codexPython = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+$pythonExe = $null
+$pythonArgs = @()
+$pythonLabel = $null
+
+if (Test-Path $venvPython) {
+    $pythonExe = $venvPython
+    $pythonLabel = $venvPython
+} elseif (Get-Command python -ErrorAction SilentlyContinue) {
+    $pythonExe = "python"
+    $pythonLabel = "python"
+} elseif (Get-Command py -ErrorAction SilentlyContinue) {
+    $pythonExe = "py"
+    $pythonArgs = @("-3")
+    $pythonLabel = "py -3"
+} elseif (Test-Path $codexPython) {
+    $pythonExe = $codexPython
+    $pythonLabel = $codexPython
+}
+
 "RytmRandomizer Closeout Summary" | Set-Content $summary
 "Timestamp: $timestamp" | Add-Content $summary
 "" | Add-Content $summary
+
+"=== Python Command ===" | Add-Content $summary
+if ($pythonExe) {
+    "Using: $pythonLabel" | Add-Content $summary
+} else {
+    "No Python command found. Tried .\.venv\Scripts\python.exe, python, py -3, and the bundled Codex runtime." | Add-Content $summary
+    Get-Content $summary
+    exit 1
+}
 
 "=== Git Branch ===" | Add-Content $summary
 git branch --show-current 2>&1 | Tee-Object -FilePath "$logDir\latest_git_branch.log" | Add-Content $summary
@@ -19,23 +49,23 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 
 "" | Add-Content $summary
 "=== Test: Scaffold ===" | Add-Content $summary
-python .\tests\test_scaffold.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_scaffold.log" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_scaffold.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_scaffold.log" | Add-Content $summary
 
 "" | Add-Content $summary
 "=== Test: Validation ===" | Add-Content $summary
-python .\tests\test_validation.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_validation.log" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_validation.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_validation.log" | Add-Content $summary
 
 "" | Add-Content $summary
 "=== Test: Inspection ===" | Add-Content $summary
-python .\tests\test_inspection.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_inspection.log" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_inspection.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_inspection.log" | Add-Content $summary
 
 "" | Add-Content $summary
 "=== Test: Preview ===" | Add-Content $summary
-python .\tests\test_preview.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_preview.log" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_preview.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_preview.log" | Add-Content $summary
 
 "" | Add-Content $summary
 "=== Test: Audit ===" | Add-Content $summary
-python .\tests\test_audit.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_audit.log" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_audit.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_audit.log" | Add-Content $summary
 
 "" | Add-Content $summary
 "=== V1.34 Reference Diff ===" | Add-Content $summary
