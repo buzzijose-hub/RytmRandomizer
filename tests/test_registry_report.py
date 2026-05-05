@@ -13,6 +13,7 @@ from rytm_randomizer.registry_report import (
 )
 
 
+FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 UNSUPPORTED_TEXT = (
     "MIDI sending",
     "MIDI port opening",
@@ -25,6 +26,10 @@ UNSUPPORTED_TEXT = (
     "Analog Four",
     "Pads 5-12",
 )
+
+
+def normalize_newlines(text):
+    return text.replace("\r\n", "\n").replace("\r", "\n").rstrip("\n")
 
 
 def test_registry_report_includes_existing_sections():
@@ -74,6 +79,15 @@ def test_formatted_registry_report_is_deterministic_and_human_readable():
     assert "Active Behavior:" in lines
     assert "Source: rytm_randomizer.registry" in lines
     assert "In-memory only: True" in lines
+
+
+def test_formatted_registry_report_matches_golden_fixture():
+    expected = normalize_newlines(
+        (FIXTURES_DIR / "registry_report_expected.txt").read_text(encoding="utf-8")
+    )
+    actual = normalize_newlines("\n".join(format_registry_report()))
+
+    assert actual == expected
 
 
 def test_registry_report_data_is_mutation_safe():
@@ -146,6 +160,7 @@ if __name__ == "__main__":
     test_registry_report_counts_match_registry_summary()
     test_registry_report_summary_is_compact_and_copied()
     test_formatted_registry_report_is_deterministic_and_human_readable()
+    test_formatted_registry_report_matches_golden_fixture()
     test_registry_report_data_is_mutation_safe()
     test_registry_report_introduces_no_midi_or_execution_behavior()
     test_registry_report_exposes_no_pads_5_to_12_or_analog_four_support()

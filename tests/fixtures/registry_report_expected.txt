@@ -1,0 +1,36 @@
+RytmRandomizer Passive Registry Report
+Sections:
+- commands: 82
+- scenes: 14
+- group_profiles: 4
+Safety Boundaries:
+- no MIDI sending
+- no port opening
+- no runtime dispatch
+- no command execution
+- no hardware mutation
+- no SysEx writes
+- no GUI
+- no capture
+- no Analog Four support
+- no Pads 5-12 support
+Unsupported Scope:
+- MIDI sending
+- MIDI port opening
+- runtime dispatch
+- command execution
+- hardware state mutation
+- SysEx writes
+- GUI
+- capture
+- Analog Four
+- Pads 5-12
+Active Behavior:
+- dispatches_commands: False
+- executes_commands: False
+- mutates_hardware: False
+- opens_ports: False
+- sends_midi: False
+- writes_sysex: False
+Source: rytm_randomizer.registry
+In-memory only: True
