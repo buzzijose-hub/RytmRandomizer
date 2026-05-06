@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a96c039 Add passive CLI group profile preview
 - 28b4f79 Add passive CLI scene preview
 - 813cc0a Add passive CLI command preview
 - aee04be Add passive CLI search commands
@@ -109,6 +110,8 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI search commands
 - passive CLI command preview
 - passive CLI scene preview
+- passive CLI group profile preview
+- passive CLI preview trio complete
 - passive CLI operator quickstart
 - guarded passive depth command labels
 - passive architecture summary
@@ -221,6 +224,8 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli preview-command <key>`
 - `python -m rytm_randomizer.cli preview-scene --help`
 - `python -m rytm_randomizer.cli preview-scene <key>`
+- `python -m rytm_randomizer.cli preview-group-profile --help`
+- `python -m rytm_randomizer.cli preview-group-profile <key>`
 - `python -m rytm_randomizer.registry_report`
 
 The passive CLI command preview milestone includes:
@@ -315,6 +320,53 @@ handlers, add handlers, dispatch scenes or commands, execute scenes or
 commands, open MIDI ports, send MIDI, write files, require hardware, or mutate
 runtime or hardware state. Unknown or missing keys fail safely.
 
+The passive CLI group profile preview milestone completes the passive CLI
+preview trio.
+
+Recent preview commits:
+
+- 813cc0a Add passive CLI command preview
+- 28b4f79 Add passive CLI scene preview
+- a96c039 Add passive CLI group profile preview
+
+The preview trio now includes:
+
+```powershell
+python -m rytm_randomizer.cli preview-command <key>
+python -m rytm_randomizer.cli preview-scene <key>
+python -m rytm_randomizer.cli preview-group-profile <key>
+```
+
+The latest milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_preview_group_profile_help_expected.txt
+- tests/fixtures/cli_preview_group_profile_known_expected.txt
+- tests/fixtures/cli_preview_group_profile_unknown_expected.txt
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  preview-group-profile.
+- `python -m rytm_randomizer.cli preview-group-profile --help` printed passive
+  preview-group-profile usage.
+- `python -m rytm_randomizer.cli preview-group-profile 2` printed passive
+  group profile preview metadata: Group profile: 2, Found: True, Name: My BD
+  Hard, Machine value: 0, Group pad: 1, and explicit no-MIDI, no-command, and
+  no-hardware-mutation statements.
+- `python -m rytm_randomizer.cli preview-group-profile DOES_NOT_EXIST` failed
+  safely with: "Group profile preview not found. No MIDI was sent. No command
+  executed. No hardware was mutated."
+
+Preview-command uses the existing passive preview helper. Preview-scene uses
+copied passive scene registry metadata. Preview-group-profile uses copied
+passive group profile registry metadata. None of the preview paths call
+handlers, add handlers, dispatch commands or scenes, execute commands or
+scenes, open MIDI ports, send MIDI, write files, require hardware, or mutate
+runtime or hardware state. Unknown or missing keys fail safely.
+
 The passive CLI operator quickstart includes:
 
 - Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md
@@ -335,6 +387,7 @@ python -m rytm_randomizer.cli search-scenes Wild
 python -m rytm_randomizer.cli search-group-profiles Hard
 python -m rytm_randomizer.cli preview-command J
 python -m rytm_randomizer.cli preview-scene S1A
+python -m rytm_randomizer.cli preview-group-profile 2
 ```
 
 It clearly states that the passive CLI is read-only and does not send MIDI,
@@ -954,6 +1007,13 @@ protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
 
 The passive CLI scene preview milestone added no MIDI sending, port opening,
+dispatch, scene execution, command execution, hardware mutation, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, or machine/profile universe
+expansion. It added no report file writing at runtime and no import-time
+printing. The protected V1.34 reference remains untouched. Analog Rytm and
+Analog Four remain off for this phase.
+
+The passive CLI preview trio completion added no MIDI sending, port opening,
 dispatch, scene execution, command execution, hardware mutation, SysEx, GUI,
 capture, Analog Four support, Pads 5-12 support, or machine/profile universe
 expansion. It added no report file writing at runtime and no import-time

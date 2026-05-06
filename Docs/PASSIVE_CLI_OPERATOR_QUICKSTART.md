@@ -80,10 +80,12 @@ Preview passive dry-run command metadata:
 ```powershell
 python -m rytm_randomizer.cli preview-command J
 python -m rytm_randomizer.cli preview-scene S1A
+python -m rytm_randomizer.cli preview-group-profile 2
 ```
 
 Preview-command uses the existing passive preview helper. Preview-scene uses
-existing copied scene registry metadata. They clearly state that no MIDI would
+existing copied scene registry metadata. Preview-group-profile uses existing
+copied group profile registry metadata. They clearly state that no MIDI would
 be sent, no command or scene would execute, and no hardware would be mutated.
 
 Unknown preview keys fail safely. For example:
@@ -91,6 +93,7 @@ Unknown preview keys fail safely. For example:
 ```powershell
 python -m rytm_randomizer.cli preview-command DOES_NOT_EXIST
 python -m rytm_randomizer.cli preview-scene DOES_NOT_EXIST
+python -m rytm_randomizer.cli preview-group-profile DOES_NOT_EXIST
 ```
 
 Expected behavior is a passive not-found message such as:
@@ -98,6 +101,7 @@ Expected behavior is a passive not-found message such as:
 ```text
 Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.
 Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.
+Group profile preview not found. No MIDI was sent. No command executed. No hardware was mutated.
 ```
 
 ## Search Commands
