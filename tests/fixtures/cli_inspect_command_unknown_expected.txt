@@ -1,0 +1,4 @@
+RytmRandomizer passive command inspection
+Command: UNKNOWN
+Found: False
+Message: Command metadata not found. No MIDI was sent. No command executed.

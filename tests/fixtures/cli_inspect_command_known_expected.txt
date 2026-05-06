@@ -1,0 +1,17 @@
+RytmRandomizer passive command inspection
+Command: P3A
+Found: True
+Type: anchor_return
+Scope: pad_3
+Pad: 3
+Label: return Pad 3 to SY Raw Mid Bass anchor / home
+Executable: False
+Scaffold only: True
+V1.34 reference command: True
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

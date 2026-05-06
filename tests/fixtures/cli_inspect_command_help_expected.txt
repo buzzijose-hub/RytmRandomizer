@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: inspect-command
+
+Usage:
+  python -m rytm_randomizer.cli inspect-command <key>
+  python -m rytm_randomizer.cli inspect-command --help
+
+Behavior:
+  Displays passive metadata for an existing command key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
