@@ -1,0 +1,5 @@
+RytmRandomizer passive command preview
+Command: UNKNOWN
+Found: False
+Message: Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.
+Safety summary: No MIDI would be sent. No command would execute.

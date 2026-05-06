@@ -2,6 +2,7 @@
 
 import sys
 
+from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
 from .registry_report import format_registry_report
 
@@ -10,7 +11,7 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
     "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query>"
+    "search-scenes <query> | search-group-profiles <query> | preview-command <key>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -25,6 +26,7 @@ Usage:
   python -m rytm_randomizer.cli search-commands <query>
   python -m rytm_randomizer.cli search-scenes <query>
   python -m rytm_randomizer.cli search-group-profiles <query>
+  python -m rytm_randomizer.cli preview-command <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -41,6 +43,23 @@ Commands:
   search-scenes      Search passive scene metadata.
   search-group-profiles
                      Search passive group profile metadata.
+  preview-command    Preview passive command metadata by key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+PREVIEW_COMMAND_HELP = """RytmRandomizer passive CLI: preview-command
+
+Usage:
+  python -m rytm_randomizer.cli preview-command <key>
+  python -m rytm_randomizer.cli preview-command --help
+
+Behavior:
+  Displays a passive dry-run preview for an existing command key.
 
 Safety:
   passive/read-only
@@ -391,6 +410,53 @@ def format_inspect_group_profile_report(profile_key):
     ]
 
 
+def format_preview_command_report(command_key):
+    """Return deterministic passive command preview lines."""
+    command = str(command_key).upper()
+    registry_report = get_registry_section("commands")
+    registry = registry_report["items"] if registry_report["exists"] else {}
+    report = preview_command(registry, command)
+
+    if not report["exists"]:
+        return [
+            "RytmRandomizer passive command preview",
+            f"Command: {command}",
+            "Found: False",
+            (
+                "Message: Command preview not found. No MIDI was sent. "
+                "No command executed. No hardware was mutated."
+            ),
+            f"Safety summary: {report['safety_summary']}",
+        ]
+
+    validation = report["validation"]
+    return [
+        "RytmRandomizer passive command preview",
+        f"Command: {command}",
+        "Found: True",
+        f"Category: {report['category'] or ''}",
+        f"Scope: {report['scope'] or ''}",
+        f"Target: {report['target'] or ''}",
+        f"Pad: {report['pad'] if report['pad'] is not None else ''}",
+        f"Scaffold only: {report['scaffold_only']}",
+        f"Executable: {report['executable']}",
+        f"Forbidden/no-touch: {report['forbidden_or_no_touch']}",
+        f"Validation ok: {validation['ok']}",
+        f"Validation errors: {len(validation['errors'])}",
+        f"Safety summary: {report['safety_summary']}",
+        "No MIDI would be sent.",
+        "No command would execute.",
+        "No hardware would be mutated.",
+        "Safety:",
+        "- passive/read-only",
+        "- no MIDI sending",
+        "- no port opening",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no hardware required",
+    ]
+
+
 REPORT_HELP = """RytmRandomizer passive CLI: report
 
 Usage:
@@ -443,6 +509,10 @@ def main(argv=None):
 
     if args == ["search-group-profiles", "--help"]:
         sys.stdout.write(f"{SEARCH_GROUP_PROFILES_HELP}\n")
+        return 0
+
+    if args == ["preview-command", "--help"]:
+        sys.stdout.write(f"{PREVIEW_COMMAND_HELP}\n")
         return 0
 
     if args == ["inspect-command", "--help"]:
@@ -530,6 +600,15 @@ def main(argv=None):
 
     if len(args) == 2 and args[0] == "inspect-group-profile":
         lines = format_inspect_group_profile_report(args[1])
+        output = "\n".join(lines)
+        if lines[2] == "Found: True":
+            sys.stdout.write(f"{output}\n")
+            return 0
+        sys.stderr.write(f"{output}\n")
+        return 1
+
+    if len(args) == 2 and args[0] == "preview-command":
+        lines = format_preview_command_report(args[1])
         output = "\n".join(lines)
         if lines[2] == "Found: True":
             sys.stdout.write(f"{output}\n")

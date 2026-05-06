@@ -11,6 +11,7 @@ Usage:
   python -m rytm_randomizer.cli search-commands <query>
   python -m rytm_randomizer.cli search-scenes <query>
   python -m rytm_randomizer.cli search-group-profiles <query>
+  python -m rytm_randomizer.cli preview-command <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -27,6 +28,7 @@ Commands:
   search-scenes      Search passive scene metadata.
   search-group-profiles
                      Search passive group profile metadata.
+  preview-command    Preview passive command metadata by key.
 
 Safety:
   passive/read-only

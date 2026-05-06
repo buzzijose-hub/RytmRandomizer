@@ -1,0 +1,23 @@
+RytmRandomizer passive command preview
+Command: J
+Found: True
+Category: print
+Scope: 
+Target: 
+Pad: 
+Scaffold only: True
+Executable: False
+Forbidden/no-touch: False
+Validation ok: True
+Validation errors: 0
+Safety summary: No MIDI would be sent. No command would execute.
+No MIDI would be sent.
+No command would execute.
+No hardware would be mutated.
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required
