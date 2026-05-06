@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5ee0e01 Update checkpoint after mock message mapper
 - 4a590c8 Add test-only mock message mapper
 - d1df975 Add mock message mapping design spec
 - 82d4898 Add mock MIDI scaffold review
@@ -199,6 +200,14 @@ mock_midi.py scaffold. It records cleanly through MockMidiSender, fails safely
 for unknown or unsupported keys, imports no real MIDI library, opens no ports,
 sends no MIDI, and is not wired into CLI or runtime execution.
 
+The mock message mapper review now lives in:
+
+- Docs/MOCK_MESSAGE_MAPPER_REVIEW.md
+
+The review accepts the test-only mock message mapper, records that no real
+MIDI behavior exists, keeps future mapper expansion mock-only unless
+separately reviewed, and keeps hardware off.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -252,6 +261,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock message mapping design/spec
 - mock message mapping design/spec review
 - test-only mock message mapper
+- mock message mapper review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1334,6 +1344,26 @@ command, no runtime execution, no dispatch, no hardware mutation, no SysEx, no
 GUI/capture, no Analog Four support, no Pads 5-12 support, and no
 machine/profile expansion. The protected V1.34 reference remains untouched.
 Analog Rytm and Analog Four remain off for this phase.
+
+The mock message mapper review includes:
+
+- Docs/MOCK_MESSAGE_MAPPER_REVIEW.md
+
+The review document is documentation-only. It accepts
+rytm_randomizer/mock_message_mapper.py as the current test-only mapper scaffold
+and tests/test_mock_message_mapper.py as current test coverage. It records that
+the mapper supports only group profile key `"2"` / My BD Hard, returns
+deterministic inert MidiMessage data, records through MockMidiSender, fails
+safely for unknown or unsupported keys, is not wired into CLI or runtime
+execution, imports no real MIDI library, opens no ports, sends no MIDI, and
+adds no hardware behavior. It sets the next recommended task as either a
+documentation-only progress checkpoint / milestone report or a small
+mock-only mapper expansion plan. It adds no real MIDI backend, mido
+dependency, port opening, active CLI command, execute-command, send-command,
+hardware-test behavior, dispatch, command execution, scene execution, hardware
+mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

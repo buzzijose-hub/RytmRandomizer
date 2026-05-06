@@ -181,6 +181,14 @@ or unsupported keys.
 
 The closeout suite now includes "Test: Mock Message Mapper".
 
+Mock message mapper review:
+
+- `Docs/MOCK_MESSAGE_MAPPER_REVIEW.md`
+
+The review accepts the test-only mock message mapper, records that no real
+MIDI behavior exists, keeps future mapper expansion mock-only unless
+separately reviewed, and keeps hardware off.
+
 No real MIDI backend, mido dependency, port provider, hardware detection,
 hardware send, active CLI command, execute-command, send-command,
 hardware-test command, runtime execution, dispatch, SysEx, GUI/capture, Analog

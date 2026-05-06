@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-4a590c8 Add test-only mock message mapper
+5ee0e01 Update checkpoint after mock message mapper
 
 ## Current Phase
 
@@ -61,8 +61,8 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Review the test-only mock message mapper milestone before any broader mapping,
-active execution, or hardware-facing work:
+Next recommended task is either a documentation-only progress checkpoint /
+milestone report, or a small mock-only mapper expansion plan:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -73,6 +73,7 @@ active execution, or hardware-facing work:
 - `Docs/MOCK_MIDI_SCAFFOLD_REVIEW.md`
 - `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md`
 - `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md`
+- `Docs/MOCK_MESSAGE_MAPPER_REVIEW.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -92,6 +93,11 @@ MockMidiSender, and fails safely for unknown or unsupported keys.
 
 No real MIDI, no hardware, no active CLI command, no runtime execution, no port
 opening, and no CLI wiring exists.
+
+The mock message mapper review accepts the current test-only mapper scaffold
+and records that future expansion must remain mock-only, separately reviewed,
+limited to existing passive metadata, and unwired from CLI or runtime
+execution.
 
 ## Do-Not-Touch Files
 

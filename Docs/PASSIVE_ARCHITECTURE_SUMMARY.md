@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-4a590c8
+5ee0e01
 
 ## Protected Reference
 
@@ -47,13 +47,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 4a590c8 Add test-only mock message mapper
+- current HEAD: 5ee0e01 Update checkpoint after mock message mapper
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review the test-only mock message mapper milestone before broader mapping or active work
+- next recommended task: documentation-only progress checkpoint / milestone report, or small mock-only mapper expansion plan
 - closeout command
 - stop condition
 
@@ -133,6 +133,29 @@ Current behavior:
 The closeout suite now includes "Test: Mock Message Mapper".
 
 Analog Rytm and Analog Four remain off for this phase.
+
+## Mock Message Mapper Review
+
+`Docs/MOCK_MESSAGE_MAPPER_REVIEW.md` records the review/acceptance checkpoint
+for the test-only mock message mapper.
+
+It confirms:
+
+- `rytm_randomizer/mock_message_mapper.py` is accepted as the current test-only mapper scaffold
+- `tests/test_mock_message_mapper.py` is accepted as current test coverage
+- the mapper supports only group profile key `"2"` / My BD Hard
+- the mapper returns deterministic inert MidiMessage data
+- the mapper records through MockMidiSender
+- the mapper fails safely for unknown or unsupported keys
+- the mapper is not wired into CLI or runtime execution
+- the mapper imports no real MIDI library
+- the mapper opens no ports
+- the mapper sends no MIDI
+- the mapper adds no hardware behavior
+- future mapper expansion must remain mock-only unless separately reviewed
+- hardware remains off
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Mock Message Mapping Design Spec
 
@@ -1301,8 +1324,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review the test-only mock message mapper milestone before broader mapping
-- keep any future mapping work mock-only without real MIDI or hardware behavior
+- create a documentation-only progress checkpoint / milestone report, or a small mock-only mapper expansion plan
+- keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond group profile 2 without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work
 
