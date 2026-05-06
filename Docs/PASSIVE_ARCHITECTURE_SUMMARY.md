@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6e90f21
+78d527a
 
 ## Protected Reference
 
@@ -45,13 +45,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6e90f21 Add active-layer design spec
+- current HEAD: 78d527a Add active-layer design review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: mock MIDI boundary planning/test-only design
+- next recommended task: review and accept mock MIDI boundary test plan
 - closeout command
 - stop condition
 
@@ -97,6 +97,28 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Mock MIDI Boundary Test Plan
+
+`Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md` defines the future mock MIDI boundary
+before implementation.
+
+It records:
+
+- mock MIDI boundary concept
+- proposed conceptual interfaces as design only
+- test-only design rules
+- future message verification expectations
+- arming and mock execution checks
+- passive-to-active separation
+- first mock test candidate constraints
+- forbidden scope for this phase
+- future closeout expectations
+- hardware-off reminder
+
+The plan keeps all MIDI behavior test-only and mockable, prevents real port
+opening in tests, and keeps hardware off. It is documentation-only and adds no
+runtime behavior.
 
 ## Active-Layer Design Spec
 
@@ -1126,8 +1148,9 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a test-only mock MIDI boundary plan/spec
-- keep hardware off during mock MIDI boundary planning
+- review and accept the mock MIDI boundary test plan
+- create a test-only mock MIDI boundary scaffold only if the plan is accepted
+- keep hardware off during mock MIDI boundary work
 
 These layers should continue to return passive data only and must not wire into
 runtime command execution.

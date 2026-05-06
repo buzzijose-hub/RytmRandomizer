@@ -115,7 +115,13 @@ Current hardware status:
 
 ## Next Recommended Task
 
-Create a test-only mock MIDI boundary plan/spec.
+Review and accept the mock MIDI boundary test plan:
+
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
+
+The plan defines the future mock MIDI boundary before implementation, keeps all
+MIDI behavior test-only and mockable, prevents real port opening in tests, and
+keeps hardware off.
 
 Do not implement real MIDI yet.
 

@@ -91,9 +91,13 @@ The spec defines:
 - forbidden actions
 - tests before any real hardware validation
 
-The review accepts the spec for planning and sets the next recommended task as
-mock MIDI boundary planning/test-only design. Hardware should remain off during
-that planning work.
+The mock MIDI boundary test plan lives in:
+
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
+
+That plan defines the future mock MIDI boundary before implementation, keeps
+all MIDI behavior test-only and mockable, prevents real port opening in tests,
+and keeps hardware off.
 
 ## Rejected/Forbidden Next Moves
 
@@ -111,5 +115,5 @@ that planning work.
 
 - Boundary accepted for planning.
 - Active-layer design/spec accepted for planning.
-- Proceed next with mock MIDI boundary planning/test-only design.
+- Proceed next with review/acceptance of the mock MIDI boundary test plan.
 - Hardware remains off.

@@ -203,6 +203,14 @@ Review status:
 The active-layer design/spec is accepted for planning. The next recommended
 task is a test-only mock MIDI boundary plan/spec.
 
+Mock MIDI boundary test plan:
+
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
+
+The plan defines the future mock MIDI boundary before implementation, keeps all
+MIDI behavior test-only and mockable, prevents real port opening in tests, and
+keeps hardware off.
+
 Do not implement real MIDI yet.
 
 Hardware remains off.

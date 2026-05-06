@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6e90f21 Add active-layer design spec
+78d527a Add active-layer design review
 
 ## Current Phase
 
@@ -61,18 +61,20 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Create a test-only mock MIDI boundary plan/spec:
+Review and accept the mock MIDI boundary test plan:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
 - `Docs/ACTIVE_LAYER_DESIGN_SPEC.md`
 - `Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md`
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
 
-The review confirms acceptance of the active-layer design/spec, records that no
-active behavior exists yet, sets the next recommended task as mock MIDI
-boundary planning/test-only design, and keeps hardware off.
+The plan defines the future mock MIDI boundary before implementation, keeps all
+MIDI behavior test-only and mockable, prevents real port opening in tests, and
+keeps hardware off.
 
-Do not implement real MIDI or execution yet.
+If accepted, the next task may be a test-only mock MIDI boundary scaffold. Do
+not implement real MIDI or execution yet.
 
 ## Do-Not-Touch Files
 
