@@ -17,6 +17,7 @@ Implemented milestone:
 - 52e7477 Add passive report-only CLI entrypoint
 - 935d24a Add passive CLI help contract
 - 73ee027 Add passive CLI command inspection
+- eeba082 Add passive CLI scene inspection
 
 ## Current Passive Foundation
 
@@ -36,6 +37,8 @@ The current closeout suite includes:
 - command lookup
 - registry
 - registry report
+- registry report CLI
+- passive CLI
 
 The passive foundation includes:
 
@@ -74,6 +77,13 @@ python -m rytm_randomizer.cli inspect-command <key>
 python -m rytm_randomizer.cli inspect-command --help
 ```
 
+Implemented passive CLI scene inspection:
+
+```powershell
+python -m rytm_randomizer.cli inspect-scene <key>
+python -m rytm_randomizer.cli inspect-scene --help
+```
+
 The report commands print the same deterministic golden-format passive registry
 report.
 
@@ -99,7 +109,7 @@ prints passive report usage, and report prints the passive registry report.
 Manual verification also showed:
 
 - `python -m rytm_randomizer.cli --help` prints updated passive CLI help with
-  report and inspect-command.
+  report, inspect-command, and inspect-scene.
 - `python -m rytm_randomizer.cli inspect-command --help` prints passive
   inspect-command usage.
 - `python -m rytm_randomizer.cli inspect-command J` prints passive metadata:
@@ -107,6 +117,15 @@ Manual verification also showed:
   Executable: False, Scaffold only: True, and V1.34 reference command: True.
 - `python -m rytm_randomizer.cli inspect-command DOES_NOT_EXIST` fails safely
   with: "Command metadata not found. No MIDI was sent. No command executed."
+- `python -m rytm_randomizer.cli inspect-scene --help` prints passive
+  inspect-scene usage.
+- `python -m rytm_randomizer.cli inspect-scene S1A` prints passive scene
+  metadata: Scene: S1A, Found: True, Name: Rolling Light, Description:
+  Lower-risk rolling movement for subtle live variation, Action:
+  rolling_light, Scope: four_pad_group, Executable: False, Scaffold only:
+  True, and V1.34 reference command: True.
+- `python -m rytm_randomizer.cli inspect-scene DOES_NOT_EXIST` fails safely
+  with: "Scene metadata not found. No MIDI was sent. No command executed."
 
 ## Allowed Behavior
 
@@ -121,6 +140,7 @@ The passive CLI preview command may:
 - fail safely for missing or unknown arguments
 - show deterministic passive help and usage text
 - inspect existing passive command metadata without executing it
+- inspect existing passive scene metadata without executing it
 
 ## Prohibited Behavior
 
@@ -148,6 +168,9 @@ functional commands.
 
 The passive CLI command inspection path must remain passive/read-only. It must
 not reinterpret command metadata as executable behavior.
+
+The passive CLI scene inspection path must remain passive/read-only. It must
+not reinterpret scene metadata as executable behavior.
 
 ## Safety Boundaries
 

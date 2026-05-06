@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- eeba082 Add passive CLI scene inspection
 - 73ee027 Add passive CLI command inspection
 - 935d24a Add passive CLI help contract
 - 52e7477 Add passive report-only CLI entrypoint
@@ -96,6 +97,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive report-only CLI entrypoint
 - passive CLI help contract
 - passive CLI command inspection
+- passive CLI scene inspection
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -173,7 +175,55 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli report`
 - `python -m rytm_randomizer.cli inspect-command --help`
 - `python -m rytm_randomizer.cli inspect-command <key>`
+- `python -m rytm_randomizer.cli inspect-scene --help`
+- `python -m rytm_randomizer.cli inspect-scene <key>`
 - `python -m rytm_randomizer.registry_report`
+
+The passive CLI scene inspection milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_inspect_scene_help_expected.txt
+- tests/fixtures/cli_inspect_scene_known_expected.txt
+- tests/fixtures/cli_inspect_scene_unknown_expected.txt
+
+The new passive CLI paths are:
+
+```powershell
+python -m rytm_randomizer.cli inspect-scene <key>
+python -m rytm_randomizer.cli inspect-scene --help
+```
+
+Existing passive CLI paths continue to work:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli inspect-command --help
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.registry_report
+```
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  report, inspect-command, and inspect-scene.
+- `python -m rytm_randomizer.cli inspect-scene --help` printed passive
+  inspect-scene usage.
+- `python -m rytm_randomizer.cli inspect-scene S1A` printed passive scene
+  metadata: Scene: S1A, Found: True, Name: Rolling Light, Description:
+  Lower-risk rolling movement for subtle live variation, Action:
+  rolling_light, Scope: four_pad_group, Executable: False, Scaffold only:
+  True, and V1.34 reference command: True.
+- `python -m rytm_randomizer.cli inspect-scene DOES_NOT_EXIST` failed safely
+  with: "Scene metadata not found. No MIDI was sent. No command executed."
+
+Inspect-scene reads existing passive scene metadata only. It does not call
+handlers, add handlers, dispatch commands, execute commands, open MIDI ports,
+send MIDI, write files, require hardware, or mutate runtime or hardware state.
+Unknown or missing keys fail safely.
 
 The passive CLI command inspection milestone includes:
 
@@ -540,6 +590,13 @@ The passive CLI command inspection milestone added no MIDI sending, port
 opening, dispatch, command execution, hardware mutation, SysEx, GUI, capture,
 Analog Four support, Pads 5-12 support, or machine/profile universe expansion.
 It added no report file writing at runtime and no import-time printing. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
+
+The passive CLI scene inspection milestone added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog
+Four support, Pads 5-12 support, or machine/profile universe expansion. It
+added no report file writing at runtime and no import-time printing. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
 
