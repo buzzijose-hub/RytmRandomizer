@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6282cbc Add passive-to-active boundary design
 - 163b39d Add next action handoff
 - a96c039 Add passive CLI group profile preview
 - 28b4f79 Add passive CLI scene preview
@@ -94,7 +95,13 @@ document. That design now lives in:
 - Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md
 
 The next recommended task is to review the boundary document before any future
-active-layer design/spec work.
+active-layer design/spec work. The boundary review now lives in:
+
+- Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md
+
+The review accepts the passive-to-active boundary for planning, records that no
+active behavior exists yet, sets the next recommended task as active-layer
+design/spec only, and keeps hardware off.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -139,6 +146,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI operator quickstart
 - next action handoff
 - passive-to-active boundary design
+- passive-to-active boundary review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1070,6 +1078,19 @@ test. It adds no implementation, MIDI code, port opening, dispatch, command
 execution, scene execution, hardware mutation, SysEx, GUI, capture, Analog Four
 support, Pads 5-12 support, or machine/profile universe expansion. The
 protected V1.34 reference remains untouched.
+
+The passive-to-active boundary review includes:
+
+- Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md
+
+The review document is documentation-only. It confirms acceptance of the
+passive-to-active boundary for planning, records that the project remains
+passive/read-only, records that no active or hardware-facing behavior exists
+yet, sets the next recommended task as active-layer design/spec only, and keeps
+hardware off. It adds no implementation, MIDI code, port opening, dispatch,
+command execution, scene execution, hardware mutation, SysEx, GUI, capture,
+Analog Four support, Pads 5-12 support, or machine/profile universe expansion.
+The protected V1.34 reference remains untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

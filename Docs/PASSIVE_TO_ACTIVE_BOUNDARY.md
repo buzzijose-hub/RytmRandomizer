@@ -194,9 +194,12 @@ This slice does not include:
 
 ## Next Recommended Task
 
-Review this boundary document.
+Review status:
 
-Then create a future active-layer design/spec if and only if the passive
-boundary is accepted.
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
+
+The boundary has an acceptance checkpoint for planning. That review confirms no
+active behavior exists yet, keeps hardware off, and sets the next recommended
+task as active-layer design/spec only.
 
 Keep hardware off until then.

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-163b39d
+6282cbc
 
 ## Protected Reference
 
@@ -45,13 +45,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 163b39d Add next action handoff
+- current HEAD: 6282cbc Add passive-to-active boundary design
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review the passive-to-active boundary document
+- next recommended task: active-layer design/spec only
 - closeout command
 - stop condition
 
@@ -80,6 +80,23 @@ It records:
 The boundary document preserves passive CLI behavior, keeps hardware off for
 the current phase, and documents preconditions before any future MIDI/hardware
 test. It is documentation-only and adds no runtime behavior.
+
+## Passive-To-Active Boundary Review
+
+`Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md` records the review/acceptance
+checkpoint for the passive-to-active boundary.
+
+It confirms:
+
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md` is accepted as the current planning boundary
+- the project remains passive/read-only
+- no active or hardware-facing behavior exists yet
+- passive commands must never accidentally reach hardware execution
+- future active execution must require explicit operator intent and arming
+- the next recommended task is active-layer design/spec only
+- hardware remains off
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Passive Lookup Helpers
 
@@ -1070,8 +1087,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review the passive-to-active boundary document
-- create a future active-layer design/spec only if the passive boundary is accepted
+- create an active-layer design/spec document only
+- keep hardware off during the design/spec work
 
 These layers should continue to return passive data only and must not wire into
 runtime command execution.

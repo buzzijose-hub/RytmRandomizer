@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-163b39d Add next action handoff
+6282cbc Add passive-to-active boundary design
 
 ## Current Phase
 
@@ -61,16 +61,17 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Review the passive-to-active boundary document:
+Create the active-layer design/spec document only, using the accepted
+passive-to-active boundary review:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
 
-This document defines the future hardware execution boundary, preserves passive
-CLI behavior, keeps hardware off for the current phase, and documents
-preconditions before any future MIDI/hardware test.
+The review confirms acceptance of the passive-to-active boundary, records that
+no active behavior exists yet, keeps hardware off, and limits the next task to
+active-layer design/spec only.
 
-If the boundary is accepted, the next task may be a future active-layer
-design/spec. Do not implement execution yet.
+Do not implement execution yet.
 
 ## Do-Not-Touch Files
 
