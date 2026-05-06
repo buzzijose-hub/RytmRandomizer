@@ -8,7 +8,7 @@ from .registry_report import format_registry_report
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "inspect-command <key> | inspect-scene <key>"
+    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -16,12 +16,31 @@ Usage:
   python -m rytm_randomizer.cli report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
+  python -m rytm_randomizer.cli inspect-group-profile <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
   report             Print the passive registry report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
+  inspect-group-profile
+                     Inspect passive group profile metadata by key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+INSPECT_GROUP_PROFILE_HELP = """RytmRandomizer passive CLI: inspect-group-profile
+
+Usage:
+  python -m rytm_randomizer.cli inspect-group-profile <key>
+  python -m rytm_randomizer.cli inspect-group-profile --help
+
+Behavior:
+  Displays passive metadata for an existing group profile key.
 
 Safety:
   passive/read-only
@@ -134,6 +153,37 @@ def format_inspect_scene_report(scene_key):
     ]
 
 
+def format_inspect_group_profile_report(profile_key):
+    """Return deterministic passive group profile metadata lines."""
+    report = get_registry_item("group_profiles", profile_key)
+    key = report["key"]
+
+    if not report["exists"]:
+        return [
+            "RytmRandomizer passive group profile inspection",
+            f"Group profile: {key}",
+            "Found: False",
+            "Message: Group profile metadata not found. No MIDI was sent. No command executed.",
+        ]
+
+    metadata = report["metadata"]
+    return [
+        "RytmRandomizer passive group profile inspection",
+        f"Group profile: {key}",
+        "Found: True",
+        f"Name: {metadata.get('name', '')}",
+        f"Machine value: {metadata.get('machine_value', '')}",
+        f"Group pad: {metadata.get('group_pad', '')}",
+        "Safety:",
+        "- passive/read-only",
+        "- no MIDI sending",
+        "- no port opening",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no hardware required",
+    ]
+
+
 REPORT_HELP = """RytmRandomizer passive CLI: report
 
 Usage:
@@ -172,6 +222,10 @@ def main(argv=None):
         sys.stdout.write(f"{INSPECT_SCENE_HELP}\n")
         return 0
 
+    if args == ["inspect-group-profile", "--help"]:
+        sys.stdout.write(f"{INSPECT_GROUP_PROFILE_HELP}\n")
+        return 0
+
     if args == ["report"]:
         sys.stdout.write("\n".join(format_registry_report()))
         sys.stdout.write("\n")
@@ -188,6 +242,15 @@ def main(argv=None):
 
     if len(args) == 2 and args[0] == "inspect-scene":
         lines = format_inspect_scene_report(args[1])
+        output = "\n".join(lines)
+        if lines[2] == "Found: True":
+            sys.stdout.write(f"{output}\n")
+            return 0
+        sys.stderr.write(f"{output}\n")
+        return 1
+
+    if len(args) == 2 and args[0] == "inspect-group-profile":
+        lines = format_inspect_group_profile_report(args[1])
         output = "\n".join(lines)
         if lines[2] == "Found: True":
             sys.stdout.write(f"{output}\n")

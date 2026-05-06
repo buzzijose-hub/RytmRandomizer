@@ -1,0 +1,4 @@
+RytmRandomizer passive group profile inspection
+Group profile: UNKNOWN
+Found: False
+Message: Group profile metadata not found. No MIDI was sent. No command executed.

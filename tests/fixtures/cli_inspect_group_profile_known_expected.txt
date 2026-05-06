@@ -1,0 +1,13 @@
+RytmRandomizer passive group profile inspection
+Group profile: 2
+Found: True
+Name: My BD Hard
+Machine value: 0
+Group pad: 1
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: inspect-group-profile
+
+Usage:
+  python -m rytm_randomizer.cli inspect-group-profile <key>
+  python -m rytm_randomizer.cli inspect-group-profile --help
+
+Behavior:
+  Displays passive metadata for an existing group profile key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
