@@ -2,9 +2,9 @@ RytmRandomizer passive command list
 Section: commands
 Count: 82
 Items:
-- 1: 
-- 2: 
-- 3: 
+- 1: guarded depth input 1, requires lane/mode prefix
+- 2: guarded depth input 2, requires lane/mode prefix
+- 3: guarded depth input 3, requires lane/mode prefix
 - 4: harder / wild four-lane mutation
 - BA: load Pad 1 BD Acoustic anchor
 - BC: load Pad 1 BD Classic anchor

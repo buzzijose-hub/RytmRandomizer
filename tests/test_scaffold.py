@@ -280,9 +280,16 @@ def test_commands_preserve_full_scene_metadata():
 
 
 def test_bare_main_prompt_depth_numbers_are_guarded():
+    expected_labels = {
+        "1": "guarded depth input 1, requires lane/mode prefix",
+        "2": "guarded depth input 2, requires lane/mode prefix",
+        "3": "guarded depth input 3, requires lane/mode prefix",
+    }
+
     for command in ("1", "2", "3"):
         assert is_guarded_main_prompt_depth(command)
         assert COMMANDS[command]["type"] == "guarded_depth"
+        assert COMMANDS[command]["label"] == expected_labels[command]
         assert_sends_no_midi(COMMANDS[command])
         assert_protocol_command_metadata(COMMANDS[command])
 

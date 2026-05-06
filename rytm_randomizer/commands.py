@@ -676,6 +676,7 @@ COMMANDS = {
         command: {
             "type": "guarded_depth",
             "sends_midi": MAIN_PROMPT_DEPTH_GUARDRAIL["sends_midi"],
+            "label": f"guarded depth input {command}, requires lane/mode prefix",
             "executable": False,
             "v134_reference_command": True,
             "scaffold_only": True,
