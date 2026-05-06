@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-c15296a Update checkpoint after mock MIDI scaffold
+82d4898 Add mock MIDI scaffold review
 
 ## Current Phase
 
@@ -61,7 +61,7 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Create a mock message mapping design/spec or a very small test-only mapper
+Review and accept the mock message mapping design/spec before any mapper
 scaffold:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
@@ -71,6 +71,7 @@ scaffold:
 - `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
 - `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md`
 - `Docs/MOCK_MIDI_SCAFFOLD_REVIEW.md`
+- `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -78,8 +79,9 @@ records that no real MIDI behavior exists:
 - `rytm_randomizer/mock_midi.py`
 - `tests/test_mock_midi.py`
 
-The next work must stay mock-only. No real MIDI, no hardware, no active CLI
-command, and no port opening.
+The mapping spec defines future mock-only mapping from passive metadata to mock
+MidiMessage objects. No mapper exists yet. No real MIDI, no hardware, no active
+CLI command, and no port opening.
 
 ## Do-Not-Touch Files
 

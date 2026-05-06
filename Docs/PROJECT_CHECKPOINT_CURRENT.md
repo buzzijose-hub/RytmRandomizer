@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 82d4898 Add mock MIDI scaffold review
 - c15296a Update checkpoint after mock MIDI scaffold
 - 58f4a44 Add test-only mock MIDI scaffold
 - 16fff78 Add mock MIDI boundary test plan
@@ -164,6 +165,14 @@ The review accepts the test-only mock MIDI scaffold, records that no real MIDI
 behavior exists, sets the next recommended task as mock message mapping
 design/spec or a test-only mapper scaffold, and keeps hardware off.
 
+The mock message mapping design/spec now lives in:
+
+- Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md
+
+The spec defines future mock-only mapping from passive metadata to mock
+MidiMessage objects, keeps hardware off, keeps real MIDI absent, and sets the
+next recommended task as review/acceptance before any mapper scaffold.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -214,6 +223,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock MIDI boundary test plan review
 - test-only mock MIDI scaffold
 - mock MIDI scaffold review
+- mock message mapping design/spec
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1246,6 +1256,20 @@ mapper scaffold. It adds no implementation, real MIDI backend, mido dependency,
 port opening, active CLI command, execute-command, send-command, hardware-test
 behavior, dispatch, command execution, scene execution, hardware mutation,
 SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched.
+
+The mock message mapping design/spec includes:
+
+- Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md
+
+The spec is documentation-only. It defines future mock-only mapping from
+passive metadata to mock MidiMessage objects, with group profile key 2 / My BD
+Hard as the likely first mock-only candidate. It keeps hardware off, keeps real
+MIDI absent, and sets the next recommended task as review/acceptance before any
+mapper scaffold. It adds no mapper code, tests, real MIDI import, mido
+dependency, port opening, active CLI command, dispatch, execution, hardware
+mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
 

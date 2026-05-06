@@ -144,6 +144,14 @@ The review accepts the test-only mock MIDI scaffold, records that no real MIDI
 behavior exists, sets the next recommended task as mock message mapping
 design/spec or a test-only mapper scaffold, and keeps hardware off.
 
+Mock message mapping design/spec:
+
+- `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md`
+
+The spec defines future mock-only mapping from passive metadata to mock
+MidiMessage objects, keeps hardware off, keeps real MIDI absent, and sets the
+next recommended task as review/acceptance before any mapper scaffold.
+
 Do not implement real MIDI yet.
 
 Keep hardware off.

@@ -120,8 +120,13 @@ This is future possibility only:
 
 ## Next Recommended Task
 
-Create a mock message mapping design/spec or a very small test-only mapper
-scaffold.
+Review and accept the mock message mapping design/spec:
+
+- `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md`
+
+The spec defines future mock-only mapping from passive metadata to mock
+MidiMessage objects, keeps hardware off, keeps real MIDI absent, and sets the
+next recommended task as review/acceptance before any mapper scaffold.
 
 No real MIDI.
 

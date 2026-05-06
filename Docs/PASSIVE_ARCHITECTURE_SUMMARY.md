@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c15296a
+82d4898
 
 ## Protected Reference
 
@@ -46,13 +46,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c15296a Update checkpoint after mock MIDI scaffold
+- current HEAD: 82d4898 Add mock MIDI scaffold review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: mock message mapping design/spec or test-only mapper scaffold
+- next recommended task: review and accept mock message mapping design/spec
 - closeout command
 - stop condition
 
@@ -98,6 +98,29 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Mock Message Mapping Design Spec
+
+`Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md` defines future mock-only mapping
+from passive metadata to mock MidiMessage objects.
+
+It records:
+
+- current passive/mock pieces
+- mapping concept
+- group profile metadata as the preferred first mapping source
+- group profile key 2 / My BD Hard as the likely first mock-only candidate
+- conceptual output metadata for a future mock message
+- required safeguards
+- scope that must not be mapped yet
+- proposed future module shape as design only
+- proposed future tests
+- relationship to the unimplemented active layer
+- stop conditions
+
+The spec keeps hardware off, keeps real MIDI absent, and sets the next
+recommended task as review/acceptance before any mapper scaffold. It is
+documentation-only and adds no runtime behavior.
 
 ## Test-Only Mock MIDI Scaffold
 
@@ -1224,7 +1247,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a mock message mapping design/spec or a very small test-only mapper scaffold
+- review and accept the mock message mapping design/spec
+- create a tiny test-only mapper scaffold only if the mapping spec is accepted
 - keep mapping work mock-only without real MIDI or hardware behavior
 - keep hardware off during mock MIDI boundary work
 
