@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-82d4898
+d1df975
 
 ## Protected Reference
 
@@ -46,13 +46,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 82d4898 Add mock MIDI scaffold review
+- current HEAD: d1df975 Add mock message mapping design spec
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept mock message mapping design/spec
+- next recommended task: create a test-only mock message mapper scaffold for group profile 2 only
 - closeout command
 - stop condition
 
@@ -122,6 +122,24 @@ The spec keeps hardware off, keeps real MIDI absent, and sets the next
 recommended task as review/acceptance before any mapper scaffold. It is
 documentation-only and adds no runtime behavior.
 
+## Mock Message Mapping Design Spec Review
+
+`Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md` records the
+review/acceptance checkpoint for the mock message mapping design/spec.
+
+It confirms:
+
+- `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md` is accepted as the current planning spec
+- the project remains passive/mock-only
+- no mapper implementation exists yet
+- no real MIDI, active execution, port opening, or hardware-facing behavior exists
+- future mapping must remain mock-only first
+- group profile 2 / My BD Hard is the first likely mock-only candidate
+- the next recommended task is a tiny test-only mock mapper scaffold for group profile 2 only
+- hardware remains off
+
+The review is documentation-only and adds no runtime behavior.
+
 ## Test-Only Mock MIDI Scaffold
 
 The test-only mock MIDI scaffold includes:
@@ -174,7 +192,7 @@ It confirms:
 - no ports are opened
 - no MIDI is sent
 - mock MIDI is not wired to CLI or active execution
-- the next recommended task is mock message mapping design/spec or a very small test-only mapper scaffold
+- the next recommended task is a test-only mock mapper scaffold for group profile 2 only, after accepting the mock message mapping design/spec review
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
@@ -1247,8 +1265,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review and accept the mock message mapping design/spec
-- create a tiny test-only mapper scaffold only if the mapping spec is accepted
+- create a tiny test-only mapper scaffold only after accepting the mock message mapping design/spec review
+- limit the first mapper scaffold to group profile 2 only
 - keep mapping work mock-only without real MIDI or hardware behavior
 - keep hardware off during mock MIDI boundary work
 

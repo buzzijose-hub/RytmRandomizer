@@ -161,9 +161,13 @@ Future tests should verify:
 
 ## Next Recommended Task After This Spec
 
-Review and accept this mock message mapping design.
+Review status:
 
-Then create a tiny test-only mapper scaffold if accepted.
+- `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md`
+
+The mock message mapping design/spec is accepted for planning.
+
+Next, create a tiny test-only mapper scaffold if it remains mock-only.
 
 First mapper target should likely be group profile 2 only.
 

@@ -128,6 +128,14 @@ The spec defines future mock-only mapping from passive metadata to mock
 MidiMessage objects, keeps hardware off, keeps real MIDI absent, and sets the
 next recommended task as review/acceptance before any mapper scaffold.
 
+Mock message mapping design/spec review:
+
+- `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md`
+
+The review accepts the mock message mapping design/spec for planning, records
+that no mapper implementation exists yet, sets the next recommended task as a
+test-only mock mapper scaffold for group profile 2, and keeps hardware off.
+
 No real MIDI.
 
 No hardware.

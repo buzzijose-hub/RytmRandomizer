@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d1df975 Add mock message mapping design spec
 - 82d4898 Add mock MIDI scaffold review
 - c15296a Update checkpoint after mock MIDI scaffold
 - 58f4a44 Add test-only mock MIDI scaffold
@@ -173,6 +174,14 @@ The spec defines future mock-only mapping from passive metadata to mock
 MidiMessage objects, keeps hardware off, keeps real MIDI absent, and sets the
 next recommended task as review/acceptance before any mapper scaffold.
 
+The mock message mapping design/spec review now lives in:
+
+- Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md
+
+The review accepts the mock message mapping design/spec for planning, records
+that no mapper implementation exists yet, sets the next recommended task as a
+test-only mock mapper scaffold for group profile 2, and keeps hardware off.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -224,6 +233,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - test-only mock MIDI scaffold
 - mock MIDI scaffold review
 - mock message mapping design/spec
+- mock message mapping design/spec review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1270,6 +1280,21 @@ MIDI absent, and sets the next recommended task as review/acceptance before any
 mapper scaffold. It adds no mapper code, tests, real MIDI import, mido
 dependency, port opening, active CLI command, dispatch, execution, hardware
 mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched.
+
+The mock message mapping design/spec review includes:
+
+- Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md
+
+The review document is documentation-only. It accepts the mock message mapping
+design/spec as the current planning document for future test-only message
+mapping, records that no mapper implementation exists yet, and sets the next
+recommended task as a tiny test-only mock mapper scaffold for group profile 2
+only. It adds no mapper code, tests, real MIDI backend, mido dependency, port
+opening, active CLI command, execute-command, send-command, hardware-test
+behavior, dispatch, command execution, scene execution, hardware mutation,
+SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
 
