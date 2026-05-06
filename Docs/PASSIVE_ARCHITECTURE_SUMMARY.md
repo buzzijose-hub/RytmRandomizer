@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-16fff78
+58f4a44
 
 ## Protected Reference
 
@@ -32,6 +32,7 @@ The standard closeout suite currently includes:
 - registry report
 - registry report CLI
 - passive CLI
+- mock MIDI
 
 The closeout workflow also checks:
 
@@ -45,13 +46,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 16fff78 Add mock MIDI boundary test plan
+- current HEAD: 58f4a44 Add test-only mock MIDI scaffold
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: test-only mock MIDI scaffold/design
+- next recommended task: review the test-only mock MIDI scaffold milestone and decide the next mock-only test slice
 - closeout command
 - stop condition
 
@@ -97,6 +98,44 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Test-Only Mock MIDI Scaffold
+
+The test-only mock MIDI scaffold includes:
+
+- `rytm_randomizer/mock_midi.py`
+- `tests/test_mock_midi.py`
+- `Scripts/closeout_check.ps1`
+
+It adds:
+
+- mock-only/test-only MIDI-like message representation
+- MockMidiSender that records intended messages in memory only
+- direct-runnable tests for import safety, message representation, sender recording, ordering, clearing, metadata isolation, no real MIDI imports, passive CLI preservation, no out-of-scope support, and no active behavior names
+- closeout coverage under "Test: Mock MIDI"
+
+It does not add:
+
+- real MIDI backend
+- real MIDI library import
+- mido dependency
+- port provider
+- hardware detection
+- hardware send
+- active CLI command
+- execute-command
+- send-command
+- hardware-test command
+- dispatch
+- execution
+- hardware mutation
+- SysEx
+- GUI/capture
+- Analog Four support
+- Pads 5-12 support
+- machine/profile expansion
+
+Analog Rytm and Analog Four remain off for this phase.
 
 ## Mock MIDI Boundary Test Plan
 
@@ -1166,7 +1205,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a test-only mock MIDI boundary scaffold with no real MIDI backend, or a more detailed implementation spec if further review is needed
+- review the test-only mock MIDI scaffold milestone
+- choose the next mock-only test slice without adding real MIDI or hardware behavior
 - keep hardware off during mock MIDI boundary work
 
 These layers should continue to return passive data only and must not wire into

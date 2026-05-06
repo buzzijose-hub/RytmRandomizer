@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-16fff78 Add mock MIDI boundary test plan
+58f4a44 Add test-only mock MIDI scaffold
 
 ## Current Phase
 
@@ -61,8 +61,8 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Create a test-only mock MIDI scaffold with no real MIDI backend, or create a
-more detailed implementation spec if further review is needed:
+Review the test-only mock MIDI scaffold milestone and decide the next mock-only
+test slice:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -71,11 +71,14 @@ more detailed implementation spec if further review is needed:
 - `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
 - `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md`
 
-The review accepts the mock MIDI boundary test plan, records that no MIDI
-implementation exists yet, sets the next recommended task as test-only mock
-MIDI scaffold/design, and keeps hardware off.
+The test-only mock MIDI scaffold is in place:
 
-Do not implement real MIDI, open ports, or add execution.
+- `rytm_randomizer/mock_midi.py`
+- `tests/test_mock_midi.py`
+
+It records intended MIDI-like messages in memory only. There is no real MIDI
+backend, no port provider, no hardware detection, no hardware send, no active
+CLI command, and no execution. Hardware remains off.
 
 ## Do-Not-Touch Files
 

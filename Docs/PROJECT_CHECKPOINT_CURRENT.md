@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 58f4a44 Add test-only mock MIDI scaffold
 - 16fff78 Add mock MIDI boundary test plan
 - 78d527a Add active-layer design review
 - 6e90f21 Add active-layer design spec
@@ -136,6 +137,24 @@ The review accepts the mock MIDI boundary test plan for planning, records that
 no MIDI implementation exists yet, sets the next recommended task as test-only
 mock MIDI scaffold/design, and keeps hardware off.
 
+The test-only mock MIDI scaffold milestone is:
+
+- 58f4a44 Add test-only mock MIDI scaffold
+
+The milestone includes:
+
+- rytm_randomizer/mock_midi.py
+- tests/test_mock_midi.py
+- Scripts/closeout_check.ps1
+
+The scaffold adds mock-only/test-only MIDI message representation and a
+MockMidiSender that records intended messages in memory only. It imports no
+real MIDI library, adds no mido dependency, opens no real MIDI ports, sends no
+MIDI, adds no CLI wiring, adds no active command, adds no execution or
+dispatch, adds no hardware behavior, adds no SysEx, adds no GUI/capture, adds
+no Analog Four support, adds no Pads 5-12 support, and adds no machine/profile
+expansion.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -184,6 +203,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - active-layer design/spec review
 - mock MIDI boundary test plan
 - mock MIDI boundary test plan review
+- test-only mock MIDI scaffold
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -210,6 +230,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_registry_report.py
 - python .\tests\test_registry_report_cli.py
 - python .\tests\test_cli.py
+- python .\tests\test_mock_midi.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -234,10 +255,13 @@ standard passive test suite.
 The closeout script now includes "Test: Passive CLI" as part of the standard
 passive test suite.
 
+The closeout script now includes "Test: Mock MIDI" as part of the standard
+passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, command lookup, registry,
-registry report, registry report CLI, and passive CLI tests passed silently; the
-V1.34 reference diff was empty; and git status was clean.
+registry report, registry report CLI, passive CLI, and mock MIDI tests passed
+silently; the V1.34 reference diff was empty; and git status was clean.
 
 The guarded passive depth command label milestone includes:
 
@@ -1181,6 +1205,22 @@ execute-command, send-command, hardware-test behavior, dispatch, command
 execution, scene execution, hardware mutation, SysEx, GUI, capture, Analog Four
 support, Pads 5-12 support, or machine/profile universe expansion. The
 protected V1.34 reference remains untouched.
+
+The test-only mock MIDI scaffold includes:
+
+- rytm_randomizer/mock_midi.py
+- tests/test_mock_midi.py
+- Scripts/closeout_check.ps1
+
+The scaffold is mock-only/test-only. It adds a MIDI-like message representation
+and MockMidiSender for capturing intended messages in memory only. It adds no
+real MIDI backend, no real MIDI library import, no mido dependency, no port
+provider, no hardware detection, no hardware send, no active CLI command, no
+execute-command, no send-command, no hardware-test command, no dispatch, no
+execution, no hardware mutation, no SysEx, no GUI/capture, no Analog Four
+support, no Pads 5-12 support, and no machine/profile universe expansion. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

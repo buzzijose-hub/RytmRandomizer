@@ -117,7 +117,18 @@ This is future possibility only, not implementation.
 
 ## Next Recommended Task
 
-Create a test-only mock MIDI scaffold with no real MIDI backend, or create a
-more detailed implementation spec if further review is needed.
+Review the test-only mock MIDI scaffold milestone and decide the next mock-only
+test slice.
+
+Implemented milestone:
+
+- 58f4a44 Add test-only mock MIDI scaffold
+- `rytm_randomizer/mock_midi.py`
+- `tests/test_mock_midi.py`
+- `Scripts/closeout_check.ps1`
+
+The scaffold records intended messages in memory only. It adds no real MIDI
+backend, no port provider, no hardware detection, no hardware send, no active
+CLI command, and no execution.
 
 Keep hardware off.

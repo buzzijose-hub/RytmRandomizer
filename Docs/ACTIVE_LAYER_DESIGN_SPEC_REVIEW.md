@@ -125,6 +125,17 @@ The review accepts the mock MIDI boundary test plan, records that no MIDI
 implementation exists yet, sets the next recommended task as test-only mock
 MIDI scaffold/design, and keeps hardware off.
 
+Implemented milestone:
+
+- 58f4a44 Add test-only mock MIDI scaffold
+- `rytm_randomizer/mock_midi.py`
+- `tests/test_mock_midi.py`
+- `Scripts/closeout_check.ps1`
+
+The scaffold records intended messages in memory only. It adds no real MIDI
+backend, no port provider, no hardware detection, no hardware send, no active
+CLI command, and no execution.
+
 Do not implement real MIDI yet.
 
 Keep hardware off.

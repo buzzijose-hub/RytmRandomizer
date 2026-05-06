@@ -193,4 +193,16 @@ The mock MIDI boundary test plan is accepted for planning. The next recommended
 task is a test-only mock MIDI scaffold with no real MIDI backend, or a more
 detailed implementation spec if further review is needed.
 
+Implemented milestone:
+
+- 58f4a44 Add test-only mock MIDI scaffold
+- `rytm_randomizer/mock_midi.py`
+- `tests/test_mock_midi.py`
+- `Scripts/closeout_check.ps1`
+
+The scaffold records intended messages in memory only and keeps all MIDI
+behavior mock-only/test-only. It adds no real MIDI backend, no port provider,
+no hardware detection, no hardware send, no active CLI command, and no
+execution.
+
 Still no real MIDI and no hardware.
