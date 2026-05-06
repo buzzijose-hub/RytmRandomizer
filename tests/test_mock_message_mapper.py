@@ -74,11 +74,47 @@ def test_group_profile_2_message_contains_expected_metadata():
     }
 
 
+def test_group_profile_3_maps_to_deterministic_mock_message():
+    from rytm_randomizer.mock_message_mapper import map_group_profile_to_mock_messages
+    from rytm_randomizer.mock_midi import MidiMessage
+
+    first = map_group_profile_to_mock_messages("3")
+    second = map_group_profile_to_mock_messages("3")
+
+    assert first == second
+    assert len(first) == 1
+    assert isinstance(first[0], MidiMessage)
+    assert first[0].message_type == "mock_group_profile"
+    assert first[0].channel == 2
+    assert first[0].control == 0
+    assert first[0].value == 1
+
+
+def test_group_profile_3_message_contains_expected_metadata():
+    from rytm_randomizer.mock_message_mapper import map_group_profile_to_mock_messages
+
+    message = map_group_profile_to_mock_messages("3")[0]
+
+    assert message.metadata == {
+        "source_kind": "group_profile",
+        "source_key": "3",
+        "source_name": "My BD Classic",
+        "group_pad": 2,
+        "machine_value": 1,
+        "target": "Pad 2 / BD Classic",
+        "mock_only": True,
+        "sends_real_midi": False,
+    }
+
+
 def test_mapped_messages_can_be_recorded_by_mock_sender_in_order():
     from rytm_randomizer.mock_message_mapper import map_group_profile_to_mock_messages
     from rytm_randomizer.mock_midi import MockMidiSender
 
-    messages = map_group_profile_to_mock_messages("2")
+    messages = [
+        *map_group_profile_to_mock_messages("2"),
+        *map_group_profile_to_mock_messages("3"),
+    ]
     sender = MockMidiSender()
 
     sender.send_many(messages)
@@ -107,9 +143,9 @@ def test_existing_but_unsupported_group_profile_fails_safely():
     )
 
     try:
-        map_group_profile_to_mock_messages("3")
+        map_group_profile_to_mock_messages("4")
     except MockMessageMappingError as exc:
-        assert "Group profile '3' is not supported by the mock mapper" in str(exc)
+        assert "Group profile '4' is not supported by the mock mapper" in str(exc)
     else:
         raise AssertionError("unsupported group profile should fail safely")
 
@@ -157,6 +193,8 @@ if __name__ == "__main__":
     test_importing_mock_message_mapper_prints_nothing()
     test_group_profile_2_maps_to_deterministic_mock_message()
     test_group_profile_2_message_contains_expected_metadata()
+    test_group_profile_3_maps_to_deterministic_mock_message()
+    test_group_profile_3_message_contains_expected_metadata()
     test_mapped_messages_can_be_recorded_by_mock_sender_in_order()
     test_unknown_group_profile_fails_safely()
     test_existing_but_unsupported_group_profile_fails_safely()

@@ -9,11 +9,17 @@ from __future__ import annotations
 from .mock_midi import MidiMessage
 from .profile_lookup import describe_group_profile
 
-SUPPORTED_GROUP_PROFILE_KEY = "2"
+SUPPORTED_GROUP_PROFILE_KEYS = ("2", "3")
 
 
 class MockMessageMappingError(ValueError):
     """Raised when passive metadata cannot be mapped to mock messages."""
+
+
+def _target_concept(profile):
+    source_name = profile["name"]
+    target_name = source_name[3:] if source_name.startswith("My ") else source_name
+    return f"Pad {profile['group_pad']} / {target_name}"
 
 
 def _build_group_profile_metadata(profile):
@@ -23,7 +29,7 @@ def _build_group_profile_metadata(profile):
         "source_name": profile["name"],
         "group_pad": profile["group_pad"],
         "machine_value": profile["machine_value"],
-        "target": "Pad 1 / BD Hard",
+        "target": _target_concept(profile),
         "mock_only": True,
         "sends_real_midi": False,
     }
@@ -40,7 +46,7 @@ def map_group_profile_to_mock_messages(key: str) -> list[MidiMessage]:
             f"Group profile '{normalized_key}' was not found; no MIDI was sent."
         )
 
-    if normalized_key != SUPPORTED_GROUP_PROFILE_KEY:
+    if normalized_key not in SUPPORTED_GROUP_PROFILE_KEYS:
         raise MockMessageMappingError(
             f"Group profile '{normalized_key}' is not supported by the mock mapper; "
             "no MIDI was sent."
