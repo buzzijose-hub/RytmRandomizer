@@ -125,6 +125,43 @@ It does not:
 - add Pads 5-12 support
 - expand the machine/profile universe
 
+### Registry Report Golden Text Contract
+
+The registry report golden text contract locks down the formatted passive
+registry report output.
+
+It uses:
+
+- `tests/test_registry_report.py`
+- `tests/fixtures/registry_report_expected.txt`
+
+Purpose:
+
+- keep the formatted report deterministic
+- provide snapshot-style golden text coverage
+- make future CLI, UI, and reporting work safer
+- normalize line endings so Windows CRLF/LF differences do not cause false failures
+
+Closeout already includes registry report testing, so no duplicate closeout
+entry was needed.
+
+It does not:
+
+- add CLI behavior
+- write report files at runtime
+- print during import
+- execute commands
+- dispatch commands
+- send MIDI
+- open ports
+- mutate state or hardware
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
 ### Profile Lookup
 
 `rytm_randomizer/profile_lookup.py` exposes read-only lookup helpers for the

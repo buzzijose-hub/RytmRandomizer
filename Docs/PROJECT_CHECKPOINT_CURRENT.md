@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 97ecf09 Add registry report golden text contract
 - e387f66 Add passive registry report generator
 - f6b10ca Add passive architecture summary
 - e7b0755 Add passive command lookup helpers
@@ -85,6 +86,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive command lookup helpers
 - unified passive registry view
 - passive registry report generator
+- registry report golden text contract
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -135,6 +137,18 @@ The passive registry report generator includes:
 
 - rytm_randomizer/registry_report.py
 - tests/test_registry_report.py
+
+The registry report golden text contract includes:
+
+- tests/test_registry_report.py
+- tests/fixtures/registry_report_expected.txt
+
+The golden text contract locks down the formatted passive registry report
+output, adds snapshot-style golden text coverage, and ensures future CLI, UI,
+and reporting work has a stable deterministic report structure. The test
+normalizes line endings so Windows CRLF/LF differences do not cause false
+failures. Closeout already includes registry report testing, so no duplicate
+closeout entry was needed.
 
 The report generator sits on top of the unified passive registry view. It
 generates in-memory, read-only report data for registry sections, per-section
@@ -351,6 +365,12 @@ The passive registry report generator added no MIDI sending, port opening,
 dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
 support, Pads 5-12 support, or machine/profile universe expansion. The
 protected V1.34 reference remains untouched.
+
+The registry report golden text contract was test-only/passive hardening. It
+added no CLI behavior, report file writing at runtime, import-time printing,
+MIDI sending, port opening, dispatch, command execution, hardware mutation,
+SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or machine/profile
+universe expansion. The protected V1.34 reference remains untouched.
 
 ## Validated Rytm Scope
 
