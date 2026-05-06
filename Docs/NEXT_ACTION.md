@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5ee0e01 Update checkpoint after mock message mapper
+32006f4 Add mock message mapper review
 
 ## Current Phase
 
@@ -61,8 +61,11 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Next recommended task is either a documentation-only progress checkpoint /
-milestone report, or a small mock-only mapper expansion plan:
+Next recommended task is to choose one of:
+
+- stop for the session
+- create a documentation-only session closeout summary
+- plan a small mock-only mapper expansion without implementing it
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -74,6 +77,7 @@ milestone report, or a small mock-only mapper expansion plan:
 - `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC.md`
 - `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md`
 - `Docs/MOCK_MESSAGE_MAPPER_REVIEW.md`
+- `Docs/PASSIVE_MOCK_MIDI_PROGRESS_CHECKPOINT.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -98,6 +102,11 @@ The mock message mapper review accepts the current test-only mapper scaffold
 and records that future expansion must remain mock-only, separately reviewed,
 limited to existing passive metadata, and unwired from CLI or runtime
 execution.
+
+The passive mock MIDI progress checkpoint summarizes the current passive CLI,
+mock MIDI, and mock message mapper state after `32006f4`. It records that this
+is a clean decision point before any additional mapper scope, active execution,
+or hardware-facing work.
 
 ## Do-Not-Touch Files
 

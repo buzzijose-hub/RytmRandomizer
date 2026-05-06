@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5ee0e01
+32006f4
 
 ## Protected Reference
 
@@ -47,13 +47,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 5ee0e01 Update checkpoint after mock message mapper
+- current HEAD: 32006f4 Add mock message mapper review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only progress checkpoint / milestone report, or small mock-only mapper expansion plan
+- next recommended task: stop for the session, create a documentation-only session closeout summary, or plan a small mock-only mapper expansion without implementation
 - closeout command
 - stop condition
 
@@ -99,6 +99,27 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Passive Mock MIDI Progress Checkpoint
+
+`Docs/PASSIVE_MOCK_MIDI_PROGRESS_CHECKPOINT.md` records a progress checkpoint
+after the passive CLI, test-only mock MIDI scaffold, test-only mock message
+mapper, and mapper review milestones.
+
+It summarizes:
+
+- current branch and HEAD
+- current passive CLI capability
+- current mock MIDI capability
+- current mock message mapper capability
+- closeout suite coverage
+- confirmed safety boundaries
+- safe next decision options
+
+The checkpoint records this as a clean decision point before any additional
+mapper scope, active execution, or hardware-facing work.
+
+It is documentation-only and adds no runtime behavior.
 
 ## Test-Only Mock Message Mapper
 
@@ -1324,7 +1345,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a documentation-only progress checkpoint / milestone report, or a small mock-only mapper expansion plan
+- stop for the session, create a documentation-only session closeout summary, or plan a small mock-only mapper expansion without implementation
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond group profile 2 without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 32006f4 Add mock message mapper review
 - 5ee0e01 Update checkpoint after mock message mapper
 - 4a590c8 Add test-only mock message mapper
 - d1df975 Add mock message mapping design spec
@@ -208,6 +209,15 @@ The review accepts the test-only mock message mapper, records that no real
 MIDI behavior exists, keeps future mapper expansion mock-only unless
 separately reviewed, and keeps hardware off.
 
+The passive mock MIDI progress checkpoint now lives in:
+
+- Docs/PASSIVE_MOCK_MIDI_PROGRESS_CHECKPOINT.md
+
+The checkpoint summarizes the current passive CLI, test-only mock MIDI, and
+test-only mock message mapper state after `32006f4 Add mock message mapper
+review`. It records this as a clean decision point before any additional mapper
+scope, active execution, or hardware-facing work.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -262,6 +272,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock message mapping design/spec review
 - test-only mock message mapper
 - mock message mapper review
+- passive mock MIDI progress checkpoint
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1364,6 +1375,22 @@ hardware-test behavior, dispatch, command execution, scene execution, hardware
 mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
+
+The passive mock MIDI progress checkpoint includes:
+
+- Docs/PASSIVE_MOCK_MIDI_PROGRESS_CHECKPOINT.md
+
+The checkpoint document is documentation-only. It summarizes the passive CLI,
+test-only mock MIDI scaffold, test-only mock message mapper, closeout suite,
+and safety boundaries after `32006f4 Add mock message mapper review`. It
+records safe next options as stopping for the session, creating a
+documentation-only session closeout summary, or planning a small mock-only
+mapper expansion without implementing it. It adds no mapper scope, real MIDI
+backend, mido dependency, port opening, active CLI command, execute-command,
+send-command, hardware-test behavior, dispatch, command execution, scene
+execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, or machine/profile universe expansion. The protected V1.34
+reference remains untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
