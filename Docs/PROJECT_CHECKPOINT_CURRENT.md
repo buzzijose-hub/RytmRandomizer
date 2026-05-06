@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c15296a Update checkpoint after mock MIDI scaffold
 - 58f4a44 Add test-only mock MIDI scaffold
 - 16fff78 Add mock MIDI boundary test plan
 - 78d527a Add active-layer design review
@@ -155,6 +156,14 @@ dispatch, adds no hardware behavior, adds no SysEx, adds no GUI/capture, adds
 no Analog Four support, adds no Pads 5-12 support, and adds no machine/profile
 expansion.
 
+The mock MIDI scaffold review now lives in:
+
+- Docs/MOCK_MIDI_SCAFFOLD_REVIEW.md
+
+The review accepts the test-only mock MIDI scaffold, records that no real MIDI
+behavior exists, sets the next recommended task as mock message mapping
+design/spec or a test-only mapper scaffold, and keeps hardware off.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -204,6 +213,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock MIDI boundary test plan
 - mock MIDI boundary test plan review
 - test-only mock MIDI scaffold
+- mock MIDI scaffold review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1221,6 +1231,23 @@ execution, no hardware mutation, no SysEx, no GUI/capture, no Analog Four
 support, no Pads 5-12 support, and no machine/profile universe expansion. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
+
+The mock MIDI scaffold review includes:
+
+- Docs/MOCK_MIDI_SCAFFOLD_REVIEW.md
+
+The review document is documentation-only. It accepts
+rytm_randomizer/mock_midi.py as the current test-only mock MIDI scaffold and
+tests/test_mock_midi.py as the current mock MIDI test coverage. It records that
+mock MIDI is in-memory only, imports no real MIDI libraries, opens no ports,
+sends no MIDI, and is not wired to CLI or active execution. It sets the next
+recommended task as mock message mapping design/spec or a very small test-only
+mapper scaffold. It adds no implementation, real MIDI backend, mido dependency,
+port opening, active CLI command, execute-command, send-command, hardware-test
+behavior, dispatch, command execution, scene execution, hardware mutation,
+SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

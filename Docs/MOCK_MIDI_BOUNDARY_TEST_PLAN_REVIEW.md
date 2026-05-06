@@ -131,4 +131,12 @@ The scaffold records intended messages in memory only. It adds no real MIDI
 backend, no port provider, no hardware detection, no hardware send, no active
 CLI command, and no execution.
 
+Mock MIDI scaffold review:
+
+- `Docs/MOCK_MIDI_SCAFFOLD_REVIEW.md`
+
+The review accepts the test-only mock MIDI scaffold, records that no real MIDI
+behavior exists, sets the next recommended task as mock message mapping
+design/spec or a test-only mapper scaffold, and keeps hardware off.
+
 Keep hardware off.

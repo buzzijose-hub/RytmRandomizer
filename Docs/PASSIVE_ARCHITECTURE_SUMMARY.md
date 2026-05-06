@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-58f4a44
+c15296a
 
 ## Protected Reference
 
@@ -46,13 +46,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 58f4a44 Add test-only mock MIDI scaffold
+- current HEAD: c15296a Update checkpoint after mock MIDI scaffold
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review the test-only mock MIDI scaffold milestone and decide the next mock-only test slice
+- next recommended task: mock message mapping design/spec or test-only mapper scaffold
 - closeout command
 - stop condition
 
@@ -136,6 +136,25 @@ It does not add:
 - machine/profile expansion
 
 Analog Rytm and Analog Four remain off for this phase.
+
+## Mock MIDI Scaffold Review
+
+`Docs/MOCK_MIDI_SCAFFOLD_REVIEW.md` records the review/acceptance checkpoint
+for the test-only mock MIDI scaffold.
+
+It confirms:
+
+- `rytm_randomizer/mock_midi.py` is accepted as the current test-only mock MIDI scaffold
+- `tests/test_mock_midi.py` is accepted as the current mock MIDI test coverage
+- mock MIDI remains in-memory only
+- no real MIDI libraries are imported
+- no ports are opened
+- no MIDI is sent
+- mock MIDI is not wired to CLI or active execution
+- the next recommended task is mock message mapping design/spec or a very small test-only mapper scaffold
+- hardware remains off
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Mock MIDI Boundary Test Plan
 
@@ -1205,8 +1224,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review the test-only mock MIDI scaffold milestone
-- choose the next mock-only test slice without adding real MIDI or hardware behavior
+- create a mock message mapping design/spec or a very small test-only mapper scaffold
+- keep mapping work mock-only without real MIDI or hardware behavior
 - keep hardware off during mock MIDI boundary work
 
 These layers should continue to return passive data only and must not wire into
