@@ -94,10 +94,14 @@ The spec defines:
 The mock MIDI boundary test plan lives in:
 
 - `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md`
 
 That plan defines the future mock MIDI boundary before implementation, keeps
 all MIDI behavior test-only and mockable, prevents real port opening in tests,
 and keeps hardware off.
+
+The review accepts the mock MIDI boundary test plan for planning and sets the
+next recommended task as test-only mock MIDI scaffold/design.
 
 ## Rejected/Forbidden Next Moves
 
@@ -115,5 +119,6 @@ and keeps hardware off.
 
 - Boundary accepted for planning.
 - Active-layer design/spec accepted for planning.
-- Proceed next with review/acceptance of the mock MIDI boundary test plan.
+- Mock MIDI boundary test plan accepted for planning.
+- Proceed next with test-only mock MIDI scaffold/design.
 - Hardware remains off.

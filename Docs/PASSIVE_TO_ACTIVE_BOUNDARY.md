@@ -226,4 +226,12 @@ The plan defines the future mock MIDI boundary before implementation, keeps all
 MIDI behavior test-only and mockable, prevents real port opening in tests, and
 keeps hardware off.
 
+Mock MIDI boundary test plan review:
+
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md`
+
+The review accepts the mock MIDI boundary test plan, records that no MIDI
+implementation exists yet, sets the next recommended task as test-only mock
+MIDI scaffold/design, and keeps hardware off.
+
 Keep hardware off until then.

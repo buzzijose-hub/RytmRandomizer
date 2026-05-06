@@ -115,13 +115,15 @@ Current hardware status:
 
 ## Next Recommended Task
 
-Review and accept the mock MIDI boundary test plan:
+Create a test-only mock MIDI scaffold with no real MIDI backend, or create a
+more detailed implementation spec if further review is needed:
 
 - `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN.md`
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md`
 
-The plan defines the future mock MIDI boundary before implementation, keeps all
-MIDI behavior test-only and mockable, prevents real port opening in tests, and
-keeps hardware off.
+The review accepts the mock MIDI boundary test plan, records that no MIDI
+implementation exists yet, sets the next recommended task as test-only mock
+MIDI scaffold/design, and keeps hardware off.
 
 Do not implement real MIDI yet.
 

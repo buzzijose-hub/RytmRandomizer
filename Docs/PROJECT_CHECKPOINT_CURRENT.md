@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 16fff78 Add mock MIDI boundary test plan
 - 78d527a Add active-layer design review
 - 6e90f21 Add active-layer design spec
 - dc277e8 Add passive-to-active boundary review
@@ -126,7 +127,14 @@ boundary test plan now lives in:
 The plan defines the future mock MIDI boundary before implementation, keeps all
 MIDI behavior test-only and mockable, prevents real port opening in tests, and
 keeps hardware off. The next recommended task is to review and accept the mock
-MIDI boundary test plan before any test-only mock MIDI scaffold work.
+MIDI boundary test plan before any test-only mock MIDI scaffold work. The mock
+MIDI boundary test plan review now lives in:
+
+- Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md
+
+The review accepts the mock MIDI boundary test plan for planning, records that
+no MIDI implementation exists yet, sets the next recommended task as test-only
+mock MIDI scaffold/design, and keeps hardware off.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -175,6 +183,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - active-layer design/spec
 - active-layer design/spec review
 - mock MIDI boundary test plan
+- mock MIDI boundary test plan review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1158,6 +1167,20 @@ hardware-test implementation, dispatch, command execution, scene execution,
 hardware mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support,
 or machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
+
+The mock MIDI boundary test plan review includes:
+
+- Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md
+
+The review document is documentation-only. It accepts the mock MIDI boundary
+test plan for planning, records that no mock MIDI code, real MIDI code, active
+execution, or hardware-facing behavior exists yet, sets the next recommended
+task as test-only mock MIDI scaffold/design, and keeps hardware off. It adds no
+implementation, MIDI code, real MIDI backend, port opening, active CLI command,
+execute-command, send-command, hardware-test behavior, dispatch, command
+execution, scene execution, hardware mutation, SysEx, GUI, capture, Analog Four
+support, Pads 5-12 support, or machine/profile universe expansion. The
+protected V1.34 reference remains untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

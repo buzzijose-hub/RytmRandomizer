@@ -185,8 +185,12 @@ It must not:
 
 ## Next Recommended Task After This Plan
 
-Review and accept the mock MIDI boundary test plan.
+Review status:
 
-Then create a test-only mock MIDI boundary scaffold if accepted.
+- `Docs/MOCK_MIDI_BOUNDARY_TEST_PLAN_REVIEW.md`
+
+The mock MIDI boundary test plan is accepted for planning. The next recommended
+task is a test-only mock MIDI scaffold with no real MIDI backend, or a more
+detailed implementation spec if further review is needed.
 
 Still no real MIDI and no hardware.
