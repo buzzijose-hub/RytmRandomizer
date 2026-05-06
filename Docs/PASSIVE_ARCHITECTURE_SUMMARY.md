@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3ff9a37
+279a2d5
 
 ## Protected Reference
 
@@ -253,6 +253,9 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli inspect-scene <key>`
 - `python -m rytm_randomizer.cli inspect-group-profile --help`
 - `python -m rytm_randomizer.cli inspect-group-profile <key>`
+- `python -m rytm_randomizer.cli list-commands`
+- `python -m rytm_randomizer.cli list-scenes`
+- `python -m rytm_randomizer.cli list-group-profiles`
 - `python -m rytm_randomizer.registry_report`
 
 It locks down:
@@ -470,6 +473,69 @@ It does not:
 
 Analog Rytm and Analog Four remain off for this phase.
 
+### Passive CLI List Commands
+
+The passive CLI list commands milestone adds read-only registry browsing paths:
+
+```powershell
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+```
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_list_commands_help_expected.txt`
+- `tests/fixtures/cli_list_commands_expected.txt`
+- `tests/fixtures/cli_list_scenes_help_expected.txt`
+- `tests/fixtures/cli_list_scenes_expected.txt`
+- `tests/fixtures/cli_list_group_profiles_help_expected.txt`
+- `tests/fixtures/cli_list_group_profiles_expected.txt`
+
+It does:
+
+- read existing passive registry metadata only
+- list existing passive command keys and labels
+- list existing passive scene keys and names
+- list existing passive group profile keys and names
+- preserve existing passive report and inspect behavior
+- require no hardware
+
+Manual verification showed:
+
+- top-level help prints report, inspect-command, inspect-scene,
+  inspect-group-profile, list-commands, list-scenes, and list-group-profiles.
+- `python -m rytm_randomizer.cli list-commands` prints 82 passive command keys
+  and labels.
+- `python -m rytm_randomizer.cli list-scenes` prints 14 passive scene keys and
+  names.
+- `python -m rytm_randomizer.cli list-group-profiles` prints 4 passive group
+  profile keys and names: 2: My BD Hard, 3: My BD Classic, 4: My BD Acoustic,
+  and 5: Pad 3 SY Raw Mid Bass.
+
+It does not:
+
+- call handlers
+- add handlers
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- write files
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ### Registry Report Golden Text Contract
 
 The registry report golden text contract locks down the formatted passive
@@ -618,6 +684,9 @@ Implemented passive command shapes include:
 - `python -m rytm_randomizer.cli inspect-scene <key>`
 - `python -m rytm_randomizer.cli inspect-group-profile --help`
 - `python -m rytm_randomizer.cli inspect-group-profile <key>`
+- `python -m rytm_randomizer.cli list-commands`
+- `python -m rytm_randomizer.cli list-scenes`
+- `python -m rytm_randomizer.cli list-group-profiles`
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 

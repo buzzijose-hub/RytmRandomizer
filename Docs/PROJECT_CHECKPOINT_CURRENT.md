@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 279a2d5 Add passive CLI list commands
 - 3ff9a37 Add passive CLI group profile inspection
 - eeba082 Add passive CLI scene inspection
 - 73ee027 Add passive CLI command inspection
@@ -100,6 +101,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI command inspection
 - passive CLI scene inspection
 - passive CLI group profile inspection
+- passive CLI list commands
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -181,7 +183,59 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli inspect-scene <key>`
 - `python -m rytm_randomizer.cli inspect-group-profile --help`
 - `python -m rytm_randomizer.cli inspect-group-profile <key>`
+- `python -m rytm_randomizer.cli list-commands`
+- `python -m rytm_randomizer.cli list-scenes`
+- `python -m rytm_randomizer.cli list-group-profiles`
 - `python -m rytm_randomizer.registry_report`
+
+The passive CLI list commands milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_list_commands_help_expected.txt
+- tests/fixtures/cli_list_commands_expected.txt
+- tests/fixtures/cli_list_scenes_help_expected.txt
+- tests/fixtures/cli_list_scenes_expected.txt
+- tests/fixtures/cli_list_group_profiles_help_expected.txt
+- tests/fixtures/cli_list_group_profiles_expected.txt
+
+The new passive CLI paths are:
+
+```powershell
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+```
+
+Existing passive CLI paths continue to work:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.cli inspect-scene <key>
+python -m rytm_randomizer.cli inspect-group-profile <key>
+python -m rytm_randomizer.registry_report
+```
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  report, inspect-command, inspect-scene, inspect-group-profile,
+  list-commands, list-scenes, and list-group-profiles.
+- `python -m rytm_randomizer.cli list-commands` printed 82 passive command
+  keys and labels.
+- `python -m rytm_randomizer.cli list-scenes` printed 14 passive scene keys and
+  names.
+- `python -m rytm_randomizer.cli list-group-profiles` printed 4 passive group
+  profile keys and names: 2: My BD Hard, 3: My BD Classic, 4: My BD Acoustic,
+  and 5: Pad 3 SY Raw Mid Bass.
+
+The list commands read existing passive registry metadata only. They do not
+call handlers, add handlers, dispatch commands, execute commands, open MIDI
+ports, send MIDI, write files, require hardware, or mutate runtime or hardware
+state.
 
 The passive CLI group profile inspection milestone includes:
 
@@ -661,6 +715,13 @@ The passive CLI group profile inspection milestone added no MIDI sending, port
 opening, dispatch, command execution, hardware mutation, SysEx, GUI, capture,
 Analog Four support, Pads 5-12 support, or machine/profile universe expansion.
 It added no report file writing at runtime and no import-time printing. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
+
+The passive CLI list commands milestone added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog
+Four support, Pads 5-12 support, or machine/profile universe expansion. It
+added no report file writing at runtime and no import-time printing. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
 
