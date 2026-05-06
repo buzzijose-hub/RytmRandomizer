@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-9ff49dd
+aee04be
 
 ## Protected Reference
 
@@ -256,6 +256,9 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli list-commands`
 - `python -m rytm_randomizer.cli list-scenes`
 - `python -m rytm_randomizer.cli list-group-profiles`
+- `python -m rytm_randomizer.cli search-commands <query>`
+- `python -m rytm_randomizer.cli search-scenes <query>`
+- `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.registry_report`
 
 It locks down:
@@ -536,6 +539,74 @@ It does not:
 
 Analog Rytm and Analog Four remain off for this phase.
 
+### Passive CLI Search Commands
+
+The passive CLI search commands milestone adds read-only registry search paths:
+
+```powershell
+python -m rytm_randomizer.cli search-commands <query>
+python -m rytm_randomizer.cli search-scenes <query>
+python -m rytm_randomizer.cli search-group-profiles <query>
+```
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_search_commands_help_expected.txt`
+- `tests/fixtures/cli_search_commands_known_expected.txt`
+- `tests/fixtures/cli_search_commands_none_expected.txt`
+- `tests/fixtures/cli_search_scenes_help_expected.txt`
+- `tests/fixtures/cli_search_scenes_known_expected.txt`
+- `tests/fixtures/cli_search_scenes_none_expected.txt`
+- `tests/fixtures/cli_search_group_profiles_help_expected.txt`
+- `tests/fixtures/cli_search_group_profiles_known_expected.txt`
+- `tests/fixtures/cli_search_group_profiles_none_expected.txt`
+
+It does:
+
+- read copied passive registry metadata only
+- search commands, scenes, and group profiles case-insensitively
+- produce deterministic human-readable match lists
+- return passive no-match output safely
+- preserve existing passive report, inspect, and list behavior
+- require no hardware
+
+Manual verification showed:
+
+- top-level help prints the passive search commands.
+- `python -m rytm_randomizer.cli search-commands BD` returns 29 passive command
+  matches.
+- `python -m rytm_randomizer.cli search-commands Pad` returns 72 passive
+  command matches.
+- `python -m rytm_randomizer.cli search-scenes Wild` returns 3 passive scene
+  matches: S4: Wild, S4A: Wild Controlled, and S4B: Wild Maximum.
+- `python -m rytm_randomizer.cli search-group-profiles Hard` returns 2: My BD
+  Hard.
+- `python -m rytm_randomizer.cli search-commands DOES_NOT_EXIST` returns:
+  "no matches found. No MIDI was sent. No command executed."
+
+It does not:
+
+- call handlers
+- add handlers
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- write files
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ### Guarded Passive Depth Command Labels
 
 The guarded passive depth command label milestone improves passive
@@ -733,6 +804,9 @@ Implemented passive command shapes include:
 - `python -m rytm_randomizer.cli list-commands`
 - `python -m rytm_randomizer.cli list-scenes`
 - `python -m rytm_randomizer.cli list-group-profiles`
+- `python -m rytm_randomizer.cli search-commands <query>`
+- `python -m rytm_randomizer.cli search-scenes <query>`
+- `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 

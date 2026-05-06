@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- aee04be Add passive CLI search commands
 - 9ff49dd Label guarded passive depth commands
 - 279a2d5 Add passive CLI list commands
 - 3ff9a37 Add passive CLI group profile inspection
@@ -103,6 +104,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI scene inspection
 - passive CLI group profile inspection
 - passive CLI list commands
+- passive CLI search commands
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -207,7 +209,69 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli list-commands`
 - `python -m rytm_randomizer.cli list-scenes`
 - `python -m rytm_randomizer.cli list-group-profiles`
+- `python -m rytm_randomizer.cli search-commands <query>`
+- `python -m rytm_randomizer.cli search-scenes <query>`
+- `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.registry_report`
+
+The passive CLI search commands milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_search_commands_help_expected.txt
+- tests/fixtures/cli_search_commands_known_expected.txt
+- tests/fixtures/cli_search_commands_none_expected.txt
+- tests/fixtures/cli_search_scenes_help_expected.txt
+- tests/fixtures/cli_search_scenes_known_expected.txt
+- tests/fixtures/cli_search_scenes_none_expected.txt
+- tests/fixtures/cli_search_group_profiles_help_expected.txt
+- tests/fixtures/cli_search_group_profiles_known_expected.txt
+- tests/fixtures/cli_search_group_profiles_none_expected.txt
+
+The new passive CLI paths are:
+
+```powershell
+python -m rytm_randomizer.cli search-commands <query>
+python -m rytm_randomizer.cli search-scenes <query>
+python -m rytm_randomizer.cli search-group-profiles <query>
+```
+
+Existing passive CLI paths continue to work:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.cli inspect-scene <key>
+python -m rytm_randomizer.cli inspect-group-profile <key>
+python -m rytm_randomizer.registry_report
+```
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  search commands.
+- `python -m rytm_randomizer.cli search-commands BD` returned 29 passive
+  command matches.
+- `python -m rytm_randomizer.cli search-commands Pad` returned 72 passive
+  command matches.
+- `python -m rytm_randomizer.cli search-scenes Wild` returned 3 passive scene
+  matches: S4: Wild, S4A: Wild Controlled, and S4B: Wild Maximum.
+- `python -m rytm_randomizer.cli search-group-profiles Hard` returned 2: My BD
+  Hard.
+- `python -m rytm_randomizer.cli search-commands DOES_NOT_EXIST` returned a
+  passive no-match message: "no matches found. No MIDI was sent. No command
+  executed."
+
+Search commands read copied passive registry metadata only. Search is
+case-insensitive, deterministic, and human-readable. No-match results exit
+safely and do not touch hardware. Search does not call handlers, add handlers,
+dispatch commands, execute commands, open MIDI ports, send MIDI, write files,
+require hardware, or mutate runtime or hardware state.
 
 The passive CLI list commands milestone includes:
 
@@ -740,6 +804,13 @@ protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
 
 The passive CLI list commands milestone added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog
+Four support, Pads 5-12 support, or machine/profile universe expansion. It
+added no report file writing at runtime and no import-time printing. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
+
+The passive CLI search commands milestone added no MIDI sending, port opening,
 dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog
 Four support, Pads 5-12 support, or machine/profile universe expansion. It
 added no report file writing at runtime and no import-time printing. The

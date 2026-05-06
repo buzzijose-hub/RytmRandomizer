@@ -21,6 +21,7 @@ Implemented milestone:
 - 3ff9a37 Add passive CLI group profile inspection
 - 279a2d5 Add passive CLI list commands
 - 9ff49dd Label guarded passive depth commands
+- aee04be Add passive CLI search commands
 
 ## Current Passive Foundation
 
@@ -102,6 +103,14 @@ python -m rytm_randomizer.cli list-scenes
 python -m rytm_randomizer.cli list-group-profiles
 ```
 
+Implemented passive CLI search commands:
+
+```powershell
+python -m rytm_randomizer.cli search-commands <query>
+python -m rytm_randomizer.cli search-scenes <query>
+python -m rytm_randomizer.cli search-group-profiles <query>
+```
+
 The report commands print the same deterministic golden-format passive registry
 report.
 
@@ -160,6 +169,17 @@ Manual verification also showed:
 - `python -m rytm_randomizer.cli list-group-profiles` prints 4 passive group
   profile keys and names: 2: My BD Hard, 3: My BD Classic, 4: My BD Acoustic,
   and 5: Pad 3 SY Raw Mid Bass.
+- `python -m rytm_randomizer.cli search-commands BD` returns 29 passive command
+  matches.
+- `python -m rytm_randomizer.cli search-commands Pad` returns 72 passive
+  command matches.
+- `python -m rytm_randomizer.cli search-scenes Wild` returns 3 passive scene
+  matches: S4: Wild, S4A: Wild Controlled, and S4B: Wild Maximum.
+- `python -m rytm_randomizer.cli search-group-profiles Hard` returns 2: My BD
+  Hard.
+- `python -m rytm_randomizer.cli search-commands DOES_NOT_EXIST` returns the
+  passive no-match message: "no matches found. No MIDI was sent. No command
+  executed."
 
 ## Allowed Behavior
 
@@ -178,6 +198,8 @@ The passive CLI preview command may:
 - inspect existing passive group profile metadata without executing it
 - list existing passive registry keys and labels without executing them
 - show guarded passive labels for depth commands 1, 2, and 3
+- search copied passive registry metadata without executing it
+- return passive no-match output safely
 
 ## Prohibited Behavior
 
@@ -215,6 +237,10 @@ must not reinterpret group profile metadata as executable behavior.
 The passive CLI list commands must remain passive/read-only. They must not
 reinterpret registry keys, labels, names, or profile metadata as executable
 behavior.
+
+The passive CLI search commands must remain passive/read-only. They must not
+reinterpret search matches, registry keys, labels, names, descriptions, actions,
+scopes, or profile metadata as executable behavior.
 
 The guarded passive depth command labels must remain metadata-only. Commands 1,
 2, and 3 must remain non-executable, scaffold-only/passive, V1.34 reference
