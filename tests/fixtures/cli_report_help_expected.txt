@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: report
+
+Usage:
+  python -m rytm_randomizer.cli report
+  python -m rytm_randomizer.cli report --help
+
+Behavior:
+  Prints the deterministic passive registry report to stdout.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

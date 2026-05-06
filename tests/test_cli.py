@@ -17,6 +17,10 @@ def expected_report_text():
     )
 
 
+def fixture_text(filename):
+    return normalize_newlines((FIXTURES_DIR / filename).read_text(encoding="utf-8"))
+
+
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", *args],
@@ -38,6 +42,22 @@ def test_importing_cli_prints_nothing():
 
     assert result.returncode == 0
     assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_top_level_help_exits_zero_and_matches_fixture():
+    result = run_cli("--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text("cli_help_expected.txt")
+    assert result.stderr == ""
+
+
+def test_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text("cli_report_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -76,6 +96,14 @@ def test_unknown_arguments_fail_safely():
     assert normalize_newlines(result.stderr) == USAGE
 
 
+def test_unknown_report_arguments_fail_safely():
+    result = run_cli("report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
 def test_report_command_exposes_no_active_behavior_or_support_expansion():
     result = run_cli("report")
     output = normalize_newlines(result.stdout)
@@ -94,8 +122,11 @@ def test_report_command_exposes_no_active_behavior_or_support_expansion():
 
 if __name__ == "__main__":
     test_importing_cli_prints_nothing()
+    test_top_level_help_exits_zero_and_matches_fixture()
+    test_report_help_exits_zero_and_matches_fixture()
     test_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_missing_arguments_fail_safely()
     test_unknown_arguments_fail_safely()
+    test_unknown_report_arguments_fail_safely()
     test_report_command_exposes_no_active_behavior_or_support_expansion()
