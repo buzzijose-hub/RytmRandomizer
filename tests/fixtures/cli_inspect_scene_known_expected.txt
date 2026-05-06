@@ -1,0 +1,17 @@
+RytmRandomizer passive scene inspection
+Scene: S1A
+Found: True
+Name: Rolling Light
+Description: Lower-risk rolling movement for subtle live variation.
+Action: rolling_light
+Scope: four_pad_group
+Executable: False
+Scaffold only: True
+V1.34 reference command: True
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

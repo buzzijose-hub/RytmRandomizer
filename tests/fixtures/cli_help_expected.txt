@@ -3,11 +3,13 @@ RytmRandomizer passive CLI
 Usage:
   python -m rytm_randomizer.cli report
   python -m rytm_randomizer.cli inspect-command <key>
+  python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
   report             Print the passive registry report.
   inspect-command    Inspect passive command metadata by key.
+  inspect-scene      Inspect passive scene metadata by key.
 
 Safety:
   passive/read-only

@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: inspect-scene
+
+Usage:
+  python -m rytm_randomizer.cli inspect-scene <key>
+  python -m rytm_randomizer.cli inspect-scene --help
+
+Behavior:
+  Displays passive metadata for an existing scene key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
