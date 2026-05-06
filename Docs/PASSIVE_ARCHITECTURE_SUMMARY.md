@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-915b7a2
+52e7477
 
 ## Protected Reference
 
@@ -31,6 +31,7 @@ The standard closeout suite currently includes:
 - registry
 - registry report
 - registry report CLI
+- passive CLI
 
 The closeout workflow also checks:
 
@@ -166,6 +167,68 @@ It does not:
 - expand the machine/profile universe
 
 Analog Rytm and Analog Four are not needed and should remain off for this phase.
+
+### Passive Report-Only CLI Entrypoint
+
+The passive report-only CLI entrypoint adds a minimal report command:
+
+```powershell
+python -m rytm_randomizer.cli report
+```
+
+The existing passive module command remains:
+
+```powershell
+python -m rytm_randomizer.registry_report
+```
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `Scripts/closeout_check.ps1`
+
+Both commands print the same deterministic golden-format passive registry
+report. Manual verification showed both commands report:
+
+- commands: 82
+- scenes: 14
+- group_profiles: 4
+
+The report confirms:
+
+- dispatches_commands: False
+- executes_commands: False
+- mutates_hardware: False
+- opens_ports: False
+- sends_midi: False
+- writes_sysex: False
+- In-memory only: True
+
+It does:
+
+- exit with code 0 for `report`
+- print nothing during import
+- fail safely for missing or unknown arguments
+- require no hardware
+
+It does not:
+
+- write report files
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
 
 ### Registry Report Golden Text Contract
 
@@ -305,7 +368,7 @@ runtime command execution.
 preview/report command concept before implementation. The implemented passive
 CLI preview now follows that plan.
 
-Potential future command shapes include:
+Implemented passive command shapes include:
 
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`

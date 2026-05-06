@@ -14,6 +14,7 @@ boundary.
 Implemented milestone:
 
 - 915b7a2 Add passive registry report CLI preview
+- 52e7477 Add passive report-only CLI entrypoint
 
 ## Current Passive Foundation
 
@@ -45,19 +46,36 @@ reference.
 
 ## Implemented Command Shape
 
-Implemented passive command:
+Implemented passive module command:
 
 ```powershell
 python -m rytm_randomizer.registry_report
 ```
 
-Earlier planning also considered:
+Implemented passive report-only CLI entrypoint:
 
 ```powershell
 python -m rytm_randomizer.cli report
 ```
 
-Only `python -m rytm_randomizer.registry_report` is implemented in this phase.
+Both commands print the same deterministic golden-format passive registry
+report.
+
+Manual verification showed both commands report:
+
+- commands: 82
+- scenes: 14
+- group_profiles: 4
+
+The report confirms:
+
+- dispatches_commands: False
+- executes_commands: False
+- mutates_hardware: False
+- opens_ports: False
+- sends_midi: False
+- writes_sysex: False
+- In-memory only: True
 
 ## Allowed Behavior
 
@@ -69,6 +87,7 @@ The passive CLI preview command may:
 - display the report to standard output only when explicitly invoked as a CLI
 - exit without requiring hardware
 - remain deterministic against the existing golden text contract
+- fail safely for missing or unknown arguments
 
 ## Prohibited Behavior
 
@@ -82,6 +101,7 @@ The passive CLI preview/report command must not:
 - write report files by default
 - print during import
 - require hardware to be connected
+- mutate runtime state
 - add GUI behavior
 - add capture behavior
 - add Analog Four support

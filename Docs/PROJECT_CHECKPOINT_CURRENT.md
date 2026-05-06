@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 52e7477 Add passive report-only CLI entrypoint
 - 915b7a2 Add passive registry report CLI preview
 - 97ecf09 Add registry report golden text contract
 - e387f66 Add passive registry report generator
@@ -90,6 +91,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - registry report golden text contract
 - passive report CLI preview plan
 - passive registry report CLI preview
+- passive report-only CLI entrypoint
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -114,6 +116,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_registry.py
 - python .\tests\test_registry_report.py
 - python .\tests\test_registry_report_cli.py
+- python .\tests\test_cli.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -135,10 +138,39 @@ standard passive test suite.
 The closeout script now includes "Test: Registry Report CLI" as part of the
 standard passive test suite.
 
+The closeout script now includes "Test: Passive CLI" as part of the standard
+passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, command lookup, and registry tests
-registry report, and registry report CLI tests passed silently; the V1.34
-reference diff was empty; and git status was clean.
+registry report, registry report CLI, and passive CLI tests passed silently; the
+V1.34 reference diff was empty; and git status was clean.
+
+The passive report-only CLI entrypoint includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- Scripts/closeout_check.ps1
+
+The new passive CLI command is:
+
+```powershell
+python -m rytm_randomizer.cli report
+```
+
+The existing passive module command remains:
+
+```powershell
+python -m rytm_randomizer.registry_report
+```
+
+Both commands print the same deterministic golden-format passive registry
+report. Manual verification showed both commands report commands: 82, scenes:
+14, and group_profiles: 4. The report confirms dispatches_commands: False,
+executes_commands: False, mutates_hardware: False, opens_ports: False,
+sends_midi: False, writes_sysex: False, and In-memory only: True. The report
+command exits with code 0, importing the CLI prints nothing, and missing or
+unknown arguments fail safely.
 
 The passive registry report CLI preview includes:
 
@@ -418,6 +450,13 @@ dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
 support, Pads 5-12 support, or machine/profile universe expansion. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four are
 not needed and should remain off for this phase.
+
+The passive report-only CLI entrypoint added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
+support, Pads 5-12 support, or machine/profile universe expansion. It writes no
+report files, requires no hardware, mutates no runtime or hardware state, and
+leaves the protected V1.34 reference untouched. Analog Rytm and Analog Four
+remain off for this phase.
 
 ## Validated Rytm Scope
 
