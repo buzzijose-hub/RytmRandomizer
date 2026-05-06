@@ -16,6 +16,7 @@ Implemented milestone:
 - 915b7a2 Add passive registry report CLI preview
 - 52e7477 Add passive report-only CLI entrypoint
 - 935d24a Add passive CLI help contract
+- 73ee027 Add passive CLI command inspection
 
 ## Current Passive Foundation
 
@@ -66,7 +67,14 @@ python -m rytm_randomizer.cli --help
 python -m rytm_randomizer.cli report --help
 ```
 
-Both commands print the same deterministic golden-format passive registry
+Implemented passive CLI command inspection:
+
+```powershell
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.cli inspect-command --help
+```
+
+The report commands print the same deterministic golden-format passive registry
 report.
 
 Manual verification showed both commands report:
@@ -88,6 +96,18 @@ The report confirms:
 Manual verification showed top-level help prints passive CLI usage, report help
 prints passive report usage, and report prints the passive registry report.
 
+Manual verification also showed:
+
+- `python -m rytm_randomizer.cli --help` prints updated passive CLI help with
+  report and inspect-command.
+- `python -m rytm_randomizer.cli inspect-command --help` prints passive
+  inspect-command usage.
+- `python -m rytm_randomizer.cli inspect-command J` prints passive metadata:
+  Command: J, Found: True, Type: print, Label: show 4-pad group layout,
+  Executable: False, Scaffold only: True, and V1.34 reference command: True.
+- `python -m rytm_randomizer.cli inspect-command DOES_NOT_EXIST` fails safely
+  with: "Command metadata not found. No MIDI was sent. No command executed."
+
 ## Allowed Behavior
 
 The passive CLI preview command may:
@@ -100,6 +120,7 @@ The passive CLI preview command may:
 - remain deterministic against the existing golden text contract
 - fail safely for missing or unknown arguments
 - show deterministic passive help and usage text
+- inspect existing passive command metadata without executing it
 
 ## Prohibited Behavior
 
@@ -109,6 +130,8 @@ The passive CLI preview/report command must not:
 - open MIDI ports
 - dispatch commands
 - execute commands
+- call command handlers
+- add command handlers
 - mutate hardware
 - write report files by default
 - print during import
@@ -122,6 +145,9 @@ The passive CLI preview/report command must not:
 
 The passive CLI help contract must remain passive/read-only and must not add new
 functional commands.
+
+The passive CLI command inspection path must remain passive/read-only. It must
+not reinterpret command metadata as executable behavior.
 
 ## Safety Boundaries
 

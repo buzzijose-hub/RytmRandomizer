@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 73ee027 Add passive CLI command inspection
 - 935d24a Add passive CLI help contract
 - 52e7477 Add passive report-only CLI entrypoint
 - 915b7a2 Add passive registry report CLI preview
@@ -94,6 +95,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive registry report CLI preview
 - passive report-only CLI entrypoint
 - passive CLI help contract
+- passive CLI command inspection
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -169,7 +171,51 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli --help`
 - `python -m rytm_randomizer.cli report --help`
 - `python -m rytm_randomizer.cli report`
+- `python -m rytm_randomizer.cli inspect-command --help`
+- `python -m rytm_randomizer.cli inspect-command <key>`
 - `python -m rytm_randomizer.registry_report`
+
+The passive CLI command inspection milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_inspect_command_help_expected.txt
+- tests/fixtures/cli_inspect_command_known_expected.txt
+- tests/fixtures/cli_inspect_command_unknown_expected.txt
+
+The new passive CLI paths are:
+
+```powershell
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.cli inspect-command --help
+```
+
+Existing passive CLI paths continue to work:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.registry_report
+```
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  report and inspect-command.
+- `python -m rytm_randomizer.cli inspect-command --help` printed passive
+  inspect-command usage.
+- `python -m rytm_randomizer.cli inspect-command J` printed passive metadata:
+  Command: J, Found: True, Type: print, Label: show 4-pad group layout,
+  Executable: False, Scaffold only: True, and V1.34 reference command: True.
+- `python -m rytm_randomizer.cli inspect-command DOES_NOT_EXIST` failed safely
+  with: "Command metadata not found. No MIDI was sent. No command executed."
+
+Inspect-command reads existing passive command metadata only. It does not call
+handlers, add handlers, dispatch commands, execute commands, open MIDI ports,
+send MIDI, write files, require hardware, or mutate runtime or hardware state.
+Unknown or missing keys fail safely.
 
 The passive report-only CLI entrypoint includes:
 
@@ -489,6 +535,13 @@ capture, Analog Four support, Pads 5-12 support, or machine/profile universe
 expansion. It added no report file writing at runtime and no import-time
 printing. The protected V1.34 reference remains untouched. Analog Rytm and
 Analog Four remain off for this phase.
+
+The passive CLI command inspection milestone added no MIDI sending, port
+opening, dispatch, command execution, hardware mutation, SysEx, GUI, capture,
+Analog Four support, Pads 5-12 support, or machine/profile universe expansion.
+It added no report file writing at runtime and no import-time printing. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
 
 ## Validated Rytm Scope
 

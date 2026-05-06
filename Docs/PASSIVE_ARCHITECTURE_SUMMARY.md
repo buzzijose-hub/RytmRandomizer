@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-935d24a
+73ee027
 
 ## Protected Reference
 
@@ -247,6 +247,8 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli --help`
 - `python -m rytm_randomizer.cli report --help`
 - `python -m rytm_randomizer.cli report`
+- `python -m rytm_randomizer.cli inspect-command --help`
+- `python -m rytm_randomizer.cli inspect-command <key>`
 - `python -m rytm_randomizer.registry_report`
 
 It locks down:
@@ -274,6 +276,63 @@ It does not:
 - send MIDI
 - dispatch commands
 - execute commands
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
+### Passive CLI Command Inspection
+
+The passive CLI command inspection milestone adds a read-only command metadata
+inspection path:
+
+```powershell
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.cli inspect-command --help
+```
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_inspect_command_help_expected.txt`
+- `tests/fixtures/cli_inspect_command_known_expected.txt`
+- `tests/fixtures/cli_inspect_command_unknown_expected.txt`
+
+It does:
+
+- read existing passive command metadata only
+- display deterministic human-readable metadata for known command keys
+- fail safely for unknown or missing keys
+- preserve existing passive CLI report behavior
+- require no hardware
+
+Manual verification showed:
+
+- top-level help prints report and inspect-command.
+- inspect-command help prints passive inspect-command usage.
+- `python -m rytm_randomizer.cli inspect-command J` prints Command: J, Found:
+  True, Type: print, Label: show 4-pad group layout, Executable: False,
+  Scaffold only: True, and V1.34 reference command: True.
+- `python -m rytm_randomizer.cli inspect-command DOES_NOT_EXIST` fails safely
+  with: "Command metadata not found. No MIDI was sent. No command executed."
+
+It does not:
+
+- call handlers
+- add handlers
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- write files
 - mutate runtime state
 - mutate hardware state
 - write SysEx
@@ -427,6 +486,8 @@ Implemented passive command shapes include:
 
 - `python -m rytm_randomizer.cli --help`
 - `python -m rytm_randomizer.cli report --help`
+- `python -m rytm_randomizer.cli inspect-command --help`
+- `python -m rytm_randomizer.cli inspect-command <key>`
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 
