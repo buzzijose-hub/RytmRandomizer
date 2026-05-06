@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: search-scenes
+
+Usage:
+  python -m rytm_randomizer.cli search-scenes <query>
+  python -m rytm_randomizer.cli search-scenes --help
+
+Behavior:
+  Searches existing passive scene metadata.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

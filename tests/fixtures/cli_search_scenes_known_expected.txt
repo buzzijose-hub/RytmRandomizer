@@ -1,0 +1,15 @@
+RytmRandomizer passive scene search
+Section: scenes
+Query: Wild
+Match count: 3
+Matches:
+- S4: Wild
+- S4A: Wild Controlled
+- S4B: Wild Maximum
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

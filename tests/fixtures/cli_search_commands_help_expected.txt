@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: search-commands
+
+Usage:
+  python -m rytm_randomizer.cli search-commands <query>
+  python -m rytm_randomizer.cli search-commands --help
+
+Behavior:
+  Searches existing passive command metadata.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

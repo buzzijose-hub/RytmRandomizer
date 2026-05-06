@@ -9,7 +9,8 @@ from .registry_report import format_registry_report
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
-    "list-commands | list-scenes | list-group-profiles"
+    "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
+    "search-scenes <query> | search-group-profiles <query>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -21,6 +22,9 @@ Usage:
   python -m rytm_randomizer.cli list-commands
   python -m rytm_randomizer.cli list-scenes
   python -m rytm_randomizer.cli list-group-profiles
+  python -m rytm_randomizer.cli search-commands <query>
+  python -m rytm_randomizer.cli search-scenes <query>
+  python -m rytm_randomizer.cli search-group-profiles <query>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -33,6 +37,58 @@ Commands:
   list-scenes        List passive scene keys and names.
   list-group-profiles
                      List passive group profile keys and names.
+  search-commands    Search passive command metadata.
+  search-scenes      Search passive scene metadata.
+  search-group-profiles
+                     Search passive group profile metadata.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+SEARCH_GROUP_PROFILES_HELP = """RytmRandomizer passive CLI: search-group-profiles
+
+Usage:
+  python -m rytm_randomizer.cli search-group-profiles <query>
+  python -m rytm_randomizer.cli search-group-profiles --help
+
+Behavior:
+  Searches existing passive group profile metadata.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+SEARCH_SCENES_HELP = """RytmRandomizer passive CLI: search-scenes
+
+Usage:
+  python -m rytm_randomizer.cli search-scenes <query>
+  python -m rytm_randomizer.cli search-scenes --help
+
+Behavior:
+  Searches existing passive scene metadata.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+SEARCH_COMMANDS_HELP = """RytmRandomizer passive CLI: search-commands
+
+Usage:
+  python -m rytm_randomizer.cli search-commands <query>
+  python -m rytm_randomizer.cli search-commands --help
+
+Behavior:
+  Searches existing passive command metadata.
 
 Safety:
   passive/read-only
@@ -143,6 +199,12 @@ def _format_list_label(metadata):
     return metadata.get("label") or metadata.get("name") or ""
 
 
+def _metadata_search_text(key, metadata):
+    values = [str(key)]
+    values.extend(value for value in metadata.values() if isinstance(value, str))
+    return "\n".join(values).lower()
+
+
 def format_registry_list_report(section_name, title):
     """Return deterministic passive registry list lines."""
     report = get_registry_section(section_name)
@@ -164,6 +226,55 @@ def format_registry_list_report(section_name, title):
     for key in sorted(items):
         label = _format_list_label(items[key])
         lines.append(f"- {key}: {label}")
+
+    lines.extend(
+        [
+            "Safety:",
+            "- passive/read-only",
+            "- no MIDI sending",
+            "- no port opening",
+            "- no command execution",
+            "- no hardware mutation",
+            "- no hardware required",
+        ]
+    )
+    return lines
+
+
+def format_registry_search_report(section_name, title, query):
+    """Return deterministic passive registry search lines."""
+    report = get_registry_section(section_name)
+    normalized_query = str(query)
+    search_query = normalized_query.lower()
+    if not report["exists"]:
+        return [
+            f"RytmRandomizer passive {title}",
+            f"Section: {report['section']}",
+            f"Query: {normalized_query}",
+            "Match count: 0",
+            "Matches:",
+            "- no matches found. No MIDI was sent. No command executed.",
+        ]
+
+    items = report["items"]
+    matches = [
+        (key, _format_list_label(metadata))
+        for key, metadata in items.items()
+        if search_query in _metadata_search_text(key, metadata)
+    ]
+    matches.sort(key=lambda item: item[0])
+
+    lines = [
+        f"RytmRandomizer passive {title}",
+        f"Section: {report['section']}",
+        f"Query: {normalized_query}",
+        f"Match count: {len(matches)}",
+        "Matches:",
+    ]
+    if matches:
+        lines.extend(f"- {key}: {label}" for key, label in matches)
+    else:
+        lines.append("- no matches found. No MIDI was sent. No command executed.")
 
     lines.extend(
         [
@@ -322,6 +433,18 @@ def main(argv=None):
         sys.stdout.write(f"{LIST_GROUP_PROFILES_HELP}\n")
         return 0
 
+    if args == ["search-commands", "--help"]:
+        sys.stdout.write(f"{SEARCH_COMMANDS_HELP}\n")
+        return 0
+
+    if args == ["search-scenes", "--help"]:
+        sys.stdout.write(f"{SEARCH_SCENES_HELP}\n")
+        return 0
+
+    if args == ["search-group-profiles", "--help"]:
+        sys.stdout.write(f"{SEARCH_GROUP_PROFILES_HELP}\n")
+        return 0
+
     if args == ["inspect-command", "--help"]:
         sys.stdout.write(f"{INSPECT_COMMAND_HELP}\n")
         return 0
@@ -353,6 +476,35 @@ def main(argv=None):
         sys.stdout.write(
             "\n".join(
                 format_registry_list_report("group_profiles", "group profile list")
+            )
+        )
+        sys.stdout.write("\n")
+        return 0
+
+    if len(args) == 2 and args[0] == "search-commands":
+        sys.stdout.write(
+            "\n".join(
+                format_registry_search_report("commands", "command search", args[1])
+            )
+        )
+        sys.stdout.write("\n")
+        return 0
+
+    if len(args) == 2 and args[0] == "search-scenes":
+        sys.stdout.write(
+            "\n".join(format_registry_search_report("scenes", "scene search", args[1]))
+        )
+        sys.stdout.write("\n")
+        return 0
+
+    if len(args) == 2 and args[0] == "search-group-profiles":
+        sys.stdout.write(
+            "\n".join(
+                format_registry_search_report(
+                    "group_profiles",
+                    "group profile search",
+                    args[1],
+                )
             )
         )
         sys.stdout.write("\n")

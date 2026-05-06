@@ -1,0 +1,13 @@
+RytmRandomizer passive scene search
+Section: scenes
+Query: NO_MATCH
+Match count: 0
+Matches:
+- no matches found. No MIDI was sent. No command executed.
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

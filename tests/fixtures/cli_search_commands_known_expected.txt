@@ -1,0 +1,15 @@
+RytmRandomizer passive command search
+Section: commands
+Query: guarded
+Match count: 3
+Matches:
+- 1: guarded depth input 1, requires lane/mode prefix
+- 2: guarded depth input 2, requires lane/mode prefix
+- 3: guarded depth input 3, requires lane/mode prefix
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

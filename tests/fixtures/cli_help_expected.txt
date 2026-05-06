@@ -8,6 +8,9 @@ Usage:
   python -m rytm_randomizer.cli list-commands
   python -m rytm_randomizer.cli list-scenes
   python -m rytm_randomizer.cli list-group-profiles
+  python -m rytm_randomizer.cli search-commands <query>
+  python -m rytm_randomizer.cli search-scenes <query>
+  python -m rytm_randomizer.cli search-group-profiles <query>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -20,6 +23,10 @@ Commands:
   list-scenes        List passive scene keys and names.
   list-group-profiles
                      List passive group profile keys and names.
+  search-commands    Search passive command metadata.
+  search-scenes      Search passive scene metadata.
+  search-group-profiles
+                     Search passive group profile metadata.
 
 Safety:
   passive/read-only

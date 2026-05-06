@@ -7,7 +7,8 @@ FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
-    "list-commands | list-scenes | list-group-profiles"
+    "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
+    "search-scenes <query> | search-group-profiles <query>"
 )
 
 
@@ -121,6 +122,36 @@ def test_list_group_profiles_help_exits_zero_and_matches_fixture():
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_list_group_profiles_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_commands_help_exits_zero_and_matches_fixture():
+    result = run_cli("search-commands", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_commands_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_scenes_help_exits_zero_and_matches_fixture():
+    result = run_cli("search-scenes", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_scenes_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_group_profiles_help_exits_zero_and_matches_fixture():
+    result = run_cli("search-group-profiles", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_group_profiles_help_expected.txt"
     )
     assert result.stderr == ""
 
@@ -270,6 +301,101 @@ def test_list_group_profiles_are_deterministic():
     assert second.stderr == ""
 
 
+def test_search_commands_known_query_exits_zero_and_matches_fixture():
+    result = run_cli("search-commands", "guarded")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_commands_known_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_scenes_known_query_exits_zero_and_matches_fixture():
+    result = run_cli("search-scenes", "Wild")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_scenes_known_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_group_profiles_known_query_exits_zero_and_matches_fixture():
+    result = run_cli("search-group-profiles", "Hard")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_group_profiles_known_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_commands_no_match_exits_zero_and_matches_fixture():
+    result = run_cli("search-commands", "NO_MATCH")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_commands_none_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_scenes_no_match_exits_zero_and_matches_fixture():
+    result = run_cli("search-scenes", "NO_MATCH")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_scenes_none_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_group_profiles_no_match_exits_zero_and_matches_fixture():
+    result = run_cli("search-group-profiles", "NO_MATCH")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_search_group_profiles_none_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_search_commands_are_case_insensitive_and_deterministic():
+    first = run_cli("search-commands", "guarded")
+    second = run_cli("search-commands", "GUARDED")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout).replace("Query: guarded", "Query: QUERY") == (
+        normalize_newlines(second.stdout).replace("Query: GUARDED", "Query: QUERY")
+    )
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_search_scenes_are_deterministic():
+    first = run_cli("search-scenes", "Wild")
+    second = run_cli("search-scenes", "Wild")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_search_group_profiles_are_deterministic():
+    first = run_cli("search-group-profiles", "Hard")
+    second = run_cli("search-group-profiles", "Hard")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
 def test_inspect_command_unknown_key_fails_safely():
     result = run_cli("inspect-command", "UNKNOWN")
 
@@ -326,6 +452,22 @@ def test_unknown_report_arguments_fail_safely():
 
 def test_unknown_list_arguments_fail_safely():
     result = run_cli("list-commands", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_missing_search_query_fails_safely():
+    result = run_cli("search-commands")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_unknown_search_arguments_fail_safely():
+    result = run_cli("search-scenes", "Wild", "--mutate")
 
     assert result.returncode == 2
     assert result.stdout == ""
@@ -493,6 +635,66 @@ def test_list_group_profiles_exposes_no_active_behavior_or_support_expansion():
     assert "Analog Four support" not in output
 
 
+def test_search_commands_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("search-commands", "guarded")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer passive command search" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert "- no command execution" in output
+    assert "- no hardware mutation" in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
+def test_search_scenes_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("search-scenes", "Wild")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer passive scene search" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert "- no command execution" in output
+    assert "- no hardware mutation" in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
+def test_search_group_profiles_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("search-group-profiles", "Hard")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer passive group profile search" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert "- no command execution" in output
+    assert "- no hardware mutation" in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
 if __name__ == "__main__":
     test_importing_cli_prints_nothing()
     test_top_level_help_exits_zero_and_matches_fixture()
@@ -503,6 +705,9 @@ if __name__ == "__main__":
     test_list_commands_help_exits_zero_and_matches_fixture()
     test_list_scenes_help_exits_zero_and_matches_fixture()
     test_list_group_profiles_help_exits_zero_and_matches_fixture()
+    test_search_commands_help_exits_zero_and_matches_fixture()
+    test_search_scenes_help_exits_zero_and_matches_fixture()
+    test_search_group_profiles_help_exits_zero_and_matches_fixture()
     test_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
@@ -517,6 +722,15 @@ if __name__ == "__main__":
     test_list_commands_are_deterministic()
     test_list_scenes_are_deterministic()
     test_list_group_profiles_are_deterministic()
+    test_search_commands_known_query_exits_zero_and_matches_fixture()
+    test_search_scenes_known_query_exits_zero_and_matches_fixture()
+    test_search_group_profiles_known_query_exits_zero_and_matches_fixture()
+    test_search_commands_no_match_exits_zero_and_matches_fixture()
+    test_search_scenes_no_match_exits_zero_and_matches_fixture()
+    test_search_group_profiles_no_match_exits_zero_and_matches_fixture()
+    test_search_commands_are_case_insensitive_and_deterministic()
+    test_search_scenes_are_deterministic()
+    test_search_group_profiles_are_deterministic()
     test_inspect_command_unknown_key_fails_safely()
     test_inspect_scene_unknown_key_fails_safely()
     test_inspect_group_profile_unknown_key_fails_safely()
@@ -524,6 +738,8 @@ if __name__ == "__main__":
     test_unknown_arguments_fail_safely()
     test_unknown_report_arguments_fail_safely()
     test_unknown_list_arguments_fail_safely()
+    test_missing_search_query_fails_safely()
+    test_unknown_search_arguments_fail_safely()
     test_missing_inspect_command_key_fails_safely()
     test_missing_inspect_scene_key_fails_safely()
     test_missing_inspect_group_profile_key_fails_safely()
@@ -534,3 +750,6 @@ if __name__ == "__main__":
     test_list_commands_exposes_no_active_behavior_or_support_expansion()
     test_list_scenes_exposes_no_active_behavior_or_support_expansion()
     test_list_group_profiles_exposes_no_active_behavior_or_support_expansion()
+    test_search_commands_exposes_no_active_behavior_or_support_expansion()
+    test_search_scenes_exposes_no_active_behavior_or_support_expansion()
+    test_search_group_profiles_exposes_no_active_behavior_or_support_expansion()

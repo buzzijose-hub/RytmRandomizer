@@ -1,0 +1,13 @@
+RytmRandomizer passive group profile search
+Section: group_profiles
+Query: Hard
+Match count: 1
+Matches:
+- 2: My BD Hard
+Safety:
+- passive/read-only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+- no hardware required

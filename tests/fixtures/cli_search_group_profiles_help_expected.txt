@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: search-group-profiles
+
+Usage:
+  python -m rytm_randomizer.cli search-group-profiles <query>
+  python -m rytm_randomizer.cli search-group-profiles --help
+
+Behavior:
+  Searches existing passive group profile metadata.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
