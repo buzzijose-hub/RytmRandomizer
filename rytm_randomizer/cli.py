@@ -2,13 +2,14 @@
 
 import sys
 
-from .registry import get_registry_item
+from .registry import get_registry_item, get_registry_section
 from .registry_report import format_registry_report
 
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key>"
+    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
+    "list-commands | list-scenes | list-group-profiles"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -17,6 +18,9 @@ Usage:
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
+  python -m rytm_randomizer.cli list-commands
+  python -m rytm_randomizer.cli list-scenes
+  python -m rytm_randomizer.cli list-group-profiles
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -25,6 +29,58 @@ Commands:
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
                      Inspect passive group profile metadata by key.
+  list-commands      List passive command keys and labels.
+  list-scenes        List passive scene keys and names.
+  list-group-profiles
+                     List passive group profile keys and names.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+LIST_GROUP_PROFILES_HELP = """RytmRandomizer passive CLI: list-group-profiles
+
+Usage:
+  python -m rytm_randomizer.cli list-group-profiles
+  python -m rytm_randomizer.cli list-group-profiles --help
+
+Behavior:
+  Lists existing passive group profile keys and names.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+LIST_SCENES_HELP = """RytmRandomizer passive CLI: list-scenes
+
+Usage:
+  python -m rytm_randomizer.cli list-scenes
+  python -m rytm_randomizer.cli list-scenes --help
+
+Behavior:
+  Lists existing passive scene keys and names.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+LIST_COMMANDS_HELP = """RytmRandomizer passive CLI: list-commands
+
+Usage:
+  python -m rytm_randomizer.cli list-commands
+  python -m rytm_randomizer.cli list-commands --help
+
+Behavior:
+  Lists existing passive command keys and labels.
 
 Safety:
   passive/read-only
@@ -81,6 +137,46 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+
+
+def _format_list_label(metadata):
+    return metadata.get("label") or metadata.get("name") or ""
+
+
+def format_registry_list_report(section_name, title):
+    """Return deterministic passive registry list lines."""
+    report = get_registry_section(section_name)
+    if not report["exists"]:
+        return [
+            f"RytmRandomizer passive {title}",
+            f"Section: {report['section']}",
+            "Found: False",
+            "Message: Registry section not found. No MIDI was sent. No command executed.",
+        ]
+
+    items = report["items"]
+    lines = [
+        f"RytmRandomizer passive {title}",
+        f"Section: {report['section']}",
+        f"Count: {report['count']}",
+        "Items:",
+    ]
+    for key in sorted(items):
+        label = _format_list_label(items[key])
+        lines.append(f"- {key}: {label}")
+
+    lines.extend(
+        [
+            "Safety:",
+            "- passive/read-only",
+            "- no MIDI sending",
+            "- no port opening",
+            "- no command execution",
+            "- no hardware mutation",
+            "- no hardware required",
+        ]
+    )
+    return lines
 
 
 def format_inspect_command_report(command_key):
@@ -214,6 +310,18 @@ def main(argv=None):
         sys.stdout.write(f"{REPORT_HELP}\n")
         return 0
 
+    if args == ["list-commands", "--help"]:
+        sys.stdout.write(f"{LIST_COMMANDS_HELP}\n")
+        return 0
+
+    if args == ["list-scenes", "--help"]:
+        sys.stdout.write(f"{LIST_SCENES_HELP}\n")
+        return 0
+
+    if args == ["list-group-profiles", "--help"]:
+        sys.stdout.write(f"{LIST_GROUP_PROFILES_HELP}\n")
+        return 0
+
     if args == ["inspect-command", "--help"]:
         sys.stdout.write(f"{INSPECT_COMMAND_HELP}\n")
         return 0
@@ -228,6 +336,25 @@ def main(argv=None):
 
     if args == ["report"]:
         sys.stdout.write("\n".join(format_registry_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["list-commands"]:
+        sys.stdout.write("\n".join(format_registry_list_report("commands", "command list")))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["list-scenes"]:
+        sys.stdout.write("\n".join(format_registry_list_report("scenes", "scene list")))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["list-group-profiles"]:
+        sys.stdout.write(
+            "\n".join(
+                format_registry_list_report("group_profiles", "group profile list")
+            )
+        )
         sys.stdout.write("\n")
         return 0
 

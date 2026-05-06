@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: list-scenes
+
+Usage:
+  python -m rytm_randomizer.cli list-scenes
+  python -m rytm_randomizer.cli list-scenes --help
+
+Behavior:
+  Lists existing passive scene keys and names.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

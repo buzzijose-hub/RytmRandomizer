@@ -6,7 +6,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key>"
+    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
+    "list-commands | list-scenes | list-group-profiles"
 )
 
 
@@ -94,6 +95,36 @@ def test_inspect_group_profile_help_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_list_commands_help_exits_zero_and_matches_fixture():
+    result = run_cli("list-commands", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_list_commands_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_list_scenes_help_exits_zero_and_matches_fixture():
+    result = run_cli("list-scenes", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_list_scenes_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_list_group_profiles_help_exits_zero_and_matches_fixture():
+    result = run_cli("list-group-profiles", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_list_group_profiles_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_report_command_exits_zero_and_matches_fixture():
     result = run_cli("report")
 
@@ -176,6 +207,69 @@ def test_inspect_group_profile_known_key_is_deterministic():
     assert second.stderr == ""
 
 
+def test_list_commands_exits_zero_and_matches_fixture():
+    result = run_cli("list-commands")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_list_commands_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_list_scenes_exits_zero_and_matches_fixture():
+    result = run_cli("list-scenes")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_list_scenes_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_list_group_profiles_exits_zero_and_matches_fixture():
+    result = run_cli("list-group-profiles")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_list_group_profiles_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_list_commands_are_deterministic():
+    first = run_cli("list-commands")
+    second = run_cli("list-commands")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_list_scenes_are_deterministic():
+    first = run_cli("list-scenes")
+    second = run_cli("list-scenes")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_list_group_profiles_are_deterministic():
+    first = run_cli("list-group-profiles")
+    second = run_cli("list-group-profiles")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
 def test_inspect_command_unknown_key_fails_safely():
     result = run_cli("inspect-command", "UNKNOWN")
 
@@ -224,6 +318,14 @@ def test_unknown_arguments_fail_safely():
 
 def test_unknown_report_arguments_fail_safely():
     result = run_cli("report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_unknown_list_arguments_fail_safely():
+    result = run_cli("list-commands", "--mutate")
 
     assert result.returncode == 2
     assert result.stdout == ""
@@ -331,6 +433,66 @@ def test_inspect_group_profile_exposes_no_active_behavior_or_support_expansion()
     assert "Analog Four support" not in output
 
 
+def test_list_commands_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("list-commands")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer passive command list" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert "- no command execution" in output
+    assert "- no hardware mutation" in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
+def test_list_scenes_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("list-scenes")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer passive scene list" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert "- no command execution" in output
+    assert "- no hardware mutation" in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
+def test_list_group_profiles_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("list-group-profiles")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer passive group profile list" in output
+    assert "- no MIDI sending" in output
+    assert "- no port opening" in output
+    assert "- no command execution" in output
+    assert "- no hardware mutation" in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
 if __name__ == "__main__":
     test_importing_cli_prints_nothing()
     test_top_level_help_exits_zero_and_matches_fixture()
@@ -338,6 +500,9 @@ if __name__ == "__main__":
     test_inspect_command_help_exits_zero_and_matches_fixture()
     test_inspect_scene_help_exits_zero_and_matches_fixture()
     test_inspect_group_profile_help_exits_zero_and_matches_fixture()
+    test_list_commands_help_exits_zero_and_matches_fixture()
+    test_list_scenes_help_exits_zero_and_matches_fixture()
+    test_list_group_profiles_help_exits_zero_and_matches_fixture()
     test_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
@@ -346,12 +511,19 @@ if __name__ == "__main__":
     test_inspect_scene_known_key_is_deterministic()
     test_inspect_group_profile_known_key_exits_zero_and_matches_fixture()
     test_inspect_group_profile_known_key_is_deterministic()
+    test_list_commands_exits_zero_and_matches_fixture()
+    test_list_scenes_exits_zero_and_matches_fixture()
+    test_list_group_profiles_exits_zero_and_matches_fixture()
+    test_list_commands_are_deterministic()
+    test_list_scenes_are_deterministic()
+    test_list_group_profiles_are_deterministic()
     test_inspect_command_unknown_key_fails_safely()
     test_inspect_scene_unknown_key_fails_safely()
     test_inspect_group_profile_unknown_key_fails_safely()
     test_missing_arguments_fail_safely()
     test_unknown_arguments_fail_safely()
     test_unknown_report_arguments_fail_safely()
+    test_unknown_list_arguments_fail_safely()
     test_missing_inspect_command_key_fails_safely()
     test_missing_inspect_scene_key_fails_safely()
     test_missing_inspect_group_profile_key_fails_safely()
@@ -359,3 +531,6 @@ if __name__ == "__main__":
     test_inspect_command_exposes_no_active_behavior_or_support_expansion()
     test_inspect_scene_exposes_no_active_behavior_or_support_expansion()
     test_inspect_group_profile_exposes_no_active_behavior_or_support_expansion()
+    test_list_commands_exposes_no_active_behavior_or_support_expansion()
+    test_list_scenes_exposes_no_active_behavior_or_support_expansion()
+    test_list_group_profiles_exposes_no_active_behavior_or_support_expansion()

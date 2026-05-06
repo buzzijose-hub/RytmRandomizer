@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: list-group-profiles
+
+Usage:
+  python -m rytm_randomizer.cli list-group-profiles
+  python -m rytm_randomizer.cli list-group-profiles --help
+
+Behavior:
+  Lists existing passive group profile keys and names.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
