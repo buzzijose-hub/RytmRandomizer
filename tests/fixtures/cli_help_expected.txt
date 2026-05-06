@@ -13,6 +13,7 @@ Usage:
   python -m rytm_randomizer.cli search-group-profiles <query>
   python -m rytm_randomizer.cli preview-command <key>
   python -m rytm_randomizer.cli preview-scene <key>
+  python -m rytm_randomizer.cli preview-group-profile <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -31,6 +32,8 @@ Commands:
                      Search passive group profile metadata.
   preview-command    Preview passive command metadata by key.
   preview-scene      Preview passive scene metadata by key.
+  preview-group-profile
+                     Preview passive group profile metadata by key.
 
 Safety:
   passive/read-only

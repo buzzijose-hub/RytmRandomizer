@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: preview-group-profile
+
+Usage:
+  python -m rytm_randomizer.cli preview-group-profile <key>
+  python -m rytm_randomizer.cli preview-group-profile --help
+
+Behavior:
+  Displays a passive dry-run preview for an existing group profile key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

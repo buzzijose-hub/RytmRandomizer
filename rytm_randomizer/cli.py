@@ -12,7 +12,7 @@ USAGE = (
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
     "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
-    "preview-scene <key>"
+    "preview-scene <key> | preview-group-profile <key>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -29,6 +29,7 @@ Usage:
   python -m rytm_randomizer.cli search-group-profiles <query>
   python -m rytm_randomizer.cli preview-command <key>
   python -m rytm_randomizer.cli preview-scene <key>
+  python -m rytm_randomizer.cli preview-group-profile <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -47,6 +48,24 @@ Commands:
                      Search passive group profile metadata.
   preview-command    Preview passive command metadata by key.
   preview-scene      Preview passive scene metadata by key.
+  preview-group-profile
+                     Preview passive group profile metadata by key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+PREVIEW_GROUP_PROFILE_HELP = """RytmRandomizer passive CLI: preview-group-profile
+
+Usage:
+  python -m rytm_randomizer.cli preview-group-profile <key>
+  python -m rytm_randomizer.cli preview-group-profile --help
+
+Behavior:
+  Displays a passive dry-run preview for an existing group profile key.
 
 Safety:
   passive/read-only
@@ -520,6 +539,43 @@ def format_preview_scene_report(scene_key):
     ]
 
 
+def format_preview_group_profile_report(profile_key):
+    """Return deterministic passive group profile preview lines."""
+    report = get_registry_item("group_profiles", profile_key)
+    key = report["key"]
+
+    if not report["exists"]:
+        return [
+            "RytmRandomizer passive group profile preview",
+            f"Group profile: {key}",
+            "Found: False",
+            (
+                "Message: Group profile preview not found. No MIDI was sent. "
+                "No command executed. No hardware was mutated."
+            ),
+        ]
+
+    metadata = report["metadata"]
+    return [
+        "RytmRandomizer passive group profile preview",
+        f"Group profile: {key}",
+        "Found: True",
+        f"Name: {metadata.get('name', '')}",
+        f"Machine value: {metadata.get('machine_value', '')}",
+        f"Group pad: {metadata.get('group_pad', '')}",
+        "No MIDI would be sent.",
+        "No command would execute.",
+        "No hardware would be mutated.",
+        "Safety:",
+        "- passive/read-only",
+        "- no MIDI sending",
+        "- no port opening",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no hardware required",
+    ]
+
+
 REPORT_HELP = """RytmRandomizer passive CLI: report
 
 Usage:
@@ -580,6 +636,10 @@ def main(argv=None):
 
     if args == ["preview-scene", "--help"]:
         sys.stdout.write(f"{PREVIEW_SCENE_HELP}\n")
+        return 0
+
+    if args == ["preview-group-profile", "--help"]:
+        sys.stdout.write(f"{PREVIEW_GROUP_PROFILE_HELP}\n")
         return 0
 
     if args == ["inspect-command", "--help"]:
@@ -685,6 +745,15 @@ def main(argv=None):
 
     if len(args) == 2 and args[0] == "preview-scene":
         lines = format_preview_scene_report(args[1])
+        output = "\n".join(lines)
+        if lines[2] == "Found: True":
+            sys.stdout.write(f"{output}\n")
+            return 0
+        sys.stderr.write(f"{output}\n")
+        return 1
+
+    if len(args) == 2 and args[0] == "preview-group-profile":
+        lines = format_preview_group_profile_report(args[1])
         output = "\n".join(lines)
         if lines[2] == "Found: True":
             sys.stdout.write(f"{output}\n")
