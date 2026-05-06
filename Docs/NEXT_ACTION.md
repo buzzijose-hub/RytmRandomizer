@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6282cbc Add passive-to-active boundary design
+dc277e8 Add passive-to-active boundary review
 
 ## Current Phase
 
@@ -61,17 +61,18 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Create the active-layer design/spec document only, using the accepted
-passive-to-active boundary review:
+Review and accept the active-layer design/spec:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC.md`
 
-The review confirms acceptance of the passive-to-active boundary, records that
-no active behavior exists yet, keeps hardware off, and limits the next task to
-active-layer design/spec only.
+The spec designs the future active/hardware-facing layer without
+implementation, preserves passive behavior, keeps hardware off, and defines
+arming, a mock MIDI boundary, forbidden scope, and testing requirements.
 
-Do not implement execution yet.
+If accepted, the next task may be a test-only mock MIDI boundary design or test
+plan. Do not implement MIDI or execution yet.
 
 ## Do-Not-Touch Files
 

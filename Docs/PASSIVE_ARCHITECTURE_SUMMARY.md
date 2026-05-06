@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6282cbc
+dc277e8
 
 ## Protected Reference
 
@@ -45,13 +45,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6282cbc Add passive-to-active boundary design
+- current HEAD: dc277e8 Add passive-to-active boundary review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: active-layer design/spec only
+- next recommended task: review and accept active-layer design/spec
 - closeout command
 - stop condition
 
@@ -97,6 +97,28 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Active-Layer Design Spec
+
+`Docs/ACTIVE_LAYER_DESIGN_SPEC.md` designs the future active/hardware-facing
+layer without implementation.
+
+It preserves passive behavior, keeps hardware off, and defines:
+
+- active layer non-negotiables
+- proposed active-layer architecture
+- mockable MIDI boundary
+- arming model
+- first active test candidate constraints
+- forbidden early active scope
+- possible future active CLI names as design only
+- required tests before implementation
+- operator checklist before first hardware validation
+- stop conditions
+
+The spec is documentation-only. It adds no MIDI code, port opening, active CLI
+command, dispatch, execution, hardware testing, GUI, capture, Analog Four
+support, Pads 5-12 support, or machine/profile universe expansion.
 
 ## Passive Lookup Helpers
 
@@ -1087,7 +1109,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create an active-layer design/spec document only
+- review and accept the active-layer design/spec
+- create a test-only mock MIDI boundary design or test plan only if the spec is accepted
 - keep hardware off during the design/spec work
 
 These layers should continue to return passive data only and must not wire into

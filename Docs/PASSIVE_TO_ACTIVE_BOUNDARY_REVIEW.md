@@ -78,8 +78,11 @@ Current hardware status:
 
 Do not implement active behavior yet.
 
-The next planning target should be an active-layer design/spec document. That
-document should define:
+The active-layer design/spec lives in:
+
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC.md`
+
+That document defines:
 
 - mockable MIDI boundary
 - arming model
@@ -104,5 +107,6 @@ Hardware should remain off during that design/spec work.
 ## Decision
 
 - Boundary accepted for planning.
-- Proceed next with active-layer design/spec only.
+- Active-layer design/spec is the next planning artifact.
+- Review and accept the active-layer design/spec before any test-only mock MIDI boundary work.
 - Hardware remains off.

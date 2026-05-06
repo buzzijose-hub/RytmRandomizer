@@ -202,4 +202,12 @@ The boundary has an acceptance checkpoint for planning. That review confirms no
 active behavior exists yet, keeps hardware off, and sets the next recommended
 task as active-layer design/spec only.
 
+Active-layer design/spec:
+
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC.md`
+
+The spec designs the future active/hardware-facing layer without
+implementation, preserves passive behavior, keeps hardware off, and defines
+arming, a mock MIDI boundary, forbidden scope, and testing requirements.
+
 Keep hardware off until then.
