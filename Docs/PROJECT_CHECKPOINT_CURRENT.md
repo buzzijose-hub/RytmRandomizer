@@ -87,6 +87,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - unified passive registry view
 - passive registry report generator
 - registry report golden text contract
+- passive report CLI preview plan
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -149,6 +150,17 @@ and reporting work has a stable deterministic report structure. The test
 normalizes line endings so Windows CRLF/LF differences do not cause false
 failures. Closeout already includes registry report testing, so no duplicate
 closeout entry was needed.
+
+The passive report CLI preview plan includes:
+
+- Docs/PASSIVE_REPORT_CLI_PREVIEW_PLAN.md
+
+The plan is documentation-only and records baseline HEAD 0ae33ef before the
+planning slice. It defines how a future read-only CLI preview/report command
+could display the already-passive registry report without implementing a CLI.
+Potential future command shapes include `python -m rytm_randomizer.registry_report`
+or `python -m rytm_randomizer.cli report`, but no command is implemented or
+approved by the plan.
 
 The report generator sits on top of the unified passive registry view. It
 generates in-memory, read-only report data for registry sections, per-section
@@ -371,6 +383,12 @@ added no CLI behavior, report file writing at runtime, import-time printing,
 MIDI sending, port opening, dispatch, command execution, hardware mutation,
 SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or machine/profile
 universe expansion. The protected V1.34 reference remains untouched.
+
+The passive report CLI preview plan added no code, tests, CLI behavior, runtime
+behavior, MIDI sending, port opening, dispatch, command execution, hardware
+mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched.
 
 ## Validated Rytm Scope
 

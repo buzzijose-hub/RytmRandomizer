@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-043912f
+0ae33ef
 
 ## Protected Reference
 
@@ -256,6 +256,43 @@ Recommended passive layers before runtime work:
 
 These layers should continue to return passive data only and must not wire into
 runtime command execution.
+
+## Passive Report CLI Preview Plan
+
+`Docs/PASSIVE_REPORT_CLI_PREVIEW_PLAN.md` defines a future read-only CLI
+preview/report command concept. It is planning only and does not implement a CLI
+or introduce runtime behavior.
+
+Potential future command shapes include:
+
+- `python -m rytm_randomizer.registry_report`
+- `python -m rytm_randomizer.cli report`
+
+The future command must only format or display the already-passive registry
+report. It should be useful for inspection, documentation, future UI, and future
+safe operator workflows.
+
+The plan requires that any future CLI preview preserve:
+
+- the passive registry report generator boundary
+- the registry report golden text contract
+- no import-time printing
+- no report file writing by default
+- no hardware requirement
+
+It prohibits:
+
+- MIDI sending
+- MIDI port opening
+- command dispatch
+- command execution
+- hardware mutation
+- SysEx
+- GUI behavior
+- capture behavior
+- Analog Four support
+- Pads 5-12 support
+- machine/profile universe expansion
 
 ## Conditions Before Hardware-Facing Work
 
