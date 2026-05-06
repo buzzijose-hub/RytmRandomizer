@@ -105,6 +105,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI group profile inspection
 - passive CLI list commands
 - passive CLI search commands
+- passive CLI operator quickstart
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -213,6 +214,32 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli search-scenes <query>`
 - `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.registry_report`
+
+The passive CLI operator quickstart includes:
+
+- Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md
+
+The quickstart documents current passive CLI operator commands:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+python -m rytm_randomizer.cli inspect-command J
+python -m rytm_randomizer.cli inspect-scene S1A
+python -m rytm_randomizer.cli inspect-group-profile 2
+python -m rytm_randomizer.cli search-commands BD
+python -m rytm_randomizer.cli search-scenes Wild
+python -m rytm_randomizer.cli search-group-profiles Hard
+```
+
+It clearly states that the passive CLI is read-only and does not send MIDI,
+open ports, execute commands, mutate hardware, or require Analog Rytm or Analog
+Four hardware to be powered on. Analog Rytm and Analog Four should remain off
+during this phase. The quickstart also records safe no-match behavior and the
+standard closeout checklist.
 
 The passive CLI search commands milestone includes:
 
@@ -816,6 +843,12 @@ Four support, Pads 5-12 support, or machine/profile universe expansion. It
 added no report file writing at runtime and no import-time printing. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
+
+The passive CLI operator quickstart is documentation-only. It added no runtime
+behavior, CLI code, MIDI sending, port opening, dispatch, command execution,
+hardware mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support,
+or machine/profile universe expansion. The protected V1.34 reference remains
+untouched. Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

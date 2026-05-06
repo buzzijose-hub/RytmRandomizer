@@ -607,6 +607,53 @@ It does not:
 
 Analog Rytm and Analog Four remain off for this phase.
 
+### Passive CLI Operator Quickstart
+
+`Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md` documents how to use the current
+passive CLI safely during the V1.34 modularization phase.
+
+It covers:
+
+- purpose
+- current safe baseline
+- how to run the passive CLI
+- report command
+- list commands
+- inspect commands
+- search commands
+- safe no-match behavior
+- what the CLI does not do
+- hardware status
+- closeout checklist
+
+It documents these representative passive CLI commands:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+python -m rytm_randomizer.cli inspect-command J
+python -m rytm_randomizer.cli inspect-scene S1A
+python -m rytm_randomizer.cli inspect-group-profile 2
+python -m rytm_randomizer.cli search-commands BD
+python -m rytm_randomizer.cli search-scenes Wild
+python -m rytm_randomizer.cli search-group-profiles Hard
+```
+
+The quickstart states that the CLI is passive/read-only and does not send MIDI,
+open ports, execute commands, mutate hardware, or require Analog Rytm or Analog
+Four hardware to be powered on. Analog Rytm and Analog Four should remain off
+during this phase.
+
+The quickstart is documentation-only. It does not add CLI behavior, runtime
+behavior, MIDI sending, port opening, dispatch, command execution, hardware
+mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion.
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ### Guarded Passive Depth Command Labels
 
 The guarded passive depth command label milestone improves passive

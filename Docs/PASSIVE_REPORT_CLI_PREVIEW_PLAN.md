@@ -181,6 +181,30 @@ Manual verification also showed:
   passive no-match message: "no matches found. No MIDI was sent. No command
   executed."
 
+The operator-facing passive CLI quickstart is documented in:
+
+- `Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md`
+
+It summarizes the current safe passive CLI commands:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+python -m rytm_randomizer.cli inspect-command J
+python -m rytm_randomizer.cli inspect-scene S1A
+python -m rytm_randomizer.cli inspect-group-profile 2
+python -m rytm_randomizer.cli search-commands BD
+python -m rytm_randomizer.cli search-scenes Wild
+python -m rytm_randomizer.cli search-group-profiles Hard
+```
+
+The quickstart is documentation-only and does not approve new CLI behavior,
+runtime wiring, command execution, MIDI behavior, hardware behavior, or new
+scope.
+
 ## Allowed Behavior
 
 The passive CLI preview command may:
