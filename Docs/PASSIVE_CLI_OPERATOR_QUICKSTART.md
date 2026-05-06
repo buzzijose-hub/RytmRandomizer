@@ -5,8 +5,8 @@
 This quickstart is for using the current RytmRandomizer passive CLI safely
 during the V1.34 modularization phase.
 
-The CLI is passive/read-only. It is for inspection, reporting, listing, and
-searching existing scaffold metadata only.
+The CLI is passive/read-only. It is for inspection, previewing, reporting,
+listing, and searching existing scaffold metadata only.
 
 ## Current Safe Baseline
 
@@ -72,6 +72,30 @@ python -m rytm_randomizer.cli inspect-group-profile 2
 Inspection reads copied metadata from the passive registry surfaces. It does
 not call handlers, dispatch commands, execute scenes, change machines, or send
 MIDI.
+
+## Preview Command
+
+Preview passive dry-run command metadata:
+
+```powershell
+python -m rytm_randomizer.cli preview-command J
+```
+
+Preview-command uses the existing passive preview helper. It clearly states
+that no MIDI would be sent, no command would execute, and no hardware would be
+mutated.
+
+Unknown preview keys fail safely. For example:
+
+```powershell
+python -m rytm_randomizer.cli preview-command DOES_NOT_EXIST
+```
+
+Expected behavior is a passive not-found message such as:
+
+```text
+Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.
+```
 
 ## Search Commands
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 813cc0a Add passive CLI command preview
 - aee04be Add passive CLI search commands
 - 9ff49dd Label guarded passive depth commands
 - 279a2d5 Add passive CLI list commands
@@ -105,6 +106,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI group profile inspection
 - passive CLI list commands
 - passive CLI search commands
+- passive CLI command preview
 - passive CLI operator quickstart
 - guarded passive depth command labels
 - passive architecture summary
@@ -213,7 +215,46 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli search-commands <query>`
 - `python -m rytm_randomizer.cli search-scenes <query>`
 - `python -m rytm_randomizer.cli search-group-profiles <query>`
+- `python -m rytm_randomizer.cli preview-command --help`
+- `python -m rytm_randomizer.cli preview-command <key>`
 - `python -m rytm_randomizer.registry_report`
+
+The passive CLI command preview milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_preview_command_help_expected.txt
+- tests/fixtures/cli_preview_command_known_expected.txt
+- tests/fixtures/cli_preview_command_unknown_expected.txt
+
+The new passive CLI paths are:
+
+```powershell
+python -m rytm_randomizer.cli preview-command <key>
+python -m rytm_randomizer.cli preview-command --help
+```
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  preview-command.
+- `python -m rytm_randomizer.cli preview-command --help` printed passive
+  preview-command usage.
+- `python -m rytm_randomizer.cli preview-command J` printed passive dry-run
+  preview metadata: Command: J, Found: True, Category: print, Scaffold only:
+  True, Executable: False, Forbidden/no-touch: False, Validation ok: True,
+  Validation errors: 0, Safety summary: No MIDI would be sent. No command
+  would execute, plus explicit no-MIDI, no-command, and no-hardware-mutation
+  statements.
+- `python -m rytm_randomizer.cli preview-command DOES_NOT_EXIST` failed safely
+  with: "Command preview not found. No MIDI was sent. No command executed. No
+  hardware was mutated."
+
+Preview-command uses the existing passive preview helper. It does not call
+handlers, add handlers, dispatch commands, execute commands, open MIDI ports,
+send MIDI, write files, require hardware, or mutate runtime or hardware state.
+Unknown or missing keys fail safely.
 
 The passive CLI operator quickstart includes:
 
@@ -233,6 +274,7 @@ python -m rytm_randomizer.cli inspect-group-profile 2
 python -m rytm_randomizer.cli search-commands BD
 python -m rytm_randomizer.cli search-scenes Wild
 python -m rytm_randomizer.cli search-group-profiles Hard
+python -m rytm_randomizer.cli preview-command J
 ```
 
 It clearly states that the passive CLI is read-only and does not send MIDI,
@@ -838,6 +880,13 @@ protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
 
 The passive CLI search commands milestone added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog
+Four support, Pads 5-12 support, or machine/profile universe expansion. It
+added no report file writing at runtime and no import-time printing. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
+
+The passive CLI command preview milestone added no MIDI sending, port opening,
 dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog
 Four support, Pads 5-12 support, or machine/profile universe expansion. It
 added no report file writing at runtime and no import-time printing. The

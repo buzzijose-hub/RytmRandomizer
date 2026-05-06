@@ -22,6 +22,7 @@ Implemented milestone:
 - 279a2d5 Add passive CLI list commands
 - 9ff49dd Label guarded passive depth commands
 - aee04be Add passive CLI search commands
+- 813cc0a Add passive CLI command preview
 
 ## Current Passive Foundation
 
@@ -111,6 +112,13 @@ python -m rytm_randomizer.cli search-scenes <query>
 python -m rytm_randomizer.cli search-group-profiles <query>
 ```
 
+Implemented passive CLI command preview:
+
+```powershell
+python -m rytm_randomizer.cli preview-command <key>
+python -m rytm_randomizer.cli preview-command --help
+```
+
 The report commands print the same deterministic golden-format passive registry
 report.
 
@@ -180,6 +188,17 @@ Manual verification also showed:
 - `python -m rytm_randomizer.cli search-commands DOES_NOT_EXIST` returns the
   passive no-match message: "no matches found. No MIDI was sent. No command
   executed."
+- `python -m rytm_randomizer.cli preview-command --help` prints passive
+  preview-command usage.
+- `python -m rytm_randomizer.cli preview-command J` prints passive dry-run
+  preview metadata: Command: J, Found: True, Category: print, Scaffold only:
+  True, Executable: False, Forbidden/no-touch: False, Validation ok: True,
+  Validation errors: 0, Safety summary: No MIDI would be sent. No command
+  would execute, and explicit no-MIDI, no-command, and no-hardware-mutation
+  statements.
+- `python -m rytm_randomizer.cli preview-command DOES_NOT_EXIST` fails safely
+  with: "Command preview not found. No MIDI was sent. No command executed. No
+  hardware was mutated."
 
 The operator-facing passive CLI quickstart is documented in:
 
@@ -199,6 +218,7 @@ python -m rytm_randomizer.cli inspect-group-profile 2
 python -m rytm_randomizer.cli search-commands BD
 python -m rytm_randomizer.cli search-scenes Wild
 python -m rytm_randomizer.cli search-group-profiles Hard
+python -m rytm_randomizer.cli preview-command J
 ```
 
 The quickstart is documentation-only and does not approve new CLI behavior,
@@ -224,6 +244,9 @@ The passive CLI preview command may:
 - show guarded passive labels for depth commands 1, 2, and 3
 - search copied passive registry metadata without executing it
 - return passive no-match output safely
+- preview existing passive command metadata without executing it
+- clearly state that no MIDI would be sent, no command would execute, and no
+  hardware would be mutated
 
 ## Prohibited Behavior
 
@@ -265,6 +288,10 @@ behavior.
 The passive CLI search commands must remain passive/read-only. They must not
 reinterpret search matches, registry keys, labels, names, descriptions, actions,
 scopes, or profile metadata as executable behavior.
+
+The passive CLI command preview path must remain passive/read-only. It must use
+the existing passive preview helper and must not reinterpret preview output as
+permission to dispatch, execute, send MIDI, or mutate hardware.
 
 The guarded passive depth command labels must remain metadata-only. Commands 1,
 2, and 3 must remain non-executable, scaffold-only/passive, V1.34 reference
