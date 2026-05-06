@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d1df975
+4a590c8
 
 ## Protected Reference
 
@@ -33,6 +33,7 @@ The standard closeout suite currently includes:
 - registry report CLI
 - passive CLI
 - mock MIDI
+- mock message mapper
 
 The closeout workflow also checks:
 
@@ -46,13 +47,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d1df975 Add mock message mapping design spec
+- current HEAD: 4a590c8 Add test-only mock message mapper
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a test-only mock message mapper scaffold for group profile 2 only
+- next recommended task: review the test-only mock message mapper milestone before broader mapping or active work
 - closeout command
 - stop condition
 
@@ -98,6 +99,40 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Test-Only Mock Message Mapper
+
+The test-only mock message mapper milestone is:
+
+- 4a590c8 Add test-only mock message mapper
+
+It includes:
+
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+- `Scripts/closeout_check.ps1`
+
+It adds a mock-only mapper from existing passive group profile metadata to
+inert mock MidiMessage objects.
+
+Current behavior:
+
+- supports only group profile key `"2"` / My BD Hard
+- returns deterministic mock message data
+- uses the existing `mock_midi.py` scaffold
+- records cleanly through MockMidiSender
+- fails safely for unknown or unsupported keys
+- is not wired into CLI
+- is not wired into runtime execution
+- imports no real MIDI library
+- opens no ports
+- sends no MIDI
+- adds no active behavior
+- adds no hardware behavior
+
+The closeout suite now includes "Test: Mock Message Mapper".
+
+Analog Rytm and Analog Four remain off for this phase.
 
 ## Mock Message Mapping Design Spec
 
@@ -192,7 +227,8 @@ It confirms:
 - no ports are opened
 - no MIDI is sent
 - mock MIDI is not wired to CLI or active execution
-- the next recommended task is a test-only mock mapper scaffold for group profile 2 only, after accepting the mock message mapping design/spec review
+- the test-only mock message mapper now supports only group profile 2 / My BD Hard
+- the closeout suite includes Mock Message Mapper
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
@@ -1265,9 +1301,9 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a tiny test-only mapper scaffold only after accepting the mock message mapping design/spec review
-- limit the first mapper scaffold to group profile 2 only
-- keep mapping work mock-only without real MIDI or hardware behavior
+- review the test-only mock message mapper milestone before broader mapping
+- keep any future mapping work mock-only without real MIDI or hardware behavior
+- do not expand beyond group profile 2 without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work
 
 These layers should continue to return passive data only and must not wire into

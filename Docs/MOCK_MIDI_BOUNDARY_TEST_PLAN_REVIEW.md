@@ -155,4 +155,18 @@ The review accepts the mock message mapping design/spec for planning, records
 that no mapper implementation exists yet, sets the next recommended task as a
 test-only mock mapper scaffold for group profile 2, and keeps hardware off.
 
+Test-only mock message mapper:
+
+- 4a590c8 Add test-only mock message mapper
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+- `Scripts/closeout_check.ps1`
+
+The mapper uses existing passive group profile metadata and the mock_midi.py
+scaffold to create deterministic inert mock MidiMessage objects for group
+profile key `"2"` / My BD Hard only. It records cleanly through
+MockMidiSender, fails safely for unknown or unsupported keys, and is not wired
+to CLI or runtime execution. The closeout suite now includes "Test: Mock
+Message Mapper".
+
 Keep hardware off.

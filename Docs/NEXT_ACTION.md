@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d1df975 Add mock message mapping design spec
+4a590c8 Add test-only mock message mapper
 
 ## Current Phase
 
@@ -61,8 +61,8 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Create a test-only mock message mapper scaffold for group profile 2 only,
-after the accepted mock message mapping review:
+Review the test-only mock message mapper milestone before any broader mapping,
+active execution, or hardware-facing work:
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -80,14 +80,18 @@ records that no real MIDI behavior exists:
 - `rytm_randomizer/mock_midi.py`
 - `tests/test_mock_midi.py`
 
-The mapping spec defines future mock-only mapping from passive metadata to mock
-MidiMessage objects. No mapper exists yet. No real MIDI, no hardware, no active
-CLI command, and no port opening.
+The test-only mock message mapper milestone adds:
 
-The mapping spec review accepts the design/spec for planning and sets the next
-recommended task as a tiny test-only mock mapper scaffold for group profile 2
-only. The scaffold must remain mock-only and must not open ports, send MIDI,
-wire into active CLI behavior, or require hardware.
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+- `Scripts/closeout_check.ps1`
+
+The mapper supports only group profile key `"2"` / My BD Hard, returns
+deterministic inert mock MidiMessage objects, records cleanly through
+MockMidiSender, and fails safely for unknown or unsupported keys.
+
+No real MIDI, no hardware, no active CLI command, no runtime execution, no port
+opening, and no CLI wiring exists.
 
 ## Do-Not-Touch Files
 

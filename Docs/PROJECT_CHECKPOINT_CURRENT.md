@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 4a590c8 Add test-only mock message mapper
 - d1df975 Add mock message mapping design spec
 - 82d4898 Add mock MIDI scaffold review
 - c15296a Update checkpoint after mock MIDI scaffold
@@ -182,6 +183,22 @@ The review accepts the mock message mapping design/spec for planning, records
 that no mapper implementation exists yet, sets the next recommended task as a
 test-only mock mapper scaffold for group profile 2, and keeps hardware off.
 
+The test-only mock message mapper milestone is:
+
+- 4a590c8 Add test-only mock message mapper
+
+The milestone includes:
+
+- rytm_randomizer/mock_message_mapper.py
+- tests/test_mock_message_mapper.py
+- Scripts/closeout_check.ps1
+
+The mapper converts existing passive group profile metadata for key `"2"` / My
+BD Hard into deterministic inert mock MidiMessage objects using the existing
+mock_midi.py scaffold. It records cleanly through MockMidiSender, fails safely
+for unknown or unsupported keys, imports no real MIDI library, opens no ports,
+sends no MIDI, and is not wired into CLI or runtime execution.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -234,6 +251,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock MIDI scaffold review
 - mock message mapping design/spec
 - mock message mapping design/spec review
+- test-only mock message mapper
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -261,6 +279,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_registry_report_cli.py
 - python .\tests\test_cli.py
 - python .\tests\test_mock_midi.py
+- python .\tests\test_mock_message_mapper.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -1297,6 +1316,24 @@ behavior, dispatch, command execution, scene execution, hardware mutation,
 SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
+
+The test-only mock message mapper includes:
+
+- rytm_randomizer/mock_message_mapper.py
+- tests/test_mock_message_mapper.py
+- Scripts/closeout_check.ps1
+
+The mapper is mock-only/test-only. It maps existing passive group profile
+metadata for key `"2"` / My BD Hard to deterministic inert mock MidiMessage
+objects using the existing mock_midi.py scaffold. It records cleanly through
+MockMidiSender and fails safely for unknown or unsupported keys. The closeout
+suite now includes "Test: Mock Message Mapper". It adds no real MIDI backend,
+no mido dependency, no port provider, no hardware detection, no hardware send,
+no active CLI command, no execute-command, no send-command, no hardware-test
+command, no runtime execution, no dispatch, no hardware mutation, no SysEx, no
+GUI/capture, no Analog Four support, no Pads 5-12 support, and no
+machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

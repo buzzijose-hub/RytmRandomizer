@@ -167,8 +167,23 @@ Review status:
 
 The mock message mapping design/spec is accepted for planning.
 
-Next, create a tiny test-only mapper scaffold if it remains mock-only.
+Implemented milestone:
 
-First mapper target should likely be group profile 2 only.
+- 4a590c8 Add test-only mock message mapper
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+- `Scripts/closeout_check.ps1`
+
+The mapper supports only group profile key `"2"` / My BD Hard, returns
+deterministic inert mock MidiMessage objects using the existing mock_midi.py
+scaffold, records cleanly through MockMidiSender, and fails safely for unknown
+or unsupported keys.
+
+The closeout suite now includes "Test: Mock Message Mapper".
+
+No real MIDI backend, mido dependency, port provider, hardware detection,
+hardware send, active CLI command, execute-command, send-command,
+hardware-test command, runtime execution, dispatch, SysEx, GUI/capture, Analog
+Four support, Pads 5-12 support, or machine/profile expansion was added.
 
 Hardware remains off.

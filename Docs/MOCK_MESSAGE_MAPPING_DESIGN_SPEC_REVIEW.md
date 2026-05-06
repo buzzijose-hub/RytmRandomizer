@@ -133,7 +133,19 @@ This is future possibility only, not implementation:
 
 ## Next Recommended Task
 
-Create a test-only mock message mapper scaffold for group profile 2 only.
+Implemented milestone:
+
+- 4a590c8 Add test-only mock message mapper
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+- `Scripts/closeout_check.ps1`
+
+The mapper supports only group profile key `"2"` / My BD Hard. It returns
+deterministic inert mock MidiMessage objects using the existing mock_midi.py
+scaffold, records cleanly through MockMidiSender, and fails safely for unknown
+or unsupported keys.
+
+The closeout suite now includes "Test: Mock Message Mapper".
 
 No real MIDI.
 
