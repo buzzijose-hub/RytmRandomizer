@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 915b7a2 Add passive registry report CLI preview
 - 97ecf09 Add registry report golden text contract
 - e387f66 Add passive registry report generator
 - f6b10ca Add passive architecture summary
@@ -88,6 +89,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive registry report generator
 - registry report golden text contract
 - passive report CLI preview plan
+- passive registry report CLI preview
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -111,6 +113,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_command_lookup.py
 - python .\tests\test_registry.py
 - python .\tests\test_registry_report.py
+- python .\tests\test_registry_report_cli.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -129,10 +132,30 @@ passive test suite.
 The closeout script now includes "Test: Registry Report" as part of the
 standard passive test suite.
 
+The closeout script now includes "Test: Registry Report CLI" as part of the
+standard passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, command lookup, and registry tests
-and registry report tests passed silently; the V1.34 reference diff was empty;
-and git status was clean.
+registry report, and registry report CLI tests passed silently; the V1.34
+reference diff was empty; and git status was clean.
+
+The passive registry report CLI preview includes:
+
+- rytm_randomizer/registry_report.py
+- tests/test_registry_report_cli.py
+- Scripts/closeout_check.ps1
+
+The user-facing passive command is:
+
+```powershell
+python -m rytm_randomizer.registry_report
+```
+
+The command prints the existing golden-format passive registry report to stdout
+and exits with code 0. It prints nothing during import, writes no files, requires
+no hardware, opens no MIDI ports, sends no MIDI, dispatches no commands,
+executes no commands, and mutates no runtime or hardware state.
 
 The passive registry report generator includes:
 
@@ -389,6 +412,12 @@ behavior, MIDI sending, port opening, dispatch, command execution, hardware
 mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
+
+The passive registry report CLI preview added no MIDI sending, port opening,
+dispatch, command execution, hardware mutation, SysEx, GUI, capture, Analog Four
+support, Pads 5-12 support, or machine/profile universe expansion. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four are
+not needed and should remain off for this phase.
 
 ## Validated Rytm Scope
 

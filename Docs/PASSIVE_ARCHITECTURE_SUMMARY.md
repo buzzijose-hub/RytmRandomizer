@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-0ae33ef
+915b7a2
 
 ## Protected Reference
 
@@ -30,6 +30,7 @@ The standard closeout suite currently includes:
 - command lookup
 - registry
 - registry report
+- registry report CLI
 
 The closeout workflow also checks:
 
@@ -124,6 +125,47 @@ It does not:
 - add Analog Four support
 - add Pads 5-12 support
 - expand the machine/profile universe
+
+### Passive Registry Report CLI Preview
+
+The passive registry report CLI preview adds the first user-facing read-only
+command for displaying the passive registry report:
+
+```powershell
+python -m rytm_randomizer.registry_report
+```
+
+It uses:
+
+- `rytm_randomizer/registry_report.py`
+- `tests/test_registry_report_cli.py`
+- `Scripts/closeout_check.ps1`
+
+It does:
+
+- print the existing golden-format passive registry report to stdout
+- exit with code 0
+- preserve the registry report golden text contract
+- require no hardware
+
+It does not:
+
+- print during import
+- write report files
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four are not needed and should remain off for this phase.
 
 ### Registry Report Golden Text Contract
 
@@ -259,18 +301,18 @@ runtime command execution.
 
 ## Passive Report CLI Preview Plan
 
-`Docs/PASSIVE_REPORT_CLI_PREVIEW_PLAN.md` defines a future read-only CLI
-preview/report command concept. It is planning only and does not implement a CLI
-or introduce runtime behavior.
+`Docs/PASSIVE_REPORT_CLI_PREVIEW_PLAN.md` defined the read-only CLI
+preview/report command concept before implementation. The implemented passive
+CLI preview now follows that plan.
 
 Potential future command shapes include:
 
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 
-The future command must only format or display the already-passive registry
-report. It should be useful for inspection, documentation, future UI, and future
-safe operator workflows.
+The command only formats and displays the already-passive registry report. It is
+useful for inspection, documentation, future UI, and future safe operator
+workflows.
 
 The plan requires that any future CLI preview preserve:
 

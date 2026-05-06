@@ -2,14 +2,18 @@
 
 ## Purpose
 
-This document defines a future read-only CLI preview/report command concept for
-RytmRandomizer. It is planning only. It does not introduce any CLI
-implementation, runtime wiring, command execution, MIDI behavior, or hardware
+This document defines the read-only CLI preview/report command concept for
+RytmRandomizer and records the implemented passive CLI preview milestone. It
+does not approve runtime wiring, command execution, MIDI behavior, or hardware
 behavior.
 
-The future command should expose the existing passive registry report in a
+The implemented command exposes the existing passive registry report in a
 convenient operator-facing form while preserving the current passive safety
 boundary.
+
+Implemented milestone:
+
+- 915b7a2 Add passive registry report CLI preview
 
 ## Current Passive Foundation
 
@@ -39,25 +43,25 @@ The passive foundation includes:
 `rytm_hybrid_randomizer_v134.py` remains the protected V1.34 behavior
 reference.
 
-## Proposed Future Command Shape
+## Implemented Command Shape
 
-Possible future command shapes:
+Implemented passive command:
 
 ```powershell
 python -m rytm_randomizer.registry_report
 ```
 
-or:
+Earlier planning also considered:
 
 ```powershell
 python -m rytm_randomizer.cli report
 ```
 
-These are concepts only. No CLI module or command is approved by this plan.
+Only `python -m rytm_randomizer.registry_report` is implemented in this phase.
 
 ## Allowed Behavior
 
-A future CLI preview/report command may:
+The passive CLI preview command may:
 
 - import the passive registry report module
 - build the existing passive registry report
@@ -68,7 +72,7 @@ A future CLI preview/report command may:
 
 ## Prohibited Behavior
 
-A future CLI preview/report command must not:
+The passive CLI preview/report command must not:
 
 - send MIDI
 - open MIDI ports
@@ -126,10 +130,10 @@ differences do not create false failures.
 
 ## Preconditions Before Implementation
 
-Before implementing any CLI preview/report command:
+Before expanding any CLI preview/report command:
 
 - user approval must be explicit
-- the implementation must be a small isolated step
+- the expansion must be a small isolated step
 - no runtime dispatch or command execution may be introduced
 - no MIDI import, send, or port opening may be introduced
 - no file-writing behavior may be introduced by default
@@ -149,14 +153,14 @@ git status --short
 
 The V1.34 reference diff must remain empty.
 
-Additional direct-runnable CLI tests should be added only if a CLI
-implementation is explicitly approved.
+Additional direct-runnable CLI tests should be added only if CLI behavior is
+expanded with explicit approval.
 
 ## Non-Goals
 
 This plan does not approve:
 
-- CLI implementation
+- additional CLI commands or options
 - runtime command dispatch
 - MIDI behavior
 - hardware interaction
