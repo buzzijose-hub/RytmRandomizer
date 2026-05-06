@@ -1,0 +1,17 @@
+RytmRandomizer passive CLI: preview-scene
+
+Usage:
+  python -m rytm_randomizer.cli preview-scene <key>
+  python -m rytm_randomizer.cli preview-scene --help
+
+Behavior:
+  Displays a passive dry-run preview for an existing scene key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no scene execution
+  no command execution
+  no hardware mutation
+  no hardware required

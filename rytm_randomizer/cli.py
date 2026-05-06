@@ -11,7 +11,8 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
     "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query> | preview-command <key>"
+    "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
+    "preview-scene <key>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -27,6 +28,7 @@ Usage:
   python -m rytm_randomizer.cli search-scenes <query>
   python -m rytm_randomizer.cli search-group-profiles <query>
   python -m rytm_randomizer.cli preview-command <key>
+  python -m rytm_randomizer.cli preview-scene <key>
   python -m rytm_randomizer.cli --help
 
 Commands:
@@ -44,11 +46,29 @@ Commands:
   search-group-profiles
                      Search passive group profile metadata.
   preview-command    Preview passive command metadata by key.
+  preview-scene      Preview passive scene metadata by key.
 
 Safety:
   passive/read-only
   no MIDI sending
   no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
+PREVIEW_SCENE_HELP = """RytmRandomizer passive CLI: preview-scene
+
+Usage:
+  python -m rytm_randomizer.cli preview-scene <key>
+  python -m rytm_randomizer.cli preview-scene --help
+
+Behavior:
+  Displays a passive dry-run preview for an existing scene key.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no scene execution
   no command execution
   no hardware mutation
   no hardware required"""
@@ -457,6 +477,49 @@ def format_preview_command_report(command_key):
     ]
 
 
+def format_preview_scene_report(scene_key):
+    """Return deterministic passive scene preview lines."""
+    report = get_registry_item("scenes", scene_key)
+    key = report["key"]
+
+    if not report["exists"]:
+        return [
+            "RytmRandomizer passive scene preview",
+            f"Scene: {key}",
+            "Found: False",
+            (
+                "Message: Scene preview not found. No MIDI was sent. "
+                "No scene executed. No command executed. No hardware was mutated."
+            ),
+        ]
+
+    metadata = report["metadata"]
+    return [
+        "RytmRandomizer passive scene preview",
+        f"Scene: {key}",
+        "Found: True",
+        f"Name: {metadata.get('name', '')}",
+        f"Description: {metadata.get('description', '')}",
+        f"Action: {metadata.get('action', '')}",
+        f"Scope: {metadata.get('scope', '')}",
+        f"Scaffold only: {metadata.get('scaffold_only')}",
+        f"Executable: {metadata.get('executable')}",
+        f"V1.34 reference command: {metadata.get('v134_reference_command')}",
+        "No MIDI would be sent.",
+        "No scene would execute.",
+        "No command would execute.",
+        "No hardware would be mutated.",
+        "Safety:",
+        "- passive/read-only",
+        "- no MIDI sending",
+        "- no port opening",
+        "- no scene execution",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no hardware required",
+    ]
+
+
 REPORT_HELP = """RytmRandomizer passive CLI: report
 
 Usage:
@@ -513,6 +576,10 @@ def main(argv=None):
 
     if args == ["preview-command", "--help"]:
         sys.stdout.write(f"{PREVIEW_COMMAND_HELP}\n")
+        return 0
+
+    if args == ["preview-scene", "--help"]:
+        sys.stdout.write(f"{PREVIEW_SCENE_HELP}\n")
         return 0
 
     if args == ["inspect-command", "--help"]:
@@ -609,6 +676,15 @@ def main(argv=None):
 
     if len(args) == 2 and args[0] == "preview-command":
         lines = format_preview_command_report(args[1])
+        output = "\n".join(lines)
+        if lines[2] == "Found: True":
+            sys.stdout.write(f"{output}\n")
+            return 0
+        sys.stderr.write(f"{output}\n")
+        return 1
+
+    if len(args) == 2 and args[0] == "preview-scene":
+        lines = format_preview_scene_report(args[1])
         output = "\n".join(lines)
         if lines[2] == "Found: True":
             sys.stdout.write(f"{output}\n")
