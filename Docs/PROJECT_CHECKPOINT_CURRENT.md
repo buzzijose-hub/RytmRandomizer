@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6e90f21 Add active-layer design spec
 - dc277e8 Add passive-to-active boundary review
 - 6282cbc Add passive-to-active boundary design
 - 163b39d Add next action handoff
@@ -110,8 +111,13 @@ lives in:
 The spec designs the future active/hardware-facing layer without
 implementation, preserves passive behavior, keeps hardware off, and defines
 arming, a mock MIDI boundary, forbidden scope, and testing requirements. The
-next recommended task is to review and accept the active-layer design/spec
-before any test-only mock MIDI boundary work.
+active-layer design/spec review now lives in:
+
+- Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md
+
+The review accepts the active-layer design/spec for planning, records that no
+active behavior exists yet, sets the next recommended task as mock MIDI
+boundary planning/test-only design, and keeps hardware off.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -158,6 +164,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive-to-active boundary design
 - passive-to-active boundary review
 - active-layer design/spec
+- active-layer design/spec review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1115,6 +1122,19 @@ hardware validation can happen. It adds no implementation, MIDI code, port
 opening, active CLI command, execution, hardware testing, GUI, capture, Analog
 Four support, Pads 5-12 support, or machine/profile universe expansion. The
 protected V1.34 reference remains untouched.
+
+The active-layer design/spec review includes:
+
+- Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md
+
+The review document is documentation-only. It confirms acceptance of the
+active-layer design/spec for planning, records that the project remains
+passive/read-only, records that no active or hardware-facing behavior exists
+yet, sets the next recommended task as mock MIDI boundary planning/test-only
+design, and keeps hardware off. It adds no implementation, MIDI code, port
+opening, dispatch, command execution, scene execution, hardware mutation, SysEx,
+GUI, capture, Analog Four support, Pads 5-12 support, or machine/profile
+universe expansion. The protected V1.34 reference remains untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

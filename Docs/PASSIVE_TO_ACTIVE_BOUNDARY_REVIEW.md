@@ -81,8 +81,9 @@ Do not implement active behavior yet.
 The active-layer design/spec lives in:
 
 - `Docs/ACTIVE_LAYER_DESIGN_SPEC.md`
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md`
 
-That document defines:
+The spec defines:
 
 - mockable MIDI boundary
 - arming model
@@ -90,7 +91,9 @@ That document defines:
 - forbidden actions
 - tests before any real hardware validation
 
-Hardware should remain off during that design/spec work.
+The review accepts the spec for planning and sets the next recommended task as
+mock MIDI boundary planning/test-only design. Hardware should remain off during
+that planning work.
 
 ## Rejected/Forbidden Next Moves
 
@@ -107,6 +110,6 @@ Hardware should remain off during that design/spec work.
 ## Decision
 
 - Boundary accepted for planning.
-- Active-layer design/spec is the next planning artifact.
-- Review and accept the active-layer design/spec before any test-only mock MIDI boundary work.
+- Active-layer design/spec accepted for planning.
+- Proceed next with mock MIDI boundary planning/test-only design.
 - Hardware remains off.

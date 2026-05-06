@@ -210,4 +210,12 @@ The spec designs the future active/hardware-facing layer without
 implementation, preserves passive behavior, keeps hardware off, and defines
 arming, a mock MIDI boundary, forbidden scope, and testing requirements.
 
+Active-layer design/spec review:
+
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md`
+
+The review confirms acceptance of the active-layer design/spec for planning,
+records that no active behavior exists yet, sets the next recommended task as
+mock MIDI boundary planning/test-only design, and keeps hardware off.
+
 Keep hardware off until then.

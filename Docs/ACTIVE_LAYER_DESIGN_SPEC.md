@@ -196,8 +196,13 @@ Future tests must prove:
 
 ## Next Recommended Task After This Spec
 
-Review and accept the active-layer design/spec.
+Review status:
 
-Then, if accepted, create a test-only mock MIDI boundary design or test plan.
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md`
+
+The active-layer design/spec is accepted for planning. The next recommended
+task is a test-only mock MIDI boundary plan/spec.
+
+Do not implement real MIDI yet.
 
 Hardware remains off.

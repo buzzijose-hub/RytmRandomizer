@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-dc277e8
+6e90f21
 
 ## Protected Reference
 
@@ -45,13 +45,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: dc277e8 Add passive-to-active boundary review
+- current HEAD: 6e90f21 Add active-layer design spec
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept active-layer design/spec
+- next recommended task: mock MIDI boundary planning/test-only design
 - closeout command
 - stop condition
 
@@ -119,6 +119,23 @@ It preserves passive behavior, keeps hardware off, and defines:
 The spec is documentation-only. It adds no MIDI code, port opening, active CLI
 command, dispatch, execution, hardware testing, GUI, capture, Analog Four
 support, Pads 5-12 support, or machine/profile universe expansion.
+
+## Active-Layer Design Spec Review
+
+`Docs/ACTIVE_LAYER_DESIGN_SPEC_REVIEW.md` records the review/acceptance
+checkpoint for the active-layer design/spec.
+
+It confirms:
+
+- `Docs/ACTIVE_LAYER_DESIGN_SPEC.md` is accepted as the current planning spec
+- the project remains passive/read-only
+- no active or hardware-facing behavior exists yet
+- future active behavior must remain behind an explicit boundary
+- future active behavior must require explicit operator intent, arming, target confirmation, and mockable MIDI testing before real hardware validation
+- the next recommended task is mock MIDI boundary planning/test-only design
+- hardware remains off
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Passive Lookup Helpers
 
@@ -1109,9 +1126,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review and accept the active-layer design/spec
-- create a test-only mock MIDI boundary design or test plan only if the spec is accepted
-- keep hardware off during the design/spec work
+- create a test-only mock MIDI boundary plan/spec
+- keep hardware off during mock MIDI boundary planning
 
 These layers should continue to return passive data only and must not wire into
 runtime command execution.
