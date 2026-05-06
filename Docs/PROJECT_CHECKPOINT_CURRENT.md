@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 935d24a Add passive CLI help contract
 - 52e7477 Add passive report-only CLI entrypoint
 - 915b7a2 Add passive registry report CLI preview
 - 97ecf09 Add registry report golden text contract
@@ -92,6 +93,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive report CLI preview plan
 - passive registry report CLI preview
 - passive report-only CLI entrypoint
+- passive CLI help contract
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -142,9 +144,32 @@ The closeout script now includes "Test: Passive CLI" as part of the standard
 passive test suite.
 
 The latest clean closeout confirmed that scaffold, validation, inspection,
-preview, audit, profile lookup, scene lookup, command lookup, and registry tests
+preview, audit, profile lookup, scene lookup, command lookup, registry,
 registry report, registry report CLI, and passive CLI tests passed silently; the
 V1.34 reference diff was empty; and git status was clean.
+
+The passive CLI help contract includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_report_help_expected.txt
+
+The help contract adds deterministic tested help and usage output for the
+passive CLI. It locks down top-level help with
+`python -m rytm_randomizer.cli --help`, report command help with
+`python -m rytm_randomizer.cli report --help`, and keeps report behavior
+unchanged for `python -m rytm_randomizer.cli report`. Manual verification showed
+top-level help prints passive CLI usage, report help prints passive report
+usage, and report prints the passive registry report. Closeout already includes
+passive CLI testing, so no closeout script update was needed for this milestone.
+
+Current passive CLI commands:
+
+- `python -m rytm_randomizer.cli --help`
+- `python -m rytm_randomizer.cli report --help`
+- `python -m rytm_randomizer.cli report`
+- `python -m rytm_randomizer.registry_report`
 
 The passive report-only CLI entrypoint includes:
 
@@ -457,6 +482,13 @@ support, Pads 5-12 support, or machine/profile universe expansion. It writes no
 report files, requires no hardware, mutates no runtime or hardware state, and
 leaves the protected V1.34 reference untouched. Analog Rytm and Analog Four
 remain off for this phase.
+
+The passive CLI help contract added no new functional commands, MIDI sending,
+port opening, dispatch, command execution, hardware mutation, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, or machine/profile universe
+expansion. It added no report file writing at runtime and no import-time
+printing. The protected V1.34 reference remains untouched. Analog Rytm and
+Analog Four remain off for this phase.
 
 ## Validated Rytm Scope
 

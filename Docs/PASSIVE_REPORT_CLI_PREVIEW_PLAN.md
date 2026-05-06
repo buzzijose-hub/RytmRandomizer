@@ -15,6 +15,7 @@ Implemented milestone:
 
 - 915b7a2 Add passive registry report CLI preview
 - 52e7477 Add passive report-only CLI entrypoint
+- 935d24a Add passive CLI help contract
 
 ## Current Passive Foundation
 
@@ -58,6 +59,13 @@ Implemented passive report-only CLI entrypoint:
 python -m rytm_randomizer.cli report
 ```
 
+Implemented passive CLI help commands:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report --help
+```
+
 Both commands print the same deterministic golden-format passive registry
 report.
 
@@ -77,6 +85,9 @@ The report confirms:
 - writes_sysex: False
 - In-memory only: True
 
+Manual verification showed top-level help prints passive CLI usage, report help
+prints passive report usage, and report prints the passive registry report.
+
 ## Allowed Behavior
 
 The passive CLI preview command may:
@@ -88,6 +99,7 @@ The passive CLI preview command may:
 - exit without requiring hardware
 - remain deterministic against the existing golden text contract
 - fail safely for missing or unknown arguments
+- show deterministic passive help and usage text
 
 ## Prohibited Behavior
 
@@ -107,6 +119,9 @@ The passive CLI preview/report command must not:
 - add Analog Four support
 - add Pads 5-12 support
 - expand the machine/profile universe
+
+The passive CLI help contract must remain passive/read-only and must not add new
+functional commands.
 
 ## Safety Boundaries
 

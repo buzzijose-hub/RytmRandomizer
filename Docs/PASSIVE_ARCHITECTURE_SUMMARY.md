@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-52e7477
+935d24a
 
 ## Protected Reference
 
@@ -230,6 +230,61 @@ It does not:
 
 Analog Rytm and Analog Four remain off for this phase.
 
+### Passive CLI Help Contract
+
+The passive CLI help contract adds deterministic tested help and usage output
+for the passive CLI.
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_report_help_expected.txt`
+
+Current passive CLI commands:
+
+- `python -m rytm_randomizer.cli --help`
+- `python -m rytm_randomizer.cli report --help`
+- `python -m rytm_randomizer.cli report`
+- `python -m rytm_randomizer.registry_report`
+
+It locks down:
+
+- top-level passive CLI usage
+- report command passive usage
+- unchanged report output behavior
+- deterministic help text fixtures
+
+Manual verification showed:
+
+- top-level help prints passive CLI usage
+- report help prints passive report usage
+- report prints the passive registry report
+
+Closeout already includes passive CLI testing, so no closeout script update was
+needed for this milestone.
+
+It does not:
+
+- add new functional commands
+- write report files at runtime
+- print during import
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ### Registry Report Golden Text Contract
 
 The registry report golden text contract locks down the formatted passive
@@ -370,6 +425,8 @@ CLI preview now follows that plan.
 
 Implemented passive command shapes include:
 
+- `python -m rytm_randomizer.cli --help`
+- `python -m rytm_randomizer.cli report --help`
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 
