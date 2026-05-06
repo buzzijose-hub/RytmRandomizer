@@ -162,6 +162,19 @@ During this phase:
 - Analog Four should remain off.
 - No MIDI interface needs to be connected.
 
+## Passive-To-Active Boundary
+
+Future hardware-facing work is documented separately in:
+
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
+
+That document defines the future hardware execution boundary, preserves passive
+CLI behavior, keeps hardware off for the current phase, and documents
+preconditions before any future MIDI/hardware test.
+
+The current CLI remains passive/read-only. Do not turn on Analog Rytm or Analog
+Four until the project explicitly enters a hardware-facing validation phase.
+
 ## Closeout Checklist
 
 After documentation or passive CLI-related changes, run:

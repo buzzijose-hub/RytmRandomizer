@@ -248,6 +248,15 @@ The operator-facing passive CLI quickstart is documented in:
 
 - `Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md`
 
+The passive-to-active boundary is documented in:
+
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
+
+That document defines the future hardware execution boundary, preserves passive
+CLI behavior, keeps hardware off for the current phase, and documents
+preconditions before any future MIDI/hardware test. It does not approve active
+commands or implementation.
+
 It summarizes the current safe passive CLI commands:
 
 ```powershell
@@ -411,6 +420,13 @@ Before expanding any CLI preview/report command:
 - import-time output must remain prohibited
 - the golden text contract must remain passing
 - the closeout suite must remain passing
+
+Before any hardware-facing CLI behavior is designed or implemented:
+
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md` must be reviewed
+- passive report/list/search/inspect/preview commands must remain read-only
+- hardware must stay off until an explicitly approved hardware-facing validation phase
+- no active command names should be added until the execution boundary and tests are designed
 
 ## Closeout Requirements For Future Implementation
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2ce0135 Update checkpoint after passive CLI preview trio
+163b39d Add next action handoff
 
 ## Current Phase
 
@@ -61,7 +61,16 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 ## Next Recommended Task
 
-Design the passive-to-active boundary document.
+Review the passive-to-active boundary document:
+
+- `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
+
+This document defines the future hardware execution boundary, preserves passive
+CLI behavior, keeps hardware off for the current phase, and documents
+preconditions before any future MIDI/hardware test.
+
+If the boundary is accepted, the next task may be a future active-layer
+design/spec. Do not implement execution yet.
 
 ## Do-Not-Touch Files
 

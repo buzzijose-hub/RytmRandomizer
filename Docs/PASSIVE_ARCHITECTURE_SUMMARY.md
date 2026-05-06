@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a96c039
+163b39d
 
 ## Protected Reference
 
@@ -45,19 +45,41 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 2ce0135 Update checkpoint after passive CLI preview trio
+- current HEAD: 163b39d Add next action handoff
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: design the passive-to-active boundary document
+- next recommended task: review the passive-to-active boundary document
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## Passive-To-Active Boundary Design
+
+`Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md` defines the future boundary between the
+current passive CLI/dry-run foundation and any later hardware-facing execution
+layer.
+
+It records:
+
+- current passive foundation
+- strict current safety boundary
+- future active layer concept
+- required preconditions before any hardware-facing test
+- proposed future command model as design only
+- arming model
+- early hardware-phase forbidden actions
+- testing requirements
+- operator checklist before turning hardware on
+
+The boundary document preserves passive CLI behavior, keeps hardware off for
+the current phase, and documents preconditions before any future MIDI/hardware
+test. It is documentation-only and adds no runtime behavior.
 
 ## Passive Lookup Helpers
 
@@ -1048,7 +1070,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- design the passive-to-active boundary document
+- review the passive-to-active boundary document
+- create a future active-layer design/spec only if the passive boundary is accepted
 
 These layers should continue to return passive data only and must not wire into
 runtime command execution.
