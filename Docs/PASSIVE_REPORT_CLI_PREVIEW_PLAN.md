@@ -23,6 +23,7 @@ Implemented milestone:
 - 9ff49dd Label guarded passive depth commands
 - aee04be Add passive CLI search commands
 - 813cc0a Add passive CLI command preview
+- 28b4f79 Add passive CLI scene preview
 
 ## Current Passive Foundation
 
@@ -119,6 +120,13 @@ python -m rytm_randomizer.cli preview-command <key>
 python -m rytm_randomizer.cli preview-command --help
 ```
 
+Implemented passive CLI scene preview:
+
+```powershell
+python -m rytm_randomizer.cli preview-scene <key>
+python -m rytm_randomizer.cli preview-scene --help
+```
+
 The report commands print the same deterministic golden-format passive registry
 report.
 
@@ -199,6 +207,17 @@ Manual verification also showed:
 - `python -m rytm_randomizer.cli preview-command DOES_NOT_EXIST` fails safely
   with: "Command preview not found. No MIDI was sent. No command executed. No
   hardware was mutated."
+- `python -m rytm_randomizer.cli preview-scene --help` prints passive
+  preview-scene usage.
+- `python -m rytm_randomizer.cli preview-scene S1A` prints passive dry-run
+  scene preview metadata: Scene: S1A, Found: True, Name: Rolling Light,
+  Description: Lower-risk rolling movement for subtle live variation, Action:
+  rolling_light, Scope: four_pad_group, Scaffold only: True, Executable:
+  False, V1.34 reference command: True, and explicit no-MIDI, no-scene,
+  no-command, and no-hardware-mutation statements.
+- `python -m rytm_randomizer.cli preview-scene DOES_NOT_EXIST` fails safely
+  with: "Scene preview not found. No MIDI was sent. No scene executed. No
+  command executed. No hardware was mutated."
 
 The operator-facing passive CLI quickstart is documented in:
 
@@ -219,6 +238,7 @@ python -m rytm_randomizer.cli search-commands BD
 python -m rytm_randomizer.cli search-scenes Wild
 python -m rytm_randomizer.cli search-group-profiles Hard
 python -m rytm_randomizer.cli preview-command J
+python -m rytm_randomizer.cli preview-scene S1A
 ```
 
 The quickstart is documentation-only and does not approve new CLI behavior,
@@ -247,6 +267,9 @@ The passive CLI preview command may:
 - preview existing passive command metadata without executing it
 - clearly state that no MIDI would be sent, no command would execute, and no
   hardware would be mutated
+- preview existing passive scene metadata without executing it
+- clearly state that no MIDI would be sent, no scene would execute, no command
+  would execute, and no hardware would be mutated
 
 ## Prohibited Behavior
 
@@ -292,6 +315,11 @@ scopes, or profile metadata as executable behavior.
 The passive CLI command preview path must remain passive/read-only. It must use
 the existing passive preview helper and must not reinterpret preview output as
 permission to dispatch, execute, send MIDI, or mutate hardware.
+
+The passive CLI scene preview path must remain passive/read-only. It must use
+existing copied scene registry metadata and must not reinterpret preview output
+as permission to dispatch scenes or commands, execute scenes or commands, send
+MIDI, or mutate hardware.
 
 The guarded passive depth command labels must remain metadata-only. Commands 1,
 2, and 3 must remain non-executable, scaffold-only/passive, V1.34 reference

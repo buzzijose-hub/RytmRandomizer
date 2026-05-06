@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 28b4f79 Add passive CLI scene preview
 - 813cc0a Add passive CLI command preview
 - aee04be Add passive CLI search commands
 - 9ff49dd Label guarded passive depth commands
@@ -107,6 +108,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI list commands
 - passive CLI search commands
 - passive CLI command preview
+- passive CLI scene preview
 - passive CLI operator quickstart
 - guarded passive depth command labels
 - passive architecture summary
@@ -217,6 +219,8 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.cli preview-command --help`
 - `python -m rytm_randomizer.cli preview-command <key>`
+- `python -m rytm_randomizer.cli preview-scene --help`
+- `python -m rytm_randomizer.cli preview-scene <key>`
 - `python -m rytm_randomizer.registry_report`
 
 The passive CLI command preview milestone includes:
@@ -256,6 +260,61 @@ handlers, add handlers, dispatch commands, execute commands, open MIDI ports,
 send MIDI, write files, require hardware, or mutate runtime or hardware state.
 Unknown or missing keys fail safely.
 
+The passive CLI scene preview milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_preview_scene_help_expected.txt
+- tests/fixtures/cli_preview_scene_known_expected.txt
+- tests/fixtures/cli_preview_scene_unknown_expected.txt
+
+The new passive CLI paths are:
+
+```powershell
+python -m rytm_randomizer.cli preview-scene <key>
+python -m rytm_randomizer.cli preview-scene --help
+```
+
+Existing passive CLI paths continue to work:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+python -m rytm_randomizer.cli search-commands <query>
+python -m rytm_randomizer.cli search-scenes <query>
+python -m rytm_randomizer.cli search-group-profiles <query>
+python -m rytm_randomizer.cli inspect-command <key>
+python -m rytm_randomizer.cli inspect-scene <key>
+python -m rytm_randomizer.cli inspect-group-profile <key>
+python -m rytm_randomizer.cli preview-command <key>
+python -m rytm_randomizer.registry_report
+```
+
+Manual verification showed:
+
+- `python -m rytm_randomizer.cli --help` printed updated passive CLI help with
+  preview-scene.
+- `python -m rytm_randomizer.cli preview-scene --help` printed passive
+  preview-scene usage.
+- `python -m rytm_randomizer.cli preview-scene S1A` printed passive dry-run
+  scene preview metadata: Scene: S1A, Found: True, Name: Rolling Light,
+  Description: Lower-risk rolling movement for subtle live variation, Action:
+  rolling_light, Scope: four_pad_group, Scaffold only: True, Executable:
+  False, V1.34 reference command: True, and explicit no-MIDI, no-scene,
+  no-command, and no-hardware-mutation statements.
+- `python -m rytm_randomizer.cli preview-scene DOES_NOT_EXIST` failed safely
+  with: "Scene preview not found. No MIDI was sent. No scene executed. No
+  command executed. No hardware was mutated."
+
+Preview-scene uses existing copied scene registry metadata. It does not call
+handlers, add handlers, dispatch scenes or commands, execute scenes or
+commands, open MIDI ports, send MIDI, write files, require hardware, or mutate
+runtime or hardware state. Unknown or missing keys fail safely.
+
 The passive CLI operator quickstart includes:
 
 - Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md
@@ -275,6 +334,7 @@ python -m rytm_randomizer.cli search-commands BD
 python -m rytm_randomizer.cli search-scenes Wild
 python -m rytm_randomizer.cli search-group-profiles Hard
 python -m rytm_randomizer.cli preview-command J
+python -m rytm_randomizer.cli preview-scene S1A
 ```
 
 It clearly states that the passive CLI is read-only and does not send MIDI,
@@ -892,6 +952,13 @@ Four support, Pads 5-12 support, or machine/profile universe expansion. It
 added no report file writing at runtime and no import-time printing. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
+
+The passive CLI scene preview milestone added no MIDI sending, port opening,
+dispatch, scene execution, command execution, hardware mutation, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, or machine/profile universe
+expansion. It added no report file writing at runtime and no import-time
+printing. The protected V1.34 reference remains untouched. Analog Rytm and
+Analog Four remain off for this phase.
 
 The passive CLI operator quickstart is documentation-only. It added no runtime
 behavior, CLI code, MIDI sending, port opening, dispatch, command execution,

@@ -73,28 +73,31 @@ Inspection reads copied metadata from the passive registry surfaces. It does
 not call handlers, dispatch commands, execute scenes, change machines, or send
 MIDI.
 
-## Preview Command
+## Preview Commands
 
 Preview passive dry-run command metadata:
 
 ```powershell
 python -m rytm_randomizer.cli preview-command J
+python -m rytm_randomizer.cli preview-scene S1A
 ```
 
-Preview-command uses the existing passive preview helper. It clearly states
-that no MIDI would be sent, no command would execute, and no hardware would be
-mutated.
+Preview-command uses the existing passive preview helper. Preview-scene uses
+existing copied scene registry metadata. They clearly state that no MIDI would
+be sent, no command or scene would execute, and no hardware would be mutated.
 
 Unknown preview keys fail safely. For example:
 
 ```powershell
 python -m rytm_randomizer.cli preview-command DOES_NOT_EXIST
+python -m rytm_randomizer.cli preview-scene DOES_NOT_EXIST
 ```
 
 Expected behavior is a passive not-found message such as:
 
 ```text
 Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.
+Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.
 ```
 
 ## Search Commands

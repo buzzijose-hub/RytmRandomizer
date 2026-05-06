@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-813cc0a
+28b4f79
 
 ## Protected Reference
 
@@ -261,6 +261,8 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.cli preview-command --help`
 - `python -m rytm_randomizer.cli preview-command <key>`
+- `python -m rytm_randomizer.cli preview-scene --help`
+- `python -m rytm_randomizer.cli preview-scene <key>`
 - `python -m rytm_randomizer.registry_report`
 
 It locks down:
@@ -671,6 +673,69 @@ It does not:
 
 Analog Rytm and Analog Four remain off for this phase.
 
+### Passive CLI Scene Preview
+
+The passive CLI scene preview milestone adds a read-only scene preview path:
+
+```powershell
+python -m rytm_randomizer.cli preview-scene <key>
+python -m rytm_randomizer.cli preview-scene --help
+```
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_preview_scene_help_expected.txt`
+- `tests/fixtures/cli_preview_scene_known_expected.txt`
+- `tests/fixtures/cli_preview_scene_unknown_expected.txt`
+
+It does:
+
+- use existing copied scene registry metadata
+- display deterministic human-readable dry-run scene preview metadata
+- clearly state that no MIDI would be sent
+- clearly state that no scene would execute
+- clearly state that no command would execute
+- clearly state that no hardware would be mutated
+- fail safely for unknown or missing keys
+- preserve existing passive report, inspect, list, search, and command preview behavior
+- require no hardware
+
+Manual verification showed:
+
+- top-level help prints preview-scene.
+- preview-scene help prints passive preview-scene usage.
+- `python -m rytm_randomizer.cli preview-scene S1A` prints Scene: S1A, Found:
+  True, Name: Rolling Light, Description: Lower-risk rolling movement for
+  subtle live variation, Action: rolling_light, Scope: four_pad_group,
+  Scaffold only: True, Executable: False, V1.34 reference command: True, and
+  explicit no-MIDI, no-scene, no-command, and no-hardware-mutation statements.
+- `python -m rytm_randomizer.cli preview-scene DOES_NOT_EXIST` fails safely
+  with: "Scene preview not found. No MIDI was sent. No scene executed. No
+  command executed. No hardware was mutated."
+
+It does not:
+
+- call handlers
+- add handlers
+- open MIDI ports
+- send MIDI
+- dispatch scenes or commands
+- execute scenes or commands
+- write files
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ### Passive CLI Operator Quickstart
 
 `Docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md` documents how to use the current
@@ -705,6 +770,7 @@ python -m rytm_randomizer.cli search-commands BD
 python -m rytm_randomizer.cli search-scenes Wild
 python -m rytm_randomizer.cli search-group-profiles Hard
 python -m rytm_randomizer.cli preview-command J
+python -m rytm_randomizer.cli preview-scene S1A
 ```
 
 The quickstart states that the CLI is passive/read-only and does not send MIDI,
@@ -921,6 +987,8 @@ Implemented passive command shapes include:
 - `python -m rytm_randomizer.cli search-group-profiles <query>`
 - `python -m rytm_randomizer.cli preview-command --help`
 - `python -m rytm_randomizer.cli preview-command <key>`
+- `python -m rytm_randomizer.cli preview-scene --help`
+- `python -m rytm_randomizer.cli preview-scene <key>`
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 
