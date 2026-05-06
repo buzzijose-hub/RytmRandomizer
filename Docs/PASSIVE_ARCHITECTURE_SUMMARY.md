@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-279a2d5
+9ff49dd
 
 ## Protected Reference
 
@@ -525,6 +525,52 @@ It does not:
 - dispatch commands
 - execute commands
 - write files
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
+### Guarded Passive Depth Command Labels
+
+The guarded passive depth command label milestone improves passive
+`list-commands` readability for guarded main-prompt depth entries:
+
+```text
+1: guarded depth input 1, requires lane/mode prefix
+2: guarded depth input 2, requires lane/mode prefix
+3: guarded depth input 3, requires lane/mode prefix
+```
+
+It uses:
+
+- `rytm_randomizer/commands.py`
+- `tests/test_scaffold.py`
+- `tests/fixtures/cli_list_commands_expected.txt`
+
+It does:
+
+- label existing guarded depth command metadata for 1, 2, and 3
+- keep the entries non-executable
+- keep the entries scaffold-only/passive
+- keep the entries as V1.34 reference command metadata
+- keep sends_midi: False
+- improve passive CLI list readability
+
+It does not:
+
+- call handlers
+- add handlers
+- add callables
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
 - mutate runtime state
 - mutate hardware state
 - write SysEx

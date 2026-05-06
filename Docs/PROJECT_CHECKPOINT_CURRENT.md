@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9ff49dd Label guarded passive depth commands
 - 279a2d5 Add passive CLI list commands
 - 3ff9a37 Add passive CLI group profile inspection
 - eeba082 Add passive CLI scene inspection
@@ -102,6 +103,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI scene inspection
 - passive CLI group profile inspection
 - passive CLI list commands
+- guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
 - closeout check workflow
@@ -155,6 +157,25 @@ The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, command lookup, registry,
 registry report, registry report CLI, and passive CLI tests passed silently; the
 V1.34 reference diff was empty; and git status was clean.
+
+The guarded passive depth command label milestone includes:
+
+- rytm_randomizer/commands.py
+- tests/test_scaffold.py
+- tests/fixtures/cli_list_commands_expected.txt
+
+Commands 1, 2, and 3 no longer display as blank labels in passive
+`list-commands` output. They are now clearly labeled as guarded depth inputs
+requiring a lane/mode prefix:
+
+- 1: guarded depth input 1, requires lane/mode prefix
+- 2: guarded depth input 2, requires lane/mode prefix
+- 3: guarded depth input 3, requires lane/mode prefix
+
+This improves passive CLI readability without changing runtime behavior.
+Commands 1, 2, and 3 remain non-executable, scaffold-only/passive,
+V1.34-reference metadata, and sends_midi: False. No handlers, callables,
+dispatch, MIDI behavior, or runtime behavior were added or changed.
 
 The passive CLI help contract includes:
 
@@ -724,6 +745,13 @@ Four support, Pads 5-12 support, or machine/profile universe expansion. It
 added no report file writing at runtime and no import-time printing. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
+
+The guarded passive depth command label milestone was passive/read-only
+metadata polish only. It added no MIDI sending, port opening, dispatch, command
+execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, or machine/profile universe expansion. The protected V1.34
+reference remains untouched. Analog Rytm and Analog Four remain off for this
+phase.
 
 ## Validated Rytm Scope
 

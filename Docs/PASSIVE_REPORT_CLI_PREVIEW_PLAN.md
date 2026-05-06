@@ -20,6 +20,7 @@ Implemented milestone:
 - eeba082 Add passive CLI scene inspection
 - 3ff9a37 Add passive CLI group profile inspection
 - 279a2d5 Add passive CLI list commands
+- 9ff49dd Label guarded passive depth commands
 
 ## Current Passive Foundation
 
@@ -153,7 +154,7 @@ Manual verification also showed:
   safely with: "Group profile metadata not found. No MIDI was sent. No command
   executed."
 - `python -m rytm_randomizer.cli list-commands` prints 82 passive command keys
-  and labels.
+  and labels, including guarded labels for depth commands 1, 2, and 3.
 - `python -m rytm_randomizer.cli list-scenes` prints 14 passive scene keys and
   names.
 - `python -m rytm_randomizer.cli list-group-profiles` prints 4 passive group
@@ -176,6 +177,7 @@ The passive CLI preview command may:
 - inspect existing passive scene metadata without executing it
 - inspect existing passive group profile metadata without executing it
 - list existing passive registry keys and labels without executing them
+- show guarded passive labels for depth commands 1, 2, and 3
 
 ## Prohibited Behavior
 
@@ -213,6 +215,10 @@ must not reinterpret group profile metadata as executable behavior.
 The passive CLI list commands must remain passive/read-only. They must not
 reinterpret registry keys, labels, names, or profile metadata as executable
 behavior.
+
+The guarded passive depth command labels must remain metadata-only. Commands 1,
+2, and 3 must remain non-executable, scaffold-only/passive, V1.34 reference
+metadata, and sends_midi: False.
 
 ## Safety Boundaries
 
