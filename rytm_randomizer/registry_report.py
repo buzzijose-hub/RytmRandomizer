@@ -1,6 +1,7 @@
 """Passive in-memory reports for the unified registry view."""
 
 from copy import deepcopy
+import sys
 
 from .registry import build_registry, list_registry_sections, summarize_registry
 
@@ -100,3 +101,15 @@ def format_registry_report(report=None):
     lines.append("Source: rytm_randomizer.registry")
     lines.append("In-memory only: True")
     return lines
+
+
+def main(argv=None):
+    """Print the passive registry report for explicit module execution."""
+    _ = [] if argv is None else list(argv)
+    sys.stdout.write("\n".join(format_registry_report()))
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
