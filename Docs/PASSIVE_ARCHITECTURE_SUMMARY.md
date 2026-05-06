@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-eeba082
+3ff9a37
 
 ## Protected Reference
 
@@ -251,6 +251,8 @@ Current passive CLI commands:
 - `python -m rytm_randomizer.cli inspect-command <key>`
 - `python -m rytm_randomizer.cli inspect-scene --help`
 - `python -m rytm_randomizer.cli inspect-scene <key>`
+- `python -m rytm_randomizer.cli inspect-group-profile --help`
+- `python -m rytm_randomizer.cli inspect-group-profile <key>`
 - `python -m rytm_randomizer.registry_report`
 
 It locks down:
@@ -383,6 +385,70 @@ Manual verification showed:
   Executable: False, Scaffold only: True, and V1.34 reference command: True.
 - `python -m rytm_randomizer.cli inspect-scene DOES_NOT_EXIST` fails safely
   with: "Scene metadata not found. No MIDI was sent. No command executed."
+
+It does not:
+
+- call handlers
+- add handlers
+- open MIDI ports
+- send MIDI
+- dispatch commands
+- execute commands
+- write files
+- mutate runtime state
+- mutate hardware state
+- write SysEx
+- add GUI behavior
+- add capture behavior
+- add Analog Four support
+- add Pads 5-12 support
+- expand the machine/profile universe
+
+Analog Rytm and Analog Four remain off for this phase.
+
+### Passive CLI Group Profile Inspection
+
+The passive CLI group profile inspection milestone adds a read-only group
+profile metadata inspection path:
+
+```powershell
+python -m rytm_randomizer.cli inspect-group-profile <key>
+python -m rytm_randomizer.cli inspect-group-profile --help
+```
+
+It uses:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_inspect_group_profile_help_expected.txt`
+- `tests/fixtures/cli_inspect_group_profile_known_expected.txt`
+- `tests/fixtures/cli_inspect_group_profile_unknown_expected.txt`
+
+It does:
+
+- read existing passive group profile metadata only
+- display deterministic human-readable metadata for known group profile keys
+- fail safely for unknown or missing keys
+- preserve existing passive CLI report, inspect-command, and inspect-scene behavior
+- require no hardware
+
+Manual verification showed:
+
+- top-level help prints report, inspect-command, inspect-scene, and
+  inspect-group-profile.
+- inspect-group-profile help prints passive inspect-group-profile usage.
+- `python -m rytm_randomizer.cli inspect-group-profile 2` prints Group profile:
+  2, Found: True, Name: My BD Hard, Machine value: 0, and Group pad: 1.
+- `python -m rytm_randomizer.cli inspect-group-profile DOES_NOT_EXIST` fails
+  safely with: "Group profile metadata not found. No MIDI was sent. No command
+  executed."
+
+CLI inspection coverage now includes:
+
+- passive command inspection
+- passive scene inspection
+- passive group profile inspection
 
 It does not:
 
@@ -550,6 +616,8 @@ Implemented passive command shapes include:
 - `python -m rytm_randomizer.cli inspect-command <key>`
 - `python -m rytm_randomizer.cli inspect-scene --help`
 - `python -m rytm_randomizer.cli inspect-scene <key>`
+- `python -m rytm_randomizer.cli inspect-group-profile --help`
+- `python -m rytm_randomizer.cli inspect-group-profile <key>`
 - `python -m rytm_randomizer.registry_report`
 - `python -m rytm_randomizer.cli report`
 

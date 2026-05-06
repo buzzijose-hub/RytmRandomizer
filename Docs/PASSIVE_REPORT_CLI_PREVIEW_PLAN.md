@@ -18,6 +18,7 @@ Implemented milestone:
 - 935d24a Add passive CLI help contract
 - 73ee027 Add passive CLI command inspection
 - eeba082 Add passive CLI scene inspection
+- 3ff9a37 Add passive CLI group profile inspection
 
 ## Current Passive Foundation
 
@@ -84,6 +85,13 @@ python -m rytm_randomizer.cli inspect-scene <key>
 python -m rytm_randomizer.cli inspect-scene --help
 ```
 
+Implemented passive CLI group profile inspection:
+
+```powershell
+python -m rytm_randomizer.cli inspect-group-profile <key>
+python -m rytm_randomizer.cli inspect-group-profile --help
+```
+
 The report commands print the same deterministic golden-format passive registry
 report.
 
@@ -109,7 +117,7 @@ prints passive report usage, and report prints the passive registry report.
 Manual verification also showed:
 
 - `python -m rytm_randomizer.cli --help` prints updated passive CLI help with
-  report, inspect-command, and inspect-scene.
+  report, inspect-command, inspect-scene, and inspect-group-profile.
 - `python -m rytm_randomizer.cli inspect-command --help` prints passive
   inspect-command usage.
 - `python -m rytm_randomizer.cli inspect-command J` prints passive metadata:
@@ -126,6 +134,14 @@ Manual verification also showed:
   True, and V1.34 reference command: True.
 - `python -m rytm_randomizer.cli inspect-scene DOES_NOT_EXIST` fails safely
   with: "Scene metadata not found. No MIDI was sent. No command executed."
+- `python -m rytm_randomizer.cli inspect-group-profile --help` prints passive
+  inspect-group-profile usage.
+- `python -m rytm_randomizer.cli inspect-group-profile 2` prints passive group
+  profile metadata: Group profile: 2, Found: True, Name: My BD Hard, Machine
+  value: 0, and Group pad: 1.
+- `python -m rytm_randomizer.cli inspect-group-profile DOES_NOT_EXIST` fails
+  safely with: "Group profile metadata not found. No MIDI was sent. No command
+  executed."
 
 ## Allowed Behavior
 
@@ -141,6 +157,7 @@ The passive CLI preview command may:
 - show deterministic passive help and usage text
 - inspect existing passive command metadata without executing it
 - inspect existing passive scene metadata without executing it
+- inspect existing passive group profile metadata without executing it
 
 ## Prohibited Behavior
 
@@ -171,6 +188,9 @@ not reinterpret command metadata as executable behavior.
 
 The passive CLI scene inspection path must remain passive/read-only. It must
 not reinterpret scene metadata as executable behavior.
+
+The passive CLI group profile inspection path must remain passive/read-only. It
+must not reinterpret group profile metadata as executable behavior.
 
 ## Safety Boundaries
 
