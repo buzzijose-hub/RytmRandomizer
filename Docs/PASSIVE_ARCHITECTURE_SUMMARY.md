@@ -38,6 +38,27 @@ The closeout workflow also checks:
 - `git diff -- rytm_hybrid_randomizer_v134.py`
 - `git status --short`
 
+## Next Action Handoff
+
+`Docs/NEXT_ACTION.md` records the current session handoff for future sessions.
+
+It captures:
+
+- current branch: modularize-v1.34
+- current HEAD: 2ce0135 Update checkpoint after passive CLI preview trio
+- current phase: passive CLI / dry-run foundation
+- current safety state
+- hardware-off reminder
+- current passive CLI capability
+- known safe passive commands
+- next recommended task: design the passive-to-active boundary document
+- closeout command
+- stop condition
+
+The handoff is for clean session resumption, safety state recall, next-task
+orientation, and hardware-off reminders. It adds no runtime behavior and does
+not expand project scope.
+
 ## Passive Lookup Helpers
 
 Current passive lookup helpers:
@@ -1027,7 +1048,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- passive CLI preview only if it does not dispatch or send MIDI
+- design the passive-to-active boundary document
 
 These layers should continue to return passive data only and must not wire into
 runtime command execution.

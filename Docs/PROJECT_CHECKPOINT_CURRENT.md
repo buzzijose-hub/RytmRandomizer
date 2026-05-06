@@ -76,6 +76,24 @@ Finish behavior-preserving modularization of V1.34.
 
 No new features should be added until the modular version behaves exactly like V1.34.
 
+## Next Action Handoff
+
+The current session handoff is:
+
+- Docs/NEXT_ACTION.md
+
+The handoff document records the current branch, current HEAD, passive CLI /
+dry-run foundation phase, current safety state, known safe passive commands,
+closeout command, and next recommended task. It is intended for clean session
+resumption without guessing.
+
+The next recommended task is to design the passive-to-active boundary
+document.
+
+The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
+MKII should remain off until the project explicitly enters a hardware-facing
+validation phase.
+
 ## Current Modular Scaffold
 
 The modular scaffold is still metadata-only. Current scaffold coverage includes:
@@ -113,6 +131,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive CLI group profile preview
 - passive CLI preview trio complete
 - passive CLI operator quickstart
+- next action handoff
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1019,6 +1038,13 @@ capture, Analog Four support, Pads 5-12 support, or machine/profile universe
 expansion. It added no report file writing at runtime and no import-time
 printing. The protected V1.34 reference remains untouched. Analog Rytm and
 Analog Four remain off for this phase.
+
+The next action handoff is documentation-only. It added no runtime behavior,
+CLI code, MIDI sending, port opening, dispatch, scene execution, command
+execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, or machine/profile universe expansion. The protected V1.34
+reference remains untouched. Analog Rytm and Analog Four remain off for this
+phase.
 
 The passive CLI operator quickstart is documentation-only. It added no runtime
 behavior, CLI code, MIDI sending, port opening, dispatch, command execution,
