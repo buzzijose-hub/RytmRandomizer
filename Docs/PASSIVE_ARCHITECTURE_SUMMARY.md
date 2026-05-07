@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f7c14f2
+55c5097
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f7c14f2 Add passive mock mapper report
+- current HEAD: 55c5097 Update checkpoint after passive mock mapper report
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: keep mapper scope frozen, plan profile 4 support, or pause mapper work for a larger progress report
+- next recommended task: freeze scope, plan profile 4 support, build a passive mock mapper report CLI preview, write a larger progress report, or review future active-layer test planning without implementation
 - closeout command
 - stop condition
 
@@ -206,11 +206,11 @@ It summarizes:
 - Mock MIDI and Mock Message Mapper tests are part of closeout
 - no implementation is added in the progress review
 
-The next options are:
+The original next options were:
 
 - keep mapper scope frozen
 - plan profile 4 mock-only support
-- build a passive mock mapper report/summary layer
+- build a passive mock mapper report/summary layer, now completed by `f7c14f2`
 - pause mapper work
 
 The review is documentation-only and adds no runtime behavior.
@@ -250,6 +250,34 @@ active execution, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four
 support, Pads 5-12 support, or machine/profile expansion.
 
 Analog Rytm and Analog Four remain off for this phase.
+
+## Passive Mock Foundation Decision Checkpoint
+
+`Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md` records the current
+passive/mock foundation decision point after the passive mock mapper report
+checkpoint.
+
+It summarizes:
+
+- passive CLI foundation complete enough for report/list/search/inspect/preview
+- passive registry/report layer
+- test-only mock MIDI scaffold
+- test-only mock message mapper
+- passive mock mapper report
+- closeout coverage for Mock MIDI, Mock Message Mapper, and Mock Mapper Report
+- supported mock mapper profiles `"2"` / My BD Hard and `"3"` / My BD Classic
+- unsupported/safe profile `"4"` / My BD Acoustic
+- intentionally absent real MIDI, mido, ports, MIDI sending, active execution, CLI wiring, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four, Pads 5-12, machine/profile expansion, execute-command, send-command, and hardware-test
+
+Safe next branches are:
+
+- freeze mock mapper scope here and stop/pause
+- create a profile 4 mock-only support plan, not implementation
+- build a passive mock mapper report CLI preview, still read-only and no active behavior
+- write a larger project progress report
+- review readiness for a future active-layer test plan, still without implementation
+
+The checkpoint is documentation-only and adds no runtime behavior.
 
 ## Test-Only Mock Mapping For Group Profile 3
 
@@ -1472,7 +1500,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- keep mapper scope frozen, plan profile 4 support, or pause mapper work for a larger progress report
+- freeze mapper scope, plan profile 4 support, build a passive mock mapper report CLI preview, write a larger project progress report, or review future active-layer test planning without implementation
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond supported group profiles `"2"` and `"3"` without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

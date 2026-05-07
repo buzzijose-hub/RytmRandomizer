@@ -3,8 +3,8 @@
 ## Purpose
 
 This document records a progress checkpoint after the passive CLI, test-only
-mock MIDI scaffold, test-only mock message mapper, and mapper review
-milestones.
+mock MIDI scaffold, test-only mock message mapper, mapper review, later
+profile 3 mapper expansion, and passive mock mapper report milestones.
 
 It is documentation-only. It does not add mapper scope, real MIDI behavior,
 active execution, port opening, CLI wiring, or hardware-facing behavior.
@@ -19,12 +19,17 @@ Current HEAD before this slice:
 
 - 32006f4 Add mock message mapper review
 
+Latest passive/mock foundation checkpoint:
+
+- 55c5097 Update checkpoint after passive mock mapper report
+
 Current phase:
 
 - passive CLI / dry-run foundation
 - test-only mock MIDI scaffold complete
-- test-only mock message mapper complete
+- test-only mock message mapper complete and expanded to profiles `"2"` and `"3"`
 - mock message mapper review complete
+- passive mock mapper report complete and included in closeout
 
 Current hardware status:
 
@@ -56,12 +61,25 @@ Current hardware status:
 
 - `rytm_randomizer/mock_message_mapper.py`
 - `tests/test_mock_message_mapper.py`
-- supports only group profile key `"2"` / My BD Hard
+- supports group profile key `"2"` / My BD Hard
+- supports group profile key `"3"` / My BD Classic
+- keeps group profile key `"4"` / My BD Acoustic unsupported/safe
 - maps existing passive group profile metadata to deterministic inert mock MidiMessage data
 - records cleanly through MockMidiSender
 - fails safely for unknown or unsupported keys
 - is not wired into CLI
 - is not wired into runtime execution
+
+## Current Mock Mapper Report Capability
+
+- `rytm_randomizer/mock_mapper_report.py`
+- `tests/test_mock_mapper_report.py`
+- summarizes supported profiles `"2"` and `"3"`
+- records profile `"4"` as unsupported/safe
+- reports mock-only status true
+- reports real MIDI, port opening, CLI wiring, and active behavior absent
+- reports hardware required false
+- remains read-only and in-memory
 
 ## Current Closeout Suite
 
@@ -81,6 +99,7 @@ The standard closeout suite includes:
 - passive CLI
 - mock MIDI
 - mock message mapper
+- mock mapper report
 - V1.34 reference diff check
 - Git status review
 
@@ -115,6 +134,7 @@ Safe next options:
 - create a documentation-only milestone report or session summary
 - refine existing docs if a wording or handoff gap is found
 - create a small mock-only mapper expansion plan before any mapper expansion
+- build a passive mock mapper report CLI preview if more visibility is useful
 
 Any mapper expansion must remain:
 
@@ -134,7 +154,7 @@ Any mapper expansion must remain:
 - active CLI command
 - command execution
 - scene execution
-- mapper expansion beyond group profile key `"2"`
+- mapper expansion beyond group profile keys `"2"` and `"3"`
 - Analog Four support
 - Pads 5-12 support
 - SysEx
@@ -147,6 +167,7 @@ Choose one of:
 
 - stop for the session
 - create a documentation-only session closeout summary
-- plan a small mock-only mapper expansion without implementing it
+- plan profile 4 support without implementing it
+- build a passive mock mapper report CLI preview without active behavior
 
 Hardware remains off.

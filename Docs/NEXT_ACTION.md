@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f7c14f2 Add passive mock mapper report
+55c5097 Update checkpoint after passive mock mapper report
 
 ## Current Phase
 
@@ -64,8 +64,10 @@ python -m rytm_randomizer.cli preview-group-profile 2
 Next recommended task is to choose one of:
 
 - keep mapper scope frozen for now
-- plan profile 4 mock-only support in a separate reviewed slice
+- create a profile 4 mock-only support plan, not implementation
+- build a passive mock mapper report CLI preview, still read-only and no active behavior
 - pause mapper work and write a larger project progress report
+- review whether the passive/mock foundation is ready for a future active-layer test plan, still without implementation
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -81,6 +83,7 @@ Next recommended task is to choose one of:
 - `Docs/MOCK_MAPPER_PROFILE_3_PROGRESS_CHECKPOINT.md`
 - `Docs/MOCK_MAPPER_PROFILE_4_DECISION_NOTE.md`
 - `Docs/MOCK_MAPPER_PROGRESS_REVIEW.md`
+- `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -141,6 +144,15 @@ profiles `"2"` / My BD Hard and `"3"` / My BD Classic are supported, profile
 `"4"` / My BD Acoustic remains unsupported/safe, mock-only status is true, real
 MIDI is absent, port opening is absent, CLI wiring is absent, active behavior
 is absent, and hardware is not required.
+
+The passive mock foundation decision checkpoint records the current state in
+one place: the passive CLI foundation is complete enough for report/list/search
+/inspect/preview, mock MIDI and mock message mapper remain test-only/inert,
+the mock mapper report is in closeout, profiles `"2"` and `"3"` are supported,
+profile `"4"` remains unsupported/safe, and the safe next branches are to
+freeze scope, plan profile 4 support, build a passive mock mapper report CLI
+preview, write a larger progress report, or review future active-layer test
+planning without implementation.
 
 ## Do-Not-Touch Files
 

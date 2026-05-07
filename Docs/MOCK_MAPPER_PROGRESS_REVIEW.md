@@ -20,6 +20,10 @@ Latest implemented reporting milestone:
 
 - f7c14f2 Add passive mock mapper report
 
+Latest documentation checkpoint:
+
+- 55c5097 Update checkpoint after passive mock mapper report
+
 Current phase:
 
 - passive CLI / dry-run foundation complete
@@ -66,6 +70,22 @@ The report summarizes current mock mapper state in memory only:
 - hardware required: false
 
 The closeout suite now includes "Test: Mock Mapper Report".
+
+## Passive Mock Foundation Decision Checkpoint
+
+The passive mock foundation decision checkpoint now lives in:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md`
+
+It records one current-state decision point for the passive/mock foundation:
+
+- passive CLI foundation complete enough for report/list/search/inspect/preview
+- mock MIDI scaffold test-only/inert
+- mock message mapper test-only/inert
+- mock mapper report included in closeout
+- profiles `"2"` and `"3"` supported
+- profile `"4"` unsupported/safe
+- real MIDI, ports, CLI wiring, active behavior, and hardware behavior absent
 
 ## Current Safety Status
 
@@ -115,14 +135,16 @@ The closeout suite now includes "Test: Mock Mapper Report".
 
 - Option A: keep mapper scope frozen for now.
 - Option B: plan profile `"4"` mock-only support in a separate reviewed slice.
-- Option C: pause mapper work and write a larger project progress report.
+- Option C: build a passive mock mapper report CLI preview, still read-only and no active behavior.
+- Option D: pause mapper work and write a larger project progress report.
+- Option E: review readiness for a future active-layer test plan, still without implementation.
 
 ## Recommendation
 
 - Do not implement profile `"4"` immediately.
 - Prefer either:
-  - keep mapper scope frozen and produce a broader progress report
-  - plan profile `"4"` support only after explicit approval
+  - pause at this clean checkpoint
+  - build a passive mock mapper report CLI preview if more visibility is useful
 - Any profile `"4"` expansion should require explicit approval and remain
   mock-only/test-only.
 

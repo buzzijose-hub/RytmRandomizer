@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 55c5097 Update checkpoint after passive mock mapper report
 - f7c14f2 Add passive mock mapper report
 - 79a9fc2 Add mock mapper progress review
 - 55b973d Add mock mapper profile 4 decision note
@@ -287,6 +288,18 @@ My BD Acoustic as unsupported/safe, reports mock-only status as true, and
 records real MIDI, port opening, CLI wiring, active behavior, Analog Four
 support, and Pads 5-12 support as absent. Hardware is not required.
 
+The passive mock foundation decision checkpoint now lives in:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md
+
+The checkpoint summarizes the current passive/mock foundation in one place:
+the passive CLI foundation is complete enough for report/list/search/inspect
+/preview, mock MIDI remains test-only/inert, mock message mapper remains
+test-only/inert, mock mapper report exists and is included in closeout,
+profiles `"2"` and `"3"` are supported, profile `"4"` remains
+unsupported/safe, and real MIDI, ports, CLI wiring, active behavior, and
+hardware behavior remain intentionally absent.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -347,6 +360,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock mapper profile 4 decision note
 - mock mapper progress review
 - passive mock mapper report
+- passive mock foundation decision checkpoint
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1560,6 +1574,28 @@ Mock Mapper Report". It adds no real MIDI backend, mido dependency, MIDI port
 opening, MIDI sending, active execution, CLI wiring, dispatch, hardware
 behavior, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
+untouched. Analog Rytm and Analog Four remain off for this phase.
+
+The passive mock foundation decision checkpoint includes:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md
+
+The checkpoint is documentation-only. It records that the passive CLI
+foundation is complete enough for report/list/search/inspect/preview, the
+passive registry/report layer exists, the test-only mock MIDI scaffold exists,
+the test-only mock message mapper exists, the passive mock mapper report
+exists, and closeout covers Mock MIDI, Mock Message Mapper, and Mock Mapper
+Report. It records the current mock mapper boundary as profiles `"2"` / My BD
+Hard and `"3"` / My BD Classic supported, profile `"4"` / My BD Acoustic
+unsupported/safe, and profile `"4"` still requiring separate approval. It
+captures safe next branches as freezing scope, creating a profile 4 mock-only
+support plan, building a passive mock mapper report CLI preview, writing a
+larger project progress report, or reviewing future active-layer test planning
+without implementation. It adds no implementation, real MIDI backend, mido
+dependency, MIDI port opening, MIDI sending, active execution, CLI wiring,
+dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, machine/profile universe expansion, execute-command,
+send-command, or hardware-test. The protected V1.34 reference remains
 untouched. Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
