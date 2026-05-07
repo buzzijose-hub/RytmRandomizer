@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6e4b35f Add project-level progress checkpoint review
 - bf3fa09 Add project-level progress checkpoint
 - 1c8566a Add read-only active boundary visibility progress report review
 - e224a2d Add read-only active boundary visibility progress report
@@ -2417,6 +2418,26 @@ It confirms the checkpoint does not authorize implementation, active
 execution, real MIDI, port opening, active CLI commands, dispatch, hardware
 behavior, profile `"4"` implementation, or profile `"3"` active-boundary
 support.
+
+The session agenda handoff includes:
+
+- Docs/SESSION_AGENDA_HANDOFF.md
+
+The handoff records the current safe working menu after the accepted
+project-level progress checkpoint. It captures the current safe CLI visibility,
+mock mapper scope, active-boundary scope, today's safe options, closeout
+command, stop conditions, and hardware-off reminder.
+
+It confirms profile `"2"` / My BD Hard remains the only active-boundary
+candidate, profile `"3"` / My BD Classic remains unsupported by the active
+boundary, profile `"4"` / My BD Acoustic remains parked and unsupported, and
+real MIDI, ports, active CLI commands, dispatch, execution, hardware behavior,
+and hardware validation remain absent.
+
+The handoff is documentation-only. It adds no implementation, tests, real
+MIDI, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
 
 The mock-only active boundary safety tests review includes:
 

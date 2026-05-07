@@ -220,3 +220,15 @@ passive/mock project checkpoint.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 13. Current Session Handoff
+
+The current session agenda handoff is:
+
+- `Docs/SESSION_AGENDA_HANDOFF.md`
+
+The handoff keeps the next work menu conservative: review/accept the handoff,
+pause, or plan only separately gated mock-only safety coverage. It does not
+authorize active execution, real MIDI, ports, active CLI commands, dispatch,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
