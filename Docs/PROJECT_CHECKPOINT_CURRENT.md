@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 17d1a0a Add real MIDI implementation test plan review
 - 5493805 Add real MIDI implementation test plan
 - 48941d8 Add real MIDI implementation design review
 - 8bfa73c Add real MIDI implementation design spec
@@ -2701,6 +2702,21 @@ profile `"3"` remains unsupported by the active boundary, and profile `"4"`
 remains parked and unsupported.
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI commands, passive CLI active-boundary evaluation, passive
+CLI construction of `MockMidiSender`, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI import and port safety tests-only implementation plan includes:
+
+- Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN.md
+
+The plan defines a future tests-only implementation slice for real MIDI import
+and port safety. It documents future test files, future test snippets,
+closeout labels, verification commands, commit boundary, safety invariants,
+and stop conditions.
+
+The plan is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI commands, passive CLI active-boundary evaluation, passive
 CLI construction of `MockMidiSender`, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`

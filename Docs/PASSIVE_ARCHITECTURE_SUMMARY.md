@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5493805
+17d1a0a
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 5493805 Add real MIDI implementation test plan
+- current HEAD: 17d1a0a Add real MIDI implementation test plan review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a tests-only implementation plan for real MIDI
-  import and port safety, return to passive/project documentation, or pause at
-  the accepted real MIDI implementation test plan checkpoint
+- next recommended task: review and accept the real MIDI import and port
+  safety tests-only implementation plan, return to passive/project
+  documentation, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
@@ -394,6 +394,29 @@ evaluation, passive CLI construction of `MockMidiSender`, dispatch, command
 execution, scene execution, hardware behavior, profile `"4"` implementation,
 profile `"3"` active-boundary support, hardware validation, or turning
 hardware on.
+
+## Real MIDI Import And Port Safety Test Implementation Plan
+
+`Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN.md` defines a
+future tests-only implementation slice for real MIDI import and port safety.
+
+It records:
+
+- future test file ownership
+- future passive import safety tests
+- future passive CLI safety tests
+- future source-separation checks
+- future active-boundary scope guard checks
+- future closeout labels
+- future verification commands
+- future commit boundary
+- safety invariants
+- stop conditions
+
+The plan is tests-only. It does not create tests, edit closeout, add runtime
+modules, add real MIDI dependencies, open ports, send MIDI, add active CLI
+commands, change active-boundary scope, implement profile `"4"`, add profile
+`"3"` active-boundary support, or authorize hardware validation.
 
 ## Project-Level Roadmap Update
 

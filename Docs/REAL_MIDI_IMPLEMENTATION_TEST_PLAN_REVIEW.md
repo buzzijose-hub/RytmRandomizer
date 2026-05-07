@@ -254,3 +254,19 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No tests or implementation are added in this slice.
+
+## 14. Real MIDI Import And Port Safety Test Implementation Plan
+
+The tests-only implementation plan now lives in:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN.md`
+
+The plan follows this accepted review and defines a future tests-only slice
+for real MIDI import and port safety. It documents future test files, future
+test snippets, closeout labels, verification commands, commit boundary, safety
+invariants, and stop conditions.
+
+The plan adds no implementation, tests, real MIDI, mido, port opening, MIDI
+sending, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
