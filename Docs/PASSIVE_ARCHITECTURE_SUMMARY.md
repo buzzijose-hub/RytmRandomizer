@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-906fbba
+524144d
 
 ## Protected Reference
 
@@ -50,15 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 906fbba Add mock-first active boundary progress report
+- current HEAD: 524144d Add mock-only active boundary safety test design
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the mock-only active boundary
-  safety test design
+- next recommended task: implement the accepted mock-only active boundary
+  safety tests
 - closeout command
 - stop condition
 
@@ -294,6 +294,30 @@ The preferred future file ownership is:
 - `tests/test_active_boundary.py`
 
 The design is documentation-only and adds no tests, code, real MIDI, ports,
+active CLI behavior, dispatch, hardware behavior, or profile `"4"` support.
+
+## Mock-Only Active Boundary Safety Test Design Review
+
+`Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN_REVIEW.md` accepts
+`Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md` as the current planning
+gate for future mock-only active boundary safety tests.
+
+The review accepts future test-only coverage for:
+
+- request/result metadata copy-safety
+- unsupported source kind safe failure
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- deterministic repeated accepted and failed evaluations
+- sender state remaining unchanged after failure paths
+- type-safety failures before message emission
+- no exposed port-provider, real-MIDI, or active CLI affordances
+
+The accepted future file ownership is:
+
+- `tests/test_active_boundary.py`
+
+The review is documentation-only and adds no tests, code, real MIDI, ports,
 active CLI behavior, dispatch, hardware behavior, or profile `"4"` support.
 
 ## Mock-Only Active Test Implementation Plan
@@ -2075,6 +2099,7 @@ Recommended passive layers before runtime work:
 - review the broader mock-first active boundary progress report
 - create a mock-only safety test design only after review
 - review and accept the mock-only active boundary safety test design
+- implement the accepted mock-only active boundary safety tests
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

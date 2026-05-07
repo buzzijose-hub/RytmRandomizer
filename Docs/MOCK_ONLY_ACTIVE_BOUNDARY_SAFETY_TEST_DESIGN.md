@@ -196,6 +196,10 @@ boundary.
 
 The future slice should prefer extending `tests/test_active_boundary.py`.
 
+The review now lives in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN_REVIEW.md`
+
 Hardware remains off.
 
 No implementation is added in this slice.

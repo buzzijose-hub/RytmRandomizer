@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-906fbba Add mock-first active boundary progress report
+524144d Add mock-only active boundary safety test design
 
 ## Current Phase
 
@@ -64,8 +64,23 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to review and accept the mock-only active boundary
-safety test design.
+Next recommended task is to implement the accepted mock-only active boundary
+safety tests.
+
+The mock-only active boundary safety test design review is:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md`
+
+The accepted future test-only implementation should prefer:
+
+- `tests/test_active_boundary.py`
+
+No closeout update should be needed unless a new test file is separately
+justified.
 
 The mock-only active boundary safety test design is:
 
