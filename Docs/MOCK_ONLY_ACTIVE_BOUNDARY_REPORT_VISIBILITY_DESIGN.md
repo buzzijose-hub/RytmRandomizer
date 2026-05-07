@@ -249,7 +249,9 @@ Unsafe next moves:
 
 ## 13. Recommendation
 
-Review and accept this design before any report implementation.
+This design is accepted in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_REPORT_VISIBILITY_DESIGN_REVIEW.md`
 
 If accepted, the next implementation slice should be tiny, read-only,
 in-memory, and test-backed.
