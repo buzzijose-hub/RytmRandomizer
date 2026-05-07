@@ -419,3 +419,16 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 21. Review Gate
+
+This real MIDI implementation design/spec is reviewed and accepted by:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+
+The review accepts this document as the current real MIDI implementation
+design/spec baseline. It does not authorize implementation, tests, real MIDI
+imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+or turning hardware on.

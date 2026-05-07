@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 8bfa73c Add real MIDI implementation design spec
 - ddc0e03 Add real MIDI boundary plan review
 - 7e02215 Add real MIDI boundary plan
 - f877da2 Add real MIDI boundary planning gate review
@@ -2642,6 +2643,27 @@ passive CLI construction of `MockMidiSender`, dispatch, command execution,
 scene execution, hardware behavior, profile `"4"` implementation, profile
 `"3"` active-boundary support, hardware validation, or hardware-on
 authorization.
+
+The real MIDI implementation design/spec review includes:
+
+- Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md
+- 8bfa73c Add real MIDI implementation design spec
+
+The review accepts the design/spec as the current real MIDI implementation
+design/spec baseline. It confirms real MIDI implementation remains blocked,
+hardware validation remains blocked, hardware remains off, profile `"3"`
+remains unsupported by the active boundary, and profile `"4"` remains parked
+and unsupported.
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI commands, passive CLI active-boundary evaluation, passive
+CLI construction of `MockMidiSender`, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
 
 The session agenda current handoff refresh includes:
 

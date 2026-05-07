@@ -1,9 +1,9 @@
-# Real MIDI Boundary Plan Review
+# Real MIDI Implementation Design Spec Review
 
 ## 1. Purpose
 
-Review and accept `Docs/REAL_MIDI_BOUNDARY_PLAN.md` as the current real MIDI
-boundary planning baseline.
+Review and accept `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md` as the
+current real MIDI implementation design/spec baseline.
 
 Confirm this is a review checkpoint only.
 
@@ -19,7 +19,7 @@ Current branch:
 
 Current HEAD before this slice:
 
-- 7e02215 Add real MIDI boundary plan
+- 8bfa73c Add real MIDI implementation design spec
 
 Current phase:
 
@@ -27,8 +27,9 @@ Current phase:
 - project-level roadmap update accepted
 - mock-first active boundary safety baseline accepted
 - real MIDI boundary planning gate accepted
-- real MIDI boundary plan created
-- real MIDI boundary plan now being reviewed
+- real MIDI boundary plan accepted
+- real MIDI implementation design/spec created
+- real MIDI implementation design/spec now being reviewed
 - no real MIDI or hardware validation started
 
 Hardware status:
@@ -39,29 +40,31 @@ Hardware status:
 
 ## 3. Review Decision
 
-`Docs/REAL_MIDI_BOUNDARY_PLAN.md` is accepted as the current real MIDI
-boundary planning baseline.
+`Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md` is accepted as the current real
+MIDI implementation design/spec baseline.
 
 The accepted planning milestone is:
 
-- 7e02215 Add real MIDI boundary plan
+- 8bfa73c Add real MIDI implementation design spec
 
 This review does not authorize implementation by itself.
 
 This review does not authorize turning hardware on by itself.
 
-## 4. Accepted Boundary Concepts
+## 4. Accepted Design Concepts
 
-The accepted plan defines these concepts at planning level only:
+The accepted design/spec defines these concepts at planning level only:
 
-- conceptual future real MIDI adapter placement
-- import and dependency isolation
-- port discovery and port selection boundaries
+- future file ownership
+- conceptual future interfaces
+- message translation rules
+- dependency isolation
+- port-provider boundary
+- sender boundary
+- active-boundary integration limits
 - passive CLI separation
-- active boundary relationship
-- arming and operator intent requirements
-- tests required before implementation
-- future implementation gates
+- required future test categories
+- future implementation sequencing
 - later hardware validation preconditions
 - forbidden scope
 
@@ -121,31 +124,48 @@ This review confirms there is still no:
 - profile `"4"` implementation
 - profile `"3"` active-boundary support
 
-## 7. Preconditions Before Any Future Implementation Design
+## 7. Preconditions Before Any Future Test Plan
 
-Before any future documentation-only real MIDI implementation design/spec:
+Before any future documentation-only real MIDI implementation test plan:
 
 - Git status must be clean
 - closeout must pass
 - V1.34 reference diff must be empty
-- this real MIDI boundary plan review must remain accepted
+- this real MIDI implementation design/spec review must remain accepted
 - passive CLI must remain read-only
 - mock-first active boundary safety baseline must remain accepted
 - hardware must remain off
-- the future design/spec must stay documentation-only
-- the future design/spec must not add dependencies
-- the future design/spec must not add active CLI commands
+- the future test plan must stay documentation-only
+- the future test plan must not add dependencies
+- the future test plan must not add active CLI commands
 
-## 8. Preconditions Before Any Later Implementation
+## 8. Preconditions Before Any Later Tests
+
+This review does not authorize test implementation.
+
+Before any later real MIDI boundary tests could be implemented, the project
+would need:
+
+- accepted real MIDI implementation test plan
+- explicit test file ownership
+- explicit no-real-port test strategy
+- explicit no-real-MIDI-import test strategy
+- explicit passive CLI regression strategy
+- explicit closeout integration plan
+- clean closeout
+- clean Git status
+- empty V1.34 reference diff
+- explicit user approval
+
+## 9. Preconditions Before Any Later Implementation
 
 This review does not authorize implementation.
 
 Before any later real MIDI implementation could be considered, the project
 would need:
 
-- accepted real MIDI implementation design/spec
 - accepted real MIDI implementation test plan
-- explicit file ownership
+- completed and reviewed mock-only/import-safety tests
 - explicit dependency decision
 - tests proving passive imports do not import real MIDI libraries
 - tests proving passive CLI commands do not open ports
@@ -157,13 +177,15 @@ would need:
 - empty V1.34 reference diff
 - explicit user approval
 
-## 9. Preconditions Before Hardware Validation
+## 10. Preconditions Before Hardware Validation
 
 This review does not authorize hardware validation.
 
 Before any hardware validation could be considered later:
 
-- all mock-only and real MIDI boundary tests must pass
+- all passive safety tests must pass
+- all mock-only active-boundary tests must pass
+- all real MIDI boundary tests must pass
 - real MIDI adapter implementation must be reviewed and accepted
 - exact target device must be selected
 - exact MIDI output port must be confirmed
@@ -175,13 +197,13 @@ Before any hardware validation could be considered later:
 
 Analog Rytm and Analog Four remain off during this review.
 
-## 10. Safe Next Options
+## 11. Safe Next Options
 
 Safe next options:
 
 - pause at this accepted planning checkpoint
 - return to passive/project documentation
-- create a documentation-only real MIDI implementation design/spec
+- create a documentation-only real MIDI implementation test plan
 
 Unsafe next moves:
 
@@ -195,9 +217,9 @@ Unsafe next moves:
 - implementing profile `"4"` without separate approval
 - adding profile `"3"` active-boundary support without separate approval
 
-## 11. Recommendation
+## 12. Recommendation
 
-If continuing, write a documentation-only real MIDI implementation design/spec
+If continuing, write a documentation-only real MIDI implementation test plan
 next.
 
 Do not implement real MIDI.
@@ -210,9 +232,10 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 12. Decision
+## 13. Decision
 
-The real MIDI boundary plan is accepted as the current planning baseline.
+The real MIDI implementation design/spec is accepted as the current planning
+baseline.
 
 Real MIDI implementation remains blocked.
 
@@ -221,40 +244,3 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
-
-## 13. Real MIDI Implementation Design Spec
-
-The documentation-only real MIDI implementation design/spec now lives in:
-
-- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md`
-
-The design/spec follows this accepted review and defines the future real MIDI
-implementation shape at planning level only. It documents future file
-ownership, conceptual interfaces, message translation rules, dependency
-isolation, port-provider boundaries, sender boundaries, active-boundary
-integration limits, passive CLI separation, required future tests, future
-implementation sequencing, later hardware validation preconditions, and
-forbidden scope.
-
-The design/spec adds no implementation, tests, real MIDI, mido, port opening,
-MIDI sending, active CLI commands, dispatch, command execution, scene
-execution, hardware behavior, profile `"4"` implementation, profile `"3"`
-active-boundary support, hardware validation, or hardware-on authorization.
-
-## 14. Real MIDI Implementation Design Spec Review
-
-The real MIDI implementation design/spec review now lives in:
-
-- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
-
-The review accepts:
-
-- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md`
-- 8bfa73c Add real MIDI implementation design spec
-
-The review accepts the design/spec as the current real MIDI implementation
-design/spec baseline. It does not authorize implementation, tests, real MIDI
-imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
-command execution, scene execution, hardware behavior, profile `"4"`
-implementation, profile `"3"` active-boundary support, hardware validation,
-or turning hardware on.

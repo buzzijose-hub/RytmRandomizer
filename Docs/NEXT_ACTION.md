@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-ddc0e03 Add real MIDI boundary plan review
+8bfa73c Add real MIDI implementation design spec
 
 ## Current Phase
 
@@ -66,9 +66,23 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the real MIDI implementation
-design/spec, more passive/project documentation, or a pause at this clean
-planning checkpoint.
+Next recommended task is a documentation-only real MIDI implementation test
+plan, more passive/project documentation, or a pause at this accepted real
+MIDI implementation design/spec checkpoint.
+
+The latest real MIDI implementation design/spec review is:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The review accepts the real MIDI implementation design/spec as the current
+planning baseline. It does not authorize implementation, tests, real MIDI
+imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
+hardware behavior, hardware validation, profile `"4"` implementation, profile
+`"3"` active-boundary support, or turning hardware on.
 
 The latest real MIDI implementation design/spec is:
 
