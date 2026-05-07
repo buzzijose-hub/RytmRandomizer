@@ -252,6 +252,16 @@ Unsafe next moves:
 Prefer a documentation-only dependency candidate evaluation next, or pause at
 this accepted dependency re-decision gate.
 
+The dependency candidate evaluation now lives in:
+
+- `Docs/REAL_MIDI_DEPENDENCY_CANDIDATE_EVALUATION.md`
+
+The evaluation keeps dependency selection deferred, keeps Candidate A as the
+current no-dependency position, and does not authorize dependency selection,
+package metadata changes, real port opening, MIDI sending, active CLI
+commands, hardware behavior, hardware validation, or hardware-on
+authorization.
+
 Do not select a dependency yet.
 
 Do not change package metadata.

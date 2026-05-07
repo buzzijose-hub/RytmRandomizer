@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3a7053e Add real MIDI dependency re-decision gate
+7feb3ac Add real MIDI dependency re-decision gate review
 
 ## Current Phase
 
@@ -67,9 +67,32 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only dependency candidate evaluation,
-more passive/project documentation, or a pause at this accepted dependency
-re-decision gate.
+Next recommended task is a documentation-only review/acceptance gate for the
+real MIDI dependency candidate evaluation, more passive/project documentation,
+or a pause at this no-dependency evaluation checkpoint.
+
+The latest real MIDI dependency candidate evaluation is:
+
+- `Docs/REAL_MIDI_DEPENDENCY_CANDIDATE_EVALUATION.md`
+
+The evaluation records:
+
+- 7feb3ac Add real MIDI dependency re-decision gate review
+- Candidate A: continue with no real MIDI dependency
+- Candidate B: future `mido`-style adapter backend, not selected
+- Candidate C: future direct backend adapter, not selected
+- Candidate D: custom or OS-specific MIDI path, not selected
+- current recommendation to keep dependency selection deferred
+- no package metadata change
+- no real MIDI backend
+- no port opening
+- no MIDI sending
+- no active CLI commands
+- no hardware validation
+
+The evaluation does not select a dependency. It recommends reviewing and
+accepting the evaluation before any future package metadata plan or dependency
+selection work.
 
 The latest real MIDI dependency re-decision gate review is:
 
