@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a7f2e28 Add mock mapper profile 3 progress checkpoint
 - c961dbf Update checkpoint after mock mapping for group profile 3
 - 4507647 Add mock mapping for group profile 3
 - 79a64df Add passive mock MIDI progress checkpoint
@@ -247,6 +248,16 @@ checkpoint after mock mapping for group profile 3`: group profiles `"2"` and
 `"3"` are supported, group profile `"4"` remains intentionally unsupported and
 safe, and no next mapper expansion is approved yet.
 
+The mock mapper profile 4 decision note now lives in:
+
+- Docs/MOCK_MAPPER_PROFILE_4_DECISION_NOTE.md
+
+The decision note keeps existing group profile `"4"` / My BD Acoustic
+unsupported for now. It records that any future profile 4 support must be
+separately approved as a tiny mock-only expansion, and that no implementation,
+real MIDI, port opening, CLI wiring, active behavior, or hardware behavior was
+added.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -304,6 +315,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive mock MIDI progress checkpoint
 - test-only mock mapping for group profile 3
 - mock mapper profile 3 progress checkpoint
+- mock mapper profile 4 decision note
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1459,6 +1471,21 @@ hardware-test behavior, dispatch, command execution, scene execution, hardware
 mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
 machine/profile universe expansion. The protected V1.34 reference remains
 untouched.
+
+The mock mapper profile 4 decision note includes:
+
+- Docs/MOCK_MAPPER_PROFILE_4_DECISION_NOTE.md
+
+The decision note is documentation-only. It decides to keep existing group
+profile `"4"` / My BD Acoustic unsupported for now. It records the later
+options as keeping profile `"4"` unsupported, planning a tiny mock-only profile
+4 expansion, or stopping mapper expansion and moving to broader mock mapper
+report/summary work. It adds no implementation, mapper scope, real MIDI
+backend, mido dependency, port opening, active CLI command, execute-command,
+send-command, hardware-test behavior, dispatch, command execution, scene
+execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, or machine/profile universe expansion. The protected V1.34
+reference remains untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

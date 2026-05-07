@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c961dbf
+a7f2e28
 
 ## Protected Reference
 
@@ -47,13 +47,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c961dbf Update checkpoint after mock mapping for group profile 3
+- current HEAD: a7f2e28 Add mock mapper profile 3 progress checkpoint
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: stop for the session, write a documentation-only next-session handoff, or plan whether group profile `"4"` should remain unsupported or become the next tiny mock-only mapper target
+- next recommended task: broader mock mapper progress report, or profile 4 mock-only expansion only after explicit approval
 - closeout command
 - stop condition
 
@@ -173,6 +173,22 @@ It summarizes:
 - the next decision point
 
 The checkpoint records that no next mapper expansion is approved yet.
+
+It is documentation-only and adds no runtime behavior.
+
+## Mock Mapper Profile 4 Decision Note
+
+`Docs/MOCK_MAPPER_PROFILE_4_DECISION_NOTE.md` records the decision for
+existing group profile `"4"` / My BD Acoustic before any mapper expansion.
+
+Current decision:
+
+- profile `"4"` / My BD Acoustic remains unsupported for now
+- no profile 4 mapping is implemented
+- future profile 4 support requires explicit approval as a tiny mock-only expansion
+
+The decision note keeps the project at a safe planning boundary before any
+additional mapper scope.
 
 It is documentation-only and adds no runtime behavior.
 
@@ -1397,7 +1413,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- stop for the session, write a documentation-only next-session handoff, or plan whether group profile `"4"` should remain unsupported or become the next tiny mock-only mapper target
+- create a broader mock mapper progress report, or consider profile 4 mock-only expansion only after explicit approval
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond group profile 2 without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work
