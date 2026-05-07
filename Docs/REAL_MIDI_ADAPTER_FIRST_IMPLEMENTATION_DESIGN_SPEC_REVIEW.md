@@ -346,12 +346,30 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 18. Decision
+## 18. First Adapter Implementation Plan
+
+The first adapter implementation plan now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLAN.md`
+
+The plan defines a future fake-provider-only implementation slice for
+`rytm_randomizer/real_midi_adapter.py` and
+`tests/test_real_midi_adapter_boundary.py`. It includes concrete future test
+snippets, future adapter boundary code snippets, targeted verification, full
+closeout, V1.34 reference protection, and commit boundaries.
+
+The plan does not authorize adapter implementation until it is reviewed and
+accepted. It does not authorize `mido`, real MIDI dependency selection,
+package metadata changes, port opening, MIDI sending, active CLI commands,
+hardware behavior, hardware validation, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
+
+## 19. Decision
 
 The real MIDI adapter first implementation design/spec is accepted.
 
-The next safe branch may be a documentation-only first adapter implementation
-plan.
+The next safe branch may be documentation-only review/acceptance of the first
+adapter implementation plan.
 
 Adapter implementation remains blocked.
 
