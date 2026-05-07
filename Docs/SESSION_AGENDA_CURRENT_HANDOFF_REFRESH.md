@@ -238,3 +238,17 @@ report or a pause at this clean state.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 13. Progress Report
+
+The broader active-boundary safety progress report now lives in:
+
+- `Docs/ACTIVE_BOUNDARY_SAFETY_PROGRESS_REPORT.md`
+
+The report consolidates the current mock-first active boundary safety layer
+and recommends either review/acceptance of the report or a pause at the clean
+progress checkpoint.
+
+The report adds no implementation, tests, real MIDI, ports, active CLI
+commands, dispatch, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.

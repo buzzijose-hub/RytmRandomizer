@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 8f7f850 Refresh current session handoff
 - 12f5182 Add additional active boundary safety tests review
 - 092f0b8 Update checkpoint after additional active boundary safety tests
 - d0a9b8d Add additional active boundary safety tests
@@ -2561,6 +2562,24 @@ unsupported, passive CLI remains read-only, real MIDI remains absent, ports
 remain closed, and hardware remains off.
 
 The handoff is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
+
+The active boundary safety progress report includes:
+
+- Docs/ACTIVE_BOUNDARY_SAFETY_PROGRESS_REPORT.md
+
+The report consolidates the current mock-first active boundary safety layer.
+It records profile `"2"` / My BD Hard as the only accepted active-boundary
+candidate, profile `"3"` / My BD Classic as unsupported by the active
+boundary, profile `"4"` / My BD Acoustic as parked and unsupported, passive
+CLI visibility as read-only, active boundary report visibility as read-only,
+current safety test coverage, current closeout coverage, absent real MIDI,
+absent ports, absent active CLI behavior, absent dispatch/execution, and
+hardware-off status.
+
+The report is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.

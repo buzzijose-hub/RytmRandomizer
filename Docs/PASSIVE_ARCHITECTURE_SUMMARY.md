@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-12f5182
+8f7f850
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 12f5182 Add additional active boundary safety tests review
+- current HEAD: 8f7f850 Refresh current session handoff
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a broader active-boundary safety progress
-  report, return to passive/project documentation, or pause at the refreshed
-  current handoff checkpoint
+- next recommended task: review/accept the active-boundary safety progress
+  report, return to passive/project documentation, or pause at the clean
+  progress checkpoint
 - closeout command
 - stop condition
 
@@ -95,6 +95,35 @@ broader active-boundary safety progress report.
 
 The handoff is documentation-only. It adds no implementation, tests, real
 MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
+
+## Active Boundary Safety Progress Report
+
+`Docs/ACTIVE_BOUNDARY_SAFETY_PROGRESS_REPORT.md` consolidates the current
+mock-first active boundary safety layer after the current session handoff
+refresh.
+
+It records:
+
+- accepted active-boundary candidate profile `"2"` / My BD Hard
+- profile `"3"` / My BD Classic remaining unsupported by the active boundary
+- profile `"4"` / My BD Acoustic remaining parked and unsupported
+- passive CLI visibility remaining read-only
+- passive CLI not evaluating active boundary requests
+- passive CLI not constructing `MockMidiSender`
+- active boundary report visibility remaining read-only
+- current safety test coverage
+- current closeout coverage
+- absent real MIDI, ports, active CLI behavior, dispatch, execution, and
+  hardware behavior
+
+The report recommends either reviewing/accepting the report or pausing at the
+clean progress checkpoint.
+
+The report is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
 machine/profile expansion.

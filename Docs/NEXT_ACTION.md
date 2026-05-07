@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-12f5182 Add additional active boundary safety tests review
+8f7f850 Refresh current session handoff
 
 ## Current Phase
 
@@ -66,9 +66,24 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader active-boundary safety progress report,
-more passive/project documentation, or a pause at this refreshed current
-handoff checkpoint.
+Next recommended task is review/acceptance of the active-boundary safety
+progress report, more passive/project documentation, or a pause at this clean
+progress checkpoint.
+
+The latest active-boundary safety progress report is:
+
+- `Docs/ACTIVE_BOUNDARY_SAFETY_PROGRESS_REPORT.md`
+
+The report consolidates the current mock-first active boundary safety layer:
+accepted candidate profile `"2"` / My BD Hard, unsupported active-boundary
+profile `"3"` / My BD Classic, parked profile `"4"` / My BD Acoustic, passive
+CLI visibility, active boundary report visibility, added safety coverage,
+closeout coverage, absent real MIDI, absent ports, absent active CLI behavior,
+and hardware-off status.
+
+It adds no implementation, tests, real MIDI, ports, active behavior, dispatch,
+execution, CLI active commands, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
 
 The latest session agenda current handoff refresh is:
 
