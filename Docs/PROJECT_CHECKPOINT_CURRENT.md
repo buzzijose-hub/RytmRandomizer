@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2e951c2 Add passive mock foundation progress report
 - 9780bcf Add passive mock mapper CLI preview phase review
 - efaf086 Update checkpoint after passive mock mapper report CLI preview
 - 19659e5 Add passive mock mapper report CLI preview
@@ -355,6 +356,16 @@ behavior remains absent, hardware is not required, and Analog Rytm and Analog
 Four remain off. The next recommended branch is a docs-only future active
 test-plan document.
 
+The future active test-plan now lives in:
+
+- Docs/FUTURE_ACTIVE_TEST_PLAN.md
+
+The test-plan defines what must be proven before any active/hardware-facing
+behavior can be implemented or validated. It is planning-only and adds no
+active execution, MIDI code, port opening, hardware validation, active CLI
+command, or profile 4 implementation. It keeps hardware off and sets the next
+recommended task as review/acceptance of the test plan.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -419,6 +430,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive mock mapper report CLI preview
 - passive mock mapper CLI preview phase review
 - passive mock foundation progress report
+- future active test-plan
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1722,6 +1734,22 @@ docs-only future active test-plan document. It adds no implementation, code,
 tests, closeout changes, real MIDI behavior, active behavior, or hardware
 requirement. The protected V1.34 reference remains untouched. Analog Rytm and
 Analog Four remain off for this phase.
+
+The future active test-plan includes:
+
+- Docs/FUTURE_ACTIVE_TEST_PLAN.md
+
+The document is planning-only. It defines what must be proven before any
+active or hardware-facing behavior can be implemented or validated. It records
+mock-only proof requirements, passive commands that must remain read-only,
+future arming meaning as a concept only, first real-hardware candidate
+constraints without selecting a final candidate, required pre-hardware
+checklist, exact stop conditions, forbidden first-active scope, required future
+test categories, and the hardware-off requirement. It adds no implementation,
+active CLI command, real MIDI, port opening, hardware validation, execution,
+dispatch, SysEx, GUI/capture, Analog Four support, Pads 5-12 support, or
+profile 4 implementation. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

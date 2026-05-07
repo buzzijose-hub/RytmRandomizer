@@ -154,6 +154,17 @@ Profile `"4"` remains unsupported unless separately approved.
 - Do not add active CLI commands yet.
 - Keep profile 4 unsupported unless separately approved.
 
+## Future Active Test-Plan Follow-Up
+
+The future active test-plan now lives in:
+
+- `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
+
+It defines what must be proven before any active or hardware-facing behavior
+can be implemented or validated. It keeps the project at planning altitude,
+keeps hardware off, adds no implementation, adds no MIDI code, opens no ports,
+and sets the next recommended task as review/acceptance of the test plan.
+
 ## Decision
 
 - Passive/mock foundation is stable and documented.

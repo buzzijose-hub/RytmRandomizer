@@ -234,4 +234,20 @@ The review accepts the mock MIDI boundary test plan, records that no MIDI
 implementation exists yet, sets the next recommended task as test-only mock
 MIDI scaffold/design, and keeps hardware off.
 
+Passive/mock foundation progress report:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
+
+The report consolidates the current passive/mock foundation before any future
+active planning.
+
+Future active test-plan:
+
+- `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
+
+The test-plan defines what must be proven before any active or
+hardware-facing behavior can be implemented or validated. It adds no
+implementation, MIDI code, port opening, active CLI command, execution, or
+hardware validation, and keeps hardware off.
+
 Keep hardware off until then.

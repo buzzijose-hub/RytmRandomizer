@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9780bcf Add passive mock mapper CLI preview phase review
+2e951c2 Add passive mock foundation progress report
 
 ## Current Phase
 
@@ -63,8 +63,8 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a docs-only future active test-plan
-document.
+Next recommended task is to review and accept the docs-only future active
+test-plan.
 
 Safe alternatives are:
 
@@ -90,6 +90,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
+- `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -189,6 +190,12 @@ supports profiles `"2"` and `"3"`, profile `"4"` remains unsupported/safe, the
 mock mapper report and CLI preview exist, real MIDI and ports remain absent,
 active behavior remains absent, and hardware remains off. The next recommended
 branch is a docs-only future active test-plan document.
+
+The future active test-plan defines what must be proven before any active or
+hardware-facing behavior can be implemented or validated. It is planning-only:
+no active execution, MIDI code, port opening, hardware validation, active CLI
+command, or profile 4 implementation is added. It keeps hardware off and sets
+the next recommended task as review/acceptance of the test plan.
 
 ## Do-Not-Touch Files
 

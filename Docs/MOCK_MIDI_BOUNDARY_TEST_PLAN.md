@@ -251,4 +251,21 @@ The review accepts the test-only mock message mapper, records that no real
 MIDI behavior exists, keeps future mapper expansion mock-only unless
 separately reviewed, and keeps hardware off.
 
+Passive/mock foundation progress report:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
+
+The report consolidates the current passive/mock foundation and confirms the
+mock MIDI scaffold, mock message mapper, mock mapper report, and CLI preview
+remain passive/mock-only.
+
+Future active test-plan:
+
+- `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
+
+The test-plan defines what must be proven before any active or hardware-facing
+behavior can be implemented or validated. It keeps hardware off and adds no
+implementation, real MIDI, port opening, active CLI command, execution, or
+hardware validation.
+
 Still no real MIDI and no hardware.
