@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f495483 Update checkpoint after read-only active boundary report CLI preview
 - 1f14769 Add read-only active boundary report CLI preview
 - f8b1d76 Add read-only active boundary report CLI preview design review
 - 8289003 Add read-only active boundary report CLI preview design
@@ -2328,6 +2329,21 @@ No closeout script update was needed. The milestone adds no real MIDI, ports,
 active CLI behavior, dispatch, command execution, scene execution, hardware
 behavior, profile `"4"` implementation, or profile `"3"` active-boundary
 support.
+
+The read-only active boundary report CLI preview review includes:
+
+- Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_REVIEW.md
+
+The review accepts
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md` as the
+current passive CLI visibility checkpoint for the completed
+`active-boundary-report` command. It confirms the command prints
+`format_active_boundary_report()` output only, keeps profile `"2"` / My BD
+Hard as the accepted active-boundary candidate, keeps profile `"3"` / My BD
+Classic unsupported by the active boundary, keeps profile `"4"` / My BD
+Acoustic parked and unsupported, and adds no implementation, tests, real MIDI,
+ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
 
 The mock-only active boundary safety tests review includes:
 

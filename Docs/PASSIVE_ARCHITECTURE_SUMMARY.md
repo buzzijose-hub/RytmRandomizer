@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-1f14769
+f495483
 
 ## Protected Reference
 
@@ -51,15 +51,17 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 1f14769 Add read-only active boundary report CLI preview
+- current HEAD: f495483 Update checkpoint after read-only active boundary
+  report CLI preview
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the completed read-only active
-  boundary report CLI preview, or pause at the clean implementation checkpoint
+- next recommended task: write a broader read-only active boundary visibility
+  progress report, write a broader project-level progress checkpoint, or pause
+  at the clean review checkpoint
 - closeout command
 - stop condition
 
@@ -680,6 +682,37 @@ This milestone adds no active request evaluation from CLI, mock message
 emission from CLI, real MIDI, ports, active execution, dispatch, command
 execution, scene execution, hardware behavior, profile `"4"` implementation,
 or profile `"3"` active-boundary support.
+
+## Read-Only Active Boundary Report CLI Preview Review
+
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_REVIEW.md` accepts
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md` as the
+current checkpoint for the completed read-only active boundary report CLI
+preview.
+
+The review accepts:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_active_boundary_report_help_expected.txt`
+- `tests/fixtures/cli_active_boundary_report_expected.txt`
+
+It confirms:
+
+- `active-boundary-report` remains passive/read-only
+- the command prints `format_active_boundary_report()` output only
+- profile `"2"` / My BD Hard remains the accepted active-boundary candidate
+- profile `"3"` / My BD Classic remains unsupported by the active boundary
+- profile `"4"` / My BD Acoustic remains parked and unsupported
+- real MIDI and ports remain absent
+- active CLI behavior remains absent
+- dispatch/execution/hardware behavior remains absent
+- hardware remains off
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -2478,8 +2511,10 @@ Recommended passive layers before runtime work:
   CLI wiring
 - review and accept the active boundary report CLI preview design before any
   CLI implementation
-- review and accept the completed read-only active boundary report CLI preview
-  before any additional active-boundary CLI visibility
+- write a broader read-only active boundary visibility progress report if more
+  context is useful
+- review that broader progress report before any additional active-boundary
+  CLI visibility
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

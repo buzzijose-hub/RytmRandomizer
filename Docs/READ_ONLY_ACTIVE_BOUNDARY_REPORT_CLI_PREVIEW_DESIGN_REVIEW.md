@@ -249,6 +249,10 @@ The implementation checkpoint is:
 
 - `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
 
+The implementation checkpoint review is:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_REVIEW.md`
+
 Hardware remains off.
 
 No implementation is added in this slice.

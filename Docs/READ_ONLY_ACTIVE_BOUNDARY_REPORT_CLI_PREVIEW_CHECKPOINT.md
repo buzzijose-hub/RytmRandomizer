@@ -224,8 +224,13 @@ The design accepted before implementation is:
 
 - `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md`
 
-The next recommended task is either a pause at this clean checkpoint or a
-documentation-only review/acceptance checkpoint for the completed CLI preview.
+The completed CLI preview is accepted in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_REVIEW.md`
+
+The next recommended task is either a pause at this clean review checkpoint or
+a broader documentation-only read-only active boundary visibility progress
+report.
 
 Hardware remains off.
 

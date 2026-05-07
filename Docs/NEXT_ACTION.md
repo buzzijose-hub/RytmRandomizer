@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-1f14769 Add read-only active boundary report CLI preview
+f495483 Update checkpoint after read-only active boundary report CLI preview
 
 ## Current Phase
 
@@ -66,9 +66,22 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is either a documentation-only review/acceptance
-checkpoint for the completed read-only active boundary report CLI preview, or
-a pause at this clean implementation checkpoint.
+Next recommended task is either a broader documentation-only read-only active
+boundary visibility progress report, a broader project-level progress
+checkpoint, or a pause at this clean review checkpoint.
+
+The latest read-only active boundary report CLI preview review is:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_REVIEW.md`
+
+The review accepts:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
+
+The review accepts the completed `active-boundary-report` CLI preview as the
+current passive CLI visibility checkpoint. It does not authorize active
+execution, real MIDI, ports, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
 
 The latest read-only active boundary report CLI preview checkpoint is:
 
