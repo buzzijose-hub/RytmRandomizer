@@ -177,8 +177,12 @@ Safe next options:
 Do not add real MIDI, ports, active CLI commands, dispatch, or hardware
 validation.
 
-Prefer a broader active boundary safety coverage progress report next if more
-context is useful before choosing another test/design slice.
+The broader active boundary safety coverage progress report now lives in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_PROGRESS_REPORT.md`
+
+Prefer reviewing and accepting that report before choosing another test/design
+slice.
 
 Hardware remains off.
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- feb49d7 Add mock-only active boundary safety tests review
 - 08aee17 Update checkpoint after mock-only active boundary safety tests
 - 51b1a8f Add mock-only active boundary safety tests
 - 26f4e3d Add mock-only active boundary safety test review
@@ -2336,6 +2337,24 @@ port-provider, real-MIDI, or active CLI affordances. It adds no
 implementation, tests, real MIDI, ports, active CLI behavior, dispatch,
 hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
+
+The mock-only active boundary safety coverage progress report includes:
+
+- Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_PROGRESS_REPORT.md
+
+The report is documentation-only. It consolidates the current mock-only active
+boundary safety coverage after the completed safety tests and review. It
+summarizes the current active boundary surface, group profile `"2"` / My BD
+Hard as the accepted candidate, group profiles `"3"` and `"4"` remaining
+unsupported by the active boundary, the accepted safety test coverage, the
+relationship to earlier mock-only active candidate tests, current closeout
+coverage, what has been proven, what remains intentionally absent, and safe
+next branches. It confirms profile `"3"` remains mock-mapper/report scope only,
+profile `"4"` remains parked and unsupported, real MIDI and ports remain
+absent, active CLI behavior remains absent, dispatch and command/scene
+execution remain absent, and hardware remains off. It adds no implementation,
+tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-08aee17
+feb49d7
 
 ## Protected Reference
 
@@ -50,16 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 08aee17 Update checkpoint after mock-only active boundary
-  safety tests
+- current HEAD: feb49d7 Add mock-only active boundary safety tests review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: broader active boundary safety coverage progress
-  report, or pause at the clean review checkpoint
+- next recommended task: review/accept the broader mock-only active boundary
+  safety coverage progress report, or pause at the clean progress checkpoint
 - closeout command
 - stop condition
 
@@ -386,6 +385,39 @@ It confirms:
 - no port-provider, real-MIDI, or active CLI affordances are exposed
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
+
+## Mock-Only Active Boundary Safety Coverage Progress Report
+
+`Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_PROGRESS_REPORT.md`
+consolidates the current mock-only active boundary safety coverage after the
+completed safety tests and review.
+
+It summarizes:
+
+- current mock-first active boundary surface
+- accepted candidate: group profile `"2"` / My BD Hard
+- unsupported active-boundary scope: group profiles `"3"` and `"4"`
+- accepted safety test coverage
+- relationship to earlier mock-only active candidate tests
+- current closeout coverage
+- what has been proven
+- what remains intentionally absent
+- safe next branches
+
+It confirms:
+
+- profile `"3"` remains mock-mapper/report scope only, not active-boundary
+  support
+- profile `"4"` remains parked and unsupported
+- real MIDI remains absent
+- ports remain closed
+- active CLI behavior remains absent
+- dispatch and command/scene execution remain absent
+- hardware remains off
+
+The report is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
 
@@ -2172,6 +2204,8 @@ Recommended passive layers before runtime work:
 - review and accept the completed mock-only active boundary safety tests
 - write a broader active boundary safety coverage progress report if more
   context is useful
+- review and accept the broader active boundary safety coverage progress
+  report
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved
