@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-0e5dd03
+76f2fe1
 
 ## Protected Reference
 
@@ -54,16 +54,17 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 0e5dd03 Add real MIDI adapter boundary safety tests
+- current HEAD: 76f2fe1 Update checkpoint after real MIDI adapter boundary
+  safety tests
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance of the real MIDI
-  adapter boundary safety tests checkpoint, return to passive/project
-  documentation, or pause at the clean safety-test checkpoint
+- next recommended task: documentation-only first adapter implementation
+  planning gate, return to passive/project documentation, or pause at the
+  accepted safety-test checkpoint
 - closeout command
 - stop condition
 
@@ -749,8 +750,38 @@ commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support, hardware
 validation, or hardware-on authorization.
 
-The next recommended task is a documentation-only review/acceptance gate for
+The next recommended task was a documentation-only review/acceptance gate for
 this safety test checkpoint.
+
+## Real MIDI Adapter Boundary Safety Tests Checkpoint Review
+
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_SAFETY_TESTS_CHECKPOINT_REVIEW.md` accepts
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md` as the current
+safety-test checkpoint.
+
+The review accepts:
+
+- 0e5dd03 Add real MIDI adapter boundary safety tests
+- 76f2fe1 Update checkpoint after real MIDI adapter boundary safety tests
+- `tests/test_real_midi_adapter_boundary.py`
+- closeout label `=== Test: Real MIDI Adapter Boundary ===`
+
+The review confirms the adapter boundary safety tests are in closeout, the
+real MIDI adapter module is still absent, passive imports and representative
+passive CLI commands do not load adapter or real MIDI modules, passive source
+files avoid adapter/port/active command affordances, active-boundary scope
+still accepts only group profile `"2"` / My BD Hard, profiles `"3"` and `"4"`
+remain unsupported by the active boundary, and V1.34 reference diff remains
+empty.
+
+The review is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
+
+The next recommended task is a documentation-only first adapter implementation
+planning gate.
 
 ## Project-Level Roadmap Update
 

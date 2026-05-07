@@ -192,7 +192,22 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 10. Decision
+## 10. Review Gate
+
+The review gate for this checkpoint is:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_SAFETY_TESTS_CHECKPOINT_REVIEW.md`
+
+The review accepts this checkpoint as the current real MIDI adapter boundary
+safety-test gate before any documentation-only first adapter implementation
+planning gate.
+
+The review does not authorize adapter implementation, real MIDI dependency
+selection, port opening, MIDI sending, active CLI commands, hardware behavior,
+hardware validation, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
+
+## 11. Decision
 
 The real MIDI adapter boundary safety tests are accepted as the current
 tests-only guardrail milestone.
