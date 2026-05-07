@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-76f2fe1
+f705eae
 
 ## Protected Reference
 
@@ -54,17 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 76f2fe1 Update checkpoint after real MIDI adapter boundary
-  safety tests
+- current HEAD: f705eae Add real MIDI adapter boundary safety tests review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only first adapter implementation
-  planning gate, return to passive/project documentation, or pause at the
-  accepted safety-test checkpoint
+- next recommended task: documentation-only review/acceptance of the real MIDI
+  adapter first implementation planning gate, return to passive/project
+  documentation, or pause at the planning checkpoint
 - closeout command
 - stop condition
 
@@ -782,6 +781,37 @@ validation, or hardware-on authorization.
 
 The next recommended task is a documentation-only first adapter implementation
 planning gate.
+
+## Real MIDI Adapter First Implementation Planning Gate
+
+`Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE.md` establishes
+the planning gate before any first real MIDI adapter implementation design/spec
+or implementation plan.
+
+The gate records:
+
+- f705eae Add real MIDI adapter boundary safety tests review
+- accepted real MIDI adapter boundary safety tests in closeout
+- `mido` remaining absent
+- no real MIDI dependency
+- no real MIDI adapter module
+- no real MIDI backend
+- no hardware validation
+
+The gate permits only a future documentation-only first adapter implementation
+design/spec. It does not permit creating `rytm_randomizer/real_midi_adapter.py`,
+selecting or installing a real MIDI dependency, adding active CLI commands,
+opening ports, sending MIDI, implementing profile `"4"`, adding profile `"3"`
+active-boundary support, turning on hardware, or starting hardware validation.
+
+The gate is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this planning gate.
 
 ## Project-Level Roadmap Update
 

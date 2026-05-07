@@ -353,3 +353,17 @@ dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or
 hardware-on authorization.
+
+## 18. First Adapter Implementation Planning Gate
+
+The first adapter implementation planning gate now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE.md`
+
+The gate follows the accepted adapter-specific test plan, the completed
+adapter boundary safety tests, and their review. It permits only a future
+documentation-only first adapter implementation design/spec. It does not
+authorize adapter implementation, real MIDI dependency selection, package
+metadata changes, port opening, MIDI sending, active CLI commands, hardware
+behavior, profile `"4"` implementation, profile `"3"` active-boundary
+support, hardware validation, or hardware-on authorization.

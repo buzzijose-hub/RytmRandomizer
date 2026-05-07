@@ -229,12 +229,25 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 12. Decision
+## 12. First Adapter Implementation Planning Gate
+
+The first adapter implementation planning gate now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE.md`
+
+The gate records that any next adapter-facing work must remain a
+documentation-only design/spec first. It does not authorize creating
+`rytm_randomizer/real_midi_adapter.py`, selecting or installing a real MIDI
+dependency, opening ports, sending MIDI, adding active CLI commands, adding
+hardware behavior, implementing profile `"4"`, adding profile `"3"`
+active-boundary support, or starting hardware validation.
+
+## 13. Decision
 
 The real MIDI adapter boundary safety tests checkpoint is accepted.
 
-The next safe branch may be a documentation-only first adapter implementation
-planning gate.
+The next safe branch may be documentation-only review/acceptance of the first
+adapter implementation planning gate.
 
 Adapter implementation remains blocked.
 

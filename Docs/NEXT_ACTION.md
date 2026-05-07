@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-76f2fe1 Update checkpoint after real MIDI adapter boundary safety tests
+f705eae Add real MIDI adapter boundary safety tests review
 
 ## Current Phase
 
@@ -66,9 +66,32 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only first adapter implementation
-planning gate, more passive/project documentation, or a pause at this accepted
-safety-test checkpoint.
+Next recommended task is documentation-only review/acceptance of the real MIDI
+adapter first implementation planning gate, more passive/project
+documentation, or a pause at this planning checkpoint.
+
+The latest real MIDI adapter first implementation planning gate is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE.md`
+
+The gate records:
+
+- f705eae Add real MIDI adapter boundary safety tests review
+- accepted adapter boundary safety tests in closeout
+- no `rytm_randomizer/real_midi_adapter.py` yet
+- no `mido`
+- no real MIDI dependency
+- no port opening
+- no MIDI sending
+- no active CLI commands
+- no hardware behavior
+- no hardware validation
+
+The gate permits only a future documentation-only first adapter implementation
+design/spec. It does not authorize adapter code, dependency selection, package
+metadata changes, port opening, MIDI sending, active CLI commands, profile
+`"4"` implementation, profile `"3"` active-boundary support, hardware
+behavior, hardware validation, or turning hardware on.
 
 The latest real MIDI adapter boundary safety tests checkpoint review is:
 
