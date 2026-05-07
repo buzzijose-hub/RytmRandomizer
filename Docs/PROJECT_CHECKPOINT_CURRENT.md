@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ede500e Add first real MIDI adapter boundary review
 - a7d0fec Update checkpoint after first real MIDI adapter boundary
 - 96b20a4 Add first real MIDI adapter boundary
 - c19cfeb Add real MIDI adapter first implementation plan
@@ -3264,6 +3265,32 @@ modules, real MIDI dependencies, package metadata changes, port opening, MIDI
 sending, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI dependency re-decision gate includes:
+
+- Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE.md
+
+The gate records:
+
+- ede500e Add first real MIDI adapter boundary review
+- accepted fake-provider-only adapter boundary baseline
+- current dependency decision remaining deferred
+- no `mido`
+- no real MIDI dependency
+- no package metadata change
+- no real MIDI backend
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+
+The gate does not select a dependency. It only allows a future
+documentation-only dependency candidate evaluation after review/acceptance.
+It adds no implementation, tests, runtime modules, real MIDI dependencies,
+package metadata changes, port opening, MIDI sending, active CLI commands,
+dispatch, command execution, scene execution, hardware behavior, profile
+`"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
 
 The session agenda current handoff refresh includes:
 

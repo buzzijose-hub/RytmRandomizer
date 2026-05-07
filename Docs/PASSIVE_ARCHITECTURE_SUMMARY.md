@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a7d0fec
+ede500e
 
 ## Protected Reference
 
@@ -54,17 +54,17 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: a7d0fec Update checkpoint after first real MIDI adapter
-  boundary
+- current HEAD: ede500e Add first real MIDI adapter boundary review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only real MIDI dependency re-decision
-  gate, return to passive/project documentation, or pause at the accepted
-  fake-provider-only adapter boundary checkpoint
+- next recommended task: documentation-only review/acceptance gate for the
+  real MIDI dependency re-decision gate, return to passive/project
+  documentation, or pause at the accepted fake-provider-only adapter boundary
+  checkpoint
 - closeout command
 - stop condition
 
@@ -1040,6 +1040,34 @@ support, hardware validation, and hardware-on authorization remain blocked.
 The next recommended task is a documentation-only real MIDI dependency
 re-decision gate, return to passive/project documentation, or pause at the
 accepted fake-provider-only adapter boundary checkpoint.
+
+## Real MIDI Dependency Re-Decision Gate
+
+`Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE.md` creates the current gate for
+revisiting the real MIDI dependency decision after the accepted
+fake-provider-only adapter boundary implementation.
+
+The gate records:
+
+- ede500e Add first real MIDI adapter boundary review
+- accepted first adapter boundary checkpoint and review
+- current dependency decision remaining deferred
+- no `mido`
+- no real MIDI dependency
+- no package metadata change
+- no real MIDI backend
+- no real port discovery
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+
+The gate does not select a dependency, install packages, edit package
+metadata, import real MIDI libraries, open ports, send MIDI, add active CLI
+commands, add hardware behavior, or start hardware validation.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this dependency re-decision gate.
 
 ## Project-Level Roadmap Update
 

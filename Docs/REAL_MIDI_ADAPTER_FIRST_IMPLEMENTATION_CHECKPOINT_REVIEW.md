@@ -215,6 +215,15 @@ Unsafe next moves:
 Prefer a documentation-only real MIDI dependency re-decision gate next, or
 pause at this accepted adapter checkpoint.
 
+The dependency re-decision gate now lives in:
+
+- `Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE.md`
+
+The gate keeps dependency selection deferred and does not authorize `mido`,
+real MIDI dependency installation, package metadata changes, real port
+opening, MIDI sending, active CLI commands, hardware behavior, hardware
+validation, or hardware-on authorization.
+
 Do not select a real MIDI dependency yet.
 
 Do not change package metadata.

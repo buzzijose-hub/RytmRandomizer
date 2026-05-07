@@ -299,3 +299,20 @@ dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or
 hardware-on authorization.
+
+## 16. Dependency Re-Decision Gate After Adapter Boundary
+
+The real MIDI dependency re-decision gate now lives in:
+
+- `Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE.md`
+
+The gate revisits this accepted deferred dependency decision after the first
+fake-provider-only adapter boundary implementation checkpoint and review.
+
+The gate does not select a dependency, install packages, edit package
+metadata, import real MIDI libraries, open ports, send MIDI, add active CLI
+commands, add hardware behavior, or start hardware validation.
+
+The current dependency decision remains deferred until a future
+documentation-only dependency candidate evaluation is created, reviewed, and
+explicitly accepted.

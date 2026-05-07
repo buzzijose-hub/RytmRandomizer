@@ -238,6 +238,23 @@ Hardware validation remains blocked.
 The recommended next branch is a documentation-only review/acceptance gate for
 this dependency decision note.
 
+## 14. Re-Decision Gate After Adapter Boundary
+
+The real MIDI dependency re-decision gate now lives in:
+
+- `Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE.md`
+
+The gate revisits this deferred dependency decision only after the accepted
+fake-provider-only adapter boundary implementation checkpoint and review.
+
+The gate does not select a dependency, install packages, edit package
+metadata, import real MIDI libraries, open ports, send MIDI, add active CLI
+commands, add hardware behavior, or start hardware validation.
+
+The current dependency decision remains deferred until a future
+documentation-only dependency candidate evaluation is created, reviewed, and
+explicitly accepted.
+
 Hardware remains off.
 
 No implementation is added in this slice.
