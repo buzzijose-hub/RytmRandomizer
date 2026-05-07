@@ -256,3 +256,16 @@ implementation, real MIDI imports, mido, port opening, MIDI sending, active
 CLI commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support, hardware
 validation, or turning hardware on.
+
+## 15. Real MIDI Boundary Plan
+
+The documentation-only real MIDI boundary plan now lives in:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLAN.md`
+
+The plan follows this accepted gate and defines the future real MIDI boundary
+at planning level only. It does not authorize implementation, real MIDI
+imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+or turning hardware on.

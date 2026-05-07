@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c572e14
+f877da2
 
 ## Protected Reference
 
@@ -51,16 +51,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c572e14 Add real MIDI boundary planning gate
+- current HEAD: f877da2 Add real MIDI boundary planning gate review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a documentation-only real MIDI boundary plan,
-  return to passive/project documentation, or pause at the accepted real MIDI
-  boundary planning gate
+- next recommended task: review and accept the real MIDI boundary plan, return
+  to passive/project documentation, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
@@ -202,6 +201,32 @@ The review does not authorize implementation, real MIDI imports, mido, port
 opening, MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or turning hardware on.
+
+## Real MIDI Boundary Plan
+
+`Docs/REAL_MIDI_BOUNDARY_PLAN.md` defines the future real MIDI boundary at
+planning level only.
+
+It records:
+
+- accepted real MIDI boundary planning gate and review
+- current passive CLI and mock-first active boundary baseline
+- conceptual future real MIDI adapter placement
+- import and dependency isolation requirements
+- port discovery and port selection boundaries
+- passive CLI separation requirements
+- active boundary relationship
+- arming and operator intent requirements
+- tests required before implementation
+- later hardware validation preconditions
+- forbidden scope
+
+The plan does not authorize implementation, real MIDI imports, mido, port
+opening, MIDI sending, active CLI commands, passive CLI active-boundary
+evaluation, passive CLI construction of `MockMidiSender`, dispatch, command
+execution, scene execution, hardware behavior, profile `"4"` implementation,
+profile `"3"` active-boundary support, hardware validation, or turning
+hardware on.
 
 ## Project-Level Roadmap Update
 

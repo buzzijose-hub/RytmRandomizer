@@ -172,3 +172,20 @@ accepted gate unless the project pauses or returns to passive documentation.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 11. Real MIDI Boundary Plan
+
+The documentation-only real MIDI boundary plan now lives in:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLAN.md`
+
+The plan follows this accepted review gate and defines the future real MIDI
+boundary at planning level only. It documents conceptual adapter placement,
+import isolation, port discovery isolation, passive CLI separation, arming and
+operator intent, tests required before implementation, later hardware
+validation conditions, and forbidden scope.
+
+The plan adds no implementation, tests, real MIDI, mido, port opening, MIDI
+sending, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
