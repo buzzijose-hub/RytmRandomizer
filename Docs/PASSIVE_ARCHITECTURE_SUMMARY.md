@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f495483
+2bc0a9e
 
 ## Protected Reference
 
@@ -51,17 +51,17 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f495483 Update checkpoint after read-only active boundary
-  report CLI preview
+- current HEAD: 2bc0a9e Add read-only active boundary report CLI preview
+  review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a broader read-only active boundary visibility
-  progress report, write a broader project-level progress checkpoint, or pause
-  at the clean review checkpoint
+- next recommended task: review and accept the read-only active boundary
+  visibility progress report, write a broader project-level progress
+  checkpoint, or pause at the clean progress checkpoint
 - closeout command
 - stop condition
 
@@ -390,6 +390,33 @@ It confirms:
 The review is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+## Read-Only Active Boundary Visibility Progress Report
+
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_VISIBILITY_PROGRESS_REPORT.md` consolidates
+the current read-only active boundary visibility stack.
+
+It summarizes:
+
+- mock-first active boundary
+- mock-only active boundary safety tests
+- read-only active boundary report module
+- read-only active boundary report CLI preview
+- accepted candidate profile `"2"` / My BD Hard
+- profile `"3"` / My BD Classic remaining unsupported by the active boundary
+- profile `"4"` / My BD Acoustic remaining parked and unsupported
+- active boundary report functions and CLI command
+- current closeout coverage
+- proven passive visibility behavior
+- intentionally absent real MIDI, ports, active CLI behavior, dispatch,
+  execution, and hardware behavior
+
+The report records that the read-only active boundary visibility stack is
+complete enough for the current passive/mock phase.
+
+The progress report is documentation-only. It adds no implementation, tests,
+real MIDI, ports, active CLI behavior, dispatch, hardware behavior, profile
+`"4"` implementation, or profile `"3"` active-boundary support.
 
 ## Mock-Only Active Boundary Safety Coverage Progress Report
 
@@ -2513,7 +2540,7 @@ Recommended passive layers before runtime work:
   CLI implementation
 - write a broader read-only active boundary visibility progress report if more
   context is useful
-- review that broader progress report before any additional active-boundary
+- review and accept that broader progress report before any additional active-boundary
   CLI visibility
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation

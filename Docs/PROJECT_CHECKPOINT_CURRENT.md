@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2bc0a9e Add read-only active boundary report CLI preview review
 - f495483 Update checkpoint after read-only active boundary report CLI preview
 - 1f14769 Add read-only active boundary report CLI preview
 - f8b1d76 Add read-only active boundary report CLI preview design review
@@ -2344,6 +2345,20 @@ Classic unsupported by the active boundary, keeps profile `"4"` / My BD
 Acoustic parked and unsupported, and adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+The read-only active boundary visibility progress report includes:
+
+- Docs/READ_ONLY_ACTIVE_BOUNDARY_VISIBILITY_PROGRESS_REPORT.md
+
+The report consolidates the current read-only active boundary visibility
+stack: mock-first active boundary, safety tests, report module, CLI preview,
+accepted candidate profile `"2"` / My BD Hard, profile `"3"` remaining
+unsupported by the active boundary, profile `"4"` remaining parked and
+unsupported, current closeout coverage, and intentionally absent real MIDI,
+ports, active CLI behavior, dispatch, execution, and hardware behavior. It
+adds no implementation, tests, real MIDI, ports, active CLI behavior,
+dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
 
 The mock-only active boundary safety tests review includes:
 

@@ -231,6 +231,10 @@ Unsafe next moves:
 Pause at this clean review checkpoint or write a broader documentation-only
 progress report for the read-only active boundary visibility work.
 
+The broader progress report now lives in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_VISIBILITY_PROGRESS_REPORT.md`
+
 Do not add real MIDI.
 
 Do not open ports.
