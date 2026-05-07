@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-55c5097 Update checkpoint after passive mock mapper report
+19659e5 Add passive mock mapper report CLI preview
 
 ## Current Phase
 
@@ -57,6 +57,7 @@ python -m rytm_randomizer.cli inspect-group-profile 2
 python -m rytm_randomizer.cli preview-command J
 python -m rytm_randomizer.cli preview-scene S1A
 python -m rytm_randomizer.cli preview-group-profile 2
+python -m rytm_randomizer.cli mock-mapper-report
 ```
 
 ## Next Recommended Task
@@ -65,7 +66,6 @@ Next recommended task is to choose one of:
 
 - keep mapper scope frozen for now
 - create a profile 4 mock-only support plan, not implementation
-- build a passive mock mapper report CLI preview, still read-only and no active behavior
 - pause mapper work and write a larger project progress report
 - review whether the passive/mock foundation is ready for a future active-layer test plan, still without implementation
 
@@ -153,6 +153,19 @@ profile `"4"` remains unsupported/safe, and the safe next branches are to
 freeze scope, plan profile 4 support, build a passive mock mapper report CLI
 preview, write a larger progress report, or review future active-layer test
 planning without implementation.
+
+The passive mock mapper report CLI preview milestone adds:
+
+- `python -m rytm_randomizer.cli mock-mapper-report`
+- `python -m rytm_randomizer.cli mock-mapper-report --help`
+
+Manual verification confirmed top-level help lists `mock-mapper-report`, the
+command help prints passive/mock-only usage, and the command prints the mock
+mapper report showing profiles `"2"` and `"3"` supported with profile `"4"`
+unsupported/safe. The command prints the existing formatted passive mock
+mapper report only. It does not wire CLI to the mapper itself, invoke active
+execution, open ports, send MIDI, require hardware, add profile 4 support, or
+add active behavior.
 
 ## Do-Not-Touch Files
 

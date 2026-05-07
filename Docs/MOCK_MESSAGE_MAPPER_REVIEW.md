@@ -162,6 +162,24 @@ and hardware required false.
 
 The closeout suite now includes "Test: Mock Mapper Report".
 
+Passive mock mapper report CLI preview milestone:
+
+- 19659e5 Add passive mock mapper report CLI preview
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_mock_mapper_report_help_expected.txt`
+- `tests/fixtures/cli_mock_mapper_report_expected.txt`
+
+The passive CLI now exposes:
+
+- `python -m rytm_randomizer.cli mock-mapper-report`
+- `python -m rytm_randomizer.cli mock-mapper-report --help`
+
+The command prints the existing formatted passive mock mapper report only. It
+does not wire CLI to the mapper itself, invoke active execution, open ports,
+send MIDI, require hardware, add profile 4 support, or add active behavior.
+
 No real MIDI.
 
 No hardware.

@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 19659e5 Add passive mock mapper report CLI preview
+- c34c39f Add passive mock foundation decision checkpoint
 - 55c5097 Update checkpoint after passive mock mapper report
 - f7c14f2 Add passive mock mapper report
 - 79a9fc2 Add mock mapper progress review
@@ -300,6 +302,31 @@ profiles `"2"` and `"3"` are supported, profile `"4"` remains
 unsupported/safe, and real MIDI, ports, CLI wiring, active behavior, and
 hardware behavior remain intentionally absent.
 
+The passive mock mapper report CLI preview milestone is:
+
+- 19659e5 Add passive mock mapper report CLI preview
+
+The milestone includes:
+
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_mock_mapper_report_help_expected.txt
+- tests/fixtures/cli_mock_mapper_report_expected.txt
+
+The new passive CLI paths are:
+
+- `python -m rytm_randomizer.cli mock-mapper-report`
+- `python -m rytm_randomizer.cli mock-mapper-report --help`
+
+Manual verification confirmed that top-level help lists `mock-mapper-report`,
+the command help prints passive/mock-only usage, and the command prints the
+mock mapper report showing profiles `"2"` and `"3"` supported with profile
+`"4"` unsupported/safe. The command prints the existing formatted passive mock
+mapper report only. It does not wire CLI to the mapper itself, invoke active
+execution, open ports, send MIDI, require hardware, add profile 4 support, or
+add active behavior.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -361,6 +388,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock mapper progress review
 - passive mock mapper report
 - passive mock foundation decision checkpoint
+- passive mock mapper report CLI preview
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1597,6 +1625,35 @@ dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support, Pads
 5-12 support, machine/profile universe expansion, execute-command,
 send-command, or hardware-test. The protected V1.34 reference remains
 untouched. Analog Rytm and Analog Four remain off for this phase.
+
+The passive mock mapper report CLI preview includes:
+
+- 19659e5 Add passive mock mapper report CLI preview
+- rytm_randomizer/cli.py
+- tests/test_cli.py
+- tests/fixtures/cli_help_expected.txt
+- tests/fixtures/cli_mock_mapper_report_help_expected.txt
+- tests/fixtures/cli_mock_mapper_report_expected.txt
+
+The new read-only CLI command is:
+
+- `python -m rytm_randomizer.cli mock-mapper-report`
+
+The help path is:
+
+- `python -m rytm_randomizer.cli mock-mapper-report --help`
+
+The command prints the existing formatted passive mock mapper report only. It
+does not wire CLI to the mapper itself, invoke active execution, open ports,
+send MIDI, require hardware, add profile 4 support, or add active behavior.
+Manual verification confirmed top-level help lists `mock-mapper-report`,
+command help prints passive/mock-only usage, and the command prints profiles
+`"2"` and `"3"` supported with profile `"4"` unsupported/safe. It adds no real
+MIDI backend, mido dependency, MIDI port opening, MIDI sending, active
+execution, CLI wiring to mapper itself, dispatch, hardware behavior, SysEx,
+GUI, capture, Analog Four support, Pads 5-12 support, or machine/profile
+universe expansion. The protected V1.34 reference remains untouched. Analog
+Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

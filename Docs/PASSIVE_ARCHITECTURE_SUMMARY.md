@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-55c5097
+19659e5
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 55c5097 Update checkpoint after passive mock mapper report
+- current HEAD: 19659e5 Add passive mock mapper report CLI preview
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: freeze scope, plan profile 4 support, build a passive mock mapper report CLI preview, write a larger progress report, or review future active-layer test planning without implementation
+- next recommended task: freeze scope, plan profile 4 support, write a larger progress report, or review future active-layer test planning without implementation
 - closeout command
 - stop condition
 
@@ -251,6 +251,38 @@ support, Pads 5-12 support, or machine/profile expansion.
 
 Analog Rytm and Analog Four remain off for this phase.
 
+## Passive Mock Mapper Report CLI Preview
+
+The passive mock mapper report CLI preview milestone is:
+
+- 19659e5 Add passive mock mapper report CLI preview
+
+It includes:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_mock_mapper_report_help_expected.txt`
+- `tests/fixtures/cli_mock_mapper_report_expected.txt`
+
+It adds these read-only passive CLI paths:
+
+- `python -m rytm_randomizer.cli mock-mapper-report`
+- `python -m rytm_randomizer.cli mock-mapper-report --help`
+
+The command prints the existing formatted passive mock mapper report only.
+Manual verification confirmed:
+
+- top-level help lists `mock-mapper-report`
+- command help prints passive/mock-only usage
+- command output shows profiles `"2"` and `"3"` supported
+- command output shows profile `"4"` unsupported/safe
+
+It does not wire CLI to the mapper itself, invoke active execution, open ports,
+send MIDI, require hardware, add profile 4 support, or add active behavior.
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ## Passive Mock Foundation Decision Checkpoint
 
 `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md` records the current
@@ -273,7 +305,7 @@ Safe next branches are:
 
 - freeze mock mapper scope here and stop/pause
 - create a profile 4 mock-only support plan, not implementation
-- build a passive mock mapper report CLI preview, still read-only and no active behavior
+- build a passive mock mapper report CLI preview, now completed by `19659e5`
 - write a larger project progress report
 - review readiness for a future active-layer test plan, still without implementation
 
@@ -1500,7 +1532,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- freeze mapper scope, plan profile 4 support, build a passive mock mapper report CLI preview, write a larger project progress report, or review future active-layer test planning without implementation
+- freeze mapper scope, plan profile 4 support, write a larger project progress report, or review future active-layer test planning without implementation
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond supported group profiles `"2"` and `"3"` without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

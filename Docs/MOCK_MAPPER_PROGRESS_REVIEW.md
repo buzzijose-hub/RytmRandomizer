@@ -24,6 +24,10 @@ Latest documentation checkpoint:
 
 - 55c5097 Update checkpoint after passive mock mapper report
 
+Latest passive CLI visibility milestone:
+
+- 19659e5 Add passive mock mapper report CLI preview
+
 Current phase:
 
 - passive CLI / dry-run foundation complete
@@ -87,6 +91,21 @@ It records one current-state decision point for the passive/mock foundation:
 - profile `"4"` unsupported/safe
 - real MIDI, ports, CLI wiring, active behavior, and hardware behavior absent
 
+## Passive Mock Mapper Report CLI Preview
+
+The passive mock mapper report CLI preview milestone adds:
+
+- `python -m rytm_randomizer.cli mock-mapper-report`
+- `python -m rytm_randomizer.cli mock-mapper-report --help`
+
+The command prints the existing formatted passive mock mapper report only.
+Manual verification confirmed top-level help lists `mock-mapper-report`,
+command help prints passive/mock-only usage, and command output shows profiles
+`"2"` and `"3"` supported with profile `"4"` unsupported/safe.
+
+It does not wire CLI to the mapper itself, invoke active execution, open ports,
+send MIDI, require hardware, add profile 4 support, or add active behavior.
+
 ## Current Safety Status
 
 - No real MIDI
@@ -135,16 +154,13 @@ It records one current-state decision point for the passive/mock foundation:
 
 - Option A: keep mapper scope frozen for now.
 - Option B: plan profile `"4"` mock-only support in a separate reviewed slice.
-- Option C: build a passive mock mapper report CLI preview, still read-only and no active behavior.
-- Option D: pause mapper work and write a larger project progress report.
-- Option E: review readiness for a future active-layer test plan, still without implementation.
+- Option C: pause mapper work and write a larger project progress report.
+- Option D: review readiness for a future active-layer test plan, still without implementation.
 
 ## Recommendation
 
 - Do not implement profile `"4"` immediately.
-- Prefer either:
-  - pause at this clean checkpoint
-  - build a passive mock mapper report CLI preview if more visibility is useful
+- Prefer pausing at this clean checkpoint or writing a larger progress report.
 - Any profile `"4"` expansion should require explicit approval and remain
   mock-only/test-only.
 
