@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ef5cfa6 Add active boundary implementation design review
 - cc614d2 Add active boundary implementation design spec
 - bb48555 Add active boundary implementation planning gate
 - 269fb39 Add mock-only active candidate tests review
@@ -517,6 +518,19 @@ current mock-first active boundary design. It confirms the accepted concepts
 remain design-only, do not authorize implementation by themselves, keep passive
 CLI separate, keep real MIDI absent, keep profile `"4"` parked, and set the
 next recommended task as a mock-first active boundary implementation plan.
+
+The active boundary implementation plan now lives in:
+
+- Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md
+
+The plan defines the future implementation slice for the mock-first active
+boundary. It plans `rytm_randomizer/active_boundary.py`,
+`tests/test_active_boundary.py`, and a `=== Test: Active Boundary ===` closeout
+label. It includes exact future test content, future module content, safety
+verification, closeout commands, and commit boundary. It keeps the future
+implementation candidate-specific for group profile `"2"` / My BD Hard and
+does not include CLI wiring, real MIDI, ports, hardware behavior, or profile
+`"4"` implementation.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -2124,6 +2138,23 @@ dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support, Pads
 5-12 support, profile `"4"` implementation, or machine/profile expansion. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
 off for this phase.
+
+The active boundary implementation plan includes:
+
+- Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md
+
+The plan is documentation-only. It defines exact future implementation steps
+for the first mock-first active boundary. It plans the future
+`ActiveBoundaryRequest`, `ActiveBoundaryResult`, `ActiveBoundaryError`, and
+`evaluate_mock_active_boundary(request, sender)` API; future tests for arming,
+dry-run confirmation, unknown keys, profile `"4"` parked behavior, profile
+`"2"` success, passive CLI regression, no real MIDI imports, and no active CLI
+names; and closeout coverage under `=== Test: Active Boundary ===`. It adds no
+implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
+active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
+or machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-cc614d2
+ef5cfa6
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: cc614d2 Add active boundary implementation design spec
+- current HEAD: ef5cfa6 Add active boundary implementation design review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: mock-first active boundary implementation plan
+- next recommended task: implement mock-first active boundary plan
 - closeout command
 - stop condition
 
@@ -140,6 +140,34 @@ The review confirms:
 The next recommended task is a mock-only active test implementation plan.
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
+
+## Active Boundary Implementation Plan
+
+`Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md` defines the future implementation
+steps for the first mock-first active boundary.
+
+It plans:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+- `=== Test: Active Boundary ===` closeout coverage
+
+The planned boundary remains:
+
+- mock-first
+- candidate-specific for group profile `"2"` / My BD Hard
+- separated from passive CLI
+- separated from real MIDI
+- unable to open ports
+- unable to reach hardware
+
+The plan includes full future test content, future module content, closeout
+instructions, safety checks, commit boundary, and self-review.
+
+The plan is documentation-only. It adds no implementation, tests, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, or machine/profile expansion.

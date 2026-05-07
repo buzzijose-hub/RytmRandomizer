@@ -134,14 +134,16 @@ The plan must not include:
 
 Safe next options:
 
-- create a mock-first active boundary implementation plan
+- implement `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
 - pause at this clean design/spec checkpoint
 - write a broader progress report covering mock-only proof and active-boundary readiness
 - add more mock-only safety tests only after a separate plan
 
 ## 9. Recommendation
 
-Create a mock-first active boundary implementation plan next.
+The mock-first active boundary implementation plan is:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
 
 That plan should remain test-first, mock-only, candidate-specific, and limited
 to the accepted future file ownership.

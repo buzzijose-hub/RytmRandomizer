@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-cc614d2 Add active boundary implementation design spec
+ef5cfa6 Add active boundary implementation design review
 
 ## Current Phase
 
@@ -63,7 +63,12 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a mock-first active boundary implementation plan.
+Next recommended task is implementation of the accepted mock-first active
+boundary plan.
+
+The implementation plan is:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
 
 The active boundary implementation design/spec review is:
 
@@ -145,6 +150,7 @@ Safe alternatives are:
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
@@ -343,6 +349,13 @@ current mock-first active boundary design. It confirms the next task is an
 implementation plan only, limited to future `active_boundary.py`,
 `test_active_boundary.py`, and closeout coverage. It does not authorize CLI
 wiring, real MIDI, ports, hardware behavior, or profile `"4"` implementation.
+
+The active boundary implementation plan defines the future mock-first active
+boundary implementation slice. It plans `rytm_randomizer/active_boundary.py`,
+`tests/test_active_boundary.py`, and a closeout label `=== Test: Active
+Boundary ===`. The planned boundary remains candidate-specific for group
+profile `"2"` / My BD Hard, uses `MockMidiSender` only, keeps passive CLI
+separate, keeps real MIDI absent, and keeps profile `"4"` parked.
 
 ## Do-Not-Touch Files
 
