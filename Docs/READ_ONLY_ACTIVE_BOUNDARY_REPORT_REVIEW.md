@@ -228,6 +228,10 @@ The accepted design review now lives in:
 
 The design and review must remain accepted before any CLI implementation.
 
+The accepted implementation checkpoint now lives in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
+
 Do not add CLI wiring without a separate accepted design.
 
 Do not add real MIDI.

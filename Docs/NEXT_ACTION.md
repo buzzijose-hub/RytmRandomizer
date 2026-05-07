@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-8289003 Add read-only active boundary report CLI preview design
+1f14769 Add read-only active boundary report CLI preview
 
 ## Current Phase
 
@@ -43,6 +43,7 @@ implemented for test-only evaluation.
 - inspect commands/scenes/group profiles
 - preview commands/scenes/group profiles
 - mock-mapper-report
+- active-boundary-report
 
 ## Known Safe Passive Commands
 
@@ -60,13 +61,32 @@ python -m rytm_randomizer.cli preview-command J
 python -m rytm_randomizer.cli preview-scene S1A
 python -m rytm_randomizer.cli preview-group-profile 2
 python -m rytm_randomizer.cli mock-mapper-report
+python -m rytm_randomizer.cli active-boundary-report
 ```
 
 ## Next Recommended Task
 
-Next recommended task is either a tiny fixture-backed implementation of the
-read-only active boundary report CLI preview, or a pause at this clean design
-review checkpoint.
+Next recommended task is either a documentation-only review/acceptance
+checkpoint for the completed read-only active boundary report CLI preview, or
+a pause at this clean implementation checkpoint.
+
+The latest read-only active boundary report CLI preview checkpoint is:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
+
+The latest implementation milestone is:
+
+- 1f14769 Add read-only active boundary report CLI preview
+
+The milestone adds passive CLI paths:
+
+- `python -m rytm_randomizer.cli active-boundary-report`
+- `python -m rytm_randomizer.cli active-boundary-report --help`
+
+The command prints `format_active_boundary_report()` output only. It does not
+evaluate active boundary requests, emit mock messages, open ports, send MIDI,
+dispatch commands, execute commands, mutate hardware, implement profile `"4"`,
+or add profile `"3"` active-boundary support.
 
 The latest read-only active boundary report CLI preview design review is:
 

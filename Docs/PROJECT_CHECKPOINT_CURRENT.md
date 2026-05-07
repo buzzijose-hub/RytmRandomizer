@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 1f14769 Add read-only active boundary report CLI preview
+- f8b1d76 Add read-only active boundary report CLI preview design review
 - 8289003 Add read-only active boundary report CLI preview design
 - 7029d9f Add read-only active boundary report review
 - 1a5f675 Update checkpoint after read-only active boundary report
@@ -2483,6 +2485,27 @@ and deterministic CLI fixtures. The future command must print
 `format_active_boundary_report()` output only. It adds no CLI implementation,
 tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
 profile `"4"` implementation, or profile `"3"` active-boundary support.
+
+The read-only active boundary report CLI preview checkpoint includes:
+
+- Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md
+
+The milestone is:
+
+- 1f14769 Add read-only active boundary report CLI preview
+
+The milestone adds passive CLI paths:
+`python -m rytm_randomizer.cli active-boundary-report` and
+`python -m rytm_randomizer.cli active-boundary-report --help`. The command
+prints `format_active_boundary_report()` output only. It reports profile `"2"`
+/ My BD Hard as the accepted active-boundary candidate, keeps profile `"3"` /
+My BD Classic unsupported by the active boundary, keeps profile `"4"` / My BD
+Acoustic parked and unsupported, and reports real MIDI, ports, active CLI
+behavior, dispatch, execution, and hardware behavior as absent. It adds no
+active request evaluation from CLI, mock message emission from CLI, real MIDI,
+ports, active execution, dispatch, command execution, scene execution, hardware
+behavior, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

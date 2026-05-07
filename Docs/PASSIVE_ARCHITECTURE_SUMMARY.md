@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-8289003
+1f14769
 
 ## Protected Reference
 
@@ -51,16 +51,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 8289003 Add read-only active boundary report CLI preview design
+- current HEAD: 1f14769 Add read-only active boundary report CLI preview
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement the tiny fixture-backed read-only active
-  boundary report CLI preview after review, or pause at the clean design
-  review checkpoint
+- next recommended task: review and accept the completed read-only active
+  boundary report CLI preview, or pause at the clean implementation checkpoint
 - closeout command
 - stop condition
 
@@ -635,6 +634,52 @@ support.
 The review is documentation-only. It adds no CLI command, implementation,
 tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
 profile `"4"` implementation, or profile `"3"` active-boundary support.
+
+## Read-Only Active Boundary Report CLI Preview
+
+The read-only active boundary report CLI preview milestone is:
+
+- 1f14769 Add read-only active boundary report CLI preview
+
+It includes:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_active_boundary_report_help_expected.txt`
+- `tests/fixtures/cli_active_boundary_report_expected.txt`
+
+New passive CLI paths:
+
+- `python -m rytm_randomizer.cli active-boundary-report`
+- `python -m rytm_randomizer.cli active-boundary-report --help`
+
+The command prints `format_active_boundary_report()` output only.
+
+It reports:
+
+- group profile `"2"` / My BD Hard as the accepted active-boundary candidate
+- group profile `"3"` / My BD Classic as unsupported by the active boundary
+- group profile `"4"` / My BD Acoustic as parked and unsupported
+- required arming and dry-run confirmation
+- mock-only status
+- real MIDI absent
+- port opening absent
+- active CLI behavior absent
+- dispatch/execution/hardware behavior absent
+- hardware not required
+
+The checkpoint lives in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
+
+No closeout script update was needed because `tests/test_cli.py` was already
+included in closeout.
+
+This milestone adds no active request evaluation from CLI, mock message
+emission from CLI, real MIDI, ports, active execution, dispatch, command
+execution, scene execution, hardware behavior, profile `"4"` implementation,
+or profile `"3"` active-boundary support.
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -2433,9 +2478,8 @@ Recommended passive layers before runtime work:
   CLI wiring
 - review and accept the active boundary report CLI preview design before any
   CLI implementation
-- implement only a tiny fixture-backed read-only active boundary report CLI
-  preview after review, with no active request evaluation or mock message
-  emission
+- review and accept the completed read-only active boundary report CLI preview
+  before any additional active-boundary CLI visibility
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

@@ -247,6 +247,14 @@ This design is accepted by:
 
 - `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md`
 
+The accepted implementation milestone is:
+
+- 1f14769 Add read-only active boundary report CLI preview
+
+The implementation checkpoint is:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
+
 If accepted, the future implementation should be tiny, fixture-backed, and
 limited to displaying `format_active_boundary_report()` output.
 

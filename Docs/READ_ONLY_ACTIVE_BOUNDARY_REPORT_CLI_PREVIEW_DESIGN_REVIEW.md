@@ -241,6 +241,14 @@ Do not turn on hardware.
 The read-only active boundary report CLI preview design is accepted as the
 current planning gate.
 
+The accepted implementation milestone is:
+
+- 1f14769 Add read-only active boundary report CLI preview
+
+The implementation checkpoint is:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_CHECKPOINT.md`
+
 Hardware remains off.
 
 No implementation is added in this slice.
