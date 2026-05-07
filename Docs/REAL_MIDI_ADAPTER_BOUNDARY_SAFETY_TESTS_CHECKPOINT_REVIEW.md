@@ -242,12 +242,25 @@ dependency, opening ports, sending MIDI, adding active CLI commands, adding
 hardware behavior, implementing profile `"4"`, adding profile `"3"`
 active-boundary support, or starting hardware validation.
 
-## 13. Decision
+## 13. First Adapter Implementation Planning Gate Review
+
+The first adapter implementation planning gate review now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE_REVIEW.md`
+
+The review accepts the planning gate as the current checkpoint before any
+documentation-only first adapter implementation design/spec. It keeps adapter
+implementation, dependency selection, package metadata changes, port opening,
+MIDI sending, active CLI commands, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+and hardware-on authorization blocked.
+
+## 14. Decision
 
 The real MIDI adapter boundary safety tests checkpoint is accepted.
 
-The next safe branch may be documentation-only review/acceptance of the first
-adapter implementation planning gate.
+The next safe branch may be a documentation-only first adapter implementation
+design/spec.
 
 Adapter implementation remains blocked.
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- af458b7 Add real MIDI adapter first implementation planning gate
 - f705eae Add real MIDI adapter boundary safety tests review
 - 76f2fe1 Update checkpoint after real MIDI adapter boundary safety tests
 - 0e5dd03 Add real MIDI adapter boundary safety tests
@@ -3060,6 +3061,29 @@ execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
 
 The gate is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.
+
+The real MIDI adapter first implementation planning gate review includes:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE.md
+- af458b7 Add real MIDI adapter first implementation planning gate
+
+The review accepts the planning gate as the current checkpoint before any
+documentation-only first adapter implementation design/spec. It confirms any
+next adapter-facing work must remain documentation-only design/spec work
+first, while adapter implementation, dependency selection, package metadata
+changes, port opening, MIDI sending, active CLI commands, dispatch, hardware
+behavior, profile `"4"` implementation, profile `"3"` active-boundary
+support, hardware validation, and hardware-on authorization remain blocked.
+
+The review is documentation-only. It adds no implementation, tests, runtime
 modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support,

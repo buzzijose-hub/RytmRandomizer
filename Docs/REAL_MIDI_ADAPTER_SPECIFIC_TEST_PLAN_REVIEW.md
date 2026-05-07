@@ -367,3 +367,21 @@ authorize adapter implementation, real MIDI dependency selection, package
 metadata changes, port opening, MIDI sending, active CLI commands, hardware
 behavior, profile `"4"` implementation, profile `"3"` active-boundary
 support, hardware validation, or hardware-on authorization.
+
+## 19. First Adapter Implementation Planning Gate Review
+
+The first adapter implementation planning gate review now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLANNING_GATE.md`
+- af458b7 Add real MIDI adapter first implementation planning gate
+
+The review accepts the planning gate as the current checkpoint before any
+documentation-only first adapter implementation design/spec. It keeps adapter
+implementation, real MIDI dependency selection, package metadata changes, port
+opening, MIDI sending, active CLI commands, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+and hardware-on authorization blocked.
