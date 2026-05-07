@@ -15,8 +15,13 @@
 Define the exact future implementation steps for the first mock-first active
 boundary.
 
-This is a plan only. It does not create code, tests, MIDI behavior, port
-opening, active CLI commands, dispatch, or hardware behavior in this slice.
+This plan was implemented by:
+
+- 565770e Add mock-first active boundary
+
+The implementation remains mock-first, candidate-specific, and not wired to
+CLI or real MIDI. It adds no MIDI behavior, port opening, active CLI commands,
+dispatch, or hardware behavior.
 
 ## 2. Current Clean Baseline
 
@@ -592,13 +597,17 @@ Type and API consistency:
 
 ## 11. Decision
 
-This plan is ready for a future mock-first active boundary implementation
+This plan has been completed by the mock-first active boundary implementation
 slice.
 
-Recommended execution approach:
+Completed execution approach:
 
 - inline execution in the main thread
 - no subagents yet
 - one small commit
+
+The matching checkpoint is:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
 
 Hardware remains off.

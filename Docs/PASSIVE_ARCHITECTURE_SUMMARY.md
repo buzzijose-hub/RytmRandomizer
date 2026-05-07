@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ef5cfa6
+565770e
 
 ## Protected Reference
 
@@ -35,6 +35,8 @@ The standard closeout suite currently includes:
 - mock MIDI
 - mock message mapper
 - mock mapper report
+- mock-only active candidate
+- active boundary
 
 The closeout workflow also checks:
 
@@ -48,13 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: ef5cfa6 Add active boundary implementation design review
-- current phase: passive CLI / dry-run foundation
+- current HEAD: 565770e Add mock-first active boundary
+- current phase: Passive/Mock Foundation Phase with mock-first active boundary
+  implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement mock-first active boundary plan
+- next recommended task: review and accept the mock-first active boundary
+  implementation checkpoint
 - closeout command
 - stop condition
 
@@ -167,10 +171,54 @@ The planned boundary remains:
 The plan includes full future test content, future module content, closeout
 instructions, safety checks, commit boundary, and self-review.
 
-The plan is documentation-only. It adds no implementation, tests, real MIDI,
-mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
-hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
-profile `"4"` implementation, or machine/profile expansion.
+The plan has now been implemented by `565770e Add mock-first active boundary`
+without real MIDI, ports, CLI wiring, dispatch, hardware behavior, SysEx,
+Analog Four support, Pads 5-12 support, profile `"4"` implementation, or
+machine/profile expansion.
+
+## Mock-First Active Boundary
+
+The mock-first active boundary milestone is:
+
+- 565770e Add mock-first active boundary
+
+It includes:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+- `Scripts/closeout_check.ps1`
+
+The closeout suite now includes:
+
+- `=== Test: Active Boundary ===`
+
+The boundary defines:
+
+- `ActiveBoundaryRequest`
+- `ActiveBoundaryResult`
+- `ActiveBoundaryError`
+- `evaluate_mock_active_boundary(request, sender)`
+
+Current behavior:
+
+- supports only group profile `"2"` / My BD Hard
+- requires arming
+- requires dry-run confirmation
+- emits inert mock messages only through `MockMidiSender`
+- fails safely with no messages for missing arming
+- fails safely with no messages for missing dry-run confirmation
+- fails safely with no messages for unknown or unsupported keys
+- keeps group profile `"4"` / My BD Acoustic parked and unsupported
+- remains separated from passive CLI
+- remains separated from real MIDI
+
+The boundary imports no real MIDI library, opens no ports, sends no MIDI,
+dispatches no commands, executes no commands, mutates no hardware, adds no
+active CLI command, and requires no hardware.
+
+The checkpoint lives in:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -317,13 +365,14 @@ It confirms:
 - the boundary remains separated from passive CLI
 - the boundary remains separated from real MIDI
 - profile `"4"` / My BD Acoustic remains parked
-- implementation is not authorized by the review itself
-- the next task is a mock-first active boundary implementation plan
+- the design/spec led to the completed mock-first active boundary
+  implementation
+- the next task is review/acceptance of the implementation checkpoint
 
-The review is documentation-only. It adds no implementation, tests, real MIDI,
-mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
-hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
-profile `"4"` implementation, or machine/profile expansion.
+The review is documentation-only. The later implementation still adds no real
+MIDI, mido, port opening, MIDI sending, active CLI command, CLI wiring,
+dispatch, hardware behavior, SysEx, GUI/capture, Analog Four support, Pads
+5-12 support, profile `"4"` implementation, or machine/profile expansion.
 
 ## Passive-To-Active Boundary Design
 
@@ -1945,8 +1994,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review and accept the first-candidate mock-only active test design
-- create a mock-only active test implementation plan after design acceptance
+- review and accept the mock-first active boundary checkpoint
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

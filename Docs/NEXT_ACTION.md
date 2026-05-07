@@ -6,11 +6,12 @@ modularize-v1.34
 
 ## Current HEAD
 
-ef5cfa6 Add active boundary implementation design review
+565770e Add mock-first active boundary
 
 ## Current Phase
 
-Passive CLI / dry-run foundation.
+Passive/Mock Foundation Phase with the first mock-first active boundary
+implemented for test-only evaluation.
 
 ## Current Safety State
 
@@ -63,8 +64,38 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is implementation of the accepted mock-first active
-boundary plan.
+Next recommended task is a documentation-only review/acceptance checkpoint for
+the completed mock-first active boundary implementation.
+
+The latest mock-first active boundary checkpoint is:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
+
+The latest implementation milestone is:
+
+- 565770e Add mock-first active boundary
+
+The milestone adds:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+- `Scripts/closeout_check.ps1`
+
+The implemented boundary defines:
+
+- `ActiveBoundaryRequest`
+- `ActiveBoundaryResult`
+- `ActiveBoundaryError`
+- `evaluate_mock_active_boundary(request, sender)`
+
+It supports only group profile `"2"` / My BD Hard through inert mock messages
+and an injected `MockMidiSender`. Missing arming, missing dry-run
+confirmation, unknown keys, unsupported keys, and profile `"4"` / My BD
+Acoustic fail safely with no emitted messages.
+
+It is not wired into CLI, does not import real MIDI libraries, opens no ports,
+sends no MIDI, dispatches no commands, executes no commands, and requires no
+hardware.
 
 The implementation plan is:
 
@@ -151,6 +182,7 @@ Safe alternatives are:
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`

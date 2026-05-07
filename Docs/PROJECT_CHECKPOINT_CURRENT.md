@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 565770e Add mock-first active boundary
 - ef5cfa6 Add active boundary implementation design review
 - cc614d2 Add active boundary implementation design spec
 - bb48555 Add active boundary implementation planning gate
@@ -531,6 +532,38 @@ verification, closeout commands, and commit boundary. It keeps the future
 implementation candidate-specific for group profile `"2"` / My BD Hard and
 does not include CLI wiring, real MIDI, ports, hardware behavior, or profile
 `"4"` implementation.
+
+The mock-first active boundary milestone is:
+
+- 565770e Add mock-first active boundary
+
+The milestone includes:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+- `Scripts/closeout_check.ps1`
+
+The closeout suite now includes:
+
+- `=== Test: Active Boundary ===`
+
+The boundary defines `ActiveBoundaryRequest`, `ActiveBoundaryResult`,
+`ActiveBoundaryError`, and
+`evaluate_mock_active_boundary(request, sender)`. It supports only group
+profile `"2"` / My BD Hard, requires arming and dry-run confirmation, and
+emits inert mock messages through an injected `MockMidiSender` only for the
+accepted mock-only path. Missing arming, missing dry-run confirmation, unknown
+keys, unsupported keys, unsupported source kinds, and profile `"4"` / My BD
+Acoustic fail safely with no emitted messages.
+
+The boundary is not wired into CLI or real MIDI. It imports no real MIDI
+library, opens no ports, sends no MIDI, dispatches no commands, executes no
+commands, mutates no hardware, adds no active CLI command, and keeps hardware
+off.
+
+The mock-first active boundary checkpoint now lives in:
+
+- Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -2155,6 +2188,22 @@ active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
 capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
 or machine/profile expansion. The protected V1.34 reference remains untouched.
 Analog Rytm and Analog Four remain off for this phase.
+
+The mock-first active boundary checkpoint includes:
+
+- Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md
+
+The checkpoint is documentation-only. It records the completed milestone
+`565770e Add mock-first active boundary`, which adds
+`rytm_randomizer/active_boundary.py`, `tests/test_active_boundary.py`, and
+updates `Scripts/closeout_check.ps1`. It confirms the closeout suite now
+includes `=== Test: Active Boundary ===`, V1.34 reference diff is empty, and
+git status is clean. The implemented boundary remains mock-first,
+candidate-specific for group profile `"2"` / My BD Hard, separated from
+passive CLI, separated from real MIDI, and unable to open ports or reach
+hardware. Profile `"4"` / My BD Acoustic remains parked and unsupported. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four
+remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

@@ -134,28 +134,36 @@ The plan must not include:
 
 Safe next options:
 
-- implement `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
+- review and accept `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
 - pause at this clean design/spec checkpoint
 - write a broader progress report covering mock-only proof and active-boundary readiness
 - add more mock-only safety tests only after a separate plan
 
 ## 9. Recommendation
 
-The mock-first active boundary implementation plan is:
+The mock-first active boundary implementation plan was:
 
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLAN.md`
 
-That plan should remain test-first, mock-only, candidate-specific, and limited
-to the accepted future file ownership.
+That plan has now been completed by:
 
-Do not implement code in this review slice.
+- 565770e Add mock-first active boundary
+
+The implementation remains test-first, mock-only, candidate-specific, and
+limited to the accepted file ownership.
+
+The next recommended task is a documentation-only review/acceptance checkpoint
+for:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
 
 ## 10. Decision
 
 Active boundary implementation design/spec accepted.
 
-The next recommended task is a mock-first active boundary implementation plan.
+The mock-first active boundary implementation is complete and should be
+reviewed in a documentation-only gate.
 
 Hardware remains off.
 
-No implementation in this slice.
+No real MIDI, ports, active CLI behavior, dispatch, or hardware behavior exists.
