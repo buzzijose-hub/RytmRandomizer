@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6938c58
+bd930f6
 
 ## Protected Reference
 
@@ -48,19 +48,39 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6938c58 Add passive mock foundation roadmap review
+- current HEAD: bd930f6 Add first-candidate mock-only active test design
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/acceptance of first-candidate mock-only active test design
+- next recommended task: docs-only safe parallel workstream plan
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## Passive Mock Knowledge Checkpoint
+
+`Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md` records the knowledge acquired
+after the first-candidate mock-only active test design.
+
+It confirms:
+
+- group profile `"2"` / My BD Hard is the first mock-only candidate
+- group profiles `"2"` and `"3"` remain the supported mock mapper scope
+- group profile `"4"` / My BD Acoustic remains unsupported/safe and parked
+- future parallelization should organize independent passive/mock lanes
+- closeout remains the synchronization point between lanes
+- subagent-driven work should wait for independent tasks and explicit approval
+- the next recommended task is a docs-only safe parallel workstream plan
+
+The checkpoint is documentation-only. It adds no implementation, tests, real
+MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
 
 ## Passive-To-Active Boundary Design
 
@@ -1682,6 +1702,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
+- create a docs-only safe parallel workstream plan
 - review and accept the first-candidate mock-only active test design
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation

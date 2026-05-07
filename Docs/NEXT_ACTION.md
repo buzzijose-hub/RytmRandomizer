@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6938c58 Add passive mock foundation roadmap review
+bd930f6 Add first-candidate mock-only active test design
 
 ## Current Phase
 
@@ -63,13 +63,25 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance for:
+Next recommended task is a documentation-only safe parallel workstream plan.
 
-- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+That plan should preserve the knowledge acquired after the first-candidate
+mock-only active test design:
+
+- use parallel thinking to organize work, not to rush scope
+- split future work into independent passive/mock lanes
+- keep closeout as the synchronization point
+- use planning, TDD, verification, and debugging workflows deliberately
+- use subagents only for independent work after explicit approval
+
+The latest knowledge checkpoint is:
+
+- `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
 
 Safe alternatives are:
 
 - stop/pause at this clean checkpoint
+- review/accept `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
 - create a docs-only profile 4 support plan
 - freeze mock mapper scope and focus on project-level documentation
 - prepare a broader roadmap/timeline update
@@ -96,6 +108,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+- `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -225,6 +238,13 @@ metadata and the existing test-only mock mapper boundary. It does not implement
 tests, active behavior, MIDI, port opening, CLI execution, or hardware
 validation. The next recommended task is review/acceptance of the candidate
 design.
+
+The passive mock knowledge checkpoint records the strategy learned after the
+first-candidate design: maximize clarity before concurrency, split future work
+into independent passive/mock lanes, keep closeout as the synchronization
+point, and create a docs-only safe parallel workstream plan next. It adds no
+implementation, tests, real MIDI, port opening, active behavior, or hardware
+behavior.
 
 ## Do-Not-Touch Files
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- bd930f6 Add first-candidate mock-only active test design
 - 6938c58 Add passive mock foundation roadmap review
 - 5b87871 Add passive mock foundation roadmap
 - 75a2afd Add future active test plan review
@@ -413,6 +414,17 @@ candidate. It uses existing passive/mock metadata and the existing test-only
 mock mapper boundary. It adds no tests, active behavior, real MIDI, port
 opening, CLI execution, hardware validation, or profile `"4"` implementation.
 The next recommended task is review/acceptance of the candidate design.
+
+The passive mock knowledge checkpoint now lives in:
+
+- Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md
+
+The checkpoint records the strategy acquired after the first-candidate design:
+parallelization should be used for clarity, not scope rush; future work should
+be split into independent passive/mock lanes; closeout remains the
+synchronization point; and subagent-style parallel work should wait for
+explicitly independent tasks and approval. The next recommended task is a
+documentation-only safe parallel workstream plan.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -1874,6 +1886,23 @@ not start hardware validation, and does not implement profile `"4"`. The next
 recommended task is review/acceptance of the candidate design. The protected
 V1.34 reference remains untouched. Analog Rytm and Analog Four remain off for
 this phase.
+
+The passive mock knowledge checkpoint includes:
+
+- Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md
+
+The checkpoint is documentation-only. It records the knowledge acquired after
+the first-candidate design: the project can now use parallel planning, but only
+inside clear passive/mock lanes with closeout as the synchronization point. It
+identifies useful workflows for future work: writing plans, test-driven
+development, verification before completion, systematic debugging, and
+subagent-driven work only for independent tasks after explicit approval. It
+sets the next recommended task as a safe parallel workstream plan. It adds no
+implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
+active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
+or machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
