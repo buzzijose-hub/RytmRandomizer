@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 48941d8 Add real MIDI implementation design review
 - 8bfa73c Add real MIDI implementation design spec
 - ddc0e03 Add real MIDI boundary plan review
 - 7e02215 Add real MIDI boundary plan
@@ -2664,6 +2665,23 @@ ports, active CLI commands, passive CLI active-boundary evaluation, passive
 CLI construction of `MockMidiSender`, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI implementation test plan includes:
+
+- Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md
+
+The test plan defines the future real MIDI-facing test strategy at planning
+level only. It documents future test file ownership, passive import safety,
+passive CLI safety, dependency absence, port-provider isolation, sender
+safe-failure behavior, active-boundary scope guards, passive CLI regressions,
+V1.34 reference protection, closeout integration, and future sequencing.
+
+The test plan is documentation-only. It adds no implementation, tests, real
+MIDI, ports, active CLI commands, passive CLI active-boundary evaluation,
+passive CLI construction of `MockMidiSender`, dispatch, command execution,
+scene execution, hardware behavior, profile `"4"` implementation, profile
+`"3"` active-boundary support, hardware validation, or hardware-on
+authorization.
 
 The session agenda current handoff refresh includes:
 

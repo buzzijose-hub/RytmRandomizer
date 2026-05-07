@@ -244,3 +244,21 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Real MIDI Implementation Test Plan
+
+The documentation-only real MIDI implementation test plan now lives in:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md`
+
+The test plan follows this accepted review and defines future real-MIDI-facing
+test strategy at planning level only. It documents future test file ownership,
+passive import safety, passive CLI safety, dependency absence, port-provider
+isolation, sender safe-failure behavior, active-boundary scope guards, passive
+CLI regressions, V1.34 reference protection, closeout integration, and future
+sequencing.
+
+The test plan adds no implementation, tests, real MIDI, mido, port opening,
+MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.

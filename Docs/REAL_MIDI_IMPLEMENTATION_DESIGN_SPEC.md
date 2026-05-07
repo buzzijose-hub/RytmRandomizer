@@ -432,3 +432,16 @@ imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation,
 or turning hardware on.
+
+## 22. Real MIDI Implementation Test Plan
+
+The documentation-only real MIDI implementation test plan now lives in:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md`
+
+The test plan follows this accepted design/spec and defines future
+real-MIDI-facing test strategy at planning level only. It does not authorize
+test implementation, real MIDI imports, mido, port opening, MIDI sending,
+active CLI commands, dispatch, command execution, scene execution, hardware
+behavior, profile `"4"` implementation, profile `"3"` active-boundary
+support, hardware validation, or turning hardware on.
