@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ede500e
+3a7053e
 
 ## Protected Reference
 
@@ -54,17 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: ede500e Add first real MIDI adapter boundary review
+- current HEAD: 3a7053e Add real MIDI dependency re-decision gate
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance gate for the
-  real MIDI dependency re-decision gate, return to passive/project
-  documentation, or pause at the accepted fake-provider-only adapter boundary
-  checkpoint
+- next recommended task: documentation-only dependency candidate evaluation,
+  return to passive/project documentation, or pause at the accepted dependency
+  re-decision gate
 - closeout command
 - stop condition
 
@@ -1068,6 +1067,31 @@ commands, add hardware behavior, or start hardware validation.
 
 The next recommended task is a documentation-only review/acceptance gate for
 this dependency re-decision gate.
+
+## Real MIDI Dependency Re-Decision Gate Review
+
+`Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE_REVIEW.md` accepts
+`Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE.md` as the current gate for
+revisiting real MIDI dependency selection.
+
+The review accepts:
+
+- 3a7053e Add real MIDI dependency re-decision gate
+- accepted fake-provider-only adapter boundary baseline
+- current dependency decision remaining deferred
+- future dependency selection requiring a separate documentation-only
+  candidate evaluation
+- future package metadata changes requiring a separate documentation-only
+  package metadata plan
+- hardware validation remaining blocked
+
+The review does not select a dependency, install packages, edit package
+metadata, import real MIDI libraries, open ports, send MIDI, add active CLI
+commands, add hardware behavior, or start hardware validation.
+
+The next recommended task is a documentation-only dependency candidate
+evaluation, return to passive/project documentation, or pause at the accepted
+dependency re-decision gate.
 
 ## Project-Level Roadmap Update
 

@@ -261,6 +261,16 @@ Unsafe next moves:
 Prefer a documentation-only review/acceptance gate for this dependency
 re-decision gate next.
 
+The review gate for this dependency re-decision gate is:
+
+- `Docs/REAL_MIDI_DEPENDENCY_REDECISION_GATE_REVIEW.md`
+
+The review accepts this gate as the current planning checkpoint before any
+future dependency candidate evaluation. It does not authorize dependency
+selection, package metadata changes, real port opening, MIDI sending, active
+CLI commands, hardware behavior, hardware validation, or hardware-on
+authorization.
+
 After that, if dependency planning continues, create a documentation-only
 dependency candidate evaluation.
 
