@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6d4ce4a Add session agenda handoff review
 - b3736cf Add session agenda handoff
 - 6e4b35f Add project-level progress checkpoint review
 - bf3fa09 Add project-level progress checkpoint
@@ -2439,6 +2440,28 @@ The handoff is documentation-only. It adds no implementation, tests, real
 MIDI, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
+
+The additional mock-only active boundary safety coverage design includes:
+
+- Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN.md
+
+The design plans a future test-only safety slice for the current mock-first
+active boundary. It targets additional coverage in
+`tests/test_active_boundary.py`, `tests/test_active_boundary_report.py`, and
+`tests/test_cli.py`.
+
+Planned future coverage includes stricter active boundary metadata and
+immutability checks, exact source-kind matching, target metadata staying
+metadata-only, active boundary report decoupling from active boundary
+evaluation, `active-boundary-report` CLI determinism and safety wording, no
+active CLI command names, no real MIDI imports, no passive CLI construction of
+`MockMidiSender`, profile `"3"` remaining unsupported by the active boundary,
+and profile `"4"` remaining parked and unsupported.
+
+The design is documentation-only. It adds no implementation, tests, real MIDI,
+port opening, MIDI sending, active execution, CLI wiring, dispatch, hardware
+behavior, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
 
 The session agenda handoff review includes:
 

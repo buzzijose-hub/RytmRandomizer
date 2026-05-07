@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-b3736cf Add session agenda handoff
+6d4ce4a Add session agenda handoff review
 
 ## Current Phase
 
@@ -66,9 +66,29 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is either a docs-only design for additional mock-only
-active-boundary safety coverage, more passive/project documentation, or a
-pause at this accepted handoff checkpoint.
+Next recommended task is either review/acceptance of the additional
+mock-only active-boundary safety coverage design, more passive/project
+documentation, or a pause at this clean design checkpoint.
+
+The latest additional mock-only active-boundary safety coverage design is:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN.md`
+
+The design plans future test-only coverage for:
+
+- stricter active boundary metadata and immutability checks
+- additional active boundary report safety checks
+- passive CLI `active-boundary-report` safety checks
+- no real MIDI libraries
+- no ports
+- no active CLI commands
+- no passive CLI evaluation of active boundary requests
+- no profile `"4"` implementation
+- no profile `"3"` active-boundary support
+
+It adds no implementation, tests, real MIDI, ports, active behavior, dispatch,
+execution, CLI active commands, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
 
 The latest session agenda handoff review is:
 

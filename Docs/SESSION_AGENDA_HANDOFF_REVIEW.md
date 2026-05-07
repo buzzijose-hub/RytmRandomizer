@@ -205,3 +205,14 @@ The session agenda handoff is accepted as the current practical working menu.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 13. Next Design Gate
+
+The next docs-only design gate is:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN.md`
+
+The design plans future test-only active-boundary safety coverage. It does not
+authorize implementation, real MIDI, ports, active CLI commands, dispatch,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
