@@ -104,6 +104,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_mock_message_mapper.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_message_mapper.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Mock Mapper Report ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_mock_mapper_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_mapper_report.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== V1.34 Reference Diff ===" | Add-Content $summary
 git diff -- rytm_hybrid_randomizer_v134.py 2>&1 | Tee-Object -FilePath "$logDir\latest_v134_reference_diff.log" | Add-Content $summary
 
