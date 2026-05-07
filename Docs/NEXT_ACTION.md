@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-17d1a0a Add real MIDI implementation test plan review
+f5be0ee Add real MIDI import port safety test plan
 
 ## Current Phase
 
@@ -66,9 +66,25 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the real MIDI import and port
-safety tests-only implementation plan, more passive/project documentation, or
-a pause at this clean planning checkpoint.
+Next recommended task is the accepted tests-only real MIDI import and port
+safety test implementation slice, more passive/project documentation, or a
+pause at this clean planning checkpoint.
+
+The latest real MIDI import and port safety tests-only implementation plan
+review is:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN.md`
+
+The review accepts the plan as the current planning gate for a future
+tests-only implementation slice. It allows only the accepted future test files
+and closeout labels as a next slice. It does not authorize real MIDI, mido,
+port opening, MIDI sending, active CLI commands, dispatch, command execution,
+scene execution, hardware behavior, profile `"4"` implementation, profile
+`"3"` active-boundary support, hardware validation, or turning hardware on.
 
 The latest real MIDI import and port safety tests-only implementation plan is:
 

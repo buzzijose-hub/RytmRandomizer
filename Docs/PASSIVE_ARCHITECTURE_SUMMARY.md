@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-17d1a0a
+f5be0ee
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 17d1a0a Add real MIDI implementation test plan review
+- current HEAD: f5be0ee Add real MIDI import port safety test plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the real MIDI import and port
-  safety tests-only implementation plan, return to passive/project
-  documentation, or pause at the clean planning checkpoint
+- next recommended task: implement the accepted tests-only real MIDI import
+  and port safety test slice, return to passive/project documentation, or
+  pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
@@ -417,6 +417,25 @@ The plan is tests-only. It does not create tests, edit closeout, add runtime
 modules, add real MIDI dependencies, open ports, send MIDI, add active CLI
 commands, change active-boundary scope, implement profile `"4"`, add profile
 `"3"` active-boundary support, or authorize hardware validation.
+
+## Real MIDI Import And Port Safety Test Implementation Plan Review
+
+`Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN_REVIEW.md` accepts
+`Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN.md` as the current
+planning gate for a future tests-only implementation slice.
+
+It accepts future ownership in:
+
+- `tests/test_real_midi_import_safety.py`
+- `tests/test_real_midi_passive_cli_safety.py`
+- `Scripts/closeout_check.ps1`
+
+The review accepts only future tests and closeout labels for import safety and
+passive CLI port/send safety. It does not add tests, edit closeout, add
+runtime modules, add real MIDI dependencies, open ports, send MIDI, add active
+CLI commands, change active-boundary scope, implement profile `"4"`, add
+profile `"3"` active-boundary support, authorize hardware validation, or turn
+hardware on.
 
 ## Project-Level Roadmap Update
 

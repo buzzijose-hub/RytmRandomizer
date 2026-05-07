@@ -270,3 +270,23 @@ The plan adds no implementation, tests, real MIDI, mido, port opening, MIDI
 sending, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+## 15. Real MIDI Import And Port Safety Test Implementation Plan Review
+
+The tests-only implementation plan review now lives in:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN.md`
+- f5be0ee Add real MIDI import port safety test plan
+
+The review accepts the plan as the current planning gate for a future
+tests-only implementation slice. It permits only the accepted future test
+files and closeout labels as the next implementation scope.
+
+The review adds no implementation, tests, real MIDI, mido, port opening, MIDI
+sending, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.

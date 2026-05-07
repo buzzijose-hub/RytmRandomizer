@@ -446,3 +446,15 @@ Safe next options:
 - return to passive/project documentation
 
 No tests or implementation are added in this slice.
+
+## 17. Review Gate
+
+The review gate for this plan now lives in:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TEST_IMPLEMENTATION_PLAN_REVIEW.md`
+
+The review accepts this document as the current planning gate for a future
+tests-only implementation slice. It does not add tests, real MIDI, mido, port
+opening, MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
