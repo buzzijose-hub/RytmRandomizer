@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 55b973d Add mock mapper profile 4 decision note
 - a7f2e28 Add mock mapper profile 3 progress checkpoint
 - c961dbf Update checkpoint after mock mapping for group profile 3
 - 4507647 Add mock mapping for group profile 3
@@ -258,6 +259,16 @@ separately approved as a tiny mock-only expansion, and that no implementation,
 real MIDI, port opening, CLI wiring, active behavior, or hardware behavior was
 added.
 
+The mock mapper progress review now lives in:
+
+- Docs/MOCK_MAPPER_PROGRESS_REVIEW.md
+
+The progress review records the current mock mapper boundary after the profile
+4 decision note: group profiles `"2"` / My BD Hard and `"3"` / My BD Classic
+are supported, group profile `"4"` / My BD Acoustic remains unsupported/safe,
+and the next options are to keep mapper scope frozen, plan profile 4 support,
+build a passive mock mapper report/summary, or pause mapper work.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -316,6 +327,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - test-only mock mapping for group profile 3
 - mock mapper profile 3 progress checkpoint
 - mock mapper profile 4 decision note
+- mock mapper progress review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1481,6 +1493,23 @@ profile `"4"` / My BD Acoustic unsupported for now. It records the later
 options as keeping profile `"4"` unsupported, planning a tiny mock-only profile
 4 expansion, or stopping mapper expansion and moving to broader mock mapper
 report/summary work. It adds no implementation, mapper scope, real MIDI
+backend, mido dependency, port opening, active CLI command, execute-command,
+send-command, hardware-test behavior, dispatch, command execution, scene
+execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, or machine/profile universe expansion. The protected V1.34
+reference remains untouched.
+
+The mock mapper progress review includes:
+
+- Docs/MOCK_MAPPER_PROGRESS_REVIEW.md
+
+The progress review is documentation-only. It summarizes the current mock
+mapper boundary after `55b973d Add mock mapper profile 4 decision note`: group
+profiles `"2"` and `"3"` are supported, group profile `"4"` remains
+unsupported/safe, Mock MIDI and Mock Message Mapper tests are part of closeout,
+and no implementation is added. It captures the next options as keeping mapper
+scope frozen, planning profile 4 support, building a passive mock mapper
+report/summary, or pausing mapper work. It adds no mapper scope, real MIDI
 backend, mido dependency, port opening, active CLI command, execute-command,
 send-command, hardware-test behavior, dispatch, command execution, scene
 execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads

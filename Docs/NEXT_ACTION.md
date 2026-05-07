@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a7f2e28 Add mock mapper profile 3 progress checkpoint
+55b973d Add mock mapper profile 4 decision note
 
 ## Current Phase
 
@@ -63,9 +63,10 @@ python -m rytm_randomizer.cli preview-group-profile 2
 
 Next recommended task is to choose one of:
 
-- stop for the session
-- write a broader mock mapper progress report
-- consider profile 4 mock-only expansion only after explicit approval
+- keep mapper scope frozen for now
+- plan profile 4 mock-only support in a separate reviewed slice
+- build a passive mock mapper report/summary layer
+- pause mapper work and write a larger project progress report
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -80,6 +81,7 @@ Next recommended task is to choose one of:
 - `Docs/PASSIVE_MOCK_MIDI_PROGRESS_CHECKPOINT.md`
 - `Docs/MOCK_MAPPER_PROFILE_3_PROGRESS_CHECKPOINT.md`
 - `Docs/MOCK_MAPPER_PROFILE_4_DECISION_NOTE.md`
+- `Docs/MOCK_MAPPER_PROGRESS_REVIEW.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -122,6 +124,12 @@ expansion is approved yet.
 The mock mapper profile 4 decision note records the current decision: profile
 `"4"` / My BD Acoustic remains unsupported for now. Future profile 4 support
 requires explicit approval as a tiny mock-only expansion.
+
+The mock mapper progress review records the current mock mapper boundary:
+profiles `"2"` and `"3"` are supported, profile `"4"` remains
+unsupported/safe, and the next options are to keep mapper scope frozen, plan
+profile 4 support, build a passive mock mapper report/summary, or pause mapper
+work.
 
 ## Do-Not-Touch Files
 

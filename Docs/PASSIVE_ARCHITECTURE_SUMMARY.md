@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a7f2e28
+55b973d
 
 ## Protected Reference
 
@@ -47,13 +47,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: a7f2e28 Add mock mapper profile 3 progress checkpoint
+- current HEAD: 55b973d Add mock mapper profile 4 decision note
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: broader mock mapper progress report, or profile 4 mock-only expansion only after explicit approval
+- next recommended task: keep mapper scope frozen, plan profile 4 support, build a passive mock mapper report/summary, or pause mapper work
 - closeout command
 - stop condition
 
@@ -191,6 +191,28 @@ The decision note keeps the project at a safe planning boundary before any
 additional mapper scope.
 
 It is documentation-only and adds no runtime behavior.
+
+## Mock Mapper Progress Review
+
+`Docs/MOCK_MAPPER_PROGRESS_REVIEW.md` records the current mock mapper boundary
+after the profile 4 decision note.
+
+It summarizes:
+
+- profiles `"2"` / My BD Hard and `"3"` / My BD Classic are supported
+- profile `"4"` / My BD Acoustic remains unsupported/safe
+- profile `"4"` requires separate approval before any mock-only expansion
+- Mock MIDI and Mock Message Mapper tests are part of closeout
+- no implementation is added in the progress review
+
+The next options are:
+
+- keep mapper scope frozen
+- plan profile 4 mock-only support
+- build a passive mock mapper report/summary layer
+- pause mapper work
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Test-Only Mock Mapping For Group Profile 3
 
@@ -1413,9 +1435,9 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a broader mock mapper progress report, or consider profile 4 mock-only expansion only after explicit approval
+- keep mapper scope frozen, plan profile 4 support, build a passive mock mapper report/summary, or pause mapper work
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
-- do not expand beyond group profile 2 without a new explicit design/review step
+- do not expand beyond supported group profiles `"2"` and `"3"` without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work
 
 These layers should continue to return passive data only and must not wire into
