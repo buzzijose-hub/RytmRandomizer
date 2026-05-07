@@ -1,9 +1,9 @@
-# Real MIDI Adapter Boundary Gate Review
+# Real MIDI Adapter Boundary Design Review
 
 ## 1. Purpose
 
-Review and accept `Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md` as the current
-planning gate before any real MIDI adapter boundary design.
+Review and accept `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md` as the current
+planning design for a future real MIDI adapter boundary.
 
 This is a review checkpoint only.
 
@@ -22,15 +22,16 @@ Current branch:
 
 Current HEAD before this slice:
 
-- 75d25c5 Add real MIDI adapter boundary gate
+- de313fe Add real MIDI adapter boundary design
 
 Current phase:
 
 - Passive/Mock Foundation Phase
 - mock-first active boundary exists for test-only evaluation
 - real MIDI dependency decision is reviewed and accepted
-- real MIDI adapter boundary gate has been documented
-- real MIDI adapter boundary gate is now being reviewed
+- real MIDI adapter boundary gate is reviewed and accepted
+- real MIDI adapter boundary design has been documented
+- real MIDI adapter boundary design is now being reviewed
 
 Accepted safety baseline:
 
@@ -39,7 +40,7 @@ Accepted safety baseline:
 - real MIDI dependency selection remains deferred
 - `mido` remains absent
 - no real MIDI backend exists
-- no real MIDI adapter exists
+- no real MIDI adapter module exists
 - no hardware validation has started
 
 Hardware status:
@@ -50,31 +51,36 @@ Hardware status:
 
 ## 3. Review Decision
 
-`Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md` is accepted as the current planning
-gate before any real MIDI adapter boundary design.
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md` is accepted as the current
+planning design for the future real MIDI adapter boundary.
 
-The gate remains documentation-only.
+The design remains documentation-only.
 
-The gate does not authorize implementation by itself.
+The design does not authorize implementation by itself.
 
-The gate does not authorize adding a real MIDI dependency by itself.
+The design does not authorize adding a real MIDI dependency by itself.
 
-The gate does not authorize turning hardware on by itself.
+The design does not authorize turning hardware on by itself.
 
-## 4. Accepted Gate Concepts
+## 4. Accepted Design Concepts
 
-The review accepts these gate concepts:
+The review accepts these design concepts:
 
-- future adapter module ownership must be designed before implementation
-- real MIDI dependency imports must be isolated from passive modules
-- future port discovery must be isolated behind an explicit boundary
-- future real sender construction must be isolated from passive code
+- future real MIDI behavior must live behind a narrow adapter boundary
+- future adapter ownership should prefer one small isolated module first
+- `rytm_randomizer/real_midi_adapter.py` is an acceptable future placeholder
+  name for design discussion
+- real MIDI imports must be lazy and isolated
+- real MIDI dependency selection remains deferred
+- future port discovery must be explicit and isolated
+- future sender construction must be explicit and guarded
 - passive CLI commands must remain read-only
 - passive CLI commands must not import real MIDI libraries
 - passive CLI commands must not open ports
 - passive CLI commands must not send MIDI
-- future adapter implementation requires adapter-specific tests first
-- future hardware validation requires a later explicit checklist and approval
+- adapter failure behavior must be deterministic and safe
+- adapter-specific tests must be planned before implementation
+- hardware validation requires a later explicit checklist and approval
 - active-boundary scope remains limited to group profile `"2"` / My BD Hard
 - profile `"3"` remains unsupported by the active boundary
 - profile `"4"` remains parked and unsupported
@@ -128,15 +134,39 @@ behavior:
 - mock-mapper-report
 - active-boundary-report
 
-## 7. Preconditions Before Future Adapter Boundary Design
+## 7. Accepted Future Test Planning Requirements
 
-Before a documentation-only real MIDI adapter boundary design begins:
+A future adapter-specific test plan must be documentation-only first.
+
+That future plan should define tests for:
+
+- passive imports not importing real MIDI libraries
+- passive CLI commands not importing real MIDI libraries
+- passive CLI commands not opening ports
+- passive CLI commands not sending MIDI
+- future adapter import not opening ports
+- missing dependency safe failure
+- fake port provider behavior
+- unknown port safe failure
+- missing arming safe failure
+- missing dry-run confirmation safe failure
+- unsupported key safe failure
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- V1.34 reference remaining untouched
+
+The future test plan must not implement tests by itself.
+
+## 8. Preconditions Before Future Adapter-Specific Test Plan
+
+Before a documentation-only adapter-specific test plan begins:
 
 - clean Git status
 - closeout passes
 - V1.34 reference diff is empty
 - real MIDI dependency decision review is accepted
-- real MIDI adapter boundary gate is accepted
+- real MIDI adapter boundary gate review is accepted
+- real MIDI adapter boundary design review is accepted
 - import safety tests remain in closeout
 - passive CLI safety tests remain in closeout
 - passive CLI remains read-only
@@ -145,24 +175,24 @@ Before a documentation-only real MIDI adapter boundary design begins:
 - no hardware required
 - hardware remains off
 
-## 8. Preconditions Before Future Adapter Implementation
+## 9. Preconditions Before Future Adapter Implementation
 
 This review does not authorize adapter implementation.
 
 Before any future adapter implementation:
 
-- real MIDI adapter boundary design exists
-- real MIDI adapter boundary design is reviewed and accepted
 - adapter-specific test plan exists
 - adapter-specific test plan is reviewed and accepted
-- implementation scope is separately approved
+- adapter-specific tests are implemented with fake providers only
+- adapter-specific tests are reviewed and accepted
 - dependency addition is separately approved
+- implementation scope is separately approved
 - closeout passes
 - V1.34 reference diff is empty
 - passive commands remain proven passive
 - hardware remains off
 
-## 9. Preconditions Before Future Hardware Validation
+## 10. Preconditions Before Future Hardware Validation
 
 This review does not authorize hardware validation.
 
@@ -170,8 +200,8 @@ Before any future hardware validation:
 
 - all mock-only tests must pass
 - all import and port safety tests must pass
-- all future real MIDI boundary tests must pass
-- real MIDI adapter implementation must be reviewed and accepted
+- all future adapter tests must pass
+- adapter implementation must be reviewed and accepted
 - exact target device must be selected
 - exact MIDI output port must be confirmed
 - exact command/pad/channel scope must be confirmed
@@ -182,12 +212,12 @@ Before any future hardware validation:
 
 Analog Rytm and Analog Four remain off during this review.
 
-## 10. Safe Next Options
+## 11. Safe Next Options
 
 Safe next options:
 
-- pause at this accepted adapter boundary gate checkpoint
-- create a documentation-only real MIDI adapter boundary design
+- pause at this accepted adapter boundary design checkpoint
+- create a documentation-only adapter-specific test plan
 - return to passive/project documentation
 
 Unsafe next moves:
@@ -204,13 +234,13 @@ Unsafe next moves:
 - implementing profile `"4"` without separate approval
 - adding profile `"3"` active-boundary support without separate approval
 
-## 11. Recommendation
+## 12. Recommendation
 
-Prefer a documentation-only real MIDI adapter boundary design next.
+Prefer a documentation-only real MIDI adapter-specific test plan next.
 
-That future design should define adapter ownership, import isolation, port
-provider boundaries, sender boundaries, missing-dependency behavior, missing
-arming behavior, missing dry-run behavior, and adapter-specific tests.
+That future test plan should define tests with fake providers only and should
+keep all real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, and hardware validation blocked.
 
 Do not implement real MIDI.
 
@@ -224,12 +254,12 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 12. Decision
+## 13. Decision
 
-The real MIDI adapter boundary gate is accepted for planning.
+The real MIDI adapter boundary design is accepted for planning.
 
-Real MIDI adapter boundary design may be written next as documentation-only
-work.
+Real MIDI adapter-specific test planning may be written next as
+documentation-only work.
 
 Adapter implementation remains blocked.
 
@@ -240,47 +270,3 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
-
-## 13. Adapter Boundary Design
-
-The real MIDI adapter boundary design now lives in:
-
-- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md`
-
-The design defines the future real MIDI adapter boundary at planning level
-only. It documents future module ownership, import isolation, dependency
-isolation, port provider boundaries, sender boundaries, passive CLI separation,
-active-boundary scope limits, deterministic safe failure behavior, tests
-required before implementation, future implementation sequencing, and hardware
-validation preconditions.
-
-The design adds no implementation, tests, runtime modules, real MIDI
-dependencies, port opening, MIDI sending, active CLI commands, dispatch,
-command execution, scene execution, hardware behavior, profile `"4"`
-implementation, profile `"3"` active-boundary support, hardware validation, or
-hardware-on authorization.
-
-## 14. Adapter Boundary Design Review
-
-The real MIDI adapter boundary design review now lives in:
-
-- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN_REVIEW.md`
-
-The review accepts:
-
-- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md`
-- de313fe Add real MIDI adapter boundary design
-
-The review accepts the design as the current planning checkpoint before any
-documentation-only real MIDI adapter-specific test plan.
-
-The review keeps adapter implementation blocked, real MIDI dependency
-selection deferred, hardware validation blocked, passive CLI read-only,
-profile `"3"` unsupported by the active boundary, profile `"4"` parked and
-unsupported, and hardware off.
-
-The review adds no implementation, tests, runtime modules, real MIDI
-dependencies, port opening, MIDI sending, active CLI commands, dispatch,
-command execution, scene execution, hardware behavior, profile `"4"`
-implementation, profile `"3"` active-boundary support, hardware validation, or
-hardware-on authorization.

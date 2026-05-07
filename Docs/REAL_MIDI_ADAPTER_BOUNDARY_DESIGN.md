@@ -427,3 +427,16 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 21. Review Gate
+
+This design is reviewed and accepted in:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN_REVIEW.md`
+
+The review accepts this design as the current planning checkpoint before any
+documentation-only real MIDI adapter-specific test plan.
+
+The review does not authorize real MIDI dependency installation, adapter
+implementation, port opening, MIDI sending, active CLI commands, hardware
+behavior, hardware validation, or turning hardware on.

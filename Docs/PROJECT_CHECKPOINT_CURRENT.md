@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- de313fe Add real MIDI adapter boundary design
 - 9fc92d2 Add real MIDI adapter boundary gate review
 - 75d25c5 Add real MIDI adapter boundary gate
 - f9bb383 Add real MIDI dependency decision review
@@ -2909,6 +2910,28 @@ tests required before implementation, future implementation sequencing, and
 hardware validation preconditions.
 
 The design is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.
+
+The real MIDI adapter boundary design review includes:
+
+- Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md
+- de313fe Add real MIDI adapter boundary design
+
+The review accepts the design as the current planning checkpoint before any
+documentation-only real MIDI adapter-specific test plan. It confirms real MIDI
+adapter implementation remains blocked, real MIDI dependency selection remains
+deferred, hardware validation remains blocked, passive CLI remains read-only,
+profile `"3"` remains unsupported by the active boundary, profile `"4"`
+remains parked and unsupported, and hardware remains off.
+
+The review is documentation-only. It adds no implementation, tests, runtime
 modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support,

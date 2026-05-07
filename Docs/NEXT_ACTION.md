@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9fc92d2 Add real MIDI adapter boundary gate review
+de313fe Add real MIDI adapter boundary design
 
 ## Current Phase
 
@@ -66,9 +66,28 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is documentation-only review/acceptance of the real MIDI
-adapter boundary design, more passive/project documentation, or a pause at
-this adapter design checkpoint.
+Next recommended task is documentation-only real MIDI adapter-specific test
+plan, more passive/project documentation, or a pause at this accepted adapter
+design checkpoint.
+
+The latest real MIDI adapter boundary design review is:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md`
+- de313fe Add real MIDI adapter boundary design
+
+The review accepts the adapter boundary design as the current planning design
+for a future real MIDI adapter boundary. It confirms that adapter
+implementation remains blocked, real MIDI dependency selection remains
+deferred, hardware validation remains blocked, passive CLI remains read-only,
+profile `"3"` remains unsupported by the active boundary, profile `"4"`
+remains parked and unsupported, and hardware remains off. It adds no `mido`,
+no real MIDI dependency, no adapter module, no port opening, no MIDI sending,
+no active CLI commands, no hardware behavior, and no hardware validation. It
+recommends a documentation-only adapter-specific test plan next.
 
 The latest real MIDI adapter boundary design is:
 

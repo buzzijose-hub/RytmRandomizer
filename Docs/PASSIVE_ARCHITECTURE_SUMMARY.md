@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-9fc92d2
+de313fe
 
 ## Protected Reference
 
@@ -53,16 +53,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 9fc92d2 Add real MIDI adapter boundary gate review
+- current HEAD: de313fe Add real MIDI adapter boundary design
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance of the real MIDI
-  adapter boundary design, return to passive/project documentation, or pause
-  at the adapter design checkpoint
+- next recommended task: documentation-only real MIDI adapter-specific test
+  plan, return to passive/project documentation, or pause at the accepted
+  adapter design checkpoint
 - closeout command
 - stop condition
 
@@ -630,6 +630,36 @@ hardware-on authorization.
 
 The next recommended task is a documentation-only review/acceptance gate for
 this design.
+
+## Real MIDI Adapter Boundary Design Review
+
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN_REVIEW.md` accepts
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md` as the current planning design for
+a future real MIDI adapter boundary.
+
+The review accepts:
+
+- de313fe Add real MIDI adapter boundary design
+- narrow future adapter boundary
+- lazy import isolation
+- deferred dependency selection
+- explicit port provider boundary
+- explicit sender boundary
+- passive CLI separation
+- deterministic safe failure behavior
+- adapter-specific tests before implementation
+- active-boundary scope limited to group profile `"2"` / My BD Hard
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- hardware-off status
+
+The review confirms no `mido`, real MIDI dependency, adapter module, real MIDI
+backend, port opening, MIDI sending, active CLI command, dispatch, command
+execution, scene execution, hardware behavior, hardware validation, profile
+`"4"` implementation, or profile `"3"` active-boundary support exists.
+
+The next recommended task is a documentation-only real MIDI adapter-specific
+test plan.
 
 ## Project-Level Roadmap Update
 
