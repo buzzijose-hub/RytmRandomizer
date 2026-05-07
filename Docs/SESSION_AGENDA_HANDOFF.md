@@ -183,3 +183,14 @@ this clean state.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 11. Review Gate
+
+This handoff is reviewed and accepted by:
+
+- `Docs/SESSION_AGENDA_HANDOFF_REVIEW.md`
+
+The review accepts this handoff as the current practical working menu. It does
+not authorize active execution, real MIDI, ports, active CLI commands,
+dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.

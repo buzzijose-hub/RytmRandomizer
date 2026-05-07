@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6e4b35f
+b3736cf
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6e4b35f Add project-level progress checkpoint review
+- current HEAD: b3736cf Add session agenda handoff
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the session agenda handoff, plan
-  additional mock-only safety coverage through a separate design gate, or
-  pause at the clean project checkpoint
+- next recommended task: create a docs-only design for additional mock-only
+  active-boundary safety coverage, return to passive/project documentation, or
+  pause at the accepted handoff checkpoint
 - closeout command
 - stop condition
 
@@ -476,6 +476,32 @@ at the clean project checkpoint.
 
 The handoff is documentation-only. It adds no implementation, tests, real
 MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
+
+## Session Agenda Handoff Review
+
+`Docs/SESSION_AGENDA_HANDOFF_REVIEW.md` accepts
+`Docs/SESSION_AGENDA_HANDOFF.md` as the current practical session agenda and
+handoff.
+
+It accepts:
+
+- the current working foundation summary
+- the current safe passive CLI visibility
+- the current mock mapper scope
+- the current active-boundary scope
+- the current safe work menu
+- the current forbidden next moves
+- the closeout command and stop conditions
+
+The review accepts the next safe options as pausing, returning to
+passive/project documentation, or creating a docs-only design for additional
+mock-only active-boundary safety coverage.
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
 machine/profile expansion.
@@ -2662,6 +2688,8 @@ Recommended passive layers before runtime work:
   agenda/handoff refresh
 - review and accept the session agenda handoff or pause at the clean project
   checkpoint
+- create a docs-only design for additional mock-only active-boundary safety
+  coverage only after accepting the session agenda handoff
 - write a session handoff/current agenda if resumption clarity is more useful
   than additional implementation
 - add more mock-only safety tests only after a separate approved design

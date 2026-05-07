@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6e4b35f Add project-level progress checkpoint review
+b3736cf Add session agenda handoff
 
 ## Current Phase
 
@@ -66,9 +66,21 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is either review/acceptance of the session agenda
-handoff, planning additional mock-only safety coverage through a separate
-design gate, or a pause at this clean project checkpoint.
+Next recommended task is either a docs-only design for additional mock-only
+active-boundary safety coverage, more passive/project documentation, or a
+pause at this accepted handoff checkpoint.
+
+The latest session agenda handoff review is:
+
+- `Docs/SESSION_AGENDA_HANDOFF_REVIEW.md`
+
+The review accepts:
+
+- `Docs/SESSION_AGENDA_HANDOFF.md`
+
+The review accepts the handoff as the current practical working menu. It does
+not authorize active execution, real MIDI, ports, dispatch, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
 
 The latest session agenda handoff is:
 
