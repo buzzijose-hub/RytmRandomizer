@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 62cc326 Add real MIDI dependency candidate evaluation review
 - e76cbfd Add real MIDI dependency candidate evaluation
 - 7feb3ac Add real MIDI dependency re-decision gate review
 - 3a7053e Add real MIDI dependency re-decision gate
@@ -3204,6 +3205,30 @@ modules, real MIDI dependencies, package metadata changes, port opening, MIDI
 sending, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI no-dependency progress checkpoint includes:
+
+- Docs/REAL_MIDI_NO_DEPENDENCY_PROGRESS_CHECKPOINT.md
+
+The checkpoint records:
+
+- 62cc326 Add real MIDI dependency candidate evaluation review
+- Candidate A remains the current accepted path
+- dependency selection remains deferred
+- package metadata remains unchanged
+- fake-provider-only adapter boundary remains the current adapter baseline
+- no `mido`
+- no real MIDI dependency
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+- hardware remains off
+
+The checkpoint confirms the project can continue planning from a clean
+no-dependency position. It does not authorize dependency selection, package
+metadata changes, real MIDI implementation, active CLI behavior, hardware
+validation, or turning hardware on.
 
 The real MIDI adapter first implementation plan includes:
 
