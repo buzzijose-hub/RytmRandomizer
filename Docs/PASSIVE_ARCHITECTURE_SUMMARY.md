@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-1a5f675
+7029d9f
 
 ## Protected Reference
 
@@ -37,6 +37,7 @@ The standard closeout suite currently includes:
 - mock mapper report
 - mock-only active candidate
 - active boundary
+- active boundary report
 
 The closeout workflow also checks:
 
@@ -50,16 +51,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 1a5f675 Update checkpoint after read-only active boundary
-  report
+- current HEAD: 7029d9f Add read-only active boundary report review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: pause at the clean review checkpoint or create a
-  docs-only active boundary report CLI preview design
+- next recommended task: review/accept the read-only active boundary report
+  CLI preview design, or pause at the clean design checkpoint
 - closeout command
 - stop condition
 
@@ -578,6 +578,28 @@ It confirms:
 
 The review is documentation-only. It adds no implementation, tests, CLI
 wiring, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
+
+## Read-Only Active Boundary Report CLI Preview Design
+
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN.md` defines a future
+passive CLI preview for the read-only active boundary report.
+
+Proposed future commands:
+
+- `python -m rytm_randomizer.cli active-boundary-report`
+- `python -m rytm_randomizer.cli active-boundary-report --help`
+
+The design requires the command to print `format_active_boundary_report()`
+output only.
+
+It requires the future CLI preview to avoid active request evaluation, mock
+message emission, real MIDI, port opening, dispatch, command execution, scene
+execution, hardware behavior, and profile `"3"` or `"4"` active-boundary
+support.
+
+The design is documentation-only. It adds no CLI command, implementation,
+tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
 profile `"4"` implementation, or profile `"3"` active-boundary support.
 
 ## Mock-Only Active Test Implementation Plan
@@ -2375,6 +2397,8 @@ Recommended passive layers before runtime work:
   CLI visibility design
 - create only a docs-only active boundary report CLI preview design before any
   CLI wiring
+- review and accept the active boundary report CLI preview design before any
+  CLI implementation
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

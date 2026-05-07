@@ -218,8 +218,11 @@ Unsafe next moves:
 
 ## 11. Recommendation
 
-Proceed next only with a docs-only active boundary report CLI preview design if
-more operator visibility is useful.
+The docs-only active boundary report CLI preview design now lives in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN.md`
+
+Review and accept that design before any CLI implementation.
 
 Do not add CLI wiring without a separate accepted design.
 
