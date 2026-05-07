@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d0a9b8d Add additional active boundary safety tests
+092f0b8 Update checkpoint after additional active boundary safety tests
 
 ## Current Phase
 
@@ -66,9 +66,25 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the completed additional
-mock-only active-boundary safety tests checkpoint, more passive/project
-documentation, or a pause at this clean test-only checkpoint.
+Next recommended task is a short session agenda/current handoff refresh, a
+broader active-boundary safety progress report, more passive/project
+documentation, or a pause at this accepted additional mock-only
+active-boundary safety test checkpoint.
+
+The latest additional mock-only active-boundary safety tests review is:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_REVIEW.md`
+
+The review accepts:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The review accepts the completed `d0a9b8d Add additional active boundary
+safety tests` milestone as the current additional mock-only active-boundary
+safety coverage checkpoint. It confirms profile `"2"` remains the only
+accepted active-boundary candidate, profile `"3"` remains unsupported by the
+active boundary, profile `"4"` remains parked and unsupported, passive CLI
+remains read-only, no real MIDI or ports exist, and hardware remains off.
 
 The latest additional mock-only active-boundary safety tests checkpoint is:
 

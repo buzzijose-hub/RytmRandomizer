@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 092f0b8 Update checkpoint after additional active boundary safety tests
 - d0a9b8d Add additional active boundary safety tests
 - 18dca7c Add additional active boundary safety coverage review
 - 5c0e990 Add additional active boundary safety coverage design
@@ -2515,6 +2516,31 @@ The checkpoint confirms the milestone adds no runtime code changes, real MIDI,
 ports, active CLI commands, passive CLI active-boundary evaluation, passive CLI
 construction of `MockMidiSender`, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
+
+The additional mock-only active boundary safety tests review includes:
+
+- Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_REVIEW.md
+
+The review accepts:
+
+- Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md
+
+The review accepts the completed `d0a9b8d Add additional active boundary
+safety tests` milestone and the `092f0b8 Update checkpoint after additional
+active boundary safety tests` documentation checkpoint as the current
+additional mock-only active-boundary safety coverage baseline.
+
+It confirms profile `"2"` / My BD Hard remains the only accepted
+active-boundary candidate, profile `"3"` / My BD Classic remains unsupported
+by the active boundary, profile `"4"` / My BD Acoustic remains parked and
+unsupported, passive CLI remains read-only, passive CLI does not evaluate
+active boundary requests, passive CLI does not construct `MockMidiSender`,
+real MIDI remains absent, ports remain closed, and hardware remains off.
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
 
 The session agenda handoff review includes:

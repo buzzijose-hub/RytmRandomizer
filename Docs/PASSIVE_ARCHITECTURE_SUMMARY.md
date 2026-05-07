@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d0a9b8d
+092f0b8
 
 ## Protected Reference
 
@@ -51,16 +51,18 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d0a9b8d Add additional active boundary safety tests
+- current HEAD: 092f0b8 Update checkpoint after additional active boundary
+  safety tests
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the completed additional mock-only
-  active-boundary safety tests checkpoint, return to passive/project
-  documentation, or pause at the clean test-only checkpoint
+- next recommended task: write a session agenda/current handoff refresh,
+  write a broader active-boundary safety progress report, return to
+  passive/project documentation, or pause at the accepted additional
+  mock-only active-boundary safety test checkpoint
 - closeout command
 - stop condition
 
@@ -501,6 +503,42 @@ passive CLI construction of `MockMidiSender`, dispatch, command execution,
 scene execution, hardware behavior, SysEx, GUI/capture, Analog Four support,
 Pads 5-12 support, profile `"4"` implementation, profile `"3"`
 active-boundary support, or machine/profile expansion.
+
+## Additional Mock-Only Active Boundary Safety Tests Review
+
+`Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_REVIEW.md` accepts
+`Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md` as the
+current checkpoint for completed additional mock-only active-boundary safety
+test coverage.
+
+It accepts:
+
+- d0a9b8d Add additional active boundary safety tests
+- 092f0b8 Update checkpoint after additional active boundary safety tests
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+- existing closeout coverage for Passive CLI, Active Boundary, and Active
+  Boundary Report
+
+The review confirms:
+
+- profile `"2"` / My BD Hard remains the only accepted active-boundary
+  candidate
+- profile `"3"` / My BD Classic remains unsupported by the active boundary
+- profile `"4"` / My BD Acoustic remains parked and unsupported
+- passive CLI remains read-only
+- passive CLI does not evaluate active boundary requests
+- passive CLI does not construct `MockMidiSender`
+- real MIDI remains absent
+- ports remain closed
+- hardware remains off
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
 
 ## Additional Mock-Only Active Boundary Safety Coverage Design
 
@@ -2810,6 +2848,8 @@ Recommended passive layers before runtime work:
   safety coverage after design review
 - review and accept the completed additional mock-only active-boundary safety
   tests checkpoint
+- write a session agenda/current handoff refresh or broader active-boundary
+  safety progress report after accepting the additional safety tests checkpoint
 - write a session handoff/current agenda if resumption clarity is more useful
   than additional implementation
 - add more mock-only safety tests only after a separate approved design
