@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-4507647
+c961dbf
 
 ## Protected Reference
 
@@ -47,13 +47,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 4507647 Add mock mapping for group profile 3
+- current HEAD: c961dbf Update checkpoint after mock mapping for group profile 3
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: stop for the session, create a documentation-only session closeout summary, or plan a small mock-only mapper expansion without implementation
+- next recommended task: stop for the session, write a documentation-only next-session handoff, or plan whether group profile `"4"` should remain unsupported or become the next tiny mock-only mapper target
 - closeout command
 - stop condition
 
@@ -156,6 +156,25 @@ Current behavior:
 The closeout suite now includes "Test: Mock Message Mapper".
 
 Analog Rytm and Analog Four remain off for this phase.
+
+## Mock Mapper Profile 3 Progress Checkpoint
+
+`Docs/MOCK_MAPPER_PROFILE_3_PROGRESS_CHECKPOINT.md` records a progress
+checkpoint after adding and documenting test-only mock mapping support for
+group profile key `"3"` / My BD Classic.
+
+It summarizes:
+
+- current branch and HEAD
+- supported mock mapper profiles `"2"` and `"3"`
+- group profile `"4"` remaining intentionally unsupported and safe
+- current mapper behavior
+- current safety boundaries
+- the next decision point
+
+The checkpoint records that no next mapper expansion is approved yet.
+
+It is documentation-only and adds no runtime behavior.
 
 ## Test-Only Mock Mapping For Group Profile 3
 
@@ -1378,7 +1397,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- stop for the session, create a documentation-only session closeout summary, or plan a small mock-only mapper expansion without implementation
+- stop for the session, write a documentation-only next-session handoff, or plan whether group profile `"4"` should remain unsupported or become the next tiny mock-only mapper target
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond group profile 2 without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

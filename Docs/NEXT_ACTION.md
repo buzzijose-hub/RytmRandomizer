@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-4507647 Add mock mapping for group profile 3
+c961dbf Update checkpoint after mock mapping for group profile 3
 
 ## Current Phase
 
@@ -64,8 +64,8 @@ python -m rytm_randomizer.cli preview-group-profile 2
 Next recommended task is to choose one of:
 
 - stop for the session
-- create a documentation-only session closeout summary
-- plan a small mock-only mapper expansion without implementing it
+- write a documentation-only next-session handoff
+- plan whether group profile `"4"` should remain unsupported or become the next tiny mock-only mapper target
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -78,6 +78,7 @@ Next recommended task is to choose one of:
 - `Docs/MOCK_MESSAGE_MAPPING_DESIGN_SPEC_REVIEW.md`
 - `Docs/MOCK_MESSAGE_MAPPER_REVIEW.md`
 - `Docs/PASSIVE_MOCK_MIDI_PROGRESS_CHECKPOINT.md`
+- `Docs/MOCK_MAPPER_PROFILE_3_PROGRESS_CHECKPOINT.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -111,6 +112,11 @@ The passive mock MIDI progress checkpoint summarizes the current passive CLI,
 mock MIDI, and mock message mapper state after `32006f4`. It records that this
 is a clean decision point before any additional mapper scope, active execution,
 or hardware-facing work.
+
+The mock mapper profile 3 progress checkpoint records the current mock mapper
+state after `c961dbf`: group profiles `"2"` and `"3"` are supported, group
+profile `"4"` remains intentionally unsupported/safe, and no next mapper
+expansion is approved yet.
 
 ## Do-Not-Touch Files
 

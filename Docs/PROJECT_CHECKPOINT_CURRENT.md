@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c961dbf Update checkpoint after mock mapping for group profile 3
 - 4507647 Add mock mapping for group profile 3
 - 79a64df Add passive mock MIDI progress checkpoint
 - 32006f4 Add mock message mapper review
@@ -237,6 +238,15 @@ through MockMidiSender. It imports no real MIDI library, opens no ports, sends
 no MIDI, adds no CLI wiring, adds no runtime execution, and adds no hardware
 behavior.
 
+The mock mapper profile 3 progress checkpoint now lives in:
+
+- Docs/MOCK_MAPPER_PROFILE_3_PROGRESS_CHECKPOINT.md
+
+The checkpoint records the current mock mapper state after `c961dbf Update
+checkpoint after mock mapping for group profile 3`: group profiles `"2"` and
+`"3"` are supported, group profile `"4"` remains intentionally unsupported and
+safe, and no next mapper expansion is approved yet.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -293,6 +303,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock message mapper review
 - passive mock MIDI progress checkpoint
 - test-only mock mapping for group profile 3
+- mock mapper profile 3 progress checkpoint
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1431,6 +1442,23 @@ hardware-test command, no SysEx, no GUI/capture, no Analog Four support, no
 Pads 5-12 support, and no machine/profile expansion. The protected V1.34
 reference remains untouched. Analog Rytm and Analog Four remain off for this
 phase.
+
+The mock mapper profile 3 progress checkpoint includes:
+
+- Docs/MOCK_MAPPER_PROFILE_3_PROGRESS_CHECKPOINT.md
+
+The checkpoint document is documentation-only. It records the mock mapper state
+after `c961dbf Update checkpoint after mock mapping for group profile 3`:
+group profiles `"2"` and `"3"` are supported, group profile `"4"` remains
+intentionally unsupported and safe, and no next mapper expansion is approved.
+It identifies the next decision as stopping, writing a next-session handoff, or
+planning whether profile `"4"` should remain unsupported or become the next
+tiny mock-only mapper target. It adds no mapper scope, real MIDI backend, mido
+dependency, port opening, active CLI command, execute-command, send-command,
+hardware-test behavior, dispatch, command execution, scene execution, hardware
+mutation, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
