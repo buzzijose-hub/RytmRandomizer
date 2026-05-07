@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ddc0e03 Add real MIDI boundary plan review
 - 7e02215 Add real MIDI boundary plan
 - f877da2 Add real MIDI boundary planning gate review
 - c572e14 Add real MIDI boundary planning gate
@@ -2623,6 +2624,24 @@ ports, active CLI commands, passive CLI active-boundary evaluation, passive
 CLI construction of `MockMidiSender`, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI implementation design/spec includes:
+
+- Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md
+
+The design/spec defines the future real MIDI implementation shape at planning
+level only. It documents proposed future file ownership, conceptual future
+interfaces, message translation rules, dependency isolation, port-provider
+boundaries, sender boundaries, active-boundary integration limits, passive CLI
+separation, required future tests, future implementation sequencing, later
+hardware validation preconditions, and forbidden scope.
+
+The design/spec is documentation-only. It adds no implementation, tests, real
+MIDI, ports, active CLI commands, passive CLI active-boundary evaluation,
+passive CLI construction of `MockMidiSender`, dispatch, command execution,
+scene execution, hardware behavior, profile `"4"` implementation, profile
+`"3"` active-boundary support, hardware validation, or hardware-on
+authorization.
 
 The session agenda current handoff refresh includes:
 

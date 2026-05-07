@@ -221,3 +221,22 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 13. Real MIDI Implementation Design Spec
+
+The documentation-only real MIDI implementation design/spec now lives in:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The design/spec follows this accepted review and defines the future real MIDI
+implementation shape at planning level only. It documents future file
+ownership, conceptual interfaces, message translation rules, dependency
+isolation, port-provider boundaries, sender boundaries, active-boundary
+integration limits, passive CLI separation, required future tests, future
+implementation sequencing, later hardware validation preconditions, and
+forbidden scope.
+
+The design/spec adds no implementation, tests, real MIDI, mido, port opening,
+MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.

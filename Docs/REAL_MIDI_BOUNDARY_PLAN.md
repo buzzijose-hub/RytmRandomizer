@@ -373,3 +373,16 @@ baseline. It does not authorize implementation, real MIDI imports, mido, port
 opening, MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or turning hardware on.
+
+## 20. Real MIDI Implementation Design Spec
+
+The documentation-only real MIDI implementation design/spec now lives in:
+
+- `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The design/spec follows this accepted boundary plan and defines future real
+MIDI implementation shape at planning level only. It does not authorize
+implementation, real MIDI imports, mido, port opening, MIDI sending, active
+CLI commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or turning hardware on.
