@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a589564 Add mock-only active candidate tests
 - 66623ef Add first-candidate mock-only active test design review
 - 833aad9 Add passive mock parallel workstream plan
 - 9a3dc06 Add passive mock knowledge checkpoint
@@ -460,6 +461,18 @@ group profile `"2"` / My BD Hard. It plans one new test file,
 `Scripts/closeout_check.ps1`. It keeps all future work mock-only and test-only,
 uses existing mock mapper and mock MIDI helpers, keeps profile `"4"` parked,
 and adds no implementation in this documentation slice.
+
+The mock-only active candidate tests checkpoint now lives in:
+
+- Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md
+
+The checkpoint records completion of the first mock-only active candidate test
+slice. The milestone adds `tests/test_mock_only_active_candidate.py` and a
+`Mock-Only Active Candidate` closeout label. It proves group profile `"2"` /
+My BD Hard maps to deterministic inert mock messages, records through
+`MockMidiSender`, preserves safe failure for unknown keys and parked profile
+`"4"`, keeps passive CLI report behavior unchanged, imports no real MIDI
+libraries, and exposes no active behavior names.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -1985,6 +1998,21 @@ and `MockMidiSender`. It plans creation of
 `Scripts/closeout_check.ps1`. It includes expected test content, commands,
 closeout checks, commit boundary, forbidden scope, and self-review. It adds no
 implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
+active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
+or machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
+
+The mock-only active candidate tests checkpoint includes:
+
+- Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md
+
+The checkpoint is documentation-only. It records the completed milestone
+`a589564 Add mock-only active candidate tests`, which adds
+`tests/test_mock_only_active_candidate.py` and updates
+`Scripts/closeout_check.ps1`. It confirms the closeout suite now includes
+`=== Test: Mock-Only Active Candidate ===`, V1.34 reference diff is empty, and
+git status is clean. It adds no real MIDI, mido, port opening, MIDI sending,
 active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
 capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
 or machine/profile expansion. The protected V1.34 reference remains untouched.

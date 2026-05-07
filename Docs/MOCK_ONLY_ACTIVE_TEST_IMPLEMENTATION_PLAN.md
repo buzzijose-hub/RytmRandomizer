@@ -413,7 +413,13 @@ Type and API consistency:
 
 ## 11. Decision
 
-This plan is ready for a future mock-only implementation slice.
+This plan has been executed by:
+
+- a589564 Add mock-only active candidate tests
+
+The completion checkpoint is:
+
+- `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md`
 
 Recommended execution approach:
 

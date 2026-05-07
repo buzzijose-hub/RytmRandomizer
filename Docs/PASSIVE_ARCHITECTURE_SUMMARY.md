@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-66623ef
+a589564
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 66623ef Add first-candidate mock-only active test design review
+- current HEAD: a589564 Add mock-only active candidate tests
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement accepted mock-only active candidate tests
+- next recommended task: review accepted mock-only active candidate tests
 - closeout command
 - stop condition
 
@@ -168,6 +168,43 @@ The plan is documentation-only. It adds no tests, implementation, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, or machine/profile expansion.
+
+## Mock-Only Active Candidate Tests
+
+The mock-only active candidate tests milestone is:
+
+- a589564 Add mock-only active candidate tests
+
+It includes:
+
+- `tests/test_mock_only_active_candidate.py`
+- `Scripts/closeout_check.ps1`
+
+The closeout suite now includes:
+
+- `=== Test: Mock-Only Active Candidate ===`
+
+The tests prove:
+
+- group profile `"2"` / My BD Hard maps to deterministic inert mock messages
+- candidate metadata is explicit and mock-only
+- `MockMidiSender` records candidate messages in memory only
+- unknown keys emit no messages and fail safely
+- group profile `"4"` / My BD Acoustic remains unsupported/safe
+- passive CLI report behavior remains unchanged
+- no real MIDI libraries are imported
+- no active behavior names are exposed
+
+The milestone adds no real MIDI, mido, port opening, MIDI sending, active
+execution, CLI wiring, dispatch, hardware behavior, SysEx, GUI/capture, Analog
+Four support, Pads 5-12 support, profile `"4"` implementation, or
+machine/profile expansion.
+
+## Mock-Only Active Candidate Tests Checkpoint
+
+`Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md` records the completed
+mock-only proof milestone and sets the next recommended task as a
+documentation-only review/acceptance checkpoint.
 
 ## Passive-To-Active Boundary Design
 

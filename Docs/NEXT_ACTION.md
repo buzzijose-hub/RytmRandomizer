@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-66623ef Add first-candidate mock-only active test design review
+a589564 Add mock-only active candidate tests
 
 ## Current Phase
 
@@ -63,10 +63,14 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is implement the accepted mock-only active candidate test
-plan:
+Next recommended task is a documentation-only review/acceptance checkpoint for
+the completed mock-only active candidate tests:
 
 - group profile `"2"` / My BD Hard
+
+The latest mock-only test checkpoint is:
+
+- `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md`
 
 The implementation plan is now:
 
@@ -124,6 +128,7 @@ Safe alternatives are:
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
 - `Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md`
+- `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
 
@@ -283,6 +288,14 @@ the implementation coverage-only, uses existing `MockMidiSender` and
 `map_group_profile_to_mock_messages`, keeps profile `"4"` parked, and adds no
 real MIDI, ports, active behavior, CLI command, or hardware behavior in this
 planning slice.
+
+The mock-only active candidate tests checkpoint records completion of that
+coverage-only slice. It confirms `tests/test_mock_only_active_candidate.py` and
+the closeout label `=== Test: Mock-Only Active Candidate ===` are in place.
+The tests prove profile `"2"` maps to inert mock messages, records through
+`MockMidiSender`, keeps profile `"4"` unsupported/safe, preserves passive CLI
+report behavior, imports no real MIDI libraries, and exposes no active behavior
+names.
 
 ## Do-Not-Touch Files
 
