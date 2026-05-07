@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-94d90cf
+65ca950
 
 ## Protected Reference
 
@@ -50,16 +50,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 94d90cf Add mock-only active boundary safety coverage
-  progress report
+- current HEAD: 65ca950 Add mock-only active boundary safety coverage
+  progress review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: pause at the clean progress review checkpoint or
-  create a docs-only active boundary report/summary visibility design
+- next recommended task: review/accept the mock-only active boundary report
+  visibility design, or pause at the clean design checkpoint
 - closeout command
 - stop condition
 
@@ -443,6 +443,36 @@ The review accepts:
 The review is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+## Mock-Only Active Boundary Report Visibility Design
+
+`Docs/MOCK_ONLY_ACTIVE_BOUNDARY_REPORT_VISIBILITY_DESIGN.md` defines a future
+read-only report/summary layer for the current mock-first active boundary
+state.
+
+The design is documentation-only. It proposes future report visibility for:
+
+- accepted active-boundary candidate: group profile `"2"` / My BD Hard
+- unsupported active-boundary profiles: group profiles `"3"` and `"4"`
+- required arming and dry-run confirmation
+- mock-only status
+- safe-failure behavior
+- absent real MIDI
+- absent port opening
+- absent active CLI behavior
+- absent hardware behavior
+- closeout coverage
+
+It proposes possible future module ownership in
+`rytm_randomizer/active_boundary_report.py`, but does not implement that
+module.
+
+It also keeps any future CLI preview separate and unapproved until a report
+module exists and a separate review accepts CLI visibility.
+
+The design adds no implementation, tests, real MIDI, ports, active CLI
+behavior, dispatch, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -2231,6 +2261,8 @@ Recommended passive layers before runtime work:
   report
 - pause at the clean progress review checkpoint or design active boundary
   report/summary visibility before any new implementation
+- review and accept the active boundary report visibility design before any
+  report implementation
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

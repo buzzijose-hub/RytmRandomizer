@@ -178,8 +178,11 @@ Unsafe next moves:
 
 ## 10. Recommendation
 
-Pause at this clean progress review checkpoint or create a docs-only design for
-active boundary report/summary visibility.
+The docs-only active boundary report/summary visibility design now lives in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_REPORT_VISIBILITY_DESIGN.md`
+
+Review and accept that design before any report implementation.
 
 Do not add real MIDI.
 

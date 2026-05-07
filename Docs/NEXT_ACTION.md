@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-94d90cf Add mock-only active boundary safety coverage progress report
+65ca950 Add mock-only active boundary safety coverage progress review
 
 ## Current Phase
 
@@ -64,9 +64,19 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is either a pause at this clean progress review
-checkpoint or a documentation-only design for active boundary report/summary
-visibility.
+Next recommended task is a documentation-only review/acceptance checkpoint for
+the mock-only active boundary report visibility design, or a pause at this
+clean design checkpoint.
+
+The latest active boundary report visibility design is:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_REPORT_VISIBILITY_DESIGN.md`
+
+The design defines a future read-only report/summary layer for the current
+mock-first active boundary state. It is documentation-only and adds no report
+module, CLI command, real MIDI, ports, active CLI behavior, dispatch, hardware
+behavior, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
 
 The latest active boundary safety coverage progress report review is:
 

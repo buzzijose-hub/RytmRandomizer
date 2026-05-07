@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 65ca950 Add mock-only active boundary safety coverage progress review
 - 94d90cf Add mock-only active boundary safety coverage progress report
 - feb49d7 Add mock-only active boundary safety tests review
 - 08aee17 Update checkpoint after mock-only active boundary safety tests
@@ -2373,6 +2374,23 @@ MIDI/port affordances, and records current closeout coverage through
 `=== Test: Active Boundary ===`. It adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+The mock-only active boundary report visibility design includes:
+
+- Docs/MOCK_ONLY_ACTIVE_BOUNDARY_REPORT_VISIBILITY_DESIGN.md
+
+The design is documentation-only. It defines a future read-only report/summary
+layer for the current mock-first active boundary state. It proposes future
+visibility for group profile `"2"` / My BD Hard as the accepted
+active-boundary candidate, group profiles `"3"` and `"4"` as unsupported by
+the active boundary, required arming and dry-run confirmation, mock-only
+status, safe-failure behavior, absent real MIDI, absent port opening, absent
+active CLI behavior, absent hardware behavior, and closeout coverage. It
+proposes possible future module ownership in
+`rytm_randomizer/active_boundary_report.py` but does not implement it. It adds
+no implementation, tests, real MIDI, ports, active CLI behavior, dispatch,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
