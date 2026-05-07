@@ -135,3 +135,14 @@ Before first-candidate mock-only active test design begins:
 - Next recommended task is first-candidate mock-only active test design.
 - Hardware remains off.
 - No implementation in this slice.
+
+## First-Candidate Design Status
+
+First-candidate mock-only active test design:
+
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+
+The design selects group profile `"2"` / My BD Hard as the first mock-only
+candidate. It remains documentation-only, uses existing passive/mock metadata,
+keeps profile `"4"` parked, and adds no tests, active behavior, MIDI, port
+opening, CLI execution, or hardware validation.

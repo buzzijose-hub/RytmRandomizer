@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5b87871
+6938c58
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 5b87871 Add passive mock foundation roadmap
+- current HEAD: 6938c58 Add passive mock foundation roadmap review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: first-candidate mock-only active test design
+- next recommended task: review/acceptance of first-candidate mock-only active test design
 - closeout command
 - stop condition
 
@@ -412,6 +412,26 @@ It confirms:
 - hardware remains off
 
 The next recommended task is first-candidate mock-only active test design.
+
+## First-Candidate Mock-Only Active Test Design
+
+`Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md` selects group profile
+`"2"` / My BD Hard as the first mock-only active test candidate.
+
+It records:
+
+- the candidate uses existing passive/mock metadata
+- the candidate is already supported by the test-only mock message mapper
+- the candidate targets validated Pad 1 scope
+- the candidate can be represented with inert `MidiMessage` data
+- the candidate can be recorded through `MockMidiSender` in memory only
+- group profile `"4"` / My BD Acoustic remains parked
+- the candidate is not a real hardware candidate yet
+
+The design adds no tests, active behavior, real MIDI, port opening, CLI
+execution, hardware validation, Analog Four support, Pads 5-12 support, SysEx,
+or profile `"4"` implementation. The next recommended task is
+review/acceptance of the candidate design.
 
 ## Passive Mock Foundation Decision Checkpoint
 
@@ -1662,7 +1682,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- first-candidate mock-only active test design document
+- review and accept the first-candidate mock-only active test design
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

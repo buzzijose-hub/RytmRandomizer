@@ -226,10 +226,18 @@ The roadmap names the current phase as the Passive/Mock Foundation Phase and
 sets the next recommended task as roadmap review/acceptance before any
 first-candidate mock-only active test design.
 
+First-candidate design status:
+
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+
+The first-candidate design selects group profile `"2"` / My BD Hard for
+mock-only active test planning. It does not implement tests, active behavior,
+MIDI, port opening, or hardware validation.
+
 Then decide whether to:
 
-- add more mock-only test coverage
-- create a first-candidate mock-only test design
+- review and accept the first-candidate mock-only active test design
+- add more mock-only test coverage only after separate approval
 - pause and produce a broader project roadmap
 
 Hardware remains off.

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6938c58 Add passive mock foundation roadmap review
 - 5b87871 Add passive mock foundation roadmap
 - 75a2afd Add future active test plan review
 - f8aa7aa Add future active test plan
@@ -403,6 +404,16 @@ My BD Acoustic parked, records that no implementation or hardware
 authorization exists, and sets the next recommended task as first-candidate
 mock-only active test design.
 
+The first-candidate mock-only active test design now lives in:
+
+- Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md
+
+The design selects group profile `"2"` / My BD Hard as the first mock-only
+candidate. It uses existing passive/mock metadata and the existing test-only
+mock mapper boundary. It adds no tests, active behavior, real MIDI, port
+opening, CLI execution, hardware validation, or profile `"4"` implementation.
+The next recommended task is review/acceptance of the candidate design.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -471,6 +482,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - future active test-plan review
 - passive mock foundation roadmap
 - passive mock foundation roadmap review
+- first-candidate mock-only active test design
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1846,6 +1858,22 @@ the next recommended task as first-candidate mock-only active test design. It
 adds no implementation, code, tests, closeout changes, real MIDI behavior,
 active behavior, or hardware requirement. The protected V1.34 reference
 remains untouched. Analog Rytm and Analog Four remain off for this phase.
+
+The first-candidate mock-only active test design includes:
+
+- Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md
+
+The design is documentation-only. It selects group profile `"2"` / My BD Hard
+as the first mock-only active test candidate because it already exists in
+passive metadata, is already supported by the test-only mock message mapper,
+targets validated Pad 1 scope, and can be represented through inert
+`MidiMessage` data recorded by `MockMidiSender`. It explicitly does not select
+a real hardware candidate, does not add tests, does not add active behavior,
+does not add real MIDI, does not open ports, does not wire CLI execution, does
+not start hardware validation, and does not implement profile `"4"`. The next
+recommended task is review/acceptance of the candidate design. The protected
+V1.34 reference remains untouched. Analog Rytm and Analog Four remain off for
+this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

@@ -185,3 +185,11 @@ The roadmap is accepted as the current roadmap/timeline checkpoint. The review
 confirms the Passive/Mock Foundation Phase, keeps profile `"4"` parked,
 confirms no implementation or hardware authorization, and sets the next
 recommended task as first-candidate mock-only active test design.
+
+First-candidate mock-only active test design:
+
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+
+The design selects group profile `"2"` / My BD Hard as the first mock-only
+candidate and sets the next recommended task as review/acceptance of that
+design.
