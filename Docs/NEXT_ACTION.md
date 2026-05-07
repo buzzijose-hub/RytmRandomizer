@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-bd930f6 Add first-candidate mock-only active test design
+9a3dc06 Add passive mock knowledge checkpoint
 
 ## Current Phase
 
@@ -63,10 +63,16 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only safe parallel workstream plan.
+Next recommended task is review/acceptance for:
 
-That plan should preserve the knowledge acquired after the first-candidate
-mock-only active test design:
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+
+The safe parallel workstream plan is now:
+
+- `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
+
+It preserves the knowledge acquired after the first-candidate mock-only active
+test design:
 
 - use parallel thinking to organize work, not to rush scope
 - split future work into independent passive/mock lanes
@@ -109,6 +115,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
 - `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
+- `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -245,6 +252,13 @@ into independent passive/mock lanes, keep closeout as the synchronization
 point, and create a docs-only safe parallel workstream plan next. It adds no
 implementation, tests, real MIDI, port opening, active behavior, or hardware
 behavior.
+
+The passive mock parallel workstream plan records how to parallelize safely:
+docs/roadmap, mock-only test design, mock-only test implementation, passive
+CLI/report visibility, safety/closeout, and future active planning are separate
+lanes. It keeps closeout as the synchronization point, recommends no subagents
+yet, keeps profile `"4"` parked, and sets the next task as review/acceptance
+of the first-candidate mock-only active test design.
 
 ## Do-Not-Touch Files
 

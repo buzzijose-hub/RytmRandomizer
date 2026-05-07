@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9a3dc06 Add passive mock knowledge checkpoint
 - bd930f6 Add first-candidate mock-only active test design
 - 6938c58 Add passive mock foundation roadmap review
 - 5b87871 Add passive mock foundation roadmap
@@ -425,6 +426,18 @@ be split into independent passive/mock lanes; closeout remains the
 synchronization point; and subagent-style parallel work should wait for
 explicitly independent tasks and approval. The next recommended task is a
 documentation-only safe parallel workstream plan.
+
+The passive mock parallel workstream plan now lives in:
+
+- Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md
+
+The plan records safe lanes for future work: docs/roadmap, mock-only test
+design, mock-only test implementation, passive CLI/report visibility,
+safety/closeout, and future active planning. It keeps parallelization as an
+organizing strategy rather than a scope expansion, keeps closeout as the
+synchronization point, recommends no subagents yet, and sets the next
+recommended task as review/acceptance of the first-candidate mock-only active
+test design.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -1898,6 +1911,24 @@ identifies useful workflows for future work: writing plans, test-driven
 development, verification before completion, systematic debugging, and
 subagent-driven work only for independent tasks after explicit approval. It
 sets the next recommended task as a safe parallel workstream plan. It adds no
+implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
+active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
+or machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
+
+The passive mock parallel workstream plan includes:
+
+- Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md
+
+The plan is documentation-only. It defines future safe lanes for docs/roadmap,
+mock-only test design, mock-only test implementation, passive CLI/report
+visibility, safety/closeout, and future active planning. It records lane
+responsibilities, dependencies, when subagents may be useful, when subagents
+should not be used, skill/workflow guidance, hard stop conditions, and closeout
+requirements. It keeps group profile `"4"` parked, keeps hardware off, and
+sets the next recommended task as review/acceptance of
+`Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`. It adds no
 implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
 active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
 capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-bd930f6
+9a3dc06
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: bd930f6 Add first-candidate mock-only active test design
+- current HEAD: 9a3dc06 Add passive mock knowledge checkpoint
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only safe parallel workstream plan
+- next recommended task: first-candidate mock-only active test design review
 - closeout command
 - stop condition
 
@@ -79,6 +79,41 @@ It confirms:
 
 The checkpoint is documentation-only. It adds no implementation, tests, real
 MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
+
+## Passive Mock Parallel Workstream Plan
+
+`Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md` defines how future work can be
+parallelized safely after the passive/mock foundation and first-candidate
+mock-only active test design.
+
+It defines these lanes:
+
+- docs and roadmap
+- mock-only test design
+- mock-only test implementation
+- passive CLI and reporting visibility
+- safety and closeout
+- future active planning
+
+It records:
+
+- lane responsibilities
+- allowed and forbidden work
+- dependencies
+- when subagents are useful
+- when subagents should not be used
+- skill/workflow guidance
+- hard stop conditions
+- closeout requirements
+
+The plan treats parallelization as an organizing strategy, not a scope
+expansion. It recommends no subagents yet and sets the next task as
+review/acceptance of `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`.
+
+The plan is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, or machine/profile expansion.
 
@@ -1702,8 +1737,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a docs-only safe parallel workstream plan
 - review and accept the first-candidate mock-only active test design
+- create a mock-only active test implementation plan after design acceptance
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved
