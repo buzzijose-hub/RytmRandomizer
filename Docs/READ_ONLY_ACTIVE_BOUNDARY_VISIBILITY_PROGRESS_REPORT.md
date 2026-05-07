@@ -266,6 +266,10 @@ Unsafe next moves:
 Review and accept this progress report before any new active-boundary
 visibility or safety work.
 
+This report is accepted by:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_VISIBILITY_PROGRESS_REPORT_REVIEW.md`
+
 Prefer pausing at this clean checkpoint or writing a broader project-level
 progress checkpoint next.
 

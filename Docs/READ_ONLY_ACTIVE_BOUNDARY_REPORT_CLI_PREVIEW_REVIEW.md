@@ -235,6 +235,10 @@ The broader progress report now lives in:
 
 - `Docs/READ_ONLY_ACTIVE_BOUNDARY_VISIBILITY_PROGRESS_REPORT.md`
 
+The broader progress report is accepted by:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_VISIBILITY_PROGRESS_REPORT_REVIEW.md`
+
 Do not add real MIDI.
 
 Do not open ports.
