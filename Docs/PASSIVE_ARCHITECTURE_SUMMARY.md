@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f1fb91e
+1a5f675
 
 ## Protected Reference
 
@@ -50,15 +50,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f1fb91e Add read-only active boundary report
+- current HEAD: 1a5f675 Update checkpoint after read-only active boundary
+  report
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the completed read-only active boundary
-  report, or pause at the clean report checkpoint
+- next recommended task: pause at the clean review checkpoint or create a
+  docs-only active boundary report CLI preview design
 - closeout command
 - stop condition
 
@@ -549,6 +550,35 @@ This milestone adds no CLI wiring, real MIDI, mido, port opening, MIDI
 sending, active CLI command, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
+
+## Read-Only Active Boundary Report Review
+
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_REVIEW.md` accepts
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CHECKPOINT.md` as the current
+checkpoint for the completed read-only active boundary report.
+
+The review accepts:
+
+- `rytm_randomizer/active_boundary_report.py`
+- `tests/test_active_boundary_report.py`
+- `=== Test: Active Boundary Report ===` closeout coverage
+
+It confirms:
+
+- the report is read-only and in-memory
+- `build_active_boundary_report()` returns deterministic copied data
+- `format_active_boundary_report(report=None)` returns deterministic
+  human-readable lines
+- `summarize_active_boundary_report(report=None)` returns a compact summary
+- profile `"2"` / My BD Hard is the accepted active-boundary candidate
+- profile `"3"` / My BD Classic remains unsupported by the active boundary
+- profile `"4"` / My BD Acoustic remains parked and unsupported
+- no CLI wiring exists
+- no real MIDI, ports, dispatch, execution, or hardware behavior exists
+
+The review is documentation-only. It adds no implementation, tests, CLI
+wiring, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -2343,6 +2373,8 @@ Recommended passive layers before runtime work:
   is needed, with no CLI wiring unless separately approved
 - review and accept the completed read-only active boundary report before any
   CLI visibility design
+- create only a docs-only active boundary report CLI preview design before any
+  CLI wiring
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

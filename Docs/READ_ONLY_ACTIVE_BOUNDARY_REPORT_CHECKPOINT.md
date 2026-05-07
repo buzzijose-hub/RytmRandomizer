@@ -191,10 +191,14 @@ hardware.
 This gives the future CLI/report visibility path a safe module boundary to
 reference later, but no CLI visibility is added yet.
 
-## 10. Recommended Next Task
+## 10. Review Status
 
-The next recommended task is a documentation-only review/acceptance checkpoint
-for the completed read-only active boundary report.
+The completed read-only active boundary report is accepted in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_REVIEW.md`
+
+The next recommended task is either a pause at this clean review checkpoint or
+a docs-only active boundary report CLI preview design.
 
 After that, safe options include:
 
