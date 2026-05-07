@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 8289003 Add read-only active boundary report CLI preview design
 - 7029d9f Add read-only active boundary report review
 - 1a5f675 Update checkpoint after read-only active boundary report
 - f1fb91e Add read-only active boundary report
@@ -2469,6 +2470,19 @@ execution, hardware behavior, and profile `"3"` or `"4"` active-boundary
 support. It adds no CLI implementation, tests, real MIDI, ports, active CLI
 behavior, dispatch, hardware behavior, profile `"4"` implementation, or
 profile `"3"` active-boundary support.
+
+The read-only active boundary report CLI preview design review includes:
+
+- Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md
+
+The review accepts the CLI preview design as the current planning gate for a
+future passive CLI visibility command:
+`python -m rytm_randomizer.cli active-boundary-report` with matching `--help`.
+It accepts future ownership in `rytm_randomizer/cli.py`, `tests/test_cli.py`,
+and deterministic CLI fixtures. The future command must print
+`format_active_boundary_report()` output only. It adds no CLI implementation,
+tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

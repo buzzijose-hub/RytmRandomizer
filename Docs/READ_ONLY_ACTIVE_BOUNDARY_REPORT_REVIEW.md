@@ -222,7 +222,11 @@ The docs-only active boundary report CLI preview design now lives in:
 
 - `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN.md`
 
-Review and accept that design before any CLI implementation.
+The accepted design review now lives in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md`
+
+The design and review must remain accepted before any CLI implementation.
 
 Do not add CLI wiring without a separate accepted design.
 

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-7029d9f
+8289003
 
 ## Protected Reference
 
@@ -51,15 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 7029d9f Add read-only active boundary report review
+- current HEAD: 8289003 Add read-only active boundary report CLI preview design
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the read-only active boundary report
-  CLI preview design, or pause at the clean design checkpoint
+- next recommended task: implement the tiny fixture-backed read-only active
+  boundary report CLI preview after review, or pause at the clean design
+  review checkpoint
 - closeout command
 - stop condition
 
@@ -599,6 +600,39 @@ execution, hardware behavior, and profile `"3"` or `"4"` active-boundary
 support.
 
 The design is documentation-only. It adds no CLI command, implementation,
+tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
+
+## Read-Only Active Boundary Report CLI Preview Design Review
+
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md` accepts
+`Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN.md` as the current
+planning gate for future passive CLI visibility of the read-only active
+boundary report.
+
+Accepted future commands:
+
+- `python -m rytm_randomizer.cli active-boundary-report`
+- `python -m rytm_randomizer.cli active-boundary-report --help`
+
+Accepted future file ownership:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_active_boundary_report_help_expected.txt`
+- `tests/fixtures/cli_active_boundary_report_expected.txt`
+- `tests/fixtures/cli_help_expected.txt`
+
+No closeout script update should be needed if the implementation stays in
+`tests/test_cli.py`, because that file is already part of closeout.
+
+The future command must print `format_active_boundary_report()` output only.
+It must not evaluate active boundary requests, emit mock messages, open ports,
+send MIDI, dispatch commands, execute commands, mutate hardware, add active
+CLI behavior, implement profile `"4"`, or add profile `"3"` active-boundary
+support.
+
+The review is documentation-only. It adds no CLI command, implementation,
 tests, real MIDI, ports, active CLI behavior, dispatch, hardware behavior,
 profile `"4"` implementation, or profile `"3"` active-boundary support.
 
@@ -2399,6 +2433,9 @@ Recommended passive layers before runtime work:
   CLI wiring
 - review and accept the active boundary report CLI preview design before any
   CLI implementation
+- implement only a tiny fixture-backed read-only active boundary report CLI
+  preview after review, with no active request evaluation or mock message
+  emission
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

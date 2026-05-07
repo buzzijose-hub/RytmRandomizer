@@ -243,6 +243,10 @@ Unsafe next moves:
 
 Review and accept this design before any CLI implementation.
 
+This design is accepted by:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md`
+
 If accepted, the future implementation should be tiny, fixture-backed, and
 limited to displaying `format_active_boundary_report()` output.
 
