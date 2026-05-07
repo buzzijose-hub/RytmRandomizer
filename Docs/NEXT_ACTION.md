@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-bb48555 Add active boundary implementation planning gate
+cc614d2 Add active boundary implementation design spec
 
 ## Current Phase
 
@@ -63,12 +63,13 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance for the documentation-only active
-boundary implementation design/spec:
+Next recommended task is a mock-first active boundary implementation plan.
 
-- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
+The active boundary implementation design/spec review is:
 
-The design/spec uses the accepted mock-only proof for:
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+
+The accepted design/spec uses the mock-only proof for:
 
 - group profile `"2"` / My BD Hard
 
@@ -143,6 +144,7 @@ Safe alternatives are:
 - `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
@@ -335,6 +337,12 @@ boundary shape for group profile `"2"` / My BD Hard. It proposes future
 conceptual request/result shapes, arming semantics, passive CLI separation,
 real MIDI separation, expected future tests, and file ownership. It adds no
 implementation, tests, real MIDI, ports, CLI commands, or hardware behavior.
+
+The active boundary implementation design/spec review accepts that spec as the
+current mock-first active boundary design. It confirms the next task is an
+implementation plan only, limited to future `active_boundary.py`,
+`test_active_boundary.py`, and closeout coverage. It does not authorize CLI
+wiring, real MIDI, ports, hardware behavior, or profile `"4"` implementation.
 
 ## Do-Not-Touch Files
 

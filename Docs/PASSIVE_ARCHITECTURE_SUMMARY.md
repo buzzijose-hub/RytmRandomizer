@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-bb48555
+cc614d2
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: bb48555 Add active boundary implementation planning gate
+- current HEAD: cc614d2 Add active boundary implementation design spec
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review active boundary implementation design/spec
+- next recommended task: mock-first active boundary implementation plan
 - closeout command
 - stop condition
 
@@ -272,6 +272,27 @@ The spec keeps the future boundary candidate-specific and not wired to CLI or
 real MIDI. It keeps profile `"4"` / My BD Acoustic parked.
 
 The spec is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
+
+## Active Boundary Implementation Design Spec Review
+
+`Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md` accepts
+`Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md` as the current mock-first
+active boundary design/spec.
+
+It confirms:
+
+- the accepted candidate remains group profile `"2"` / My BD Hard
+- the boundary remains mock-first and candidate-specific
+- the boundary remains separated from passive CLI
+- the boundary remains separated from real MIDI
+- profile `"4"` / My BD Acoustic remains parked
+- implementation is not authorized by the review itself
+- the next task is a mock-first active boundary implementation plan
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, or machine/profile expansion.

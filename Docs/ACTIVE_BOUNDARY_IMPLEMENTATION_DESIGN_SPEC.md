@@ -261,9 +261,11 @@ Before implementation:
 
 ## 15. Next Recommended Task
 
-Create a documentation-only review/acceptance checkpoint for this design/spec.
+The documentation-only review/acceptance checkpoint for this design/spec is:
 
-Then, if accepted, create a mock-first active boundary implementation plan.
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+
+After acceptance, create a mock-first active boundary implementation plan.
 
 Do not implement active boundary code yet.
 

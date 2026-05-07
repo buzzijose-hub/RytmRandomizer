@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- cc614d2 Add active boundary implementation design spec
 - bb48555 Add active boundary implementation planning gate
 - 269fb39 Add mock-only active candidate tests review
 - fba0c88 Update checkpoint after mock-only active candidate tests
@@ -506,6 +507,16 @@ candidate, group profile `"2"` / My BD Hard. It proposes conceptual request and
 result shapes, mock-only arming semantics, passive CLI separation, real MIDI
 separation, expected future tests, and allowed future file ownership. It adds
 no implementation in this documentation slice.
+
+The active boundary implementation design/spec review now lives in:
+
+- Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md
+
+The review accepts the active boundary implementation design/spec as the
+current mock-first active boundary design. It confirms the accepted concepts
+remain design-only, do not authorize implementation by themselves, keep passive
+CLI separate, keep real MIDI absent, keep profile `"4"` parked, and set the
+next recommended task as a mock-first active boundary implementation plan.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -2096,6 +2107,23 @@ CLI command, dispatch, hardware behavior, SysEx, GUI, capture, Analog Four
 support, Pads 5-12 support, profile `"4"` implementation, or machine/profile
 expansion. The protected V1.34 reference remains untouched. Analog Rytm and
 Analog Four remain off for this phase.
+
+The active boundary implementation design/spec review includes:
+
+- Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md
+
+The review is documentation-only. It accepts the design/spec for the future
+mock-first active boundary and records the accepted future concepts:
+`rytm_randomizer/active_boundary.py`, `tests/test_active_boundary.py`,
+`ActiveBoundaryRequest`, `ActiveBoundaryResult`, `ActiveBoundaryError`, and
+`evaluate_mock_active_boundary(request, sender)`. It confirms future
+implementation planning must remain mock-first, candidate-specific, and limited
+to accepted file ownership. It adds no implementation, code, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, active CLI command,
+dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support, Pads
+5-12 support, profile `"4"` implementation, or machine/profile expansion. The
+protected V1.34 reference remains untouched. Analog Rytm and Analog Four remain
+off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
