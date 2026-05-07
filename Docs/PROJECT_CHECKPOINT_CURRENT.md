@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 66623ef Add first-candidate mock-only active test design review
 - 833aad9 Add passive mock parallel workstream plan
 - 9a3dc06 Add passive mock knowledge checkpoint
 - bd930f6 Add first-candidate mock-only active test design
@@ -448,6 +449,17 @@ The review accepts group profile `"2"` / My BD Hard as the current mock-only
 planning candidate. It confirms the candidate is not a real hardware candidate,
 does not authorize hardware validation, keeps profile `"4"` parked, and sets
 the next recommended task as a mock-only active test implementation plan.
+
+The mock-only active test implementation plan now lives in:
+
+- Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md
+
+The plan defines the future coverage-only test slice for the accepted candidate:
+group profile `"2"` / My BD Hard. It plans one new test file,
+`tests/test_mock_only_active_candidate.py`, and one closeout update in
+`Scripts/closeout_check.ps1`. It keeps all future work mock-only and test-only,
+uses existing mock mapper and mock MIDI helpers, keeps profile `"4"` parked,
+and adds no implementation in this documentation slice.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -1960,6 +1972,23 @@ sending, active execution, active CLI command, dispatch, hardware behavior,
 SysEx, GUI, capture, Analog Four support, Pads 5-12 support, profile `"4"`
 implementation, or machine/profile expansion. The protected V1.34 reference
 remains untouched. Analog Rytm and Analog Four remain off for this phase.
+
+The mock-only active test implementation plan includes:
+
+- Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md
+
+The plan is documentation-only. It defines exact future steps for adding
+coverage-only tests for group profile `"2"` / My BD Hard, using existing
+`map_group_profile_to_mock_messages`, `MockMessageMappingError`, `MidiMessage`,
+and `MockMidiSender`. It plans creation of
+`tests/test_mock_only_active_candidate.py` and a closeout label in
+`Scripts/closeout_check.ps1`. It includes expected test content, commands,
+closeout checks, commit boundary, forbidden scope, and self-review. It adds no
+implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
+active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
+or machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

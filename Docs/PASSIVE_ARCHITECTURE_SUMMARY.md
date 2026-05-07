@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-833aad9
+66623ef
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 833aad9 Add passive mock parallel workstream plan
+- current HEAD: 66623ef Add first-candidate mock-only active test design review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: mock-only active test implementation plan
+- next recommended task: implement accepted mock-only active candidate tests
 - closeout command
 - stop condition
 
@@ -140,6 +140,31 @@ The review confirms:
 The next recommended task is a mock-only active test implementation plan.
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
+
+## Mock-Only Active Test Implementation Plan
+
+`Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md` defines the future
+coverage-only implementation slice for group profile `"2"` / My BD Hard.
+
+It plans:
+
+- creation of `tests/test_mock_only_active_candidate.py`
+- closeout coverage labeled `=== Test: Mock-Only Active Candidate ===`
+- deterministic mock message assertions for profile `"2"`
+- metadata assertions for the accepted candidate
+- `MockMidiSender` recording assertions
+- unknown and unsupported key safe-failure assertions
+- passive CLI read-only regression coverage
+- no-real-MIDI import checks
+- V1.34 reference and git status checks
+
+The plan keeps profile `"4"` parked and recommends inline execution in the
+main thread with one small commit.
+
+The plan is documentation-only. It adds no tests, implementation, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, or machine/profile expansion.

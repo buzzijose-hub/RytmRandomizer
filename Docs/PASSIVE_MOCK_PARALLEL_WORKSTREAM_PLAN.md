@@ -293,15 +293,18 @@ The first-candidate review/acceptance gate is:
 
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
 
-After acceptance, create a mock-only active test implementation plan.
+The mock-only active test implementation plan is:
 
-Do not implement tests yet in this slice.
+- `Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md`
+
+Do not implement tests until that plan is explicitly approved for execution.
 
 ## 13. Decision
 
 Parallel work is approved as an organizing strategy, not as a scope expansion.
 
-The next recommended task is a mock-only active test implementation plan.
+The next recommended task is implementation of the accepted mock-only active
+candidate tests, if the plan is approved for execution.
 
 Hardware remains off.
 

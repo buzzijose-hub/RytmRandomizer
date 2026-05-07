@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-833aad9 Add passive mock parallel workstream plan
+66623ef Add first-candidate mock-only active test design review
 
 ## Current Phase
 
@@ -63,10 +63,14 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only mock-only active test
-implementation plan for:
+Next recommended task is implement the accepted mock-only active candidate test
+plan:
 
 - group profile `"2"` / My BD Hard
+
+The implementation plan is now:
+
+- `Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md`
 
 The first-candidate design review is now:
 
@@ -119,6 +123,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
+- `Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md`
 - `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
 
@@ -270,6 +275,14 @@ The first-candidate mock-only active test design review accepts group profile
 tests, active behavior, real MIDI, port opening, CLI execution, hardware
 validation, or profile `"4"` implementation exists. The next recommended task
 is a mock-only active test implementation plan.
+
+The mock-only active test implementation plan defines the future test-only
+slice for group profile `"2"` / My BD Hard. It plans one new test file,
+`tests/test_mock_only_active_candidate.py`, and one closeout update. It keeps
+the implementation coverage-only, uses existing `MockMidiSender` and
+`map_group_profile_to_mock_messages`, keeps profile `"4"` parked, and adds no
+real MIDI, ports, active behavior, CLI command, or hardware behavior in this
+planning slice.
 
 ## Do-Not-Touch Files
 

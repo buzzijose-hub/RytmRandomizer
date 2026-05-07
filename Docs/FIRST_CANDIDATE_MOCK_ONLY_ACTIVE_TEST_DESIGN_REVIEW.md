@@ -118,8 +118,9 @@ ownership and the user explicitly approves delegated work.
 
 ## 9. Next Recommended Task
 
-Create a mock-only active test implementation plan for group profile `"2"` /
-My BD Hard.
+The mock-only active test implementation plan is:
+
+- `Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md`
 
 The plan should define:
 
