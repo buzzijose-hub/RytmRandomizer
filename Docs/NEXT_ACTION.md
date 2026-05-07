@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d1a2b07 Add real MIDI dependency decision note
+f9bb383 Add real MIDI dependency decision review
 
 ## Current Phase
 
@@ -66,9 +66,20 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only real MIDI adapter boundary gate,
-more passive/project documentation, or a pause at this accepted dependency
-checkpoint.
+Next recommended task is documentation-only review/acceptance of the real MIDI
+adapter boundary gate, more passive/project documentation, or a pause at this
+adapter planning checkpoint.
+
+The latest real MIDI adapter boundary gate is:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md`
+
+The gate establishes the planning checkpoint before any real MIDI adapter
+boundary design or implementation. It defines required future adapter design
+topics, import isolation rules, port boundary rules, sender boundary rules,
+and tests required before adapter implementation. It adds no `mido`, no real
+MIDI dependency, no adapter module, no port opening, no MIDI sending, no active
+CLI commands, no hardware behavior, and no hardware validation.
 
 The latest real MIDI dependency decision review is:
 

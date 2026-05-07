@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d1a2b07
+f9bb383
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d1a2b07 Add real MIDI dependency decision note
+- current HEAD: f9bb383 Add real MIDI dependency decision review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only real MIDI adapter boundary gate,
-  return to passive/project documentation, or pause at the accepted dependency
-  checkpoint
+- next recommended task: documentation-only review/acceptance of the real
+  MIDI adapter boundary gate, return to passive/project documentation, or
+  pause at the adapter planning checkpoint
 - closeout command
 - stop condition
 
@@ -543,6 +543,30 @@ Accepted decision:
 
 The review recommends a documentation-only real MIDI adapter boundary gate as
 the next branch. It adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
+
+## Real MIDI Adapter Boundary Gate
+
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md` establishes the planning gate before
+any real MIDI adapter boundary design or implementation.
+
+It defines:
+
+- required future adapter design topics
+- proposed future module ownership discussion
+- import isolation requirements
+- port boundary requirements
+- sender boundary requirements
+- tests required before adapter implementation
+- current accepted active-boundary scope
+- forbidden scope
+- preconditions before adapter design, adapter implementation, and hardware
+  validation
+
+The gate adds no implementation, tests, runtime modules, real MIDI
 dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or

@@ -257,3 +257,20 @@ gate.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Adapter Boundary Gate
+
+The real MIDI adapter boundary gate now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md`
+
+The gate establishes the planning checkpoint before any real MIDI adapter
+boundary design or implementation. It defines required future adapter design
+topics, import isolation rules, port boundary rules, sender boundary rules,
+and tests required before adapter implementation.
+
+The gate adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
