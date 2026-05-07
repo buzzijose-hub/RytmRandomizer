@@ -199,8 +199,10 @@ Unsafe next moves:
 
 ## 11. Recommendation
 
-Proceed next only with a tiny read-only active boundary report module if more
-visibility is useful.
+The tiny read-only active boundary report module is now implemented and
+checkpointed in:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CHECKPOINT.md`
 
 Do not add CLI wiring in the first implementation.
 

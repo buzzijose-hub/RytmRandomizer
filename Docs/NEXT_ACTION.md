@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2f30259 Add mock-only active boundary report visibility design
+f1fb91e Add read-only active boundary report
 
 ## Current Phase
 
@@ -64,8 +64,37 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is either a pause at this clean design review checkpoint
-or a tiny read-only active boundary report module implementation.
+Next recommended task is a documentation-only review/acceptance checkpoint for
+the completed read-only active boundary report, or a pause at this clean report
+checkpoint.
+
+The latest read-only active boundary report checkpoint is:
+
+- `Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CHECKPOINT.md`
+
+The latest implementation milestone is:
+
+- f1fb91e Add read-only active boundary report
+
+The milestone adds:
+
+- `rytm_randomizer/active_boundary_report.py`
+- `tests/test_active_boundary_report.py`
+- `Scripts/closeout_check.ps1`
+
+The closeout suite now includes:
+
+- `=== Test: Active Boundary Report ===`
+
+The report module exposes:
+
+- `build_active_boundary_report()`
+- `format_active_boundary_report(report=None)`
+- `summarize_active_boundary_report(report=None)`
+
+It remains read-only, in-memory, not wired to CLI, and adds no real MIDI,
+ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
 
 The latest active boundary report visibility design review is:
 

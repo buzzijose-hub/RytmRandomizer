@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f1fb91e Add read-only active boundary report
+- ce2754a Add mock-only active boundary report visibility design review
 - 2f30259 Add mock-only active boundary report visibility design
 - 65ca950 Add mock-only active boundary safety coverage progress review
 - 94d90cf Add mock-only active boundary safety coverage progress report
@@ -2412,6 +2414,28 @@ absent active CLI behavior, absent hardware behavior, and closeout coverage.
 It does not accept CLI wiring and adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+The read-only active boundary report checkpoint includes:
+
+- Docs/READ_ONLY_ACTIVE_BOUNDARY_REPORT_CHECKPOINT.md
+
+The checkpoint records completion of `f1fb91e Add read-only active boundary
+report`. That milestone adds `rytm_randomizer/active_boundary_report.py`,
+`tests/test_active_boundary_report.py`, and the closeout label
+`=== Test: Active Boundary Report ===` in `Scripts/closeout_check.ps1`. The
+report exposes `build_active_boundary_report()`,
+`format_active_boundary_report(report=None)`, and
+`summarize_active_boundary_report(report=None)`. It summarizes group profile
+`"2"` / My BD Hard as the accepted active-boundary candidate, group profile
+`"3"` / My BD Classic as unsupported by the active boundary, group profile
+`"4"` / My BD Acoustic as parked and unsupported, required arming and dry-run
+confirmation, mock-only status, safe-failure behavior, absent real MIDI and
+ports, absent active CLI behavior, absent dispatch/execution/hardware
+behavior, and closeout coverage. The implementation was developed test-first:
+the initial active boundary report test failed before the module existed and
+passed after implementation. It adds no CLI wiring, real MIDI, ports, active
+CLI command, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, or profile `"3"` active-boundary support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
