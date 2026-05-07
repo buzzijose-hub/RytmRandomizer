@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-1307fab Add mock-first active boundary review
+ccfc2e3 Refresh handoff after mock-first active boundary review
 
 ## Current Phase
 
@@ -64,8 +64,16 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a broader mock-first active boundary
-progress report.
+Next recommended task is to review the broader mock-first active boundary
+progress report, then decide whether to create a mock-only safety test design.
+
+The broader mock-first active boundary progress report is:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_PROGRESS_REPORT.md`
+
+The morning handoff refresh milestone is:
+
+- ccfc2e3 Refresh handoff after mock-first active boundary review
 
 The mock-first active boundary review is:
 

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-1307fab
+ccfc2e3
 
 ## Protected Reference
 
@@ -50,15 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 1307fab Add mock-first active boundary review
+- current HEAD: ccfc2e3 Refresh handoff after mock-first active boundary review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a broader mock-first active boundary progress
-  report
+- next recommended task: review the broader mock-first active boundary progress
+  report, then decide whether to create a mock-only safety test design
 - closeout command
 - stop condition
 
@@ -249,6 +249,28 @@ It confirms:
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
+
+## Mock-First Active Boundary Progress Report
+
+`Docs/MOCK_FIRST_ACTIVE_BOUNDARY_PROGRESS_REPORT.md` summarizes the current
+state after the first mock-first active boundary implementation, checkpoint,
+review, and morning handoff refresh.
+
+It records:
+
+- passive CLI visibility remains read-only
+- mock mapper profiles `"2"` and `"3"` remain supported
+- profile `"4"` / My BD Acoustic remains parked and unsupported
+- group profile `"2"` / My BD Hard remains the only accepted active-boundary candidate
+- arming and dry-run confirmation are required for mock emission
+- all safe failures emit no messages
+- real MIDI remains absent
+- ports remain closed
+- active CLI behavior remains absent
+- hardware remains off
+
+The report recommends a mock-only safety test design as the next possible
+branch, not implementation.
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -2026,6 +2048,8 @@ Recommended passive layers before runtime work:
 
 - pause at the clean mock-first active boundary review checkpoint
 - create a broader mock-first active boundary progress report after user confirmation
+- review the broader mock-first active boundary progress report
+- create a mock-only safety test design only after review
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

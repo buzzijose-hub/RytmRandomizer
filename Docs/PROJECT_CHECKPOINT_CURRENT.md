@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ccfc2e3 Refresh handoff after mock-first active boundary review
 - 1307fab Add mock-first active boundary review
 - ae55174 Update checkpoint after mock-first active boundary
 - 565770e Add mock-first active boundary
@@ -2246,6 +2247,21 @@ the mock-first active boundary implementation. It confirms
 coverage. It records that future expansion requires a separate plan or design
 gate, profile `"4"` remains parked unless separately approved, and hardware
 remains off.
+
+The mock-first active boundary progress report includes:
+
+- Docs/MOCK_FIRST_ACTIVE_BOUNDARY_PROGRESS_REPORT.md
+
+The report is documentation-only. It summarizes the current state after the
+first mock-first active boundary implementation, checkpoint, review, and
+morning handoff refresh. It records that passive CLI visibility remains
+read-only, mock mapper profiles `"2"` and `"3"` remain supported, profile
+`"4"` remains parked and unsupported, group profile `"2"` / My BD Hard remains
+the only accepted active-boundary candidate, arming and dry-run confirmation
+are required for mock emission, all safe failures emit no messages, real MIDI
+and ports remain absent, active CLI behavior remains absent, and hardware
+remains off. It recommends a mock-only safety test design as the next possible
+branch, not implementation.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
