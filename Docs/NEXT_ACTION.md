@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-269fb39 Add mock-only active candidate tests review
+bb48555 Add active boundary implementation planning gate
 
 ## Current Phase
 
@@ -63,10 +63,20 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only active boundary implementation
-design/spec, using the accepted mock-only active candidate tests as proof:
+Next recommended task is review/acceptance for the documentation-only active
+boundary implementation design/spec:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The design/spec uses the accepted mock-only proof for:
 
 - group profile `"2"` / My BD Hard
+
+It remains mock-first, candidate-specific, and not wired to CLI or real MIDI.
+
+The active boundary implementation design/spec is:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
 
 The active boundary implementation planning gate is:
 
@@ -132,6 +142,7 @@ Safe alternatives are:
 - `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
 - `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
 - `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md`
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
@@ -318,6 +329,12 @@ implementation may not begin yet. It allows only a docs-only active boundary
 implementation design/spec next. That future spec must remain mock-first,
 preserve passive CLI behavior, avoid real MIDI libraries and ports, keep
 profile `"4"` parked, and keep hardware off.
+
+The active boundary implementation design/spec defines the future mock-first
+boundary shape for group profile `"2"` / My BD Hard. It proposes future
+conceptual request/result shapes, arming semantics, passive CLI separation,
+real MIDI separation, expected future tests, and file ownership. It adds no
+implementation, tests, real MIDI, ports, CLI commands, or hardware behavior.
 
 ## Do-Not-Touch Files
 

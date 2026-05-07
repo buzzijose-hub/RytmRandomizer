@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-269fb39
+bb48555
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 269fb39 Add mock-only active candidate tests review
+- current HEAD: bb48555 Add active boundary implementation planning gate
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only active boundary implementation design/spec
+- next recommended task: review active boundary implementation design/spec
 - closeout command
 - stop condition
 
@@ -250,6 +250,31 @@ The gate adds no implementation, tests, real MIDI, mido, port opening, MIDI
 sending, active execution, CLI wiring, dispatch, hardware behavior, SysEx,
 GUI/capture, Analog Four support, Pads 5-12 support, profile `"4"`
 implementation, or machine/profile expansion.
+
+## Active Boundary Implementation Design Spec
+
+`Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md` defines the future
+mock-first active boundary shape for the accepted candidate:
+
+- group profile `"2"` / My BD Hard
+
+It proposes:
+
+- future module shape
+- conceptual request and result data shapes
+- mock-only arming semantics
+- passive CLI separation
+- real MIDI separation
+- expected future tests
+- allowed future file ownership
+
+The spec keeps the future boundary candidate-specific and not wired to CLI or
+real MIDI. It keeps profile `"4"` / My BD Acoustic parked.
+
+The spec is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
 
 ## Passive-To-Active Boundary Design
 

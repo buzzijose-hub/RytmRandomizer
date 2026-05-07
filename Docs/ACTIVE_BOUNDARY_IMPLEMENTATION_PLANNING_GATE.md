@@ -140,14 +140,16 @@ Before any future active boundary implementation:
 
 Safe next options:
 
-- create a docs-only active boundary implementation design/spec
+- review and accept `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
 - pause at this clean planning gate
 - create a broader progress report covering passive/mock proof
 - add more mock-only safety tests only after a separate plan
 
 ## 10. Recommendation
 
-Create a docs-only active boundary implementation design/spec next.
+The docs-only active boundary implementation design/spec is:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_DESIGN_SPEC.md`
 
 That spec should remain mock-first and should not add code. It should define
 the future boundary carefully enough that a later implementation can be tested
