@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- b21eecc Add active boundary safety progress report review
 - 45c4aab Add active boundary safety progress report
 - 8f7f850 Refresh current session handoff
 - 12f5182 Add additional active boundary safety tests review
@@ -2603,6 +2604,25 @@ active CLI behavior, absent dispatch/execution, and hardware-off status.
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
+
+The project-level roadmap update includes:
+
+- Docs/PROJECT_LEVEL_ROADMAP_UPDATE.md
+
+The roadmap records the current Passive/Mock Foundation Phase with accepted
+mock-first active boundary safety baseline. It summarizes completed safe
+foundation work, current passive CLI visibility, current mock mapper scope,
+current active-boundary scope, closeout coverage, intentionally absent real
+MIDI/ports/active behavior/hardware behavior, and safe next branches.
+
+It keeps profile `"3"` / My BD Classic unsupported by the active boundary,
+profile `"4"` / My BD Acoustic parked and unsupported, real MIDI absent, ports
+absent, active CLI behavior absent, and hardware off.
+
+The roadmap is documentation-only. It adds no implementation, tests, real
+MIDI, ports, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
 

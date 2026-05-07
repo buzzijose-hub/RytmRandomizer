@@ -266,3 +266,17 @@ project-level roadmap update.
 The review adds no implementation, tests, real MIDI, ports, active CLI
 commands, dispatch, hardware behavior, profile `"4"` implementation, or
 profile `"3"` active-boundary support.
+
+## 15. Roadmap Update
+
+The fresh project-level roadmap update now lives in:
+
+- `Docs/PROJECT_LEVEL_ROADMAP_UPDATE.md`
+
+The roadmap keeps the project in the Passive/Mock Foundation Phase with an
+accepted mock-first active boundary safety baseline. It recommends
+review/acceptance of the roadmap or pausing at the clean roadmap checkpoint.
+
+The roadmap adds no implementation, tests, real MIDI, ports, active CLI
+commands, dispatch, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.

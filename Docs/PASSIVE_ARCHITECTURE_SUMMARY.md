@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-45c4aab
+b21eecc
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 45c4aab Add active boundary safety progress report
+- current HEAD: b21eecc Add active boundary safety progress report review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a fresh project-level roadmap update, return to
-  passive/project documentation, or pause at the accepted active-boundary
-  safety progress checkpoint
+- next recommended task: review/accept the fresh project-level roadmap update,
+  return to passive/project documentation, or pause at the clean roadmap
+  checkpoint
 - closeout command
 - stop condition
 
@@ -151,6 +151,36 @@ fresh project-level roadmap update.
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
+
+## Project-Level Roadmap Update
+
+`Docs/PROJECT_LEVEL_ROADMAP_UPDATE.md` provides a fresh project-level roadmap
+after the accepted active-boundary safety progress report review.
+
+It records:
+
+- current phase: Passive/Mock Foundation Phase with accepted mock-first active
+  boundary safety baseline
+- completed passive CLI, mock MIDI, mock message mapper/report, mock-first
+  active boundary, safety test, report, and review work
+- current safe passive CLI visibility
+- current mock mapper support for profiles `"2"` and `"3"`
+- active-boundary support for profile `"2"` only
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- current closeout coverage
+- absent real MIDI, ports, active CLI behavior, dispatch, execution, and
+  hardware behavior
+- safe next branches before any future mock-only or hardware-facing work
+
+The roadmap recommends review/acceptance or pausing at the clean roadmap
+checkpoint.
+
+The roadmap is documentation-only. It adds no implementation, tests, real
+MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
 machine/profile expansion.

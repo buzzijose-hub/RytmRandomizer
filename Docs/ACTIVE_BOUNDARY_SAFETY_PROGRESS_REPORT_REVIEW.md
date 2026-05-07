@@ -199,3 +199,18 @@ mock-first active boundary safety baseline.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 11. Roadmap Update
+
+The fresh project-level roadmap update now lives in:
+
+- `Docs/PROJECT_LEVEL_ROADMAP_UPDATE.md`
+
+The roadmap summarizes the accepted active-boundary safety baseline in the
+larger project context and keeps real MIDI, ports, active CLI behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, and
+hardware validation out of scope.
+
+The roadmap adds no implementation, tests, real MIDI, ports, active CLI
+commands, dispatch, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
