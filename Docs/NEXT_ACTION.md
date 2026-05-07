@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-32006f4 Add mock message mapper review
+4507647 Add mock mapping for group profile 3
 
 ## Current Phase
 
@@ -94,6 +94,10 @@ The test-only mock message mapper milestone adds:
 The mapper supports only group profile key `"2"` / My BD Hard, returns
 deterministic inert mock MidiMessage objects, records cleanly through
 MockMidiSender, and fails safely for unknown or unsupported keys.
+
+The latest test-only mock mapper expansion adds support for existing group
+profile key `"3"` / My BD Classic. Group profile key `"2"` behavior remains
+unchanged, and group profile key `"4"` remains unsupported and fails safely.
 
 No real MIDI, no hardware, no active CLI command, no runtime execution, no port
 opening, and no CLI wiring exists.

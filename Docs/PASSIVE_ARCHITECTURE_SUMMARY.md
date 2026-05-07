@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-32006f4
+4507647
 
 ## Protected Reference
 
@@ -47,7 +47,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 32006f4 Add mock message mapper review
+- current HEAD: 4507647 Add mock mapping for group profile 3
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
@@ -138,7 +138,9 @@ inert mock MidiMessage objects.
 
 Current behavior:
 
-- supports only group profile key `"2"` / My BD Hard
+- supports group profile key `"2"` / My BD Hard
+- supports group profile key `"3"` / My BD Classic
+- keeps group profile key `"4"` unsupported with safe failure behavior
 - returns deterministic mock message data
 - uses the existing `mock_midi.py` scaffold
 - records cleanly through MockMidiSender
@@ -155,6 +157,36 @@ The closeout suite now includes "Test: Mock Message Mapper".
 
 Analog Rytm and Analog Four remain off for this phase.
 
+## Test-Only Mock Mapping For Group Profile 3
+
+The test-only mock mapping for group profile 3 milestone is:
+
+- 4507647 Add mock mapping for group profile 3
+
+It includes:
+
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+
+It adds support for existing group profile key `"3"` / My BD Classic in the
+test-only mock mapper.
+
+Current behavior:
+
+- existing group profile key `"2"` / My BD Hard behavior remains unchanged
+- group profile key `"3"` / My BD Classic maps to deterministic inert mock MidiMessage data
+- group profile key `"4"` remains unsupported and fails safely
+- mapped messages record cleanly through MockMidiSender
+- the mapper is not wired into CLI
+- the mapper is not wired into runtime execution
+- the mapper imports no real MIDI library
+- the mapper opens no ports
+- the mapper sends no MIDI
+- the mapper adds no active behavior
+- the mapper adds no hardware behavior
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ## Mock Message Mapper Review
 
 `Docs/MOCK_MESSAGE_MAPPER_REVIEW.md` records the review/acceptance checkpoint
@@ -164,7 +196,8 @@ It confirms:
 
 - `rytm_randomizer/mock_message_mapper.py` is accepted as the current test-only mapper scaffold
 - `tests/test_mock_message_mapper.py` is accepted as current test coverage
-- the mapper supports only group profile key `"2"` / My BD Hard
+- the mapper supports group profile keys `"2"` / My BD Hard and `"3"` / My BD Classic
+- group profile key `"4"` remains unsupported and fails safely
 - the mapper returns deterministic inert MidiMessage data
 - the mapper records through MockMidiSender
 - the mapper fails safely for unknown or unsupported keys

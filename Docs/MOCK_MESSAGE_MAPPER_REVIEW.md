@@ -33,7 +33,9 @@ Current hardware status:
 
 - `rytm_randomizer/mock_message_mapper.py` is accepted as the current test-only mapper scaffold.
 - `tests/test_mock_message_mapper.py` is accepted as current test coverage.
-- The mapper supports only group profile key `"2"` / My BD Hard.
+- The mapper supports group profile key `"2"` / My BD Hard.
+- The mapper supports group profile key `"3"` / My BD Classic.
+- Existing group profile key `"4"` remains unsupported and fails safely.
 - The mapper returns deterministic inert MidiMessage data.
 - The mapper records through MockMidiSender.
 - The mapper fails safely for unknown/unsupported keys.
@@ -52,6 +54,13 @@ Current hardware status:
 - group pad: 1
 - machine value: 0
 - target concept: Pad 1 / BD Hard
+- mock_only: True
+- sends_real_midi: False
+- source key: `"3"`
+- source name: My BD Classic
+- group pad: 2
+- machine value: 1
+- target concept: Pad 2 / BD Classic
 - mock_only: True
 - sends_real_midi: False
 
@@ -126,6 +135,17 @@ This is future possibility only:
 - Hardware remains off.
 
 ## Next Recommended Task
+
+Latest mock-only mapper expansion:
+
+- 4507647 Add mock mapping for group profile 3
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+
+The mapper now also supports existing group profile key `"3"` / My BD Classic.
+Group profile key `"2"` / My BD Hard behavior remains unchanged. Group profile
+key `"4"` remains unsupported and fails safely. The mapping remains test-only,
+mock-only, deterministic, and unwired from CLI or runtime execution.
 
 Update `Docs/NEXT_ACTION.md` to recommend either:
 

@@ -145,6 +145,17 @@ deterministic inert mock MidiMessage objects using the existing mock_midi.py
 scaffold, records cleanly through MockMidiSender, and fails safely for unknown
 or unsupported keys.
 
+Expanded mock-only milestone:
+
+- 4507647 Add mock mapping for group profile 3
+- `rytm_randomizer/mock_message_mapper.py`
+- `tests/test_mock_message_mapper.py`
+
+The mapper now also supports existing group profile key `"3"` / My BD Classic.
+Group profile key `"2"` / My BD Hard behavior remains unchanged. Group profile
+key `"4"` remains unsupported and fails safely. The mapping remains test-only,
+mock-only, deterministic, and unwired from CLI or runtime execution.
+
 The closeout suite now includes "Test: Mock Message Mapper".
 
 Mock message mapper review:

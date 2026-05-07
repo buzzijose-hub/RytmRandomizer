@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 4507647 Add mock mapping for group profile 3
+- 79a64df Add passive mock MIDI progress checkpoint
 - 32006f4 Add mock message mapper review
 - 5ee0e01 Update checkpoint after mock message mapper
 - 4a590c8 Add test-only mock message mapper
@@ -218,6 +220,23 @@ test-only mock message mapper state after `32006f4 Add mock message mapper
 review`. It records this as a clean decision point before any additional mapper
 scope, active execution, or hardware-facing work.
 
+The test-only mock mapping for group profile 3 milestone is:
+
+- 4507647 Add mock mapping for group profile 3
+
+The milestone includes:
+
+- rytm_randomizer/mock_message_mapper.py
+- tests/test_mock_message_mapper.py
+
+The mapper now supports existing group profile key `"3"` / My BD Classic in
+addition to existing key `"2"` / My BD Hard. Existing profile `"2"` behavior
+remains unchanged, profile `"4"` remains unsupported and fails safely, and the
+mapping returns deterministic inert mock MidiMessage data that records cleanly
+through MockMidiSender. It imports no real MIDI library, opens no ports, sends
+no MIDI, adds no CLI wiring, adds no runtime execution, and adds no hardware
+behavior.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -273,6 +292,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - test-only mock message mapper
 - mock message mapper review
 - passive mock MIDI progress checkpoint
+- test-only mock mapping for group profile 3
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1391,6 +1411,26 @@ send-command, hardware-test behavior, dispatch, command execution, scene
 execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
 5-12 support, or machine/profile universe expansion. The protected V1.34
 reference remains untouched.
+
+The test-only mock mapping for group profile 3 includes:
+
+- 4507647 Add mock mapping for group profile 3
+- rytm_randomizer/mock_message_mapper.py
+- tests/test_mock_message_mapper.py
+
+The milestone is test-only/mock-only. It adds mapping support for existing
+group profile key `"3"` / My BD Classic while keeping existing group profile
+key `"2"` / My BD Hard behavior unchanged. Existing group profile key `"4"`
+remains unsupported and fails safely. The mapping returns deterministic inert
+mock MidiMessage data and records cleanly through MockMidiSender. It is not
+wired into CLI or runtime execution, imports no real MIDI library, opens no
+ports, sends no MIDI, and adds no active or hardware behavior. It adds no real
+MIDI backend, no mido dependency, no port provider, no hardware detection, no
+hardware send, no active CLI command, no execute-command, no send-command, no
+hardware-test command, no SysEx, no GUI/capture, no Analog Four support, no
+Pads 5-12 support, and no machine/profile expansion. The protected V1.34
+reference remains untouched. Analog Rytm and Analog Four remain off for this
+phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
