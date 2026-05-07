@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-9a3dc06
+833aad9
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 9a3dc06 Add passive mock knowledge checkpoint
+- current HEAD: 833aad9 Add passive mock parallel workstream plan
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: first-candidate mock-only active test design review
+- next recommended task: mock-only active test implementation plan
 - closeout command
 - stop condition
 
@@ -113,6 +113,33 @@ expansion. It recommends no subagents yet and sets the next task as
 review/acceptance of `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`.
 
 The plan is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, or machine/profile expansion.
+
+## First-Candidate Mock-Only Active Test Design Review
+
+`Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md` accepts
+`Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md` as the current planning
+gate.
+
+Accepted candidate:
+
+- group profile `"2"` / My BD Hard
+
+The review confirms:
+
+- the candidate remains mock-only
+- the candidate is not a real hardware candidate yet
+- profile `"4"` / My BD Acoustic remains parked
+- future implementation must use `MockMidiSender` only
+- passive CLI must remain read-only
+- active CLI commands remain absent
+- hardware remains off
+
+The next recommended task is a mock-only active test implementation plan.
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, or machine/profile expansion.

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 833aad9 Add passive mock parallel workstream plan
 - 9a3dc06 Add passive mock knowledge checkpoint
 - bd930f6 Add first-candidate mock-only active test design
 - 6938c58 Add passive mock foundation roadmap review
@@ -438,6 +439,15 @@ organizing strategy rather than a scope expansion, keeps closeout as the
 synchronization point, recommends no subagents yet, and sets the next
 recommended task as review/acceptance of the first-candidate mock-only active
 test design.
+
+The first-candidate mock-only active test design review now lives in:
+
+- Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md
+
+The review accepts group profile `"2"` / My BD Hard as the current mock-only
+planning candidate. It confirms the candidate is not a real hardware candidate,
+does not authorize hardware validation, keeps profile `"4"` parked, and sets
+the next recommended task as a mock-only active test implementation plan.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -1934,6 +1944,22 @@ active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
 capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
 or machine/profile expansion. The protected V1.34 reference remains untouched.
 Analog Rytm and Analog Four remain off for this phase.
+
+The first-candidate mock-only active test design review includes:
+
+- Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md
+
+The review is documentation-only. It accepts
+`Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md` as the current planning
+gate and accepts group profile `"2"` / My BD Hard as the first mock-only
+candidate. It records that future implementation must remain mock-only and
+test-only, use `MockMidiSender` only, keep passive CLI read-only, keep active
+CLI commands absent, and keep profile `"4"` parked unless separately approved.
+It adds no implementation, code, tests, real MIDI, mido, port opening, MIDI
+sending, active execution, active CLI command, dispatch, hardware behavior,
+SysEx, GUI, capture, Analog Four support, Pads 5-12 support, profile `"4"`
+implementation, or machine/profile expansion. The protected V1.34 reference
+remains untouched. Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

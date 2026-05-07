@@ -165,7 +165,10 @@ while the first candidate uses existing supported profile `"2"`.
 
 ## Next Recommended Task
 
-Review and accept this first-candidate mock-only active test design.
+This first-candidate mock-only active test design is ready for review and
+acceptance in:
+
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
 
 Then decide whether to:
 

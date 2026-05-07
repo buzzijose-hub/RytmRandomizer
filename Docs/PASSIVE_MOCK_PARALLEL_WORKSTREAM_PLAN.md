@@ -289,11 +289,11 @@ Completion means:
 
 ## 12. Recommended Next Slice
 
-Create a documentation-only review/acceptance gate for:
+The first-candidate review/acceptance gate is:
 
-- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
 
-Then, if accepted, create a mock-only active test implementation plan.
+After acceptance, create a mock-only active test implementation plan.
 
 Do not implement tests yet in this slice.
 
@@ -301,8 +301,7 @@ Do not implement tests yet in this slice.
 
 Parallel work is approved as an organizing strategy, not as a scope expansion.
 
-The next recommended task is the first-candidate mock-only active test design
-review/acceptance gate.
+The next recommended task is a mock-only active test implementation plan.
 
 Hardware remains off.
 

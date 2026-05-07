@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9a3dc06 Add passive mock knowledge checkpoint
+833aad9 Add passive mock parallel workstream plan
 
 ## Current Phase
 
@@ -63,11 +63,16 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance for:
+Next recommended task is a documentation-only mock-only active test
+implementation plan for:
 
-- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+- group profile `"2"` / My BD Hard
 
-The safe parallel workstream plan is now:
+The first-candidate design review is now:
+
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
+
+The safe parallel workstream plan is:
 
 - `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
 
@@ -87,7 +92,6 @@ The latest knowledge checkpoint is:
 Safe alternatives are:
 
 - stop/pause at this clean checkpoint
-- review/accept `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
 - create a docs-only profile 4 support plan
 - freeze mock mapper scope and focus on project-level documentation
 - prepare a broader roadmap/timeline update
@@ -114,6 +118,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
+- `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
 - `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
 
@@ -259,6 +264,12 @@ CLI/report visibility, safety/closeout, and future active planning are separate
 lanes. It keeps closeout as the synchronization point, recommends no subagents
 yet, keeps profile `"4"` parked, and sets the next task as review/acceptance
 of the first-candidate mock-only active test design.
+
+The first-candidate mock-only active test design review accepts group profile
+`"2"` / My BD Hard as the current mock-only planning candidate. It confirms no
+tests, active behavior, real MIDI, port opening, CLI execution, hardware
+validation, or profile `"4"` implementation exists. The next recommended task
+is a mock-only active test implementation plan.
 
 ## Do-Not-Touch Files
 
