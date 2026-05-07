@@ -130,3 +130,13 @@ Before any future real hardware validation:
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` is the next roadmap checkpoint.
 - Hardware remains off.
 - No implementation in this slice.
+
+## Roadmap Review Status
+
+Roadmap review:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
+
+The roadmap review accepts the passive/mock foundation roadmap as the current
+roadmap checkpoint. It keeps hardware off and sets the next recommended task
+as first-candidate mock-only active test design.

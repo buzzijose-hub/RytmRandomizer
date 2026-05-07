@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-75a2afd
+5b87871
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 75a2afd Add future active test plan review
+- current HEAD: 5b87871 Add passive mock foundation roadmap
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: roadmap review/acceptance
+- next recommended task: first-candidate mock-only active test design
 - closeout command
 - stop condition
 
@@ -396,6 +396,22 @@ test design, mock-only active candidate tests, later active boundary review,
 later real MIDI boundary design, later hardware validation checklist, and much
 later real hardware validation only after explicit approval. It is
 documentation-only and adds no runtime behavior.
+
+## Passive Mock Foundation Roadmap Review
+
+`Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md` accepts
+`Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` as the current roadmap/timeline
+checkpoint.
+
+It confirms:
+
+- the accepted phase name is Passive/Mock Foundation Phase
+- the accepted roadmap direction starts with first-candidate mock-only active test design
+- profile `"4"` / My BD Acoustic remains parked
+- no implementation, real MIDI, ports, active behavior, or hardware validation exists
+- hardware remains off
+
+The next recommended task is first-candidate mock-only active test design.
 
 ## Passive Mock Foundation Decision Checkpoint
 
@@ -1646,8 +1662,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- roadmap review/acceptance
-- after roadmap review, create a first-candidate mock-only active test design document
+- first-candidate mock-only active test design document
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

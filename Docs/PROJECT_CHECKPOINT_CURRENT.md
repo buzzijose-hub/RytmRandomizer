@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5b87871 Add passive mock foundation roadmap
 - 75a2afd Add future active test plan review
 - f8aa7aa Add future active test plan
 - 2e951c2 Add passive mock foundation progress report
@@ -392,6 +393,16 @@ next planning gates before mock-only active tests, and documents the later
 conditions required before any real hardware validation. The next recommended
 task is roadmap review/acceptance.
 
+The passive/mock foundation roadmap review now lives in:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md
+
+The review accepts `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` as the current
+roadmap. It confirms the Passive/Mock Foundation Phase, keeps profile `"4"` /
+My BD Acoustic parked, records that no implementation or hardware
+authorization exists, and sets the next recommended task as first-candidate
+mock-only active test design.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -459,6 +470,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - future active test-plan
 - future active test-plan review
 - passive mock foundation roadmap
+- passive mock foundation roadmap review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1816,6 +1828,24 @@ next. It adds no implementation, code, tests, closeout changes, real MIDI
 behavior, active behavior, or hardware requirement. The protected V1.34
 reference remains untouched. Analog Rytm and Analog Four remain off for this
 phase.
+
+The passive/mock foundation roadmap review includes:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md
+
+The review is documentation-only. It accepts
+`Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` as the current roadmap/timeline
+checkpoint. It confirms the accepted phase name is Passive/Mock Foundation
+Phase, accepts the roadmap direction toward first-candidate mock-only active
+test design, keeps profile `"4"` / My BD Acoustic parked, and confirms real
+MIDI, mido, MIDI port opening, MIDI sending, active execution, CLI wiring to
+active behavior, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four
+support, Pads 5-12 support, machine/profile expansion, execute-command,
+send-command, hardware-test, and hardware validation remain absent. It sets
+the next recommended task as first-candidate mock-only active test design. It
+adds no implementation, code, tests, closeout changes, real MIDI behavior,
+active behavior, or hardware requirement. The protected V1.34 reference
+remains untouched. Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

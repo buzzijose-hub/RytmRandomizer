@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-75a2afd Add future active test plan review
+5b87871 Add passive mock foundation roadmap
 
 ## Current Phase
 
@@ -63,9 +63,12 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is roadmap review/acceptance for:
+Next recommended task is a first-candidate mock-only active test design
+document.
 
-- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
+Accepted roadmap gate:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 
 Safe alternatives are:
 
@@ -94,6 +97,7 @@ Safe alternatives are:
 - `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
 - `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
+- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -210,6 +214,12 @@ Passive/Mock Foundation Phase. It records that the foundation is complete
 enough for planning, not active, not hardware-facing, and still has no real
 MIDI, ports, active behavior, or hardware validation. It keeps profile `"4"`
 parked and sets the next recommended task as roadmap review/acceptance.
+
+The passive/mock foundation roadmap review accepts
+`Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` as the current roadmap. It confirms
+the Passive/Mock Foundation Phase, keeps profile `"4"` parked, keeps hardware
+off, and sets the next recommended task as first-candidate mock-only active
+test design.
 
 ## Do-Not-Touch Files
 
