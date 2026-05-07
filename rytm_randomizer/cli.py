@@ -4,11 +4,13 @@ import sys
 
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
+from .mock_mapper_report import format_mock_mapper_report
 from .registry_report import format_registry_report
 
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
+    "mock-mapper-report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
     "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -18,6 +20,7 @@ TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
 Usage:
   python -m rytm_randomizer.cli report
+  python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -34,6 +37,8 @@ Usage:
 
 Commands:
   report             Print the passive registry report.
+  mock-mapper-report
+                     Print the passive mock mapper report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -592,6 +597,23 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+MOCK_MAPPER_REPORT_HELP = """RytmRandomizer passive CLI: mock-mapper-report
+
+Usage:
+  python -m rytm_randomizer.cli mock-mapper-report
+  python -m rytm_randomizer.cli mock-mapper-report --help
+
+Behavior:
+  Prints the deterministic passive mock mapper report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
 
 
 def main(argv=None):
@@ -604,6 +626,10 @@ def main(argv=None):
 
     if args == ["report", "--help"]:
         sys.stdout.write(f"{REPORT_HELP}\n")
+        return 0
+
+    if args == ["mock-mapper-report", "--help"]:
+        sys.stdout.write(f"{MOCK_MAPPER_REPORT_HELP}\n")
         return 0
 
     if args == ["list-commands", "--help"]:
@@ -656,6 +682,11 @@ def main(argv=None):
 
     if args == ["report"]:
         sys.stdout.write("\n".join(format_registry_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["mock-mapper-report"]:
+        sys.stdout.write("\n".join(format_mock_mapper_report()))
         sys.stdout.write("\n")
         return 0
 

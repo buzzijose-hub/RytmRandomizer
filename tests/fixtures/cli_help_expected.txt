@@ -2,6 +2,7 @@ RytmRandomizer passive CLI
 
 Usage:
   python -m rytm_randomizer.cli report
+  python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -18,6 +19,8 @@ Usage:
 
 Commands:
   report             Print the passive registry report.
+  mock-mapper-report
+                     Print the passive mock mapper report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile

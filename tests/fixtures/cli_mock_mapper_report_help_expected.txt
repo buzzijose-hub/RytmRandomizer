@@ -1,0 +1,17 @@
+RytmRandomizer passive CLI: mock-mapper-report
+
+Usage:
+  python -m rytm_randomizer.cli mock-mapper-report
+  python -m rytm_randomizer.cli mock-mapper-report --help
+
+Behavior:
+  Prints the deterministic passive mock mapper report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
