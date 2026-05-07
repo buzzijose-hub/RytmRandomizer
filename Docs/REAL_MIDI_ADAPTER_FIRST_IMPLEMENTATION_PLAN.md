@@ -816,7 +816,26 @@ After that, the future implementation slice may be considered, still with no
 real MIDI dependency, no real ports, no MIDI sending, no active CLI commands,
 and no hardware.
 
-## 12. Decision
+## 12. Review Gate
+
+The review gate for this implementation plan is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLAN_REVIEW.md`
+
+The review accepts this implementation plan as the current checkpoint before
+any first adapter boundary code.
+
+The review allows a future implementation slice limited to:
+
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+
+The review does not authorize `mido`, real MIDI dependency selection, package
+metadata changes, real port opening, MIDI sending, active CLI commands,
+hardware behavior, hardware validation, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
+
+## 13. Decision
 
 The first adapter implementation plan is documented.
 

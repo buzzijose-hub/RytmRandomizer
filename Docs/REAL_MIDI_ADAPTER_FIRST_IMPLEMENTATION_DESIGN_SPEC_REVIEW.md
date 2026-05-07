@@ -364,12 +364,28 @@ package metadata changes, port opening, MIDI sending, active CLI commands,
 hardware behavior, hardware validation, profile `"4"` implementation, or
 profile `"3"` active-boundary support.
 
-## 19. Decision
+## 19. First Adapter Implementation Plan Review
+
+The first adapter implementation plan review now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_PLAN_REVIEW.md`
+
+The review accepts the plan as the current checkpoint before any first adapter
+boundary code. It allows a future implementation slice limited to
+`rytm_randomizer/real_midi_adapter.py` and
+`tests/test_real_midi_adapter_boundary.py`, using fake providers only.
+
+The review keeps `mido`, real MIDI dependency selection, package metadata
+changes, real port opening, MIDI sending, active CLI commands, hardware
+behavior, hardware validation, profile `"4"` implementation, and profile `"3"`
+active-boundary support blocked.
+
+## 20. Decision
 
 The real MIDI adapter first implementation design/spec is accepted.
 
-The next safe branch may be documentation-only review/acceptance of the first
-adapter implementation plan.
+The next safe branch may be the tiny first adapter boundary implementation
+slice.
 
 Adapter implementation remains blocked.
 
