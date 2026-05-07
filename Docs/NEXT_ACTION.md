@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f877da2 Add real MIDI boundary planning gate review
+7e02215 Add real MIDI boundary plan
 
 ## Current Phase
 
@@ -66,9 +66,23 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the real MIDI boundary plan,
-more passive/project documentation, or a pause at this clean planning
-checkpoint.
+Next recommended task is a documentation-only real MIDI implementation
+design/spec, more passive/project documentation, or a pause at this accepted
+real MIDI boundary planning checkpoint.
+
+The latest real MIDI boundary plan review is:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLAN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLAN.md`
+
+The review accepts the real MIDI boundary plan as the current planning
+baseline. It does not authorize implementation, real MIDI imports, mido, port
+opening, MIDI sending, active CLI commands, dispatch, hardware behavior,
+hardware validation, profile `"4"` implementation, profile `"3"`
+active-boundary support, or turning hardware on.
 
 The latest real MIDI boundary plan is:
 

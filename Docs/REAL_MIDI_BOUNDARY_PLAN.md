@@ -361,3 +361,15 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 19. Review Gate
+
+This real MIDI boundary plan is reviewed and accepted by:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLAN_REVIEW.md`
+
+The review accepts this document as the current real MIDI boundary planning
+baseline. It does not authorize implementation, real MIDI imports, mido, port
+opening, MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or turning hardware on.

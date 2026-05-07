@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f877da2
+7e02215
 
 ## Protected Reference
 
@@ -51,15 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f877da2 Add real MIDI boundary planning gate review
+- current HEAD: 7e02215 Add real MIDI boundary plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the real MIDI boundary plan, return
-  to passive/project documentation, or pause at the clean planning checkpoint
+- next recommended task: write a documentation-only real MIDI implementation
+  design/spec, return to passive/project documentation, or pause at the
+  accepted real MIDI boundary planning checkpoint
 - closeout command
 - stop condition
 
@@ -222,6 +223,37 @@ It records:
 - forbidden scope
 
 The plan does not authorize implementation, real MIDI imports, mido, port
+opening, MIDI sending, active CLI commands, passive CLI active-boundary
+evaluation, passive CLI construction of `MockMidiSender`, dispatch, command
+execution, scene execution, hardware behavior, profile `"4"` implementation,
+profile `"3"` active-boundary support, hardware validation, or turning
+hardware on.
+
+## Real MIDI Boundary Plan Review
+
+`Docs/REAL_MIDI_BOUNDARY_PLAN_REVIEW.md` accepts
+`Docs/REAL_MIDI_BOUNDARY_PLAN.md` as the current real MIDI boundary planning
+baseline.
+
+It accepts:
+
+- 7e02215 Add real MIDI boundary plan
+- conceptual future real MIDI adapter placement
+- import and dependency isolation
+- port discovery and port selection boundaries
+- passive CLI separation
+- active boundary relationship
+- arming and operator intent requirements
+- tests required before implementation
+- later hardware validation preconditions
+- forbidden scope
+
+The review confirms real MIDI implementation remains blocked, hardware
+validation remains blocked, hardware remains off, profile `"3"` remains
+unsupported by the active boundary, and profile `"4"` remains parked and
+unsupported.
+
+The review does not authorize implementation, real MIDI imports, mido, port
 opening, MIDI sending, active CLI commands, passive CLI active-boundary
 evaluation, passive CLI construction of `MockMidiSender`, dispatch, command
 execution, scene execution, hardware behavior, profile `"4"` implementation,
