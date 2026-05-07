@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ae55174
+1307fab
 
 ## Protected Reference
 
@@ -50,15 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: ae55174 Update checkpoint after mock-first active boundary
+- current HEAD: 1307fab Add mock-first active boundary review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: pause at the clean sleep checkpoint or create a
-  broader mock-first active boundary progress report after user confirmation
+- next recommended task: create a broader mock-first active boundary progress
+  report
 - closeout command
 - stop condition
 
@@ -225,6 +225,10 @@ The checkpoint lives in:
 `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md` accepts
 `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md` as the current checkpoint for
 the implemented mock-first active boundary.
+
+Milestone:
+
+- 1307fab Add mock-first active boundary review
 
 The review accepts:
 

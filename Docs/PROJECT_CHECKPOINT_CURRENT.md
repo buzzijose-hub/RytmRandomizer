@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 1307fab Add mock-first active boundary review
 - ae55174 Update checkpoint after mock-first active boundary
 - 565770e Add mock-first active boundary
 - ef5cfa6 Add active boundary implementation design review
@@ -569,6 +570,10 @@ The mock-first active boundary checkpoint now lives in:
 The mock-first active boundary review now lives in:
 
 - Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md
+
+The review milestone is:
+
+- 1307fab Add mock-first active boundary review
 
 The review accepts the checkpoint as the current record of the implemented
 mock-first active boundary. It confirms the boundary remains mock-first,
@@ -2228,6 +2233,10 @@ remain off for this phase.
 The mock-first active boundary review includes:
 
 - Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md
+
+The review milestone is:
+
+- 1307fab Add mock-first active boundary review
 
 The review is documentation-only. It accepts
 `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md` as the current checkpoint for

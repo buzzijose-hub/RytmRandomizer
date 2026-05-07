@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-ae55174 Update checkpoint after mock-first active boundary
+1307fab Add mock-first active boundary review
 
 ## Current Phase
 
@@ -64,12 +64,16 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to pause at this clean sleep checkpoint or, after
-user confirmation, create a broader mock-first active boundary progress report.
+Next recommended task is to create a broader mock-first active boundary
+progress report.
 
 The mock-first active boundary review is:
 
 - `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md`
+
+The mock-first active boundary review milestone is:
+
+- 1307fab Add mock-first active boundary review
 
 The review accepts:
 
@@ -79,7 +83,7 @@ The accepted implementation milestone remains:
 
 - 565770e Add mock-first active boundary
 
-The accepted documentation checkpoint is:
+The accepted documentation checkpoint remains:
 
 - ae55174 Update checkpoint after mock-first active boundary
 
