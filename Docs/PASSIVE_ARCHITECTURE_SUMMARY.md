@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a589564
+fba0c88
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: a589564 Add mock-only active candidate tests
+- current HEAD: fba0c88 Update checkpoint after mock-only active candidate tests
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review accepted mock-only active candidate tests
+- next recommended task: docs-only active boundary implementation planning gate
 - closeout command
 - stop condition
 
@@ -205,6 +205,29 @@ machine/profile expansion.
 `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md` records the completed
 mock-only proof milestone and sets the next recommended task as a
 documentation-only review/acceptance checkpoint.
+
+## Mock-Only Active Candidate Tests Review
+
+`Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_REVIEW.md` accepts the completed
+mock-only active candidate tests as the current test-only proof checkpoint.
+
+It confirms:
+
+- group profile `"2"` / My BD Hard is proven through inert mock messages
+- `MockMidiSender` records the candidate messages in memory only
+- profile `"4"` / My BD Acoustic remains unsupported/safe
+- passive CLI behavior remains read-only
+- no real MIDI libraries are imported
+- no active behavior names are exposed
+- closeout includes `=== Test: Mock-Only Active Candidate ===`
+- hardware remains off
+
+The review records that the project has moved from mock-only planning to
+mock-only proof without crossing into real MIDI, active execution, or hardware
+validation.
+
+The next recommended task is a docs-only active boundary implementation
+planning gate.
 
 ## Passive-To-Active Boundary Design
 

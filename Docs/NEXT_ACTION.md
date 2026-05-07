@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a589564 Add mock-only active candidate tests
+fba0c88 Update checkpoint after mock-only active candidate tests
 
 ## Current Phase
 
@@ -63,10 +63,14 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance checkpoint for
-the completed mock-only active candidate tests:
+Next recommended task is a documentation-only active boundary implementation
+planning gate, using the accepted mock-only active candidate tests as proof:
 
 - group profile `"2"` / My BD Hard
+
+The mock-only active candidate tests review is:
+
+- `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_REVIEW.md`
 
 The latest mock-only test checkpoint is:
 
@@ -129,6 +133,7 @@ Safe alternatives are:
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN_REVIEW.md`
 - `Docs/MOCK_ONLY_ACTIVE_TEST_IMPLEMENTATION_PLAN.md`
 - `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_CHECKPOINT.md`
+- `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_REVIEW.md`
 - `Docs/PASSIVE_MOCK_KNOWLEDGE_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_PARALLEL_WORKSTREAM_PLAN.md`
 
@@ -296,6 +301,12 @@ The tests prove profile `"2"` maps to inert mock messages, records through
 `MockMidiSender`, keeps profile `"4"` unsupported/safe, preserves passive CLI
 report behavior, imports no real MIDI libraries, and exposes no active behavior
 names.
+
+The mock-only active candidate tests review accepts the completed tests as the
+current mock-only proof checkpoint. It confirms the project has moved from
+mock-only planning to mock-only proof without adding real MIDI, ports, active
+CLI behavior, hardware behavior, or profile `"4"` support. The next recommended
+task is a docs-only active boundary implementation planning gate.
 
 ## Do-Not-Touch Files
 

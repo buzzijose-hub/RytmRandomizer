@@ -148,8 +148,10 @@ design.
 
 ## 9. Recommended Next Task
 
-Create a documentation-only review/acceptance checkpoint for the mock-only
-active candidate tests.
+The documentation-only review/acceptance checkpoint for the mock-only active
+candidate tests is:
+
+- `Docs/MOCK_ONLY_ACTIVE_CANDIDATE_TESTS_REVIEW.md`
 
 Then decide whether to:
 
