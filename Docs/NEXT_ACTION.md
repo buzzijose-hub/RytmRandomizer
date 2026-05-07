@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-55b973d Add mock mapper profile 4 decision note
+f7c14f2 Add passive mock mapper report
 
 ## Current Phase
 
@@ -65,7 +65,6 @@ Next recommended task is to choose one of:
 
 - keep mapper scope frozen for now
 - plan profile 4 mock-only support in a separate reviewed slice
-- build a passive mock mapper report/summary layer
 - pause mapper work and write a larger project progress report
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
@@ -130,6 +129,18 @@ profiles `"2"` and `"3"` are supported, profile `"4"` remains
 unsupported/safe, and the next options are to keep mapper scope frozen, plan
 profile 4 support, build a passive mock mapper report/summary, or pause mapper
 work.
+
+The passive mock mapper report milestone adds:
+
+- `rytm_randomizer/mock_mapper_report.py`
+- `tests/test_mock_mapper_report.py`
+- `Scripts/closeout_check.ps1`
+
+The report summarizes the current mock mapper boundary in memory only:
+profiles `"2"` / My BD Hard and `"3"` / My BD Classic are supported, profile
+`"4"` / My BD Acoustic remains unsupported/safe, mock-only status is true, real
+MIDI is absent, port opening is absent, CLI wiring is absent, active behavior
+is absent, and hardware is not required.
 
 ## Do-Not-Touch Files
 

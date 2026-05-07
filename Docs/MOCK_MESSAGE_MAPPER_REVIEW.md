@@ -147,10 +147,20 @@ Group profile key `"2"` / My BD Hard behavior remains unchanged. Group profile
 key `"4"` remains unsupported and fails safely. The mapping remains test-only,
 mock-only, deterministic, and unwired from CLI or runtime execution.
 
-Update `Docs/NEXT_ACTION.md` to recommend either:
+Passive mock mapper report milestone:
 
-- a progress checkpoint / milestone report
-- a small mock-only mapper expansion plan
+- f7c14f2 Add passive mock mapper report
+- `rytm_randomizer/mock_mapper_report.py`
+- `tests/test_mock_mapper_report.py`
+- `Scripts/closeout_check.ps1`
+
+The report summarizes the current mock mapper boundary without adding mapper
+scope: supported profiles `"2"` / My BD Hard and `"3"` / My BD Classic,
+unsupported/safe profile `"4"` / My BD Acoustic, mock-only status true, real
+MIDI absent, port opening absent, CLI wiring absent, active behavior absent,
+and hardware required false.
+
+The closeout suite now includes "Test: Mock Mapper Report".
 
 No real MIDI.
 

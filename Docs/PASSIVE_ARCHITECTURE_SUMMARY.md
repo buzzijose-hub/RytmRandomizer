@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-55b973d
+f7c14f2
 
 ## Protected Reference
 
@@ -34,6 +34,7 @@ The standard closeout suite currently includes:
 - passive CLI
 - mock MIDI
 - mock message mapper
+- mock mapper report
 
 The closeout workflow also checks:
 
@@ -47,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 55b973d Add mock mapper profile 4 decision note
+- current HEAD: f7c14f2 Add passive mock mapper report
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: keep mapper scope frozen, plan profile 4 support, build a passive mock mapper report/summary, or pause mapper work
+- next recommended task: keep mapper scope frozen, plan profile 4 support, or pause mapper work for a larger progress report
 - closeout command
 - stop condition
 
@@ -214,6 +215,42 @@ The next options are:
 
 The review is documentation-only and adds no runtime behavior.
 
+## Passive Mock Mapper Report
+
+The passive mock mapper report milestone is:
+
+- f7c14f2 Add passive mock mapper report
+
+It includes:
+
+- `rytm_randomizer/mock_mapper_report.py`
+- `tests/test_mock_mapper_report.py`
+- `Scripts/closeout_check.ps1`
+
+It adds a read-only, in-memory report for the current test-only mock mapper
+support state.
+
+Current report boundary:
+
+- supported mock mapper profiles: `"2"` / My BD Hard and `"3"` / My BD Classic
+- unsupported/safe profile: `"4"` / My BD Acoustic
+- mock-only status: true
+- real MIDI: absent
+- port opening: absent
+- CLI wiring: absent
+- active behavior: absent
+- hardware required: false
+- Analog Four support: absent
+- Pads 5-12 support: absent
+
+The closeout suite now includes "Test: Mock Mapper Report".
+
+The report does not add CLI wiring, real MIDI, mido, MIDI ports, MIDI sending,
+active execution, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four
+support, Pads 5-12 support, or machine/profile expansion.
+
+Analog Rytm and Analog Four remain off for this phase.
+
 ## Test-Only Mock Mapping For Group Profile 3
 
 The test-only mock mapping for group profile 3 milestone is:
@@ -361,8 +398,8 @@ It confirms:
 - no ports are opened
 - no MIDI is sent
 - mock MIDI is not wired to CLI or active execution
-- the test-only mock message mapper now supports only group profile 2 / My BD Hard
-- the closeout suite includes Mock Message Mapper
+- the test-only mock message mapper now supports group profiles 2 / My BD Hard and 3 / My BD Classic
+- the closeout suite includes Mock Message Mapper and Mock Mapper Report
 - hardware remains off
 
 The review is documentation-only and adds no runtime behavior.
@@ -1435,7 +1472,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- keep mapper scope frozen, plan profile 4 support, build a passive mock mapper report/summary, or pause mapper work
+- keep mapper scope frozen, plan profile 4 support, or pause mapper work for a larger progress report
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond supported group profiles `"2"` and `"3"` without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

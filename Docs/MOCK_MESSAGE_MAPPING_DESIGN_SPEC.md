@@ -200,6 +200,21 @@ The review accepts the test-only mock message mapper, records that no real
 MIDI behavior exists, keeps future mapper expansion mock-only unless
 separately reviewed, and keeps hardware off.
 
+Passive mock mapper report milestone:
+
+- f7c14f2 Add passive mock mapper report
+- `rytm_randomizer/mock_mapper_report.py`
+- `tests/test_mock_mapper_report.py`
+- `Scripts/closeout_check.ps1`
+
+The report summarizes current mock mapper support without expanding mapper
+scope: group profiles `"2"` / My BD Hard and `"3"` / My BD Classic are
+supported, group profile `"4"` / My BD Acoustic remains unsupported/safe,
+mock-only status is true, real MIDI is absent, port opening is absent, CLI
+wiring is absent, active behavior is absent, and hardware is not required.
+
+The closeout suite now includes "Test: Mock Mapper Report".
+
 No real MIDI backend, mido dependency, port provider, hardware detection,
 hardware send, active CLI command, execute-command, send-command,
 hardware-test command, runtime execution, dispatch, SysEx, GUI/capture, Analog

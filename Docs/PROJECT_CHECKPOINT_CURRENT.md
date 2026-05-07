@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f7c14f2 Add passive mock mapper report
+- 79a9fc2 Add mock mapper progress review
 - 55b973d Add mock mapper profile 4 decision note
 - a7f2e28 Add mock mapper profile 3 progress checkpoint
 - c961dbf Update checkpoint after mock mapping for group profile 3
@@ -269,6 +271,22 @@ are supported, group profile `"4"` / My BD Acoustic remains unsupported/safe,
 and the next options are to keep mapper scope frozen, plan profile 4 support,
 build a passive mock mapper report/summary, or pause mapper work.
 
+The passive mock mapper report milestone is:
+
+- f7c14f2 Add passive mock mapper report
+
+The milestone includes:
+
+- rytm_randomizer/mock_mapper_report.py
+- tests/test_mock_mapper_report.py
+- Scripts/closeout_check.ps1
+
+The report is read-only and in-memory. It summarizes supported mock mapper
+profiles `"2"` / My BD Hard and `"3"` / My BD Classic, records profile `"4"` /
+My BD Acoustic as unsupported/safe, reports mock-only status as true, and
+records real MIDI, port opening, CLI wiring, active behavior, Analog Four
+support, and Pads 5-12 support as absent. Hardware is not required.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -328,6 +346,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - mock mapper profile 3 progress checkpoint
 - mock mapper profile 4 decision note
 - mock mapper progress review
+- passive mock mapper report
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -356,6 +375,7 @@ The closeout script runs the standard passive test suite and safety checks:
 - python .\tests\test_cli.py
 - python .\tests\test_mock_midi.py
 - python .\tests\test_mock_message_mapper.py
+- python .\tests\test_mock_mapper_report.py
 - git diff -- rytm_hybrid_randomizer_v134.py
 - git status --short
 
@@ -383,10 +403,17 @@ passive test suite.
 The closeout script now includes "Test: Mock MIDI" as part of the standard
 passive test suite.
 
+The closeout script now includes "Test: Mock Message Mapper" as part of the
+standard passive test suite.
+
+The closeout script now includes "Test: Mock Mapper Report" as part of the
+standard passive test suite.
+
 The latest clean closeout confirmed that scaffold, validation, inspection,
 preview, audit, profile lookup, scene lookup, command lookup, registry,
-registry report, registry report CLI, passive CLI, and mock MIDI tests passed
-silently; the V1.34 reference diff was empty; and git status was clean.
+registry report, registry report CLI, passive CLI, mock MIDI, mock message
+mapper, and mock mapper report tests passed silently; the V1.34 reference diff
+was empty; and git status was clean.
 
 The guarded passive depth command label milestone includes:
 
@@ -1515,6 +1542,25 @@ send-command, hardware-test behavior, dispatch, command execution, scene
 execution, hardware mutation, SysEx, GUI, capture, Analog Four support, Pads
 5-12 support, or machine/profile universe expansion. The protected V1.34
 reference remains untouched.
+
+The passive mock mapper report includes:
+
+- f7c14f2 Add passive mock mapper report
+- rytm_randomizer/mock_mapper_report.py
+- tests/test_mock_mapper_report.py
+- Scripts/closeout_check.ps1
+
+The report is passive, read-only, and in-memory only. It summarizes the current
+mock mapper support state without expanding mapper scope: profiles `"2"` / My
+BD Hard and `"3"` / My BD Classic are supported, profile `"4"` / My BD
+Acoustic remains unsupported/safe, mock-only status is true, real MIDI is
+absent, port opening is absent, CLI wiring is absent, active behavior is
+absent, and hardware is not required. The closeout suite now includes "Test:
+Mock Mapper Report". It adds no real MIDI backend, mido dependency, MIDI port
+opening, MIDI sending, active execution, CLI wiring, dispatch, hardware
+behavior, SysEx, GUI, capture, Analog Four support, Pads 5-12 support, or
+machine/profile universe expansion. The protected V1.34 reference remains
+untouched. Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

@@ -16,6 +16,10 @@ Current HEAD before this slice:
 
 - 55b973d Add mock mapper profile 4 decision note
 
+Latest implemented reporting milestone:
+
+- f7c14f2 Add passive mock mapper report
+
 Current phase:
 
 - passive CLI / dry-run foundation complete
@@ -41,6 +45,27 @@ Unsupported by current decision:
 
 Profile `"4"` remains intentionally unsupported/safe until separately
 approved.
+
+## Passive Mock Mapper Report
+
+The passive mock mapper report milestone adds:
+
+- `rytm_randomizer/mock_mapper_report.py`
+- `tests/test_mock_mapper_report.py`
+- `Scripts/closeout_check.ps1`
+
+The report summarizes current mock mapper state in memory only:
+
+- supported mock mapper profiles: `"2"` / My BD Hard and `"3"` / My BD Classic
+- unsupported/safe profile: `"4"` / My BD Acoustic
+- mock-only status: true
+- real MIDI: absent
+- port opening: absent
+- CLI wiring: absent
+- active behavior: absent
+- hardware required: false
+
+The closeout suite now includes "Test: Mock Mapper Report".
 
 ## Current Safety Status
 
@@ -84,20 +109,20 @@ approved.
 - passive CLI
 - mock MIDI
 - mock message mapper
+- mock mapper report
 
 ## Next Decision Options
 
 - Option A: keep mapper scope frozen for now.
 - Option B: plan profile `"4"` mock-only support in a separate reviewed slice.
-- Option C: build a passive mock mapper report/summary layer.
-- Option D: pause mapper work and write a larger project progress report.
+- Option C: pause mapper work and write a larger project progress report.
 
 ## Recommendation
 
 - Do not implement profile `"4"` immediately.
 - Prefer either:
   - keep mapper scope frozen and produce a broader progress report
-  - build a passive mock mapper report/summary layer if more tooling is needed
+  - plan profile `"4"` support only after explicit approval
 - Any profile `"4"` expansion should require explicit approval and remain
   mock-only/test-only.
 
