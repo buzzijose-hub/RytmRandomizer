@@ -218,6 +218,14 @@ The future active test-plan is accepted as the current planning gate. The
 review confirms that no implementation exists, hardware remains off, and this
 plan does not authorize implementation or hardware validation by itself.
 
+Roadmap status:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
+
+The roadmap names the current phase as the Passive/Mock Foundation Phase and
+sets the next recommended task as roadmap review/acceptance before any
+first-candidate mock-only active test design.
+
 Then decide whether to:
 
 - add more mock-only test coverage

@@ -174,6 +174,15 @@ gate. It confirms no implementation exists, hardware remains off, passive
 commands remain read-only, and future active-facing work must remain
 mock-only and documentation/test-gated until explicitly approved.
 
+Passive/mock foundation roadmap:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
+
+The roadmap names the current phase as the Passive/Mock Foundation Phase,
+records that the foundation is complete enough for planning, keeps profile
+`"4"` parked, and sets the next recommended task as roadmap
+review/acceptance.
+
 ## Decision
 
 - Passive/mock foundation is stable and documented.

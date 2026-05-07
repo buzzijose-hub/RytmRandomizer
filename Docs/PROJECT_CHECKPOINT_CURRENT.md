@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 75a2afd Add future active test plan review
 - f8aa7aa Add future active test plan
 - 2e951c2 Add passive mock foundation progress report
 - 9780bcf Add passive mock mapper CLI preview phase review
@@ -379,6 +380,18 @@ broader roadmap/timeline update, creating a first-candidate mock-only active
 test design document, adding more mock-only safety tests only after separate
 approved design, or returning to passive/project documentation.
 
+The passive/mock foundation roadmap now lives in:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md
+
+The roadmap names the current phase as the Passive/Mock Foundation Phase. It
+records that the phase is complete enough for planning, not active, not
+hardware-facing, and includes no real MIDI. It summarizes the completed safe
+foundation, keeps group profile `"4"` parked as unsupported/safe, lists the
+next planning gates before mock-only active tests, and documents the later
+conditions required before any real hardware validation. The next recommended
+task is roadmap review/acceptance.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -445,6 +458,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive mock foundation progress report
 - future active test-plan
 - future active test-plan review
+- passive mock foundation roadmap
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1783,6 +1797,25 @@ test design document, adding more mock-only safety tests after separate
 approved design, or returning to passive/project documentation. The protected
 V1.34 reference remains untouched. Analog Rytm and Analog Four remain off for
 this phase.
+
+The passive/mock foundation roadmap includes:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md
+
+The roadmap is documentation-only. It names the current phase as the
+Passive/Mock Foundation Phase and records that the phase is complete enough to
+support future planning. It summarizes the completed safe foundation, current
+supported mock scope, intentionally absent real MIDI, mido, MIDI port opening,
+MIDI sending, active execution, CLI wiring to active behavior, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+machine/profile expansion, execute-command, send-command, hardware-test, and
+hardware validation. It lists next planning gates from roadmap review through
+much later real hardware validation, keeps profile `"4"` / My BD Acoustic
+parked unless separately approved, and recommends roadmap review/acceptance
+next. It adds no implementation, code, tests, closeout changes, real MIDI
+behavior, active behavior, or hardware requirement. The protected V1.34
+reference remains untouched. Analog Rytm and Analog Four remain off for this
+phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

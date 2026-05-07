@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f8aa7aa
+75a2afd
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f8aa7aa Add future active test plan
+- current HEAD: 75a2afd Add future active test plan review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: choose a safe post-review branch after future active test-plan acceptance
+- next recommended task: roadmap review/acceptance
 - closeout command
 - stop condition
 
@@ -371,6 +371,31 @@ Safe next options are pausing, writing a broader roadmap/timeline update,
 creating a first-candidate mock-only active test design document, adding more
 mock-only safety tests after a separate approved design, or returning to
 passive/project documentation.
+
+## Passive Mock Foundation Roadmap
+
+`Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` records the current roadmap/timeline
+after the passive/mock foundation work.
+
+It names the current phase:
+
+- Passive/Mock Foundation Phase
+
+It confirms:
+
+- the phase is complete enough for future planning
+- the phase does not include real MIDI
+- the phase does not include active execution
+- the phase does not include hardware validation
+- group profiles `"2"` and `"3"` are supported in the mock mapper
+- group profile `"4"` / My BD Acoustic remains parked as unsupported/safe
+- roadmap review/acceptance is the next recommended gate
+
+The roadmap lists next planning gates through first-candidate mock-only active
+test design, mock-only active candidate tests, later active boundary review,
+later real MIDI boundary design, later hardware validation checklist, and much
+later real hardware validation only after explicit approval. It is
+documentation-only and adds no runtime behavior.
 
 ## Passive Mock Foundation Decision Checkpoint
 
@@ -1621,9 +1646,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- pause at this clean planning checkpoint
-- write a broader roadmap/timeline update
-- create a first-candidate mock-only active test design document
+- roadmap review/acceptance
+- after roadmap review, create a first-candidate mock-only active test design document
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

@@ -110,8 +110,8 @@ Before any future real hardware validation:
 
 ## Safe Next Options
 
-- Option A: pause at this clean planning checkpoint.
-- Option B: write a broader roadmap/timeline update.
+- Option A: roadmap review/acceptance checkpoint.
+- Option B: pause at this clean planning checkpoint.
 - Option C: create a first-candidate mock-only active test design document.
 - Option D: add more mock-only safety tests, but only after a separate approved design.
 - Option E: keep active planning frozen and return to passive/project documentation.
@@ -120,13 +120,13 @@ Before any future real hardware validation:
 
 - Do not implement active behavior yet.
 - Do not turn on hardware.
-- Prefer either:
-  - broader roadmap/timeline update
-  - first-candidate mock-only active test design document
+- Prefer roadmap review/acceptance next.
+- Then create a first-candidate mock-only active test design document.
 - Keep all future active-facing work mock-only and documentation/test-gated until explicitly approved.
 
 ## Decision
 
 - `Docs/FUTURE_ACTIVE_TEST_PLAN.md` accepted for planning.
+- `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md` is the next roadmap checkpoint.
 - Hardware remains off.
 - No implementation in this slice.
