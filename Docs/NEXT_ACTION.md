@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-ccfc2e3 Refresh handoff after mock-first active boundary review
+906fbba Add mock-first active boundary progress report
 
 ## Current Phase
 
@@ -64,8 +64,18 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to review the broader mock-first active boundary
-progress report, then decide whether to create a mock-only safety test design.
+Next recommended task is to review and accept the mock-only active boundary
+safety test design.
+
+The mock-only active boundary safety test design is:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md`
+
+The design proposes a future test-only slice that should prefer extending:
+
+- `tests/test_active_boundary.py`
+
+It does not implement tests or code in this slice.
 
 The broader mock-first active boundary progress report is:
 

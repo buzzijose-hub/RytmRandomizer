@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 906fbba Add mock-first active boundary progress report
 - ccfc2e3 Refresh handoff after mock-first active boundary review
 - 1307fab Add mock-first active boundary review
 - ae55174 Update checkpoint after mock-first active boundary
@@ -2262,6 +2263,22 @@ are required for mock emission, all safe failures emit no messages, real MIDI
 and ports remain absent, active CLI behavior remains absent, and hardware
 remains off. It recommends a mock-only safety test design as the next possible
 branch, not implementation.
+
+The mock-only active boundary safety test design includes:
+
+- Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md
+
+The design is documentation-only. It defines a future test-only safety slice
+for the current mock-first active boundary and prefers extending
+`tests/test_active_boundary.py` rather than creating new infrastructure. It
+plans future coverage for metadata copy-safety, unsupported source kind safe
+failure, profile `"3"` remaining unsupported by the active boundary, profile
+`"4"` remaining parked and unsupported, deterministic repeated accepted and
+failure evaluations, sender state remaining unchanged after failure paths,
+type-safety failures before message emission, and no port-provider, real-MIDI,
+or active CLI affordances being exposed. It adds no tests, code, real MIDI,
+ports, active CLI behavior, dispatch, hardware behavior, or profile `"4"`
+support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

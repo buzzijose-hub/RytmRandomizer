@@ -228,6 +228,10 @@ Prefer Option B next:
 That design should stay documentation-only and should decide whether any extra
 coverage is needed before widening the boundary.
 
+That design now lives in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md`
+
 Do not add real MIDI, ports, active CLI commands, dispatch, or hardware
 validation.
 
