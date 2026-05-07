@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- cdbf58a Add real MIDI adapter first implementation planning gate review
 - af458b7 Add real MIDI adapter first implementation planning gate
 - f705eae Add real MIDI adapter boundary safety tests review
 - 76f2fe1 Update checkpoint after real MIDI adapter boundary safety tests
@@ -3085,6 +3086,35 @@ support, hardware validation, and hardware-on authorization remain blocked.
 
 The review is documentation-only. It adds no implementation, tests, runtime
 modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.
+
+The real MIDI adapter first implementation design/spec includes:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC.md
+
+The design/spec records:
+
+- cdbf58a Add real MIDI adapter first implementation planning gate review
+- future module ownership discussion for `rytm_randomizer/real_midi_adapter.py`
+- future dependency isolation and lazy import behavior
+- future port provider and sender boundaries
+- dependency-absent safe failure behavior
+- passive CLI separation
+- active-boundary scope limits
+- future fake-provider-only test requirements
+- V1.34 reference protection
+
+The design/spec defines the future adapter as a narrow boundary only. It does
+not authorize creating `rytm_randomizer/real_midi_adapter.py`, selecting or
+installing a real MIDI dependency, package metadata changes, port opening,
+MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
+
+The design/spec is documentation-only. It adds no implementation, tests,
+runtime modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support,
 hardware validation, or hardware-on authorization.

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-af458b7
+cdbf58a
 
 ## Protected Reference
 
@@ -54,16 +54,17 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: af458b7 Add real MIDI adapter first implementation planning gate
+- current HEAD: cdbf58a Add real MIDI adapter first implementation planning
+  gate review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only first adapter implementation
-  design/spec, return to passive/project documentation, or pause at the
-  accepted planning checkpoint
+- next recommended task: documentation-only review/acceptance of the real MIDI
+  adapter first implementation design/spec, return to passive/project
+  documentation, or pause at the design checkpoint
 - closeout command
 - stop condition
 
@@ -839,6 +840,41 @@ validation, or hardware-on authorization.
 
 The next recommended task is a documentation-only first adapter implementation
 design/spec.
+
+## Real MIDI Adapter First Implementation Design Spec
+
+`Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC.md` defines the
+future first implementation shape for the real MIDI adapter boundary.
+
+The design/spec records:
+
+- cdbf58a Add real MIDI adapter first implementation planning gate review
+- future module ownership discussion for `rytm_randomizer/real_midi_adapter.py`
+- future dependency isolation
+- future lazy import behavior
+- future port provider boundary
+- future sender boundary
+- dependency-absent safe failure behavior
+- passive CLI separation
+- active-boundary scope limits
+- future fake-provider-only test requirements
+- V1.34 reference protection
+- stop conditions before implementation or hardware validation
+
+The design/spec confirms the future adapter should remain a narrow boundary
+only: no passive CLI integration, no active CLI command, no dispatch, no scene
+execution, no profile `"4"` implementation, no profile `"3"` active-boundary
+support, no package metadata changes, no port opening, no MIDI sending, and no
+hardware validation.
+
+The design/spec is documentation-only. It adds no implementation, tests,
+runtime modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this design/spec.
 
 ## Project-Level Roadmap Update
 

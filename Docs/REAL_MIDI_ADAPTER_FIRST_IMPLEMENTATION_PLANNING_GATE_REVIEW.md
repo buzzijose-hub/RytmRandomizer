@@ -285,12 +285,29 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 15. Decision
+## 15. First Adapter Implementation Design Spec
+
+The first adapter implementation design/spec now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The design/spec defines the future adapter boundary shape at planning level
+only. It discusses future module ownership, dependency isolation, lazy import
+behavior, port provider and sender boundaries, dependency-absent safe failure,
+passive CLI separation, active-boundary scope limits, future fake-provider-only
+test requirements, V1.34 reference protection, and stop conditions.
+
+The design/spec does not authorize adapter implementation, dependency
+selection, package metadata changes, port opening, MIDI sending, active CLI
+commands, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
+
+## 16. Decision
 
 The real MIDI adapter first implementation planning gate is accepted.
 
-The next safe branch may be a documentation-only first adapter implementation
-design/spec.
+The next safe branch may be documentation-only review/acceptance of the first
+adapter implementation design/spec.
 
 Adapter implementation remains blocked.
 

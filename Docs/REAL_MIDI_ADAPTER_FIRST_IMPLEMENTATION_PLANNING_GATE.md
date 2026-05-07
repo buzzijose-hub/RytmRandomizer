@@ -304,7 +304,25 @@ opening, MIDI sending, active CLI commands, hardware behavior, hardware
 validation, profile `"4"` implementation, or profile `"3"` active-boundary
 support.
 
-## 16. Decision
+## 16. First Adapter Implementation Design Spec
+
+The first adapter implementation design/spec now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The design/spec documents the future adapter shape at planning level only:
+future module ownership, dependency isolation, lazy import behavior, port
+provider boundary, sender boundary, dependency-absent safe failure, passive CLI
+separation, active-boundary scope limits, fake-provider-only test
+requirements, V1.34 reference protection, and stop conditions.
+
+The design/spec does not authorize creating `rytm_randomizer/real_midi_adapter.py`,
+selecting or installing a real MIDI dependency, package metadata changes, port
+opening, MIDI sending, active CLI commands, hardware behavior, hardware
+validation, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
+
+## 17. Decision
 
 The first adapter implementation planning gate is established.
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-af458b7 Add real MIDI adapter first implementation planning gate
+cdbf58a Add real MIDI adapter first implementation planning gate review
 
 ## Current Phase
 
@@ -66,9 +66,30 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only first adapter implementation
-design/spec, more passive/project documentation, or a pause at this accepted
-planning checkpoint.
+Next recommended task is documentation-only review/acceptance of the real MIDI
+adapter first implementation design/spec, more passive/project documentation,
+or a pause at this design checkpoint.
+
+The latest real MIDI adapter first implementation design/spec is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC.md`
+
+The design/spec records:
+
+- cdbf58a Add real MIDI adapter first implementation planning gate review
+- future module ownership discussion for `rytm_randomizer/real_midi_adapter.py`
+- future dependency isolation and lazy import behavior
+- future port provider and sender boundaries
+- dependency-absent safe failure behavior
+- passive CLI separation
+- active-boundary scope limits
+- future fake-provider-only test requirements
+- V1.34 reference protection
+
+The design/spec is documentation-only. It adds no tests, no adapter module, no
+`mido`, no real MIDI dependency, no package metadata changes, no port opening,
+no MIDI sending, no active CLI commands, no hardware behavior, and no hardware
+validation. It recommends a documentation-only review/acceptance gate next.
 
 The latest real MIDI adapter first implementation planning gate review is:
 
