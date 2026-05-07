@@ -240,3 +240,22 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 13. Adapter Boundary Design
+
+The real MIDI adapter boundary design now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md`
+
+The design defines the future real MIDI adapter boundary at planning level
+only. It documents future module ownership, import isolation, dependency
+isolation, port provider boundaries, sender boundaries, passive CLI separation,
+active-boundary scope limits, deterministic safe failure behavior, tests
+required before implementation, future implementation sequencing, and hardware
+validation preconditions.
+
+The design adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.

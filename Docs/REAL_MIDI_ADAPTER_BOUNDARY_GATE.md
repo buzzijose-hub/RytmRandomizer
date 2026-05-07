@@ -325,3 +325,19 @@ documentation-only real MIDI adapter boundary design.
 The review does not authorize real MIDI dependency installation, adapter
 implementation, port opening, MIDI sending, active CLI commands, hardware
 behavior, hardware validation, or turning hardware on.
+
+## 19. Adapter Boundary Design
+
+The documentation-only real MIDI adapter boundary design now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md`
+
+The design expands this gate into planning-level adapter ownership, import
+isolation, dependency isolation, port provider boundary, sender boundary,
+passive CLI separation, active-boundary scope limits, safe failure behavior,
+required future tests, implementation sequencing, and hardware validation
+preconditions.
+
+The design does not authorize real MIDI dependency installation, adapter
+implementation, port opening, MIDI sending, active CLI commands, hardware
+behavior, hardware validation, or turning hardware on.

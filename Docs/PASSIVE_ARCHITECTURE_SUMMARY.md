@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-75d25c5
+9fc92d2
 
 ## Protected Reference
 
@@ -53,16 +53,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 75d25c5 Add real MIDI adapter boundary gate
+- current HEAD: 9fc92d2 Add real MIDI adapter boundary gate review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only real MIDI adapter boundary design,
-  return to passive/project documentation, or pause at the accepted adapter
-  planning checkpoint
+- next recommended task: documentation-only review/acceptance of the real MIDI
+  adapter boundary design, return to passive/project documentation, or pause
+  at the adapter design checkpoint
 - closeout command
 - stop condition
 
@@ -600,6 +600,36 @@ execution, scene execution, hardware behavior, hardware validation, profile
 
 The next recommended task is a documentation-only real MIDI adapter boundary
 design.
+
+## Real MIDI Adapter Boundary Design
+
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_DESIGN.md` defines the future real MIDI
+adapter boundary at planning level only.
+
+It documents:
+
+- future adapter module ownership
+- import isolation design
+- dependency boundary design
+- port provider design
+- sender boundary design
+- passive CLI separation
+- active boundary relationship
+- deterministic safe failure behavior
+- tests required before implementation
+- future implementation sequence
+- hardware validation boundary
+- stop conditions
+
+The design keeps real MIDI dependency selection deferred and keeps adapter
+implementation blocked. It adds no `mido`, real MIDI dependency, runtime
+adapter module, port opening, MIDI sending, active CLI command, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this design.
 
 ## Project-Level Roadmap Update
 
