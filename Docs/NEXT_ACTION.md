@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-1f352de Add real MIDI adapter-specific test plan
+0e5dd03 Add real MIDI adapter boundary safety tests
 
 ## Current Phase
 
@@ -66,9 +66,30 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a tests-only adapter boundary safety implementation
-slice, more passive/project documentation, or a pause at this accepted adapter
-test planning checkpoint.
+Next recommended task is documentation-only review/acceptance of the real MIDI
+adapter boundary safety tests checkpoint, more passive/project documentation,
+or a pause at this clean safety-test checkpoint.
+
+The latest real MIDI adapter boundary safety tests checkpoint is:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The checkpoint records:
+
+- 0e5dd03 Add real MIDI adapter boundary safety tests
+- `tests/test_real_midi_adapter_boundary.py`
+- `Scripts/closeout_check.ps1`
+- `=== Test: Real MIDI Adapter Boundary ===`
+
+The milestone adds tests-only guardrails proving the real MIDI adapter module
+does not exist yet, passive imports and representative passive CLI commands do
+not load adapter or real MIDI modules, passive sources do not reference
+adapter/port/active command affordances, active-boundary scope still accepts
+only group profile `"2"`, profiles `"3"` and `"4"` remain unsupported by the
+active boundary, closeout includes the new test file, and the V1.34 reference
+diff remains empty. It adds no `mido`, no real MIDI dependency, no adapter
+module, no port opening, no MIDI sending, no active CLI commands, no hardware
+behavior, and no hardware validation.
 
 The latest real MIDI adapter-specific test plan review is:
 

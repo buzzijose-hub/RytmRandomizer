@@ -300,3 +300,29 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 16. Adapter Boundary Safety Tests Checkpoint
+
+The real MIDI adapter boundary safety tests checkpoint now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The checkpoint records:
+
+- 0e5dd03 Add real MIDI adapter boundary safety tests
+- `tests/test_real_midi_adapter_boundary.py`
+- `Scripts/closeout_check.ps1`
+- `=== Test: Real MIDI Adapter Boundary ===`
+
+The tests-only milestone proves the adapter module is not implemented yet,
+passive imports and representative passive CLI commands do not load adapter or
+real MIDI modules, passive sources avoid adapter/port/active command
+affordances, active-boundary scope remains limited to group profile `"2"`,
+profiles `"3"` and `"4"` remain unsupported by the active boundary, closeout
+includes the new test file, and the V1.34 reference diff remains empty.
+
+The checkpoint adds no implementation, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
