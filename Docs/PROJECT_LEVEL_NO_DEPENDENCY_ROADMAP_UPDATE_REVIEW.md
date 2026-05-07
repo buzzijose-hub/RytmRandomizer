@@ -261,3 +261,18 @@ Package metadata remains unchanged.
 Hardware remains off.
 
 No implementation is added by this slice.
+
+## 14. Session Handoff
+
+The follow-up session handoff now lives in:
+
+- `Docs/SESSION_HANDOFF_NO_DEPENDENCY_ROADMAP_REVIEW.md`
+
+It provides a practical resume point after this accepted roadmap review. It
+keeps Candidate A as the accepted no-dependency path, keeps dependency
+selection deferred, keeps package metadata unchanged, keeps hardware
+validation blocked, and keeps hardware off.
+
+The handoff does not authorize dependency selection, package metadata changes,
+real MIDI implementation, active CLI behavior, hardware validation, or turning
+hardware on.
