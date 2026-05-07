@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3ad0939
+8f9fa46
 
 ## Protected Reference
 
@@ -51,15 +51,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3ad0939 Update checkpoint after real MIDI import safety tests
+- current HEAD: 8f9fa46 Add real MIDI import safety tests review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only next-phase planning gate, return
-  to passive/project documentation, or pause at the clean test-safety
+- next recommended task: documentation-only real MIDI dependency decision
+  note, return to passive/project documentation, or pause at the clean safety
   checkpoint
 - closeout command
 - stop condition
@@ -485,6 +485,27 @@ runtime modules, real MIDI dependencies, port opening, MIDI sending, active
 CLI commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support, hardware
 validation, or hardware-on authorization.
+
+## Real MIDI Next Phase Planning Gate
+
+`Docs/REAL_MIDI_NEXT_PHASE_PLANNING_GATE.md` records the safe decision point
+after the reviewed real MIDI import and port safety tests.
+
+It records:
+
+- real MIDI import and passive CLI safety tests are in closeout
+- real MIDI implementation remains blocked
+- hardware validation remains blocked
+- profile `"3"` remains unsupported by the active boundary
+- profile `"4"` remains parked and unsupported
+- next safe branches are documentation-only or separately approved work
+
+The gate recommends a documentation-only real MIDI dependency decision note as
+the next branch. It does not add implementation, tests, runtime modules, real
+MIDI dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
 
 ## Project-Level Roadmap Update
 

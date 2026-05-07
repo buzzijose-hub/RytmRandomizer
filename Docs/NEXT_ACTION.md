@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3ad0939 Update checkpoint after real MIDI import safety tests
+8f9fa46 Add real MIDI import safety tests review
 
 ## Current Phase
 
@@ -66,8 +66,19 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only next-phase planning gate, more
-passive/project documentation, or a pause at this clean test-safety checkpoint.
+Next recommended task is a documentation-only real MIDI dependency decision
+note, more passive/project documentation, or a pause at this clean safety
+checkpoint.
+
+The latest real MIDI next-phase planning gate is:
+
+- `Docs/REAL_MIDI_NEXT_PHASE_PLANNING_GATE.md`
+
+The gate records the current safe decision point after the reviewed real MIDI
+import and port safety tests. It keeps real MIDI implementation blocked,
+keeps hardware validation blocked, keeps profile `"3"` unsupported by the
+active boundary, keeps profile `"4"` parked, and recommends a
+documentation-only real MIDI dependency decision note next.
 
 The latest real MIDI import and port safety tests review is:
 

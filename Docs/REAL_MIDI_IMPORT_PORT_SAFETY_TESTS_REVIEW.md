@@ -245,3 +245,21 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Next Phase Planning Gate
+
+The next phase planning gate now lives in:
+
+- `Docs/REAL_MIDI_NEXT_PHASE_PLANNING_GATE.md`
+
+The gate records the safe decision point after this reviewed test-safety
+checkpoint. It keeps real MIDI implementation blocked, hardware validation
+blocked, profile `"3"` unsupported by the active boundary, and profile `"4"`
+parked and unsupported.
+
+The gate recommends a documentation-only real MIDI dependency decision note as
+the next branch. It adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
