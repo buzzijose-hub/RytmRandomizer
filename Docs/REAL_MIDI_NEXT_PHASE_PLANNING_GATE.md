@@ -238,3 +238,16 @@ decision note.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Dependency Decision Note
+
+The real MIDI dependency decision note now lives in:
+
+- `Docs/REAL_MIDI_DEPENDENCY_DECISION_NOTE.md`
+
+The note records the current decision to defer real MIDI dependency selection.
+It adds no `mido`, no real MIDI backend, no dependency installation, no package
+metadata changes, no port opening, no MIDI sending, no active CLI commands, no
+hardware behavior, and no hardware validation.
+
+The note recommends a documentation-only review/acceptance gate next.

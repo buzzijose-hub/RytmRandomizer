@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-8f9fa46
+49b194f
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 8f9fa46 Add real MIDI import safety tests review
+- current HEAD: 49b194f Add real MIDI next phase planning gate
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only real MIDI dependency decision
-  note, return to passive/project documentation, or pause at the clean safety
-  checkpoint
+- next recommended task: documentation-only review/acceptance of the real
+  MIDI dependency decision note, return to passive/project documentation, or
+  pause at the clean dependency decision checkpoint
 - closeout command
 - stop condition
 
@@ -506,6 +506,26 @@ MIDI dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or
 hardware-on authorization.
+
+## Real MIDI Dependency Decision Note
+
+`Docs/REAL_MIDI_DEPENDENCY_DECISION_NOTE.md` records the current real MIDI
+dependency decision after the next-phase planning gate.
+
+Decision:
+
+- defer real MIDI dependency selection
+- do not add `mido`
+- do not add any real MIDI backend
+- do not install MIDI packages
+- do not edit dependency metadata for MIDI
+
+The note requires a separate real MIDI adapter boundary design and review
+before any dependency can be added. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
 
 ## Project-Level Roadmap Update
 
