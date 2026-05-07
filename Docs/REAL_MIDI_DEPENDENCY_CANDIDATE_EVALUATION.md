@@ -324,6 +324,15 @@ Unsafe next moves:
 Prefer a documentation-only review/acceptance gate for this dependency
 candidate evaluation next.
 
+The review gate for this dependency candidate evaluation is:
+
+- `Docs/REAL_MIDI_DEPENDENCY_CANDIDATE_EVALUATION_REVIEW.md`
+
+The review accepts Candidate A, continue with no real MIDI dependency, as the
+current position. It does not authorize dependency selection, package metadata
+changes, real port opening, MIDI sending, active CLI commands, hardware
+behavior, hardware validation, or hardware-on authorization.
+
 Keep Candidate A, no real MIDI dependency, as the current position.
 
 Do not select a dependency yet.
