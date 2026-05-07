@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-48941d8
+5493805
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 48941d8 Add real MIDI implementation design review
+- current HEAD: 5493805 Add real MIDI implementation test plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the real MIDI implementation test
-  plan, return to passive/project documentation, or pause at the clean
-  planning checkpoint
+- next recommended task: create a tests-only implementation plan for real MIDI
+  import and port safety, return to passive/project documentation, or pause at
+  the accepted real MIDI implementation test plan checkpoint
 - closeout command
 - stop condition
 
@@ -353,6 +353,42 @@ boundary, keeps profile `"4"` parked and unsupported, keeps real MIDI absent,
 keeps ports closed, keeps active CLI behavior absent, and keeps hardware off.
 
 The test plan does not authorize test implementation, real MIDI imports, mido,
+port opening, MIDI sending, active CLI commands, passive CLI active-boundary
+evaluation, passive CLI construction of `MockMidiSender`, dispatch, command
+execution, scene execution, hardware behavior, profile `"4"` implementation,
+profile `"3"` active-boundary support, hardware validation, or turning
+hardware on.
+
+## Real MIDI Implementation Test Plan Review
+
+`Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN_REVIEW.md` accepts
+`Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md` as the current real MIDI-facing
+test planning baseline.
+
+It accepts:
+
+- 5493805 Add real MIDI implementation test plan
+- future test file ownership
+- passive import safety coverage
+- passive CLI safety coverage
+- dependency absence coverage
+- port-provider isolation coverage
+- sender safe-failure coverage
+- active-boundary scope guard coverage
+- passive CLI regression coverage
+- V1.34 reference protection
+- future closeout integration
+- tests-only implementation sequencing
+- later hardware validation preconditions
+- forbidden scope
+
+The review confirms real MIDI test implementation remains blocked until a
+tests-only implementation plan is accepted, real MIDI implementation remains
+blocked, hardware validation remains blocked, hardware remains off, profile
+`"3"` remains unsupported by the active boundary, and profile `"4"` remains
+parked and unsupported.
+
+The review does not authorize test implementation, real MIDI imports, mido,
 port opening, MIDI sending, active CLI commands, passive CLI active-boundary
 evaluation, passive CLI construction of `MockMidiSender`, dispatch, command
 execution, scene execution, hardware behavior, profile `"4"` implementation,

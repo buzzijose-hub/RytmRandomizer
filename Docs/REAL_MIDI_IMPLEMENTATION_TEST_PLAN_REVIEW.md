@@ -1,9 +1,9 @@
-# Real MIDI Implementation Design Spec Review
+# Real MIDI Implementation Test Plan Review
 
 ## 1. Purpose
 
-Review and accept `Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md` as the
-current real MIDI implementation design/spec baseline.
+Review and accept `Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md` as the current
+real MIDI-facing test planning baseline.
 
 Confirm this is a review checkpoint only.
 
@@ -19,7 +19,7 @@ Current branch:
 
 Current HEAD before this slice:
 
-- 8bfa73c Add real MIDI implementation design spec
+- 5493805 Add real MIDI implementation test plan
 
 Current phase:
 
@@ -28,8 +28,9 @@ Current phase:
 - mock-first active boundary safety baseline accepted
 - real MIDI boundary planning gate accepted
 - real MIDI boundary plan accepted
-- real MIDI implementation design/spec created
-- real MIDI implementation design/spec now being reviewed
+- real MIDI implementation design/spec accepted
+- real MIDI implementation test plan created
+- real MIDI implementation test plan now being reviewed
 - no real MIDI or hardware validation started
 
 Hardware status:
@@ -40,31 +41,34 @@ Hardware status:
 
 ## 3. Review Decision
 
-`Docs/REAL_MIDI_IMPLEMENTATION_DESIGN_SPEC.md` is accepted as the current real
-MIDI implementation design/spec baseline.
+`Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md` is accepted as the current real
+MIDI-facing test planning baseline.
 
 The accepted planning milestone is:
 
-- 8bfa73c Add real MIDI implementation design spec
+- 5493805 Add real MIDI implementation test plan
 
-This review does not authorize implementation by itself.
+This review does not authorize test implementation by itself.
+
+This review does not authorize real MIDI implementation by itself.
 
 This review does not authorize turning hardware on by itself.
 
-## 4. Accepted Design Concepts
+## 4. Accepted Test Planning Concepts
 
-The accepted design/spec defines these concepts at planning level only:
+The accepted test plan defines these concepts at planning level only:
 
-- future file ownership
-- conceptual future interfaces
-- message translation rules
-- dependency isolation
-- port-provider boundary
-- sender boundary
-- active-boundary integration limits
-- passive CLI separation
-- required future test categories
-- future implementation sequencing
+- future test file ownership
+- passive import safety coverage
+- passive CLI safety coverage
+- dependency absence coverage
+- port-provider isolation coverage
+- sender safe-failure coverage
+- active-boundary scope guard coverage
+- passive CLI regression coverage
+- V1.34 reference protection
+- future closeout integration
+- future tests-only implementation sequence
 - later hardware validation preconditions
 - forbidden scope
 
@@ -124,20 +128,21 @@ This review confirms there is still no:
 - profile `"4"` implementation
 - profile `"3"` active-boundary support
 
-## 7. Preconditions Before Any Future Test Plan
+## 7. Preconditions Before Any Future Tests-Only Plan
 
-Before any future documentation-only real MIDI implementation test plan:
+Before any future tests-only implementation plan:
 
 - Git status must be clean
 - closeout must pass
 - V1.34 reference diff must be empty
-- this real MIDI implementation design/spec review must remain accepted
+- this real MIDI implementation test plan review must remain accepted
 - passive CLI must remain read-only
 - mock-first active boundary safety baseline must remain accepted
 - hardware must remain off
-- the future test plan must stay documentation-only
-- the future test plan must not add dependencies
-- the future test plan must not add active CLI commands
+- the future implementation plan must remain tests-only
+- the future implementation plan must not add dependencies
+- the future implementation plan must not add active CLI commands
+- the future implementation plan must not add real MIDI sending
 
 ## 8. Preconditions Before Any Later Tests
 
@@ -146,7 +151,7 @@ This review does not authorize test implementation.
 Before any later real MIDI boundary tests could be implemented, the project
 would need:
 
-- accepted real MIDI implementation test plan
+- accepted tests-only implementation plan
 - explicit test file ownership
 - explicit no-real-port test strategy
 - explicit no-real-MIDI-import test strategy
@@ -164,8 +169,8 @@ This review does not authorize implementation.
 Before any later real MIDI implementation could be considered, the project
 would need:
 
-- accepted real MIDI implementation test plan
 - completed and reviewed mock-only/import-safety tests
+- accepted implementation plan
 - explicit dependency decision
 - tests proving passive imports do not import real MIDI libraries
 - tests proving passive CLI commands do not open ports
@@ -203,7 +208,7 @@ Safe next options:
 
 - pause at this accepted planning checkpoint
 - return to passive/project documentation
-- create a documentation-only real MIDI implementation test plan
+- create a tests-only implementation plan for real MIDI import/port safety
 
 Unsafe next moves:
 
@@ -219,8 +224,10 @@ Unsafe next moves:
 
 ## 12. Recommendation
 
-If continuing, write a documentation-only real MIDI implementation test plan
-next.
+If continuing, write a tests-only implementation plan for real MIDI import and
+port safety next.
+
+Do not implement tests yet.
 
 Do not implement real MIDI.
 
@@ -234,8 +241,11 @@ Do not turn on hardware.
 
 ## 13. Decision
 
-The real MIDI implementation design/spec is accepted as the current planning
+The real MIDI implementation test plan is accepted as the current planning
 baseline.
+
+Real MIDI test implementation remains blocked until a tests-only
+implementation plan is accepted.
 
 Real MIDI implementation remains blocked.
 
@@ -243,40 +253,4 @@ Hardware validation remains blocked.
 
 Hardware remains off.
 
-No implementation is added in this slice.
-
-## 14. Real MIDI Implementation Test Plan
-
-The documentation-only real MIDI implementation test plan now lives in:
-
-- `Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md`
-
-The test plan follows this accepted review and defines future real-MIDI-facing
-test strategy at planning level only. It documents future test file ownership,
-passive import safety, passive CLI safety, dependency absence, port-provider
-isolation, sender safe-failure behavior, active-boundary scope guards, passive
-CLI regressions, V1.34 reference protection, closeout integration, and future
-sequencing.
-
-The test plan adds no implementation, tests, real MIDI, mido, port opening,
-MIDI sending, active CLI commands, dispatch, command execution, scene
-execution, hardware behavior, profile `"4"` implementation, profile `"3"`
-active-boundary support, hardware validation, or hardware-on authorization.
-
-## 15. Real MIDI Implementation Test Plan Review
-
-The real MIDI implementation test plan review now lives in:
-
-- `Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN_REVIEW.md`
-
-The review accepts:
-
-- `Docs/REAL_MIDI_IMPLEMENTATION_TEST_PLAN.md`
-- 5493805 Add real MIDI implementation test plan
-
-The review accepts the test plan as the current real MIDI-facing test
-planning baseline. It does not authorize test implementation, real MIDI
-imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
-command execution, scene execution, hardware behavior, profile `"4"`
-implementation, profile `"3"` active-boundary support, hardware validation,
-or turning hardware on.
+No tests or implementation are added in this slice.
