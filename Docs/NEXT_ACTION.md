@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-51b1a8f Add mock-only active boundary safety tests
+08aee17 Update checkpoint after mock-only active boundary safety tests
 
 ## Current Phase
 
@@ -64,8 +64,22 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance checkpoint for
-the completed mock-only active boundary safety tests.
+Next recommended task is a broader documentation-only active boundary safety
+coverage progress report, or a pause at the clean review checkpoint.
+
+The latest mock-only active boundary safety tests review is:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_REVIEW.md`
+
+The review accepts:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The review confirms the completed safety tests are accepted as the current
+mock-only active boundary safety coverage checkpoint. It adds no
+implementation, real MIDI, ports, active CLI behavior, dispatch, hardware
+behavior, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
 
 The latest mock-only active boundary safety tests checkpoint is:
 

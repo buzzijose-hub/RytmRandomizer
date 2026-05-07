@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 08aee17 Update checkpoint after mock-only active boundary safety tests
 - 51b1a8f Add mock-only active boundary safety tests
 - 26f4e3d Add mock-only active boundary safety test review
 - 524144d Add mock-only active boundary safety test design
@@ -2316,6 +2317,25 @@ No closeout script update was needed. The milestone adds no real MIDI, ports,
 active CLI behavior, dispatch, command execution, scene execution, hardware
 behavior, profile `"4"` implementation, or profile `"3"` active-boundary
 support.
+
+The mock-only active boundary safety tests review includes:
+
+- Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_REVIEW.md
+
+The review is documentation-only. It accepts
+`Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md` as the current
+checkpoint for completed mock-only active boundary safety coverage. It accepts
+the `51b1a8f Add mock-only active boundary safety tests` milestone,
+`tests/test_active_boundary.py`, and the existing `=== Test: Active Boundary
+===` closeout coverage. It confirms metadata copy-safety coverage,
+unsupported source kind safe failure, profile `"3"` remaining unsupported by
+the active boundary, profile `"4"` remaining parked and unsupported,
+deterministic repeated accepted and failed evaluations, failure paths emitting
+no messages, invalid type failures before message emission, and no exposed
+port-provider, real-MIDI, or active CLI affordances. It adds no
+implementation, tests, real MIDI, ports, active CLI behavior, dispatch,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

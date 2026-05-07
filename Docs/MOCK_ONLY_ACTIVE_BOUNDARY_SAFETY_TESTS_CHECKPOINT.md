@@ -153,10 +153,15 @@ The project remains:
 - separated from real MIDI
 - not hardware-facing
 
-## 9. Recommended Next Task
+## 9. Review Status
 
-The next recommended task is a documentation-only review/acceptance checkpoint
-for the completed mock-only active boundary safety tests.
+The completed safety tests are accepted in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_REVIEW.md`
+
+The next recommended task is either a broader documentation-only active
+boundary safety coverage progress report or a pause at this clean review
+checkpoint.
 
 Then decide whether to:
 
