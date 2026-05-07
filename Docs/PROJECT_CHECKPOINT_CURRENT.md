@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 1c8566a Add read-only active boundary visibility progress report review
 - e224a2d Add read-only active boundary visibility progress report
 - 2bc0a9e Add read-only active boundary report CLI preview review
 - f495483 Update checkpoint after read-only active boundary report CLI preview
@@ -2375,6 +2376,29 @@ active-boundary visibility or mock-only safety work behind separate
 design/review gates. It adds no implementation, tests, real MIDI, ports,
 active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+The project-level progress checkpoint includes:
+
+- Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md
+
+The checkpoint consolidates the current whole-project passive/mock foundation:
+passive CLI report/list/search/inspect/preview, mock MIDI scaffold, mock
+message mapper/report, mock mapper report CLI preview, mock-first active
+boundary, mock-only active boundary safety coverage, read-only active boundary
+report, `active-boundary-report` passive CLI preview, and current closeout
+coverage.
+
+It records that group profiles `"2"` and `"3"` remain mock mapper scope,
+profile `"4"` remains parked/unsupported, profile `"2"` / My BD Hard remains
+the only active-boundary candidate, profile `"3"` remains unsupported by the
+active boundary, and real MIDI, ports, active CLI commands, dispatch,
+execution, hardware behavior, and hardware validation remain intentionally
+absent.
+
+The project-level checkpoint is documentation-only. It adds no implementation,
+tests, real MIDI, port opening, MIDI sending, active execution, CLI wiring,
+dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
 
 The mock-only active boundary safety tests review includes:
 

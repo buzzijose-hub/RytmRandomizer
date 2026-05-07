@@ -220,6 +220,8 @@ Safe next options:
 
 - pause at this clean review checkpoint
 - write a broader project-level progress checkpoint
+- use `Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md` as the broader
+  project-level checkpoint once that follow-up document exists
 - keep active planning frozen and return to passive/project documentation
 - plan additional mock-only safety coverage only through a separate design
   gate
@@ -236,8 +238,9 @@ Unsafe next moves:
 
 ## 12. Recommendation
 
-Pause at this clean review checkpoint or write a broader project-level
-progress checkpoint next.
+Pause at this clean review checkpoint or use
+`Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md` as the broader project-level
+progress checkpoint.
 
 Do not add real MIDI.
 

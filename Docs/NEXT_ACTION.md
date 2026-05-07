@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-e224a2d Add read-only active boundary visibility progress report
+1c8566a Add read-only active boundary visibility progress report review
 
 ## Current Phase
 
@@ -66,9 +66,28 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is either a broader project-level progress checkpoint,
-more passive/project documentation, or a pause at this clean review
-checkpoint.
+Next recommended task is either review/acceptance of the project-level
+progress checkpoint, a session agenda/handoff, or a pause at this clean
+project checkpoint.
+
+The latest project-level progress checkpoint is:
+
+- `Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md`
+
+The checkpoint consolidates:
+
+- passive CLI foundation
+- mock MIDI scaffold
+- mock message mapper and report
+- mock-first active boundary
+- read-only active boundary report and CLI preview
+- current closeout coverage
+- absent real MIDI, ports, active behavior, dispatch, execution, and hardware
+  behavior
+
+It records that profiles `"2"` and `"3"` remain mock mapper scope, profile
+`"4"` remains parked/unsupported, only profile `"2"` is accepted by the
+mock-first active boundary, and hardware remains off.
 
 The latest read-only active boundary visibility progress report review is:
 

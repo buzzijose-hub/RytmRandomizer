@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-e224a2d
+1c8566a
 
 ## Protected Reference
 
@@ -51,17 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: e224a2d Add read-only active boundary visibility progress
-  report
+- current HEAD: 1c8566a Add read-only active boundary visibility progress
+  report review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a broader project-level progress checkpoint,
-  return to passive/project documentation, or pause at the clean review
-  checkpoint
+- next recommended task: review/accept the project-level progress checkpoint,
+  write a session agenda/handoff, or pause at the clean project checkpoint
 - closeout command
 - stop condition
 
@@ -390,6 +389,40 @@ It confirms:
 The review is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI behavior, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+## Project-Level Progress Checkpoint
+
+`Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md` consolidates the current
+project-level passive/mock foundation after the read-only active boundary
+visibility review.
+
+It summarizes:
+
+- passive CLI foundation
+- mock MIDI scaffold
+- mock message mapper and report
+- mock mapper report CLI preview
+- mock-first active boundary
+- mock-only active boundary safety tests
+- read-only active boundary report
+- `active-boundary-report` passive CLI preview
+- current closeout coverage
+- supported mock mapper profiles `"2"` and `"3"`
+- profile `"4"` remaining parked/unsupported
+- profile `"2"` remaining the only accepted active-boundary candidate
+- profile `"3"` remaining unsupported by the active boundary
+- intentionally absent real MIDI, ports, active CLI commands, dispatch,
+  execution, and hardware behavior
+
+The checkpoint records the project as stable enough to pause, review/accept
+the checkpoint, write a session handoff, or plan only separately gated
+mock-only safety work.
+
+The checkpoint is documentation-only. It adds no implementation, tests, real
+MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
 
 ## Read-Only Active Boundary Visibility Progress Report
 
@@ -2567,6 +2600,10 @@ Recommended passive layers before runtime work:
   context is useful
 - pause or write a broader project-level progress checkpoint before any
   additional active-boundary CLI visibility
+- review and accept the project-level progress checkpoint or pause before any
+  further active-boundary planning
+- write a session handoff/current agenda if resumption clarity is more useful
+  than additional implementation
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved
