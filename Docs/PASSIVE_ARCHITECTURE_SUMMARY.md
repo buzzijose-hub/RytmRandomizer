@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5c0e990
+d0a9b8d
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 5c0e990 Add additional active boundary safety coverage design
+- current HEAD: d0a9b8d Add additional active boundary safety tests
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement only the accepted test-only additional
-  mock-only active-boundary safety coverage, return to passive/project
-  documentation, or pause at the accepted design review checkpoint
+- next recommended task: review/accept the completed additional mock-only
+  active-boundary safety tests checkpoint, return to passive/project
+  documentation, or pause at the clean test-only checkpoint
 - closeout command
 - stop condition
 
@@ -451,6 +451,56 @@ mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
 machine/profile expansion.
+
+## Additional Mock-Only Active Boundary Safety Tests
+
+The additional mock-only active boundary safety tests milestone is:
+
+- d0a9b8d Add additional active boundary safety tests
+
+It updates:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+The checkpoint lives in:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The milestone adds test-only coverage for:
+
+- accepted result metadata including target data and remaining immutable
+- failure result metadata recording source kind, source key, mock-only status,
+  and sends-real-MIDI false
+- request source keys normalizing to strings before evaluation
+- custom request metadata not leaking into emitted mock message metadata
+- accepted evaluation not mutating request metadata or source mapper output
+- exact source kind matching
+- sender receiving exactly emitted messages and no extras
+- target values remaining metadata-only without port or hardware selection
+- active boundary report output matching the CLI fixture when joined
+- active boundary report summary exposing no real MIDI, port provider, or
+  hardware target fields
+- unsupported source kinds remaining limited to scene and command
+- closeout coverage staying passive/mock labeled
+- report output mutation not mutating future report output
+- report module staying decoupled from active boundary evaluation
+- top-level CLI help exposing no active execution commands
+- CLI source not evaluating the active boundary
+- CLI source not constructing `MockMidiSender`
+- `active-boundary-report` output keeping boundary profiles and passive safety
+  explicit
+
+No closeout script update was needed because all touched test files were
+already included in closeout.
+
+This milestone adds no runtime code changes, real MIDI, mido, port opening,
+MIDI sending, active CLI commands, passive CLI active-boundary evaluation,
+passive CLI construction of `MockMidiSender`, dispatch, command execution,
+scene execution, hardware behavior, SysEx, GUI/capture, Analog Four support,
+Pads 5-12 support, profile `"4"` implementation, profile `"3"`
+active-boundary support, or machine/profile expansion.
 
 ## Additional Mock-Only Active Boundary Safety Coverage Design
 
@@ -2758,6 +2808,8 @@ Recommended passive layers before runtime work:
   design before any new tests
 - implement only the accepted test-only additional mock-only active-boundary
   safety coverage after design review
+- review and accept the completed additional mock-only active-boundary safety
+  tests checkpoint
 - write a session handoff/current agenda if resumption clarity is more useful
   than additional implementation
 - add more mock-only safety tests only after a separate approved design

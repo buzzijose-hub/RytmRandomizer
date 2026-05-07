@@ -204,3 +204,28 @@ the current planning gate.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 13. Implementation Checkpoint
+
+The accepted test-only coverage was implemented by:
+
+- d0a9b8d Add additional active boundary safety tests
+
+The checkpoint lives in:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The implementation updates only:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+No closeout script update was needed because those files were already covered
+by closeout.
+
+The implementation remains test-only and adds no runtime code changes, real
+MIDI, ports, active CLI commands, passive CLI active-boundary evaluation,
+passive CLI construction of `MockMidiSender`, dispatch, execution, hardware
+behavior, profile `"4"` implementation, or profile `"3"` active-boundary
+support.

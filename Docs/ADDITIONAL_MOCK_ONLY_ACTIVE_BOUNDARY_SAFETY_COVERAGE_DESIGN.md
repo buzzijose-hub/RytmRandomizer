@@ -238,3 +238,24 @@ The review accepts this document as the current planning gate for future
 test-only active-boundary safety coverage. It does not authorize real MIDI,
 ports, active CLI commands, dispatch, hardware behavior, profile `"4"`
 implementation, or profile `"3"` active-boundary support.
+
+## 15. Implementation Checkpoint
+
+The accepted test-only coverage was implemented by:
+
+- d0a9b8d Add additional active boundary safety tests
+
+The checkpoint lives in:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The milestone updates only:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+It adds no runtime code changes, real MIDI, ports, active CLI commands,
+passive CLI active-boundary evaluation, passive CLI construction of
+`MockMidiSender`, dispatch, execution, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.

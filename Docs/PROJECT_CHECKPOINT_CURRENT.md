@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d0a9b8d Add additional active boundary safety tests
+- 18dca7c Add additional active boundary safety coverage review
 - 5c0e990 Add additional active boundary safety coverage design
 - 6d4ce4a Add session agenda handoff review
 - b3736cf Add session agenda handoff
@@ -2480,6 +2482,40 @@ It confirms the next safe implementation may add only accepted test-only
 coverage. It adds no implementation, tests, real MIDI, port opening, MIDI
 sending, active execution, CLI wiring, dispatch, hardware behavior, profile
 `"4"` implementation, or profile `"3"` active-boundary support.
+
+The additional mock-only active boundary safety tests checkpoint includes:
+
+- Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md
+
+The test-only milestone is:
+
+- d0a9b8d Add additional active boundary safety tests
+
+The milestone updates:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+It adds accepted test-only coverage for active boundary metadata and
+immutability, failure metadata, request source key normalization, metadata
+leak prevention, source mapper output copy-safety, exact source-kind matching,
+sender emission exactness, target metadata staying metadata-only, active
+boundary report output and summary safety, passive/mock closeout labels,
+report output copy-safety, report decoupling from boundary evaluation,
+top-level CLI help exposing no active execution commands, CLI source not
+evaluating active boundary requests, CLI source not constructing
+`MockMidiSender`, and `active-boundary-report` output keeping boundary
+profiles and passive safety explicit.
+
+No closeout script update was needed because all touched test files were
+already in closeout.
+
+The checkpoint confirms the milestone adds no runtime code changes, real MIDI,
+ports, active CLI commands, passive CLI active-boundary evaluation, passive CLI
+construction of `MockMidiSender`, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
 
 The session agenda handoff review includes:
 

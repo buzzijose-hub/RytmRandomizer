@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5c0e990 Add additional active boundary safety coverage design
+d0a9b8d Add additional active boundary safety tests
 
 ## Current Phase
 
@@ -66,9 +66,39 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the accepted test-only additional mock-only
-active-boundary safety coverage slice, more passive/project documentation, or
-a pause at this accepted design review checkpoint.
+Next recommended task is review/acceptance of the completed additional
+mock-only active-boundary safety tests checkpoint, more passive/project
+documentation, or a pause at this clean test-only checkpoint.
+
+The latest additional mock-only active-boundary safety tests checkpoint is:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The latest test-only implementation milestone is:
+
+- d0a9b8d Add additional active boundary safety tests
+
+The milestone updates:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+The added coverage strengthens active boundary metadata and immutability
+checks, active boundary report safety checks, and passive CLI
+`active-boundary-report` safety checks. It confirms profile `"2"` remains the
+only accepted active-boundary candidate, profile `"3"` remains unsupported by
+the active boundary, profile `"4"` remains parked and unsupported, passive CLI
+does not evaluate active boundary requests, passive CLI does not construct
+`MockMidiSender`, no active CLI command names are exposed, no real MIDI
+libraries are imported, and no ports or hardware are touched.
+
+No closeout script update was needed because all touched test files were
+already included in closeout.
+
+The slice adds no runtime code changes, real MIDI, ports, active CLI commands,
+dispatch, execution, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
 
 The latest additional mock-only active-boundary safety coverage design review
 is:
