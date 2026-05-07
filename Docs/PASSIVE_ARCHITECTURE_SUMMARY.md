@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f9bb383
+75d25c5
 
 ## Protected Reference
 
@@ -38,6 +38,8 @@ The standard closeout suite currently includes:
 - mock-only active candidate
 - active boundary
 - active boundary report
+- real MIDI import safety
+- real MIDI passive CLI safety
 
 The closeout workflow also checks:
 
@@ -51,16 +53,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f9bb383 Add real MIDI dependency decision review
+- current HEAD: 75d25c5 Add real MIDI adapter boundary gate
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance of the real
-  MIDI adapter boundary gate, return to passive/project documentation, or
-  pause at the adapter planning checkpoint
+- next recommended task: documentation-only real MIDI adapter boundary design,
+  return to passive/project documentation, or pause at the accepted adapter
+  planning checkpoint
 - closeout command
 - stop condition
 
@@ -571,6 +573,33 @@ dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or
 hardware-on authorization.
+
+## Real MIDI Adapter Boundary Gate Review
+
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE_REVIEW.md` accepts
+`Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md` as the current planning gate before
+any real MIDI adapter boundary design.
+
+The review accepts:
+
+- 75d25c5 Add real MIDI adapter boundary gate
+- adapter boundary gate planning scope
+- import isolation requirements
+- port boundary requirements
+- sender boundary requirements
+- adapter-specific tests before implementation
+- active-boundary scope limited to group profile `"2"` / My BD Hard
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- hardware-off status
+
+The review confirms no `mido`, real MIDI dependency, adapter module, real MIDI
+backend, port opening, MIDI sending, active CLI command, dispatch, command
+execution, scene execution, hardware behavior, hardware validation, profile
+`"4"` implementation, or profile `"3"` active-boundary support exists.
+
+The next recommended task is a documentation-only real MIDI adapter boundary
+design.
 
 ## Project-Level Roadmap Update
 

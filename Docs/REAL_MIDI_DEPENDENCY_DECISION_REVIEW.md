@@ -274,3 +274,28 @@ dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or
 hardware-on authorization.
+
+## 15. Adapter Boundary Gate Review
+
+The real MIDI adapter boundary gate review now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_ADAPTER_BOUNDARY_GATE.md`
+- 75d25c5 Add real MIDI adapter boundary gate
+
+The review accepts the adapter boundary gate as the current planning checkpoint
+before any documentation-only real MIDI adapter boundary design.
+
+The review keeps real MIDI adapter implementation blocked, real MIDI
+dependency selection deferred, hardware validation blocked, passive CLI
+read-only, profile `"3"` unsupported by the active boundary, profile `"4"`
+parked and unsupported, and hardware off.
+
+The review adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
