@@ -458,3 +458,19 @@ tests-only implementation slice. It does not add tests, real MIDI, mido, port
 opening, MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+## 18. Completed Tests Checkpoint
+
+The completed tests-only checkpoint now lives in:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md`
+
+The implementation milestone is:
+
+- 457b6be Add real MIDI import and port safety tests
+
+The milestone adds the planned test files and closeout labels. It adds no
+runtime modules, real MIDI, mido, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.

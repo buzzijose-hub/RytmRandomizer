@@ -246,3 +246,25 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No tests or implementation are added in this slice.
+
+## 14. Completed Tests Checkpoint
+
+The completed tests-only checkpoint now lives in:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md`
+
+The implementation milestone is:
+
+- 457b6be Add real MIDI import and port safety tests
+
+The milestone adds:
+
+- `tests/test_real_midi_import_safety.py`
+- `tests/test_real_midi_passive_cli_safety.py`
+- `Scripts/closeout_check.ps1`
+
+The milestone adds only the accepted tests and closeout labels. It adds no
+runtime modules, real MIDI, mido, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f5be0ee Add real MIDI import port safety test plan
+457b6be Add real MIDI import and port safety tests
 
 ## Current Phase
 
@@ -66,9 +66,36 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the accepted tests-only real MIDI import and port
-safety test implementation slice, more passive/project documentation, or a
-pause at this clean planning checkpoint.
+Next recommended task is documentation-only review/acceptance of the real MIDI
+import and port safety tests checkpoint, more passive/project documentation,
+or a pause at this clean test-safety checkpoint.
+
+The latest real MIDI import and port safety tests checkpoint is:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md`
+
+The checkpoint records completion of:
+
+- 457b6be Add real MIDI import and port safety tests
+
+The milestone adds:
+
+- `tests/test_real_midi_import_safety.py`
+- `tests/test_real_midi_passive_cli_safety.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout now includes:
+
+- `=== Test: Real MIDI Import Safety ===`
+- `=== Test: Real MIDI Passive CLI Safety ===`
+
+The tests prove passive/mock imports and representative passive CLI paths do
+not import real MIDI libraries or expose port/send/active command affordances.
+They also preserve active-boundary scope: profile `"2"` remains the only
+accepted active-boundary candidate, profile `"3"` remains unsupported by the
+active boundary, and profile `"4"` remains parked and unsupported. The
+milestone adds no real MIDI, mido, ports, active CLI commands, dispatch,
+runtime behavior, hardware behavior, or hardware validation.
 
 The latest real MIDI import and port safety tests-only implementation plan
 review is:

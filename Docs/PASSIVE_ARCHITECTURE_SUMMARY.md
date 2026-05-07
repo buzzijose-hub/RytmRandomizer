@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f5be0ee
+457b6be
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f5be0ee Add real MIDI import port safety test plan
+- current HEAD: 457b6be Add real MIDI import and port safety tests
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement the accepted tests-only real MIDI import
-  and port safety test slice, return to passive/project documentation, or
-  pause at the clean planning checkpoint
+- next recommended task: documentation-only review/acceptance of the real
+  MIDI import and port safety tests checkpoint, return to passive/project
+  documentation, or pause at the clean test-safety checkpoint
 - closeout command
 - stop condition
 
@@ -436,6 +436,34 @@ runtime modules, add real MIDI dependencies, open ports, send MIDI, add active
 CLI commands, change active-boundary scope, implement profile `"4"`, add
 profile `"3"` active-boundary support, authorize hardware validation, or turn
 hardware on.
+
+## Real MIDI Import And Port Safety Tests Checkpoint
+
+`Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md` records completion of:
+
+- 457b6be Add real MIDI import and port safety tests
+
+The milestone adds:
+
+- `tests/test_real_midi_import_safety.py`
+- `tests/test_real_midi_passive_cli_safety.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout now includes:
+
+- `=== Test: Real MIDI Import Safety ===`
+- `=== Test: Real MIDI Passive CLI Safety ===`
+
+The tests prove passive/mock imports and representative passive CLI paths do
+not import real MIDI libraries or expose port/send/active command affordances.
+They also keep active-boundary scope narrow: profile `"2"` remains the only
+accepted active-boundary candidate, profile `"3"` remains unsupported by the
+active boundary, and profile `"4"` remains parked and unsupported.
+
+The milestone adds no runtime modules, real MIDI dependencies, port opening,
+MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
 
 ## Project-Level Roadmap Update
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 457b6be Add real MIDI import and port safety tests
 - f5be0ee Add real MIDI import port safety test plan
 - 17d1a0a Add real MIDI implementation test plan review
 - 5493805 Add real MIDI implementation test plan
@@ -2743,6 +2744,36 @@ passive CLI construction of `MockMidiSender`, dispatch, command execution,
 scene execution, hardware behavior, profile `"4"` implementation, profile
 `"3"` active-boundary support, hardware validation, or hardware-on
 authorization.
+
+The real MIDI import and port safety tests checkpoint includes:
+
+- Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md
+
+The implementation milestone is:
+
+- 457b6be Add real MIDI import and port safety tests
+
+The milestone adds:
+
+- tests/test_real_midi_import_safety.py
+- tests/test_real_midi_passive_cli_safety.py
+- Scripts/closeout_check.ps1
+
+Closeout now includes:
+
+- === Test: Real MIDI Import Safety ===
+- === Test: Real MIDI Passive CLI Safety ===
+
+The tests prove passive/mock imports and representative passive CLI paths do
+not import real MIDI libraries or expose port/send/active command affordances.
+They also preserve active-boundary scope: profile `"2"` remains the only
+accepted active-boundary candidate, profile `"3"` remains unsupported by the
+active boundary, and profile `"4"` remains parked and unsupported.
+
+The milestone adds no runtime modules, real MIDI dependencies, port opening,
+MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
 
 The session agenda current handoff refresh includes:
 
