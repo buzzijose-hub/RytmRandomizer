@@ -209,6 +209,16 @@ Unsafe next moves:
 Prefer a documentation-only review/acceptance gate for this implementation
 checkpoint next.
 
+The review gate for this implementation checkpoint is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+The review accepts this checkpoint as the current fake-provider-only adapter
+boundary baseline. It does not authorize `mido`, real MIDI dependency
+selection, package metadata changes, real port opening, MIDI sending, active
+CLI commands, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
+
 Do not select a real MIDI dependency yet.
 
 Do not change package metadata.

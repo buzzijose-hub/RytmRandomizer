@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-96b20a4 Add first real MIDI adapter boundary
+a7d0fec Update checkpoint after first real MIDI adapter boundary
 
 ## Current Phase
 
@@ -67,10 +67,28 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance gate for the
-first real MIDI adapter boundary implementation checkpoint, more
-passive/project documentation, or a pause at this fake-provider-only adapter
-boundary checkpoint.
+Next recommended task is a documentation-only real MIDI dependency re-decision
+gate, more passive/project documentation, or a pause at this accepted
+fake-provider-only adapter boundary checkpoint.
+
+The latest real MIDI adapter first implementation checkpoint review is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md`
+- 96b20a4 Add first real MIDI adapter boundary
+- a7d0fec Update checkpoint after first real MIDI adapter boundary
+
+The review accepts the adapter boundary checkpoint as the current
+fake-provider-only implementation baseline. It confirms the adapter exists
+while `mido`, real MIDI dependency selection, package metadata changes, real
+port opening, MIDI sending, active CLI commands, hardware behavior, profile
+`"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, and hardware-on authorization remain blocked. It recommends a
+documentation-only real MIDI dependency re-decision gate next, or pausing at
+this accepted adapter checkpoint.
 
 The latest real MIDI adapter first implementation checkpoint is:
 

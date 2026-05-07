@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-96b20a4
+a7d0fec
 
 ## Protected Reference
 
@@ -54,17 +54,17 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 96b20a4 Add first real MIDI adapter boundary
+- current HEAD: a7d0fec Update checkpoint after first real MIDI adapter
+  boundary
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance gate for the
-  first real MIDI adapter boundary implementation checkpoint, return to
-  passive/project documentation, or pause at the fake-provider-only adapter
-  boundary checkpoint
+- next recommended task: documentation-only real MIDI dependency re-decision
+  gate, return to passive/project documentation, or pause at the accepted
+  fake-provider-only adapter boundary checkpoint
 - closeout command
 - stop condition
 
@@ -1011,6 +1011,35 @@ active-boundary support, and starts no hardware validation.
 
 The next recommended task is a documentation-only review/acceptance gate for
 this implementation checkpoint.
+
+## Real MIDI Adapter First Implementation Checkpoint Review
+
+`Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT_REVIEW.md` accepts
+`Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md` as the current
+checkpoint for the first real MIDI adapter boundary implementation.
+
+The review accepts:
+
+- 96b20a4 Add first real MIDI adapter boundary
+- a7d0fec Update checkpoint after first real MIDI adapter boundary
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+- fake-provider-only adapter boundary behavior
+- dependency-absent safe failure behavior
+- unknown-port safe failure behavior
+- unsupported-message safe failure behavior
+- passive CLI and passive import regression guards
+- active-boundary scope guards for profiles `"3"` and `"4"`
+
+The review confirms the adapter boundary exists while `mido`, real MIDI
+dependency selection, package metadata changes, real port opening, MIDI
+sending, active CLI commands, command dispatch, scene execution, hardware
+behavior, profile `"4"` implementation, profile `"3"` active-boundary
+support, hardware validation, and hardware-on authorization remain blocked.
+
+The next recommended task is a documentation-only real MIDI dependency
+re-decision gate, return to passive/project documentation, or pause at the
+accepted fake-provider-only adapter boundary checkpoint.
 
 ## Project-Level Roadmap Update
 

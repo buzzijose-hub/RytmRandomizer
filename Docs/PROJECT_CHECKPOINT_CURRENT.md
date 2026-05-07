@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a7d0fec Update checkpoint after first real MIDI adapter boundary
 - 96b20a4 Add first real MIDI adapter boundary
 - c19cfeb Add real MIDI adapter first implementation plan
 - 507ee2e Add real MIDI adapter first implementation design review
@@ -3236,6 +3237,32 @@ The checkpoint is documentation-only. It adds no implementation, tests,
 runtime modules, real MIDI dependencies, package metadata changes, port
 opening, MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI adapter first implementation checkpoint review includes:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md
+- 96b20a4 Add first real MIDI adapter boundary
+- a7d0fec Update checkpoint after first real MIDI adapter boundary
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+
+The review accepts the adapter boundary checkpoint as the current
+fake-provider-only implementation baseline. It confirms the adapter boundary
+exists while `mido`, real MIDI dependency selection, package metadata changes,
+real port opening, MIDI sending, active CLI commands, command dispatch, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, and hardware-on authorization
+remain blocked.
+
+The review is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, package metadata changes, port opening, MIDI
+sending, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
 
 The session agenda current handoff refresh includes:
