@@ -1180,6 +1180,37 @@ hardware on.
 The next recommended task is to pause at the clean checkpoint or write a
 broader project progress update.
 
+## Project-Level No-Dependency Roadmap Update
+
+`Docs/PROJECT_LEVEL_NO_DEPENDENCY_ROADMAP_UPDATE.md` provides a project-level
+roadmap update after the accepted no-dependency progress checkpoint.
+
+The roadmap records:
+
+- 46e5ca8 Add real MIDI no-dependency progress checkpoint
+- Passive/Mock Foundation Phase with fake-provider-only adapter boundary
+  safety
+- Candidate A remains the accepted no-dependency path
+- dependency selection remains deferred
+- package metadata remains unchanged
+- passive CLI remains read-only
+- fake-provider-only adapter boundary remains isolated from passive CLI
+- no `mido`
+- no real MIDI dependency
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+- hardware remains off
+
+It confirms the project has a substantial passive/mock foundation and a
+fake-provider adapter boundary while still not being a real MIDI or hardware
+validation system.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this roadmap, more passive/project documentation, or a pause at the clean
+no-dependency checkpoint.
+
 ## Project-Level Roadmap Update
 
 `Docs/PROJECT_LEVEL_ROADMAP_UPDATE.md` provides a fresh project-level roadmap

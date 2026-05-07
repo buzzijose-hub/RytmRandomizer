@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 46e5ca8 Add real MIDI no-dependency progress checkpoint
 - 62cc326 Add real MIDI dependency candidate evaluation review
 - e76cbfd Add real MIDI dependency candidate evaluation
 - 7feb3ac Add real MIDI dependency re-decision gate review
@@ -3229,6 +3230,34 @@ The checkpoint confirms the project can continue planning from a clean
 no-dependency position. It does not authorize dependency selection, package
 metadata changes, real MIDI implementation, active CLI behavior, hardware
 validation, or turning hardware on.
+
+The project-level no-dependency roadmap update includes:
+
+- Docs/PROJECT_LEVEL_NO_DEPENDENCY_ROADMAP_UPDATE.md
+
+The roadmap records:
+
+- 46e5ca8 Add real MIDI no-dependency progress checkpoint
+- Passive/Mock Foundation Phase with fake-provider-only adapter boundary
+  safety
+- Candidate A remains the accepted no-dependency path
+- dependency selection remains deferred
+- package metadata remains unchanged
+- passive CLI remains read-only
+- fake-provider-only adapter boundary remains isolated from passive CLI
+- no `mido`
+- no real MIDI dependency
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+- hardware remains off
+
+The roadmap confirms the project has a substantial passive/mock foundation
+and fake-provider adapter boundary while still not being a real MIDI or
+hardware validation system. It does not authorize dependency selection,
+package metadata changes, real MIDI implementation, active CLI behavior,
+hardware validation, or turning hardware on.
 
 The real MIDI adapter first implementation plan includes:
 

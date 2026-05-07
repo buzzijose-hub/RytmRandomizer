@@ -67,9 +67,36 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader project progress checkpoint,
-more passive/project documentation, or a pause at this accepted
-no-dependency evaluation checkpoint.
+Next recommended task is a documentation-only review/acceptance gate for the
+project-level no-dependency roadmap update, more passive/project
+documentation, or a pause at this accepted no-dependency checkpoint.
+
+The latest project-level no-dependency roadmap update is:
+
+- `Docs/PROJECT_LEVEL_NO_DEPENDENCY_ROADMAP_UPDATE.md`
+
+The roadmap records:
+
+- 46e5ca8 Add real MIDI no-dependency progress checkpoint
+- Passive/Mock Foundation Phase with fake-provider-only adapter boundary
+  safety
+- Candidate A remains the accepted no-dependency path
+- dependency selection remains deferred
+- package metadata remains unchanged
+- passive CLI remains read-only
+- fake-provider-only adapter boundary remains isolated from passive CLI
+- no `mido`
+- no real MIDI dependency
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+- hardware remains off
+
+The roadmap recommends a documentation-only review/acceptance gate next. It
+does not authorize dependency selection, package metadata changes, real MIDI
+implementation, active CLI behavior, hardware validation, or turning hardware
+on.
 
 The latest real MIDI no-dependency progress checkpoint is:
 

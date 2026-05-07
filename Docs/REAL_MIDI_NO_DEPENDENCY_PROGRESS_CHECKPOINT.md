@@ -191,6 +191,14 @@ Safe next branches:
   approval
 - create a dependency selection review only after explicit approval
 
+The broader project roadmap update now lives in:
+
+- `Docs/PROJECT_LEVEL_NO_DEPENDENCY_ROADMAP_UPDATE.md`
+
+That roadmap keeps Candidate A as the accepted no-dependency path and
+recommends a documentation-only review/acceptance gate before any future
+dependency, package metadata, real MIDI, or hardware-facing work.
+
 ## 11. Recommendation
 
 Prefer pausing at this clean checkpoint or writing a broader project progress
