@@ -328,3 +328,29 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 16. Follow-Up Implementation Checkpoint
+
+The accepted fake-provider-only implementation slice has since been completed
+and recorded in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md`
+
+The checkpoint records:
+
+- 96b20a4 Add first real MIDI adapter boundary
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+- import-safe adapter boundary behavior
+- dependency-absent safe failure behavior
+- unknown-port safe failure behavior
+- unsupported-message safe failure behavior
+- fake-provider-only send tests
+- passive CLI and passive import regression guards
+- active-boundary scope guards for profiles `"3"` and `"4"`
+
+The checkpoint confirms that the adapter boundary exists while `mido`, real
+MIDI dependency selection, package metadata changes, real port opening, MIDI
+sending, active CLI commands, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+and hardware-on authorization remain blocked.

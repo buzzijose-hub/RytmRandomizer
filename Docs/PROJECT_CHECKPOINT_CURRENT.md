@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 96b20a4 Add first real MIDI adapter boundary
 - c19cfeb Add real MIDI adapter first implementation plan
 - 507ee2e Add real MIDI adapter first implementation design review
 - 869535f Add real MIDI adapter first implementation design spec
@@ -3204,6 +3205,37 @@ The review is documentation-only. It adds no implementation, tests, runtime
 modules, real MIDI dependencies, package metadata changes, port opening, MIDI
 sending, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI adapter first implementation checkpoint includes:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md
+
+The checkpoint records:
+
+- 96b20a4 Add first real MIDI adapter boundary
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+- import-safe adapter boundary module
+- deterministic adapter error and result types
+- fake-provider-only port provider and sender boundaries
+- explicit provider requirement
+- dependency-absent safe failure behavior
+- unknown-port safe failure behavior
+- unsupported-message safe failure behavior
+- passive CLI and passive import regression guards
+- active-boundary scope guards for profiles `"3"` and `"4"`
+
+The checkpoint confirms the adapter boundary exists while `mido`, real MIDI
+dependency selection, package metadata changes, real port opening, MIDI
+sending, active CLI commands, command dispatch, scene execution, hardware
+behavior, profile `"4"` implementation, profile `"3"` active-boundary
+support, hardware validation, and hardware-on authorization remain blocked.
+
+The checkpoint is documentation-only. It adds no implementation, tests,
+runtime modules, real MIDI dependencies, package metadata changes, port
+opening, MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
 
 The session agenda current handoff refresh includes:

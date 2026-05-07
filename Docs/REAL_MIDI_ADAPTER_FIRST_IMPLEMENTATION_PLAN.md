@@ -835,12 +835,33 @@ metadata changes, real port opening, MIDI sending, active CLI commands,
 hardware behavior, hardware validation, profile `"4"` implementation, or
 profile `"3"` active-boundary support.
 
+The follow-up implementation checkpoint is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md`
+
+The checkpoint records:
+
+- 96b20a4 Add first real MIDI adapter boundary
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+- fake-provider-only adapter boundary behavior
+- no `mido`
+- no real MIDI dependency
+- no package metadata changes
+- no real port opening
+- no MIDI sending
+- no active CLI commands
+- no hardware validation
+
 ## 13. Decision
 
 The first adapter implementation plan is documented.
 
-Adapter implementation remains blocked until this plan is reviewed and
-accepted.
+The plan was reviewed and accepted.
+
+The accepted fake-provider-only adapter boundary implementation slice has
+since been completed and recorded in
+`Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_CHECKPOINT.md`.
 
 Real MIDI dependency selection remains deferred.
 
@@ -848,4 +869,4 @@ Hardware validation remains blocked.
 
 Hardware remains off.
 
-No implementation is added in this slice.
+No implementation is added by this planning document.
