@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-8f7f850 Refresh current session handoff
+45c4aab Add active boundary safety progress report
 
 ## Current Phase
 
@@ -66,9 +66,24 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the active-boundary safety
-progress report, more passive/project documentation, or a pause at this clean
-progress checkpoint.
+Next recommended task is a fresh project-level roadmap update, more
+passive/project documentation, or a pause at this accepted active-boundary
+safety progress checkpoint.
+
+The latest active-boundary safety progress report review is:
+
+- `Docs/ACTIVE_BOUNDARY_SAFETY_PROGRESS_REPORT_REVIEW.md`
+
+The review accepts:
+
+- `Docs/ACTIVE_BOUNDARY_SAFETY_PROGRESS_REPORT.md`
+
+The review accepts the report as the current consolidated mock-first active
+boundary safety checkpoint. It confirms profile `"2"` remains the only
+accepted active-boundary candidate, profile `"3"` remains unsupported by the
+active boundary, profile `"4"` remains parked and unsupported, passive CLI
+remains read-only, active boundary report visibility remains read-only, no
+real MIDI or ports exist, and hardware remains off.
 
 The latest active-boundary safety progress report is:
 
