@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-b21eecc Add active boundary safety progress report review
+bf89f87 Add project-level roadmap update
 
 ## Current Phase
 
@@ -66,9 +66,24 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the fresh project-level roadmap
-update, more passive/project documentation, or a pause at this clean roadmap
-checkpoint.
+Next recommended task is pause at the accepted roadmap checkpoint, more
+passive/project documentation, or a docs-only real MIDI boundary plan only if
+explicitly approved.
+
+The latest project-level roadmap update review is:
+
+- `Docs/PROJECT_LEVEL_ROADMAP_UPDATE_REVIEW.md`
+
+The review accepts:
+
+- `Docs/PROJECT_LEVEL_ROADMAP_UPDATE.md`
+
+The review accepts the roadmap as the current project-level roadmap
+checkpoint. It keeps the project in the Passive/Mock Foundation Phase with an
+accepted mock-first active boundary safety baseline, keeps profile `"3"`
+unsupported by the active boundary, keeps profile `"4"` parked/unsupported,
+keeps real MIDI absent, keeps ports absent, keeps active CLI behavior absent,
+and keeps hardware off.
 
 The latest project-level roadmap update is:
 

@@ -295,3 +295,14 @@ with an accepted mock-first active boundary safety baseline.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Review Gate
+
+This roadmap is reviewed and accepted by:
+
+- `Docs/PROJECT_LEVEL_ROADMAP_UPDATE_REVIEW.md`
+
+The review accepts this roadmap as the current project-level roadmap
+checkpoint. It does not authorize real MIDI, ports, active CLI commands,
+dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
