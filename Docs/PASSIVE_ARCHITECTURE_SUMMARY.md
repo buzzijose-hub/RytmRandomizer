@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-092f0b8
+12f5182
 
 ## Protected Reference
 
@@ -51,24 +51,53 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 092f0b8 Update checkpoint after additional active boundary
-  safety tests
+- current HEAD: 12f5182 Add additional active boundary safety tests review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a session agenda/current handoff refresh,
-  write a broader active-boundary safety progress report, return to
-  passive/project documentation, or pause at the accepted additional
-  mock-only active-boundary safety test checkpoint
+- next recommended task: write a broader active-boundary safety progress
+  report, return to passive/project documentation, or pause at the refreshed
+  current handoff checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## Session Agenda Current Handoff Refresh
+
+`Docs/SESSION_AGENDA_CURRENT_HANDOFF_REFRESH.md` records the current practical
+handoff after the accepted additional mock-only active-boundary safety tests
+review.
+
+It captures:
+
+- current date: 2026-05-07
+- current branch: modularize-v1.34
+- current HEAD before the refresh: 12f5182 Add additional active boundary
+  safety tests review
+- current safe passive CLI visibility
+- current mock mapper support for profiles `"2"` and `"3"`
+- current active-boundary support for profile `"2"` only
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- current closeout coverage
+- safe work menu
+- forbidden next moves
+- closeout command and stop conditions
+
+The handoff recommends either pausing at the clean checkpoint or writing a
+broader active-boundary safety progress report.
+
+The handoff is documentation-only. It adds no implementation, tests, real
+MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
 
 ## Passive Mock Knowledge Checkpoint
 
