@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-1c8566a
+bf3fa09
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 1c8566a Add read-only active boundary visibility progress
-  report review
+- current HEAD: bf3fa09 Add project-level progress checkpoint
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the project-level progress checkpoint,
-  write a session agenda/handoff, or pause at the clean project checkpoint
+- next recommended task: write a session agenda/handoff refresh, return to
+  passive/project documentation, or pause at the accepted project-level
+  checkpoint
 - closeout command
 - stop condition
 
@@ -420,6 +420,34 @@ mock-only safety work.
 
 The checkpoint is documentation-only. It adds no implementation, tests, real
 MIDI, mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
+
+## Project-Level Progress Checkpoint Review
+
+`Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT_REVIEW.md` accepts
+`Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md` as the current broad passive/mock
+project checkpoint.
+
+It accepts:
+
+- the current passive CLI visibility layer
+- the current mock MIDI scaffold
+- the current mock message mapper and report
+- the current mock-first active boundary
+- the current read-only active boundary report and CLI preview
+- the current closeout coverage
+- profile `"2"` / My BD Hard as the only active-boundary candidate
+- profile `"3"` / My BD Classic as unsupported by the active boundary
+- profile `"4"` / My BD Acoustic as parked and unsupported
+
+The review keeps further active-boundary work behind separate design/review
+gates and recommends either pausing at this clean checkpoint or writing a short
+session agenda/handoff refresh next.
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
 machine/profile expansion.
@@ -2602,6 +2630,8 @@ Recommended passive layers before runtime work:
   additional active-boundary CLI visibility
 - review and accept the project-level progress checkpoint or pause before any
   further active-boundary planning
+- pause at the accepted project-level progress checkpoint or write a session
+  agenda/handoff refresh
 - write a session handoff/current agenda if resumption clarity is more useful
   than additional implementation
 - add more mock-only safety tests only after a separate approved design

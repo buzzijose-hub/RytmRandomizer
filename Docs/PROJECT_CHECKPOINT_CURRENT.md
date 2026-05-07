@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- bf3fa09 Add project-level progress checkpoint
 - 1c8566a Add read-only active boundary visibility progress report review
 - e224a2d Add read-only active boundary visibility progress report
 - 2bc0a9e Add read-only active boundary report CLI preview review
@@ -2399,6 +2400,23 @@ The project-level checkpoint is documentation-only. It adds no implementation,
 tests, real MIDI, port opening, MIDI sending, active execution, CLI wiring,
 dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
+
+The project-level progress checkpoint review includes:
+
+- Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT_REVIEW.md
+
+The review accepts `Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md` as the current
+broad passive/mock project checkpoint. It accepts the current passive CLI
+visibility layer, mock MIDI scaffold, mock message mapper/report, mock-first
+active boundary, read-only active boundary report and CLI preview, current
+closeout coverage, profile `"2"` / My BD Hard as the only active-boundary
+candidate, profile `"3"` / My BD Classic as unsupported by the active
+boundary, and profile `"4"` / My BD Acoustic as parked and unsupported.
+
+It confirms the checkpoint does not authorize implementation, active
+execution, real MIDI, port opening, active CLI commands, dispatch, hardware
+behavior, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
 
 The mock-only active boundary safety tests review includes:
 

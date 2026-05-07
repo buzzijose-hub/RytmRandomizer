@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-1c8566a Add read-only active boundary visibility progress report review
+bf3fa09 Add project-level progress checkpoint
 
 ## Current Phase
 
@@ -66,9 +66,22 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is either review/acceptance of the project-level
-progress checkpoint, a session agenda/handoff, or a pause at this clean
-project checkpoint.
+Next recommended task is either a session agenda/handoff refresh, more
+passive/project documentation, or a pause at this accepted project-level
+checkpoint.
+
+The latest project-level progress checkpoint review is:
+
+- `Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT_REVIEW.md`
+
+The review accepts:
+
+- `Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT.md`
+
+The review accepts the project-level checkpoint as the current broad
+passive/mock project checkpoint. It does not authorize active execution, real
+MIDI, ports, dispatch, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
 
 The latest project-level progress checkpoint is:
 

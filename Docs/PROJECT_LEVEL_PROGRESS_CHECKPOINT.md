@@ -230,3 +230,14 @@ The project is at a stable project-level passive/mock checkpoint.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Review Gate
+
+This checkpoint is reviewed and accepted by:
+
+- `Docs/PROJECT_LEVEL_PROGRESS_CHECKPOINT_REVIEW.md`
+
+The review accepts this document as the current broad passive/mock project
+checkpoint. It does not authorize active execution, real MIDI, port opening,
+active CLI commands, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.
