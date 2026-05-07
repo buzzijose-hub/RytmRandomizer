@@ -156,6 +156,68 @@ def test_formatted_report_is_deterministic_and_human_readable():
     ]
 
 
+def test_formatted_report_join_matches_cli_fixture():
+    from rytm_randomizer.active_boundary_report import format_active_boundary_report
+
+    assert "\n".join(format_active_boundary_report()) == fixture_text(
+        "cli_active_boundary_report_expected.txt"
+    )
+
+
+def test_summary_exposes_no_real_midi_port_provider_or_hardware_target_fields():
+    from rytm_randomizer.active_boundary_report import summarize_active_boundary_report
+
+    summary = summarize_active_boundary_report()
+
+    assert "real_midi" not in summary
+    assert "port_provider" not in summary
+    assert "midi_port" not in summary
+    assert "hardware_target" not in summary
+    assert summary["active_cli_behavior"] == "absent"
+    assert summary["hardware_required"] is False
+
+
+def test_unsupported_source_kinds_remain_limited_to_scene_and_command():
+    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+
+    report = build_active_boundary_report()
+
+    assert report["unsupported_source_kinds"] == ("scene", "command")
+
+
+def test_closeout_coverage_lists_only_passive_mock_labels():
+    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+
+    report = build_active_boundary_report()
+
+    assert report["closeout_coverage"] == (
+        "Mock-Only Active Candidate",
+        "Active Boundary",
+    )
+    assert "Hardware" not in " ".join(report["closeout_coverage"])
+    assert "Real MIDI" not in " ".join(report["closeout_coverage"])
+
+
+def test_mutating_formatted_report_output_does_not_mutate_future_output():
+    from rytm_randomizer.active_boundary_report import format_active_boundary_report
+
+    lines = format_active_boundary_report()
+    lines[0] = "MUTATED"
+
+    assert format_active_boundary_report()[0] == "RytmRandomizer Active Boundary Report"
+
+
+def test_report_module_remains_decoupled_from_active_boundary_evaluation():
+    import inspect
+    import rytm_randomizer.active_boundary_report as report
+
+    source = inspect.getsource(report)
+
+    assert "evaluate_mock_active_boundary" not in source
+    assert "MockMidiSender(" not in source
+    assert "from .mock_midi import" not in source
+
+
 def test_returned_report_data_is_copied_and_mutation_safe():
     from rytm_randomizer.active_boundary_report import build_active_boundary_report
 
@@ -237,6 +299,12 @@ if __name__ == "__main__":
     test_report_records_required_conditions_and_read_only_boundaries()
     test_report_summary_is_deterministic()
     test_formatted_report_is_deterministic_and_human_readable()
+    test_formatted_report_join_matches_cli_fixture()
+    test_summary_exposes_no_real_midi_port_provider_or_hardware_target_fields()
+    test_unsupported_source_kinds_remain_limited_to_scene_and_command()
+    test_closeout_coverage_lists_only_passive_mock_labels()
+    test_mutating_formatted_report_output_does_not_mutate_future_output()
+    test_report_module_remains_decoupled_from_active_boundary_evaluation()
     test_returned_report_data_is_copied_and_mutation_safe()
     test_no_real_midi_library_is_imported()
     test_passive_cli_report_behavior_remains_unchanged()

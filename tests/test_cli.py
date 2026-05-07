@@ -269,6 +269,32 @@ def test_active_boundary_report_command_is_deterministic():
     assert second.stderr == ""
 
 
+def test_top_level_help_exposes_no_active_execution_commands():
+    result = run_cli("--help")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "execute-command" not in output
+    assert "send-command" not in output
+    assert "hardware-test" not in output
+    assert "open-port" not in output
+    assert "send-midi" not in output
+
+
+def test_cli_source_does_not_evaluate_active_boundary_or_construct_sender():
+    import inspect
+
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
+
+    import rytm_randomizer.cli as cli
+
+    source = inspect.getsource(cli)
+
+    assert "evaluate_mock_active_boundary" not in source
+    assert "MockMidiSender" not in source
+
+
 def test_mock_mapper_report_command_imports_no_real_midi_libraries():
     result = subprocess.run(
         [
@@ -856,6 +882,32 @@ def test_active_boundary_report_exposes_no_active_behavior_or_support_expansion(
     assert "Analog Four support" not in output
 
 
+def test_active_boundary_report_output_keeps_boundary_profiles_explicit():
+    result = run_cli("active-boundary-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "Unsupported Active Boundary Profiles:" in output
+    assert "3: My BD Classic" in output
+    assert "not active-boundary supported" in output
+    assert "4: My BD Acoustic" in output
+    assert "parked until separately approved" in output
+
+
+def test_active_boundary_report_output_keeps_passive_safety_explicit():
+    result = run_cli("active-boundary-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "- real_midi: absent" in output
+    assert "- port_opening: absent" in output
+    assert "- active_cli_behavior: absent" in output
+    assert "- dispatch: absent" in output
+    assert "- command_execution: absent" in output
+    assert "- scene_execution: absent" in output
+    assert "- hardware_behavior: absent" in output
+
+
 def test_inspect_command_exposes_no_active_behavior_or_support_expansion():
     result = run_cli("inspect-command", "P3A")
     output = normalize_newlines(result.stdout)
@@ -1133,6 +1185,8 @@ if __name__ == "__main__":
     test_report_command_is_deterministic()
     test_mock_mapper_report_command_is_deterministic()
     test_active_boundary_report_command_is_deterministic()
+    test_top_level_help_exposes_no_active_execution_commands()
+    test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
     test_mock_mapper_report_command_imports_no_real_midi_libraries()
     test_active_boundary_report_command_imports_no_real_midi_libraries()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
@@ -1185,6 +1239,8 @@ if __name__ == "__main__":
     test_report_command_exposes_no_active_behavior_or_support_expansion()
     test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion()
     test_active_boundary_report_exposes_no_active_behavior_or_support_expansion()
+    test_active_boundary_report_output_keeps_boundary_profiles_explicit()
+    test_active_boundary_report_output_keeps_passive_safety_explicit()
     test_inspect_command_exposes_no_active_behavior_or_support_expansion()
     test_inspect_scene_exposes_no_active_behavior_or_support_expansion()
     test_inspect_group_profile_exposes_no_active_behavior_or_support_expansion()
