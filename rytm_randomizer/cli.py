@@ -2,6 +2,7 @@
 
 import sys
 
+from .active_boundary_report import format_active_boundary_report
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
 from .mock_mapper_report import format_mock_mapper_report
@@ -10,7 +11,7 @@ from .registry_report import format_registry_report
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "mock-mapper-report | "
+    "mock-mapper-report | active-boundary-report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
     "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -21,6 +22,7 @@ TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 Usage:
   python -m rytm_randomizer.cli report
   python -m rytm_randomizer.cli mock-mapper-report
+  python -m rytm_randomizer.cli active-boundary-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -39,6 +41,8 @@ Commands:
   report             Print the passive registry report.
   mock-mapper-report
                      Print the passive mock mapper report.
+  active-boundary-report
+                     Print the read-only active boundary report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -614,6 +618,24 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+ACTIVE_BOUNDARY_REPORT_HELP = """RytmRandomizer passive CLI: active-boundary-report
+
+Usage:
+  python -m rytm_randomizer.cli active-boundary-report
+  python -m rytm_randomizer.cli active-boundary-report --help
+
+Behavior:
+  Prints the deterministic read-only active boundary report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only
+  no MIDI sending
+  no port opening
+  no active execution
+  no command execution
+  no hardware mutation
+  no hardware required"""
 
 
 def main(argv=None):
@@ -630,6 +652,10 @@ def main(argv=None):
 
     if args == ["mock-mapper-report", "--help"]:
         sys.stdout.write(f"{MOCK_MAPPER_REPORT_HELP}\n")
+        return 0
+
+    if args == ["active-boundary-report", "--help"]:
+        sys.stdout.write(f"{ACTIVE_BOUNDARY_REPORT_HELP}\n")
         return 0
 
     if args == ["list-commands", "--help"]:
@@ -687,6 +713,11 @@ def main(argv=None):
 
     if args == ["mock-mapper-report"]:
         sys.stdout.write("\n".join(format_mock_mapper_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["active-boundary-report"]:
+        sys.stdout.write("\n".join(format_active_boundary_report()))
         sys.stdout.write("\n")
         return 0
 

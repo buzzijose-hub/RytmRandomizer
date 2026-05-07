@@ -1,0 +1,18 @@
+RytmRandomizer passive CLI: active-boundary-report
+
+Usage:
+  python -m rytm_randomizer.cli active-boundary-report
+  python -m rytm_randomizer.cli active-boundary-report --help
+
+Behavior:
+  Prints the deterministic read-only active boundary report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only
+  no MIDI sending
+  no port opening
+  no active execution
+  no command execution
+  no hardware mutation
+  no hardware required
