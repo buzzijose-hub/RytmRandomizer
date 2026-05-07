@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-19659e5
+efaf086
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 19659e5 Add passive mock mapper report CLI preview
+- current HEAD: efaf086 Update checkpoint after passive mock mapper report CLI preview
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: freeze scope, plan profile 4 support, write a larger progress report, or review future active-layer test planning without implementation
+- next recommended task: freeze scope, create a profile 4 plan, write a larger project milestone report, or draft a future active/mock-only test plan without implementation
 - closeout command
 - stop condition
 
@@ -282,6 +282,30 @@ It does not wire CLI to the mapper itself, invoke active execution, open ports,
 send MIDI, require hardware, add profile 4 support, or add active behavior.
 
 Analog Rytm and Analog Four remain off for this phase.
+
+## Passive Mock Mapper CLI Preview Phase Review
+
+`Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md` records the end-of-phase
+checkpoint for the passive mock mapper CLI preview work.
+
+It confirms:
+
+- passive CLI visibility includes report, list, search, inspect, preview, and mock-mapper-report
+- mock MIDI scaffold is complete and test-only/inert
+- mock message mapper is complete for supported profiles
+- mock mapper report is complete
+- mock mapper report CLI preview is complete
+- profiles `"2"` / My BD Hard and `"3"` / My BD Classic are supported
+- profile `"4"` / My BD Acoustic remains unsupported/safe
+- real MIDI, mido, ports, MIDI sending, active execution, CLI wiring to the mapper itself, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four, Pads 5-12, machine/profile expansion, execute-command, send-command, and hardware-test remain absent
+- hardware remains off
+
+Safe next branches are freezing scope, creating a profile 4 plan, writing a
+broader project milestone report, drafting a future active test-plan document,
+or creating a mock-only active command test plan with no real MIDI and no
+hardware.
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Passive Mock Foundation Decision Checkpoint
 
@@ -1532,7 +1556,7 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- freeze mapper scope, plan profile 4 support, write a larger project progress report, or review future active-layer test planning without implementation
+- freeze mapper scope, create a profile 4 plan, write a larger project milestone report, draft a future active test-plan document, or create a mock-only active command test plan without implementation
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond supported group profiles `"2"` and `"3"` without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

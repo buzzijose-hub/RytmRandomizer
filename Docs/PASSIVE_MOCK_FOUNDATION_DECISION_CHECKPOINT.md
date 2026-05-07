@@ -22,6 +22,11 @@ Latest passive visibility milestone:
 
 - 19659e5 Add passive mock mapper report CLI preview
 
+Latest phase review:
+
+- efaf086 Update checkpoint after passive mock mapper report CLI preview
+- `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
+
 Current phase:
 
 - passive CLI / dry-run foundation complete enough for report/list/search/inspect/preview
@@ -29,6 +34,7 @@ Current phase:
 - mock message mapper exists and remains test-only/inert
 - mock mapper report exists and is included in closeout
 - passive mock mapper report CLI preview exists and remains read-only
+- passive mock mapper CLI preview phase review exists
 
 Hardware status:
 
@@ -108,13 +114,14 @@ Profile `"4"` remains unsupported unless separately approved.
 - Option B: create a profile 4 mock-only support plan, not implementation.
 - Option C: write a larger project progress report.
 - Option D: review whether the passive/mock foundation is ready for a future active-layer test plan, still without implementation.
+- Option E: create a mock-only active command test plan, still no real MIDI and no hardware.
 
 ## Recommendation
 
 - Do not jump to real MIDI.
 - Do not turn on the Rytm.
 - Do not add active CLI commands yet.
-- Prefer pausing at this clean checkpoint or writing a larger progress report.
+- Prefer a broader project milestone report or a future active test-plan document, still documentation-only.
 
 ## Stop Conditions
 

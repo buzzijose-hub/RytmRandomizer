@@ -180,6 +180,18 @@ The command prints the existing formatted passive mock mapper report only. It
 does not wire CLI to the mapper itself, invoke active execution, open ports,
 send MIDI, require hardware, add profile 4 support, or add active behavior.
 
+Passive mock mapper CLI preview phase review:
+
+- efaf086 Update checkpoint after passive mock mapper report CLI preview
+- `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
+
+The phase review confirms the passive mock mapper CLI preview phase is
+complete. It records that the CLI visibility layer includes report, list,
+search, inspect, preview, and mock-mapper-report; profiles `"2"` and `"3"` are
+supported; profile `"4"` remains unsupported/safe; real MIDI, ports, CLI
+wiring to the mapper itself, active behavior, and hardware behavior remain
+absent; and hardware remains off.
+
 No real MIDI.
 
 No hardware.

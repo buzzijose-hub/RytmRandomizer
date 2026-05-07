@@ -28,6 +28,11 @@ Latest passive CLI visibility milestone:
 
 - 19659e5 Add passive mock mapper report CLI preview
 
+Latest phase review:
+
+- efaf086 Update checkpoint after passive mock mapper report CLI preview
+- `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
+
 Current phase:
 
 - passive CLI / dry-run foundation complete
@@ -106,6 +111,15 @@ command help prints passive/mock-only usage, and command output shows profiles
 It does not wire CLI to the mapper itself, invoke active execution, open ports,
 send MIDI, require hardware, add profile 4 support, or add active behavior.
 
+## Passive Mock Mapper CLI Preview Phase Review
+
+The passive mock mapper CLI preview phase review records that this visibility
+phase is complete. It confirms the current passive CLI can report, list,
+search, inspect, preview, and show the mock mapper report. It also confirms
+profiles `"2"` and `"3"` are supported, profile `"4"` remains unsupported/safe,
+real MIDI and ports are absent, active behavior is absent, and hardware remains
+off.
+
 ## Current Safety Status
 
 - No real MIDI
@@ -154,13 +168,14 @@ send MIDI, require hardware, add profile 4 support, or add active behavior.
 
 - Option A: keep mapper scope frozen for now.
 - Option B: plan profile `"4"` mock-only support in a separate reviewed slice.
-- Option C: pause mapper work and write a larger project progress report.
-- Option D: review readiness for a future active-layer test plan, still without implementation.
+- Option C: write a larger project milestone report.
+- Option D: begin a future active test-plan document, still documentation-only and hardware-off.
+- Option E: create a mock-only active command test plan, still no real MIDI and no hardware.
 
 ## Recommendation
 
 - Do not implement profile `"4"` immediately.
-- Prefer pausing at this clean checkpoint or writing a larger progress report.
+- Prefer either a broader project milestone report or a future active test-plan document, still documentation-only.
 - Any profile `"4"` expansion should require explicit approval and remain
   mock-only/test-only.
 

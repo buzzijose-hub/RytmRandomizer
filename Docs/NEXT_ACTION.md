@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-19659e5 Add passive mock mapper report CLI preview
+efaf086 Update checkpoint after passive mock mapper report CLI preview
 
 ## Current Phase
 
@@ -66,8 +66,10 @@ Next recommended task is to choose one of:
 
 - keep mapper scope frozen for now
 - create a profile 4 mock-only support plan, not implementation
+- create a broader project milestone report
 - pause mapper work and write a larger project progress report
 - review whether the passive/mock foundation is ready for a future active-layer test plan, still without implementation
+- create a mock-only active command test plan, still no real MIDI and no hardware
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -84,6 +86,7 @@ Next recommended task is to choose one of:
 - `Docs/MOCK_MAPPER_PROFILE_4_DECISION_NOTE.md`
 - `Docs/MOCK_MAPPER_PROGRESS_REVIEW.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md`
+- `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -166,6 +169,14 @@ unsupported/safe. The command prints the existing formatted passive mock
 mapper report only. It does not wire CLI to the mapper itself, invoke active
 execution, open ports, send MIDI, require hardware, add profile 4 support, or
 add active behavior.
+
+The passive mock mapper CLI preview phase review records that the passive/mock
+visibility layer is complete through `mock-mapper-report`. It confirms the
+current CLI visibility layer, supported profiles `"2"` and `"3"`, unsupported
+/safe profile `"4"`, absent real MIDI and ports, absent active behavior, and
+hardware-off status. Safe next branches are freezing scope, creating a profile
+4 plan, writing a broader milestone report, or drafting future active/mock-only
+test plans without implementation.
 
 ## Do-Not-Touch Files
 

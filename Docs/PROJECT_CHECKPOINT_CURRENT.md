@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- efaf086 Update checkpoint after passive mock mapper report CLI preview
 - 19659e5 Add passive mock mapper report CLI preview
 - c34c39f Add passive mock foundation decision checkpoint
 - 55c5097 Update checkpoint after passive mock mapper report
@@ -327,6 +328,18 @@ mapper report only. It does not wire CLI to the mapper itself, invoke active
 execution, open ports, send MIDI, require hardware, add profile 4 support, or
 add active behavior.
 
+The passive mock mapper CLI preview phase review now lives in:
+
+- Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md
+
+The phase review records that the passive mock mapper CLI preview phase is
+complete. It summarizes the current passive CLI visibility layer, the
+test-only mock MIDI scaffold, the test-only mock message mapper, the passive
+mock mapper report, and the `mock-mapper-report` CLI preview. It confirms
+profiles `"2"` and `"3"` are supported, profile `"4"` remains
+unsupported/safe, real MIDI and ports are absent, active behavior is absent,
+hardware is not required, and Analog Rytm and Analog Four remain off.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -389,6 +402,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive mock mapper report
 - passive mock foundation decision checkpoint
 - passive mock mapper report CLI preview
+- passive mock mapper CLI preview phase review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1654,6 +1668,24 @@ execution, CLI wiring to mapper itself, dispatch, hardware behavior, SysEx,
 GUI, capture, Analog Four support, Pads 5-12 support, or machine/profile
 universe expansion. The protected V1.34 reference remains untouched. Analog
 Rytm and Analog Four remain off for this phase.
+
+The passive mock mapper CLI preview phase review includes:
+
+- Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md
+
+The phase review is documentation-only. It records the end of the passive mock
+mapper CLI preview phase after `efaf086 Update checkpoint after passive mock
+mapper report CLI preview`. It confirms the passive CLI visibility layer now
+includes report, list, search, inspect, preview, and mock-mapper-report
+commands. It records the mock mapper boundary as profiles `"2"` / My BD Hard
+and `"3"` / My BD Classic supported with profile `"4"` / My BD Acoustic
+unsupported/safe. It confirms real MIDI, mido, MIDI port opening, MIDI sending,
+active execution, CLI wiring to the mapper itself, dispatch, hardware behavior,
+SysEx, GUI/capture, Analog Four support, Pads 5-12 support, machine/profile
+expansion, execute-command, send-command, and hardware-test remain absent. It
+adds no implementation, code, tests, closeout changes, real MIDI behavior,
+active behavior, or hardware requirement. The protected V1.34 reference
+remains untouched. Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
