@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-49b194f Add real MIDI next phase planning gate
+d1a2b07 Add real MIDI dependency decision note
 
 ## Current Phase
 
@@ -66,9 +66,23 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is documentation-only review/acceptance of the real MIDI
-dependency decision note, more passive/project documentation, or a pause at
-this clean dependency decision checkpoint.
+Next recommended task is a documentation-only real MIDI adapter boundary gate,
+more passive/project documentation, or a pause at this accepted dependency
+checkpoint.
+
+The latest real MIDI dependency decision review is:
+
+- `Docs/REAL_MIDI_DEPENDENCY_DECISION_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_DEPENDENCY_DECISION_NOTE.md`
+
+The review accepts the current decision to defer real MIDI dependency
+selection. It keeps `mido`, real MIDI backends, dependency installs, package
+metadata changes, port opening, MIDI sending, active CLI commands, hardware
+behavior, and hardware validation blocked. It recommends a documentation-only
+real MIDI adapter boundary gate next.
 
 The latest real MIDI dependency decision note is:
 

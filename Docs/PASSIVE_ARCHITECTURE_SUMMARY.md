@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-49b194f
+d1a2b07
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 49b194f Add real MIDI next phase planning gate
+- current HEAD: d1a2b07 Add real MIDI dependency decision note
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance of the real
-  MIDI dependency decision note, return to passive/project documentation, or
-  pause at the clean dependency decision checkpoint
+- next recommended task: documentation-only real MIDI adapter boundary gate,
+  return to passive/project documentation, or pause at the accepted dependency
+  checkpoint
 - closeout command
 - stop condition
 
@@ -526,6 +526,27 @@ modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support, hardware
 validation, or hardware-on authorization.
+
+## Real MIDI Dependency Decision Review
+
+`Docs/REAL_MIDI_DEPENDENCY_DECISION_REVIEW.md` accepts
+`Docs/REAL_MIDI_DEPENDENCY_DECISION_NOTE.md` as the current dependency
+decision checkpoint.
+
+Accepted decision:
+
+- defer real MIDI dependency selection
+- keep `mido` absent
+- keep real MIDI backend absent
+- keep dependency metadata unchanged
+- require a separate adapter boundary design before dependency work
+
+The review recommends a documentation-only real MIDI adapter boundary gate as
+the next branch. It adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
 
 ## Project-Level Roadmap Update
 

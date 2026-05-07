@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d1a2b07 Add real MIDI dependency decision note
 - 49b194f Add real MIDI next phase planning gate
 - 8f9fa46 Add real MIDI import safety tests review
 - 3ad0939 Update checkpoint after real MIDI import safety tests
@@ -2827,6 +2828,29 @@ The note requires a separate real MIDI adapter boundary design and review
 before any dependency can be added.
 
 The note is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.
+
+The real MIDI dependency decision review includes:
+
+- Docs/REAL_MIDI_DEPENDENCY_DECISION_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_DEPENDENCY_DECISION_NOTE.md
+- d1a2b07 Add real MIDI dependency decision note
+
+The review accepts the current decision to defer real MIDI dependency
+selection. It keeps `mido`, real MIDI backends, dependency installs, package
+metadata changes, port opening, MIDI sending, active CLI commands, hardware
+behavior, and hardware validation blocked.
+
+The review recommends a documentation-only real MIDI adapter boundary gate as
+the next branch.
+
+The review is documentation-only. It adds no implementation, tests, runtime
 modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support,

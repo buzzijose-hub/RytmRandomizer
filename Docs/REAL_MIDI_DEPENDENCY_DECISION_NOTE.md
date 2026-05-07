@@ -241,3 +241,21 @@ this dependency decision note.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Review Gate
+
+The review gate for this dependency decision now lives in:
+
+- `Docs/REAL_MIDI_DEPENDENCY_DECISION_REVIEW.md`
+
+The review accepts this note as the current dependency decision checkpoint.
+It keeps real MIDI dependency selection deferred, keeps `mido` absent, keeps
+real MIDI backends absent, keeps dependency metadata unchanged, and requires a
+separate adapter boundary design before dependency work.
+
+The review recommends a documentation-only real MIDI adapter boundary gate as
+the next branch. It adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
