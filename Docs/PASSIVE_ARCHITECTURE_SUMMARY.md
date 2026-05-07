@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c14c869
+1f352de
 
 ## Protected Reference
 
@@ -53,16 +53,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c14c869 Add real MIDI adapter boundary design review
+- current HEAD: 1f352de Add real MIDI adapter-specific test plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance of the real MIDI
-  adapter-specific test plan, return to passive/project documentation, or pause
-  at the adapter test planning checkpoint
+- next recommended task: tests-only adapter boundary safety implementation
+  slice, return to passive/project documentation, or pause at the accepted
+  adapter test planning checkpoint
 - closeout command
 - stop condition
 
@@ -692,6 +692,35 @@ validation, or hardware-on authorization.
 
 The next recommended task is a documentation-only review/acceptance gate for
 this test plan.
+
+## Real MIDI Adapter-Specific Test Plan Review
+
+`Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN_REVIEW.md` accepts
+`Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md` as the current planning gate
+before any adapter-specific test implementation.
+
+The review accepts:
+
+- 1f352de Add real MIDI adapter-specific test plan
+- future fake-provider-only test approach
+- future ownership in `tests/test_real_midi_adapter_boundary.py`
+- future closeout label `=== Test: Real MIDI Adapter Boundary ===`
+- adapter import safety test category
+- dependency absence safe-failure test category
+- fake port provider test category
+- sender construction guard test category
+- passive CLI regression safety test category
+- active-boundary scope guard test category
+- V1.34 reference protection test category
+
+The review confirms no tests, `mido`, real MIDI dependency, adapter module,
+real MIDI backend, port opening, MIDI sending, active CLI command, dispatch,
+command execution, scene execution, hardware behavior, hardware validation,
+profile `"4"` implementation, or profile `"3"` active-boundary support exists.
+
+The next recommended task is a tests-only adapter boundary safety
+implementation slice, limited to fake-provider-only tests and closeout
+integration.
 
 ## Project-Level Roadmap Update
 

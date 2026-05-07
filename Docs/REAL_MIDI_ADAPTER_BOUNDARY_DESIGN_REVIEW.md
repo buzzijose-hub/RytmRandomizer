@@ -289,3 +289,28 @@ dependencies, port opening, MIDI sending, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, profile `"4"`
 implementation, profile `"3"` active-boundary support, hardware validation, or
 hardware-on authorization.
+
+## 15. Adapter-Specific Test Plan Review
+
+The real MIDI adapter-specific test plan review now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md`
+- 1f352de Add real MIDI adapter-specific test plan
+
+The review accepts the plan as the current planning checkpoint before any
+tests-only adapter boundary safety implementation slice.
+
+The review keeps adapter implementation blocked, real MIDI dependency
+selection deferred, hardware validation blocked, passive CLI read-only,
+profile `"3"` unsupported by the active boundary, profile `"4"` parked and
+unsupported, and hardware off.
+
+The review adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.
