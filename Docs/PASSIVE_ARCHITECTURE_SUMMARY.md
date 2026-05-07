@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6d4ce4a
+5c0e990
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6d4ce4a Add session agenda handoff review
+- current HEAD: 5c0e990 Add additional active boundary safety coverage design
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the additional mock-only
-  active-boundary safety coverage design, return to passive/project
-  documentation, or pause at the clean design checkpoint
+- next recommended task: implement only the accepted test-only additional
+  mock-only active-boundary safety coverage, return to passive/project
+  documentation, or pause at the accepted design review checkpoint
 - closeout command
 - stop condition
 
@@ -481,6 +481,36 @@ No closeout update is expected because the preferred test files are already in
 the closeout suite.
 
 The design is documentation-only. It adds no implementation, tests, real MIDI,
+mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+profile `"4"` implementation, profile `"3"` active-boundary support, or
+machine/profile expansion.
+
+## Additional Mock-Only Active Boundary Safety Coverage Design Review
+
+`Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN_REVIEW.md`
+accepts
+`Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN.md` as the
+current planning gate for future additional mock-only active-boundary safety
+coverage.
+
+It accepts future test-only ownership in:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+The review accepts additional future coverage for active boundary metadata,
+immutability, exact source-kind matching, target metadata staying metadata
+only, active boundary report decoupling, passive CLI
+`active-boundary-report` determinism, absent active CLI command names, absent
+real MIDI imports, profile `"3"` remaining unsupported by the active
+boundary, and profile `"4"` remaining parked and unsupported.
+
+No closeout update is expected because the preferred test files are already in
+the closeout suite.
+
+The review is documentation-only. It adds no implementation, tests, real MIDI,
 mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
@@ -2726,6 +2756,8 @@ Recommended passive layers before runtime work:
   coverage only after accepting the session agenda handoff
 - review and accept the additional mock-only active-boundary safety coverage
   design before any new tests
+- implement only the accepted test-only additional mock-only active-boundary
+  safety coverage after design review
 - write a session handoff/current agenda if resumption clarity is more useful
   than additional implementation
 - add more mock-only safety tests only after a separate approved design

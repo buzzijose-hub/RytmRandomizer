@@ -227,3 +227,14 @@ altitude only.
 No implementation is added in this slice.
 
 Hardware remains off.
+
+## 14. Review Gate
+
+This design is reviewed and accepted by:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN_REVIEW.md`
+
+The review accepts this document as the current planning gate for future
+test-only active-boundary safety coverage. It does not authorize real MIDI,
+ports, active CLI commands, dispatch, hardware behavior, profile `"4"`
+implementation, or profile `"3"` active-boundary support.

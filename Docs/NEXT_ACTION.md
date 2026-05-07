@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6d4ce4a Add session agenda handoff review
+5c0e990 Add additional active boundary safety coverage design
 
 ## Current Phase
 
@@ -66,9 +66,28 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is either review/acceptance of the additional
-mock-only active-boundary safety coverage design, more passive/project
-documentation, or a pause at this clean design checkpoint.
+Next recommended task is the accepted test-only additional mock-only
+active-boundary safety coverage slice, more passive/project documentation, or
+a pause at this accepted design review checkpoint.
+
+The latest additional mock-only active-boundary safety coverage design review
+is:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN_REVIEW.md`
+
+The review accepts:
+
+- `Docs/ADDITIONAL_MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_DESIGN.md`
+
+The review accepts future test-only coverage in:
+
+- `tests/test_active_boundary.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+
+It does not authorize real MIDI, ports, active CLI commands, passive CLI
+evaluation of active boundary requests, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
 
 The latest additional mock-only active-boundary safety coverage design is:
 
