@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-bf89f87
+3f67c9f
 
 ## Protected Reference
 
@@ -51,16 +51,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: bf89f87 Add project-level roadmap update
+- current HEAD: 3f67c9f Add project-level roadmap update review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: pause at the accepted roadmap checkpoint, return to
-  passive/project documentation, or create a docs-only real MIDI boundary plan
-  only if explicitly approved
+- next recommended task: review/accept the real MIDI boundary planning gate,
+  return to passive/project documentation, or pause at the clean planning gate
 - closeout command
 - stop condition
 
@@ -154,6 +153,30 @@ mido, port opening, MIDI sending, active execution, CLI wiring, dispatch,
 hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
 profile `"4"` implementation, profile `"3"` active-boundary support, or
 machine/profile expansion.
+
+## Real MIDI Boundary Planning Gate
+
+`Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE.md` defines the gate before any future
+documentation-only real MIDI boundary plan.
+
+It records:
+
+- current accepted roadmap checkpoint
+- accepted mock-first active boundary safety baseline
+- current passive CLI visibility
+- profile `"2"` as the only active-boundary candidate
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- real MIDI remaining absent
+- ports remaining closed
+- active CLI behavior remaining absent
+- hardware remaining off
+
+The gate allows only a future documentation-only real MIDI boundary plan after
+review. It does not authorize implementation, real MIDI imports, mido, port
+opening, MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, or hardware validation.
 
 ## Project-Level Roadmap Update
 

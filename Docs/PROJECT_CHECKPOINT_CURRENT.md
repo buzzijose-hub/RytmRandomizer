@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3f67c9f Add project-level roadmap update review
 - bf89f87 Add project-level roadmap update
 - b21eecc Add active boundary safety progress report review
 - 45c4aab Add active boundary safety progress report
@@ -2544,6 +2545,22 @@ active boundary requests, passive CLI does not construct `MockMidiSender`,
 real MIDI remains absent, ports remain closed, and hardware remains off.
 
 The review is documentation-only. It adds no implementation, tests, real MIDI,
+ports, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.
+
+The real MIDI boundary planning gate includes:
+
+- Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE.md
+
+The gate defines conditions before any future documentation-only real MIDI
+boundary plan may be written. It keeps the project in the Passive/Mock
+Foundation Phase with an accepted mock-first active boundary safety baseline.
+It confirms real MIDI remains absent, ports remain closed, active CLI behavior
+remains absent, hardware remains off, profile `"3"` remains unsupported by the
+active boundary, and profile `"4"` remains parked and unsupported.
+
+The gate is documentation-only. It adds no implementation, tests, real MIDI,
 ports, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.

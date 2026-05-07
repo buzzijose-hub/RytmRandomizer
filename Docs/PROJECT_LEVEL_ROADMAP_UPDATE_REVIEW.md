@@ -217,3 +217,18 @@ checkpoint.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 12. Real MIDI Boundary Planning Gate
+
+The real MIDI boundary planning gate now lives in:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE.md`
+
+The gate defines the conditions before any future documentation-only real MIDI
+boundary plan may be written. It keeps real MIDI, ports, active CLI behavior,
+dispatch, hardware behavior, hardware validation, profile `"4"`
+implementation, and profile `"3"` active-boundary support out of scope.
+
+The gate adds no implementation, tests, real MIDI, ports, active CLI commands,
+dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
+active-boundary support.

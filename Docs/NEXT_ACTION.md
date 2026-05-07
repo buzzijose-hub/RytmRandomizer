@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-bf89f87 Add project-level roadmap update
+3f67c9f Add project-level roadmap update review
 
 ## Current Phase
 
@@ -66,9 +66,19 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is pause at the accepted roadmap checkpoint, more
-passive/project documentation, or a docs-only real MIDI boundary plan only if
-explicitly approved.
+Next recommended task is review/acceptance of the real MIDI boundary planning
+gate, more passive/project documentation, or a pause at this clean planning
+gate.
+
+The latest real MIDI boundary planning gate is:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE.md`
+
+The gate defines the conditions before any future documentation-only real MIDI
+boundary plan may be written. It does not authorize implementation, real MIDI
+imports, mido, port opening, MIDI sending, active CLI commands, dispatch,
+hardware behavior, hardware validation, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
 
 The latest project-level roadmap update review is:
 
