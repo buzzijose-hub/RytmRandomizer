@@ -27,6 +27,11 @@ Latest phase review:
 - efaf086 Update checkpoint after passive mock mapper report CLI preview
 - `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
 
+Latest consolidated progress report:
+
+- 9780bcf Add passive mock mapper CLI preview phase review
+- `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
+
 Current phase:
 
 - passive CLI / dry-run foundation complete enough for report/list/search/inspect/preview
@@ -35,6 +40,7 @@ Current phase:
 - mock mapper report exists and is included in closeout
 - passive mock mapper report CLI preview exists and remains read-only
 - passive mock mapper CLI preview phase review exists
+- passive mock foundation progress report exists as the consolidated current-state reference
 
 Hardware status:
 
@@ -108,20 +114,28 @@ Profile `"4"` remains unsupported unless separately approved.
 - Hardware remains off.
 - No real MIDI libraries are required.
 
+## Consolidated Progress Report
+
+`Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md` consolidates the current
+passive/mock foundation in one place. It records the passive CLI visibility
+layer, test-only mock MIDI scaffold, test-only mock message mapper, passive
+mock mapper report, mock mapper report CLI preview, supported profiles `"2"`
+and `"3"`, unsupported/safe profile `"4"`, intentionally absent real MIDI and
+ports, absent active behavior, and hardware-off state.
+
 ## Safe Next Branch Options
 
 - Option A: freeze mock mapper scope here and stop/pause.
 - Option B: create a profile 4 mock-only support plan, not implementation.
-- Option C: write a larger project progress report.
-- Option D: review whether the passive/mock foundation is ready for a future active-layer test plan, still without implementation.
-- Option E: create a mock-only active command test plan, still no real MIDI and no hardware.
+- Option C: create a docs-only future active test-plan document.
+- Option D: focus on project-level documentation or a broader roadmap/timeline update.
 
 ## Recommendation
 
 - Do not jump to real MIDI.
 - Do not turn on the Rytm.
 - Do not add active CLI commands yet.
-- Prefer a broader project milestone report or a future active test-plan document, still documentation-only.
+- Prefer a docs-only future active test-plan document next.
 
 ## Stop Conditions
 

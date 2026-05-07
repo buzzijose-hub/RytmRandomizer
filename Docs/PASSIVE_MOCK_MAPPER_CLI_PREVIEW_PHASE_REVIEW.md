@@ -141,3 +141,17 @@ It shows:
 - Passive mock mapper CLI preview phase is complete.
 - Hardware remains off.
 - No implementation in this slice.
+
+## Follow-Up Progress Report
+
+The consolidated passive/mock foundation progress report now lives in:
+
+- `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
+
+It summarizes the full current passive/mock foundation in one place before any
+future active test-plan work. It confirms the passive CLI foundation, mock MIDI
+scaffold, mock message mapper, mock mapper report, and mock mapper report CLI
+preview are complete for the current phase. It also records that profiles
+`"2"` and `"3"` are supported, profile `"4"` remains unsupported/safe, real
+MIDI and ports remain absent, active behavior remains absent, and hardware
+remains off.

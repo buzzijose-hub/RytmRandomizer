@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-efaf086
+9780bcf
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: efaf086 Update checkpoint after passive mock mapper report CLI preview
+- current HEAD: 9780bcf Add passive mock mapper CLI preview phase review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: freeze scope, create a profile 4 plan, write a larger project milestone report, or draft a future active/mock-only test plan without implementation
+- next recommended task: create a docs-only future active test-plan document
 - closeout command
 - stop condition
 
@@ -307,6 +307,30 @@ hardware.
 
 The review is documentation-only and adds no runtime behavior.
 
+## Passive Mock Foundation Progress Report
+
+`Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md` consolidates the full current
+passive/mock foundation in one place before any future active test-plan work.
+
+It records:
+
+- passive CLI foundation complete enough for report/list/search/inspect/preview
+- mock MIDI scaffold complete and test-only/inert
+- mock message mapper complete for profiles `"2"` and `"3"`
+- profile `"4"` / My BD Acoustic unsupported/safe
+- mock mapper report complete
+- mock mapper report CLI preview complete
+- real MIDI absent
+- mido absent
+- ports absent
+- active behavior absent
+- hardware off and not required
+
+The report documents current closeout coverage, guardrails, intentionally
+absent scope, and safe next branches. Its recommendation is to create a
+docs-only future active test-plan document next. It is documentation-only and
+adds no runtime behavior.
+
 ## Passive Mock Foundation Decision Checkpoint
 
 `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md` records the current
@@ -330,8 +354,8 @@ Safe next branches are:
 - freeze mock mapper scope here and stop/pause
 - create a profile 4 mock-only support plan, not implementation
 - build a passive mock mapper report CLI preview, now completed by `19659e5`
-- write a larger project progress report
-- review readiness for a future active-layer test plan, still without implementation
+- write a larger project progress report, now completed by `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
+- create a docs-only future active test-plan document
 
 The checkpoint is documentation-only and adds no runtime behavior.
 
@@ -1556,7 +1580,9 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- freeze mapper scope, create a profile 4 plan, write a larger project milestone report, draft a future active test-plan document, or create a mock-only active command test plan without implementation
+- create a docs-only future active test-plan document
+- keep profile `"4"` unsupported unless separately approved
+- stop/pause at the clean checkpoint if no next planning slice is needed
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed
 - do not expand beyond supported group profiles `"2"` and `"3"` without a new explicit design/review step
 - keep hardware off during mock MIDI boundary work

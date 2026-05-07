@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9780bcf Add passive mock mapper CLI preview phase review
 - efaf086 Update checkpoint after passive mock mapper report CLI preview
 - 19659e5 Add passive mock mapper report CLI preview
 - c34c39f Add passive mock foundation decision checkpoint
@@ -340,6 +341,20 @@ profiles `"2"` and `"3"` are supported, profile `"4"` remains
 unsupported/safe, real MIDI and ports are absent, active behavior is absent,
 hardware is not required, and Analog Rytm and Analog Four remain off.
 
+The passive mock foundation progress report now lives in:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md
+
+The progress report consolidates the current passive/mock foundation in one
+place before any future active test-plan work. It records that the passive CLI
+foundation is complete enough for report/list/search/inspect/preview, the
+mock MIDI scaffold is test-only/inert, the mock message mapper supports
+profiles `"2"` and `"3"`, profile `"4"` remains unsupported/safe, the mock
+mapper report and CLI preview exist, real MIDI and ports remain absent, active
+behavior remains absent, hardware is not required, and Analog Rytm and Analog
+Four remain off. The next recommended branch is a docs-only future active
+test-plan document.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -403,6 +418,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive mock foundation decision checkpoint
 - passive mock mapper report CLI preview
 - passive mock mapper CLI preview phase review
+- passive mock foundation progress report
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1632,8 +1648,9 @@ Hard and `"3"` / My BD Classic supported, profile `"4"` / My BD Acoustic
 unsupported/safe, and profile `"4"` still requiring separate approval. It
 captures safe next branches as freezing scope, creating a profile 4 mock-only
 support plan, building a passive mock mapper report CLI preview, writing a
-larger project progress report, or reviewing future active-layer test planning
-without implementation. It adds no implementation, real MIDI backend, mido
+larger project progress report now covered by
+`Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`, or creating a docs-only
+future active test-plan document. It adds no implementation, real MIDI backend, mido
 dependency, MIDI port opening, MIDI sending, active execution, CLI wiring,
 dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support, Pads
 5-12 support, machine/profile universe expansion, execute-command,
@@ -1686,6 +1703,25 @@ expansion, execute-command, send-command, and hardware-test remain absent. It
 adds no implementation, code, tests, closeout changes, real MIDI behavior,
 active behavior, or hardware requirement. The protected V1.34 reference
 remains untouched. Analog Rytm and Analog Four remain off for this phase.
+
+The passive mock foundation progress report includes:
+
+- Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md
+
+The report is documentation-only. It consolidates the full current passive
+/mock foundation in one place after `9780bcf Add passive mock mapper CLI
+preview phase review`. It summarizes major achievements, current passive CLI
+capability, current mock foundation capability, supported mock mapper profiles
+`"2"` / My BD Hard and `"3"` / My BD Classic, unsupported/safe profile `"4"` /
+My BD Acoustic, current closeout coverage, intentionally absent real MIDI,
+mido, MIDI port opening, MIDI sending, active execution, CLI wiring to mapper
+execution, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four
+support, Pads 5-12 support, machine/profile expansion, execute-command,
+send-command, and hardware-test. It sets the next recommended branch as a
+docs-only future active test-plan document. It adds no implementation, code,
+tests, closeout changes, real MIDI behavior, active behavior, or hardware
+requirement. The protected V1.34 reference remains untouched. Analog Rytm and
+Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

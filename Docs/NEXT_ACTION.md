@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-efaf086 Update checkpoint after passive mock mapper report CLI preview
+9780bcf Add passive mock mapper CLI preview phase review
 
 ## Current Phase
 
@@ -41,6 +41,7 @@ Passive CLI / dry-run foundation.
 - search commands/scenes/group profiles
 - inspect commands/scenes/group profiles
 - preview commands/scenes/group profiles
+- mock-mapper-report
 
 ## Known Safe Passive Commands
 
@@ -62,14 +63,15 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to choose one of:
+Next recommended task is to create a docs-only future active test-plan
+document.
 
-- keep mapper scope frozen for now
-- create a profile 4 mock-only support plan, not implementation
-- create a broader project milestone report
-- pause mapper work and write a larger project progress report
-- review whether the passive/mock foundation is ready for a future active-layer test plan, still without implementation
-- create a mock-only active command test plan, still no real MIDI and no hardware
+Safe alternatives are:
+
+- stop/pause at this clean checkpoint
+- create a docs-only profile 4 support plan
+- freeze mock mapper scope and focus on project-level documentation
+- prepare a broader roadmap/timeline update
 
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY.md`
 - `Docs/PASSIVE_TO_ACTIVE_BOUNDARY_REVIEW.md`
@@ -87,6 +89,7 @@ Next recommended task is to choose one of:
 - `Docs/MOCK_MAPPER_PROGRESS_REVIEW.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_DECISION_CHECKPOINT.md`
 - `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
+- `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -177,6 +180,15 @@ current CLI visibility layer, supported profiles `"2"` and `"3"`, unsupported
 hardware-off status. Safe next branches are freezing scope, creating a profile
 4 plan, writing a broader milestone report, or drafting future active/mock-only
 test plans without implementation.
+
+The passive mock foundation progress report consolidates the full current
+passive/mock foundation into one milestone reference. It records that the
+passive CLI foundation is complete enough for report/list/search/inspect
+/preview, the mock MIDI scaffold is test-only/inert, the mock message mapper
+supports profiles `"2"` and `"3"`, profile `"4"` remains unsupported/safe, the
+mock mapper report and CLI preview exist, real MIDI and ports remain absent,
+active behavior remains absent, and hardware remains off. The next recommended
+branch is a docs-only future active test-plan document.
 
 ## Do-Not-Touch Files
 
