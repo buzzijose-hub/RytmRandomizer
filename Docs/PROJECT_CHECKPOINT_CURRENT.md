@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 869535f Add real MIDI adapter first implementation design spec
 - cdbf58a Add real MIDI adapter first implementation planning gate review
 - af458b7 Add real MIDI adapter first implementation planning gate
 - f705eae Add real MIDI adapter boundary safety tests review
@@ -3118,6 +3119,33 @@ runtime modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support,
 hardware validation, or hardware-on authorization.
+
+The real MIDI adapter first implementation design/spec review includes:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC.md
+- 869535f Add real MIDI adapter first implementation design spec
+
+The review accepts the design/spec as the current checkpoint before any
+documentation-only first adapter implementation plan. It confirms future
+adapter work remains limited to a narrow boundary, fake-provider-only tests,
+dependency-absent safe failure behavior, passive CLI separation,
+active-boundary scope limits, and V1.34 reference protection.
+
+The review keeps adapter implementation, dependency selection, package
+metadata changes, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+and hardware-on authorization blocked.
+
+The review is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, package metadata changes, port opening, MIDI
+sending, active CLI commands, dispatch, command execution, scene execution,
+hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or hardware-on authorization.
 
 The session agenda current handoff refresh includes:
 

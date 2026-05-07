@@ -302,12 +302,25 @@ selection, package metadata changes, port opening, MIDI sending, active CLI
 commands, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
 
-## 16. Decision
+## 16. First Adapter Implementation Design Spec Review
+
+The first adapter implementation design/spec review now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+
+The review accepts the design/spec as the current checkpoint before any
+documentation-only first adapter implementation plan. It keeps adapter
+implementation, dependency selection, package metadata changes, port opening,
+MIDI sending, active CLI commands, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+and hardware-on authorization blocked.
+
+## 17. Decision
 
 The real MIDI adapter first implementation planning gate is accepted.
 
-The next safe branch may be documentation-only review/acceptance of the first
-adapter implementation design/spec.
+The next safe branch may be a documentation-only first adapter implementation
+plan.
 
 Adapter implementation remains blocked.
 

@@ -395,7 +395,22 @@ Do not add active CLI commands.
 
 Do not turn on hardware.
 
-## 19. Decision
+## 19. Review Gate
+
+The review gate for this design/spec is:
+
+- `Docs/REAL_MIDI_ADAPTER_FIRST_IMPLEMENTATION_DESIGN_SPEC_REVIEW.md`
+
+The review accepts this design/spec as the current checkpoint before any
+documentation-only first adapter implementation plan.
+
+The review does not authorize creating `rytm_randomizer/real_midi_adapter.py`,
+selecting or installing a real MIDI dependency, package metadata changes, port
+opening, MIDI sending, active CLI commands, hardware behavior, hardware
+validation, profile `"4"` implementation, or profile `"3"` active-boundary
+support.
+
+## 20. Decision
 
 The first adapter implementation design/spec is documented.
 
