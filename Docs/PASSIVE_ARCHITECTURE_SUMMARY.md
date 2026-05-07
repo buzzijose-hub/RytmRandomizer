@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-524144d
+51b1a8f
 
 ## Protected Reference
 
@@ -50,15 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 524144d Add mock-only active boundary safety test design
+- current HEAD: 51b1a8f Add mock-only active boundary safety tests
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement the accepted mock-only active boundary
-  safety tests
+- next recommended task: review/accept the completed mock-only active
+  boundary safety tests
 - closeout command
 - stop condition
 
@@ -319,6 +319,47 @@ The accepted future file ownership is:
 
 The review is documentation-only and adds no tests, code, real MIDI, ports,
 active CLI behavior, dispatch, hardware behavior, or profile `"4"` support.
+
+## Mock-Only Active Boundary Safety Tests
+
+The mock-only active boundary safety tests milestone is:
+
+- 51b1a8f Add mock-only active boundary safety tests
+
+It updates:
+
+- `tests/test_active_boundary.py`
+
+The tests add coverage for:
+
+- request metadata copy/immutability
+- result metadata copy/immutability
+- unsupported source kind safe failure
+- profile `"3"` remaining unsupported by the active boundary
+- profile `"4"` remaining parked and unsupported
+- repeated accepted evaluations staying deterministic
+- repeated failure evaluations staying deterministic
+- sender state staying empty after failure paths
+- invalid request type failing before message emission
+- invalid sender type failing before message emission
+- no `open_midi_port`, `send_midi`, or `MidiPortProvider` affordances exposed
+
+The existing closeout label covers the added tests:
+
+- `=== Test: Active Boundary ===`
+
+No closeout script update was needed because `tests/test_active_boundary.py`
+was already included in closeout.
+
+The checkpoint lives in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+This milestone adds no real MIDI, mido, port opening, MIDI sending, active CLI
+behavior, dispatch, command execution, scene execution, hardware behavior,
+SysEx, GUI/capture, Analog Four support, Pads 5-12 support, profile `"4"`
+implementation, profile `"3"` active-boundary support, or machine/profile
+expansion.
 
 ## Mock-Only Active Test Implementation Plan
 

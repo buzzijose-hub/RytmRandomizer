@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-524144d Add mock-only active boundary safety test design
+51b1a8f Add mock-only active boundary safety tests
 
 ## Current Phase
 
@@ -64,8 +64,26 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to implement the accepted mock-only active boundary
-safety tests.
+Next recommended task is a documentation-only review/acceptance checkpoint for
+the completed mock-only active boundary safety tests.
+
+The latest mock-only active boundary safety tests checkpoint is:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
+The latest test-only implementation milestone is:
+
+- 51b1a8f Add mock-only active boundary safety tests
+
+The milestone updates:
+
+- `tests/test_active_boundary.py`
+
+It adds safety coverage for metadata copy/immutability, unsupported source
+kind, profile `"3"` remaining unsupported by the active boundary, profile
+`"4"` remaining parked, deterministic accepted and failed evaluations, sender
+state after failure paths, invalid input type failures before message
+emission, and no real-MIDI or active-CLI affordances exposed.
 
 The mock-only active boundary safety test design review is:
 
@@ -75,16 +93,17 @@ The review accepts:
 
 - `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md`
 
-The accepted future test-only implementation should prefer:
+The accepted test-only implementation was completed in:
 
 - `tests/test_active_boundary.py`
 
-No closeout update should be needed unless a new test file is separately
-justified.
+No closeout update was needed because `tests/test_active_boundary.py` was
+already included in closeout.
 
 The mock-only active boundary safety test design is:
 
 - `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TEST_DESIGN.md`
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
 
 The design proposes a future test-only slice that should prefer extending:
 

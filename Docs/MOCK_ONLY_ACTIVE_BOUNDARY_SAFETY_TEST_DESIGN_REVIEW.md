@@ -164,6 +164,10 @@ validation.
 
 Mock-only active boundary safety test design accepted.
 
+The accepted safety tests are now complete and checkpointed in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_TESTS_CHECKPOINT.md`
+
 Hardware remains off.
 
 No implementation is added in this slice.
