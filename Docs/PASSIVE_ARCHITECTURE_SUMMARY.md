@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-457b6be
+3ad0939
 
 ## Protected Reference
 
@@ -51,16 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 457b6be Add real MIDI import and port safety tests
+- current HEAD: 3ad0939 Update checkpoint after real MIDI import safety tests
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance of the real
-  MIDI import and port safety tests checkpoint, return to passive/project
-  documentation, or pause at the clean test-safety checkpoint
+- next recommended task: documentation-only next-phase planning gate, return
+  to passive/project documentation, or pause at the clean test-safety
+  checkpoint
 - closeout command
 - stop condition
 
@@ -464,6 +464,27 @@ The milestone adds no runtime modules, real MIDI dependencies, port opening,
 MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+## Real MIDI Import And Port Safety Tests Review
+
+`Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_REVIEW.md` accepts
+`Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md` as the current
+completed test-safety checkpoint.
+
+It accepts:
+
+- 457b6be Add real MIDI import and port safety tests
+- `tests/test_real_midi_import_safety.py`
+- `tests/test_real_midi_passive_cli_safety.py`
+- `=== Test: Real MIDI Import Safety ===`
+- `=== Test: Real MIDI Passive CLI Safety ===`
+
+The review confirms the project now has closeout-protected guardrails for
+real MIDI import safety and passive CLI port/send safety. It does not add
+runtime modules, real MIDI dependencies, port opening, MIDI sending, active
+CLI commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
 
 ## Project-Level Roadmap Update
 

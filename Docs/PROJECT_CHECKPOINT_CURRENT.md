@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3ad0939 Update checkpoint after real MIDI import safety tests
 - 457b6be Add real MIDI import and port safety tests
 - f5be0ee Add real MIDI import port safety test plan
 - 17d1a0a Add real MIDI implementation test plan review
@@ -2774,6 +2775,24 @@ The milestone adds no runtime modules, real MIDI dependencies, port opening,
 MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+The real MIDI import and port safety tests review includes:
+
+- Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_REVIEW.md
+
+The review accepts:
+
+- Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md
+- 457b6be Add real MIDI import and port safety tests
+
+The review accepts the completed tests as the current closeout-protected
+guardrails for real MIDI import and passive CLI port/send safety.
+
+The review is documentation-only. It adds no runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation,
+or hardware-on authorization.
 
 The session agenda current handoff refresh includes:
 

@@ -306,3 +306,17 @@ labels. It adds no runtime modules, real MIDI, mido, port opening, MIDI
 sending, active CLI commands, dispatch, command execution, scene execution,
 hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, hardware validation, or hardware-on authorization.
+
+## 17. Real MIDI Import And Port Safety Tests Review
+
+The completed tests review now lives in:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_REVIEW.md`
+
+The review accepts the completed tests checkpoint and the `457b6be Add real
+MIDI import and port safety tests` milestone as the current
+closeout-protected guardrail baseline. It adds no runtime modules, real MIDI,
+mido, port opening, MIDI sending, active CLI commands, dispatch, command
+execution, scene execution, hardware behavior, profile `"4"` implementation,
+profile `"3"` active-boundary support, hardware validation, or hardware-on
+authorization.

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-457b6be Add real MIDI import and port safety tests
+3ad0939 Update checkpoint after real MIDI import safety tests
 
 ## Current Phase
 
@@ -66,9 +66,22 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is documentation-only review/acceptance of the real MIDI
-import and port safety tests checkpoint, more passive/project documentation,
-or a pause at this clean test-safety checkpoint.
+Next recommended task is a documentation-only next-phase planning gate, more
+passive/project documentation, or a pause at this clean test-safety checkpoint.
+
+The latest real MIDI import and port safety tests review is:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_IMPORT_PORT_SAFETY_TESTS_CHECKPOINT.md`
+- 457b6be Add real MIDI import and port safety tests
+
+The review accepts the completed tests as the current closeout-protected
+guardrails for real MIDI import and passive CLI port/send safety. It confirms
+that real MIDI implementation remains blocked, hardware validation remains
+blocked, and hardware remains off.
 
 The latest real MIDI import and port safety tests checkpoint is:
 
