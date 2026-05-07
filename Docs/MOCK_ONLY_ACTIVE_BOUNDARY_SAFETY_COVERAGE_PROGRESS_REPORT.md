@@ -245,8 +245,12 @@ Unsafe next moves:
 
 ## 13. Recommendation
 
-Review and accept this progress report next, then pause or choose the next
-mock-only design slice deliberately.
+This progress report is accepted in:
+
+- `Docs/MOCK_ONLY_ACTIVE_BOUNDARY_SAFETY_COVERAGE_PROGRESS_REPORT_REVIEW.md`
+
+Pause at this clean progress review checkpoint or choose the next mock-only
+design slice deliberately.
 
 Do not add real MIDI.
 
