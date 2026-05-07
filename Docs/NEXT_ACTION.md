@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-de313fe Add real MIDI adapter boundary design
+c14c869 Add real MIDI adapter boundary design review
 
 ## Current Phase
 
@@ -66,9 +66,23 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is documentation-only real MIDI adapter-specific test
-plan, more passive/project documentation, or a pause at this accepted adapter
-design checkpoint.
+Next recommended task is documentation-only review/acceptance of the real MIDI
+adapter-specific test plan, more passive/project documentation, or a pause at
+this adapter test planning checkpoint.
+
+The latest real MIDI adapter-specific test plan is:
+
+- `Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md`
+
+The plan defines future adapter-specific tests that must exist before any real
+MIDI adapter implementation. It covers future test ownership,
+fake-provider-only behavior, adapter import safety, dependency absence,
+unknown port safe failure, sender construction guards, passive CLI regression
+coverage, active-boundary scope guards, V1.34 reference protection, future
+closeout integration, and future implementation sequencing. It adds no tests,
+no `mido`, no real MIDI dependency, no adapter module, no port opening, no
+MIDI sending, no active CLI commands, no hardware behavior, and no hardware
+validation. It recommends a documentation-only review gate next.
 
 The latest real MIDI adapter boundary design review is:
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c14c869 Add real MIDI adapter boundary design review
 - de313fe Add real MIDI adapter boundary design
 - 9fc92d2 Add real MIDI adapter boundary gate review
 - 75d25c5 Add real MIDI adapter boundary gate
@@ -2932,6 +2933,26 @@ profile `"3"` remains unsupported by the active boundary, profile `"4"`
 remains parked and unsupported, and hardware remains off.
 
 The review is documentation-only. It adds no implementation, tests, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support,
+hardware validation, or hardware-on authorization.
+
+The real MIDI adapter-specific test plan includes:
+
+- Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md
+
+The plan defines future adapter-specific tests that must exist before any real
+MIDI adapter implementation. It documents future ownership in
+`tests/test_real_midi_adapter_boundary.py`, the future closeout label
+`=== Test: Real MIDI Adapter Boundary ===`, adapter import safety, dependency
+absence safe failure, fake port provider behavior, unknown port safe failure,
+sender construction guards, message send guards, passive CLI regression
+coverage, active-boundary scope guards, V1.34 reference protection, future
+test implementation sequencing, forbidden scope, and preconditions before
+adapter implementation or hardware validation.
+
+The plan is documentation-only. It adds no implementation, tests, runtime
 modules, real MIDI dependencies, port opening, MIDI sending, active CLI
 commands, dispatch, command execution, scene execution, hardware behavior,
 profile `"4"` implementation, profile `"3"` active-boundary support,

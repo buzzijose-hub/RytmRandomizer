@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-de313fe
+c14c869
 
 ## Protected Reference
 
@@ -53,16 +53,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: de313fe Add real MIDI adapter boundary design
+- current HEAD: c14c869 Add real MIDI adapter boundary design review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only real MIDI adapter-specific test
-  plan, return to passive/project documentation, or pause at the accepted
-  adapter design checkpoint
+- next recommended task: documentation-only review/acceptance of the real MIDI
+  adapter-specific test plan, return to passive/project documentation, or pause
+  at the adapter test planning checkpoint
 - closeout command
 - stop condition
 
@@ -660,6 +660,38 @@ execution, scene execution, hardware behavior, hardware validation, profile
 
 The next recommended task is a documentation-only real MIDI adapter-specific
 test plan.
+
+## Real MIDI Adapter-Specific Test Plan
+
+`Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md` defines the future
+adapter-specific tests that must exist before any real MIDI adapter
+implementation.
+
+It documents:
+
+- future test ownership in `tests/test_real_midi_adapter_boundary.py`
+- future closeout label `=== Test: Real MIDI Adapter Boundary ===`
+- existing import and passive CLI safety tests that must remain in closeout
+- future adapter import safety tests
+- future dependency absence tests
+- future fake port provider tests
+- future sender construction guard tests
+- future message send guard tests
+- future passive CLI regression tests
+- future active-boundary scope guard tests
+- future V1.34 reference protection checks
+- future test implementation sequence
+- forbidden scope
+- preconditions before adapter implementation and hardware validation
+
+The plan is documentation-only. It adds no tests, implementation, runtime
+modules, real MIDI dependencies, port opening, MIDI sending, active CLI
+commands, dispatch, command execution, scene execution, hardware behavior,
+profile `"4"` implementation, profile `"3"` active-boundary support, hardware
+validation, or hardware-on authorization.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this test plan.
 
 ## Project-Level Roadmap Update
 

@@ -270,3 +270,22 @@ Hardware validation remains blocked.
 Hardware remains off.
 
 No implementation is added in this slice.
+
+## 14. Adapter-Specific Test Plan
+
+The real MIDI adapter-specific test plan now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md`
+
+The plan defines future adapter-specific tests that must exist before any real
+MIDI adapter implementation. It covers future test ownership,
+fake-provider-only behavior, adapter import safety, dependency absence,
+unknown port safe failure, sender construction guards, passive CLI regression
+coverage, active-boundary scope guards, V1.34 reference protection, future
+closeout integration, and implementation sequencing.
+
+The plan adds no implementation, tests, runtime modules, real MIDI
+dependencies, port opening, MIDI sending, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, profile `"4"`
+implementation, profile `"3"` active-boundary support, hardware validation, or
+hardware-on authorization.

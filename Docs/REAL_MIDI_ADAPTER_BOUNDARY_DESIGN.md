@@ -440,3 +440,19 @@ documentation-only real MIDI adapter-specific test plan.
 The review does not authorize real MIDI dependency installation, adapter
 implementation, port opening, MIDI sending, active CLI commands, hardware
 behavior, hardware validation, or turning hardware on.
+
+## 22. Adapter-Specific Test Plan
+
+The documentation-only real MIDI adapter-specific test plan now lives in:
+
+- `Docs/REAL_MIDI_ADAPTER_SPECIFIC_TEST_PLAN.md`
+
+The plan defines future adapter-specific tests that must exist before any real
+MIDI adapter implementation. It documents adapter import safety, dependency
+absence, fake port providers, sender construction guards, send guards, passive
+CLI regression coverage, active-boundary scope guards, V1.34 reference
+protection, future closeout integration, and implementation sequencing.
+
+The plan does not authorize test implementation, real MIDI dependency
+installation, adapter implementation, port opening, MIDI sending, active CLI
+commands, hardware behavior, hardware validation, or turning hardware on.
