@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3f67c9f
+c572e14
 
 ## Protected Reference
 
@@ -51,15 +51,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3f67c9f Add project-level roadmap update review
+- current HEAD: c572e14 Add real MIDI boundary planning gate
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/accept the real MIDI boundary planning gate,
-  return to passive/project documentation, or pause at the clean planning gate
+- next recommended task: write a documentation-only real MIDI boundary plan,
+  return to passive/project documentation, or pause at the accepted real MIDI
+  boundary planning gate
 - closeout command
 - stop condition
 
@@ -177,6 +178,30 @@ review. It does not authorize implementation, real MIDI imports, mido, port
 opening, MIDI sending, active CLI commands, dispatch, command execution, scene
 execution, hardware behavior, profile `"4"` implementation, profile `"3"`
 active-boundary support, or hardware validation.
+
+## Real MIDI Boundary Planning Gate Review
+
+`Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE_REVIEW.md` accepts
+`Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE.md` as the current planning gate before
+any future documentation-only real MIDI boundary plan.
+
+It accepts:
+
+- c572e14 Add real MIDI boundary planning gate
+- only a future documentation-only real MIDI boundary plan as the next real
+  MIDI-facing planning branch
+- profile `"2"` / My BD Hard as the only active-boundary candidate
+- profile `"3"` / My BD Classic as unsupported by the active boundary
+- profile `"4"` / My BD Acoustic as parked and unsupported
+- real MIDI remaining absent
+- ports remaining closed
+- active CLI behavior remaining absent
+- hardware remaining off
+
+The review does not authorize implementation, real MIDI imports, mido, port
+opening, MIDI sending, active CLI commands, dispatch, command execution, scene
+execution, hardware behavior, profile `"4"` implementation, profile `"3"`
+active-boundary support, hardware validation, or turning hardware on.
 
 ## Project-Level Roadmap Update
 

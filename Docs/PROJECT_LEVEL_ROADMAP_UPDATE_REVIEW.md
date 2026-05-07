@@ -232,3 +232,23 @@ implementation, and profile `"3"` active-boundary support out of scope.
 The gate adds no implementation, tests, real MIDI, ports, active CLI commands,
 dispatch, hardware behavior, profile `"4"` implementation, or profile `"3"`
 active-boundary support.
+
+## 13. Real MIDI Boundary Planning Gate Review
+
+The real MIDI boundary planning gate review now lives in:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE_REVIEW.md`
+
+The review accepts:
+
+- `Docs/REAL_MIDI_BOUNDARY_PLANNING_GATE.md`
+- c572e14 Add real MIDI boundary planning gate
+
+The review accepts the gate as the current planning gate before any future
+documentation-only real MIDI boundary plan. It keeps real MIDI, ports, active
+CLI behavior, dispatch, hardware behavior, hardware validation, profile `"4"`
+implementation, and profile `"3"` active-boundary support out of scope.
+
+The review adds no implementation, tests, real MIDI, ports, active CLI
+commands, dispatch, hardware behavior, profile `"4"` implementation, or
+profile `"3"` active-boundary support.
