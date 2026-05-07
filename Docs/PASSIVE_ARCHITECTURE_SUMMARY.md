@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-565770e
+ae55174
 
 ## Protected Reference
 
@@ -50,15 +50,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 565770e Add mock-first active boundary
+- current HEAD: ae55174 Update checkpoint after mock-first active boundary
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the mock-first active boundary
-  implementation checkpoint
+- next recommended task: pause at the clean sleep checkpoint or create a
+  broader mock-first active boundary progress report after user confirmation
 - closeout command
 - stop condition
 
@@ -219,6 +219,32 @@ active CLI command, and requires no hardware.
 The checkpoint lives in:
 
 - `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
+
+## Mock-First Active Boundary Review
+
+`Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md` accepts
+`Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md` as the current checkpoint for
+the implemented mock-first active boundary.
+
+The review accepts:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+- `=== Test: Active Boundary ===` closeout coverage
+
+It confirms:
+
+- group profile `"2"` / My BD Hard remains the only accepted candidate
+- profile `"4"` / My BD Acoustic remains parked and unsupported
+- missing arming fails safely with no messages
+- missing dry-run confirmation fails safely with no messages
+- unknown and unsupported keys fail safely with no messages
+- passive CLI remains separated from the boundary
+- real MIDI remains absent
+- ports remain closed
+- hardware remains off
+
+The review is documentation-only and adds no runtime behavior.
 
 ## Mock-Only Active Test Implementation Plan
 
@@ -1994,7 +2020,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review and accept the mock-first active boundary checkpoint
+- pause at the clean mock-first active boundary review checkpoint
+- create a broader mock-first active boundary progress report after user confirmation
 - add more mock-only safety tests only after a separate approved design
 - keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved

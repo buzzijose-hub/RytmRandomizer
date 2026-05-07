@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-565770e Add mock-first active boundary
+ae55174 Update checkpoint after mock-first active boundary
 
 ## Current Phase
 
@@ -64,8 +64,27 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance checkpoint for
-the completed mock-first active boundary implementation.
+Next recommended task is to pause at this clean sleep checkpoint or, after
+user confirmation, create a broader mock-first active boundary progress report.
+
+The mock-first active boundary review is:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md`
+
+The review accepts:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md`
+
+The accepted implementation milestone remains:
+
+- 565770e Add mock-first active boundary
+
+The accepted documentation checkpoint is:
+
+- ae55174 Update checkpoint after mock-first active boundary
+
+The review confirms no real MIDI, ports, active CLI behavior, dispatch,
+hardware behavior, or profile `"4"` implementation exists.
 
 The latest mock-first active boundary checkpoint is:
 

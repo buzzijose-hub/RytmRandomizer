@@ -184,6 +184,10 @@ That review should confirm:
 
 Hardware remains off.
 
+The review now lives in:
+
+- `Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md`
+
 ## 11. Decision
 
 Mock-first active boundary implementation is complete and closeout-protected.

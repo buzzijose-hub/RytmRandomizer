@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ae55174 Update checkpoint after mock-first active boundary
 - 565770e Add mock-first active boundary
 - ef5cfa6 Add active boundary implementation design review
 - cc614d2 Add active boundary implementation design spec
@@ -564,6 +565,25 @@ off.
 The mock-first active boundary checkpoint now lives in:
 
 - Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md
+
+The mock-first active boundary review now lives in:
+
+- Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md
+
+The review accepts the checkpoint as the current record of the implemented
+mock-first active boundary. It confirms the boundary remains mock-first,
+candidate-specific for group profile `"2"` / My BD Hard, separated from
+passive CLI, separated from real MIDI, and not hardware-facing. It accepts
+safe-failure behavior for missing arming, missing dry-run confirmation,
+unknown keys, unsupported keys, unsupported source kinds, and profile `"4"` /
+My BD Acoustic with no emitted messages.
+
+The review confirms no real MIDI, mido, MIDI port opening, MIDI sending,
+hardware detection, hardware send, active CLI commands, CLI wiring to active
+behavior, dispatch, command execution, scene execution, hardware behavior,
+SysEx, GUI/capture, Analog Four support, Pads 5-12 support, machine/profile
+expansion, execute-command, send-command, hardware-test, hardware validation,
+or profile `"4"` implementation exists.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -2204,6 +2224,19 @@ passive CLI, separated from real MIDI, and unable to open ports or reach
 hardware. Profile `"4"` / My BD Acoustic remains parked and unsupported. The
 protected V1.34 reference remains untouched. Analog Rytm and Analog Four
 remain off for this phase.
+
+The mock-first active boundary review includes:
+
+- Docs/MOCK_FIRST_ACTIVE_BOUNDARY_REVIEW.md
+
+The review is documentation-only. It accepts
+`Docs/MOCK_FIRST_ACTIVE_BOUNDARY_CHECKPOINT.md` as the current checkpoint for
+the mock-first active boundary implementation. It confirms
+`rytm_randomizer/active_boundary.py`, `tests/test_active_boundary.py`, and the
+`=== Test: Active Boundary ===` closeout label are accepted as current
+coverage. It records that future expansion requires a separate plan or design
+gate, profile `"4"` remains parked unless separately approved, and hardware
+remains off.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command
