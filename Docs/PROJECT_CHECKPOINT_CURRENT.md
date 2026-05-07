@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 269fb39 Add mock-only active candidate tests review
 - fba0c88 Update checkpoint after mock-only active candidate tests
 - a589564 Add mock-only active candidate tests
 - 66623ef Add first-candidate mock-only active test design review
@@ -484,6 +485,16 @@ checkpoint. It confirms group profile `"2"` / My BD Hard has been proven
 through inert mock messages and `MockMidiSender`, profile `"4"` remains
 parked, no real MIDI or active behavior exists, and the next recommended task
 is a documentation-only active boundary implementation planning gate.
+
+The active boundary implementation planning gate now lives in:
+
+- Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md
+
+The gate records that active boundary implementation may not begin yet. It uses
+the accepted mock-only proof for group profile `"2"` / My BD Hard to allow only
+a documentation-only active boundary implementation design/spec next. It keeps
+passive CLI read-only, avoids real MIDI libraries and ports, keeps profile
+`"4"` parked, and keeps hardware off.
 
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
@@ -2042,6 +2053,21 @@ Pads 5-12 support, profile `"4"` implementation, or machine/profile expansion.
 It sets the next recommended task as a docs-only active boundary implementation
 planning gate. The protected V1.34 reference remains untouched. Analog Rytm and
 Analog Four remain off for this phase.
+
+The active boundary implementation planning gate includes:
+
+- Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md
+
+The gate is documentation-only. It establishes the checkpoint before any future
+active boundary implementation work. It records the accepted mock-only proof,
+required boundary properties, future design questions, forbidden scope,
+preconditions before later implementation, and safe next options. It permits
+only a docs-only active boundary implementation design/spec next. It adds no
+implementation, code, tests, real MIDI, mido, port opening, MIDI sending,
+active execution, active CLI command, dispatch, hardware behavior, SysEx, GUI,
+capture, Analog Four support, Pads 5-12 support, profile `"4"` implementation,
+or machine/profile expansion. The protected V1.34 reference remains untouched.
+Analog Rytm and Analog Four remain off for this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

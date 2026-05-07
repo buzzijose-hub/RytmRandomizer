@@ -157,8 +157,12 @@ armed, test-gated, and unable to reach hardware accidentally.
 
 Mock-only active candidate tests accepted.
 
+The active boundary implementation planning gate is:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md`
+
 The next recommended task is a docs-only active boundary implementation
-planning gate.
+design/spec.
 
 Hardware remains off.
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-fba0c88 Update checkpoint after mock-only active candidate tests
+269fb39 Add mock-only active candidate tests review
 
 ## Current Phase
 
@@ -64,9 +64,13 @@ python -m rytm_randomizer.cli mock-mapper-report
 ## Next Recommended Task
 
 Next recommended task is a documentation-only active boundary implementation
-planning gate, using the accepted mock-only active candidate tests as proof:
+design/spec, using the accepted mock-only active candidate tests as proof:
 
 - group profile `"2"` / My BD Hard
+
+The active boundary implementation planning gate is:
+
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md`
 
 The mock-only active candidate tests review is:
 
@@ -127,6 +131,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
 - `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
 - `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
+- `Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_ROADMAP_REVIEW.md`
 - `Docs/FIRST_CANDIDATE_MOCK_ONLY_ACTIVE_TEST_DESIGN.md`
@@ -307,6 +312,12 @@ current mock-only proof checkpoint. It confirms the project has moved from
 mock-only planning to mock-only proof without adding real MIDI, ports, active
 CLI behavior, hardware behavior, or profile `"4"` support. The next recommended
 task is a docs-only active boundary implementation planning gate.
+
+The active boundary implementation planning gate records that active boundary
+implementation may not begin yet. It allows only a docs-only active boundary
+implementation design/spec next. That future spec must remain mock-first,
+preserve passive CLI behavior, avoid real MIDI libraries and ports, keep
+profile `"4"` parked, and keep hardware off.
 
 ## Do-Not-Touch Files
 

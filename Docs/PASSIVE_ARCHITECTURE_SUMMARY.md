@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-fba0c88
+269fb39
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: fba0c88 Update checkpoint after mock-only active candidate tests
+- current HEAD: 269fb39 Add mock-only active candidate tests review
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only active boundary implementation planning gate
+- next recommended task: docs-only active boundary implementation design/spec
 - closeout command
 - stop condition
 
@@ -228,6 +228,28 @@ validation.
 
 The next recommended task is a docs-only active boundary implementation
 planning gate.
+
+## Active Boundary Implementation Planning Gate
+
+`Docs/ACTIVE_BOUNDARY_IMPLEMENTATION_PLANNING_GATE.md` establishes the planning
+gate before any future active boundary implementation work.
+
+It records:
+
+- accepted mock-only proof for group profile `"2"` / My BD Hard
+- required future boundary properties
+- future design questions
+- forbidden scope
+- preconditions before any later implementation
+- safe next options
+
+It confirms active boundary implementation may not begin yet. The next allowed
+step is a docs-only active boundary implementation design/spec.
+
+The gate adds no implementation, tests, real MIDI, mido, port opening, MIDI
+sending, active execution, CLI wiring, dispatch, hardware behavior, SysEx,
+GUI/capture, Analog Four support, Pads 5-12 support, profile `"4"`
+implementation, or machine/profile expansion.
 
 ## Passive-To-Active Boundary Design
 
