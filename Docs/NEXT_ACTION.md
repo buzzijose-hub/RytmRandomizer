@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2e951c2 Add passive mock foundation progress report
+f8aa7aa Add future active test plan
 
 ## Current Phase
 
@@ -63,8 +63,12 @@ python -m rytm_randomizer.cli mock-mapper-report
 
 ## Next Recommended Task
 
-Next recommended task is to review and accept the docs-only future active
-test-plan.
+Next recommended task is to choose one of the safe post-review branches:
+
+- pause at this clean planning checkpoint
+- write a broader roadmap/timeline update
+- create a first-candidate mock-only active test design document
+- keep active planning frozen and return to passive/project documentation
 
 Safe alternatives are:
 
@@ -91,6 +95,7 @@ Safe alternatives are:
 - `Docs/PASSIVE_MOCK_MAPPER_CLI_PREVIEW_PHASE_REVIEW.md`
 - `Docs/PASSIVE_MOCK_FOUNDATION_PROGRESS_REPORT.md`
 - `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
+- `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
 
 The mock MIDI scaffold review accepts the test-only mock MIDI scaffold and
 records that no real MIDI behavior exists:
@@ -196,6 +201,11 @@ hardware-facing behavior can be implemented or validated. It is planning-only:
 no active execution, MIDI code, port opening, hardware validation, active CLI
 command, or profile 4 implementation is added. It keeps hardware off and sets
 the next recommended task as review/acceptance of the test plan.
+
+The future active test-plan review accepts `Docs/FUTURE_ACTIVE_TEST_PLAN.md`
+as the current planning gate. It confirms no implementation exists, hardware
+remains off, passive commands remain read-only, and future active-facing work
+must remain mock-only and documentation/test-gated until explicitly approved.
 
 ## Do-Not-Touch Files
 

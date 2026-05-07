@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-2e951c2
+f8aa7aa
 
 ## Protected Reference
 
@@ -48,13 +48,13 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 2e951c2 Add passive mock foundation progress report
+- current HEAD: f8aa7aa Add future active test plan
 - current phase: passive CLI / dry-run foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the docs-only future active test-plan
+- next recommended task: choose a safe post-review branch after future active test-plan acceptance
 - closeout command
 - stop condition
 
@@ -352,6 +352,25 @@ The test-plan adds no implementation, active CLI command, MIDI code, port
 opening, hardware validation, execution, dispatch, SysEx, GUI/capture, Analog
 Four support, Pads 5-12 support, or profile 4 implementation. Its next
 recommended task is review/acceptance of the test plan.
+
+## Future Active Test Plan Review
+
+`Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md` accepts
+`Docs/FUTURE_ACTIVE_TEST_PLAN.md` as the current planning gate.
+
+It confirms:
+
+- the plan remains documentation-only
+- no implementation exists
+- the plan does not authorize hardware being turned on by itself
+- no real MIDI, mido, ports, MIDI sending, active execution, CLI wiring to active behavior, dispatch, hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support, machine/profile expansion, execute-command, send-command, hardware-test, or hardware validation exists
+- passive commands remain read-only
+- hardware remains off
+
+Safe next options are pausing, writing a broader roadmap/timeline update,
+creating a first-candidate mock-only active test design document, adding more
+mock-only safety tests after a separate approved design, or returning to
+passive/project documentation.
 
 ## Passive Mock Foundation Decision Checkpoint
 
@@ -1602,8 +1621,11 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- review and accept the docs-only future active test-plan
-- after review, decide whether to add more mock-only test coverage, create a first-candidate mock-only test design, or pause for a broader roadmap
+- pause at this clean planning checkpoint
+- write a broader roadmap/timeline update
+- create a first-candidate mock-only active test design document
+- add more mock-only safety tests only after a separate approved design
+- keep active planning frozen and return to passive/project documentation
 - keep profile `"4"` unsupported unless separately approved
 - stop/pause at the clean checkpoint if no next planning slice is needed
 - keep any future mapping work mock-only without real MIDI or hardware behavior and separately reviewed

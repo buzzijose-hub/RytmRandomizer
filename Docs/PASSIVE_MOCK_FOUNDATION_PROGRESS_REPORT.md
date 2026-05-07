@@ -165,6 +165,15 @@ can be implemented or validated. It keeps the project at planning altitude,
 keeps hardware off, adds no implementation, adds no MIDI code, opens no ports,
 and sets the next recommended task as review/acceptance of the test plan.
 
+Future active test-plan review:
+
+- `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
+
+The review accepts `Docs/FUTURE_ACTIVE_TEST_PLAN.md` as the current planning
+gate. It confirms no implementation exists, hardware remains off, passive
+commands remain read-only, and future active-facing work must remain
+mock-only and documentation/test-gated until explicitly approved.
+
 ## Decision
 
 - Passive/mock foundation is stable and documented.

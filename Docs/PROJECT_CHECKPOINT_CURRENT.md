@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f8aa7aa Add future active test plan
 - 2e951c2 Add passive mock foundation progress report
 - 9780bcf Add passive mock mapper CLI preview phase review
 - efaf086 Update checkpoint after passive mock mapper report CLI preview
@@ -366,6 +367,18 @@ active execution, MIDI code, port opening, hardware validation, active CLI
 command, or profile 4 implementation. It keeps hardware off and sets the next
 recommended task as review/acceptance of the test plan.
 
+The future active test-plan review now lives in:
+
+- Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md
+
+The review accepts `Docs/FUTURE_ACTIVE_TEST_PLAN.md` as the current planning
+gate. It confirms the plan remains documentation-only, does not authorize
+implementation by itself, does not authorize turning hardware on by itself,
+and keeps hardware off. It records safe next options as pausing, writing a
+broader roadmap/timeline update, creating a first-candidate mock-only active
+test design document, adding more mock-only safety tests only after separate
+approved design, or returning to passive/project documentation.
+
 The handoff also reminds future sessions that Analog Rytm MKII and Analog Four
 MKII should remain off until the project explicitly enters a hardware-facing
 validation phase.
@@ -431,6 +444,7 @@ The modular scaffold is still metadata-only. Current scaffold coverage includes:
 - passive mock mapper CLI preview phase review
 - passive mock foundation progress report
 - future active test-plan
+- future active test-plan review
 - guarded passive depth command labels
 - passive architecture summary
 - behavior-preserving extraction plan
@@ -1750,6 +1764,25 @@ active CLI command, real MIDI, port opening, hardware validation, execution,
 dispatch, SysEx, GUI/capture, Analog Four support, Pads 5-12 support, or
 profile 4 implementation. The protected V1.34 reference remains untouched.
 Analog Rytm and Analog Four remain off for this phase.
+
+The future active test-plan review includes:
+
+- Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md
+
+The review is documentation-only. It accepts
+`Docs/FUTURE_ACTIVE_TEST_PLAN.md` as the current planning gate and confirms no
+implementation exists. It records that the plan does not authorize
+implementation or turning hardware on by itself, passive commands remain
+read-only, hardware remains off, and no real MIDI, mido, MIDI port opening,
+MIDI sending, active execution, CLI wiring to active behavior, dispatch,
+hardware behavior, SysEx, GUI/capture, Analog Four support, Pads 5-12 support,
+machine/profile expansion, execute-command, send-command, hardware-test, or
+hardware validation exists. It sets safe next options as pausing, writing a
+broader roadmap/timeline update, creating a first-candidate mock-only active
+test design document, adding more mock-only safety tests after separate
+approved design, or returning to passive/project documentation. The protected
+V1.34 reference remains untouched. Analog Rytm and Analog Four remain off for
+this phase.
 
 The guarded passive depth command label milestone was passive/read-only
 metadata polish only. It added no MIDI sending, port opening, dispatch, command

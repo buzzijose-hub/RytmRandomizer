@@ -210,7 +210,13 @@ Before implementation:
 
 ## Next Recommended Task
 
-Review and accept this future active test-plan.
+Review status:
+
+- `Docs/FUTURE_ACTIVE_TEST_PLAN_REVIEW.md`
+
+The future active test-plan is accepted as the current planning gate. The
+review confirms that no implementation exists, hardware remains off, and this
+plan does not authorize implementation or hardware validation by itself.
 
 Then decide whether to:
 
