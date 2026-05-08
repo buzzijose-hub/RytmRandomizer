@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a9ff228 Update checkpoint after active boundary report metadata alignment
+3715730 Add active boundary report metadata alignment review
 
 ## Current Phase
 
@@ -67,8 +67,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only Packet 3 fake-provider adapter
-guard strengthening plan, or a pause at the clean Packet 2 review checkpoint.
+Next recommended task is review/acceptance of the Packet 3 fake-provider
+adapter guard strengthening plan, or a pause at the clean planning checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -262,6 +262,24 @@ Pads 5-12 support, and machine/profile expansion frozen.
 
 The review recommends a docs-only Packet 3 fake-provider adapter guard
 strengthening plan next before any implementation.
+
+The latest Packet 3 fake-provider adapter guard strengthening plan is:
+
+- `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN.md`
+
+It records:
+
+- Packet 3 should remain fake-provider-only
+- allowed future ownership is limited to `real_midi_adapter.py` and
+  `tests/test_real_midi_adapter_boundary.py`
+- future implementation should add fake-provider guard tests first
+- real MIDI libraries, package metadata, port discovery, port opening, MIDI
+  sending, active CLI behavior, and hardware validation remain frozen
+- next recommended step: review and accept the plan before implementation
+
+The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, hardware behavior, package metadata changes, or
+hardware validation.
 
 The latest user-facing project progress report is:
 

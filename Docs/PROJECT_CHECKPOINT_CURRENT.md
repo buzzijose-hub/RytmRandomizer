@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3715730 Add active boundary report metadata alignment review
 - a9ff228 Update checkpoint after active boundary report metadata alignment
 - aba1d75 Align active boundary report metadata
 - a4580b1 Add active boundary report alignment plan
@@ -563,6 +564,37 @@ changes, and hardware validation frozen.
 
 The review recommends a docs-only Packet 3 fake-provider adapter guard
 strengthening plan before any Packet 3 implementation.
+
+## Fake-Provider Adapter Guard Strengthening Plan
+
+The fake-provider adapter guard strengthening plan defines Packet 3 from the
+mock/fake-provider active-boundary strengthening sequence.
+
+It records current adapter ownership:
+
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+
+The plan proposes future test-first guard strengthening for:
+
+- copied provider state
+- immutable/list-safe output names
+- unavailable fake port safe failures
+- invalid port-name safe failures
+- unsupported message sequences emitting no fake messages before failure
+- copied/immutable send-result metadata
+- copied translated message metadata
+
+The plan keeps the adapter fake-provider-only. It forbids real MIDI
+dependencies, `mido`, `rtmidi`, package metadata changes, MIDI port discovery,
+MIDI port opening, MIDI sending, active CLI commands, hardware behavior,
+hardware validation, profile `"3"` active-boundary support, profile `"4"`
+implementation, Analog Four support, Pads 5-12 support, and machine/profile
+expansion.
+
+The plan is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

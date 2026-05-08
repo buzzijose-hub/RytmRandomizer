@@ -135,8 +135,12 @@ Before any Packet 3 fake-provider adapter guard strengthening begins:
 
 ## Recommendation
 
-Proceed next with a docs-only Packet 3 fake-provider adapter guard
-strengthening plan before any implementation.
+The Packet 3 fake-provider adapter guard strengthening plan is:
+
+- `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN.md`
+
+Proceed next with a docs-only review/acceptance gate for that Packet 3 plan
+before any implementation.
 
 Keep profile `"3"` active-boundary support, profile `"4"` implementation,
 real MIDI dependencies, package metadata changes, port opening, MIDI sending,
