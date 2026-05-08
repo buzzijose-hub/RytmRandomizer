@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- af0deee Add behavior parity roadmap review
 - e7895ab Add behavior parity roadmap
 - 03afb56 Add next strengthening sequence planning gate review
 - d5c0413 Add next strengthening sequence planning gate
@@ -1349,6 +1350,50 @@ The review accepts the next recommended branch as a docs-only V1.34 behavior
 parity matrix plan.
 
 The review is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
+
+## V1.34 Behavior Parity Matrix Plan
+
+The V1.34 behavior parity matrix plan defines the documentation-only plan for
+a future matrix that will make passive metadata coverage, behavior gaps, state
+assumptions, and future test needs visible.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+
+Current baseline before this slice:
+
+- af0deee Add behavior parity roadmap review
+
+The plan defines:
+
+- future matrix goals
+- accepted source documents and data
+- proposed matrix columns
+- proposed deterministic status values
+- proposed behavior domains
+- proposed command families
+- recommended matrix build order
+- first recommended matrix slice
+- stop conditions
+
+The proposed matrix columns include command key, V1.34 label, passive metadata
+source, passive metadata status, behavior domain, command family, menu/page
+context, pad/channel scope, state dependencies, anchor/profile dependencies,
+mutation-depth dependencies, scene/group intent, hardware/MIDI implication,
+safe-failure expectation, current modular behavior status, parity gap summary,
+required future artifact, required future test category, implementation
+authorization status, and notes.
+
+The first recommended matrix slice is docs-only schema and first rows for
+menu/status and utility commands.
+
+The plan recommends a documentation-only review/acceptance gate next.
+
+The plan is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.

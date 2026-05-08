@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-e7895ab Add behavior parity roadmap
+af0deee Add behavior parity roadmap review
 
 ## Current Phase
 
@@ -22,7 +22,9 @@ A broader project-level progress report after Packets 1 through 4 has been
 created and accepted as the latest orientation checkpoint. The latest session
 handoff records this clean leave-off point. The next strengthening sequence
 planning gate has been created and accepted. A behavior-parity roadmap has now
-been documented and accepted as the preferred next branch after that gate.
+been documented and accepted as the preferred next branch after that gate. A
+V1.34 behavior parity matrix plan has now been documented as the first
+matrix-planning slice.
 
 ## Current Safety State
 
@@ -77,8 +79,31 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only V1.34 behavior parity matrix plan, or a
-pause at this clean accepted behavior-parity roadmap checkpoint.
+Next recommended task is a docs-only V1.34 behavior parity matrix plan
+review/acceptance checkpoint, or a pause at this clean behavior-parity matrix
+planning checkpoint.
+
+The latest V1.34 behavior parity matrix plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+
+It records:
+
+- the future matrix goal: make passive metadata coverage, runtime behavior
+  gaps, behavior domains, state assumptions, and future test needs visible
+- accepted source documents and data for a future matrix
+- proposed matrix columns
+- proposed deterministic status values
+- proposed behavior domains and command families
+- recommended matrix build order
+- first recommended matrix slice: docs-only schema and first rows for
+  menu/status and utility commands
+- no implementation authorization
+- no real MIDI, ports, active CLI behavior, execution, package metadata, or
+  hardware validation
+- no parallel implementation recommended for the immediate next slice
+
+The matrix plan recommends a docs-only review/acceptance gate next.
 
 The latest behavior-parity roadmap is:
 

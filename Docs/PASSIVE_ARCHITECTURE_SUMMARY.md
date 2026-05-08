@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-e7895ab
+af0deee
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: e7895ab Add behavior parity roadmap
+- current HEAD: af0deee Add behavior parity roadmap review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -65,13 +65,15 @@ It captures:
   with a current-session handoff recorded; the next strengthening sequence
   planning gate is now created and accepted; the behavior-parity roadmap is
   now documented and accepted as the preferred next branch after that accepted
-  gate
+  gate; a V1.34 behavior parity matrix plan is now documented as the first
+  matrix-planning slice
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only V1.34 behavior parity matrix plan, or pause
-  at the clean accepted behavior-parity roadmap checkpoint
+- next recommended task: docs-only V1.34 behavior parity matrix plan
+  review/acceptance checkpoint, or pause at the clean behavior-parity matrix
+  planning checkpoint
 - closeout command
 - stop condition
 
@@ -226,6 +228,35 @@ parity matrix plan.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Plan
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md` defines the documentation-only plan
+for a future V1.34 behavior parity matrix.
+
+The plan records:
+
+- matrix goals for making passive metadata coverage, behavior gaps, state
+  assumptions, and future test needs explicit
+- accepted sources such as the protected V1.34 reference, command-surface
+  reference, behavior review, behavior-parity roadmap, passive metadata, and
+  passive registry/CLI visibility outputs
+- proposed matrix columns
+- proposed deterministic status values
+- proposed behavior domains
+- proposed command families
+- recommended matrix build order
+- first recommended matrix slice: docs-only schema and first rows for
+  menu/status and utility commands
+
+The plan keeps the first real matrix slice serial so the schema can stabilize
+before any future documentation-only domain parallelization.
+
+The plan recommends a docs-only review/acceptance gate next.
+
+The plan adds no implementation, tests, runtime code, CLI behavior, dispatch,
+MIDI, port opening, package metadata changes, active CLI commands, hardware
+behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
