@@ -16,10 +16,37 @@ PASSIVE_CLI_COMMANDS = (
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
+PASSIVE_CLI_SWEEP_COMMANDS = (
+    ("--help",),
+    ("report",),
+    ("list-commands",),
+    ("list-scenes",),
+    ("list-group-profiles",),
+    ("search-commands", "BD"),
+    ("search-scenes", "Wild"),
+    ("search-group-profiles", "BD"),
+    ("inspect-command", "J"),
+    ("inspect-scene", "S1A"),
+    ("inspect-group-profile", "2"),
+    ("preview-command", "J"),
+    ("preview-scene", "S1A"),
+    ("preview-group-profile", "2"),
+    ("mock-mapper-report",),
+    ("active-boundary-report",),
+)
+FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
+    "mido",
+    "rtmidi",
+    "pythonrtmidi",
+    "rytm_randomizer.real_midi_adapter",
+)
 
 FORBIDDEN_CLI_SOURCE_TOKENS = (
     "MockMidiSender(",
+    "RealMidiPortProvider",
     "RealMidiSender(",
+    "build_real_midi_sender",
+    "real_midi_adapter",
     "evaluate_mock_active_boundary",
     "open_output",
     "open_input",
@@ -70,12 +97,50 @@ for module_name in ("mido", "rtmidi", "pythonrtmidi"):
     )
 
 
+def run_cli_in_process_and_check_no_real_midi_or_adapter_modules(*args):
+    code = f"""
+import sys
+from rytm_randomizer import cli
+exit_code = cli.main({list(args)!r})
+assert exit_code == 0, exit_code
+for module_name in {FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES!r}:
+    assert module_name not in sys.modules, module_name
+"""
+    return subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
 def test_representative_passive_cli_commands_do_not_import_real_midi_libraries():
     for command in PASSIVE_CLI_COMMANDS:
         result = run_cli_in_process_and_check_no_real_midi(*command)
 
         assert result.returncode == 0, command
         assert result.stderr == ""
+
+
+def test_passive_cli_sweep_does_not_import_real_midi_or_adapter_modules():
+    for command in PASSIVE_CLI_SWEEP_COMMANDS:
+        result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(
+            *command
+        )
+
+        assert result.returncode == 0, (command, result.stderr)
+        assert result.stderr == ""
+
+
+def test_passive_cli_sweep_exposes_no_active_or_port_commands():
+    for command in PASSIVE_CLI_SWEEP_COMMANDS:
+        result = run_cli(*command)
+
+        assert result.returncode == 0, command
+        assert result.stderr == ""
+        for token in FORBIDDEN_CLI_OUTPUT_TOKENS:
+            assert token not in result.stdout, (command, token)
 
 
 def test_passive_cli_source_does_not_construct_senders_or_evaluate_boundary():
@@ -110,6 +175,8 @@ def test_passive_report_outputs_expose_no_active_or_port_commands():
 
 if __name__ == "__main__":
     test_representative_passive_cli_commands_do_not_import_real_midi_libraries()
+    test_passive_cli_sweep_does_not_import_real_midi_or_adapter_modules()
+    test_passive_cli_sweep_exposes_no_active_or_port_commands()
     test_passive_cli_source_does_not_construct_senders_or_evaluate_boundary()
     test_top_level_help_exposes_no_active_or_port_commands()
     test_passive_report_outputs_expose_no_active_or_port_commands()
