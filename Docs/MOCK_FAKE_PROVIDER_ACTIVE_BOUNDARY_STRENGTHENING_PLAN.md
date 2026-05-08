@@ -270,9 +270,12 @@ The Packet 2 matching checkpoint is:
 
 - `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md`
 
-Next recommended task is a documentation-only review/acceptance gate for the
-completed Packet 2 checkpoint before Packet 3 fake-provider adapter guard
-strengthening.
+The Packet 2 checkpoint review is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT_REVIEW.md`
+
+Next recommended task is a documentation-only Packet 3 fake-provider adapter
+guard strengthening plan before any Packet 3 implementation.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.

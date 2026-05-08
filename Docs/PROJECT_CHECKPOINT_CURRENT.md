@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a9ff228 Update checkpoint after active boundary report metadata alignment
 - aba1d75 Align active boundary report metadata
 - a4580b1 Add active boundary report alignment plan
 - 4b41f56 Add active boundary metadata strengthening review
@@ -528,6 +529,40 @@ The milestone adds no profile `"3"` active-boundary support, profile `"4"`
 implementation, real MIDI, port opening, active CLI command, dispatch,
 command execution, scene execution, hardware behavior, package metadata
 changes, or hardware validation.
+
+## Active Boundary Report Metadata Alignment Checkpoint Review
+
+The active-boundary report metadata alignment checkpoint review accepts
+`Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md` as the completed
+Packet 2 checkpoint.
+
+Accepted milestone:
+
+- aba1d75 Align active boundary report metadata
+
+Accepted state:
+
+- read-only active-boundary report metadata visibility is aligned with Packet
+  1 result metadata
+- passive CLI `active-boundary-report` output includes the same read-only
+  metadata visibility
+- profile `"2"` / My BD Hard remains the only accepted active-boundary
+  candidate
+- profile `"3"` remains unsupported by the active boundary
+- profile `"4"` remains parked and unsupported
+
+The review accepts the recorded verification: report metadata test failed
+first, targeted report and CLI tests passed, full closeout passed, V1.34
+reference diff was empty, package metadata files remained absent, and git
+status was clean.
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, real MIDI, port opening, active CLI command, dispatch,
+command execution, scene execution, hardware behavior, package metadata
+changes, and hardware validation frozen.
+
+The review recommends a docs-only Packet 3 fake-provider adapter guard
+strengthening plan before any Packet 3 implementation.
 
 ## User-Facing Project Progress Report
 

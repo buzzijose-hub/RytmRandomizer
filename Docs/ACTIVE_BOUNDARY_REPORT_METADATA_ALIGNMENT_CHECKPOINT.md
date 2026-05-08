@@ -162,11 +162,12 @@ Closeout coverage still includes:
 
 ## Next Recommended Task
 
-The next recommended task is a documentation-only review/acceptance checkpoint
-for this completed Packet 2 checkpoint.
+This checkpoint is accepted in:
 
-After that review, decide whether to proceed to Packet 3: fake-provider
-adapter guard strengthening.
+- `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT_REVIEW.md`
+
+The next recommended task is a documentation-only Packet 3 fake-provider
+adapter guard strengthening plan.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.
