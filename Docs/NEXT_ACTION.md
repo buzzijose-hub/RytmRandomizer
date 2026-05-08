@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-ee7c497 Add active-boundary strengthening progress review
+6aca34f Add passive CLI safety regression sweep plan
 
 ## Current Phase
 
@@ -14,8 +14,8 @@ Passive/Mock Foundation Phase with the first mock-first active boundary
 implemented for test-only evaluation and the first fake-provider-only real
 MIDI adapter boundary now present. Packets 1, 2, and 3 in the current
 mock/fake-provider active-boundary strengthening sequence are complete and
-reviewed, and the strengthening progress report is accepted as the current
-checkpoint.
+reviewed. Packet 4 passive CLI safety regression sweep is planned and accepted
+as the current planning gate.
 
 ## Current Safety State
 
@@ -70,9 +70,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance gate for the
-Packet 4 passive CLI safety regression sweep plan, or a pause at the clean
-planning checkpoint.
+Next recommended task is a tiny Packet 4 test-only passive CLI safety
+regression implementation slice, or a pause at the clean Packet 4 review
+checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -443,7 +443,30 @@ sending, active CLI command, hardware behavior, hardware validation, profile
 `"3"` active-boundary support, profile `"4"` implementation, Analog Four
 support, Pads 5-12 support, or machine/profile expansion is added.
 
-The plan recommends review and acceptance next.
+The plan is accepted by the review gate below. Packet 4 remains unimplemented
+until a separate tiny test-only implementation slice is started.
+
+The latest Packet 4 passive CLI safety regression sweep plan review is:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN.md`
+- 6aca34f Add passive CLI safety regression sweep plan
+- Packet 4 as a future tests-only passive CLI safety regression sweep
+- future ownership limited to `tests/test_real_midi_passive_cli_safety.py`
+  and `tests/test_cli.py`
+- a tiny implementation slice only if it stays test-only and passive-safe
+
+The review keeps new CLI commands, active CLI commands, real MIDI
+dependencies, `mido`, `rtmidi`, package metadata changes, port discovery, port
+opening, MIDI sending, hardware validation, profile `"3"` active-boundary
+support, profile `"4"` implementation, Analog Four support, Pads 5-12 support,
+and machine/profile expansion frozen.
+
+The review recommends a tiny Packet 4 test-only implementation slice next, or
+a pause at the clean review checkpoint.
 
 The latest user-facing project progress report is:
 

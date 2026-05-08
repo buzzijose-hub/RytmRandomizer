@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ee7c497
+6aca34f
 
 ## Protected Reference
 
@@ -54,19 +54,18 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: ee7c497 Add active-boundary strengthening progress review
+- current HEAD: 6aca34f Add passive CLI safety regression sweep plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
-  and Packets 1, 2, and 3 in the current strengthening sequence complete and
-  reviewed, with the strengthening progress report accepted as the current
-  checkpoint
+  Packets 1, 2, and 3 in the current strengthening sequence complete and
+  reviewed, and Packet 4 passive CLI safety regression sweep planned and
+  accepted as the current planning gate
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance gate for the
-  Packet 4 passive CLI safety regression sweep plan, or pause at the clean
-  planning checkpoint
+- next recommended task: tiny Packet 4 test-only passive CLI safety regression
+  implementation slice, or pause at the clean Packet 4 review checkpoint
 - closeout command
 - stop condition
 
@@ -623,7 +622,39 @@ sending, active CLI command, hardware behavior, hardware validation, profile
 `"3"` active-boundary support, profile `"4"` implementation, Analog Four
 support, Pads 5-12 support, or machine/profile expansion is added.
 
-The plan recommends a documentation-only review/acceptance gate next.
+The plan is now accepted by
+`Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN_REVIEW.md`. Packet 4 remains
+unimplemented until a separate tiny test-only implementation slice is started.
+
+## Passive CLI Safety Regression Sweep Plan Review
+
+`Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN_REVIEW.md` accepts the Packet 4
+passive CLI safety regression sweep plan as the current planning gate.
+
+Accepted future scope:
+
+- representative passive CLI commands remain read-only
+- future tests may prove passive CLI commands do not import real MIDI modules
+- future tests may prove passive CLI commands do not import
+  `rytm_randomizer.real_midi_adapter`
+- future tests may prove passive CLI commands do not construct real MIDI
+  providers or senders
+- future tests may prove passive CLI commands do not expose active command
+  names
+- future ownership remains limited to
+  `tests/test_real_midi_passive_cli_safety.py` and `tests/test_cli.py`
+
+The review keeps new CLI commands, active CLI commands, `execute-command`,
+`send-command`, `hardware-test`, real MIDI dependencies, `mido`, `rtmidi`,
+package metadata changes, port discovery, port opening, MIDI sending, hardware
+validation, profile `"3"` active-boundary support, profile `"4"`
+implementation, Analog Four support, Pads 5-12 support, and machine/profile
+expansion frozen.
+
+The review recommends a tiny Packet 4 test-only implementation slice next, or
+a pause at the clean review checkpoint. It adds no tests, runtime code, CLI
+behavior, MIDI, port opening, active execution, package metadata changes, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 

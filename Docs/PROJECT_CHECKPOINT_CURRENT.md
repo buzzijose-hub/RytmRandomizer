@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6aca34f Add passive CLI safety regression sweep plan
 - ee7c497 Add active-boundary strengthening progress review
 - 3495402 Add active-boundary strengthening progress report
 - 76b538f Add fake-provider adapter guard review
@@ -841,7 +842,47 @@ sending, active CLI command, hardware behavior, hardware validation, profile
 `"3"` active-boundary support, profile `"4"` implementation, Analog Four
 support, Pads 5-12 support, or machine/profile expansion is added.
 
-The plan recommends a documentation-only review/acceptance gate next.
+The plan is now accepted by
+`Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN_REVIEW.md`. Packet 4 remains
+unimplemented until a separate tiny test-only implementation slice is started.
+
+## Passive CLI Safety Regression Sweep Plan Review
+
+The passive CLI safety regression sweep plan review accepts the Packet 4 plan
+as the current planning gate.
+
+Review document:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN_REVIEW.md`
+
+Accepted milestone:
+
+- 6aca34f Add passive CLI safety regression sweep plan
+
+The review accepts:
+
+- future passive CLI safety regression coverage for representative passive
+  commands
+- future tests proving passive CLI commands do not import real MIDI modules
+- future tests proving passive CLI commands do not import
+  `rytm_randomizer.real_midi_adapter`
+- future tests proving passive CLI commands do not construct real MIDI
+  providers or senders
+- future tests proving passive CLI commands do not expose active command names
+- future ownership limited to `tests/test_real_midi_passive_cli_safety.py` and
+  `tests/test_cli.py`
+
+The review keeps new CLI commands, active CLI commands, `execute-command`,
+`send-command`, `hardware-test`, dispatch, command execution, scene execution,
+real MIDI dependencies, `mido`, `rtmidi`, package metadata changes, port
+discovery, port opening, MIDI sending, hardware validation, profile `"3"`
+active-boundary support, profile `"4"` implementation, Analog Four support,
+Pads 5-12 support, and machine/profile expansion frozen.
+
+The review recommends a tiny Packet 4 test-only implementation slice next, or
+a pause at the clean review checkpoint. It adds no tests, runtime code, CLI
+behavior, MIDI, port opening, active execution, package metadata changes, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 
