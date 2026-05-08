@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 0e7a80a Update checkpoint after L PZ passive metadata
 - 56f8bec Add L PZ passive command metadata
 - 60e28dc Add L PZ passive metadata expansion plan review
 - ac71857 Add L PZ passive metadata expansion plan
@@ -507,6 +508,43 @@ no dependency selection.
 The next safe branch is a docs-only next-gap decision note, another tiny
 passive metadata-only plan, a broader progress report, or a pause at this
 clean checkpoint.
+
+## V1.34 Isolated Pad Mutation Next Passive Metadata Gap Decision Note
+
+The next passive metadata gap category has been selected in:
+
+- Docs/V134_ISOLATED_PAD_MUTATION_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md
+
+The decision note records:
+
+- completed `T`, `C`, and `Q` passive metadata checkpoint
+- completed `B`, `E`, `W`, and `U` passive metadata checkpoint
+- completed `L` and `PZ` passive metadata checkpoint
+- current passive command count: 91
+- captured V1.34 operator command entries: 106
+- captured entries now modeled as passive command metadata: 88
+- captured entries still not modeled as passive command metadata: 18
+- next recommended planning target: isolated single-pad mutation metadata
+
+The selected category is:
+
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, port opening, MIDI
+sending, package metadata, dependency selection, selected-pad runtime
+mutation, isolated-pad mutation execution, active behavior, hardware behavior,
+or hardware validation.
+
+The next safe branch is a docs-only passive metadata expansion plan for
+`PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

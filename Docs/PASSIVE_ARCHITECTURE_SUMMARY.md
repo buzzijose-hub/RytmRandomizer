@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-56f8bec
+0e7a80a
 
 ## Protected Reference
 
@@ -54,15 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 56f8bec Add L PZ passive command metadata
+- current HEAD: 0e7a80a Update checkpoint after L PZ passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only next-gap decision note, broader progress
-  checkpoint, or pause at the clean `L` / `PZ` metadata checkpoint
+- next recommended task: docs-only passive metadata expansion plan for
+  isolated single-pad mutation metadata, broader progress checkpoint, or pause
+  at the clean isolated-pad metadata checkpoint
 - closeout command
 - stop condition
 
@@ -324,6 +325,39 @@ added.
 
 The next recommended task is a docs-only next-gap decision note, a broader
 progress checkpoint, or a pause at this clean metadata checkpoint.
+
+## V1.34 Isolated Pad Mutation Next Passive Metadata Gap Decision Note
+
+`Docs/V134_ISOLATED_PAD_MUTATION_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+selects the next passive metadata planning target after the completed `L` and
+`PZ` checkpoint.
+
+The selected next category is isolated single-pad mutation metadata:
+
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+
+The decision note records the current adjusted gap position:
+
+- 106 captured V1.34 operator command entries
+- 88 captured entries now modeled as passive command metadata
+- 18 captured entries still not modeled as passive command metadata
+- current passive command count: 91
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, selected-pad runtime mutation,
+isolated-pad mutation execution, active behavior, hardware behavior, or
+hardware validation.
+
+The next recommended task is a docs-only passive metadata expansion plan for
+`PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
