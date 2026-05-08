@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- aba1d75 Align active boundary report metadata
 - a4580b1 Add active boundary report alignment plan
 - 4b41f56 Add active boundary metadata strengthening review
 - 9372a58 Update checkpoint after active boundary metadata strengthening
@@ -487,6 +488,46 @@ expansion frozen.
 The review is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, hardware behavior, package metadata changes, or hardware validation.
+
+## Active Boundary Report Metadata Alignment Checkpoint
+
+The active-boundary report metadata alignment checkpoint records completion of
+Packet 2 from the mock/fake-provider active-boundary strengthening sequence.
+
+Milestone commit:
+
+- aba1d75 Align active boundary report metadata
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary_report.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_active_boundary_report_expected.txt`
+
+The read-only active-boundary report now exposes Packet 1 metadata visibility:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- result metadata fields for source, target, arming, dry-run confirmation,
+  operator intent, mock-only status, and sends-real-MIDI status
+- failure reason metadata on failure paths
+
+The passive CLI `active-boundary-report` output includes the same metadata
+through the existing report formatter only.
+
+The milestone followed TDD: the new report metadata test failed first with
+missing `result_metadata`, then targeted report and CLI tests passed after the
+minimal report alignment implementation.
+
+The checkpoint confirms full closeout passed, V1.34 reference diff was empty,
+package metadata diff was empty, package metadata files remained absent, and
+git status was clean.
+
+The milestone adds no profile `"3"` active-boundary support, profile `"4"`
+implementation, real MIDI, port opening, active CLI command, dispatch,
+command execution, scene execution, hardware behavior, package metadata
+changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

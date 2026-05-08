@@ -221,8 +221,16 @@ This plan has a matching review gate:
 
 - `Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN_REVIEW.md`
 
-After acceptance, implement a tiny Packet 2 report alignment slice only if the
-report text should expose the Packet 1 metadata fields.
+Packet 2 has now been implemented in:
+
+- aba1d75 Align active boundary report metadata
+
+The matching checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md`
+
+Next recommended task is a documentation-only review/acceptance gate for the
+completed Packet 2 checkpoint before Packet 3.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.

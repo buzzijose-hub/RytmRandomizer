@@ -258,12 +258,21 @@ Packet 1 has now been completed in:
 
 - e8b3403 Strengthen active boundary metadata
 
-The matching checkpoint is:
+The Packet 1 matching checkpoint is:
 
 - `Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT.md`
 
+Packet 2 has now been completed in:
+
+- aba1d75 Align active boundary report metadata
+
+The Packet 2 matching checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md`
+
 Next recommended task is a documentation-only review/acceptance gate for the
-completed Packet 1 checkpoint before Packet 2.
+completed Packet 2 checkpoint before Packet 3 fake-provider adapter guard
+strengthening.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a4580b1
+aba1d75
 
 ## Protected Reference
 
@@ -54,15 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: a4580b1 Add active boundary report alignment plan
+- current HEAD: aba1d75 Align active boundary report metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 2 active-boundary report alignment
-  implementation slice, or pause at the clean planning checkpoint
+- next recommended task: documentation-only review/acceptance checkpoint for
+  completed Packet 2 active-boundary report metadata alignment, or pause at
+  the clean implementation checkpoint
 - closeout command
 - stop condition
 
@@ -319,6 +320,44 @@ read-only report should expose Packet 1 metadata fields. It adds no tests,
 runtime code, CLI behavior, dispatch, command execution, scene execution,
 MIDI, port opening, hardware behavior, package metadata changes, or hardware
 validation.
+
+## Active Boundary Report Metadata Alignment Checkpoint
+
+`Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md` records
+completion of Packet 2 from the mock/fake-provider active-boundary
+strengthening sequence.
+
+Milestone commit:
+
+- aba1d75 Align active boundary report metadata
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary_report.py`
+- `tests/test_active_boundary_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_active_boundary_report_expected.txt`
+
+The read-only active-boundary report now exposes:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- Packet 1 result metadata fields
+- failure reason metadata on failure paths
+
+The passive CLI `active-boundary-report` output includes the same metadata
+through the existing formatted report only. It does not evaluate active
+requests, construct senders, dispatch commands, open ports, send MIDI, or
+touch hardware.
+
+The checkpoint confirms targeted report and CLI tests passed, full closeout
+passed, V1.34 reference diff was empty, package metadata files remained
+absent, and git status was clean.
+
+The milestone adds no profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port opening, MIDI sending, hardware validation, Analog Four support,
+Pads 5-12 support, or machine/profile expansion.
 
 ## User-Facing Project Progress Report
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a4580b1 Add active boundary report alignment plan
+aba1d75 Align active boundary report metadata
 
 ## Current Phase
 
@@ -67,8 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 2 active-boundary report alignment
-implementation slice, or a pause at the clean planning checkpoint.
+Next recommended task is a documentation-only review/acceptance checkpoint for
+the completed Packet 2 active-boundary report metadata alignment checkpoint,
+or a pause at the clean implementation checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -222,6 +223,25 @@ The review recommends a tiny Packet 2 implementation slice next only if the
 read-only report should expose Packet 1 metadata fields. It adds no tests,
 runtime code, CLI behavior, dispatch, MIDI, port opening, hardware behavior,
 package metadata changes, or hardware validation.
+
+The latest active-boundary report metadata alignment checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md`
+
+It records:
+
+- aba1d75 Align active boundary report metadata
+- Packet 2 active-boundary report alignment is complete
+- active-boundary report output now exposes Packet 1 metadata visibility
+- `active-boundary-report` CLI output includes the same read-only metadata
+- profile `"2"` remains the only accepted active-boundary candidate
+- profile `"3"` remains unsupported by the active boundary
+- profile `"4"` remains parked and unsupported
+- no real MIDI, port opening, active CLI command, dispatch, execution,
+  package metadata change, or hardware validation was added
+
+The checkpoint recommends a documentation-only review/acceptance gate before
+Packet 3 fake-provider adapter guard strengthening.
 
 The latest user-facing project progress report is:
 

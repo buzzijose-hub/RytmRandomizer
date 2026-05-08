@@ -129,11 +129,18 @@ Before any Packet 2 implementation begins:
 
 ## Recommendation
 
-Proceed next with the tiny Packet 2 implementation only if the report text
-should expose the Packet 1 metadata guarantees.
+Packet 2 has now been implemented in:
 
-Keep the implementation read-only and tightly scoped to report output and
-deterministic tests/fixtures.
+- aba1d75 Align active boundary report metadata
+
+The matching checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_METADATA_ALIGNMENT_CHECKPOINT.md`
+
+Proceed next with a documentation-only review/acceptance gate for the completed
+Packet 2 checkpoint before any Packet 3 implementation.
+
+Keep future implementation read-only, test-gated, and tightly scoped.
 
 ## Decision
 
