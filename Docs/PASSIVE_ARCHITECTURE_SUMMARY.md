@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-e8b3403
+9372a58
 
 ## Protected Reference
 
@@ -54,16 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: e8b3403 Strengthen active boundary metadata
+- current HEAD: 9372a58 Update checkpoint after active boundary metadata
+  strengthening
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/acceptance of the completed active-boundary
-  metadata strengthening checkpoint, or pause at the clean completion
-  checkpoint
+- next recommended task: Packet 2 active-boundary report alignment planning
+  slice, or pause at the clean completion checkpoint
 - closeout command
 - stop condition
 
@@ -224,6 +224,42 @@ The milestone adds no real MIDI, port opening, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, package metadata
 changes, profile `"3"` active-boundary support, profile `"4"`
 implementation, or hardware validation.
+
+## Active Boundary Metadata Strengthening Checkpoint Review
+
+`Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT_REVIEW.md` accepts
+`Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT.md` as the completed
+Packet 1 checkpoint.
+
+Accepted milestone:
+
+- e8b3403 Strengthen active boundary metadata
+
+The review accepts the active-boundary result metadata additions:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- source kind and source key
+- target
+- armed state
+- dry-run confirmation state
+- optional operator intent
+- mock-only status
+- sends-real-MIDI status
+- failure reason on failure paths
+
+The review confirms profile `"2"` / My BD Hard remains the only accepted
+active-boundary candidate, profile `"3"` remains unsupported by the active
+boundary, and profile `"4"` remains parked and unsupported.
+
+The review accepts the verification state: targeted active-boundary tests
+passed, full closeout passed, V1.34 reference diff was empty, package metadata
+files remained absent, and git status was clean.
+
+The review recommends a Packet 2 active-boundary report alignment planning
+slice next. It adds no tests, runtime code, CLI behavior, dispatch, command
+execution, scene execution, MIDI, port opening, hardware behavior, package
+metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

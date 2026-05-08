@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9372a58 Update checkpoint after active boundary metadata strengthening
 - e8b3403 Strengthen active boundary metadata
 - 5220bc3 Add mock fake-provider active-boundary strengthening review
 - 9393a99 Add mock fake-provider active-boundary strengthening plan
@@ -388,6 +389,42 @@ The milestone adds no real MIDI, port opening, active CLI commands, dispatch,
 command execution, scene execution, hardware behavior, package metadata
 changes, profile `"3"` active-boundary support, profile `"4"`
 implementation, or hardware validation.
+
+## Active Boundary Metadata Strengthening Checkpoint Review
+
+The active-boundary metadata strengthening checkpoint review accepts
+`Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT.md` as the completed
+Packet 1 checkpoint.
+
+Accepted milestone:
+
+- e8b3403 Strengthen active boundary metadata
+
+The review accepts the active-boundary result metadata additions:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- source kind and source key
+- target
+- armed state
+- dry-run confirmation state
+- optional operator intent
+- mock-only status
+- sends-real-MIDI status
+- failure reason on failure paths
+
+The review confirms profile `"2"` / My BD Hard remains the only accepted
+active-boundary candidate, profile `"3"` remains unsupported by the active
+boundary, and profile `"4"` remains parked and unsupported.
+
+The review accepts the verification state: targeted active-boundary tests
+passed, full closeout passed, V1.34 reference diff was empty, package metadata
+files remained absent, and git status was clean.
+
+The review recommends a Packet 2 active-boundary report alignment planning
+slice next. It adds no tests, runtime code, CLI behavior, dispatch, command
+execution, scene execution, MIDI, port opening, hardware behavior, package
+metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

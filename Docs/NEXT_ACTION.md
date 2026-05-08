@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-e8b3403 Strengthen active boundary metadata
+9372a58 Update checkpoint after active boundary metadata strengthening
 
 ## Current Phase
 
@@ -67,9 +67,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the completed active-boundary
-metadata strengthening checkpoint, or a pause at the clean completion
-checkpoint.
+Next recommended task is a Packet 2 active-boundary report alignment planning
+slice, or a pause at the clean completion checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -166,6 +165,22 @@ It records:
 
 The checkpoint recommends a documentation-only review/acceptance gate before
 Packet 2.
+
+The latest active-boundary metadata strengthening checkpoint review is:
+
+- `Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT_REVIEW.md`
+
+It accepts:
+
+- `Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT.md`
+- e8b3403 Strengthen active boundary metadata
+- Packet 1 as complete and reviewed
+- the new mock-only active-boundary result metadata
+- the preserved frozen scope for profiles `"3"` and `"4"`
+
+The review recommends a Packet 2 active-boundary report alignment planning
+slice next. It adds no tests, runtime code, CLI behavior, dispatch, MIDI, port
+opening, hardware behavior, package metadata changes, or hardware validation.
 
 The latest user-facing project progress report is:
 

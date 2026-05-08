@@ -144,11 +144,12 @@ Closeout coverage still includes:
 
 ## Next Recommended Task
 
-Create a documentation-only review/acceptance checkpoint for this completed
-metadata strengthening slice.
+The documentation-only review/acceptance checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT_REVIEW.md`
 
 After that review, decide whether to proceed to Packet 2: active-boundary
-report alignment.
+report alignment planning.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.
