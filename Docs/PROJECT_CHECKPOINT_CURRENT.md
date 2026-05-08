@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 03afb56 Add next strengthening sequence planning gate review
 - d5c0413 Add next strengthening sequence planning gate
 - 5c43496 Refresh handoff after packets 1-4 progress review
 - d69afd6 Add project-level progress report after packets 1-4 review
@@ -1247,7 +1248,64 @@ behavior, hardware validation, profile `"3"` active-boundary support, profile
 `"4"` implementation, Analog Four support, Pads 5-12 support, or
 machine/profile expansion was added.
 
-The next recommended task is a docs-only behavior-parity roadmap.
+The next recommended task is a docs-only behavior-parity roadmap
+review/acceptance gate.
+
+## Behavior Parity Roadmap
+
+The behavior-parity roadmap documents the preferred next branch after the
+accepted next strengthening sequence planning gate.
+
+Roadmap document:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP.md`
+
+Current baseline before this slice:
+
+- 03afb56 Add next strengthening sequence planning gate review
+
+The roadmap defines behavior parity as the future modular reproduction of
+validated V1.34 operator behavior. It clarifies that complete passive command
+metadata coverage does not mean modular runtime behavior parity is implemented.
+
+The roadmap records the current non-parity state:
+
+- passive metadata and visibility exist
+- passive CLI report/list/search/inspect/preview paths exist
+- mock and active-boundary reports exist
+- command dispatch remains absent
+- command execution remains absent
+- scene execution remains absent
+- prompt/input loop execution remains absent
+- MIDI sending remains absent
+- MIDI port opening remains absent
+- hardware mutation remains absent
+- hardware validation remains absent
+
+The roadmap identifies future behavior domains to map before implementation:
+
+- operator command routing
+- menu and status commands
+- target pad and channel selection
+- anchor and profile load behavior
+- group profile and full group layout actions
+- scene command behavior
+- mutation-depth semantics
+- Pad 1, Pad 2, Pad 3, and Pad 4 lane behavior
+- selected isolated pad mutations
+- current anchor and script state reporting
+- undo and commit behavior
+- quit, back, and safe no-op behavior
+- hardware-facing preconditions
+
+The roadmap recommends a documentation-only review/acceptance gate next. After
+review, the likely next planning artifact is a docs-only V1.34 behavior parity
+matrix plan.
+
+The roadmap is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 

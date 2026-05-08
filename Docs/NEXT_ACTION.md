@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d5c0413 Add next strengthening sequence planning gate
+03afb56 Add next strengthening sequence planning gate review
 
 ## Current Phase
 
@@ -21,7 +21,8 @@ report has been created and accepted as the current consolidation checkpoint.
 A broader project-level progress report after Packets 1 through 4 has been
 created and accepted as the latest orientation checkpoint. The latest session
 handoff records this clean leave-off point. The next strengthening sequence
-planning gate has been created and accepted.
+planning gate has been created and accepted. A behavior-parity roadmap has now
+been documented as the preferred next branch after that gate.
 
 ## Current Safety State
 
@@ -76,8 +77,38 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only behavior-parity roadmap, or a pause at
-the clean accepted planning gate.
+Next recommended task is a docs-only behavior-parity roadmap review/acceptance
+checkpoint, or a pause at this clean behavior-parity roadmap checkpoint.
+
+The latest behavior-parity roadmap is:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP.md`
+
+It records:
+
+- behavior parity as the future modular reproduction of validated V1.34
+  operator behavior
+- current non-parity state: passive metadata and visibility exist, but runtime
+  command dispatch, scene execution, prompt execution, MIDI sending, port
+  opening, and hardware mutation remain absent
+- behavior domains to map before implementation, including routing, target
+  selection, anchor/profile behavior, scenes, mutation depths, isolated pad
+  behavior, undo/commit expectations, and safe no-op behavior
+- needed parity artifacts such as a behavior parity matrix, state model,
+  anchor lifecycle model, mutation depth model, scene/group intent model, and
+  test strategy
+- recommended phases beginning with a docs-only V1.34 behavior parity matrix
+  plan
+- no implementation authorization
+- no real MIDI, ports, active CLI behavior, execution, package metadata, or
+  hardware validation
+- no parallel implementation recommended for the immediate next slice
+- hardware-off reminder
+
+The roadmap recommends a docs-only review/acceptance gate next. After review,
+the likely next planning artifact is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
 
 The latest next strengthening sequence planning gate is:
 
