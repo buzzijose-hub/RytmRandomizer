@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6b680e3
+713e5c7
 
 ## Protected Reference
 
@@ -54,15 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6b680e3 Add B E W U passive metadata expansion plan
+- current HEAD: 713e5c7 Add B E W U passive command metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny passive metadata-only implementation slice for
-  `B`, `E`, `W`, and `U`, only after explicit approval
+- next recommended task: docs-only next-gap decision note, another tiny
+  passive metadata-only plan, broader project progress checkpoint, or pause
+  at the clean `B` / `E` / `W` / `U` metadata checkpoint
 - closeout command
 - stop condition
 
@@ -188,6 +189,34 @@ The review does not implement the metadata. It adds no metadata, tests,
 runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
 metadata, dependency selection, active behavior, hardware behavior, or hardware
 validation.
+
+## B E W U Passive Metadata Checkpoint
+
+`Docs/V134_B_E_W_U_PASSIVE_METADATA_CHECKPOINT.md` records completion of the
+accepted passive metadata-only expansion for:
+
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+
+Milestone commit:
+
+- 713e5c7 Add B E W U passive command metadata
+
+The implementation added passive `STATE_UTILITY_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 85 to 89, the passive registry report
+command count moved from `commands: 85` to `commands: 89`, captured V1.34
+operator entries modeled as passive command metadata moved from 82 to 86, and
+remaining captured gaps moved from 24 to 20.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+runtime dispatch, real MIDI, port opening, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, or hardware
+validation was added.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

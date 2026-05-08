@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6b680e3 Add B E W U passive metadata expansion plan
+713e5c7 Add B E W U passive command metadata
 
 ## Current Phase
 
@@ -67,14 +67,40 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny passive metadata-only implementation slice
-for the accepted anchor/state utility gap category, only if explicitly
-approved:
+Next recommended task is a docs-only next-gap decision note or a pause at the
+clean `B` / `E` / `W` / `U` passive metadata checkpoint.
+
+The latest `B` / `E` / `W` / `U` passive metadata checkpoint is:
+
+- `Docs/V134_B_E_W_U_PASSIVE_METADATA_CHECKPOINT.md`
+
+It records:
 
 - `B`
 - `E`
 - `W`
 - `U`
+- 713e5c7 Add B E W U passive command metadata
+- passive `STATE_UTILITY_COMMANDS` metadata
+- command count movement from 85 to 89
+- captured modeled count movement from 82 to 86
+- remaining captured gap movement from 24 to 20
+- scaffold and command lookup test updates
+- passive list/report fixture updates
+- no new CLI command
+- no dispatch
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+
+Safe next options are:
+
+- pause at this clean checkpoint
+- create a docs-only next-gap decision note
+- plan another tiny passive metadata-only expansion from the captured V1.34
+  command surface
+- update a broader project progress report
 
 The latest `B` / `E` / `W` / `U` passive metadata expansion plan review is:
 

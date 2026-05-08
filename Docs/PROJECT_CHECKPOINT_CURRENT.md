@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 713e5c7 Add B E W U passive command metadata
+- 0a97757 Add B E W U passive metadata expansion plan review
 - 6b680e3 Add B E W U passive metadata expansion plan
 - 4f7d519 Add next passive metadata gap decision note
 - b0fd0f9 Update checkpoint after T C Q passive metadata
@@ -322,8 +324,50 @@ The review does not implement metadata, tests, runtime code, CLI wiring,
 dispatch, real MIDI, port opening, MIDI sending, active behavior, hardware
 behavior, package metadata, dependency selection, or hardware validation.
 
-Recommended next task is the tiny passive metadata-only implementation slice
-for `B`, `E`, `W`, and `U`, only after explicit approval.
+The accepted metadata-only implementation has now been completed in:
+
+- 713e5c7 Add B E W U passive command metadata
+
+## B E W U Passive Metadata Checkpoint
+
+The accepted anchor/state utility gap category has been implemented and
+checkpointed:
+
+- Docs/V134_B_E_W_U_PASSIVE_METADATA_CHECKPOINT.md
+
+The milestone records:
+
+- passive `STATE_UTILITY_COMMANDS` metadata for `B`, `E`, `W`, and `U`
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+- passive command count moving from 85 to 89
+- passive registry report command count moving from `commands: 85` to
+  `commands: 89`
+- captured V1.34 operator entries modeled as passive command metadata moving
+  from 82 to 86
+- captured V1.34 operator entries still not modeled as passive command
+  metadata moving from 24 to 20
+- updates to scaffold and command lookup tests
+- updates to passive list/report fixtures
+
+Files changed by the milestone:
+
+- `rytm_randomizer/commands.py`
+- `tests/test_scaffold.py`
+- `tests/test_command_lookup.py`
+- `tests/fixtures/cli_list_commands_expected.txt`
+- `tests/fixtures/registry_report_expected.txt`
+
+The new metadata remains scaffold-only and non-executable. It adds no new CLI
+command, no runtime dispatch, no real MIDI, no port opening, no MIDI sending,
+no active behavior, no hardware behavior, no package metadata, and no
+dependency selection.
+
+The next safe branch is a docs-only next-gap decision note, another tiny
+passive metadata-only plan, a broader progress report, or a pause at this
+clean checkpoint.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
