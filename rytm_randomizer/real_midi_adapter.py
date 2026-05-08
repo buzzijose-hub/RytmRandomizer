@@ -73,9 +73,12 @@ class RealMidiPortProvider:
         if port_name not in self._output_names:
             raise RealMidiPortError(f"unknown_midi_output_port: {port_name}")
         try:
-            return self._ports[port_name]
+            port = self._ports[port_name]
         except KeyError as exc:
             raise RealMidiPortError(f"unavailable_midi_output_port: {port_name}") from exc
+        if not callable(getattr(port, "send", None)):
+            raise RealMidiPortError(f"invalid_midi_output_port: {port_name}")
+        return port
 
 
 class RealMidiSender:

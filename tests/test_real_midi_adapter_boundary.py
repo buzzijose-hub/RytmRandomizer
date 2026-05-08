@@ -122,6 +122,25 @@ def test_real_midi_port_provider_unknown_port_fails_safely():
         raise AssertionError("expected RealMidiPortError")
 
 
+def test_real_midi_port_provider_rejects_configured_port_without_send():
+    from rytm_randomizer.real_midi_adapter import (
+        RealMidiPortError,
+        RealMidiPortProvider,
+    )
+
+    provider = RealMidiPortProvider(
+        output_names=("Fake Rytm",),
+        ports={"Fake Rytm": object()},
+    )
+
+    try:
+        provider.open_output("Fake Rytm")
+    except RealMidiPortError as exc:
+        assert str(exc) == "invalid_midi_output_port: Fake Rytm"
+    else:
+        raise AssertionError("expected RealMidiPortError")
+
+
 def test_real_midi_sender_records_to_fake_port_only():
     from rytm_randomizer.mock_midi import build_cc_message
     from rytm_randomizer.real_midi_adapter import (
@@ -300,6 +319,7 @@ if __name__ == "__main__":
     test_real_midi_adapter_import_is_side_effect_free()
     test_build_real_midi_sender_requires_explicit_provider()
     test_real_midi_port_provider_unknown_port_fails_safely()
+    test_real_midi_port_provider_rejects_configured_port_without_send()
     test_real_midi_sender_records_to_fake_port_only()
     test_real_midi_sender_rejects_unsupported_message_type()
     test_passive_imports_do_not_load_adapter_or_real_midi_modules()
