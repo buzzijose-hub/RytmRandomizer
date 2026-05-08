@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9b8b31c Add V1.34 behavior parity mutation depth matrix slice
+9b34d22 Add V1.34 behavior parity mutation depth matrix review
 
 ## Current Phase
 
@@ -29,7 +29,9 @@ for menu/status and utility commands has now been documented and accepted. The
 next docs-only behavior parity matrix slice for anchor/profile commands has
 now been documented and accepted. The next docs-only behavior parity matrix
 slice for mutation-depth and guarded numeric input commands has now been
-documented and accepted.
+documented and accepted. The next docs-only behavior parity matrix slice for
+scene and group intent commands has now been documented and is awaiting
+review.
 
 ## Current Safety State
 
@@ -84,11 +86,36 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only scene and group intent behavior parity
-matrix slice, or a pause at this clean accepted mutation-depth matrix slice
-checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the scene and
+group intent behavior parity matrix slice, or a pause at this clean docs-only
+matrix checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE.md`
+
+It records:
+
+- scene command rows from `SCENE_COMMANDS`
+- four-pad group mutation rows from `GROUP_COMMANDS`
+- lane-aware group mutation rows from `GROUP_COMMANDS`
+- command keys `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`, `S3`,
+  `S3A`, `S3B`, `S4`, `S4A`, `S4B`, `S5`, `X`, `D`, `I`, `4`, `Y`, `V`,
+  and `N`
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- scene/group intent, lane-aware group intent, and future test categories as
+  planning vocabulary only
+
+The slice confirms no implementation, tests, runtime code, dispatch,
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, or hardware validation was added.
+
+The slice recommends a docs-only review/acceptance gate next before adding
+more matrix rows.
+
+The latest accepted V1.34 behavior parity matrix slice before that is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_MUTATION_DEPTH_GUARDED_INPUT_SLICE.md`
 

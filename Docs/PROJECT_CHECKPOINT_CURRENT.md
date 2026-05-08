@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9b34d22 Add V1.34 behavior parity mutation depth matrix review
 - 9b8b31c Add V1.34 behavior parity mutation depth matrix slice
 - e9f54de Add V1.34 behavior parity anchor profile matrix review
 - f2348d3 Add V1.34 behavior parity anchor profile matrix slice
@@ -1712,6 +1713,61 @@ package metadata, hardware behavior, or hardware validation was added.
 
 The next recommended branch is a docs-only scene and group intent behavior
 parity matrix slice.
+
+## V1.34 Behavior Parity Matrix Scene And Group Intent Slice
+
+The V1.34 behavior parity matrix scene and group intent slice documents the
+next set of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE.md`
+
+Current baseline before this slice:
+
+- 9b34d22 Add V1.34 behavior parity mutation depth matrix review
+
+The slice includes command keys:
+
+- `S0`
+- `S1`
+- `S1A`
+- `S1B`
+- `S2`
+- `S2A`
+- `S2B`
+- `S3`
+- `S3A`
+- `S3B`
+- `S4`
+- `S4A`
+- `S4B`
+- `S5`
+- `X`
+- `D`
+- `I`
+- `4`
+- `Y`
+- `V`
+- `N`
+
+The slice records scene command intent, four-pad group mutation intent, and
+lane-aware group mutation intent as captured passive metadata with current
+modular behavior status `passive-only`.
+
+It records behavior gaps for future parity work without closing them.
+
+Scene and group mutation behavior is marked as `forbidden-early-scope`
+planning vocabulary because these commands remain unsuitable for the earliest
+active/hardware validation phase.
+
+The next recommended branch is a docs-only review/acceptance gate for this
+scene and group intent behavior parity matrix slice.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 
