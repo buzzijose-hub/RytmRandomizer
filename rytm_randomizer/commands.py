@@ -344,6 +344,48 @@ PROFILE_WORKFLOW_COMMANDS = {
     },
 }
 
+LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS = {
+    "M1": {
+        "type": "mutation",
+        "scope": "selected_profile",
+        "command_family": "legacy_single_profile_mutation",
+        "mutation_area": "full",
+        "mutation_depth": "micro",
+        "uses_selected_profile": True,
+        "sends_midi": False,
+        "label": "Legacy single-profile full micro mutation",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "M2": {
+        "type": "mutation",
+        "scope": "selected_profile",
+        "command_family": "legacy_single_profile_mutation",
+        "mutation_area": "full",
+        "mutation_depth": "groove",
+        "uses_selected_profile": True,
+        "sends_midi": False,
+        "label": "Legacy single-profile full groove mutation",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "M3": {
+        "type": "mutation",
+        "scope": "selected_profile",
+        "command_family": "legacy_single_profile_mutation",
+        "mutation_area": "full",
+        "mutation_depth": "strong",
+        "uses_selected_profile": True,
+        "sends_midi": False,
+        "label": "Legacy single-profile full strong mutation",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+}
+
 FORBIDDEN_ACTIONS = {
     "master_volume": {
         "label": "Master volume",
@@ -889,6 +931,7 @@ COMMANDS = {
     **ISOLATED_PAD_UTILITY_COMMANDS,
     **ISOLATED_PAD_MUTATION_COMMANDS,
     **PROFILE_WORKFLOW_COMMANDS,
+    **LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS,
     **GROUP_COMMANDS,
     **PAD1_COMMANDS,
     **PAD2_COMMANDS,

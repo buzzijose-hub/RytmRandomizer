@@ -214,6 +214,27 @@ def test_known_profile_workflow_command_lookups_return_existing_metadata():
     assert describe_command("M")["metadata"]["anchor_load_intent"] is True
 
 
+def test_known_legacy_single_profile_mutation_command_lookups_return_existing_metadata():
+    expected = {
+        "M1": ("micro", "Legacy single-profile full micro mutation"),
+        "M2": ("groove", "Legacy single-profile full groove mutation"),
+        "M3": ("strong", "Legacy single-profile full strong mutation"),
+    }
+
+    for command_key, (mutation_depth, label) in expected.items():
+        report = describe_command(command_key)
+
+        assert_passive_command_report(report, command_key)
+        assert report["type"] == "mutation"
+        assert report["scope"] == "selected_profile"
+        assert report["label"] == label
+        assert report["metadata"] == COMMANDS[command_key]
+        assert report["metadata"]["command_family"] == "legacy_single_profile_mutation"
+        assert report["metadata"]["mutation_area"] == "full"
+        assert report["metadata"]["mutation_depth"] == mutation_depth
+        assert report["metadata"]["uses_selected_profile"] is True
+
+
 def test_command_lookup_helpers_return_existing_values_only():
     assert get_command_type("O") == "load"
     assert get_command_type("S1A") == "scene"
@@ -275,6 +296,7 @@ if __name__ == "__main__":
     test_known_isolated_pad_utility_command_lookups_return_existing_metadata()
     test_known_isolated_pad_mutation_command_lookups_return_existing_metadata()
     test_known_profile_workflow_command_lookups_return_existing_metadata()
+    test_known_legacy_single_profile_mutation_command_lookups_return_existing_metadata()
     test_command_lookup_helpers_return_existing_values_only()
     test_command_lookup_normalizes_keys_without_executing()
     test_unknown_command_returns_passive_not_found_result()

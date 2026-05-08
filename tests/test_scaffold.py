@@ -11,6 +11,7 @@ from rytm_randomizer.commands import (
     GROUP_COMMANDS,
     ISOLATED_PAD_MUTATION_COMMANDS,
     ISOLATED_PAD_UTILITY_COMMANDS,
+    LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     MENU_COMMANDS,
     PAD1_COMMANDS,
@@ -585,6 +586,41 @@ def test_representative_profile_workflow_labels_match_v134_intent():
         "v134_reference_command": True,
         "scaffold_only": True,
     }
+
+
+def test_legacy_single_profile_mutation_commands_match_v134_metadata_only_set():
+    expected = {"M1", "M2", "M3"}
+
+    assert set(LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_legacy_single_profile_mutation_commands_are_scaffold_only_and_not_executable():
+    for metadata in LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+        assert metadata["scope"] == "selected_profile"
+        assert metadata["command_family"] == "legacy_single_profile_mutation"
+        assert metadata["mutation_area"] == "full"
+        assert metadata["uses_selected_profile"] is True
+
+
+def test_representative_legacy_single_profile_mutation_labels_match_v134_intent():
+    assert LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS["M1"] == {
+        "type": "mutation",
+        "scope": "selected_profile",
+        "command_family": "legacy_single_profile_mutation",
+        "mutation_area": "full",
+        "mutation_depth": "micro",
+        "uses_selected_profile": True,
+        "sends_midi": False,
+        "label": "Legacy single-profile full micro mutation",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS["M2"]["mutation_depth"] == "groove"
+    assert LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS["M3"]["mutation_depth"] == "strong"
 
 
 def test_forbidden_actions_match_controlled_mutation_roadmap():

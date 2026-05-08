@@ -1,6 +1,6 @@
 RytmRandomizer passive command list
 Section: commands
-Count: 101
+Count: 104
 Items:
 - 1: guarded depth input 1, requires lane/mode prefix
 - 2: guarded depth input 2, requires lane/mode prefix
@@ -31,6 +31,9 @@ Items:
 - J: show 4-pad group layout
 - L: select isolated single-pad mutation target, default Pad 3
 - M: load selected profile anchor
+- M1: Legacy single-profile full micro mutation
+- M2: Legacy single-profile full groove mutation
+- M3: Legacy single-profile full strong mutation
 - N: lane-aware grit mutation on all 4 group pads
 - O: load full 4-pad group anchors
 - P: select/switch profile and change Rytm machine
