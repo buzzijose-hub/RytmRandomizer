@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 4b41f56 Add active boundary metadata strengthening review
 - 9372a58 Update checkpoint after active boundary metadata strengthening
 - e8b3403 Strengthen active boundary metadata
 - 5220bc3 Add mock fake-provider active-boundary strengthening review
@@ -425,6 +426,38 @@ The review recommends a Packet 2 active-boundary report alignment planning
 slice next. It adds no tests, runtime code, CLI behavior, dispatch, command
 execution, scene execution, MIDI, port opening, hardware behavior, package
 metadata changes, or hardware validation.
+
+## Active Boundary Report Alignment Plan
+
+The active-boundary report alignment plan defines Packet 2 from the
+mock/fake-provider active-boundary strengthening sequence.
+
+It records that Packet 1 result metadata is now available:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- source kind and source key
+- target
+- armed state
+- dry-run confirmation state
+- optional operator intent
+- mock-only status
+- sends-real-MIDI status
+- failure reason on failure paths
+
+The plan keeps the active-boundary report passive/read-only. It may later align
+`rytm_randomizer/active_boundary_report.py`, `tests/test_active_boundary_report.py`,
+`tests/test_cli.py`, and deterministic CLI fixtures with the Packet 1 metadata
+fields if report text changes.
+
+The plan keeps profile `"2"` / My BD Hard as the only accepted active-boundary
+candidate, profile `"3"` unsupported by the active boundary, and profile `"4"`
+parked and unsupported.
+
+The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
+dispatch, command execution, scene execution, MIDI, port opening, hardware
+behavior, package metadata changes, profile `"3"` active-boundary support,
+profile `"4"` implementation, or hardware validation.
 
 ## User-Facing Project Progress Report
 

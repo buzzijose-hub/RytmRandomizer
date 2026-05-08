@@ -144,7 +144,9 @@ Safe next options:
 
 ## Recommendation
 
-Proceed next with a Packet 2 active-boundary report alignment planning slice.
+The Packet 2 active-boundary report alignment planning slice is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN.md`
 
 Packet 2 should determine whether `active_boundary_report.py`, report tests,
 CLI fixtures, or docs should reflect the newly strengthened metadata.

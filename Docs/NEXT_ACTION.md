@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9372a58 Update checkpoint after active boundary metadata strengthening
+4b41f56 Add active boundary metadata strengthening review
 
 ## Current Phase
 
@@ -67,8 +67,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a Packet 2 active-boundary report alignment planning
-slice, or a pause at the clean completion checkpoint.
+Next recommended task is review/acceptance of the Packet 2 active-boundary
+report alignment plan, or a pause at the clean completion checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -181,6 +181,24 @@ It accepts:
 The review recommends a Packet 2 active-boundary report alignment planning
 slice next. It adds no tests, runtime code, CLI behavior, dispatch, MIDI, port
 opening, hardware behavior, package metadata changes, or hardware validation.
+
+The latest Packet 2 active-boundary report alignment plan is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN.md`
+
+It records:
+
+- Packet 1 result metadata is now available for report alignment
+- current active-boundary report remains read-only and passive
+- possible future report section for boundary name, supported candidate, result
+  metadata fields, and failure reason metadata
+- accepted future ownership for `active_boundary_report.py`, report tests, CLI
+  tests, and deterministic CLI fixtures if report text changes
+- next recommended step: review and accept the plan before implementation
+
+The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, hardware behavior, package metadata changes, or
+hardware validation.
 
 The latest user-facing project progress report is:
 

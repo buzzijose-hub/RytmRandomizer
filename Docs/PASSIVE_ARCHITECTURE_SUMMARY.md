@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-9372a58
+4b41f56
 
 ## Protected Reference
 
@@ -54,16 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 9372a58 Update checkpoint after active boundary metadata
-  strengthening
+- current HEAD: 4b41f56 Add active boundary metadata strengthening review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: Packet 2 active-boundary report alignment planning
-  slice, or pause at the clean completion checkpoint
+- next recommended task: review/acceptance of the Packet 2 active-boundary
+  report alignment plan, or pause at the clean completion checkpoint
 - closeout command
 - stop condition
 
@@ -260,6 +259,38 @@ The review recommends a Packet 2 active-boundary report alignment planning
 slice next. It adds no tests, runtime code, CLI behavior, dispatch, command
 execution, scene execution, MIDI, port opening, hardware behavior, package
 metadata changes, or hardware validation.
+
+## Active Boundary Report Alignment Plan
+
+`Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN.md` defines Packet 2 from the
+mock/fake-provider active-boundary strengthening sequence.
+
+It records that Packet 1 result metadata is now available:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- source kind and source key
+- target
+- armed state
+- dry-run confirmation state
+- optional operator intent
+- mock-only status
+- sends-real-MIDI status
+- failure reason on failure paths
+
+The plan keeps the active-boundary report passive/read-only. It may later align
+`rytm_randomizer/active_boundary_report.py`, `tests/test_active_boundary_report.py`,
+`tests/test_cli.py`, and deterministic CLI fixtures with the Packet 1 metadata
+fields if report text changes.
+
+The plan keeps profile `"2"` / My BD Hard as the only accepted active-boundary
+candidate, profile `"3"` unsupported by the active boundary, and profile `"4"`
+parked and unsupported.
+
+The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
+dispatch, command execution, scene execution, MIDI, port opening, hardware
+behavior, package metadata changes, profile `"3"` active-boundary support,
+profile `"4"` implementation, or hardware validation.
 
 ## User-Facing Project Progress Report
 
