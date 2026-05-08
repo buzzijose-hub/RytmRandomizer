@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5ddac4b
+58014d7
 
 ## Protected Reference
 
@@ -146,6 +146,25 @@ before any command metadata, tests, or implementation are edited.
 It adds no runtime behavior, CLI wiring, dispatch, real MIDI, ports, MIDI
 sending, package metadata, dependency selection, active behavior, hardware
 behavior, or hardware validation.
+
+## T C Q Passive Metadata Expansion Plan
+
+`Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN.md` defines a future
+metadata-only expansion plan for the first accepted gap category:
+
+- `T` / select target pad/channel
+- `C` / change MIDI channel
+- `Q` / quit
+
+The plan proposes future passive `UTILITY_COMMANDS` metadata and existing-test
+updates only. It records that a future implementation would move the passive
+command count from 82 to 85 and update passive list/report fixtures
+accordingly.
+
+The plan is documentation-only and does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, or hardware
+validation.
 
 ## Session Agenda Current Handoff Refresh
 

@@ -222,5 +222,9 @@ Create a documentation-only passive metadata expansion plan for:
 - `C`
 - `Q`
 
+That plan now lives in:
+
+- `Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN.md`
+
 That future plan should define the exact metadata-only change, tests, closeout
 expectations, and safety boundaries before any code or metadata is edited.
