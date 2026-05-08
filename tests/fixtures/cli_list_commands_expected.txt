@@ -1,6 +1,6 @@
 RytmRandomizer passive command list
 Section: commands
-Count: 91
+Count: 99
 Items:
 - 1: guarded depth input 1, requires lane/mode prefix
 - 2: guarded depth input 2, requires lane/mode prefix
@@ -51,10 +51,18 @@ Items:
 - P4M: show Pad 4 BD Acoustic body / accent menu
 - P4R: rotate Pad 4 through BD Acoustic behavior modes
 - P4X: safely mutate the currently loaded Pad 4 mode
+- PA: mutate selected isolated pad Amp only, choose depth
+- PB: mutate selected isolated pad Body only, choose depth
 - PBH: return Pad 1 BD Plastic to anchor
 - PD: show BD Plastic menu/status
+- PF: mutate selected isolated pad Filter only, choose depth
+- PG: mutate selected isolated pad Grit only, choose depth
 - PK: BD Plastic kick/body discovery
+- PL: mutate selected isolated pad LFO only, choose depth
+- PM: mutate selected isolated pad only using its group default zone/depth
+- PO: mutate selected isolated pad Morph only, choose depth
 - PR: show selected isolated pad
+- PS: mutate selected isolated pad SRC only, choose depth
 - PT: BD Plastic tone/modulation discovery
 - PX: BD Plastic rubber/experimental discovery
 - PZ: return selected isolated pad to anchor only

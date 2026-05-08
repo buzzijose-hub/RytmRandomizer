@@ -9,6 +9,7 @@ from rytm_randomizer.commands import (
     COMMANDS,
     FORBIDDEN_ACTIONS,
     GROUP_COMMANDS,
+    ISOLATED_PAD_MUTATION_COMMANDS,
     ISOLATED_PAD_UTILITY_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     MENU_COMMANDS,
@@ -494,6 +495,54 @@ def test_representative_isolated_pad_utility_labels_match_v134_intent():
         "v134_reference_command": True,
         "scaffold_only": True,
     }
+
+
+def test_isolated_pad_mutation_commands_match_v134_metadata_only_set():
+    expected = {"PM", "PS", "PF", "PA", "PL", "PO", "PB", "PG"}
+
+    assert set(ISOLATED_PAD_MUTATION_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_isolated_pad_mutation_commands_are_scaffold_only_and_not_executable():
+    for metadata in ISOLATED_PAD_MUTATION_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+        assert metadata["scope"] == "selected_isolated_pad"
+        assert metadata["command_family"] == "isolated_pad_mutation"
+
+
+def test_representative_isolated_pad_mutation_labels_match_v134_intent():
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PM"] == {
+        "type": "mutation",
+        "scope": "selected_isolated_pad",
+        "command_family": "isolated_pad_mutation",
+        "mutation_area": "full",
+        "uses_group_default_zone_depth": True,
+        "sends_midi": False,
+        "label": "mutate selected isolated pad only using its group default zone/depth",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PS"] == {
+        "type": "mutation",
+        "scope": "selected_isolated_pad",
+        "command_family": "isolated_pad_mutation",
+        "mutation_area": "src",
+        "requires_depth_selection": True,
+        "sends_midi": False,
+        "label": "mutate selected isolated pad SRC only, choose depth",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PF"]["mutation_area"] == "filter"
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PA"]["mutation_area"] == "amp"
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PL"]["mutation_area"] == "lfo"
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PO"]["mutation_area"] == "morph"
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PB"]["mutation_area"] == "body"
+    assert ISOLATED_PAD_MUTATION_COMMANDS["PG"]["mutation_area"] == "grit"
 
 
 def test_forbidden_actions_match_controlled_mutation_roadmap():

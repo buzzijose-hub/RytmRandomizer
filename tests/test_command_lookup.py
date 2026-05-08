@@ -153,6 +153,37 @@ def test_known_isolated_pad_utility_command_lookups_return_existing_metadata():
     assert describe_command("L")["metadata"]["default_pad"] == 3
 
 
+def test_known_isolated_pad_mutation_command_lookups_return_existing_metadata():
+    expected = {
+        "PM": (
+            "full",
+            "mutate selected isolated pad only using its group default zone/depth",
+        ),
+        "PS": ("src", "mutate selected isolated pad SRC only, choose depth"),
+        "PF": ("filter", "mutate selected isolated pad Filter only, choose depth"),
+        "PA": ("amp", "mutate selected isolated pad Amp only, choose depth"),
+        "PL": ("lfo", "mutate selected isolated pad LFO only, choose depth"),
+        "PO": ("morph", "mutate selected isolated pad Morph only, choose depth"),
+        "PB": ("body", "mutate selected isolated pad Body only, choose depth"),
+        "PG": ("grit", "mutate selected isolated pad Grit only, choose depth"),
+    }
+
+    for command_key, (mutation_area, label) in expected.items():
+        report = describe_command(command_key)
+
+        assert_passive_command_report(report, command_key)
+        assert report["type"] == "mutation"
+        assert report["scope"] == "selected_isolated_pad"
+        assert report["label"] == label
+        assert report["metadata"] == COMMANDS[command_key]
+        assert report["metadata"]["command_family"] == "isolated_pad_mutation"
+        assert report["metadata"]["mutation_area"] == mutation_area
+
+    assert describe_command("PM")["metadata"]["uses_group_default_zone_depth"] is True
+    for command_key in ("PS", "PF", "PA", "PL", "PO", "PB", "PG"):
+        assert describe_command(command_key)["metadata"]["requires_depth_selection"] is True
+
+
 def test_command_lookup_helpers_return_existing_values_only():
     assert get_command_type("O") == "load"
     assert get_command_type("S1A") == "scene"
@@ -212,6 +243,7 @@ if __name__ == "__main__":
     test_known_utility_command_lookups_return_existing_metadata()
     test_known_state_utility_command_lookups_return_existing_metadata()
     test_known_isolated_pad_utility_command_lookups_return_existing_metadata()
+    test_known_isolated_pad_mutation_command_lookups_return_existing_metadata()
     test_command_lookup_helpers_return_existing_values_only()
     test_command_lookup_normalizes_keys_without_executing()
     test_unknown_command_returns_passive_not_found_result()
