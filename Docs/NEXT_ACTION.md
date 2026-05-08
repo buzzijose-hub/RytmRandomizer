@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f01ed9e Add user-facing project progress report
+7ed4fdc Add next phase planning gate
 
 ## Current Phase
 
@@ -67,9 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only uncaptured V1.34 behavior review, a
-mock/fake-provider active-boundary strengthening plan, or a pause at the clean
-completion checkpoint.
+Next recommended task is a mock/fake-provider active-boundary strengthening
+plan, a behavior-parity planning document, or a pause at the clean completion
+checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -90,6 +90,25 @@ It records:
 The gate is documentation-only. It does not implement features, edit runtime
 behavior, add tests, send MIDI, open ports, add active CLI behavior, or
 authorize hardware validation.
+
+The latest V1.34 uncaptured behavior review is:
+
+- `Docs/V134_UNCAPTURED_BEHAVIOR_REVIEW.md`
+
+It records:
+
+- captured V1.34 command surface remains complete as passive metadata
+- no new passive metadata gap is opened
+- behavior parity remains unimplemented
+- future work should preserve anchor assumptions, selection state,
+  mutation-depth semantics, scene/group intent, undo/commit expectations, and
+  hardware-facing preconditions
+- next recommended branch: mock/fake-provider active-boundary strengthening
+  plan or behavior-parity planning document
+
+The review is documentation-only. It does not implement handlers, dispatch,
+command execution, scene execution, MIDI, port opening, active CLI behavior, or
+hardware validation.
 
 The latest user-facing project progress report is:
 

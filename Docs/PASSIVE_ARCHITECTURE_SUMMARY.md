@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f01ed9e
+7ed4fdc
 
 ## Protected Reference
 
@@ -54,16 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f01ed9e Add user-facing project progress report
+- current HEAD: 7ed4fdc Add next phase planning gate
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only uncaptured V1.34 behavior review,
-  mock/fake-provider active-boundary strengthening plan, or pause at the clean
-  completion checkpoint
+- next recommended task: mock/fake-provider active-boundary strengthening
+  plan, behavior-parity planning document, or pause at the clean completion
+  checkpoint
 - closeout command
 - stop condition
 
@@ -91,6 +91,33 @@ The gate is documentation-only. It adds no implementation, tests, runtime
 behavior, CLI execution, MIDI, port opening, dispatch, hardware behavior,
 SysEx, GUI, capture, Analog Four support, Pads 5-12 support, machine/profile
 expansion, or package metadata changes.
+
+## V1.34 Uncaptured Behavior Review
+
+`Docs/V134_UNCAPTURED_BEHAVIOR_REVIEW.md` checks the difference between
+captured operator command vocabulary, passive metadata representation, and
+future runtime behavior parity.
+
+It records that the captured V1.34 command surface remains complete as passive
+metadata:
+
+- passive command count: 109
+- captured V1.34 operator entries modeled as passive command metadata: 106
+- remaining captured command-surface gaps: 0
+- registry report command count: `commands: 109`
+
+No new passive metadata gap is opened by the review.
+
+The review confirms behavior parity remains unimplemented. Future planning
+must preserve anchor assumptions, pad/profile selection state, current profile
+behavior, mutation-depth semantics, menu/status behavior, scene/group intent,
+undo/commit expectations, channel/target selection expectations, and
+hardware-facing preconditions before any active or hardware-facing
+implementation.
+
+The review is documentation-only. It adds no metadata, tests, runtime code,
+CLI wiring, dispatch, command execution, scene execution, MIDI, port opening,
+hardware behavior, package metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

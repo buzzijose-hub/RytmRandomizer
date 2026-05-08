@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 7ed4fdc Add next phase planning gate
 - f01ed9e Add user-facing project progress report
 - 15173c3 Add V1.34 passive metadata completion review
 - 7276d35 Add V1.34 passive metadata completion report
@@ -250,6 +251,33 @@ The gate is documentation-only. It adds no implementation, tests, runtime
 behavior, CLI execution, MIDI, port opening, dispatch, hardware behavior,
 SysEx, GUI, capture, Analog Four support, Pads 5-12 support, machine/profile
 expansion, or package metadata changes.
+
+## V1.34 Uncaptured Behavior Review
+
+The V1.34 uncaptured behavior review checks the difference between captured
+operator command vocabulary, passive metadata representation, and future
+runtime behavior parity.
+
+It records that the captured V1.34 command surface remains complete as passive
+metadata:
+
+- passive command count: 109
+- captured V1.34 operator entries modeled as passive command metadata: 106
+- remaining captured command-surface gaps: 0
+- registry report command count: `commands: 109`
+
+No new passive metadata gap is opened by the review.
+
+The review confirms behavior parity remains unimplemented. Future planning
+must preserve anchor assumptions, pad/profile selection state, current profile
+behavior, mutation-depth semantics, menu/status behavior, scene/group intent,
+undo/commit expectations, channel/target selection expectations, and
+hardware-facing preconditions before any active or hardware-facing
+implementation.
+
+The review is documentation-only. It adds no metadata, tests, runtime code,
+CLI wiring, dispatch, command execution, scene execution, MIDI, port opening,
+hardware behavior, package metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 
