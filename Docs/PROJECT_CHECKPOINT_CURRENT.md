@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6e3a19c Add isolated pad mutation metadata expansion plan
 - 2c095a7 Add isolated pad mutation metadata decision note
 - 0e7a80a Update checkpoint after L PZ passive metadata
 - 56f8bec Add L PZ passive command metadata
@@ -593,6 +594,40 @@ package metadata, dependency selection, active behavior, hardware behavior, or
 hardware validation.
 
 The next safe branch is a documentation-only review gate for this plan.
+
+## V1.34 Isolated Pad Mutation Passive Metadata Expansion Plan Review
+
+The isolated-pad mutation passive metadata expansion plan is accepted as the
+current planning checkpoint:
+
+- Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md
+
+The review accepts:
+
+- Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md
+- future passive `ISOLATED_PAD_MUTATION_COMMANDS` metadata
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+- future command count movement from 91 to 99
+- future captured modeled count movement from 88 to 96
+- future remaining captured gap movement from 18 to 10
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement metadata, tests, runtime code, CLI wiring,
+dispatch, real MIDI, port opening, MIDI sending, active behavior, hardware
+behavior, package metadata, dependency selection, selected-pad runtime state
+mutation, isolated-pad mutation execution, depth prompt execution, or hardware
+validation.
+
+The accepted metadata-only implementation may proceed inside the current
+approved work packet.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

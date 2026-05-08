@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-2c095a7
+6e3a19c
 
 ## Protected Reference
 
@@ -54,16 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 2c095a7 Add isolated pad mutation metadata decision note
+- current HEAD: 6e3a19c Add isolated pad mutation metadata expansion plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only review gate for the isolated-pad mutation
-  metadata expansion plan, broader progress checkpoint, or pause at the clean
-  isolated-pad planning checkpoint
+- next recommended task: tiny passive metadata-only implementation slice for
+  isolated-pad mutation metadata, broader progress checkpoint, or pause at the
+  clean isolated-pad planning checkpoint
 - closeout command
 - stop condition
 
@@ -391,6 +391,39 @@ mutation execution, depth prompt execution, active behavior, hardware
 behavior, or hardware validation.
 
 The next recommended task is a documentation-only review gate for this plan.
+
+## V1.34 Isolated Pad Mutation Passive Metadata Expansion Plan Review
+
+`Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md`
+accepts the isolated-pad mutation passive metadata expansion plan as the
+current planning checkpoint.
+
+It accepts:
+
+- future passive `ISOLATED_PAD_MUTATION_COMMANDS` metadata
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+- future command count movement from 91 to 99
+- future captured modeled count movement from 88 to 96
+- future remaining captured gap movement from 18 to 10
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement the metadata. It adds no metadata, tests,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, selected-pad runtime state mutation,
+isolated-pad mutation execution, depth prompt execution, active behavior,
+hardware behavior, or hardware validation.
+
+The next recommended task is the tiny passive metadata-only implementation
+slice for `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`, inside the
+current approved work packet.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
