@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d8fd5e2 Add passive CLI safety regression sweep
+- b974bbf Add passive CLI safety regression sweep review
 - 6aca34f Add passive CLI safety regression sweep plan
 - ee7c497 Add active-boundary strengthening progress review
 - 3495402 Add active-boundary strengthening progress report
@@ -883,6 +885,74 @@ The review recommends a tiny Packet 4 test-only implementation slice next, or
 a pause at the clean review checkpoint. It adds no tests, runtime code, CLI
 behavior, MIDI, port opening, active execution, package metadata changes, or
 hardware validation.
+
+## Passive CLI Safety Regression Sweep Checkpoint
+
+The passive CLI safety regression sweep checkpoint records completion of
+Packet 4 from the mock/fake-provider active-boundary strengthening sequence.
+
+Checkpoint document:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_CHECKPOINT.md`
+
+Milestone commit:
+
+- d8fd5e2 Add passive CLI safety regression sweep
+
+Files changed by the milestone:
+
+- `tests/test_real_midi_passive_cli_safety.py`
+
+The milestone adds test-only coverage for a broader representative passive CLI
+sweep covering help, report, list, search, inspect, preview,
+`mock-mapper-report`, and `active-boundary-report` commands.
+
+The expanded sweep verifies passive CLI commands do not import:
+
+- `mido`
+- `rtmidi`
+- `pythonrtmidi`
+- `rytm_randomizer.real_midi_adapter`
+
+It also verifies passive CLI output does not expose:
+
+- `execute-command`
+- `send-command`
+- `hardware-test`
+- `--armed`
+- `--port`
+- `mido`
+
+The source guard now also covers real MIDI provider/sender and
+active-boundary evaluation affordances including `RealMidiPortProvider`,
+`RealMidiSender(`, `build_real_midi_sender`, `real_midi_adapter`, and
+`evaluate_mock_active_boundary`.
+
+No closeout script update was needed because
+`tests/test_real_midi_passive_cli_safety.py` was already included under
+`=== Test: Real MIDI Passive CLI Safety ===`.
+
+Verification recorded by the milestone:
+
+- red test failed first on the missing broader helper
+- targeted real MIDI passive CLI safety test passed
+- passive CLI test passed
+- full closeout passed before commit
+- full closeout passed after commit
+- V1.34 reference diff was empty
+- package metadata diff was empty
+- package metadata files remained absent
+- git status was clean
+
+The milestone adds no runtime code, CLI behavior, active CLI command, dispatch,
+execution, real MIDI dependency, port opening, MIDI sending, package metadata,
+hardware behavior, hardware validation, profile `"3"` active-boundary support,
+profile `"4"` implementation, Analog Four support, Pads 5-12 support, or
+machine/profile expansion.
+
+The next recommended task is a documentation-only review/acceptance gate for
+the completed Packet 4 checkpoint, or a broader active-boundary strengthening
+progress report covering Packets 1 through 4.
 
 ## User-Facing Project Progress Report
 

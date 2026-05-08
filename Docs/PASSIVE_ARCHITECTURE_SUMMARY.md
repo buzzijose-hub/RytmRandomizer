@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6aca34f
+d8fd5e2
 
 ## Protected Reference
 
@@ -54,18 +54,19 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6aca34f Add passive CLI safety regression sweep plan
+- current HEAD: d8fd5e2 Add passive CLI safety regression sweep
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
-  reviewed, and Packet 4 passive CLI safety regression sweep planned and
-  accepted as the current planning gate
+  reviewed, and Packet 4 passive CLI safety regression sweep complete
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 4 test-only passive CLI safety regression
-  implementation slice, or pause at the clean Packet 4 review checkpoint
+- next recommended task: documentation-only review/acceptance gate for the
+  completed Packet 4 passive CLI safety regression sweep checkpoint, or a
+  broader active-boundary strengthening progress report covering Packets 1
+  through 4
 - closeout command
 - stop condition
 
@@ -655,6 +656,56 @@ The review recommends a tiny Packet 4 test-only implementation slice next, or
 a pause at the clean review checkpoint. It adds no tests, runtime code, CLI
 behavior, MIDI, port opening, active execution, package metadata changes, or
 hardware validation.
+
+## Passive CLI Safety Regression Sweep Checkpoint
+
+`Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_CHECKPOINT.md` records completion of
+Packet 4 from the mock/fake-provider active-boundary strengthening sequence.
+
+Milestone commit:
+
+- d8fd5e2 Add passive CLI safety regression sweep
+
+Milestone file:
+
+- `tests/test_real_midi_passive_cli_safety.py`
+
+The milestone expands representative passive CLI safety coverage across help,
+report, list, search, inspect, preview, `mock-mapper-report`, and
+`active-boundary-report` commands.
+
+It verifies representative passive CLI commands do not import:
+
+- `mido`
+- `rtmidi`
+- `pythonrtmidi`
+- `rytm_randomizer.real_midi_adapter`
+
+It verifies representative passive CLI output does not expose active command
+or hardware-facing affordances:
+
+- `execute-command`
+- `send-command`
+- `hardware-test`
+- `--armed`
+- `--port`
+- `mido`
+
+It also strengthens passive CLI source guards against real MIDI
+providers/senders and active-boundary evaluation affordances.
+
+No closeout script update was needed because
+`tests/test_real_midi_passive_cli_safety.py` was already included in closeout.
+
+The checkpoint confirms targeted tests, passive CLI tests, and full closeout
+passed; V1.34 reference diff was empty; package metadata diff was empty;
+package metadata files remained absent; and git status was clean.
+
+The milestone adds no runtime code, CLI behavior, active CLI command, dispatch,
+execution, real MIDI dependency, port opening, MIDI sending, package metadata,
+hardware behavior, hardware validation, profile `"3"` active-boundary support,
+profile `"4"` implementation, Analog Four support, Pads 5-12 support, or
+machine/profile expansion.
 
 ## User-Facing Project Progress Report
 
