@@ -157,6 +157,45 @@ UTILITY_COMMANDS = {
     },
 }
 
+STATE_UTILITY_COMMANDS = {
+    "B": {
+        "type": "anchor_state",
+        "scope": "current_anchor",
+        "sends_midi": False,
+        "label": "back to current anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "E": {
+        "type": "anchor_state",
+        "scope": "current_state_anchor",
+        "sends_midi": False,
+        "label": "commit current state as new anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "W": {
+        "type": "exploration",
+        "scope": "waveform",
+        "sends_midi": False,
+        "label": "waveform exploration only",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "U": {
+        "type": "state_history",
+        "scope": "script_generated_state",
+        "sends_midi": False,
+        "label": "undo previous script-generated state",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+}
+
 FORBIDDEN_ACTIONS = {
     "master_volume": {
         "label": "Master volume",
@@ -698,6 +737,7 @@ COMMANDS = {
     },
     **MENU_COMMANDS,
     **UTILITY_COMMANDS,
+    **STATE_UTILITY_COMMANDS,
     **GROUP_COMMANDS,
     **PAD1_COMMANDS,
     **PAD2_COMMANDS,

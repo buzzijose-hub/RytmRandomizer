@@ -15,6 +15,7 @@ from rytm_randomizer.commands import (
     PAD2_COMMANDS,
     PAD3_COMMANDS,
     PAD4_COMMANDS,
+    STATE_UTILITY_COMMANDS,
     UTILITY_COMMANDS,
     is_guarded_main_prompt_depth,
 )
@@ -401,6 +402,58 @@ def test_representative_utility_command_labels_match_v134_intent():
         "scope": "operator_session",
         "sends_midi": False,
         "label": "quit",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+
+
+def test_state_utility_commands_match_v134_metadata_only_set():
+    expected = {"B", "E", "W", "U"}
+
+    assert set(STATE_UTILITY_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_state_utility_commands_are_scaffold_only_and_not_executable():
+    for metadata in STATE_UTILITY_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+
+
+def test_representative_state_utility_command_labels_match_v134_intent():
+    assert STATE_UTILITY_COMMANDS["B"] == {
+        "type": "anchor_state",
+        "scope": "current_anchor",
+        "sends_midi": False,
+        "label": "back to current anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert STATE_UTILITY_COMMANDS["E"] == {
+        "type": "anchor_state",
+        "scope": "current_state_anchor",
+        "sends_midi": False,
+        "label": "commit current state as new anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert STATE_UTILITY_COMMANDS["W"] == {
+        "type": "exploration",
+        "scope": "waveform",
+        "sends_midi": False,
+        "label": "waveform exploration only",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert STATE_UTILITY_COMMANDS["U"] == {
+        "type": "state_history",
+        "scope": "script_generated_state",
+        "sends_midi": False,
+        "label": "undo previous script-generated state",
         "executable": False,
         "v134_reference_command": True,
         "scaffold_only": True,

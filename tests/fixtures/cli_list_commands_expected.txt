@@ -1,11 +1,12 @@
 RytmRandomizer passive command list
 Section: commands
-Count: 85
+Count: 89
 Items:
 - 1: guarded depth input 1, requires lane/mode prefix
 - 2: guarded depth input 2, requires lane/mode prefix
 - 3: guarded depth input 3, requires lane/mode prefix
 - 4: harder / wild four-lane mutation
+- B: back to current anchor
 - BA: load Pad 1 BD Acoustic anchor
 - BC: load Pad 1 BD Classic anchor
 - BD: show BD engine tools
@@ -18,6 +19,7 @@ Items:
 - BS: load Pad 1 BD Sharp anchor
 - C: change MIDI channel
 - D: deeper four-lane mutation, Pads 2-4 pushed harder
+- E: commit current state as new anchor
 - FG: BD FM grit discovery
 - FK: BD FM kick/body discovery
 - FM: show BD FM menu/status
@@ -83,7 +85,9 @@ Items:
 - SW: Pad 3 SY Raw Wave + Balance discovery
 - SX: Pad 3 SY Raw sci-fi motion accent mode
 - T: select target pad/channel
+- U: undo previous script-generated state
 - V: lane-aware filter mutation on all 4 group pads
+- W: waveform exploration only
 - X: balanced four-lane mutate full 4-pad group
 - Y: lane-aware SRC/morph mutation on all 4 group pads
 - Z: return all 4 group pads to anchors
