@@ -275,3 +275,18 @@ Package metadata remains unchanged.
 Hardware remains off.
 
 No implementation is added by this slice.
+
+## 15. Review Gate
+
+The plan review now lives in:
+
+- `Docs/PACKAGE_METADATA_NO_DEPENDENCY_PLAN_REVIEW.md`
+
+The review accepts this plan as the current package metadata planning
+checkpoint. It keeps Candidate A as the accepted no-dependency path, keeps
+dependency selection deferred, keeps package metadata unchanged, keeps
+hardware validation blocked, and keeps hardware off.
+
+The review does not authorize creating package metadata, selecting
+dependencies, editing package metadata, implementing real MIDI, adding active
+CLI behavior, starting hardware validation, or turning hardware on.
