@@ -61,16 +61,39 @@ It captures:
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only passive metadata expansion plan for legacy
-  single-profile mutation metadata, broader V1.34 passive metadata progress
-  report, or pause at the clean profile selection / anchor loading passive
-  metadata checkpoint
+- next recommended task: docs-only review gate for the legacy single-profile
+  mutation passive metadata expansion plan, broader V1.34 passive metadata
+  progress report, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Legacy Single-Profile Mutation Passive Metadata Expansion Plan
+
+`Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md`
+defines a future metadata-only path for:
+
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+
+The plan proposes a future passive
+`LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS` dictionary, scaffold-only metadata
+for all three commands, command count movement from 101 to 104, captured
+modeled count movement from 98 to 101, remaining captured gap movement from 8
+to 5, passive list/report fixture updates, and tests in existing scaffold and
+command lookup coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, selected-profile runtime mutation, legacy mutation
+execution, depth execution, active behavior, hardware behavior, or hardware
+validation.
+
+The plan must be reviewed and accepted before implementation.
 
 ## V1.34 Legacy Single-Profile Mutation Next Passive Metadata Gap Decision Note
 
