@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 892d9b6 Add V1.34 behavior parity menu utility matrix review
 - 2f46180 Add V1.34 behavior parity menu utility matrix slice
 - 0a9b8f5 Add V1.34 behavior parity matrix plan review
 - 3f991d3 Add V1.34 behavior parity matrix plan
@@ -1516,6 +1517,67 @@ package metadata, hardware behavior, or hardware validation was added.
 
 The next recommended branch is a docs-only anchor/profile behavior parity
 matrix slice.
+
+## V1.34 Behavior Parity Matrix Anchor/Profile Slice
+
+The V1.34 behavior parity matrix anchor/profile slice documents the next set
+of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_ANCHOR_PROFILE_SLICE.md`
+
+Current baseline before this slice:
+
+- 892d9b6 Add V1.34 behavior parity menu utility matrix review
+
+The slice includes command keys:
+
+- `P`
+- `M`
+- `O`
+- `Z`
+- `BR`
+- `BH`
+- `BS`
+- `BC`
+- `BA`
+- `BF`
+- `FZ`
+- `BP`
+- `PBH`
+- `BI`
+- `SBH`
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2R`
+- `P2Z`
+- `PZ`
+- `SL`
+- `SB`
+- `SX`
+- `SA`
+- `P3R`
+- `P3A`
+- `P4R`
+- `P4A`
+
+The slice records profile workflow, anchor load, anchor return, mode load,
+profile rotation, and group anchor rows as captured passive metadata with
+current modular behavior status `passive-only`.
+
+It records behavior gaps for future parity work without closing them.
+
+The slice recommends a documentation-only review/acceptance gate next before
+adding mutation-depth, guarded numeric input, scene/group intent,
+lane-specific mutation, undo/commit, or state rows.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 

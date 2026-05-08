@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-2f46180
+892d9b6
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 2f46180 Add V1.34 behavior parity menu utility matrix slice
+- current HEAD: 892d9b6 Add V1.34 behavior parity menu utility matrix review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -67,14 +67,15 @@ It captures:
   now documented and accepted as the preferred next branch after that accepted
   gate; a V1.34 behavior parity matrix plan is now documented and accepted as
   the first matrix-planning slice; the first docs-only matrix slice for
-  menu/status and utility commands is now documented and accepted
+  menu/status and utility commands is now documented and accepted; the next
+  docs-only matrix slice for anchor/profile commands is now documented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only anchor/profile behavior parity matrix
-  slice, or pause at the clean accepted menu/status and utility matrix slice
-  checkpoint
+- next recommended task: docs-only review/acceptance gate for the
+  anchor/profile behavior parity matrix slice, or pause at the clean
+  anchor/profile matrix slice checkpoint
 - closeout command
 - stop condition
 
@@ -359,6 +360,66 @@ next.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Anchor/Profile Slice
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_ANCHOR_PROFILE_SLICE.md` documents the next
+behavior parity matrix rows using the accepted schema.
+
+The slice covers:
+
+- profile workflow commands from `PROFILE_WORKFLOW_COMMANDS`
+- anchor load and return rows from `GROUP_COMMANDS`
+- Pad 1 BD anchor load, return, and rotation rows from `PAD1_COMMANDS`
+- Pad 2 profile load, return, and rotation rows from `PAD2_COMMANDS`
+- selected isolated pad anchor return row from
+  `ISOLATED_PAD_UTILITY_COMMANDS`
+- Pad 3 mode load, return, and rotation rows from `PAD3_COMMANDS`
+- Pad 4 return and rotation rows from `PAD4_COMMANDS`
+
+Included command keys:
+
+- `P`
+- `M`
+- `O`
+- `Z`
+- `BR`
+- `BH`
+- `BS`
+- `BC`
+- `BA`
+- `BF`
+- `FZ`
+- `BP`
+- `PBH`
+- `BI`
+- `SBH`
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2R`
+- `P2Z`
+- `PZ`
+- `SL`
+- `SB`
+- `SX`
+- `SA`
+- `P3R`
+- `P3A`
+- `P4R`
+- `P4A`
+
+The slice records every row as captured passive metadata and current modular
+behavior status `passive-only`. It intentionally documents parity gaps rather
+than closing them.
+
+The next recommended task is a docs-only review/acceptance gate before adding
+more matrix rows.
+
+The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
+MIDI, port opening, package metadata changes, active CLI commands, hardware
+behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 

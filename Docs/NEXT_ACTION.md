@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2f46180 Add V1.34 behavior parity menu utility matrix slice
+892d9b6 Add V1.34 behavior parity menu utility matrix review
 
 ## Current Phase
 
@@ -25,7 +25,9 @@ planning gate has been created and accepted. A behavior-parity roadmap has now
 been documented and accepted as the preferred next branch after that gate. A
 V1.34 behavior parity matrix plan has now been documented and accepted as the
 first matrix-planning slice. The first docs-only behavior parity matrix slice
-for menu/status and utility commands has now been documented and accepted.
+for menu/status and utility commands has now been documented and accepted. The
+next docs-only behavior parity matrix slice for anchor/profile commands has
+now been documented.
 
 ## Current Safety State
 
@@ -80,11 +82,35 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only anchor/profile behavior parity matrix
-slice, or a pause at this clean accepted menu/status and utility matrix slice
-checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the
+anchor/profile behavior parity matrix slice, or a pause at this clean
+anchor/profile matrix slice checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_ANCHOR_PROFILE_SLICE.md`
+
+It records:
+
+- the accepted matrix schema in document form
+- anchor load, anchor return, profile selection, profile rotation, mode load,
+  and four-pad group anchor rows
+- command keys `P`, `M`, `O`, `Z`, `BR`, `BH`, `BS`, `BC`, `BA`, `BF`, `FZ`,
+  `BP`, `PBH`, `BI`, `SBH`, `P2B`, `P2H`, `P2C`, `P2F`, `P2R`, `P2Z`, `PZ`,
+  `SL`, `SB`, `SX`, `SA`, `P3R`, `P3A`, `P4R`, and `P4A`
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- future artifact and test categories as planning vocabulary only
+
+The slice confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, active CLI behavior, package metadata, or
+hardware validation was added.
+
+The slice recommends a docs-only review/acceptance gate next before adding
+more matrix rows.
+
+The latest accepted V1.34 behavior parity matrix slice before that is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE.md`
 
