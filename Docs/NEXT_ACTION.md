@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-713e5c7 Add B E W U passive command metadata
+50e776f Update checkpoint after B E W U passive metadata
 
 ## Current Phase
 
@@ -67,8 +67,24 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next-gap decision note or a pause at the
-clean `B` / `E` / `W` / `U` passive metadata checkpoint.
+Next recommended task is a docs-only passive metadata expansion plan for the
+accepted next gap category:
+
+- `L`
+- `PZ`
+
+The latest `L` / `PZ` next-gap decision note is:
+
+- `Docs/V134_L_PZ_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+
+It selects isolated single-pad selection/status and return metadata as the
+next planning target and keeps implementation parked until a separate plan,
+review, and explicit approval.
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation.
 
 The latest `B` / `E` / `W` / `U` passive metadata checkpoint is:
 

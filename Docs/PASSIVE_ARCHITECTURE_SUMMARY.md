@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-713e5c7
+50e776f
 
 ## Protected Reference
 
@@ -54,16 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 713e5c7 Add B E W U passive command metadata
+- current HEAD: 50e776f Update checkpoint after B E W U passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only next-gap decision note, another tiny
-  passive metadata-only plan, broader project progress checkpoint, or pause
-  at the clean `B` / `E` / `W` / `U` metadata checkpoint
+- next recommended task: docs-only passive metadata expansion plan for
+  `L` and `PZ`
 - closeout command
 - stop condition
 
@@ -217,6 +216,33 @@ The metadata remains scaffold-only and non-executable. No new CLI command,
 runtime dispatch, real MIDI, port opening, MIDI sending, package metadata,
 dependency selection, active behavior, hardware behavior, or hardware
 validation was added.
+
+## V1.34 L PZ Next Passive Metadata Gap Decision Note
+
+`Docs/V134_L_PZ_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md` selects the next
+passive metadata planning target after the completed `B`, `E`, `W`, and `U`
+checkpoint.
+
+The selected next category is isolated single-pad selection/status and return
+metadata:
+
+- `L` / select isolated single-pad mutation target, default Pad 3
+- `PZ` / return selected isolated pad to anchor only
+
+The decision note records the current adjusted gap position:
+
+- 106 captured V1.34 operator command entries
+- 86 captured entries now modeled as passive command metadata
+- 20 captured entries still not modeled as passive command metadata
+- current passive command count: 89
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation.
+
+The next recommended task is a docs-only passive metadata expansion plan for
+`L` and `PZ`.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 50e776f Update checkpoint after B E W U passive metadata
 - 713e5c7 Add B E W U passive command metadata
 - 0a97757 Add B E W U passive metadata expansion plan review
 - 6b680e3 Add B E W U passive metadata expansion plan
@@ -368,6 +369,36 @@ dependency selection.
 The next safe branch is a docs-only next-gap decision note, another tiny
 passive metadata-only plan, a broader progress report, or a pause at this
 clean checkpoint.
+
+## V1.34 L PZ Next Passive Metadata Gap Decision Note
+
+The next passive metadata gap category has been selected in:
+
+- Docs/V134_L_PZ_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md
+
+The decision note records:
+
+- completed `T`, `C`, and `Q` passive metadata checkpoint
+- completed `B`, `E`, `W`, and `U` passive metadata checkpoint
+- current passive command count: 89
+- captured V1.34 operator command entries: 106
+- captured entries now modeled as passive command metadata: 86
+- captured entries still not modeled as passive command metadata: 20
+- next recommended planning target: `L` and `PZ`
+
+The selected category is isolated single-pad selection/status and return
+metadata:
+
+- `L` / select isolated single-pad mutation target, default Pad 3
+- `PZ` / return selected isolated pad to anchor only
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, port opening, MIDI
+sending, package metadata, dependency selection, active behavior, hardware
+behavior, or hardware validation.
+
+The next safe branch is a docs-only passive metadata expansion plan for
+`L` and `PZ`.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
