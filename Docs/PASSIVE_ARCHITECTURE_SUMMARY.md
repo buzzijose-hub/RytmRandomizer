@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-249bc67
+c50cfec
 
 ## Protected Reference
 
@@ -54,22 +54,61 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 249bc67 Update checkpoint after profile selection anchor passive metadata
+- current HEAD: c50cfec Add legacy single-profile mutation passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: bounded implementation packet for legacy
-  single-profile mutation passive metadata, broader V1.34 passive metadata
-  progress report, or pause at the clean planning checkpoint
+- next recommended task: docs-only next-gap decision note for `S`, `F`, `A`,
+  `G`, and `K`, broader V1.34 passive metadata progress report, or pause at
+  the clean checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Legacy Single-Profile Mutation Passive Metadata Checkpoint
+
+`Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_PASSIVE_METADATA_CHECKPOINT.md`
+records completion of the accepted passive metadata-only expansion for:
+
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+
+Milestone commit:
+
+- c50cfec Add legacy single-profile mutation passive metadata
+
+The implementation added passive `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`
+metadata in `rytm_randomizer/commands.py`, updated scaffold and command lookup
+tests, and updated deterministic passive list/report fixtures.
+
+The passive command count moved from 101 to 104, the passive registry report
+command count moved from `commands: 101` to `commands: 104`, captured V1.34
+operator entries modeled as passive command metadata moved from 98 to 101, and
+remaining captured gaps moved from 8 to 5.
+
+The remaining captured gaps are now:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, selected-profile runtime mutation, legacy mutation
+execution, depth execution, real MIDI, port opening, MIDI sending, package
+metadata, dependency selection, active behavior, hardware behavior, or hardware
+validation was added.
+
+Package metadata files remain absent and the protected V1.34 reference remains
+untouched.
 
 ## V1.34 Legacy Single-Profile Mutation Passive Metadata Expansion Plan Review
 

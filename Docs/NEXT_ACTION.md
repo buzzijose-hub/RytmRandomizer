@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-249bc67 Update checkpoint after profile selection anchor passive metadata
+c50cfec Add legacy single-profile mutation passive metadata
 
 ## Current Phase
 
@@ -67,9 +67,54 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a bounded implementation packet for legacy
-single-profile mutation passive metadata, a broader V1.34 passive metadata
-progress report, or a pause at the clean planning checkpoint.
+Next recommended task is a docs-only next-gap decision note for the remaining
+generic current-profile page mutation metadata, a broader V1.34 passive
+metadata progress report, or a pause at the clean checkpoint.
+
+The remaining captured command-surface gaps are:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+The latest legacy single-profile mutation passive metadata checkpoint is:
+
+- `Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_PASSIVE_METADATA_CHECKPOINT.md`
+
+It records:
+
+- `c50cfec Add legacy single-profile mutation passive metadata`
+- passive `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS` metadata
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+- command count movement from 101 to 104
+- registry report command count movement from `commands: 101` to
+  `commands: 104`
+- captured modeled count movement from 98 to 101
+- remaining captured gap movement from 8 to 5
+- scaffold and command lookup test updates
+- passive list/report fixture updates
+- no new CLI command
+- no handler
+- no dispatch
+- no selected-profile runtime mutation
+- no legacy mutation execution
+- no depth execution
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+- no package metadata changes
+
+Safe next options are:
+
+- pause at this clean checkpoint
+- create a docs-only next-gap decision note for `S`, `F`, `A`, `G`, and `K`
+- plan generic current-profile page mutation metadata
+- write a broader V1.34 passive metadata progress report
 
 The latest legacy single-profile mutation passive metadata expansion plan
 review is:
