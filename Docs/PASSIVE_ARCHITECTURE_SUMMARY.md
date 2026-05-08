@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d16fd37
+6219d86
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d16fd37 Add package metadata no-dependency plan
+- current HEAD: 6219d86 Add package metadata no-dependency plan review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
@@ -70,6 +70,33 @@ It captures:
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Operator Command Surface Reference
+
+`Docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md` captures the
+operator-provided V1.34 command surface as documentation-only project
+knowledge.
+
+It records:
+
+- Pad 1 BD engine tools
+- Pad 2 snare / secondary percussion tools
+- 4-pad group commands
+- scene and preset commands
+- isolated single-pad mutation commands
+- Pad 3 SY Raw tools
+- Pad 4 BD Acoustic tools
+- legacy mutation commands
+- utility/state commands
+
+The reference is not passive registry data and is not wired into CLI, mock
+mapping, active execution, dispatch, MIDI, ports, or hardware behavior. It is
+intended as a future comparison source for a docs-only passive registry gap
+review.
+
+It adds no package metadata, no dependency selection, no `mido`, no real MIDI
+dependency, no port opening, no MIDI sending, no active CLI command, no
+hardware validation, and no hardware-on authorization.
 
 ## Session Agenda Current Handoff Refresh
 

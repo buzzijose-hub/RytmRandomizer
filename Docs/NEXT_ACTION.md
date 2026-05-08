@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d16fd37 Add package metadata no-dependency plan
+6219d86 Add package metadata no-dependency plan review
 
 ## Current Phase
 
@@ -67,9 +67,27 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is continued passive/project documentation, an exact
-future package metadata implementation plan only after explicit approval, or a
-pause at this accepted package metadata no-dependency plan review checkpoint.
+Next recommended task is review/acceptance of the captured V1.34 operator
+command surface reference, followed by a docs-only passive registry gap review
+if useful.
+
+The latest V1.34 operator command surface reference is:
+
+- `Docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md`
+
+It captures the operator-provided command list for the V1.34 workflow,
+including Pad 1 BD engine tools, Pad 2 secondary percussion tools, 4-pad group
+commands, scene commands, isolated pad commands, Pad 3 SY Raw tools, Pad 4 BD
+Acoustic tools, legacy mutation commands, and utility/state commands.
+
+The reference is documentation-only. It does not add metadata, tests, runtime
+behavior, CLI wiring, dispatch, real MIDI, port opening, MIDI sending,
+hardware behavior, package metadata, dependency selection, or hardware
+validation.
+
+The recommended follow-up is a docs-only command-surface gap review that
+compares the captured operator command surface against the current passive
+registry and marks what is modeled, missing, or intentionally out of scope.
 
 The latest package metadata no-dependency plan review is:
 

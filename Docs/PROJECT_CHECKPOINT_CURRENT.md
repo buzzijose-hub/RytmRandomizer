@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6219d86 Add package metadata no-dependency plan review
 - d16fd37 Add package metadata no-dependency plan
 - bae5746 Add no-dependency user-facing progress report review
 - 3309829 Add no-dependency user-facing progress report
@@ -190,6 +191,28 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Operator Command Surface Reference
+
+The current operator-provided V1.34 command surface has been captured as a
+documentation-only reference:
+
+- Docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md
+
+The reference preserves the current operator vocabulary for target/channel
+selection, Pad 1 BD engine tools, Pad 2 secondary percussion tools, 4-pad group
+commands, scene commands, isolated pad commands, Pad 3 SY Raw tools, Pad 4 BD
+Acoustic tools, legacy mutation commands, and utility/state commands.
+
+This capture does not implement or authorize runtime behavior. It does not add
+metadata, tests, package metadata, dependency selection, real MIDI, mido, port
+opening, MIDI sending, active CLI behavior, dispatch, command execution, scene
+execution, hardware behavior, hardware validation, Analog Four support, Pads
+5-12 support, or profile `"4"` implementation.
+
+Recommended follow-up is a docs-only passive registry gap review comparing the
+captured operator command surface against current passive command/scene/profile
+metadata.
 
 ## Current Priority
 
