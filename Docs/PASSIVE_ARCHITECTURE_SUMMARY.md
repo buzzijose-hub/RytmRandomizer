@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d1e11dd
+230a883
 
 ## Protected Reference
 
@@ -54,16 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d1e11dd Add T C Q passive metadata expansion plan
+- current HEAD: 230a883 Add T C Q passive command metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: broader project progress checkpoint, return to
-  passive/project documentation, or pause at the accepted no-dependency
-  evaluation checkpoint
+- next recommended task: docs-only next-gap decision note, another tiny
+  passive metadata-only plan, broader project progress checkpoint, or pause
+  at the clean `T` / `C` / `Q` metadata checkpoint
 - closeout command
 - stop condition
 
@@ -186,6 +186,31 @@ The review does not implement the metadata. It adds no metadata, tests,
 runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
 metadata, dependency selection, active behavior, hardware behavior, or hardware
 validation.
+
+## T C Q Passive Metadata Checkpoint
+
+`Docs/V134_T_C_Q_PASSIVE_METADATA_CHECKPOINT.md` records completion of the
+accepted passive metadata-only expansion for:
+
+- `T` / select target pad/channel
+- `C` / change MIDI channel
+- `Q` / quit
+
+Milestone commit:
+
+- 230a883 Add T C Q passive command metadata
+
+The implementation added passive `UTILITY_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 82 to 85, and the passive registry report
+command count moved from `commands: 82` to `commands: 85`.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+runtime dispatch, real MIDI, port opening, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, or hardware
+validation was added.
 
 ## Session Agenda Current Handoff Refresh
 

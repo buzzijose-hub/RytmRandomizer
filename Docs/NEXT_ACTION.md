@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d1e11dd Add T C Q passive metadata expansion plan
+230a883 Add T C Q passive command metadata
 
 ## Current Phase
 
@@ -67,12 +67,37 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny passive metadata-only implementation slice
-for the accepted first gap category, only if explicitly approved:
+Next recommended task is a docs-only next-gap decision note or a pause at the
+clean `T` / `C` / `Q` passive metadata checkpoint.
+
+The latest `T` / `C` / `Q` passive metadata checkpoint is:
+
+- `Docs/V134_T_C_Q_PASSIVE_METADATA_CHECKPOINT.md`
+
+It records:
 
 - `T`
 - `C`
 - `Q`
+- 230a883 Add T C Q passive command metadata
+- passive `UTILITY_COMMANDS` metadata
+- command count movement from 82 to 85
+- scaffold and command lookup test updates
+- passive list/report fixture updates
+- no new CLI command
+- no dispatch
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+
+Safe next options are:
+
+- pause at this clean checkpoint
+- create a docs-only next-gap decision note
+- plan another tiny passive metadata-only expansion from the captured V1.34
+  command surface
+- update a broader project progress report
 
 The latest `T` / `C` / `Q` passive metadata expansion plan review is:
 

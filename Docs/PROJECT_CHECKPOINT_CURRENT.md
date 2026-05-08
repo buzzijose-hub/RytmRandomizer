@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 230a883 Add T C Q passive command metadata
+- af2d293 Add T C Q passive metadata expansion plan review
 - d1e11dd Add T C Q passive metadata expansion plan
 - 58014d7 Add V1.34 passive registry gap review acceptance
 - 5ddac4b Add V1.34 passive registry gap review
@@ -313,8 +315,45 @@ The review does not implement metadata, tests, runtime code, CLI wiring,
 dispatch, real MIDI, port opening, MIDI sending, active behavior, hardware
 behavior, package metadata, dependency selection, or hardware validation.
 
-Recommended next task is the tiny passive metadata-only implementation slice
-for `T`, `C`, and `Q`, only after explicit approval.
+The accepted metadata-only implementation has now been completed in:
+
+- 230a883 Add T C Q passive command metadata
+
+## T C Q Passive Metadata Checkpoint
+
+The first accepted passive registry gap category has been implemented and
+checkpointed:
+
+- Docs/V134_T_C_Q_PASSIVE_METADATA_CHECKPOINT.md
+
+The milestone records:
+
+- passive `UTILITY_COMMANDS` metadata for `T`, `C`, and `Q`
+- `T` / select target pad/channel
+- `C` / change MIDI channel
+- `Q` / quit
+- passive command count moving from 82 to 85
+- passive registry report command count moving from `commands: 82` to
+  `commands: 85`
+- updates to scaffold and command lookup tests
+- updates to passive list/report fixtures
+
+Files changed by the milestone:
+
+- `rytm_randomizer/commands.py`
+- `tests/test_scaffold.py`
+- `tests/test_command_lookup.py`
+- `tests/fixtures/cli_list_commands_expected.txt`
+- `tests/fixtures/registry_report_expected.txt`
+
+The new metadata remains scaffold-only and non-executable. It adds no new CLI
+command, no runtime dispatch, no real MIDI, no port opening, no MIDI sending,
+no active behavior, no hardware behavior, no package metadata, and no
+dependency selection.
+
+The next safe branch is a docs-only next-gap decision note, another tiny
+passive metadata-only plan, a broader progress report, or a pause at this
+clean checkpoint.
 
 ## Current Priority
 
