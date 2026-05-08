@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-4f7d519
+6b680e3
 
 ## Protected Reference
 
@@ -54,15 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 4f7d519 Add next passive metadata gap decision note
+- current HEAD: 6b680e3 Add B E W U passive metadata expansion plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only review gate for the `B`, `E`, `W`, and
-  `U` passive metadata expansion plan
+- next recommended task: tiny passive metadata-only implementation slice for
+  `B`, `E`, `W`, and `U`, only after explicit approval
 - closeout command
 - stop condition
 
@@ -163,6 +163,30 @@ accordingly.
 The plan is documentation-only and does not add metadata, tests, runtime code,
 CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
 dependency selection, active behavior, hardware behavior, or hardware
+validation.
+
+## B E W U Passive Metadata Expansion Plan Review
+
+`Docs/V134_B_E_W_U_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md` accepts the
+`B`, `E`, `W`, and `U` passive metadata expansion plan as the current planning
+checkpoint.
+
+It accepts:
+
+- future passive `STATE_UTILITY_COMMANDS` metadata
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+- future command count movement from 85 to 89
+- future captured modeled count movement from 82 to 86
+- future remaining captured gap movement from 24 to 20
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement the metadata. It adds no metadata, tests,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, active behavior, hardware behavior, or hardware
 validation.
 
 ## T C Q Passive Metadata Expansion Plan Review

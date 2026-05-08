@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 6b680e3 Add B E W U passive metadata expansion plan
 - 4f7d519 Add next passive metadata gap decision note
 - b0fd0f9 Update checkpoint after T C Q passive metadata
 - 230a883 Add T C Q passive command metadata
@@ -295,6 +296,34 @@ package metadata, dependency selection, or hardware validation.
 
 The next recommended task is review/acceptance of the plan before any metadata
 or tests are edited.
+
+## B E W U Passive Metadata Expansion Plan Review
+
+The `B`, `E`, `W`, and `U` passive metadata expansion plan is accepted as the
+current planning checkpoint:
+
+- Docs/V134_B_E_W_U_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md
+
+The review accepts:
+
+- Docs/V134_B_E_W_U_PASSIVE_METADATA_EXPANSION_PLAN.md
+- future passive `STATE_UTILITY_COMMANDS` metadata
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+- future passive command count movement from 85 to 89
+- future captured modeled count movement from 82 to 86
+- future remaining captured gap movement from 24 to 20
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement metadata, tests, runtime code, CLI wiring,
+dispatch, real MIDI, port opening, MIDI sending, active behavior, hardware
+behavior, package metadata, dependency selection, or hardware validation.
+
+Recommended next task is the tiny passive metadata-only implementation slice
+for `B`, `E`, `W`, and `U`, only after explicit approval.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
