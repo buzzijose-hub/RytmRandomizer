@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-03afb56 Add next strengthening sequence planning gate review
+e7895ab Add behavior parity roadmap
 
 ## Current Phase
 
@@ -22,7 +22,7 @@ A broader project-level progress report after Packets 1 through 4 has been
 created and accepted as the latest orientation checkpoint. The latest session
 handoff records this clean leave-off point. The next strengthening sequence
 planning gate has been created and accepted. A behavior-parity roadmap has now
-been documented as the preferred next branch after that gate.
+been documented and accepted as the preferred next branch after that gate.
 
 ## Current Safety State
 
@@ -77,8 +77,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only behavior-parity roadmap review/acceptance
-checkpoint, or a pause at this clean behavior-parity roadmap checkpoint.
+Next recommended task is a docs-only V1.34 behavior parity matrix plan, or a
+pause at this clean accepted behavior-parity roadmap checkpoint.
 
 The latest behavior-parity roadmap is:
 
@@ -109,6 +109,30 @@ The roadmap recommends a docs-only review/acceptance gate next. After review,
 the likely next planning artifact is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+
+The latest behavior-parity roadmap review is:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP_REVIEW.md`
+
+It accepts:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP.md`
+- e7895ab Add behavior parity roadmap
+- behavior parity as broader than passive command metadata coverage
+- the current non-parity state, including no dispatch, command execution,
+  scene execution, prompt/input loop execution, MIDI sending, port opening, or
+  hardware validation
+- behavior domains to map before implementation
+- needed future artifacts such as a behavior parity matrix, state model,
+  anchor lifecycle model, mutation depth model, scene/group intent model, and
+  test strategy
+- roadmap phases beginning with a docs-only V1.34 behavior parity matrix plan
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, active CLI behavior, package metadata, or
+hardware validation was added.
+
+The review recommends a docs-only V1.34 behavior parity matrix plan next.
 
 The latest next strengthening sequence planning gate is:
 

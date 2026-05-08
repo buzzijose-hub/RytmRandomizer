@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-03afb56
+e7895ab
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 03afb56 Add next strengthening sequence planning gate review
+- current HEAD: e7895ab Add behavior parity roadmap
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -64,13 +64,14 @@ It captures:
   Packets 1 through 4 is now accepted as the latest orientation checkpoint,
   with a current-session handoff recorded; the next strengthening sequence
   planning gate is now created and accepted; the behavior-parity roadmap is
-  now documented as the preferred next branch after that accepted gate
+  now documented and accepted as the preferred next branch after that accepted
+  gate
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only behavior-parity roadmap review/acceptance
-  checkpoint, or pause at the clean behavior-parity roadmap checkpoint
+- next recommended task: docs-only V1.34 behavior parity matrix plan, or pause
+  at the clean accepted behavior-parity roadmap checkpoint
 - closeout command
 - stop condition
 
@@ -143,8 +144,8 @@ implementation, Analog Four support, Pads 5-12 support, or machine/profile
 expansion exists.
 
 The review recommends a docs-only behavior-parity roadmap next. That roadmap
-is now documented, so the current next recommended task is a docs-only roadmap
-review/acceptance gate.
+is now documented and accepted, so the current next recommended task is a
+docs-only V1.34 behavior parity matrix plan.
 
 ## Behavior Parity Roadmap
 
@@ -186,12 +187,45 @@ It identifies future behavior domains to map before implementation:
 - quit, back, and safe no-op behavior
 - hardware-facing preconditions
 
-The roadmap recommends review/acceptance next. After review, the likely next
-planning artifact is a docs-only V1.34 behavior parity matrix plan.
+The roadmap recommends review/acceptance next. That review is now complete.
+The likely next planning artifact is a docs-only V1.34 behavior parity matrix
+plan.
 
 It adds no implementation, tests, runtime code, CLI behavior, dispatch, MIDI,
 port opening, package metadata changes, active CLI commands, hardware
 behavior, or hardware validation.
+
+## Behavior Parity Roadmap Review
+
+`Docs/BEHAVIOR_PARITY_ROADMAP_REVIEW.md` accepts the behavior-parity roadmap
+as the current planning roadmap for future V1.34 runtime behavior parity.
+
+Accepted roadmap:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP.md`
+
+Accepted roadmap commit:
+
+- e7895ab Add behavior parity roadmap
+
+The review accepts behavior parity as broader than passive command metadata
+coverage. Accepted future parity scope includes command semantics, state
+transitions, target pad and channel selection behavior, anchor assumptions,
+current-profile behavior, selected isolated pad behavior, mutation-depth
+semantics, scene and group intent, undo and commit expectations, safe failure
+and no-op behavior, and hardware-facing preconditions.
+
+The review confirms modular runtime behavior parity remains unimplemented.
+There is still no command dispatch, command execution, scene execution,
+prompt/input loop execution, MIDI sending, MIDI port opening, hardware
+mutation, SysEx write, or hardware validation.
+
+The review accepts the next recommended branch as a docs-only V1.34 behavior
+parity matrix plan.
+
+The review adds no implementation, tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, package metadata changes, active CLI commands,
+hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 

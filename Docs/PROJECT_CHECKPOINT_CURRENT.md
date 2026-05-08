@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e7895ab Add behavior parity roadmap
 - 03afb56 Add next strengthening sequence planning gate review
 - d5c0413 Add next strengthening sequence planning gate
 - 5c43496 Refresh handoff after packets 1-4 progress review
@@ -1298,11 +1299,56 @@ The roadmap identifies future behavior domains to map before implementation:
 - quit, back, and safe no-op behavior
 - hardware-facing preconditions
 
-The roadmap recommends a documentation-only review/acceptance gate next. After
-review, the likely next planning artifact is a docs-only V1.34 behavior parity
-matrix plan.
+The roadmap recommends a documentation-only review/acceptance gate next. That
+review is now complete. The likely next planning artifact is a docs-only V1.34
+behavior parity matrix plan.
 
 The roadmap is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
+
+## Behavior Parity Roadmap Review
+
+The behavior-parity roadmap review accepts the roadmap as the current planning
+roadmap for future V1.34 runtime behavior parity.
+
+Review document:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP_REVIEW.md`
+
+Accepted roadmap:
+
+- `Docs/BEHAVIOR_PARITY_ROADMAP.md`
+
+Accepted roadmap commit:
+
+- e7895ab Add behavior parity roadmap
+
+The review accepts behavior parity as future modular reproduction of validated
+V1.34 operator behavior. It confirms behavior parity is broader than passive
+command metadata coverage and remains separate from immediate hardware
+execution.
+
+The review accepts the current non-parity state:
+
+- command dispatch remains absent
+- command execution remains absent
+- scene execution remains absent
+- prompt/input loop execution remains absent
+- current-profile mutation execution remains absent
+- anchor loading execution remains absent
+- profile rotation execution remains absent
+- undo/commit runtime behavior remains absent
+- MIDI sending remains absent
+- MIDI port opening remains absent
+- hardware mutation remains absent
+- hardware validation remains absent
+
+The review accepts the next recommended branch as a docs-only V1.34 behavior
+parity matrix plan.
+
+The review is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.
