@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-15173c3 Add V1.34 passive metadata completion review
+f01ed9e Add user-facing project progress report
 
 ## Current Phase
 
@@ -67,11 +67,29 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a next-phase planning gate, a review of any uncaptured
-V1.34 behavior, or a pause at the clean completion checkpoint.
+Next recommended task is a docs-only uncaptured V1.34 behavior review, a
+mock/fake-provider active-boundary strengthening plan, or a pause at the clean
+completion checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
+
+The latest next-phase planning gate is:
+
+- `Docs/NEXT_PHASE_PLANNING_GATE.md`
+
+It records:
+
+- captured V1.34 command surface complete as passive metadata
+- passive command count: 109
+- captured modeled count: 106
+- remaining captured command-surface gaps: 0
+- real hardware validation remains 0%
+- next recommended branch: docs-only uncaptured V1.34 behavior review
+
+The gate is documentation-only. It does not implement features, edit runtime
+behavior, add tests, send MIDI, open ports, add active CLI behavior, or
+authorize hardware validation.
 
 The latest user-facing project progress report is:
 

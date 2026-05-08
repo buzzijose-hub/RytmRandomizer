@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-15173c3
+f01ed9e
 
 ## Protected Reference
 
@@ -54,21 +54,43 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 15173c3 Add V1.34 passive metadata completion review
+- current HEAD: f01ed9e Add user-facing project progress report
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: next-phase planning gate, review of any uncaptured
-  V1.34 behavior, or pause at the clean completion checkpoint
+- next recommended task: docs-only uncaptured V1.34 behavior review,
+  mock/fake-provider active-boundary strengthening plan, or pause at the clean
+  completion checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## Next Phase Planning Gate
+
+`Docs/NEXT_PHASE_PLANNING_GATE.md` records the first safe branch after
+completing the captured V1.34 command surface as passive metadata.
+
+It accepts the current state:
+
+- passive command count: 109
+- captured V1.34 operator entries modeled as passive command metadata: 106
+- remaining captured command-surface gaps: 0
+- real hardware validation: 0%
+
+The gate recommends a docs-only uncaptured V1.34 behavior review next, before
+any mock/fake-provider strengthening, real MIDI dependency planning, or
+hardware-validation planning.
+
+The gate is documentation-only. It adds no implementation, tests, runtime
+behavior, CLI execution, MIDI, port opening, dispatch, hardware behavior,
+SysEx, GUI, capture, Analog Four support, Pads 5-12 support, machine/profile
+expansion, or package metadata changes.
 
 ## User-Facing Project Progress Report
 
