@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5fbfeec Add generic current-profile mutation passive metadata
+ce09a28 Update checkpoint after generic current-profile mutation passive metadata
 
 ## Current Phase
 
@@ -67,11 +67,32 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader V1.34 passive metadata completion report,
-a review of any uncaptured V1.34 behavior, or a pause at the clean checkpoint.
+Next recommended task is a review/acceptance gate for the V1.34 passive
+metadata completion report, a review of any uncaptured V1.34 behavior, or a
+pause at the clean checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
+
+The latest broader V1.34 passive metadata completion report is:
+
+- `Docs/V134_PASSIVE_METADATA_COMPLETION_REPORT.md`
+
+It records:
+
+- current passive command count: 109
+- captured V1.34 operator entries modeled as passive command metadata: 106
+- remaining captured command-surface gaps: 0
+- registry report command count: `commands: 109`
+- currently captured V1.34 command surface fully modeled as passive metadata
+- passive CLI visibility remains read-only
+- closeout coverage remains intact
+- no MIDI, ports, dispatch, execution, hardware behavior, or package metadata
+  changes
+
+The report is documentation-only. It does not make commands executable and
+does not authorize runtime behavior, MIDI, port opening, hardware validation,
+or active CLI behavior.
 
 The latest generic current-profile mutation passive metadata checkpoint is:
 
