@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-50e776f Update checkpoint after B E W U passive metadata
+5dd459b Add L PZ next passive metadata gap decision note
 
 ## Current Phase
 
@@ -67,11 +67,31 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only passive metadata expansion plan for the
-accepted next gap category:
+Next recommended task is a documentation-only review gate for the `L` / `PZ`
+passive metadata expansion plan.
+
+The latest `L` / `PZ` passive metadata expansion plan is:
+
+- `Docs/V134_L_PZ_PASSIVE_METADATA_EXPANSION_PLAN.md`
+
+It defines a future metadata-only path for:
 
 - `L`
 - `PZ`
+
+The plan proposes a future `ISOLATED_PAD_UTILITY_COMMANDS` metadata
+dictionary, passive scaffold-only metadata for both commands, command count
+movement from 89 to 91, captured modeled count movement from 86 to 88,
+remaining captured gap movement from 20 to 18, fixture updates for passive
+list/report output, and tests in existing scaffold and command lookup
+coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, selected-pad runtime
+state mutation, anchor return execution, or hardware validation.
+
+The plan must be reviewed and accepted before implementation.
 
 The latest `L` / `PZ` next-gap decision note is:
 

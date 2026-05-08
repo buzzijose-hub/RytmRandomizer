@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5dd459b Add L PZ next passive metadata gap decision note
 - 50e776f Update checkpoint after B E W U passive metadata
 - 713e5c7 Add B E W U passive command metadata
 - 0a97757 Add B E W U passive metadata expansion plan review
@@ -397,8 +398,45 @@ fixtures, runtime code, CLI wiring, dispatch, real MIDI, port opening, MIDI
 sending, package metadata, dependency selection, active behavior, hardware
 behavior, or hardware validation.
 
-The next safe branch is a docs-only passive metadata expansion plan for
+The next safe branch was a docs-only passive metadata expansion plan for
 `L` and `PZ`.
+
+## V1.34 L PZ Passive Metadata Expansion Plan
+
+The selected isolated single-pad selection/status and return gap category now
+has a documentation-only metadata expansion plan:
+
+- Docs/V134_L_PZ_PASSIVE_METADATA_EXPANSION_PLAN.md
+
+The plan covers:
+
+- `L` / select isolated single-pad mutation target, default Pad 3
+- `PZ` / return selected isolated pad to anchor only
+- future `ISOLATED_PAD_UTILITY_COMMANDS` metadata
+- command count movement from 89 to 91
+- captured modeled count movement from 86 to 88
+- remaining captured gap movement from 20 to 18
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The plan requires:
+
+- no selected-pad runtime state mutation
+- no isolated-pad mutation execution
+- no active anchor return execution
+- no new CLI command
+- no dispatch
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+
+The plan is documentation-only. It does not add metadata, tests, fixtures,
+runtime code, CLI wiring, dispatch, real MIDI, port opening, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation.
+
+The next safe branch is a documentation-only review gate for this plan.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
