@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3715730 Add active boundary report metadata alignment review
+8071446 Add fake-provider adapter guard strengthening plan
 
 ## Current Phase
 
@@ -67,8 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the Packet 3 fake-provider
-adapter guard strengthening plan, or a pause at the clean planning checkpoint.
+Next recommended task is a tiny test-first Packet 3 fake-provider adapter guard
+strengthening implementation slice, or a pause at the clean planning
+checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -280,6 +281,27 @@ It records:
 The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, hardware behavior, package metadata changes, or
 hardware validation.
+
+The latest Packet 3 fake-provider adapter guard strengthening plan review is:
+
+- `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN.md`
+- future ownership limited to `real_midi_adapter.py` and
+  `tests/test_real_midi_adapter_boundary.py`
+- a tiny test-first fake-provider-only implementation slice
+- no parallel implementation for the first slice because ownership is
+  concentrated in one adapter module and one test file
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port discovery, port opening, MIDI sending, hardware validation,
+Analog Four support, Pads 5-12 support, and machine/profile expansion frozen.
+
+The review recommends a tiny Packet 3 implementation slice next only if the
+selected guard tests remain small, fake-provider-only, and test-first.
 
 The latest user-facing project progress report is:
 

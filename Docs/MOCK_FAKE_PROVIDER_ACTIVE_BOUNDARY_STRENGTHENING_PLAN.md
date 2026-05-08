@@ -278,8 +278,12 @@ The Packet 3 plan is:
 
 - `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN.md`
 
-Next recommended task is a documentation-only review/acceptance gate for the
-Packet 3 plan before any Packet 3 implementation.
+The Packet 3 plan review is:
+
+- `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN_REVIEW.md`
+
+Next recommended task is a tiny test-first Packet 3 implementation slice only
+if the selected guard tests remain small and fake-provider-only.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.

@@ -214,7 +214,9 @@ Do not run parallel implementation against the same files.
 
 ## Recommendation
 
-Review and accept this Packet 3 plan next.
+This plan has a matching review gate:
+
+- `Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_PLAN_REVIEW.md`
 
 After acceptance, implement a tiny test-first fake-provider adapter guard
 strengthening slice only if the selected tests remain small and fake-provider
