@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-892d9b6
+f2348d3
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 892d9b6 Add V1.34 behavior parity menu utility matrix review
+- current HEAD: f2348d3 Add V1.34 behavior parity anchor profile matrix slice
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -68,14 +68,15 @@ It captures:
   gate; a V1.34 behavior parity matrix plan is now documented and accepted as
   the first matrix-planning slice; the first docs-only matrix slice for
   menu/status and utility commands is now documented and accepted; the next
-  docs-only matrix slice for anchor/profile commands is now documented
+  docs-only matrix slice for anchor/profile commands is now documented and
+  accepted
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only review/acceptance gate for the
-  anchor/profile behavior parity matrix slice, or pause at the clean
-  anchor/profile matrix slice checkpoint
+- next recommended task: docs-only mutation-depth and guarded numeric input
+  behavior parity matrix slice, or pause at the clean accepted anchor/profile
+  matrix slice checkpoint
 - closeout command
 - stop condition
 
@@ -414,12 +415,49 @@ The slice records every row as captured passive metadata and current modular
 behavior status `passive-only`. It intentionally documents parity gaps rather
 than closing them.
 
-The next recommended task is a docs-only review/acceptance gate before adding
-more matrix rows.
+That review is now complete.
 
 The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
 MIDI, port opening, package metadata changes, active CLI commands, hardware
 behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Anchor/Profile Slice Review
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_ANCHOR_PROFILE_SLICE_REVIEW.md` accepts the
+anchor/profile behavior parity matrix slice.
+
+Accepted slice:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_ANCHOR_PROFILE_SLICE.md`
+
+Accepted slice commit:
+
+- f2348d3 Add V1.34 behavior parity anchor profile matrix slice
+
+The review accepts:
+
+- profile workflow commands from `PROFILE_WORKFLOW_COMMANDS`
+- anchor load and return rows from `GROUP_COMMANDS`
+- Pad 1 BD anchor load, return, and rotation rows from `PAD1_COMMANDS`
+- Pad 2 profile load, return, and rotation rows from `PAD2_COMMANDS`
+- selected isolated pad anchor return row from
+  `ISOLATED_PAD_UTILITY_COMMANDS`
+- Pad 3 mode load, return, and rotation rows from `PAD3_COMMANDS`
+- Pad 4 return and rotation rows from `PAD4_COMMANDS`
+- the 30 included command keys
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- future artifact and test categories as planning vocabulary only
+
+The review confirms the slice records behavior gaps rather than closing them.
+
+The review recommends a docs-only mutation-depth and guarded numeric input
+behavior parity matrix slice next.
+
+The review adds no implementation, tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, package metadata changes, active CLI commands,
+hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
