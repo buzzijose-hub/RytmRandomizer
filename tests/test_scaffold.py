@@ -17,6 +17,7 @@ from rytm_randomizer.commands import (
     PAD2_COMMANDS,
     PAD3_COMMANDS,
     PAD4_COMMANDS,
+    PROFILE_WORKFLOW_COMMANDS,
     STATE_UTILITY_COMMANDS,
     UTILITY_COMMANDS,
     is_guarded_main_prompt_depth,
@@ -543,6 +544,47 @@ def test_representative_isolated_pad_mutation_labels_match_v134_intent():
     assert ISOLATED_PAD_MUTATION_COMMANDS["PO"]["mutation_area"] == "morph"
     assert ISOLATED_PAD_MUTATION_COMMANDS["PB"]["mutation_area"] == "body"
     assert ISOLATED_PAD_MUTATION_COMMANDS["PG"]["mutation_area"] == "grit"
+
+
+def test_profile_workflow_commands_match_v134_metadata_only_set():
+    expected = {"P", "M"}
+
+    assert set(PROFILE_WORKFLOW_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_profile_workflow_commands_are_scaffold_only_and_not_executable():
+    for metadata in PROFILE_WORKFLOW_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+        assert metadata["command_family"] == "profile_workflow"
+
+
+def test_representative_profile_workflow_labels_match_v134_intent():
+    assert PROFILE_WORKFLOW_COMMANDS["P"] == {
+        "type": "selection",
+        "scope": "profile_machine",
+        "command_family": "profile_workflow",
+        "selects_profile": True,
+        "machine_change_intent": True,
+        "sends_midi": False,
+        "label": "select/switch profile and change Rytm machine",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert PROFILE_WORKFLOW_COMMANDS["M"] == {
+        "type": "anchor_load",
+        "scope": "selected_profile",
+        "command_family": "profile_workflow",
+        "uses_selected_profile": True,
+        "anchor_load_intent": True,
+        "sends_midi": False,
+        "label": "load selected profile anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
 
 
 def test_forbidden_actions_match_controlled_mutation_roadmap():

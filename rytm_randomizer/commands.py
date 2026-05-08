@@ -317,6 +317,33 @@ ISOLATED_PAD_MUTATION_COMMANDS = {
     },
 }
 
+PROFILE_WORKFLOW_COMMANDS = {
+    "P": {
+        "type": "selection",
+        "scope": "profile_machine",
+        "command_family": "profile_workflow",
+        "selects_profile": True,
+        "machine_change_intent": True,
+        "sends_midi": False,
+        "label": "select/switch profile and change Rytm machine",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "M": {
+        "type": "anchor_load",
+        "scope": "selected_profile",
+        "command_family": "profile_workflow",
+        "uses_selected_profile": True,
+        "anchor_load_intent": True,
+        "sends_midi": False,
+        "label": "load selected profile anchor",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+}
+
 FORBIDDEN_ACTIONS = {
     "master_volume": {
         "label": "Master volume",
@@ -861,6 +888,7 @@ COMMANDS = {
     **STATE_UTILITY_COMMANDS,
     **ISOLATED_PAD_UTILITY_COMMANDS,
     **ISOLATED_PAD_MUTATION_COMMANDS,
+    **PROFILE_WORKFLOW_COMMANDS,
     **GROUP_COMMANDS,
     **PAD1_COMMANDS,
     **PAD2_COMMANDS,

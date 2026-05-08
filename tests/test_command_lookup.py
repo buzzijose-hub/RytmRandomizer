@@ -184,6 +184,36 @@ def test_known_isolated_pad_mutation_command_lookups_return_existing_metadata():
         assert describe_command(command_key)["metadata"]["requires_depth_selection"] is True
 
 
+def test_known_profile_workflow_command_lookups_return_existing_metadata():
+    expected = {
+        "P": (
+            "selection",
+            "profile_machine",
+            "select/switch profile and change Rytm machine",
+        ),
+        "M": (
+            "anchor_load",
+            "selected_profile",
+            "load selected profile anchor",
+        ),
+    }
+
+    for command_key, (command_type, scope, label) in expected.items():
+        report = describe_command(command_key)
+
+        assert_passive_command_report(report, command_key)
+        assert report["type"] == command_type
+        assert report["scope"] == scope
+        assert report["label"] == label
+        assert report["metadata"] == COMMANDS[command_key]
+        assert report["metadata"]["command_family"] == "profile_workflow"
+
+    assert describe_command("P")["metadata"]["selects_profile"] is True
+    assert describe_command("P")["metadata"]["machine_change_intent"] is True
+    assert describe_command("M")["metadata"]["uses_selected_profile"] is True
+    assert describe_command("M")["metadata"]["anchor_load_intent"] is True
+
+
 def test_command_lookup_helpers_return_existing_values_only():
     assert get_command_type("O") == "load"
     assert get_command_type("S1A") == "scene"
@@ -244,6 +274,7 @@ if __name__ == "__main__":
     test_known_state_utility_command_lookups_return_existing_metadata()
     test_known_isolated_pad_utility_command_lookups_return_existing_metadata()
     test_known_isolated_pad_mutation_command_lookups_return_existing_metadata()
+    test_known_profile_workflow_command_lookups_return_existing_metadata()
     test_command_lookup_helpers_return_existing_values_only()
     test_command_lookup_normalizes_keys_without_executing()
     test_unknown_command_returns_passive_not_found_result()
