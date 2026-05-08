@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-75de10a Add project-level progress report after packets 1-4
+d69afd6 Add project-level progress report after packets 1-4 review
 
 ## Current Phase
 
@@ -19,7 +19,8 @@ checkpointed, and accepted. Packets 1 through 4 in the current strengthening
 sequence are now complete and reviewed. The Packets 1 through 4 progress
 report has been created and accepted as the current consolidation checkpoint.
 A broader project-level progress report after Packets 1 through 4 has been
-created and accepted as the latest orientation checkpoint.
+created and accepted as the latest orientation checkpoint. The latest session
+handoff records this clean leave-off point.
 
 ## Current Safety State
 
@@ -77,6 +78,20 @@ python -m rytm_randomizer.cli active-boundary-report
 Next recommended task is a new docs-only strengthening sequence planning gate,
 a docs-only behavior-parity roadmap, a user-facing day/session progress
 report, or a pause at the clean project-level checkpoint.
+
+The latest current-session handoff is:
+
+- `Docs/SESSION_HANDOFF_AFTER_PACKETS_1_4_PROGRESS_REVIEW.md`
+
+It records:
+
+- current clean baseline at d69afd6
+- Packets 1 through 4 complete and reviewed
+- project-level progress report after Packets 1 through 4 accepted
+- no real MIDI, ports, active CLI behavior, execution, package metadata, or
+  hardware validation
+- safe resume options
+- hardware-off reminder
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.

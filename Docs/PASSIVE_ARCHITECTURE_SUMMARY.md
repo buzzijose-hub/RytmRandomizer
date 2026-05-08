@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-75de10a
+d69afd6
 
 ## Protected Reference
 
@@ -54,14 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 75de10a Add project-level progress report after packets 1-4
+- current HEAD: d69afd6 Add project-level progress report after packets 1-4
+  review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
   reviewed, and Packet 4 passive CLI safety regression sweep complete,
   checkpointed, accepted, summarized, and accepted in the Packets 1 through 4
   progress report review; a broader project-level progress report after
-  Packets 1 through 4 is now accepted as the latest orientation checkpoint
+  Packets 1 through 4 is now accepted as the latest orientation checkpoint,
+  with a current-session handoff recorded
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
@@ -75,6 +77,15 @@ It captures:
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+The latest current-session handoff is:
+
+- `Docs/SESSION_HANDOFF_AFTER_PACKETS_1_4_PROGRESS_REVIEW.md`
+
+It records the clean leave-off point at d69afd6, the accepted Packets 1 through
+4 progress state, the accepted project-level progress report, current safety
+state, closeout command, stop condition, safe resume options, and hardware-off
+reminder.
 
 ## Next Phase Planning Gate
 
