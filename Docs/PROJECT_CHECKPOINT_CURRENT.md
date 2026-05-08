@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3d45ff9 Update checkpoint after isolated pad mutation passive metadata
 - af6be75 Add isolated pad mutation passive metadata
 - 5ef7dc1 Add isolated pad mutation metadata plan review
 - 6e3a19c Add isolated pad mutation metadata expansion plan
@@ -212,6 +213,31 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Profile Selection Anchor Next Passive Metadata Gap Decision Note
+
+The latest next-gap decision note selects profile selection / anchor loading
+metadata as the next planning target after the isolated-pad mutation metadata
+checkpoint:
+
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+
+Current gap position:
+
+- passive command count: 99
+- captured V1.34 entries modeled as passive command metadata: 96
+- remaining captured command-surface gaps: 10
+
+If later implemented as passive metadata only, `P` and `M` would move the
+passive command count from 99 to 101, captured modeled count from 96 to 98,
+and remaining captured gaps from 10 to 8.
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, profile runtime state mutation,
+machine change execution, anchor loading execution, active behavior, hardware
+behavior, or hardware validation.
 
 ## V1.34 Isolated Pad Mutation Passive Metadata Checkpoint
 

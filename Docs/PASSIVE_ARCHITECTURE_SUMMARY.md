@@ -61,15 +61,40 @@ It captures:
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only next-gap decision note, broader V1.34
-  passive metadata progress report, or pause at the clean isolated-pad
-  mutation metadata checkpoint
+- next recommended task: docs-only passive metadata expansion plan for profile
+  selection / anchor loading metadata, broader V1.34 passive metadata progress
+  report, or pause at the clean isolated-pad mutation metadata checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Profile Selection Anchor Next Passive Metadata Gap Decision Note
+
+`Docs/V134_PROFILE_SELECTION_ANCHOR_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+selects profile selection / anchor loading metadata as the next planning
+target:
+
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+
+The decision note records the current gap position:
+
+- passive command count: 99
+- captured V1.34 entries modeled as passive command metadata: 96
+- remaining captured command-surface gaps: 10
+
+If later implemented as passive metadata only, `P` and `M` would move the
+passive command count from 99 to 101, captured modeled count from 96 to 98,
+and remaining captured gaps from 10 to 8.
+
+The note is documentation-only. It does not add metadata, tests, fixtures,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, profile runtime state mutation, machine change
+execution, anchor loading execution, active behavior, hardware behavior, or
+hardware validation.
 
 ## V1.34 Isolated Pad Mutation Passive Metadata Checkpoint
 

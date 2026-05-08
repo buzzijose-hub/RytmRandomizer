@@ -67,9 +67,35 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next-gap decision note, a broader V1.34
-passive metadata progress report, or a pause at the clean isolated-pad mutation
+Next recommended task is a documentation-only passive metadata expansion plan
+for profile selection / anchor loading metadata, a broader V1.34 passive
+metadata progress report, or a pause at the clean isolated-pad mutation
 metadata checkpoint.
+
+The latest next-gap decision note is:
+
+- `Docs/V134_PROFILE_SELECTION_ANCHOR_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+
+It selects profile selection / anchor loading metadata as the next planning
+target:
+
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+
+The decision note records:
+
+- current passive command count: 99
+- captured modeled count: 96
+- remaining captured gap count: 10
+- future command count movement from 99 to 101 if implemented
+- future captured modeled count movement from 96 to 98 if implemented
+- future remaining captured gap movement from 10 to 8 if implemented
+
+It is documentation-only. It does not add metadata, tests, fixtures, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, profile runtime state mutation, machine change
+execution, anchor loading execution, active behavior, hardware behavior, or
+hardware validation.
 
 The latest isolated-pad mutation passive metadata checkpoint is:
 
