@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- deda7af Add V1.34 behavior parity Pad 3 lane matrix review
 - 1da5569 Add V1.34 behavior parity Pad 3 lane matrix slice
 - 9510d01 Add V1.34 behavior parity Pad 2 lane matrix review
 - f612e3f Add V1.34 behavior parity Pad 2 lane matrix slice
@@ -2041,6 +2042,36 @@ The next recommended branch is a docs-only Pad 4 lane behavior parity matrix
 slice.
 
 The review is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
+
+## V1.34 Behavior Parity Matrix Pad 4 Lane Behavior Slice
+
+The V1.34 behavior parity matrix Pad 4 lane behavior slice documents the next
+set of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD4_LANE_BEHAVIOR_SLICE.md`
+
+Current baseline before this slice:
+
+- deda7af Add V1.34 behavior parity Pad 3 lane matrix review
+
+The slice includes command key:
+
+- `P4X`
+
+The slice records Pad 4 currently loaded mode mutation as captured passive
+metadata with current modular behavior status `passive-only`.
+
+It records a behavior gap for future parity work without closing it.
+
+The next recommended branch is a docs-only review/acceptance gate for this
+Pad 4 lane behavior matrix slice.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.
