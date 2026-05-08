@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-431328b
+5fbfeec
 
 ## Protected Reference
 
@@ -54,22 +54,59 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 431328b Add generic current-profile mutation metadata expansion plan
+- current HEAD: 5fbfeec Add generic current-profile mutation passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: bounded TDD implementation packet for generic
-  current-profile mutation passive metadata, broader V1.34 passive metadata
-  progress report, or pause at the clean planning checkpoint
+- next recommended task: broader V1.34 passive metadata completion report,
+  review of any uncaptured V1.34 behavior, or pause at the clean checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Generic Current-Profile Mutation Passive Metadata Checkpoint
+
+`Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_PASSIVE_METADATA_CHECKPOINT.md`
+records completion of the accepted passive metadata-only expansion for:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+Milestone commit:
+
+- 5fbfeec Add generic current-profile mutation passive metadata
+
+The implementation added passive `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+metadata in `rytm_randomizer/commands.py`, updated scaffold and command lookup
+tests, and updated deterministic passive list/report fixtures.
+
+The passive command count moved from 104 to 109, the passive registry report
+command count moved from `commands: 104` to `commands: 109`, captured V1.34
+operator entries modeled as passive command metadata moved from 101 to 106, and
+remaining captured gaps moved from 5 to 0.
+
+The currently captured V1.34 operator command surface is now fully modeled as
+passive command metadata. This does not make those commands executable; it
+means the captured operator vocabulary is represented as inert, read-only
+metadata for inspection, reporting, lookup, and future planning.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, depth prompt execution, current-profile mutation
+execution, selected-profile runtime mutation, real MIDI, port opening, MIDI
+sending, package metadata, dependency selection, active behavior, hardware
+behavior, or hardware validation was added.
+
+Package metadata files remain absent and the protected V1.34 reference remains
+untouched.
 
 ## V1.34 Generic Current-Profile Mutation Passive Metadata Expansion Plan Review
 

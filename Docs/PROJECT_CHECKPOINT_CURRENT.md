@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5fbfeec Add generic current-profile mutation passive metadata
 - 431328b Add generic current-profile mutation metadata expansion plan
 - ae0a772 Add generic current-profile mutation gap decision note
 - f1d8735 Update checkpoint after legacy single-profile mutation passive metadata
@@ -224,6 +225,44 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Generic Current-Profile Mutation Passive Metadata Checkpoint
+
+The generic current-profile mutation passive metadata checkpoint records
+completion of the accepted passive metadata-only expansion for:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+Milestone commit:
+
+- 5fbfeec Add generic current-profile mutation passive metadata
+
+The implementation added passive `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+metadata in `rytm_randomizer/commands.py`, updated scaffold and command lookup
+tests, and updated deterministic passive list/report fixtures.
+
+The passive command count moved from 104 to 109, the passive registry report
+command count moved from `commands: 104` to `commands: 109`, captured V1.34
+operator entries modeled as passive command metadata moved from 101 to 106, and
+remaining captured gaps moved from 5 to 0.
+
+The currently captured V1.34 operator command surface is now fully modeled as
+passive command metadata. This does not make those commands executable; it
+means the captured operator vocabulary is represented as inert, read-only
+metadata for inspection, reporting, lookup, and future planning.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, depth prompt execution, current-profile mutation
+execution, selected-profile runtime mutation, real MIDI, port opening, MIDI
+sending, package metadata, dependency selection, active behavior, hardware
+behavior, or hardware validation was added.
+
+Package metadata files remain absent and the protected V1.34 reference remains
+untouched.
 
 ## V1.34 Generic Current-Profile Mutation Passive Metadata Expansion Plan Review
 

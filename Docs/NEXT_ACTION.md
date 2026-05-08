@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-431328b Add generic current-profile mutation metadata expansion plan
+5fbfeec Add generic current-profile mutation passive metadata
 
 ## Current Phase
 
@@ -67,17 +67,50 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a bounded TDD implementation packet for the generic
-current-profile mutation passive metadata, a broader V1.34 passive metadata
-progress report, or a pause at the clean planning checkpoint.
+Next recommended task is a broader V1.34 passive metadata completion report,
+a review of any uncaptured V1.34 behavior, or a pause at the clean checkpoint.
 
-The remaining captured command-surface gaps are:
+The currently captured V1.34 command surface has no remaining passive metadata
+gaps.
 
+The latest generic current-profile mutation passive metadata checkpoint is:
+
+- `Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_PASSIVE_METADATA_CHECKPOINT.md`
+
+It records:
+
+- `5fbfeec Add generic current-profile mutation passive metadata`
+- passive `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS` metadata
 - `S` / SRC-only mutation, choose depth
 - `F` / Filter-only mutation, choose depth
 - `A` / Amp-only mutation, choose depth
 - `G` / Grit-only mutation, choose depth
 - `K` / Kick body mutation, choose depth
+- command count movement from 104 to 109
+- registry report command count movement from `commands: 104` to
+  `commands: 109`
+- captured modeled count movement from 101 to 106
+- remaining captured gap movement from 5 to 0
+- scaffold and command lookup test updates
+- passive list/report fixture updates
+- no new CLI command
+- no handler
+- no dispatch
+- no current-profile mutation execution
+- no selected-profile runtime mutation
+- no depth execution
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+- no package metadata changes
+
+Safe next options are:
+
+- pause at this clean checkpoint
+- write a broader V1.34 passive metadata completion report
+- review whether any uncaptured V1.34 behavior still needs documentation
+- continue only with explicitly approved passive/mock planning or test work
 
 The latest generic current-profile mutation passive metadata expansion plan
 review is:
