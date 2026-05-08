@@ -67,9 +67,36 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is passive/project documentation, a broader user-facing
-progress report, or a pause at this accepted no-dependency session handoff
-checkpoint.
+Next recommended task is a documentation-only review/acceptance gate for the
+user-facing no-dependency progress report, continued passive/project
+documentation, or a pause at this accepted progress checkpoint.
+
+The latest user-facing no-dependency progress report is:
+
+- `Docs/USER_FACING_NO_DEPENDENCY_PROGRESS_REPORT.md`
+
+The report records:
+
+- ca24796 Add no-dependency roadmap session handoff
+- Passive/Mock Foundation Phase with fake-provider-only adapter boundary
+  safety
+- passive CLI and dry-run visibility are mature
+- mock MIDI and mock message mapping are established
+- mock-first active boundary is established for one safe candidate
+- Candidate A remains the accepted no-dependency path
+- dependency selection remains deferred
+- package metadata remains unchanged
+- no `mido`
+- no real MIDI dependency
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+- hardware remains off
+
+The report is a broader user-facing project summary. It does not authorize
+dependency selection, package metadata changes, real MIDI implementation,
+active CLI behavior, hardware validation, or turning hardware on.
 
 The latest no-dependency session handoff is:
 
