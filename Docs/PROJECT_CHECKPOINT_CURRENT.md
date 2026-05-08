@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c1a6c89 Add V1.34 behavior parity scene group matrix review
 - dc578e5 Add V1.34 behavior parity scene group intent matrix slice
 - 9b34d22 Add V1.34 behavior parity mutation depth matrix review
 - 9b8b31c Add V1.34 behavior parity mutation depth matrix slice
@@ -1807,6 +1808,50 @@ package metadata, hardware behavior, or hardware validation was added.
 
 The next recommended branch is a docs-only Pad 1 lane behavior parity matrix
 slice.
+
+## V1.34 Behavior Parity Matrix Pad 1 Lane Behavior Slice
+
+The V1.34 behavior parity matrix Pad 1 lane behavior slice documents the next
+set of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD1_LANE_BEHAVIOR_SLICE.md`
+
+Current baseline before this slice:
+
+- c1a6c89 Add V1.34 behavior parity scene group matrix review
+
+The slice includes command keys:
+
+- `BM`
+- `FT`
+- `FK`
+- `FG`
+- `PT`
+- `PK`
+- `PX`
+- `ST`
+- `SK`
+- `SC`
+
+The slice records Pad 1 current BD engine mutation, BD FM discovery, BD
+Plastic discovery, and BD Silky discovery rows as captured passive metadata
+with current modular behavior status `passive-only`.
+
+It records behavior gaps for future parity work without closing them.
+
+Pad 1 discovery behavior is marked as `forbidden-early-scope` planning
+vocabulary because discovery/randomization commands remain unsuitable for the
+earliest active/hardware validation phase.
+
+The next recommended branch is a docs-only review/acceptance gate for this
+Pad 1 lane behavior matrix slice.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 

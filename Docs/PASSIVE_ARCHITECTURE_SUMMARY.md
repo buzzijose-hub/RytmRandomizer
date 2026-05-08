@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-dc578e5
+c1a6c89
 
 ## Protected Reference
 
@@ -54,8 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: dc578e5 Add V1.34 behavior parity scene group intent matrix
-  slice
+- current HEAD: c1a6c89 Add V1.34 behavior parity scene group matrix review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -73,13 +72,15 @@ It captures:
   accepted; the next docs-only matrix slice for mutation-depth and guarded
   numeric input commands is now documented and accepted; the next docs-only
   matrix slice for scene and group intent commands is now documented and
-  accepted
+  accepted; the next docs-only matrix slice for Pad 1 lane behavior is now
+  documented and awaiting review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Pad 1 lane behavior parity matrix slice, or
-  pause at the clean accepted scene/group intent matrix slice checkpoint
+- next recommended task: docs-only review/acceptance gate for the Pad 1 lane
+  behavior parity matrix slice, or pause at the clean docs-only matrix
+  checkpoint
 - closeout command
 - stop condition
 
@@ -628,6 +629,46 @@ The review recommends a docs-only Pad 1 lane behavior matrix slice next.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Pad 1 Lane Behavior Slice
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD1_LANE_BEHAVIOR_SLICE.md` documents the
+next behavior parity matrix rows using the accepted schema.
+
+The slice covers:
+
+- Pad 1 current BD engine mutation row from `PAD1_COMMANDS`
+- Pad 1 BD FM discovery/mutation rows from `PAD1_COMMANDS`
+- Pad 1 BD Plastic discovery/mutation rows from `PAD1_COMMANDS`
+- Pad 1 BD Silky discovery/mutation rows from `PAD1_COMMANDS`
+
+Included command keys:
+
+- `BM`
+- `FT`
+- `FK`
+- `FG`
+- `PT`
+- `PK`
+- `PX`
+- `ST`
+- `SK`
+- `SC`
+
+The slice records every row as captured passive metadata and current modular
+behavior status `passive-only`. It records Pad 1 current-engine mutation,
+BD FM discovery, BD Plastic discovery, and BD Silky discovery parity gaps
+without closing them.
+
+Pad 1 discovery behavior is recorded as `forbidden-early-scope` planning
+vocabulary because discovery/randomization commands remain unsuitable for the
+earliest active/hardware validation phase.
+
+The slice recommends a docs-only review/acceptance gate next.
+
+The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
+command execution, scene execution, MIDI, port opening, package metadata
+changes, active CLI commands, hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
