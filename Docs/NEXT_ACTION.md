@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-38c9f6b Add V1.34 uncaptured behavior review
+9393a99 Add mock fake-provider active-boundary strengthening plan
 
 ## Current Phase
 
@@ -67,9 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the mock/fake-provider
-active-boundary strengthening plan, or a pause at the clean completion
-checkpoint.
+Next recommended task is Packet 1: active-boundary metadata strengthening for
+the existing group profile `"2"` / My BD Hard candidate, or a pause at the
+clean completion checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -128,6 +128,23 @@ It records:
 The plan is documentation-only. It does not add tests, edit runtime code,
 change CLI behavior, send MIDI, open ports, add active execution, or authorize
 hardware validation.
+
+The latest mock/fake-provider active-boundary strengthening plan review is:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PLAN.md`
+- Packet 1 as the next recommended implementation slice
+- profile `"2"` / My BD Hard as the only accepted active-boundary candidate
+- no parallel implementation for Packet 1 because ownership is concentrated in
+  `active_boundary.py` and `tests/test_active_boundary.py`
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port opening, MIDI sending, hardware validation, Analog Four support,
+Pads 5-12 support, and machine/profile expansion frozen.
 
 The latest user-facing project progress report is:
 

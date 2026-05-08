@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9393a99 Add mock fake-provider active-boundary strengthening plan
 - 38c9f6b Add V1.34 uncaptured behavior review
 - 7ed4fdc Add next phase planning gate
 - f01ed9e Add user-facing project progress report
@@ -308,6 +309,40 @@ changes, port opening, MIDI sending, hardware validation, Analog Four support,
 Pads 5-12 support, and machine/profile expansion frozen.
 
 The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
+dispatch, command execution, scene execution, MIDI, port opening, hardware
+behavior, package metadata changes, or hardware validation.
+
+## Mock/Fake-Provider Active-Boundary Strengthening Plan Review
+
+The mock/fake-provider active-boundary strengthening plan review accepts
+`Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PLAN.md` as the current
+gate for future boundary strengthening.
+
+Accepted boundary state:
+
+- profile `"2"` / My BD Hard remains the only accepted active-boundary
+  candidate
+- `armed=True` and `dry_run_confirmed=True` remain required
+- an injected `MockMidiSender` remains required
+- safe failures emit no messages
+- `rytm_randomizer/real_midi_adapter.py` remains fake-provider-only
+- explicit injected providers remain required
+- real MIDI libraries, hardware discovery, real port opening, and real MIDI
+  sending remain absent
+
+The review accepts Packet 1 as the next recommended implementation slice:
+active-boundary metadata strengthening in `rytm_randomizer/active_boundary.py`
+and `tests/test_active_boundary.py` only.
+
+Parallel implementation is not recommended for Packet 1 because the intended
+ownership is tiny and concentrated in the same files.
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port opening, MIDI sending, hardware validation, Analog Four support,
+Pads 5-12 support, and machine/profile expansion frozen.
+
+The review is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, command execution, scene execution, MIDI, port opening, hardware
 behavior, package metadata changes, or hardware validation.
 
