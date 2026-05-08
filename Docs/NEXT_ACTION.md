@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5c43496 Refresh handoff after packets 1-4 progress review
+d5c0413 Add next strengthening sequence planning gate
 
 ## Current Phase
 
@@ -21,7 +21,7 @@ report has been created and accepted as the current consolidation checkpoint.
 A broader project-level progress report after Packets 1 through 4 has been
 created and accepted as the latest orientation checkpoint. The latest session
 handoff records this clean leave-off point. The next strengthening sequence
-planning gate has been created and awaits review.
+planning gate has been created and accepted.
 
 ## Current Safety State
 
@@ -76,9 +76,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance gate for the
-next strengthening sequence planning gate, or a pause at the clean planning
-checkpoint.
+Next recommended task is a docs-only behavior-parity roadmap, or a pause at
+the clean accepted planning gate.
 
 The latest next strengthening sequence planning gate is:
 
@@ -96,6 +95,23 @@ It records:
   hardware validation
 - no parallel implementation recommended for the immediate next slice
 - hardware-off reminder
+
+The latest next strengthening sequence planning gate review is:
+
+- `Docs/NEXT_STRENGTHENING_SEQUENCE_PLANNING_GATE_REVIEW.md`
+
+It accepts:
+
+- `Docs/NEXT_STRENGTHENING_SEQUENCE_PLANNING_GATE.md`
+- d5c0413 Add next strengthening sequence planning gate
+- behavior-parity roadmap as the preferred next docs-only branch
+- fake-provider adapter follow-up planning as an optional later branch
+- active-boundary safety planning as an optional later branch
+- no parallel implementation for the immediate next slice
+- no real MIDI, ports, active CLI behavior, execution, package metadata, or
+  hardware validation
+
+The review recommends a docs-only behavior-parity roadmap next.
 
 The latest current-session handoff is:
 
