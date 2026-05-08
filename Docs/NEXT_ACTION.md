@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-af3c615 Add V1.34 behavior parity Pad 4 lane matrix slice
+04277a5 Add V1.34 behavior parity Pad 4 lane matrix review
 
 ## Current Phase
 
@@ -39,6 +39,8 @@ The next docs-only behavior parity matrix slice for Pad 3 lane behavior has
 now been documented and accepted.
 The next docs-only behavior parity matrix slice for Pad 4 lane behavior has
 now been documented and accepted.
+The next docs-only behavior parity matrix slice for undo/commit/state
+behavior has now been documented and is awaiting review.
 
 ## Current Safety State
 
@@ -93,11 +95,32 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only undo/commit/state behavior parity matrix
-slice, or a pause at this clean accepted Pad 4 lane behavior matrix slice
-checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the
+undo/commit/state behavior parity matrix slice, or a pause at this clean
+docs-only matrix checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_UNDO_COMMIT_STATE_SLICE.md`
+
+It records:
+
+- state utility rows from `STATE_UTILITY_COMMANDS`
+- command keys `B`, `E`, `W`, and `U`
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- undo/commit/state behavior and future test categories as planning
+  vocabulary only
+
+The slice confirms no implementation, tests, runtime code, dispatch,
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, or hardware validation was added.
+
+The slice recommends a docs-only review/acceptance gate next before any
+broader matrix progress review.
+
+The latest accepted V1.34 behavior parity matrix slice before that is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD4_LANE_BEHAVIOR_SLICE.md`
 

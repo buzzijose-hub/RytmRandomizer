@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 04277a5 Add V1.34 behavior parity Pad 4 lane matrix review
 - af3c615 Add V1.34 behavior parity Pad 4 lane matrix slice
 - deda7af Add V1.34 behavior parity Pad 3 lane matrix review
 - 1da5569 Add V1.34 behavior parity Pad 3 lane matrix slice
@@ -2106,6 +2107,40 @@ The next recommended branch is a docs-only undo/commit/state behavior parity
 matrix slice.
 
 The review is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
+
+## V1.34 Behavior Parity Matrix Undo Commit State Slice
+
+The V1.34 behavior parity matrix undo/commit/state slice documents the next
+set of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_UNDO_COMMIT_STATE_SLICE.md`
+
+Current baseline before this slice:
+
+- 04277a5 Add V1.34 behavior parity Pad 4 lane matrix review
+
+The slice includes command keys:
+
+- `B`
+- `E`
+- `W`
+- `U`
+
+The slice records current-anchor return, anchor commit, waveform exploration,
+and undo behavior as captured passive metadata with current modular behavior
+status `passive-only`.
+
+It records behavior gaps for future parity work without closing them.
+
+The next recommended branch is a docs-only review/acceptance gate for this
+undo/commit/state behavior matrix slice.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.

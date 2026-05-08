@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-af3c615
+04277a5
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: af3c615 Add V1.34 behavior parity Pad 4 lane matrix slice
+- current HEAD: 04277a5 Add V1.34 behavior parity Pad 4 lane matrix review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -76,14 +76,16 @@ It captures:
   documented and accepted; the next docs-only matrix slice for Pad 2 lane
   behavior is now documented and accepted; the next docs-only matrix slice for
   Pad 3 lane behavior is now documented and accepted; the next docs-only
-  matrix slice for Pad 4 lane behavior is now documented and accepted
+  matrix slice for Pad 4 lane behavior is now documented and accepted; the
+  next docs-only matrix slice for undo/commit/state behavior is now
+  documented and awaiting review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only undo/commit/state behavior parity matrix
-  slice, or pause at the clean accepted Pad 4 lane behavior matrix slice
-  checkpoint
+- next recommended task: docs-only review/acceptance gate for the
+  undo/commit/state behavior parity matrix slice, or pause at the clean
+  docs-only matrix checkpoint
 - closeout command
 - stop condition
 
@@ -890,6 +892,34 @@ next.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Undo Commit State Slice
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_UNDO_COMMIT_STATE_SLICE.md` documents the
+next behavior parity matrix rows using the accepted schema.
+
+The slice covers:
+
+- state utility rows from `STATE_UTILITY_COMMANDS`
+
+Included command keys:
+
+- `B`
+- `E`
+- `W`
+- `U`
+
+The slice records every row as captured passive metadata and current modular
+behavior status `passive-only`. It records current-anchor return, anchor
+commit, waveform exploration, and undo behavior parity gaps without closing
+them.
+
+The slice recommends a docs-only review/acceptance gate next before any
+broader matrix progress review.
+
+The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
+command execution, scene execution, MIDI, port opening, package metadata
+changes, active CLI commands, hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
