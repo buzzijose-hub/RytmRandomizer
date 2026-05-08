@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f2348d3
+e9f54de
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f2348d3 Add V1.34 behavior parity anchor profile matrix slice
+- current HEAD: e9f54de Add V1.34 behavior parity anchor profile matrix review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -69,14 +69,15 @@ It captures:
   the first matrix-planning slice; the first docs-only matrix slice for
   menu/status and utility commands is now documented and accepted; the next
   docs-only matrix slice for anchor/profile commands is now documented and
-  accepted
+  accepted; the next docs-only matrix slice for mutation-depth and guarded
+  numeric input commands is now documented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only mutation-depth and guarded numeric input
-  behavior parity matrix slice, or pause at the clean accepted anchor/profile
-  matrix slice checkpoint
+- next recommended task: docs-only review/acceptance gate for the
+  mutation-depth and guarded numeric input behavior parity matrix slice, or
+  pause at the clean mutation-depth matrix slice checkpoint
 - closeout command
 - stop condition
 
@@ -458,6 +459,54 @@ behavior parity matrix slice next.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Mutation-Depth And Guarded Input Slice
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_MUTATION_DEPTH_GUARDED_INPUT_SLICE.md`
+documents the next behavior parity matrix rows using the accepted schema.
+
+The slice covers:
+
+- guarded main-prompt numeric depth input rows generated from
+  `GUARDED_MAIN_PROMPT_DEPTH_COMMANDS`
+- legacy single-profile mutation rows from
+  `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`
+- current-profile page mutation rows from
+  `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+- selected isolated pad mutation rows from `ISOLATED_PAD_MUTATION_COMMANDS`
+
+Included command keys:
+
+- `1`
+- `2`
+- `3`
+- `M1`
+- `M2`
+- `M3`
+- `S`
+- `F`
+- `A`
+- `G`
+- `K`
+- `PM`
+- `PS`
+- `PF`
+- `PA`
+- `PL`
+- `PO`
+- `PB`
+- `PG`
+
+The slice records every row as captured passive metadata and current modular
+behavior status `passive-only`. It intentionally documents parity gaps rather
+than closing them.
+
+The next recommended task is a docs-only review/acceptance gate before adding
+more matrix rows.
+
+The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
+MIDI, port opening, package metadata changes, active CLI commands, hardware
+behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 

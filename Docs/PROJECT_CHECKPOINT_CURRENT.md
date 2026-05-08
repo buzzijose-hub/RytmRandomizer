@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e9f54de Add V1.34 behavior parity anchor profile matrix review
 - f2348d3 Add V1.34 behavior parity anchor profile matrix slice
 - 892d9b6 Add V1.34 behavior parity menu utility matrix review
 - 2f46180 Add V1.34 behavior parity menu utility matrix slice
@@ -1619,6 +1620,56 @@ package metadata, hardware behavior, or hardware validation was added.
 
 The next recommended branch is a docs-only mutation-depth and guarded numeric
 input behavior parity matrix slice.
+
+## V1.34 Behavior Parity Matrix Mutation-Depth And Guarded Input Slice
+
+The V1.34 behavior parity matrix mutation-depth and guarded input slice
+documents the next set of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MUTATION_DEPTH_GUARDED_INPUT_SLICE.md`
+
+Current baseline before this slice:
+
+- e9f54de Add V1.34 behavior parity anchor profile matrix review
+
+The slice includes command keys:
+
+- `1`
+- `2`
+- `3`
+- `M1`
+- `M2`
+- `M3`
+- `S`
+- `F`
+- `A`
+- `G`
+- `K`
+- `PM`
+- `PS`
+- `PF`
+- `PA`
+- `PL`
+- `PO`
+- `PB`
+- `PG`
+
+The slice records guarded numeric depth inputs, legacy fixed-depth mutation
+commands, current-profile page mutations that require depth selection, and
+selected isolated pad mutation rows as captured passive metadata with current
+modular behavior status `passive-only`.
+
+It records behavior gaps for future parity work without closing them.
+
+The slice recommends a documentation-only review/acceptance gate next before
+adding scene/group intent, lane-specific mutation, undo/commit, or state rows.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 

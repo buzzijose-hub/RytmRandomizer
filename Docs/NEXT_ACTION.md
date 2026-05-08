@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f2348d3 Add V1.34 behavior parity anchor profile matrix slice
+e9f54de Add V1.34 behavior parity anchor profile matrix review
 
 ## Current Phase
 
@@ -27,7 +27,9 @@ V1.34 behavior parity matrix plan has now been documented and accepted as the
 first matrix-planning slice. The first docs-only behavior parity matrix slice
 for menu/status and utility commands has now been documented and accepted. The
 next docs-only behavior parity matrix slice for anchor/profile commands has
-now been documented and accepted.
+now been documented and accepted. The next docs-only behavior parity matrix
+slice for mutation-depth and guarded numeric input commands has now been
+documented.
 
 ## Current Safety State
 
@@ -82,11 +84,38 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only mutation-depth and guarded numeric input
-behavior parity matrix slice, or a pause at this clean accepted
-anchor/profile matrix slice checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the
+mutation-depth and guarded numeric input behavior parity matrix slice, or a
+pause at this clean mutation-depth matrix slice checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MUTATION_DEPTH_GUARDED_INPUT_SLICE.md`
+
+It records:
+
+- guarded main-prompt numeric depth input rows generated from
+  `GUARDED_MAIN_PROMPT_DEPTH_COMMANDS`
+- legacy single-profile mutation rows from
+  `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`
+- current-profile page mutation rows from
+  `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+- selected isolated pad mutation rows from `ISOLATED_PAD_MUTATION_COMMANDS`
+- command keys `1`, `2`, `3`, `M1`, `M2`, `M3`, `S`, `F`, `A`, `G`, `K`,
+  `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- future artifact and test categories as planning vocabulary only
+
+The slice confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, active CLI behavior, package metadata, or
+hardware validation was added.
+
+The slice recommends a docs-only review/acceptance gate next before adding
+more matrix rows.
+
+The latest accepted V1.34 behavior parity matrix slice before that is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_ANCHOR_PROFILE_SLICE.md`
 
