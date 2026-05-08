@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2f46180 Add V1.34 behavior parity menu utility matrix slice
 - 0a9b8f5 Add V1.34 behavior parity matrix plan review
 - 3f991d3 Add V1.34 behavior parity matrix plan
 - af0deee Add behavior parity roadmap review
@@ -1473,14 +1474,48 @@ The slice records these rows as captured passive metadata with current modular
 behavior status `passive-only`. It records behavior gaps for future parity work
 without closing them.
 
-The slice recommends a documentation-only review/acceptance gate next before
-adding anchor/profile, mutation, scene, lane-specific, undo/commit, or state
-rows.
+That review is now complete.
 
 The slice is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.
+
+## V1.34 Behavior Parity Matrix Menu/Utility Slice Review
+
+The V1.34 behavior parity matrix menu/utility slice review accepts the first
+behavior parity matrix slice as the current first matrix checkpoint.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE_REVIEW.md`
+
+Accepted slice:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE.md`
+
+Accepted slice commit:
+
+- 2f46180 Add V1.34 behavior parity menu utility matrix slice
+
+The review accepts:
+
+- menu/status display commands from `MENU_COMMANDS`
+- core utility/session commands from `UTILITY_COMMANDS`
+- all 17 included command keys
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- future artifact and test categories as planning vocabulary only
+
+The review confirms the slice records behavior gaps rather than closing them.
+
+The review confirms no implementation, tests, runtime code, dispatch, command
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, hardware behavior, or hardware validation was added.
+
+The next recommended branch is a docs-only anchor/profile behavior parity
+matrix slice.
 
 ## User-Facing Project Progress Report
 

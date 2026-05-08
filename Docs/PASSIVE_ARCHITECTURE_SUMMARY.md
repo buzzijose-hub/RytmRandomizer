@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-0a9b8f5
+2f46180
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 0a9b8f5 Add V1.34 behavior parity matrix plan review
+- current HEAD: 2f46180 Add V1.34 behavior parity menu utility matrix slice
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -67,13 +67,13 @@ It captures:
   now documented and accepted as the preferred next branch after that accepted
   gate; a V1.34 behavior parity matrix plan is now documented and accepted as
   the first matrix-planning slice; the first docs-only matrix slice for
-  menu/status and utility commands is now documented
+  menu/status and utility commands is now documented and accepted
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only review/acceptance gate for the first
-  matrix slice, or pause at the clean menu/status and utility matrix slice
+- next recommended task: docs-only anchor/profile behavior parity matrix
+  slice, or pause at the clean accepted menu/status and utility matrix slice
   checkpoint
 - closeout command
 - stop condition
@@ -322,12 +322,43 @@ The slice records every row as captured passive metadata and current modular
 behavior status `passive-only`. It intentionally documents parity gaps rather
 than closing them.
 
-The next recommended task is a docs-only review/acceptance gate before adding
-more matrix rows.
+That review is now complete.
 
 The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
 MIDI, port opening, package metadata changes, active CLI commands, hardware
 behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Menu/Utility Slice Review
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE_REVIEW.md` accepts the
+first behavior parity matrix slice.
+
+Accepted slice:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE.md`
+
+Accepted slice commit:
+
+- 2f46180 Add V1.34 behavior parity menu utility matrix slice
+
+The review accepts:
+
+- menu/status display commands from `MENU_COMMANDS`
+- core utility/session commands from `UTILITY_COMMANDS`
+- the 17 included command keys
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- future artifact and test categories as planning vocabulary only
+
+The review confirms the slice records behavior gaps rather than closing them.
+
+The review recommends a docs-only anchor/profile behavior parity matrix slice
+next.
+
+The review adds no implementation, tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, package metadata changes, active CLI commands,
+hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
