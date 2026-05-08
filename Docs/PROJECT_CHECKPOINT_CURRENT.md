@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5ddac4b Add V1.34 passive registry gap review
 - a9d6e1d Add V1.34 operator command surface reference
 - 6219d86 Add package metadata no-dependency plan review
 - d16fd37 Add package metadata no-dependency plan
@@ -241,6 +242,29 @@ The first recommended future gap category is:
 
 Any future metadata expansion must be separately planned, reviewed, and kept
 passive/scaffold-only unless a later explicit approval says otherwise.
+
+## V1.34 Passive Registry Gap Review Acceptance
+
+The passive registry gap review is accepted as the current planning checkpoint:
+
+- Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW_ACCEPTANCE.md
+
+The acceptance records:
+
+- 106 captured V1.34 operator command entries
+- 79 currently modeled as passive command metadata
+- 27 currently not modeled as passive command metadata
+- scene commands `S0` through `S5` modeled
+- group profile metadata for `2`, `3`, `4`, and `5` present
+- `T`, `C`, and `Q` as the first future planning target
+
+The acceptance does not authorize metadata expansion, tests, CLI wiring,
+runtime behavior, dispatch, real MIDI, port opening, MIDI sending, active
+behavior, hardware behavior, package metadata, dependency selection, or
+hardware validation.
+
+Recommended next task is a documentation-only passive metadata expansion plan
+for `T`, `C`, and `Q`.
 
 ## Current Priority
 

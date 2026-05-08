@@ -285,6 +285,10 @@ No implementation is added by this slice.
 
 Review and accept this gap review.
 
+That acceptance now lives in:
+
+- `Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW_ACCEPTANCE.md`
+
 Then, if useful, create a tiny passive metadata expansion plan for the first
 gap category:
 

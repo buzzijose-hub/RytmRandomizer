@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a9d6e1d
+5ddac4b
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6219d86 Add package metadata no-dependency plan review
+- current HEAD: 5ddac4b Add V1.34 passive registry gap review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
@@ -124,6 +124,28 @@ The gap review is documentation-only. It adds no metadata, tests, runtime
 behavior, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
 metadata, dependency selection, active behavior, hardware behavior, or hardware
 validation.
+
+## V1.34 Passive Registry Gap Review Acceptance
+
+`Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW_ACCEPTANCE.md` accepts the passive
+registry gap review as the current planning checkpoint.
+
+It accepts:
+
+- 106 captured V1.34 operator command entries
+- 79 currently modeled as passive command metadata
+- 27 currently not modeled as passive command metadata
+- scene commands `S0` through `S5` modeled
+- group profile metadata for `2`, `3`, `4`, and `5` present
+- `T`, `C`, and `Q` as the first future planning target
+
+The acceptance gate does not authorize metadata expansion. It recommends a
+documentation-only passive metadata expansion plan for `T`, `C`, and `Q`
+before any command metadata, tests, or implementation are edited.
+
+It adds no runtime behavior, CLI wiring, dispatch, real MIDI, ports, MIDI
+sending, package metadata, dependency selection, active behavior, hardware
+behavior, or hardware validation.
 
 ## Session Agenda Current Handoff Refresh
 

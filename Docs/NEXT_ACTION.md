@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a9d6e1d Add V1.34 operator command surface reference
+5ddac4b Add V1.34 passive registry gap review
 
 ## Current Phase
 
@@ -67,9 +67,31 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the V1.34 passive registry gap
-review, followed by a tiny docs-only passive metadata expansion plan for the
-first gap category if useful.
+Next recommended task is a documentation-only passive metadata expansion plan
+for the accepted first gap category:
+
+- `T`
+- `C`
+- `Q`
+
+The latest V1.34 passive registry gap review acceptance is:
+
+- `Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW_ACCEPTANCE.md`
+
+It accepts:
+
+- `Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW.md`
+- 106 captured V1.34 operator command entries
+- 79 currently modeled as passive command metadata
+- 27 currently not modeled as passive command metadata
+- scene commands `S0` through `S5` modeled
+- group profile metadata for `2`, `3`, `4`, and `5` present
+- `T`, `C`, and `Q` as the first future planning target
+
+The acceptance gate is documentation-only. It does not authorize metadata
+expansion, tests, CLI wiring, runtime behavior, dispatch, real MIDI, ports,
+MIDI sending, package metadata, dependency selection, active behavior,
+hardware behavior, or hardware validation.
 
 The latest V1.34 passive registry gap review is:
 
