@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d8fd5e2 Add passive CLI safety regression sweep
+0d22ad2 Add passive CLI safety regression sweep checkpoint review
 
 ## Current Phase
 
@@ -16,7 +16,8 @@ MIDI adapter boundary now present. Packets 1, 2, and 3 in the current
 mock/fake-provider active-boundary strengthening sequence are complete and
 reviewed. Packet 4 passive CLI safety regression sweep is complete,
 checkpointed, and accepted. Packets 1 through 4 in the current strengthening
-sequence are now complete and reviewed.
+sequence are now complete and reviewed. The Packets 1 through 4 progress
+report has been created as the current consolidation checkpoint.
 
 ## Current Safety State
 
@@ -71,9 +72,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader active-boundary strengthening progress
-report covering Packets 1 through 4, or a pause at the clean Packet 4 review
-checkpoint.
+Next recommended task is a documentation-only review/acceptance gate for the
+Packets 1 through 4 active-boundary strengthening progress report, or a pause
+at the clean consolidation checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -526,6 +527,29 @@ active-boundary strengthening sequence as complete and reviewed.
 
 The review recommends a broader active-boundary strengthening progress report
 covering Packets 1 through 4 next.
+
+The latest Packets 1 through 4 active-boundary strengthening progress report
+is:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PACKETS_1_4_PROGRESS_REPORT.md`
+
+It records:
+
+- Packet 1 active-boundary metadata strengthening complete and reviewed
+- Packet 2 active-boundary report alignment complete and reviewed
+- Packet 3 fake-provider adapter guard strengthening complete and reviewed
+- Packet 4 passive CLI safety regression sweep complete and reviewed
+- the current mock-first active-boundary state
+- the current read-only `active-boundary-report` visibility state
+- the current fake-provider-only adapter boundary
+- the current passive CLI safety boundary
+- closeout coverage through real MIDI import safety, passive CLI safety, and
+  adapter boundary tests
+- real MIDI, ports, active CLI commands, dispatch, execution, package
+  metadata, and hardware validation remain absent
+
+The report recommends a documentation-only review/acceptance gate next, or a
+pause at the clean Packets 1 through 4 consolidation checkpoint.
 
 The latest user-facing project progress report is:
 
