@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9b8b31c Add V1.34 behavior parity mutation depth matrix slice
 - e9f54de Add V1.34 behavior parity anchor profile matrix review
 - f2348d3 Add V1.34 behavior parity anchor profile matrix slice
 - 892d9b6 Add V1.34 behavior parity menu utility matrix review
@@ -1663,13 +1664,54 @@ modular behavior status `passive-only`.
 
 It records behavior gaps for future parity work without closing them.
 
-The slice recommends a documentation-only review/acceptance gate next before
-adding scene/group intent, lane-specific mutation, undo/commit, or state rows.
+That review is now complete.
 
 The slice is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.
+
+## V1.34 Behavior Parity Matrix Mutation-Depth And Guarded Input Slice Review
+
+The V1.34 behavior parity matrix mutation-depth and guarded input slice review
+accepts the third behavior parity matrix slice as the current matrix
+checkpoint.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MUTATION_DEPTH_GUARDED_INPUT_SLICE_REVIEW.md`
+
+Accepted slice:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MUTATION_DEPTH_GUARDED_INPUT_SLICE.md`
+
+Accepted slice commit:
+
+- 9b8b31c Add V1.34 behavior parity mutation depth matrix slice
+
+The review accepts:
+
+- guarded main-prompt depth input rows generated from
+  `GUARDED_MAIN_PROMPT_DEPTH_COMMANDS`
+- legacy single-profile mutation rows from
+  `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`
+- current-profile page mutation rows from
+  `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+- selected isolated pad mutation rows from `ISOLATED_PAD_MUTATION_COMMANDS`
+- all 19 included command keys
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- future artifact and test categories as planning vocabulary only
+
+The review confirms the slice records behavior gaps rather than closing them.
+
+The review confirms no implementation, tests, runtime code, dispatch, command
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, hardware behavior, or hardware validation was added.
+
+The next recommended branch is a docs-only scene and group intent behavior
+parity matrix slice.
 
 ## User-Facing Project Progress Report
 
