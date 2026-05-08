@@ -269,6 +269,10 @@ Then, if useful, create a docs-only passive registry gap review that compares
 this captured surface against the current passive command/scene/profile
 metadata.
 
+That comparison now lives in:
+
+- `Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW.md`
+
 Hardware remains off.
 
 No implementation is added by this slice.

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6219d86
+a9d6e1d
 
 ## Protected Reference
 
@@ -97,6 +97,33 @@ review.
 It adds no package metadata, no dependency selection, no `mido`, no real MIDI
 dependency, no port opening, no MIDI sending, no active CLI command, no
 hardware validation, and no hardware-on authorization.
+
+## V1.34 Passive Registry Gap Review
+
+`Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW.md` compares the captured V1.34
+operator command surface against the current passive registry.
+
+It records:
+
+- 106 captured operator command entries
+- 79 currently modeled as passive command metadata
+- 27 currently not modeled as passive command metadata
+- scene commands `S0` through `S5` modeled
+- group profile metadata for `2`, `3`, `4`, and `5` present
+
+The documented gaps are target/channel selection, isolated single-pad
+selection/mutation, profile selection/loading, legacy single-profile mutation,
+generic current-profile page mutation, anchor/state utilities, and the quit
+utility.
+
+The recommended first future gap category is:
+
+- `T`, `C`, and `Q`
+
+The gap review is documentation-only. It adds no metadata, tests, runtime
+behavior, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, active behavior, hardware behavior, or hardware
+validation.
 
 ## Session Agenda Current Handoff Refresh
 

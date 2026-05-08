@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a9d6e1d Add V1.34 operator command surface reference
 - 6219d86 Add package metadata no-dependency plan review
 - d16fd37 Add package metadata no-dependency plan
 - bae5746 Add no-dependency user-facing progress report review
@@ -213,6 +214,33 @@ execution, hardware behavior, hardware validation, Analog Four support, Pads
 Recommended follow-up is a docs-only passive registry gap review comparing the
 captured operator command surface against current passive command/scene/profile
 metadata.
+
+## V1.34 Passive Registry Gap Review
+
+The captured V1.34 operator command surface has been compared against the
+current passive registry:
+
+- Docs/V134_PASSIVE_REGISTRY_GAP_REVIEW.md
+
+The review records:
+
+- 106 captured operator command entries
+- 79 currently modeled as passive command metadata
+- 27 currently not modeled as passive command metadata
+- scene commands `S0` through `S5` modeled
+- group profile metadata for `2`, `3`, `4`, and `5` present
+
+The remaining gaps are documentation-only planning inputs. They do not add
+metadata, tests, CLI wiring, runtime behavior, dispatch, real MIDI, port
+opening, MIDI sending, active behavior, hardware behavior, package metadata,
+dependency selection, or hardware validation.
+
+The first recommended future gap category is:
+
+- `T`, `C`, and `Q`
+
+Any future metadata expansion must be separately planned, reviewed, and kept
+passive/scaffold-only unless a later explicit approval says otherwise.
 
 ## Current Priority
 
