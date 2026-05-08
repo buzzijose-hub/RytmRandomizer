@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e8b3403 Strengthen active boundary metadata
+- 5220bc3 Add mock fake-provider active-boundary strengthening review
 - 9393a99 Add mock fake-provider active-boundary strengthening plan
 - 38c9f6b Add V1.34 uncaptured behavior review
 - 7ed4fdc Add next phase planning gate
@@ -345,6 +347,47 @@ Pads 5-12 support, and machine/profile expansion frozen.
 The review is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, command execution, scene execution, MIDI, port opening, hardware
 behavior, package metadata changes, or hardware validation.
+
+## Active Boundary Metadata Strengthening Checkpoint
+
+The active-boundary metadata strengthening checkpoint records completion of
+Packet 1 from the mock/fake-provider active-boundary strengthening plan.
+
+The milestone commit is:
+
+- e8b3403 Strengthen active boundary metadata
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+
+The active-boundary result metadata now includes:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- source kind and source key
+- target
+- armed state
+- dry-run confirmation state
+- optional operator intent
+- mock-only status
+- sends-real-MIDI status
+- failure reason on failure paths
+
+The milestone added tests for accepted result metadata and safe-failure
+metadata. It preserves profile `"2"` / My BD Hard as the only accepted
+active-boundary candidate, keeps profile `"3"` unsupported by the active
+boundary, and keeps profile `"4"` parked and unsupported.
+
+The checkpoint confirms targeted active-boundary tests passed, full closeout
+passed, V1.34 reference diff was empty, package metadata files remained absent,
+and git status was clean.
+
+The milestone adds no real MIDI, port opening, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, package metadata
+changes, profile `"3"` active-boundary support, profile `"4"`
+implementation, or hardware validation.
 
 ## User-Facing Project Progress Report
 

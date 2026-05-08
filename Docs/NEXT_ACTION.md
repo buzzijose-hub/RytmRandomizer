@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9393a99 Add mock fake-provider active-boundary strengthening plan
+e8b3403 Strengthen active boundary metadata
 
 ## Current Phase
 
@@ -67,9 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is Packet 1: active-boundary metadata strengthening for
-the existing group profile `"2"` / My BD Hard candidate, or a pause at the
-clean completion checkpoint.
+Next recommended task is review/acceptance of the completed active-boundary
+metadata strengthening checkpoint, or a pause at the clean completion
+checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -145,6 +145,27 @@ The review keeps profile `"3"` active-boundary support, profile `"4"`
 implementation, active CLI commands, real MIDI dependencies, package metadata
 changes, port opening, MIDI sending, hardware validation, Analog Four support,
 Pads 5-12 support, and machine/profile expansion frozen.
+
+The latest active-boundary metadata strengthening checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT.md`
+
+It records:
+
+- e8b3403 Strengthen active boundary metadata
+- Packet 1 from the mock/fake-provider strengthening plan is complete
+- active-boundary accepted and failure results now carry deterministic
+  boundary metadata
+- failure metadata includes safe-failure reason
+- profile `"2"` / My BD Hard remains the only accepted active-boundary
+  candidate
+- profile `"3"` active-boundary support and profile `"4"` implementation
+  remain frozen
+- no real MIDI, port opening, active CLI command, dispatch, execution, package
+  metadata change, or hardware validation was added
+
+The checkpoint recommends a documentation-only review/acceptance gate before
+Packet 2.
 
 The latest user-facing project progress report is:
 

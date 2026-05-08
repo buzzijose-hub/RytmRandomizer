@@ -149,16 +149,20 @@ such as separate report alignment and fake-provider adapter guard work.
 
 Safe next options:
 
-- implement Packet 1 as a tiny test-first active-boundary metadata
-  strengthening slice
+- review and accept the completed Packet 1 active-boundary metadata
+  strengthening checkpoint
 - create a more detailed Packet 1 implementation plan if needed
 - pause at this clean review checkpoint
 - write a broader roadmap/timeline update
 
 ## Recommendation
 
-Proceed next with Packet 1 only: active-boundary metadata strengthening for the
-existing accepted candidate, group profile `"2"` / My BD Hard.
+Packet 1 has now been completed in:
+
+- e8b3403 Strengthen active boundary metadata
+
+Proceed next with a documentation-only review/acceptance checkpoint for the
+completed Packet 1 milestone before Packet 2.
 
 Do not widen active-boundary support. Do not add real MIDI. Do not turn on
 hardware.

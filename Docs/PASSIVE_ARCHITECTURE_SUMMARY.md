@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-9393a99
+e8b3403
 
 ## Protected Reference
 
@@ -54,17 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 9393a99 Add mock fake-provider active-boundary strengthening
-  plan
+- current HEAD: e8b3403 Strengthen active boundary metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: Packet 1 active-boundary metadata strengthening for
-  the existing group profile `"2"` / My BD Hard candidate, or pause at the
-  clean completion checkpoint
+- next recommended task: review/acceptance of the completed active-boundary
+  metadata strengthening checkpoint, or pause at the clean completion
+  checkpoint
 - closeout command
 - stop condition
 
@@ -184,6 +183,47 @@ Pads 5-12 support, and machine/profile expansion frozen.
 The review is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, command execution, scene execution, MIDI, port opening, hardware
 behavior, package metadata changes, or hardware validation.
+
+## Active Boundary Metadata Strengthening Checkpoint
+
+`Docs/ACTIVE_BOUNDARY_METADATA_STRENGTHENING_CHECKPOINT.md` records completion
+of Packet 1 from the mock/fake-provider active-boundary strengthening plan.
+
+The milestone commit is:
+
+- e8b3403 Strengthen active boundary metadata
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+
+The active-boundary result metadata now includes:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- source kind and source key
+- target
+- armed state
+- dry-run confirmation state
+- optional operator intent
+- mock-only status
+- sends-real-MIDI status
+- failure reason on failure paths
+
+The milestone added tests for accepted result metadata and safe-failure
+metadata. It preserves profile `"2"` / My BD Hard as the only accepted
+active-boundary candidate, keeps profile `"3"` unsupported by the active
+boundary, and keeps profile `"4"` parked and unsupported.
+
+The checkpoint confirms targeted active-boundary tests passed, full closeout
+passed, V1.34 reference diff was empty, package metadata files remained absent,
+and git status was clean.
+
+The milestone adds no real MIDI, port opening, active CLI commands, dispatch,
+command execution, scene execution, hardware behavior, package metadata
+changes, profile `"3"` active-boundary support, profile `"4"`
+implementation, or hardware validation.
 
 ## User-Facing Project Progress Report
 
