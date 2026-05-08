@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 249bc67 Update checkpoint after profile selection anchor passive metadata
 - 124fa3f Add profile selection anchor passive metadata
 - af235cf Add profile selection anchor metadata plan review
 - 1d7a919 Add profile selection anchor metadata expansion plan
@@ -217,6 +218,32 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Legacy Single-Profile Mutation Next Passive Metadata Gap Decision Note
+
+The latest next-gap decision note selects legacy single-profile mutation
+metadata as the next planning target after the completed profile selection /
+anchor loading metadata checkpoint:
+
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+
+Current gap position:
+
+- passive command count: 101
+- captured V1.34 entries modeled as passive command metadata: 98
+- remaining captured command-surface gaps: 8
+
+If later implemented as passive metadata only, `M1`, `M2`, and `M3` would move
+the passive command count from 101 to 104, captured modeled count from 98 to
+101, and remaining captured gaps from 8 to 5.
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, selected-profile runtime mutation,
+legacy mutation execution, depth execution, active behavior, hardware
+behavior, or hardware validation.
 
 ## V1.34 Profile Selection Anchor Passive Metadata Checkpoint
 

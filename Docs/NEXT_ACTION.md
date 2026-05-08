@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-124fa3f Add profile selection anchor passive metadata
+249bc67 Update checkpoint after profile selection anchor passive metadata
 
 ## Current Phase
 
@@ -67,9 +67,35 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next-gap decision note, a broader V1.34
-passive metadata progress report, or a pause at the clean profile selection /
-anchor loading passive metadata checkpoint.
+Next recommended task is a documentation-only passive metadata expansion plan
+for legacy single-profile mutation metadata, a broader V1.34 passive metadata
+progress report, or a pause at the clean profile selection / anchor loading
+passive metadata checkpoint.
+
+The latest next-gap decision note is:
+
+- `Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+
+It selects legacy single-profile mutation metadata as the next planning target:
+
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+
+The decision note records:
+
+- current passive command count: 101
+- captured modeled count: 98
+- remaining captured gap count: 8
+- future command count movement from 101 to 104 if implemented
+- future captured modeled count movement from 98 to 101 if implemented
+- future remaining captured gap movement from 8 to 5 if implemented
+
+It is documentation-only. It does not add metadata, tests, fixtures, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, selected-profile runtime mutation, legacy mutation
+execution, depth execution, active behavior, hardware behavior, or hardware
+validation.
 
 The latest profile selection / anchor loading passive metadata checkpoint is:
 

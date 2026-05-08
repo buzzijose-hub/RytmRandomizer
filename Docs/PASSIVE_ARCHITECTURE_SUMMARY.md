@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-124fa3f
+249bc67
 
 ## Protected Reference
 
@@ -54,22 +54,48 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 124fa3f Add profile selection anchor passive metadata
+- current HEAD: 249bc67 Update checkpoint after profile selection anchor passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only next-gap decision note, broader V1.34
-  passive metadata progress report, or pause at the clean profile selection /
-  anchor loading passive metadata checkpoint
+- next recommended task: docs-only passive metadata expansion plan for legacy
+  single-profile mutation metadata, broader V1.34 passive metadata progress
+  report, or pause at the clean profile selection / anchor loading passive
+  metadata checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Legacy Single-Profile Mutation Next Passive Metadata Gap Decision Note
+
+`Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+selects legacy single-profile mutation metadata as the next planning target:
+
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+
+The decision note records the current gap position:
+
+- passive command count: 101
+- captured V1.34 entries modeled as passive command metadata: 98
+- remaining captured command-surface gaps: 8
+
+If later implemented as passive metadata only, `M1`, `M2`, and `M3` would
+move the passive command count from 101 to 104, captured modeled count from 98
+to 101, and remaining captured gaps from 8 to 5.
+
+The note is documentation-only. It does not add metadata, tests, fixtures,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, selected-profile runtime mutation, legacy
+mutation execution, depth execution, active behavior, hardware behavior, or
+hardware validation.
 
 ## V1.34 Profile Selection Anchor Passive Metadata Checkpoint
 
