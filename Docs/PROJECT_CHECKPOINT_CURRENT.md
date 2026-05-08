@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 124fa3f Add profile selection anchor passive metadata
+- af235cf Add profile selection anchor metadata plan review
 - 1d7a919 Add profile selection anchor metadata expansion plan
 - b3fe516 Add profile selection anchor metadata decision note
 - 3d45ff9 Update checkpoint after isolated pad mutation passive metadata
@@ -215,6 +217,33 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Profile Selection Anchor Passive Metadata Checkpoint
+
+The profile selection / anchor loading passive metadata checkpoint records
+completion of the accepted passive metadata-only expansion for:
+
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+
+Milestone commit:
+
+- 124fa3f Add profile selection anchor passive metadata
+
+The implementation added passive `PROFILE_WORKFLOW_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 99 to 101, the passive registry report
+command count moved from `commands: 99` to `commands: 101`, captured V1.34
+operator entries modeled as passive command metadata moved from 96 to 98, and
+remaining captured gaps moved from 10 to 8.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, runtime profile state mutation, machine change
+execution, anchor loading execution, real MIDI, port opening, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation was added.
 
 ## V1.34 Profile Selection Anchor Passive Metadata Expansion Plan Review
 

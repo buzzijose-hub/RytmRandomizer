@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-af6be75
+124fa3f
 
 ## Protected Reference
 
@@ -54,22 +54,48 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: af6be75 Add isolated pad mutation passive metadata
+- current HEAD: 124fa3f Add profile selection anchor passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: bounded implementation packet for profile selection /
-  anchor loading passive metadata, broader V1.34 passive metadata progress
-  report, or pause at the clean planning checkpoint
+- next recommended task: docs-only next-gap decision note, broader V1.34
+  passive metadata progress report, or pause at the clean profile selection /
+  anchor loading passive metadata checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Profile Selection Anchor Passive Metadata Checkpoint
+
+`Docs/V134_PROFILE_SELECTION_ANCHOR_PASSIVE_METADATA_CHECKPOINT.md` records
+completion of the accepted passive metadata-only expansion for:
+
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+
+Milestone commit:
+
+- 124fa3f Add profile selection anchor passive metadata
+
+The implementation added passive `PROFILE_WORKFLOW_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 99 to 101, captured V1.34 operator
+entries modeled as passive command metadata moved from 96 to 98, and remaining
+captured gaps moved from 10 to 8.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, runtime profile state mutation, machine change
+execution, anchor loading execution, real MIDI, port opening, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation was added.
 
 ## V1.34 Profile Selection Anchor Passive Metadata Expansion Plan Review
 

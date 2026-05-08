@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-af6be75 Add isolated pad mutation passive metadata
+124fa3f Add profile selection anchor passive metadata
 
 ## Current Phase
 
@@ -67,9 +67,45 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a bounded implementation packet for profile
-selection / anchor loading passive metadata, a broader V1.34 passive metadata
-progress report, or a pause at the clean planning checkpoint.
+Next recommended task is a docs-only next-gap decision note, a broader V1.34
+passive metadata progress report, or a pause at the clean profile selection /
+anchor loading passive metadata checkpoint.
+
+The latest profile selection / anchor loading passive metadata checkpoint is:
+
+- `Docs/V134_PROFILE_SELECTION_ANCHOR_PASSIVE_METADATA_CHECKPOINT.md`
+
+It records:
+
+- `124fa3f Add profile selection anchor passive metadata`
+- passive `PROFILE_WORKFLOW_COMMANDS` metadata
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+- command count movement from 99 to 101
+- captured modeled count movement from 96 to 98
+- remaining captured gap movement from 10 to 8
+- scaffold and command lookup test updates
+- passive list/report fixture updates
+- no new CLI command
+- no handler
+- no dispatch
+- no runtime profile state mutation
+- no machine change execution
+- no anchor loading execution
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+- no package metadata changes
+
+Safe next options are:
+
+- pause at this clean checkpoint
+- create a docs-only next-gap decision note
+- plan legacy single-profile mutation metadata for `M1`, `M2`, and `M3`
+- plan generic current-profile page mutation metadata for `S`, `F`, `A`, `G`,
+  and `K`
+- write a broader V1.34 passive metadata progress report
 
 The latest profile selection / anchor loading passive metadata expansion plan
 review is:
