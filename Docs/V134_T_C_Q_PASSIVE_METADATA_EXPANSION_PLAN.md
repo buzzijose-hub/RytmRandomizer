@@ -405,4 +405,9 @@ This plan defines the future metadata-only path for `T`, `C`, and `Q`.
 
 No implementation is added by this slice.
 
-The next recommended task is review/acceptance of this plan.
+The review/acceptance gate now lives in:
+
+- `Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md`
+
+The next recommended task is the tiny passive metadata-only implementation
+slice for `T`, `C`, and `Q`, only after explicit approval.

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-58014d7
+d1e11dd
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 5ddac4b Add V1.34 passive registry gap review
+- current HEAD: d1e11dd Add T C Q passive metadata expansion plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
@@ -164,6 +164,27 @@ accordingly.
 The plan is documentation-only and does not add metadata, tests, runtime code,
 CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
 dependency selection, active behavior, hardware behavior, or hardware
+validation.
+
+## T C Q Passive Metadata Expansion Plan Review
+
+`Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md` accepts the
+`T`, `C`, and `Q` passive metadata expansion plan as the current planning
+checkpoint.
+
+It accepts:
+
+- future passive `UTILITY_COMMANDS` metadata
+- `T` / select target pad/channel
+- `C` / change MIDI channel
+- `Q` / quit
+- future command count movement from 82 to 85
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement the metadata. It adds no metadata, tests,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, active behavior, hardware behavior, or hardware
 validation.
 
 ## Session Agenda Current Handoff Refresh

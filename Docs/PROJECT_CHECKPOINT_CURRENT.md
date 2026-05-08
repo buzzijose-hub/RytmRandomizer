@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d1e11dd Add T C Q passive metadata expansion plan
 - 58014d7 Add V1.34 passive registry gap review acceptance
 - 5ddac4b Add V1.34 passive registry gap review
 - a9d6e1d Add V1.34 operator command surface reference
@@ -290,6 +291,30 @@ package metadata, dependency selection, or hardware validation.
 
 The next recommended task is review/acceptance of the plan before any metadata
 or tests are edited.
+
+## T C Q Passive Metadata Expansion Plan Review
+
+The `T`, `C`, and `Q` passive metadata expansion plan is accepted as the
+current planning checkpoint:
+
+- Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md
+
+The review accepts:
+
+- future passive `UTILITY_COMMANDS` metadata
+- `T` / select target pad/channel
+- `C` / change MIDI channel
+- `Q` / quit
+- future command count movement from 82 to 85
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement metadata, tests, runtime code, CLI wiring,
+dispatch, real MIDI, port opening, MIDI sending, active behavior, hardware
+behavior, package metadata, dependency selection, or hardware validation.
+
+Recommended next task is the tiny passive metadata-only implementation slice
+for `T`, `C`, and `Q`, only after explicit approval.
 
 ## Current Priority
 

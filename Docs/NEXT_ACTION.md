@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-58014d7 Add V1.34 passive registry gap review acceptance
+d1e11dd Add T C Q passive metadata expansion plan
 
 ## Current Phase
 
@@ -67,12 +67,32 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the documentation-only passive
-metadata expansion plan for the accepted first gap category:
+Next recommended task is the tiny passive metadata-only implementation slice
+for the accepted first gap category, only if explicitly approved:
 
 - `T`
 - `C`
 - `Q`
+
+The latest `T` / `C` / `Q` passive metadata expansion plan review is:
+
+- `Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_T_C_Q_PASSIVE_METADATA_EXPANSION_PLAN.md`
+- future passive `UTILITY_COMMANDS` metadata
+- `T` / select target pad/channel
+- `C` / change MIDI channel
+- `Q` / quit
+- future command count movement from 82 to 85
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review is documentation-only. It does not add metadata, tests, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, or hardware
+validation.
 
 The latest `T` / `C` / `Q` passive metadata expansion plan is:
 
