@@ -210,9 +210,20 @@ Safe next branches:
 - create a future dependency selection review only after explicit approval
 - continue planning without selecting a dependency
 
+The package metadata no-dependency plan now lives in:
+
+- `Docs/PACKAGE_METADATA_NO_DEPENDENCY_PLAN.md`
+
+That plan keeps Candidate A as the accepted no-dependency path, keeps
+dependency selection deferred, keeps package metadata unchanged, and does not
+authorize package metadata creation or dependency selection.
+
 ## 10. Recommendation
 
 Pause at this clean checkpoint or continue passive/project documentation.
+
+The next documentation step can also be a review/acceptance gate for
+`Docs/PACKAGE_METADATA_NO_DEPENDENCY_PLAN.md`.
 
 Do not select a real MIDI dependency yet.
 

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3309829
+bae5746
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3309829 Add no-dependency user-facing progress report
+- current HEAD: bae5746 Add no-dependency user-facing progress report review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
@@ -1332,6 +1332,37 @@ remaining not ready for real MIDI or hardware validation.
 The next recommended task is continued passive/project documentation, a
 documentation-only package metadata plan only after explicit approval, or a
 pause at this accepted progress report review checkpoint.
+
+## Package Metadata No-Dependency Plan
+
+`Docs/PACKAGE_METADATA_NO_DEPENDENCY_PLAN.md` documents how future package
+metadata work should be planned while keeping the current no-dependency
+position intact.
+
+The plan records:
+
+- bae5746 Add no-dependency user-facing progress report review
+- current root package metadata checked as absent for `pyproject.toml`,
+  `requirements.txt`, `setup.py`, and `setup.cfg`
+- Candidate A as the accepted no-dependency path
+- dependency selection remaining deferred
+- package metadata remaining unchanged
+- future package metadata requiring a separate review gate
+- no `mido`
+- no real MIDI dependency
+- no real port opening
+- no MIDI sending
+- no active CLI command
+- no hardware validation
+- hardware remaining off
+
+It recommends a future `pyproject.toml` only if a later review gate approves
+package metadata creation, and it keeps real MIDI dependency selection
+separate from package metadata planning.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this plan, continued passive/project documentation, or a pause at this package
+metadata planning checkpoint.
 
 ## Project-Level Roadmap Update
 
