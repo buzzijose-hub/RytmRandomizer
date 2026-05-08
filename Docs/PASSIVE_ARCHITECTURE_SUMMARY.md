@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-7ed4fdc
+38c9f6b
 
 ## Protected Reference
 
@@ -54,15 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 7ed4fdc Add next phase planning gate
+- current HEAD: 38c9f6b Add V1.34 uncaptured behavior review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: mock/fake-provider active-boundary strengthening
-  plan, behavior-parity planning document, or pause at the clean completion
+- next recommended task: review/acceptance of the mock/fake-provider
+  active-boundary strengthening plan, or pause at the clean completion
   checkpoint
 - closeout command
 - stop condition
@@ -118,6 +118,37 @@ implementation.
 The review is documentation-only. It adds no metadata, tests, runtime code,
 CLI wiring, dispatch, command execution, scene execution, MIDI, port opening,
 hardware behavior, package metadata changes, or hardware validation.
+
+## Mock/Fake-Provider Active-Boundary Strengthening Plan
+
+`Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PLAN.md` defines safe
+future work for the current mock-first active boundary and fake-provider-only
+adapter boundary.
+
+It records the current boundary state:
+
+- `rytm_randomizer/active_boundary.py` accepts only group profile `"2"` / My
+  BD Hard
+- active-boundary evaluation requires arming, dry-run confirmation, and an
+  injected `MockMidiSender`
+- unsupported profiles, unknown keys, missing arming, and missing dry-run
+  confirmation emit no messages
+- `rytm_randomizer/real_midi_adapter.py` remains fake-provider-only
+- the adapter requires explicit injected providers and opens no real ports
+- `sent_real_midi` remains false in current fake-provider tests
+
+The plan proposes future packets for active-boundary metadata strengthening,
+active-boundary report alignment, fake-provider adapter guard strengthening,
+and passive CLI safety regression coverage.
+
+The plan keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port opening, MIDI sending, hardware validation, Analog Four support,
+Pads 5-12 support, and machine/profile expansion frozen.
+
+The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
+dispatch, command execution, scene execution, MIDI, port opening, hardware
+behavior, package metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

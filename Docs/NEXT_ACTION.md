@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-7ed4fdc Add next phase planning gate
+38c9f6b Add V1.34 uncaptured behavior review
 
 ## Current Phase
 
@@ -67,8 +67,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a mock/fake-provider active-boundary strengthening
-plan, a behavior-parity planning document, or a pause at the clean completion
+Next recommended task is review/acceptance of the mock/fake-provider
+active-boundary strengthening plan, or a pause at the clean completion
 checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
@@ -108,6 +108,25 @@ It records:
 
 The review is documentation-only. It does not implement handlers, dispatch,
 command execution, scene execution, MIDI, port opening, active CLI behavior, or
+hardware validation.
+
+The latest mock/fake-provider active-boundary strengthening plan is:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PLAN.md`
+
+It records:
+
+- current mock-first active boundary accepts only group profile `"2"` / My BD
+  Hard
+- current fake-provider-only adapter boundary requires explicit injected fake
+  providers
+- future strengthening should remain test-only/mock-only first
+- profile `"3"` active-boundary support and profile `"4"` implementation stay
+  frozen
+- next recommended step: review and accept the plan before any implementation
+
+The plan is documentation-only. It does not add tests, edit runtime code,
+change CLI behavior, send MIDI, open ports, add active execution, or authorize
 hardware validation.
 
 The latest user-facing project progress report is:
