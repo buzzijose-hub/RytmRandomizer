@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f1d8735
+ae0a772
 
 ## Protected Reference
 
@@ -54,22 +54,48 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f1d8735 Update checkpoint after legacy single-profile mutation passive metadata
+- current HEAD: ae0a772 Add generic current-profile mutation gap decision note
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only passive metadata expansion plan for `S`,
-  `F`, `A`, `G`, and `K`, broader V1.34 passive metadata progress report, or
-  pause at the clean decision checkpoint
+- next recommended task: docs-only review gate for the generic current-profile
+  mutation passive metadata expansion plan, broader V1.34 passive metadata
+  progress report, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Generic Current-Profile Mutation Passive Metadata Expansion Plan
+
+`Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md`
+defines a future metadata-only path for:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+The plan proposes a future passive
+`CURRENT_PROFILE_PAGE_MUTATION_COMMANDS` dictionary, scaffold-only metadata for
+all five commands, command count movement from 104 to 109, captured modeled
+count movement from 101 to 106, remaining captured gap movement from 5 to 0,
+passive list/report fixture updates, and tests in existing scaffold and
+command lookup coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, current-profile mutation execution, selected-profile
+runtime mutation, depth execution, active behavior, hardware behavior, or
+hardware validation.
+
+The plan must be reviewed and accepted before implementation.
 
 ## V1.34 Generic Current-Profile Mutation Next Passive Metadata Gap Decision Note
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ae0a772 Add generic current-profile mutation gap decision note
 - f1d8735 Update checkpoint after legacy single-profile mutation passive metadata
 - c50cfec Add legacy single-profile mutation passive metadata
 - f3511d4 Add legacy single-profile mutation metadata expansion plan
@@ -222,6 +223,32 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Generic Current-Profile Mutation Passive Metadata Expansion Plan
+
+The latest generic current-profile mutation passive metadata expansion plan
+defines a future metadata-only path for:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+The plan proposes a future passive
+`CURRENT_PROFILE_PAGE_MUTATION_COMMANDS` dictionary, scaffold-only metadata for
+all five commands, command count movement from 104 to 109, captured modeled
+count movement from 101 to 106, remaining captured gap movement from 5 to 0,
+passive list/report fixture updates, and tests in existing scaffold and
+command lookup coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, current-profile mutation execution, selected-profile
+runtime mutation, depth execution, active behavior, hardware behavior, or
+hardware validation.
+
+The plan must be reviewed and accepted before implementation.
 
 ## V1.34 Generic Current-Profile Mutation Next Passive Metadata Gap Decision Note
 

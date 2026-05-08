@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f1d8735 Update checkpoint after legacy single-profile mutation passive metadata
+ae0a772 Add generic current-profile mutation gap decision note
 
 ## Current Phase
 
@@ -67,9 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only passive metadata expansion plan for the
-remaining generic current-profile page mutation commands, a broader V1.34
-passive metadata progress report, or a pause at the clean decision checkpoint.
+Next recommended task is a docs-only review gate for the generic
+current-profile mutation passive metadata expansion plan, a broader V1.34
+passive metadata progress report, or a pause at the clean planning checkpoint.
 
 The remaining captured command-surface gaps are:
 
@@ -78,6 +78,32 @@ The remaining captured command-surface gaps are:
 - `A` / Amp-only mutation, choose depth
 - `G` / Grit-only mutation, choose depth
 - `K` / Kick body mutation, choose depth
+
+The latest generic current-profile mutation passive metadata expansion plan is:
+
+- `Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md`
+
+It defines a future metadata-only path for:
+
+- `S`
+- `F`
+- `A`
+- `G`
+- `K`
+
+The plan proposes future passive `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+metadata, scaffold-only entries for all five commands, command count movement
+from 104 to 109, captured modeled count movement from 101 to 106, remaining
+captured gap movement from 5 to 0, fixture updates for passive list/report
+output, and tests in existing scaffold and command lookup coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, current-profile mutation execution, selected-profile
+runtime mutation, depth execution, active behavior, hardware behavior, or
+hardware validation.
+
+The plan must be reviewed and accepted before implementation.
 
 The latest next-gap decision note is:
 
