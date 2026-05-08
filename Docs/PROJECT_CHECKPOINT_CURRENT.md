@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f3511d4 Add legacy single-profile mutation metadata expansion plan
 - b0abf1a Add legacy single-profile mutation metadata decision note
 - 249bc67 Update checkpoint after profile selection anchor passive metadata
 - 124fa3f Add profile selection anchor passive metadata
@@ -219,6 +220,34 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Legacy Single-Profile Mutation Passive Metadata Expansion Plan Review
+
+The legacy single-profile mutation passive metadata expansion plan review
+accepts the plan as the current implementation guide for a future passive
+metadata-only slice.
+
+Accepted future target commands:
+
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+
+Accepted future metadata dictionary:
+
+- `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`
+
+If later implemented, the passive command count would move from 101 to 104,
+captured modeled count would move from 98 to 101, and remaining captured gaps
+would move from 8 to 5.
+
+The review is documentation-only. It does not add metadata, tests, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, selected-profile runtime mutation, legacy mutation
+execution, depth execution, active behavior, hardware behavior, or hardware
+validation.
+
+Implementation remains parked until explicitly approved.
 
 ## V1.34 Legacy Single-Profile Mutation Passive Metadata Expansion Plan
 

@@ -67,9 +67,35 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review gate for the legacy
-single-profile mutation passive metadata expansion plan, a broader V1.34
-passive metadata progress report, or a pause at the clean planning checkpoint.
+Next recommended task is a bounded implementation packet for legacy
+single-profile mutation passive metadata, a broader V1.34 passive metadata
+progress report, or a pause at the clean planning checkpoint.
+
+The latest legacy single-profile mutation passive metadata expansion plan
+review is:
+
+- `Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_LEGACY_SINGLE_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md`
+- future passive `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS` metadata
+- `M1` / Legacy single-profile full micro mutation
+- `M2` / Legacy single-profile full groove mutation
+- `M3` / Legacy single-profile full strong mutation
+- future command count movement from 101 to 104
+- future captured modeled count movement from 98 to 101
+- future remaining captured gap movement from 8 to 5
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review is documentation-only. It does not add metadata, tests, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, selected-profile runtime mutation, legacy mutation
+execution, depth execution, active behavior, hardware behavior, or hardware
+validation.
+
+Implementation remains parked until explicitly approved.
 
 The latest legacy single-profile mutation passive metadata expansion plan is:
 
