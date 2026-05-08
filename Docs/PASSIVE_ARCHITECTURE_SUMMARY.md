@@ -61,15 +61,37 @@ It captures:
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only passive metadata expansion plan for profile
-  selection / anchor loading metadata, broader V1.34 passive metadata progress
-  report, or pause at the clean isolated-pad mutation metadata checkpoint
+- next recommended task: docs-only review gate for the profile selection /
+  anchor loading passive metadata expansion plan, broader V1.34 passive
+  metadata progress report, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Profile Selection Anchor Passive Metadata Expansion Plan
+
+`Docs/V134_PROFILE_SELECTION_ANCHOR_PASSIVE_METADATA_EXPANSION_PLAN.md`
+defines a future metadata-only path for:
+
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+
+The plan proposes a future passive `PROFILE_WORKFLOW_COMMANDS` dictionary,
+scaffold-only metadata for both commands, command count movement from 99 to
+101, captured modeled count movement from 96 to 98, remaining captured gap
+movement from 10 to 8, passive list/report fixture updates, and tests in
+existing scaffold and command lookup coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, profile runtime state mutation, machine change
+execution, anchor loading execution, active behavior, hardware behavior, or
+hardware validation.
+
+The plan must be reviewed and accepted before implementation.
 
 ## V1.34 Profile Selection Anchor Next Passive Metadata Gap Decision Note
 
