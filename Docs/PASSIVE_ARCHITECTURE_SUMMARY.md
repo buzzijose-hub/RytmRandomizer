@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d8619bc
+3089a76
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d8619bc Add V1.34 behavior parity undo commit state matrix slice
+- current HEAD: 3089a76 Add V1.34 behavior parity undo commit state matrix review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -78,13 +78,14 @@ It captures:
   Pad 3 lane behavior is now documented and accepted; the next docs-only
   matrix slice for Pad 4 lane behavior is now documented and accepted; the
   next docs-only matrix slice for undo/commit/state behavior is now
-  documented and accepted
+  documented and accepted; the docs-only complete-matrix progress review is
+  now documented as the current matrix checkpoint
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only complete-matrix progress review, or pause
-  at the clean accepted undo/commit/state behavior matrix slice checkpoint
+- next recommended task: docs-only behavior parity implementation readiness
+  checkpoint, or pause at the clean complete-matrix progress checkpoint
 - closeout command
 - stop condition
 
@@ -949,6 +950,45 @@ The review recommends a docs-only complete-matrix progress review next.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Complete Progress Review
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_COMPLETE_PROGRESS_REVIEW.md` summarizes the
+accepted docs-only behavior parity matrix build order.
+
+It records the accepted planning foundation:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN_REVIEW.md`
+
+It records the accepted matrix slices and reviews for:
+
+- menu/status and utility commands
+- anchor/profile commands
+- mutation-depth and guarded numeric input commands
+- scene and group intent commands
+- Pad 1 lane behavior
+- Pad 2 lane behavior
+- Pad 3 lane behavior
+- Pad 4 lane behavior
+- undo/commit/state behavior
+
+The review confirms passive metadata visibility is still not runtime behavior
+parity. Command routing, menu/status behavior, target pad/channel selection,
+anchor/profile load and return, mutation-depth prompts, current-profile
+mutation, selected isolated pad mutation, scene execution, group mutation,
+Pad 1 through Pad 4 lane behavior, undo/commit/state behavior, waveform
+exploration, and prompt/input loop behavior remain open implementation gaps.
+
+The review confirms no implementation, tests, runtime code, CLI behavior,
+dispatch, command execution, scene execution, real MIDI dependency, `mido`,
+`rtmidi`, package metadata changes, port discovery/opening/sending, active CLI
+commands, hardware behavior, profile `"3"` active-boundary support, profile
+`"4"` implementation, Analog Four support, Pads 5-12 support, machine/profile
+expansion, SysEx, GUI/capture, or hardware validation was added.
+
+The next recommended branch is a docs-only behavior parity implementation
+readiness checkpoint, or pause at this clean matrix checkpoint.
 
 ## Next Phase Planning Gate
 
