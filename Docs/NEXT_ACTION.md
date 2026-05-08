@@ -67,9 +67,34 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review gate for the profile
-selection / anchor loading passive metadata expansion plan, a broader V1.34
-passive metadata progress report, or a pause at the clean planning checkpoint.
+Next recommended task is a bounded implementation packet for profile
+selection / anchor loading passive metadata, a broader V1.34 passive metadata
+progress report, or a pause at the clean planning checkpoint.
+
+The latest profile selection / anchor loading passive metadata expansion plan
+review is:
+
+- `Docs/V134_PROFILE_SELECTION_ANCHOR_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_PROFILE_SELECTION_ANCHOR_PASSIVE_METADATA_EXPANSION_PLAN.md`
+- future passive `PROFILE_WORKFLOW_COMMANDS` metadata
+- `P` / select/switch profile and change Rytm machine
+- `M` / load selected profile anchor
+- future command count movement from 99 to 101
+- future captured modeled count movement from 96 to 98
+- future remaining captured gap movement from 10 to 8
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review is documentation-only. It does not add metadata, tests, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, profile runtime state mutation, machine change
+execution, anchor loading execution, active behavior, hardware behavior, or
+hardware validation.
+
+Implementation remains parked until explicitly approved.
 
 The latest profile selection / anchor loading passive metadata expansion plan
 is:
