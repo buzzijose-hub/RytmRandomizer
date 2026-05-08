@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6e3a19c
+af6be75
 
 ## Protected Reference
 
@@ -54,22 +54,54 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6e3a19c Add isolated pad mutation metadata expansion plan
+- current HEAD: af6be75 Add isolated pad mutation passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny passive metadata-only implementation slice for
-  isolated-pad mutation metadata, broader progress checkpoint, or pause at the
-  clean isolated-pad planning checkpoint
+- next recommended task: docs-only next-gap decision note, broader V1.34
+  passive metadata progress report, or pause at the clean isolated-pad
+  mutation metadata checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Isolated Pad Mutation Passive Metadata Checkpoint
+
+`Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_CHECKPOINT.md` records
+completion of the accepted passive metadata-only expansion for:
+
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+
+Milestone commit:
+
+- af6be75 Add isolated pad mutation passive metadata
+
+The implementation added passive `ISOLATED_PAD_MUTATION_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 91 to 99, captured V1.34 operator entries
+modeled as passive command metadata moved from 88 to 96, and remaining
+captured gaps moved from 18 to 10.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, selected-pad runtime mutation, isolated-pad mutation
+execution, depth prompt execution, real MIDI, port opening, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation was added.
 
 ## V1.34 Operator Command Surface Reference
 

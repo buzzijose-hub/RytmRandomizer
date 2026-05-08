@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6e3a19c Add isolated pad mutation metadata expansion plan
+af6be75 Add isolated pad mutation passive metadata
 
 ## Current Phase
 
@@ -67,9 +67,45 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny passive metadata-only implementation slice
-for isolated-pad mutation metadata, a broader progress checkpoint, or a pause
-at the clean isolated-pad planning checkpoint.
+Next recommended task is a docs-only next-gap decision note, a broader V1.34
+passive metadata progress report, or a pause at the clean isolated-pad mutation
+metadata checkpoint.
+
+The latest isolated-pad mutation passive metadata checkpoint is:
+
+- `Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_CHECKPOINT.md`
+
+It records:
+
+- `af6be75 Add isolated pad mutation passive metadata`
+- passive `ISOLATED_PAD_MUTATION_COMMANDS` metadata
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- command count movement from 91 to 99
+- captured modeled count movement from 88 to 96
+- remaining captured gap movement from 18 to 10
+- scaffold and command lookup test updates
+- passive list/report fixture updates
+- no new CLI command
+- no handler
+- no dispatch
+- no selected-pad runtime mutation
+- no isolated-pad mutation execution
+- no depth prompt execution
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+- no package metadata changes
+
+Safe next options are:
+
+- pause at this clean checkpoint
+- create a docs-only next-gap decision note
+- plan profile selection / anchor loading metadata for `P` and `M`
+- plan generic current-profile page mutation metadata for `S`, `F`, `A`, `G`,
+  and `K`
+- plan legacy single-profile mutation metadata for `M1`, `M2`, and `M3`
+- write a broader V1.34 passive metadata progress report
 
 The latest isolated-pad mutation passive metadata expansion plan review is:
 

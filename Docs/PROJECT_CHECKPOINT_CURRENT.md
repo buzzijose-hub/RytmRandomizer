@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- af6be75 Add isolated pad mutation passive metadata
+- 5ef7dc1 Add isolated pad mutation metadata plan review
 - 6e3a19c Add isolated pad mutation metadata expansion plan
 - 2c095a7 Add isolated pad mutation metadata decision note
 - 0e7a80a Update checkpoint after L PZ passive metadata
@@ -210,6 +212,39 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Isolated Pad Mutation Passive Metadata Checkpoint
+
+The isolated-pad mutation passive metadata checkpoint records completion of
+the accepted passive metadata-only expansion for:
+
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+
+Milestone commit:
+
+- af6be75 Add isolated pad mutation passive metadata
+
+The implementation added passive `ISOLATED_PAD_MUTATION_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 91 to 99, the passive registry report
+command count moved from `commands: 91` to `commands: 99`, captured V1.34
+operator entries modeled as passive command metadata moved from 88 to 96, and
+remaining captured gaps moved from 18 to 10.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+handler, runtime dispatch, selected-pad runtime mutation, isolated-pad mutation
+execution, depth prompt execution, real MIDI, port opening, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation was added.
 
 ## V1.34 Operator Command Surface Reference
 
