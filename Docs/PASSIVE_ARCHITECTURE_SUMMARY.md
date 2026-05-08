@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ce09a28
+7276d35
 
 ## Protected Reference
 
@@ -54,22 +54,41 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: ce09a28 Update checkpoint after generic current-profile mutation passive metadata
+- current HEAD: 7276d35 Add V1.34 passive metadata completion report
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/acceptance gate for the V1.34 passive metadata
-  completion report, review of any uncaptured V1.34 behavior, or pause at the
-  clean checkpoint
+- next recommended task: user-facing project progress report, review of any
+  uncaptured V1.34 behavior, or pause at the clean completion checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Passive Metadata Completion Report Review
+
+`Docs/V134_PASSIVE_METADATA_COMPLETION_REPORT_REVIEW.md` accepts the V1.34
+passive metadata completion report as the current checkpoint for the captured
+V1.34 operator command surface as passive metadata.
+
+Accepted current state:
+
+- passive command count: 109
+- captured V1.34 operator entries modeled as passive command metadata: 106
+- remaining captured command-surface gaps: 0
+- registry report command count: `commands: 109`
+
+The review confirms this is metadata completion, not runtime parity or
+hardware validation. It adds no runtime behavior, CLI execution, MIDI, port
+opening, dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support,
+Pads 5-12 support, machine/profile expansion, or package metadata changes.
+
+The protected V1.34 reference remains untouched and hardware remains off.
 
 ## V1.34 Passive Metadata Completion Report
 

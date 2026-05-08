@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 7276d35 Add V1.34 passive metadata completion report
 - ce09a28 Update checkpoint after generic current-profile mutation passive metadata
 - 5fbfeec Add generic current-profile mutation passive metadata
 - 431328b Add generic current-profile mutation metadata expansion plan
@@ -226,6 +227,26 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Passive Metadata Completion Report Review
+
+The V1.34 passive metadata completion report review accepts the completion
+report as the current checkpoint for the captured V1.34 operator command
+surface as passive metadata.
+
+Accepted current state:
+
+- passive command count: 109
+- captured V1.34 operator entries modeled as passive command metadata: 106
+- remaining captured command-surface gaps: 0
+- registry report command count: `commands: 109`
+
+The review confirms this is metadata completion, not runtime parity or
+hardware validation. It adds no runtime behavior, CLI execution, MIDI, port
+opening, dispatch, hardware behavior, SysEx, GUI, capture, Analog Four support,
+Pads 5-12 support, machine/profile expansion, or package metadata changes.
+
+The protected V1.34 reference remains untouched and hardware remains off.
 
 ## V1.34 Passive Metadata Completion Report
 
