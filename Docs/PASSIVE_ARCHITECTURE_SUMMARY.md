@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5dd459b
+ac71857
 
 ## Protected Reference
 
@@ -54,15 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 5dd459b Add L PZ next passive metadata gap decision note
+- current HEAD: ac71857 Add L PZ passive metadata expansion plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review gate for the `L` / `PZ`
-  passive metadata expansion plan
+- next recommended task: tiny passive metadata-only implementation slice for
+  `L` and `PZ`, only after explicit approval
 - closeout command
 - stop condition
 
@@ -268,7 +268,32 @@ runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
 metadata, dependency selection, selected-pad runtime state mutation, anchor
 return execution, active behavior, hardware behavior, or hardware validation.
 
-The next recommended task is a documentation-only review gate for this plan.
+The next recommended task was a documentation-only review gate for this plan.
+
+## V1.34 L PZ Passive Metadata Expansion Plan Review
+
+`Docs/V134_L_PZ_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md` accepts the
+`L` and `PZ` passive metadata expansion plan as the current planning
+checkpoint.
+
+It accepts:
+
+- future passive `ISOLATED_PAD_UTILITY_COMMANDS` metadata
+- `L` / select isolated single-pad mutation target, default Pad 3
+- `PZ` / return selected isolated pad to anchor only
+- future command count movement from 89 to 91
+- future captured modeled count movement from 86 to 88
+- future remaining captured gap movement from 20 to 18
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review does not implement the metadata. It adds no metadata, tests,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, selected-pad runtime state mutation, anchor
+return execution, active behavior, hardware behavior, or hardware validation.
+
+The next recommended task is the tiny passive metadata-only implementation
+slice for `L` and `PZ`, only after explicit approval.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
