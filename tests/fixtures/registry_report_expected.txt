@@ -1,6 +1,6 @@
 RytmRandomizer Passive Registry Report
 Sections:
-- commands: 89
+- commands: 91
 - scenes: 14
 - group_profiles: 4
 Safety Boundaries:

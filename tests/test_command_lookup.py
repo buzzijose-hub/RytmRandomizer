@@ -127,6 +127,32 @@ def test_known_state_utility_command_lookups_return_existing_metadata():
         assert report["metadata"] == COMMANDS[command_key]
 
 
+def test_known_isolated_pad_utility_command_lookups_return_existing_metadata():
+    expected = {
+        "L": (
+            "selection",
+            "isolated_pad_target",
+            "select isolated single-pad mutation target, default Pad 3",
+        ),
+        "PZ": (
+            "anchor_return",
+            "selected_isolated_pad",
+            "return selected isolated pad to anchor only",
+        ),
+    }
+
+    for command_key, (command_type, scope, label) in expected.items():
+        report = describe_command(command_key)
+
+        assert_passive_command_report(report, command_key)
+        assert report["type"] == command_type
+        assert report["scope"] == scope
+        assert report["label"] == label
+        assert report["metadata"] == COMMANDS[command_key]
+
+    assert describe_command("L")["metadata"]["default_pad"] == 3
+
+
 def test_command_lookup_helpers_return_existing_values_only():
     assert get_command_type("O") == "load"
     assert get_command_type("S1A") == "scene"
@@ -185,6 +211,7 @@ if __name__ == "__main__":
     test_known_pad_1_to_4_command_lookups_return_existing_metadata()
     test_known_utility_command_lookups_return_existing_metadata()
     test_known_state_utility_command_lookups_return_existing_metadata()
+    test_known_isolated_pad_utility_command_lookups_return_existing_metadata()
     test_command_lookup_helpers_return_existing_values_only()
     test_command_lookup_normalizes_keys_without_executing()
     test_unknown_command_returns_passive_not_found_result()

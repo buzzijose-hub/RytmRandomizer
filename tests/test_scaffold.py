@@ -9,6 +9,7 @@ from rytm_randomizer.commands import (
     COMMANDS,
     FORBIDDEN_ACTIONS,
     GROUP_COMMANDS,
+    ISOLATED_PAD_UTILITY_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
     MENU_COMMANDS,
     PAD1_COMMANDS,
@@ -454,6 +455,41 @@ def test_representative_state_utility_command_labels_match_v134_intent():
         "scope": "script_generated_state",
         "sends_midi": False,
         "label": "undo previous script-generated state",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+
+
+def test_isolated_pad_utility_commands_match_v134_metadata_only_set():
+    expected = {"L", "PZ"}
+
+    assert set(ISOLATED_PAD_UTILITY_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_isolated_pad_utility_commands_are_scaffold_only_and_not_executable():
+    for metadata in ISOLATED_PAD_UTILITY_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+
+
+def test_representative_isolated_pad_utility_labels_match_v134_intent():
+    assert ISOLATED_PAD_UTILITY_COMMANDS["L"] == {
+        "type": "selection",
+        "scope": "isolated_pad_target",
+        "sends_midi": False,
+        "label": "select isolated single-pad mutation target, default Pad 3",
+        "default_pad": 3,
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert ISOLATED_PAD_UTILITY_COMMANDS["PZ"] == {
+        "type": "anchor_return",
+        "scope": "selected_isolated_pad",
+        "sends_midi": False,
+        "label": "return selected isolated pad to anchor only",
         "executable": False,
         "v134_reference_command": True,
         "scaffold_only": True,

@@ -196,6 +196,28 @@ STATE_UTILITY_COMMANDS = {
     },
 }
 
+ISOLATED_PAD_UTILITY_COMMANDS = {
+    "L": {
+        "type": "selection",
+        "scope": "isolated_pad_target",
+        "sends_midi": False,
+        "label": "select isolated single-pad mutation target, default Pad 3",
+        "default_pad": 3,
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "PZ": {
+        "type": "anchor_return",
+        "scope": "selected_isolated_pad",
+        "sends_midi": False,
+        "label": "return selected isolated pad to anchor only",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+}
+
 FORBIDDEN_ACTIONS = {
     "master_volume": {
         "label": "Master volume",
@@ -738,6 +760,7 @@ COMMANDS = {
     **MENU_COMMANDS,
     **UTILITY_COMMANDS,
     **STATE_UTILITY_COMMANDS,
+    **ISOLATED_PAD_UTILITY_COMMANDS,
     **GROUP_COMMANDS,
     **PAD1_COMMANDS,
     **PAD2_COMMANDS,
