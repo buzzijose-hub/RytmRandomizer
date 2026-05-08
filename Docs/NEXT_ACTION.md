@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-c1a6c89 Add V1.34 behavior parity scene group matrix review
+c69d4cf Add V1.34 behavior parity Pad 1 lane matrix slice
 
 ## Current Phase
 
@@ -32,7 +32,7 @@ slice for mutation-depth and guarded numeric input commands has now been
 documented and accepted. The next docs-only behavior parity matrix slice for
 scene and group intent commands has now been documented and accepted.
 The next docs-only behavior parity matrix slice for Pad 1 lane behavior has
-now been documented and is awaiting review.
+now been documented and accepted.
 
 ## Current Safety State
 
@@ -87,11 +87,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review/acceptance gate for the Pad 1 lane
-behavior parity matrix slice, or a pause at this clean docs-only matrix
-checkpoint.
+Next recommended task is a docs-only Pad 2 lane behavior parity matrix slice,
+or a pause at this clean accepted Pad 1 lane behavior matrix slice checkpoint.
 
-The latest V1.34 behavior parity matrix slice is:
+The latest accepted V1.34 behavior parity matrix slice is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD1_LANE_BEHAVIOR_SLICE.md`
 
@@ -112,8 +111,35 @@ The slice confirms no implementation, tests, runtime code, dispatch,
 execution, scene execution, real MIDI, port opening, active CLI behavior,
 package metadata, or hardware validation was added.
 
-The slice recommends a docs-only review/acceptance gate next before adding
-more matrix rows.
+The slice recommended a docs-only review/acceptance gate before adding more
+matrix rows. That review is now complete.
+
+The latest V1.34 behavior parity matrix Pad 1 lane behavior slice review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD1_LANE_BEHAVIOR_SLICE_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD1_LANE_BEHAVIOR_SLICE.md`
+- c69d4cf Add V1.34 behavior parity Pad 1 lane matrix slice
+- Pad 1 current BD engine mutation row from `PAD1_COMMANDS`
+- Pad 1 BD FM discovery/mutation rows from `PAD1_COMMANDS`
+- Pad 1 BD Plastic discovery/mutation rows from `PAD1_COMMANDS`
+- Pad 1 BD Silky discovery/mutation rows from `PAD1_COMMANDS`
+- all 10 slice rows as captured passive metadata
+- all 10 slice rows as current modular behavior status `passive-only`
+- all 10 slice rows as implementation authorization status
+  `documentation-only`
+- `future-real-midi-risk` for `BM` and `forbidden-early-scope` for discovery
+  rows as planning vocabulary only
+- future Pad 1 lane parity test categories as planning vocabulary only
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, or hardware validation was added.
+
+The review recommends a docs-only Pad 2 lane behavior parity matrix slice
+next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 
