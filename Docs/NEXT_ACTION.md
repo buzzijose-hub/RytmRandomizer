@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-ae0a772 Add generic current-profile mutation gap decision note
+431328b Add generic current-profile mutation metadata expansion plan
 
 ## Current Phase
 
@@ -67,9 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review gate for the generic
-current-profile mutation passive metadata expansion plan, a broader V1.34
-passive metadata progress report, or a pause at the clean planning checkpoint.
+Next recommended task is a bounded TDD implementation packet for the generic
+current-profile mutation passive metadata, a broader V1.34 passive metadata
+progress report, or a pause at the clean planning checkpoint.
 
 The remaining captured command-surface gaps are:
 
@@ -78,6 +78,34 @@ The remaining captured command-surface gaps are:
 - `A` / Amp-only mutation, choose depth
 - `G` / Grit-only mutation, choose depth
 - `K` / Kick body mutation, choose depth
+
+The latest generic current-profile mutation passive metadata expansion plan
+review is:
+
+- `Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md`
+- future passive `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS` metadata
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+- future command count movement from 104 to 109
+- future captured modeled count movement from 101 to 106
+- future remaining captured gap movement from 5 to 0
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The review is documentation-only. It does not add metadata, tests, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, current-profile mutation execution, selected-profile
+runtime mutation, depth execution, active behavior, hardware behavior, or
+hardware validation.
+
+Implementation remains parked until explicitly approved.
 
 The latest generic current-profile mutation passive metadata expansion plan is:
 
