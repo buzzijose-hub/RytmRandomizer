@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-230a883 Add T C Q passive command metadata
+4f7d519 Add next passive metadata gap decision note
 
 ## Current Phase
 
@@ -67,13 +67,29 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only passive metadata expansion plan for the
-accepted next gap category:
+Next recommended task is a documentation-only review gate for the `B`, `E`,
+`W`, and `U` passive metadata expansion plan.
+
+The latest `B` / `E` / `W` / `U` passive metadata expansion plan is:
+
+- `Docs/V134_B_E_W_U_PASSIVE_METADATA_EXPANSION_PLAN.md`
+
+It defines a future metadata-only path for:
 
 - `B`
 - `E`
 - `W`
 - `U`
+
+The plan proposes a future `STATE_UTILITY_COMMANDS` metadata dictionary,
+passive scaffold-only metadata for all four commands, command count movement
+from 85 to 89, fixture updates for passive list/report output, and tests in
+existing scaffold and command lookup coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, or hardware
+validation.
 
 The latest next-gap decision note is:
 

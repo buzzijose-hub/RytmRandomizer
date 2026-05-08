@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 4f7d519 Add next passive metadata gap decision note
 - b0fd0f9 Update checkpoint after T C Q passive metadata
 - 230a883 Add T C Q passive command metadata
 - af2d293 Add T C Q passive metadata expansion plan review
@@ -385,6 +386,35 @@ behavior, or hardware validation.
 
 The next safe branch is a docs-only passive metadata expansion plan for
 `B`, `E`, `W`, and `U`.
+
+## B E W U Passive Metadata Expansion Plan
+
+The selected anchor/state utility gap category now has a documentation-only
+metadata expansion plan:
+
+- Docs/V134_B_E_W_U_PASSIVE_METADATA_EXPANSION_PLAN.md
+
+The plan covers:
+
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+
+It proposes future passive `STATE_UTILITY_COMMANDS` metadata, existing-test
+updates only, passive command count movement from 85 to 89, and passive
+list/report fixture updates.
+
+The plan records expected captured V1.34 operator entries modeled as passive
+command metadata moving from 82 to 86, and remaining captured gaps moving from
+24 to 20 after a future implementation.
+
+It does not implement metadata, tests, runtime code, CLI wiring, dispatch,
+real MIDI, port opening, MIDI sending, active behavior, hardware behavior,
+package metadata, dependency selection, or hardware validation.
+
+The next recommended task is review/acceptance of the plan before any metadata
+or tests are edited.
 
 ## Current Priority
 

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-230a883
+4f7d519
 
 ## Protected Reference
 
@@ -54,15 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 230a883 Add T C Q passive command metadata
+- current HEAD: 4f7d519 Add next passive metadata gap decision note
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only passive metadata expansion plan for
-  `B`, `E`, `W`, and `U`
+- next recommended task: docs-only review gate for the `B`, `E`, `W`, and
+  `U` passive metadata expansion plan
 - closeout command
 - stop condition
 
@@ -238,6 +238,28 @@ hardware validation.
 
 The next recommended task is a docs-only passive metadata expansion plan for
 `B`, `E`, `W`, and `U`.
+
+## B E W U Passive Metadata Expansion Plan
+
+`Docs/V134_B_E_W_U_PASSIVE_METADATA_EXPANSION_PLAN.md` defines a future
+metadata-only expansion plan for the selected anchor/state utility gap
+category:
+
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+
+The plan proposes future passive `STATE_UTILITY_COMMANDS` metadata and
+existing-test updates only. It records that a future implementation would move
+the passive command count from 85 to 89, move captured V1.34 operator entries
+modeled as passive command metadata from 82 to 86, move remaining captured
+gaps from 24 to 20, and update passive list/report fixtures accordingly.
+
+The plan is documentation-only and does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, active behavior, hardware behavior, or hardware
+validation.
 
 ## Session Agenda Current Handoff Refresh
 
