@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-af0deee Add behavior parity roadmap review
+3f991d3 Add V1.34 behavior parity matrix plan
 
 ## Current Phase
 
@@ -23,8 +23,8 @@ created and accepted as the latest orientation checkpoint. The latest session
 handoff records this clean leave-off point. The next strengthening sequence
 planning gate has been created and accepted. A behavior-parity roadmap has now
 been documented and accepted as the preferred next branch after that gate. A
-V1.34 behavior parity matrix plan has now been documented as the first
-matrix-planning slice.
+V1.34 behavior parity matrix plan has now been documented and accepted as the
+first matrix-planning slice.
 
 ## Current Safety State
 
@@ -79,9 +79,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only V1.34 behavior parity matrix plan
-review/acceptance checkpoint, or a pause at this clean behavior-parity matrix
-planning checkpoint.
+Next recommended task is a docs-only matrix schema and first-row slice for
+menu/status and utility commands, or a pause at this clean accepted
+behavior-parity matrix planning checkpoint.
 
 The latest V1.34 behavior parity matrix plan is:
 
@@ -104,6 +104,29 @@ It records:
 - no parallel implementation recommended for the immediate next slice
 
 The matrix plan recommends a docs-only review/acceptance gate next.
+
+The latest V1.34 behavior parity matrix plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+- 3f991d3 Add V1.34 behavior parity matrix plan
+- the future matrix goal
+- accepted sources
+- proposed matrix columns
+- proposed deterministic status values
+- proposed behavior domains and command families
+- recommended matrix build order
+- first matrix slice: docs-only matrix schema and first rows for menu/status
+  and utility commands
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, active CLI behavior, package metadata, or
+hardware validation was added.
+
+The review recommends a docs-only matrix schema and first-row slice next.
 
 The latest behavior-parity roadmap is:
 

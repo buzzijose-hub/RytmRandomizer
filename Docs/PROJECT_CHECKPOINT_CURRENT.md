@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3f991d3 Add V1.34 behavior parity matrix plan
 - af0deee Add behavior parity roadmap review
 - e7895ab Add behavior parity roadmap
 - 03afb56 Add next strengthening sequence planning gate review
@@ -1391,12 +1392,48 @@ authorization status, and notes.
 The first recommended matrix slice is docs-only schema and first rows for
 menu/status and utility commands.
 
-The plan recommends a documentation-only review/acceptance gate next.
+The plan recommends a documentation-only review/acceptance gate next. That
+review is now complete.
 
 The plan is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.
+
+## V1.34 Behavior Parity Matrix Plan Review
+
+The V1.34 behavior parity matrix plan review accepts the matrix plan as the
+current planning gate for future matrix work.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN_REVIEW.md`
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+
+Accepted plan commit:
+
+- 3f991d3 Add V1.34 behavior parity matrix plan
+
+The review accepts:
+
+- future matrix goal
+- accepted sources
+- proposed matrix columns
+- proposed deterministic status values
+- proposed behavior domains and command families
+- recommended matrix build order
+- first matrix slice as docs-only matrix schema and first rows for menu/status
+  and utility commands
+
+The review confirms no implementation, tests, runtime code, dispatch, command
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, hardware behavior, or hardware validation was added.
+
+The next recommended branch is a docs-only matrix schema and first-row slice
+for menu/status and utility commands.
 
 ## User-Facing Project Progress Report
 

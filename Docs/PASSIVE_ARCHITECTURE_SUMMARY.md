@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-af0deee
+3f991d3
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: af0deee Add behavior parity roadmap review
+- current HEAD: 3f991d3 Add V1.34 behavior parity matrix plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -65,15 +65,15 @@ It captures:
   with a current-session handoff recorded; the next strengthening sequence
   planning gate is now created and accepted; the behavior-parity roadmap is
   now documented and accepted as the preferred next branch after that accepted
-  gate; a V1.34 behavior parity matrix plan is now documented as the first
-  matrix-planning slice
+  gate; a V1.34 behavior parity matrix plan is now documented and accepted as
+  the first matrix-planning slice
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only V1.34 behavior parity matrix plan
-  review/acceptance checkpoint, or pause at the clean behavior-parity matrix
-  planning checkpoint
+- next recommended task: docs-only matrix schema and first-row slice for
+  menu/status and utility commands, or pause at the clean accepted
+  behavior-parity matrix planning checkpoint
 - closeout command
 - stop condition
 
@@ -252,11 +252,40 @@ The plan records:
 The plan keeps the first real matrix slice serial so the schema can stabilize
 before any future documentation-only domain parallelization.
 
-The plan recommends a docs-only review/acceptance gate next.
+The plan recommends a docs-only review/acceptance gate next. That review is
+now complete.
 
 The plan adds no implementation, tests, runtime code, CLI behavior, dispatch,
 MIDI, port opening, package metadata changes, active CLI commands, hardware
 behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN_REVIEW.md` accepts the V1.34 behavior
+parity matrix plan as the current planning gate for future matrix work.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PLAN.md`
+
+Accepted plan commit:
+
+- 3f991d3 Add V1.34 behavior parity matrix plan
+
+The review accepts the future matrix goal, accepted sources, proposed matrix
+columns, proposed deterministic status values, proposed behavior domains and
+command families, and recommended matrix build order.
+
+The review accepts the first actual matrix slice as:
+
+- docs-only matrix schema and first rows for menu/status and utility commands
+
+The review confirms the first matrix slice should be serial so the schema can
+stabilize before any future documentation-only domain parallelization.
+
+The review adds no implementation, tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, package metadata changes, active CLI commands,
+hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
