@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-76b538f Add fake-provider adapter guard review
+3495402 Add active-boundary strengthening progress report
 
 ## Current Phase
 
@@ -14,7 +14,8 @@ Passive/Mock Foundation Phase with the first mock-first active boundary
 implemented for test-only evaluation and the first fake-provider-only real
 MIDI adapter boundary now present. Packets 1, 2, and 3 in the current
 mock/fake-provider active-boundary strengthening sequence are complete and
-reviewed.
+reviewed, and the strengthening progress report is accepted as the current
+checkpoint.
 
 ## Current Safety State
 
@@ -69,9 +70,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance gate for the
-mock/fake-provider active-boundary strengthening progress report, or a pause
-at the clean progress checkpoint.
+Next recommended task is a docs-only Packet 4 passive CLI safety regression
+sweep plan, or a pause at the clean progress review checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -386,6 +386,35 @@ expansion exists.
 The report recommends review and acceptance next. After that, the safest
 implementation-facing branch is a documentation plan for Packet 4 passive CLI
 safety regression sweep.
+
+The latest mock/fake-provider active-boundary strengthening progress report
+review is:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PROGRESS_REPORT_REVIEW.md`
+
+It accepts:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PROGRESS_REPORT.md`
+- 3495402 Add active-boundary strengthening progress report
+- Packets 1, 2, and 3 as complete and reviewed
+- Packet 4 as still unimplemented and requiring a separate plan before any
+  tests or code changes
+- profile `"2"` / My BD Hard as the only accepted active-boundary candidate
+- profile `"3"` as unsupported by the active boundary
+- profile `"4"` as parked and unsupported
+- active-boundary report visibility as read-only
+- fake-provider adapter behavior as explicit-provider-only and fake-provider
+  only
+
+The review confirms no real MIDI dependency, `mido`, `rtmidi`, package
+metadata, hardware detection, port discovery, port opening, MIDI sending,
+active CLI command, dispatch, execution, hardware behavior, hardware
+validation, profile `"3"` active-boundary support, profile `"4"`
+implementation, Analog Four support, Pads 5-12 support, or machine/profile
+expansion exists.
+
+The review recommends a docs-only Packet 4 passive CLI safety regression sweep
+plan next.
 
 The latest user-facing project progress report is:
 

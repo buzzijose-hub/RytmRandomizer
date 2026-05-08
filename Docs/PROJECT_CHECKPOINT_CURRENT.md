@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3495402 Add active-boundary strengthening progress report
 - 76b538f Add fake-provider adapter guard review
 - 17c625f Update checkpoint after fake-provider adapter guard
 - 6886acf Strengthen fake-provider adapter guard
@@ -769,6 +770,44 @@ expansion exists.
 The report recommends a documentation-only review/acceptance gate next. After
 that, the safest implementation-facing branch is a documentation plan for
 Packet 4 passive CLI safety regression sweep.
+
+## Mock/Fake-Provider Active-Boundary Strengthening Progress Report Review
+
+The mock/fake-provider active-boundary strengthening progress report review
+accepts the current progress report as the checkpoint after Packets 1, 2, and
+3.
+
+Review document:
+
+- `Docs/MOCK_FAKE_PROVIDER_ACTIVE_BOUNDARY_STRENGTHENING_PROGRESS_REPORT_REVIEW.md`
+
+Accepted progress report commit:
+
+- 3495402 Add active-boundary strengthening progress report
+
+Accepted state:
+
+- Packet 1 active-boundary metadata strengthening is complete and reviewed
+- Packet 2 active-boundary report alignment is complete and reviewed
+- Packet 3 fake-provider adapter guard strengthening is complete and reviewed
+- Packet 4 passive CLI safety regression sweep remains unimplemented and must
+  be separately planned before tests or code changes
+- profile `"2"` / My BD Hard remains the only accepted active-boundary
+  candidate
+- profile `"3"` remains unsupported by the active boundary
+- profile `"4"` remains parked and unsupported
+- active-boundary report visibility remains read-only
+- fake-provider adapter remains explicit-provider-only and fake-provider-only
+
+The review confirms no real MIDI dependency, `mido`, `rtmidi`, package
+metadata, hardware detection, port discovery, port opening, MIDI sending,
+active CLI command, dispatch, execution, hardware behavior, hardware
+validation, profile `"3"` active-boundary support, profile `"4"`
+implementation, Analog Four support, Pads 5-12 support, or machine/profile
+expansion exists.
+
+The review recommends a docs-only Packet 4 passive CLI safety regression sweep
+plan next.
 
 ## User-Facing Project Progress Report
 
