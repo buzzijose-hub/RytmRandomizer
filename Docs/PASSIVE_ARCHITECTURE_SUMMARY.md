@@ -58,15 +58,15 @@ It captures:
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
-  reviewed, and Packet 4 passive CLI safety regression sweep complete
+  reviewed, and Packet 4 passive CLI safety regression sweep complete,
+  checkpointed, and accepted
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance gate for the
-  completed Packet 4 passive CLI safety regression sweep checkpoint, or a
-  broader active-boundary strengthening progress report covering Packets 1
-  through 4
+- next recommended task: broader active-boundary strengthening progress report
+  covering Packets 1 through 4, or pause at the clean Packet 4 review
+  checkpoint
 - closeout command
 - stop condition
 
@@ -706,6 +706,37 @@ execution, real MIDI dependency, port opening, MIDI sending, package metadata,
 hardware behavior, hardware validation, profile `"3"` active-boundary support,
 profile `"4"` implementation, Analog Four support, Pads 5-12 support, or
 machine/profile expansion.
+
+## Passive CLI Safety Regression Sweep Checkpoint Review
+
+`Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_CHECKPOINT_REVIEW.md` accepts the
+completed Packet 4 checkpoint.
+
+Accepted milestone:
+
+- d8fd5e2 Add passive CLI safety regression sweep
+
+Accepted documentation checkpoint:
+
+- 0644cf5 Update checkpoint after passive CLI safety regression sweep
+
+The review accepts the expanded representative passive CLI sweep in
+`tests/test_real_midi_passive_cli_safety.py`, including import isolation from
+`mido`, `rtmidi`, `pythonrtmidi`, and `rytm_randomizer.real_midi_adapter`, and
+output isolation from `execute-command`, `send-command`, `hardware-test`,
+`--armed`, `--port`, and `mido`.
+
+The review confirms Packet 4 added no runtime code, CLI behavior, active CLI
+command, dispatch, execution, real MIDI dependency, port opening, MIDI sending,
+package metadata, hardware behavior, hardware validation, profile `"3"`
+active-boundary support, profile `"4"` implementation, Analog Four support,
+Pads 5-12 support, or machine/profile expansion.
+
+The review records Packets 1, 2, 3, and 4 in the current mock/fake-provider
+active-boundary strengthening sequence as complete and reviewed.
+
+The review recommends a broader active-boundary strengthening progress report
+covering Packets 1 through 4 next.
 
 ## User-Facing Project Progress Report
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 0644cf5 Update checkpoint after passive CLI safety regression sweep
 - d8fd5e2 Add passive CLI safety regression sweep
 - b974bbf Add passive CLI safety regression sweep review
 - 6aca34f Add passive CLI safety regression sweep plan
@@ -953,6 +954,52 @@ machine/profile expansion.
 The next recommended task is a documentation-only review/acceptance gate for
 the completed Packet 4 checkpoint, or a broader active-boundary strengthening
 progress report covering Packets 1 through 4.
+
+## Passive CLI Safety Regression Sweep Checkpoint Review
+
+The passive CLI safety regression sweep checkpoint review accepts Packet 4 as
+complete and reviewed.
+
+Review document:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_CHECKPOINT_REVIEW.md`
+
+Accepted milestone:
+
+- d8fd5e2 Add passive CLI safety regression sweep
+
+Accepted documentation checkpoint:
+
+- 0644cf5 Update checkpoint after passive CLI safety regression sweep
+
+The review accepts:
+
+- the expanded representative passive CLI safety sweep in
+  `tests/test_real_midi_passive_cli_safety.py`
+- import isolation from `mido`, `rtmidi`, `pythonrtmidi`, and
+  `rytm_randomizer.real_midi_adapter`
+- output isolation from `execute-command`, `send-command`, `hardware-test`,
+  `--armed`, `--port`, and `mido`
+- source guard coverage against real MIDI provider/sender affordances and
+  active-boundary evaluation from passive CLI
+- the recorded targeted test, passive CLI test, closeout, V1.34 diff, package
+  metadata diff, package metadata absence, and clean git verification
+
+The review confirms Packet 4 added no runtime code, CLI behavior, active CLI
+command, dispatch, execution, real MIDI dependency, port opening, MIDI sending,
+package metadata, hardware behavior, hardware validation, profile `"3"`
+active-boundary support, profile `"4"` implementation, Analog Four support,
+Pads 5-12 support, or machine/profile expansion.
+
+The current mock/fake-provider active-boundary strengthening sequence now has:
+
+- Packet 1 active-boundary metadata strengthening complete and reviewed
+- Packet 2 active-boundary report alignment complete and reviewed
+- Packet 3 fake-provider adapter guard strengthening complete and reviewed
+- Packet 4 passive CLI safety regression sweep complete and reviewed
+
+The next recommended task is a broader active-boundary strengthening progress
+report covering Packets 1 through 4.
 
 ## User-Facing Project Progress Report
 
