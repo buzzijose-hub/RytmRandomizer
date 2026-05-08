@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ac71857
+56f8bec
 
 ## Protected Reference
 
@@ -54,15 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: ac71857 Add L PZ passive metadata expansion plan
+- current HEAD: 56f8bec Add L PZ passive command metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny passive metadata-only implementation slice for
-  `L` and `PZ`, only after explicit approval
+- next recommended task: docs-only next-gap decision note, broader progress
+  checkpoint, or pause at the clean `L` / `PZ` metadata checkpoint
 - closeout command
 - stop condition
 
@@ -294,6 +294,36 @@ return execution, active behavior, hardware behavior, or hardware validation.
 
 The next recommended task is the tiny passive metadata-only implementation
 slice for `L` and `PZ`, only after explicit approval.
+
+## L PZ Passive Metadata Checkpoint
+
+`Docs/V134_L_PZ_PASSIVE_METADATA_CHECKPOINT.md` records completion of the
+accepted passive metadata-only expansion for:
+
+- `L` / select isolated single-pad mutation target, default Pad 3
+- `PZ` / return selected isolated pad to anchor only
+
+Milestone commit:
+
+- 56f8bec Add L PZ passive command metadata
+
+The implementation added passive `ISOLATED_PAD_UTILITY_COMMANDS` metadata in
+`rytm_randomizer/commands.py`, updated scaffold and command lookup tests, and
+updated deterministic passive list/report fixtures.
+
+The passive command count moved from 89 to 91, the passive registry report
+command count moved from `commands: 89` to `commands: 91`, captured V1.34
+operator entries modeled as passive command metadata moved from 86 to 88, and
+remaining captured gaps moved from 20 to 18.
+
+The metadata remains scaffold-only and non-executable. No new CLI command,
+runtime dispatch, selected-pad runtime state mutation, active anchor return
+execution, real MIDI, port opening, MIDI sending, package metadata, dependency
+selection, active behavior, hardware behavior, or hardware validation was
+added.
+
+The next recommended task is a docs-only next-gap decision note, a broader
+progress checkpoint, or a pause at this clean metadata checkpoint.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

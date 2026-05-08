@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 56f8bec Add L PZ passive command metadata
+- 60e28dc Add L PZ passive metadata expansion plan review
 - ac71857 Add L PZ passive metadata expansion plan
 - 5dd459b Add L PZ next passive metadata gap decision note
 - 50e776f Update checkpoint after B E W U passive metadata
@@ -465,6 +467,46 @@ metadata, dependency selection, or hardware validation.
 
 The next safe branch is the tiny passive metadata-only `L` and `PZ`
 implementation slice, only after explicit approval.
+
+## L PZ Passive Metadata Checkpoint
+
+The accepted isolated single-pad selection/status and return gap category has
+been implemented and checkpointed:
+
+- Docs/V134_L_PZ_PASSIVE_METADATA_CHECKPOINT.md
+
+The milestone records:
+
+- passive `ISOLATED_PAD_UTILITY_COMMANDS` metadata for `L` and `PZ`
+- `L` / select isolated single-pad mutation target, default Pad 3
+- `PZ` / return selected isolated pad to anchor only
+- passive command count moving from 89 to 91
+- passive registry report command count moving from `commands: 89` to
+  `commands: 91`
+- captured V1.34 operator entries modeled as passive command metadata moving
+  from 86 to 88
+- captured V1.34 operator entries still not modeled as passive command
+  metadata moving from 20 to 18
+- updates to scaffold and command lookup tests
+- updates to passive list/report fixtures
+
+Files changed by the milestone:
+
+- `rytm_randomizer/commands.py`
+- `tests/test_scaffold.py`
+- `tests/test_command_lookup.py`
+- `tests/fixtures/cli_list_commands_expected.txt`
+- `tests/fixtures/registry_report_expected.txt`
+
+The new metadata remains scaffold-only and non-executable. It adds no new CLI
+command, no runtime dispatch, no selected-pad runtime state mutation, no
+active anchor return execution, no real MIDI, no port opening, no MIDI
+sending, no active behavior, no hardware behavior, no package metadata, and
+no dependency selection.
+
+The next safe branch is a docs-only next-gap decision note, another tiny
+passive metadata-only plan, a broader progress report, or a pause at this
+clean checkpoint.
 
 ## T C Q Passive Metadata Expansion Plan Review
 
