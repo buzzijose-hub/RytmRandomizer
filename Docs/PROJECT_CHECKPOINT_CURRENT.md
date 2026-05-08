@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- b0fd0f9 Update checkpoint after T C Q passive metadata
 - 230a883 Add T C Q passive command metadata
 - af2d293 Add T C Q passive metadata expansion plan review
 - d1e11dd Add T C Q passive metadata expansion plan
@@ -354,6 +355,36 @@ dependency selection.
 The next safe branch is a docs-only next-gap decision note, another tiny
 passive metadata-only plan, a broader progress report, or a pause at this
 clean checkpoint.
+
+## V1.34 Next Passive Metadata Gap Decision Note
+
+The next passive metadata gap category has been selected in:
+
+- Docs/V134_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md
+
+The decision note records:
+
+- completed `T`, `C`, and `Q` passive metadata checkpoint
+- current passive command count: 85
+- captured V1.34 operator command entries: 106
+- captured entries now modeled as passive command metadata: 82
+- captured entries still not modeled as passive command metadata: 24
+- next recommended planning target: `B`, `E`, `W`, and `U`
+
+The selected category is anchor/state utility metadata:
+
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, port opening, MIDI
+sending, package metadata, dependency selection, active behavior, hardware
+behavior, or hardware validation.
+
+The next safe branch is a docs-only passive metadata expansion plan for
+`B`, `E`, `W`, and `U`.
 
 ## Current Priority
 

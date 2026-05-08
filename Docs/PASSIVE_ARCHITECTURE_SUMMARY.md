@@ -61,9 +61,8 @@ It captures:
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only next-gap decision note, another tiny
-  passive metadata-only plan, broader project progress checkpoint, or pause
-  at the clean `T` / `C` / `Q` metadata checkpoint
+- next recommended task: docs-only passive metadata expansion plan for
+  `B`, `E`, `W`, and `U`
 - closeout command
 - stop condition
 
@@ -211,6 +210,34 @@ The metadata remains scaffold-only and non-executable. No new CLI command,
 runtime dispatch, real MIDI, port opening, MIDI sending, package metadata,
 dependency selection, active behavior, hardware behavior, or hardware
 validation was added.
+
+## V1.34 Next Passive Metadata Gap Decision Note
+
+`Docs/V134_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md` selects the next
+passive metadata planning target after the completed `T`, `C`, and `Q`
+checkpoint.
+
+The selected next category is anchor/state utility metadata:
+
+- `B` / back to current anchor
+- `E` / commit current state as new anchor
+- `W` / waveform exploration only
+- `U` / undo previous script-generated state
+
+The decision note records the current adjusted gap position:
+
+- 106 captured V1.34 operator command entries
+- 82 captured entries now modeled as passive command metadata
+- 24 captured entries still not modeled as passive command metadata
+- current passive command count: 85
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation.
+
+The next recommended task is a docs-only passive metadata expansion plan for
+`B`, `E`, `W`, and `U`.
 
 ## Session Agenda Current Handoff Refresh
 

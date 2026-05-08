@@ -67,8 +67,25 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next-gap decision note or a pause at the
-clean `T` / `C` / `Q` passive metadata checkpoint.
+Next recommended task is a docs-only passive metadata expansion plan for the
+accepted next gap category:
+
+- `B`
+- `E`
+- `W`
+- `U`
+
+The latest next-gap decision note is:
+
+- `Docs/V134_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+
+It selects anchor/state utility metadata as the next planning target and keeps
+implementation parked until a separate plan, review, and explicit approval.
+
+The decision note is documentation-only. It does not add metadata, tests,
+fixtures, runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation.
 
 The latest `T` / `C` / `Q` passive metadata checkpoint is:
 
