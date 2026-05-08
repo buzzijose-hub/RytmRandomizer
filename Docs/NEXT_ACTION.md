@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-14394d0 Add active-boundary strengthening packets 1-4 progress review
+75de10a Add project-level progress report after packets 1-4
 
 ## Current Phase
 
@@ -19,7 +19,7 @@ checkpointed, and accepted. Packets 1 through 4 in the current strengthening
 sequence are now complete and reviewed. The Packets 1 through 4 progress
 report has been created and accepted as the current consolidation checkpoint.
 A broader project-level progress report after Packets 1 through 4 has been
-created as the latest orientation checkpoint.
+created and accepted as the latest orientation checkpoint.
 
 ## Current Safety State
 
@@ -74,9 +74,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a documentation-only review/acceptance gate for the
-project-level progress report after Packets 1 through 4, a new docs-only
-strengthening sequence planning gate, or a pause at the clean checkpoint.
+Next recommended task is a new docs-only strengthening sequence planning gate,
+a docs-only behavior-parity roadmap, a user-facing day/session progress
+report, or a pause at the clean project-level checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -607,6 +607,26 @@ expansion exists.
 
 The report recommends a documentation-only review/acceptance gate next, or a
 pause at the clean project-level progress checkpoint.
+
+The latest project-level progress report after Packets 1 through 4 review is:
+
+- `Docs/PROJECT_LEVEL_PROGRESS_REPORT_AFTER_PACKETS_1_4_REVIEW.md`
+
+It accepts:
+
+- `Docs/PROJECT_LEVEL_PROGRESS_REPORT_AFTER_PACKETS_1_4.md`
+- 75de10a Add project-level progress report after packets 1-4
+- the current Passive/Mock Foundation Phase after completed Packets 1 through
+  4 active-boundary strengthening
+- the current passive CLI read-only visibility layer
+- the current mock mapper and active-boundary scope
+- the current closeout baseline
+- the preserved absence of real MIDI, ports, active CLI behavior, execution,
+  package metadata, and hardware validation
+
+The review recommends a new docs-only strengthening sequence planning gate, a
+docs-only behavior-parity roadmap, a user-facing day/session progress report,
+or a pause at the clean project-level checkpoint.
 
 The latest user-facing project progress report is:
 
