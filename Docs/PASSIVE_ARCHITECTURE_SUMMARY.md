@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-0e7a80a
+2c095a7
 
 ## Protected Reference
 
@@ -54,16 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 0e7a80a Update checkpoint after L PZ passive metadata
+- current HEAD: 2c095a7 Add isolated pad mutation metadata decision note
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only passive metadata expansion plan for
-  isolated single-pad mutation metadata, broader progress checkpoint, or pause
-  at the clean isolated-pad metadata checkpoint
+- next recommended task: docs-only review gate for the isolated-pad mutation
+  metadata expansion plan, broader progress checkpoint, or pause at the clean
+  isolated-pad planning checkpoint
 - closeout command
 - stop condition
 
@@ -358,6 +358,39 @@ hardware validation.
 
 The next recommended task is a docs-only passive metadata expansion plan for
 `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`.
+
+## V1.34 Isolated Pad Mutation Passive Metadata Expansion Plan
+
+`Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md` defines a
+future metadata-only expansion plan for the selected isolated single-pad
+mutation category:
+
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+
+The plan proposes:
+
+- a future `ISOLATED_PAD_MUTATION_COMMANDS` metadata dictionary
+- passive scaffold-only metadata for all eight commands
+- command count movement from 91 to 99
+- captured modeled count movement from 88 to 96
+- remaining captured gap movement from 18 to 10
+- passive list/report fixture updates
+- existing scaffold and command lookup test updates
+
+The plan is documentation-only. It adds no command metadata, tests, fixtures,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, selected-pad runtime mutation, isolated-pad
+mutation execution, depth prompt execution, active behavior, hardware
+behavior, or hardware validation.
+
+The next recommended task is a documentation-only review gate for this plan.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

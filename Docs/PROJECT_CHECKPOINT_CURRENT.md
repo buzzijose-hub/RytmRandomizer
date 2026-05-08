@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2c095a7 Add isolated pad mutation metadata decision note
 - 0e7a80a Update checkpoint after L PZ passive metadata
 - 56f8bec Add L PZ passive command metadata
 - 60e28dc Add L PZ passive metadata expansion plan review
@@ -545,6 +546,53 @@ or hardware validation.
 
 The next safe branch is a docs-only passive metadata expansion plan for
 `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`.
+
+## V1.34 Isolated Pad Mutation Passive Metadata Expansion Plan
+
+The selected isolated single-pad mutation gap category now has a
+documentation-only metadata expansion plan:
+
+- Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md
+
+The plan covers:
+
+- `PM` / mutate selected isolated pad only using its group default zone/depth
+- `PS` / mutate selected isolated pad SRC only, choose depth
+- `PF` / mutate selected isolated pad Filter only, choose depth
+- `PA` / mutate selected isolated pad Amp only, choose depth
+- `PL` / mutate selected isolated pad LFO only, choose depth
+- `PO` / mutate selected isolated pad Morph only, choose depth
+- `PB` / mutate selected isolated pad Body only, choose depth
+- `PG` / mutate selected isolated pad Grit only, choose depth
+
+The plan proposes:
+
+- a future `ISOLATED_PAD_MUTATION_COMMANDS` metadata dictionary
+- passive scaffold-only metadata for all eight commands
+- command count movement from 91 to 99
+- captured modeled count movement from 88 to 96
+- remaining captured gap movement from 18 to 10
+- existing scaffold and command lookup test updates
+- passive list/report fixture updates
+
+The plan requires:
+
+- no selected-pad runtime state mutation
+- no isolated-pad mutation execution
+- no depth prompt execution
+- no new CLI command
+- no dispatch
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+
+The plan is documentation-only. It does not add metadata, tests, fixtures,
+runtime code, CLI wiring, dispatch, real MIDI, port opening, MIDI sending,
+package metadata, dependency selection, active behavior, hardware behavior, or
+hardware validation.
+
+The next safe branch is a documentation-only review gate for this plan.
 
 ## T C Q Passive Metadata Expansion Plan Review
 

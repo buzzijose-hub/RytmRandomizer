@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-0e7a80a Update checkpoint after L PZ passive metadata
+2c095a7 Add isolated pad mutation metadata decision note
 
 ## Current Phase
 
@@ -67,8 +67,39 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only passive metadata expansion plan, a broader
-progress checkpoint, or a pause at the clean isolated-pad metadata checkpoint.
+Next recommended task is a docs-only review gate for the isolated-pad mutation
+metadata expansion plan, a broader progress checkpoint, or a pause at the clean
+isolated-pad planning checkpoint.
+
+The latest isolated-pad mutation passive metadata expansion plan is:
+
+- `Docs/V134_ISOLATED_PAD_MUTATION_PASSIVE_METADATA_EXPANSION_PLAN.md`
+
+It defines a future metadata-only path for:
+
+- `PM`
+- `PS`
+- `PF`
+- `PA`
+- `PL`
+- `PO`
+- `PB`
+- `PG`
+
+The plan proposes a future `ISOLATED_PAD_MUTATION_COMMANDS` metadata
+dictionary, passive scaffold-only metadata for all eight commands, command
+count movement from 91 to 99, captured modeled count movement from 88 to 96,
+remaining captured gap movement from 18 to 10, fixture updates for passive
+list/report output, and tests in existing scaffold and command lookup
+coverage.
+
+The plan is documentation-only. It does not add metadata, tests, runtime code,
+CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, selected-pad runtime mutation, isolated-pad mutation
+execution, depth prompt execution, active behavior, hardware behavior, or
+hardware validation.
+
+The plan must be reviewed and accepted before implementation.
 
 The latest next-gap decision note is:
 
