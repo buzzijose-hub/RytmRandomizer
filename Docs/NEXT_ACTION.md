@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-c50cfec Add legacy single-profile mutation passive metadata
+f1d8735 Update checkpoint after legacy single-profile mutation passive metadata
 
 ## Current Phase
 
@@ -67,9 +67,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next-gap decision note for the remaining
-generic current-profile page mutation metadata, a broader V1.34 passive
-metadata progress report, or a pause at the clean checkpoint.
+Next recommended task is a docs-only passive metadata expansion plan for the
+remaining generic current-profile page mutation commands, a broader V1.34
+passive metadata progress report, or a pause at the clean decision checkpoint.
 
 The remaining captured command-surface gaps are:
 
@@ -78,6 +78,34 @@ The remaining captured command-surface gaps are:
 - `A` / Amp-only mutation, choose depth
 - `G` / Grit-only mutation, choose depth
 - `K` / Kick body mutation, choose depth
+
+The latest next-gap decision note is:
+
+- `Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+
+It selects the remaining generic current-profile page mutation commands as the
+next passive metadata planning target:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+The decision note records:
+
+- current passive command count: 104
+- captured modeled count: 101
+- remaining captured gap count: 5
+- future command count movement from 104 to 109 if implemented
+- future captured modeled count movement from 101 to 106 if implemented
+- future remaining captured gap movement from 5 to 0 if implemented
+
+It is documentation-only. It does not add metadata, tests, fixtures, runtime
+code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package metadata,
+dependency selection, current-profile mutation execution, selected-profile
+runtime mutation, depth execution, active behavior, hardware behavior, or
+hardware validation.
 
 The latest legacy single-profile mutation passive metadata checkpoint is:
 

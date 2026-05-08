@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c50cfec
+f1d8735
 
 ## Protected Reference
 
@@ -54,22 +54,50 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c50cfec Add legacy single-profile mutation passive metadata
+- current HEAD: f1d8735 Update checkpoint after legacy single-profile mutation passive metadata
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only next-gap decision note for `S`, `F`, `A`,
-  `G`, and `K`, broader V1.34 passive metadata progress report, or pause at
-  the clean checkpoint
+- next recommended task: docs-only passive metadata expansion plan for `S`,
+  `F`, `A`, `G`, and `K`, broader V1.34 passive metadata progress report, or
+  pause at the clean decision checkpoint
 - closeout command
 - stop condition
 
 The handoff is for clean session resumption, safety state recall, next-task
 orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
+
+## V1.34 Generic Current-Profile Mutation Next Passive Metadata Gap Decision Note
+
+`Docs/V134_GENERIC_CURRENT_PROFILE_MUTATION_NEXT_PASSIVE_METADATA_GAP_DECISION_NOTE.md`
+selects the remaining generic current-profile page mutation commands as the
+next passive metadata planning target:
+
+- `S` / SRC-only mutation, choose depth
+- `F` / Filter-only mutation, choose depth
+- `A` / Amp-only mutation, choose depth
+- `G` / Grit-only mutation, choose depth
+- `K` / Kick body mutation, choose depth
+
+The decision note records the current gap position:
+
+- passive command count: 104
+- captured V1.34 entries modeled as passive command metadata: 101
+- remaining captured command-surface gaps: 5
+
+If later implemented as passive metadata only, `S`, `F`, `A`, `G`, and `K`
+would move the passive command count from 104 to 109, captured modeled count
+from 101 to 106, and remaining captured gaps from 5 to 0.
+
+The note is documentation-only. It does not add metadata, tests, fixtures,
+runtime code, CLI wiring, dispatch, real MIDI, ports, MIDI sending, package
+metadata, dependency selection, current-profile mutation execution,
+selected-profile runtime mutation, depth execution, active behavior, hardware
+behavior, or hardware validation.
 
 ## V1.34 Legacy Single-Profile Mutation Passive Metadata Checkpoint
 
