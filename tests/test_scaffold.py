@@ -7,6 +7,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from rytm_randomizer.commands import (
     COMMANDS,
+    CURRENT_PROFILE_PAGE_MUTATION_COMMANDS,
     FORBIDDEN_ACTIONS,
     GROUP_COMMANDS,
     ISOLATED_PAD_MUTATION_COMMANDS,
@@ -621,6 +622,41 @@ def test_representative_legacy_single_profile_mutation_labels_match_v134_intent(
     }
     assert LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS["M2"]["mutation_depth"] == "groove"
     assert LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS["M3"]["mutation_depth"] == "strong"
+
+
+def test_current_profile_page_mutation_commands_match_v134_metadata_only_set():
+    expected = {"S", "F", "A", "G", "K"}
+
+    assert set(CURRENT_PROFILE_PAGE_MUTATION_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_current_profile_page_mutation_commands_are_scaffold_only_and_not_executable():
+    for metadata in CURRENT_PROFILE_PAGE_MUTATION_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+        assert metadata["scope"] == "current_profile"
+        assert metadata["command_family"] == "generic_current_profile_page_mutation"
+        assert metadata["requires_depth_selection"] is True
+
+
+def test_representative_current_profile_page_mutation_labels_match_v134_intent():
+    assert CURRENT_PROFILE_PAGE_MUTATION_COMMANDS["S"] == {
+        "type": "mutation",
+        "scope": "current_profile",
+        "command_family": "generic_current_profile_page_mutation",
+        "mutation_area": "src",
+        "requires_depth_selection": True,
+        "sends_midi": False,
+        "label": "SRC-only mutation, choose depth",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert CURRENT_PROFILE_PAGE_MUTATION_COMMANDS["F"]["mutation_area"] == "filter"
+    assert CURRENT_PROFILE_PAGE_MUTATION_COMMANDS["A"]["mutation_area"] == "amp"
+    assert CURRENT_PROFILE_PAGE_MUTATION_COMMANDS["G"]["mutation_area"] == "grit"
+    assert CURRENT_PROFILE_PAGE_MUTATION_COMMANDS["K"]["mutation_area"] == "kick_body"
 
 
 def test_forbidden_actions_match_controlled_mutation_roadmap():
