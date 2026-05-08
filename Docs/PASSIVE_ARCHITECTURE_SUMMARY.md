@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3f991d3
+0a9b8f5
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3f991d3 Add V1.34 behavior parity matrix plan
+- current HEAD: 0a9b8f5 Add V1.34 behavior parity matrix plan review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -66,14 +66,15 @@ It captures:
   planning gate is now created and accepted; the behavior-parity roadmap is
   now documented and accepted as the preferred next branch after that accepted
   gate; a V1.34 behavior parity matrix plan is now documented and accepted as
-  the first matrix-planning slice
+  the first matrix-planning slice; the first docs-only matrix slice for
+  menu/status and utility commands is now documented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only matrix schema and first-row slice for
-  menu/status and utility commands, or pause at the clean accepted
-  behavior-parity matrix planning checkpoint
+- next recommended task: docs-only review/acceptance gate for the first
+  matrix slice, or pause at the clean menu/status and utility matrix slice
+  checkpoint
 - closeout command
 - stop condition
 
@@ -286,6 +287,47 @@ stabilize before any future documentation-only domain parallelization.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Menu/Utility Slice
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE.md` documents the first
+behavior parity matrix rows using the accepted schema.
+
+The slice covers:
+
+- menu/status display commands from `MENU_COMMANDS`
+- core utility/session commands from `UTILITY_COMMANDS`
+
+Included command keys:
+
+- `BD`
+- `FM`
+- `PD`
+- `SM`
+- `P2M`
+- `J`
+- `GM`
+- `SCN`
+- `PR`
+- `SR`
+- `P3M`
+- `P4M`
+- `H`
+- `R`
+- `T`
+- `C`
+- `Q`
+
+The slice records every row as captured passive metadata and current modular
+behavior status `passive-only`. It intentionally documents parity gaps rather
+than closing them.
+
+The next recommended task is a docs-only review/acceptance gate before adding
+more matrix rows.
+
+The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
+MIDI, port opening, package metadata changes, active CLI commands, hardware
+behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 

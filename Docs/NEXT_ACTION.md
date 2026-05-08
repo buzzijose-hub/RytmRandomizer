@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3f991d3 Add V1.34 behavior parity matrix plan
+0a9b8f5 Add V1.34 behavior parity matrix plan review
 
 ## Current Phase
 
@@ -24,7 +24,8 @@ handoff records this clean leave-off point. The next strengthening sequence
 planning gate has been created and accepted. A behavior-parity roadmap has now
 been documented and accepted as the preferred next branch after that gate. A
 V1.34 behavior parity matrix plan has now been documented and accepted as the
-first matrix-planning slice.
+first matrix-planning slice. The first docs-only behavior parity matrix slice
+for menu/status and utility commands has now been documented.
 
 ## Current Safety State
 
@@ -79,9 +80,29 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only matrix schema and first-row slice for
-menu/status and utility commands, or a pause at this clean accepted
-behavior-parity matrix planning checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the first
+matrix slice, or a pause at this clean menu/status and utility matrix slice
+checkpoint.
+
+The latest V1.34 behavior parity matrix slice is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE.md`
+
+It records:
+
+- the accepted matrix schema in document form
+- first rows for menu/status display commands from `MENU_COMMANDS`
+- first rows for core utility/session commands from `UTILITY_COMMANDS`
+- command keys `BD`, `FM`, `PD`, `SM`, `P2M`, `J`, `GM`, `SCN`, `PR`, `SR`,
+  `P3M`, `P4M`, `H`, `R`, `T`, `C`, and `Q`
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- no implementation authorization
+- no real MIDI, ports, active CLI behavior, execution, package metadata, or
+  hardware validation
+
+The slice recommends a docs-only review/acceptance gate next before adding
+more matrix rows.
 
 The latest V1.34 behavior parity matrix plan is:
 

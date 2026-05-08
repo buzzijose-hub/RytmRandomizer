@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 0a9b8f5 Add V1.34 behavior parity matrix plan review
 - 3f991d3 Add V1.34 behavior parity matrix plan
 - af0deee Add behavior parity roadmap review
 - e7895ab Add behavior parity roadmap
@@ -1434,6 +1435,52 @@ package metadata, hardware behavior, or hardware validation was added.
 
 The next recommended branch is a docs-only matrix schema and first-row slice
 for menu/status and utility commands.
+
+## V1.34 Behavior Parity Matrix Menu/Utility Slice
+
+The first behavior parity matrix slice documents menu/status and utility rows
+using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_MENU_UTILITY_SLICE.md`
+
+Current baseline before this slice:
+
+- 0a9b8f5 Add V1.34 behavior parity matrix plan review
+
+The slice includes command keys:
+
+- `BD`
+- `FM`
+- `PD`
+- `SM`
+- `P2M`
+- `J`
+- `GM`
+- `SCN`
+- `PR`
+- `SR`
+- `P3M`
+- `P4M`
+- `H`
+- `R`
+- `T`
+- `C`
+- `Q`
+
+The slice records these rows as captured passive metadata with current modular
+behavior status `passive-only`. It records behavior gaps for future parity work
+without closing them.
+
+The slice recommends a documentation-only review/acceptance gate next before
+adding anchor/profile, mutation, scene, lane-specific, undo/commit, or state
+rows.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 
