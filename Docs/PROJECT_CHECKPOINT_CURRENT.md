@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 7628b66 Add V1.34 behavior parity Pad 1 lane matrix review
 - c69d4cf Add V1.34 behavior parity Pad 1 lane matrix slice
 - c1a6c89 Add V1.34 behavior parity scene group matrix review
 - dc578e5 Add V1.34 behavior parity scene group intent matrix slice
@@ -1892,6 +1893,44 @@ package metadata, hardware behavior, or hardware validation was added.
 
 The next recommended branch is a docs-only Pad 2 lane behavior parity matrix
 slice.
+
+## V1.34 Behavior Parity Matrix Pad 2 Lane Behavior Slice
+
+The V1.34 behavior parity matrix Pad 2 lane behavior slice documents the next
+set of matrix rows using the accepted matrix schema.
+
+Slice document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD2_LANE_BEHAVIOR_SLICE.md`
+
+Current baseline before this slice:
+
+- 7628b66 Add V1.34 behavior parity Pad 1 lane matrix review
+
+The slice includes command keys:
+
+- `P2T`
+- `P2P`
+- `P2G`
+- `P2X`
+
+The slice records Pad 2 tone/snap discovery, pressure/body discovery,
+grit/noise discovery, and currently loaded profile mutation rows as captured
+passive metadata with current modular behavior status `passive-only`.
+
+It records behavior gaps for future parity work without closing them.
+
+Pad 2 discovery behavior is marked as `forbidden-early-scope` planning
+vocabulary because discovery/randomization commands remain unsuitable for the
+earliest active/hardware validation phase.
+
+The next recommended branch is a docs-only review/acceptance gate for this
+Pad 2 lane behavior matrix slice.
+
+The slice is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
 
 ## User-Facing Project Progress Report
 

@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c69d4cf
+7628b66
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c69d4cf Add V1.34 behavior parity Pad 1 lane matrix slice
+- current HEAD: 7628b66 Add V1.34 behavior parity Pad 1 lane matrix review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -73,13 +73,15 @@ It captures:
   numeric input commands is now documented and accepted; the next docs-only
   matrix slice for scene and group intent commands is now documented and
   accepted; the next docs-only matrix slice for Pad 1 lane behavior is now
-  documented and accepted
+  documented and accepted; the next docs-only matrix slice for Pad 2 lane
+  behavior is now documented and awaiting review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Pad 2 lane behavior parity matrix slice, or
-  pause at the clean accepted Pad 1 lane behavior matrix slice checkpoint
+- next recommended task: docs-only review/acceptance gate for the Pad 2 lane
+  behavior parity matrix slice, or pause at the clean docs-only matrix
+  checkpoint
 - closeout command
 - stop condition
 
@@ -703,6 +705,40 @@ The review recommends a docs-only Pad 2 lane behavior matrix slice next.
 The review adds no implementation, tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, package metadata changes, active CLI commands,
 hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Pad 2 Lane Behavior Slice
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_PAD2_LANE_BEHAVIOR_SLICE.md` documents the
+next behavior parity matrix rows using the accepted schema.
+
+The slice covers:
+
+- Pad 2 tone/snap discovery row from `PAD2_COMMANDS`
+- Pad 2 pressure/body discovery row from `PAD2_COMMANDS`
+- Pad 2 grit/noise discovery row from `PAD2_COMMANDS`
+- Pad 2 currently loaded profile mutation row from `PAD2_COMMANDS`
+
+Included command keys:
+
+- `P2T`
+- `P2P`
+- `P2G`
+- `P2X`
+
+The slice records every row as captured passive metadata and current modular
+behavior status `passive-only`. It records Pad 2 tone/snap discovery,
+pressure/body discovery, grit/noise discovery, and current-profile mutation
+parity gaps without closing them.
+
+Pad 2 discovery behavior is recorded as `forbidden-early-scope` planning
+vocabulary because discovery/randomization commands remain unsuitable for the
+earliest active/hardware validation phase.
+
+The slice recommends a docs-only review/acceptance gate next.
+
+The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
+command execution, scene execution, MIDI, port opening, package metadata
+changes, active CLI commands, hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 
