@@ -127,6 +127,36 @@ MENU_COMMANDS = {
     },
 }
 
+UTILITY_COMMANDS = {
+    "T": {
+        "type": "selection",
+        "scope": "target_pad_channel",
+        "sends_midi": False,
+        "label": "select target pad/channel",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "C": {
+        "type": "selection",
+        "scope": "midi_channel",
+        "sends_midi": False,
+        "label": "change MIDI channel",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+    "Q": {
+        "type": "session",
+        "scope": "operator_session",
+        "sends_midi": False,
+        "label": "quit",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    },
+}
+
 FORBIDDEN_ACTIONS = {
     "master_volume": {
         "label": "Master volume",
@@ -667,6 +697,7 @@ COMMANDS = {
         for command, metadata in SCENE_COMMANDS.items()
     },
     **MENU_COMMANDS,
+    **UTILITY_COMMANDS,
     **GROUP_COMMANDS,
     **PAD1_COMMANDS,
     **PAD2_COMMANDS,

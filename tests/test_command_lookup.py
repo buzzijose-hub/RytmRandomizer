@@ -84,6 +84,23 @@ def test_known_pad_1_to_4_command_lookups_return_existing_metadata():
         assert report["metadata"] == COMMANDS[command_key]
 
 
+def test_known_utility_command_lookups_return_existing_metadata():
+    expected = {
+        "T": ("selection", "target_pad_channel", "select target pad/channel"),
+        "C": ("selection", "midi_channel", "change MIDI channel"),
+        "Q": ("session", "operator_session", "quit"),
+    }
+
+    for command_key, (command_type, scope, label) in expected.items():
+        report = describe_command(command_key)
+
+        assert_passive_command_report(report, command_key)
+        assert report["type"] == command_type
+        assert report["scope"] == scope
+        assert report["label"] == label
+        assert report["metadata"] == COMMANDS[command_key]
+
+
 def test_command_lookup_helpers_return_existing_values_only():
     assert get_command_type("O") == "load"
     assert get_command_type("S1A") == "scene"
@@ -140,6 +157,7 @@ if __name__ == "__main__":
     test_known_group_command_lookup_returns_existing_metadata()
     test_known_scene_command_lookup_returns_existing_metadata()
     test_known_pad_1_to_4_command_lookups_return_existing_metadata()
+    test_known_utility_command_lookups_return_existing_metadata()
     test_command_lookup_helpers_return_existing_values_only()
     test_command_lookup_normalizes_keys_without_executing()
     test_unknown_command_returns_passive_not_found_result()

@@ -15,6 +15,7 @@ from rytm_randomizer.commands import (
     PAD2_COMMANDS,
     PAD3_COMMANDS,
     PAD4_COMMANDS,
+    UTILITY_COMMANDS,
     is_guarded_main_prompt_depth,
 )
 from rytm_randomizer.constants import (
@@ -357,6 +358,49 @@ def test_representative_menu_status_labels_match_v134_intent():
         "type": "print",
         "sends_midi": False,
         "label": "print current script state",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+
+
+def test_utility_commands_match_v134_metadata_only_set():
+    expected = {"T", "C", "Q"}
+
+    assert set(UTILITY_COMMANDS) == expected
+    assert expected.issubset(COMMANDS)
+
+
+def test_utility_commands_are_scaffold_only_and_not_executable():
+    for metadata in UTILITY_COMMANDS.values():
+        assert_sends_no_midi(metadata)
+        assert_protocol_command_metadata(metadata)
+
+
+def test_representative_utility_command_labels_match_v134_intent():
+    assert UTILITY_COMMANDS["T"] == {
+        "type": "selection",
+        "scope": "target_pad_channel",
+        "sends_midi": False,
+        "label": "select target pad/channel",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert UTILITY_COMMANDS["C"] == {
+        "type": "selection",
+        "scope": "midi_channel",
+        "sends_midi": False,
+        "label": "change MIDI channel",
+        "executable": False,
+        "v134_reference_command": True,
+        "scaffold_only": True,
+    }
+    assert UTILITY_COMMANDS["Q"] == {
+        "type": "session",
+        "scope": "operator_session",
+        "sends_midi": False,
+        "label": "quit",
         "executable": False,
         "v134_reference_command": True,
         "scaffold_only": True,
