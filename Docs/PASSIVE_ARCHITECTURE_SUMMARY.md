@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-9b34d22
+dc578e5
 
 ## Protected Reference
 
@@ -54,7 +54,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 9b34d22 Add V1.34 behavior parity mutation depth matrix review
+- current HEAD: dc578e5 Add V1.34 behavior parity scene group intent matrix
+  slice
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -72,14 +73,13 @@ It captures:
   accepted; the next docs-only matrix slice for mutation-depth and guarded
   numeric input commands is now documented and accepted; the next docs-only
   matrix slice for scene and group intent commands is now documented and
-  awaiting review
+  accepted
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only review/acceptance gate for the scene and
-  group intent behavior parity matrix slice, or pause at the clean docs-only
-  matrix checkpoint
+- next recommended task: docs-only Pad 1 lane behavior parity matrix slice, or
+  pause at the clean accepted scene/group intent matrix slice checkpoint
 - closeout command
 - stop condition
 
@@ -589,11 +589,45 @@ Scene and group mutation behavior is recorded as `forbidden-early-scope`
 planning vocabulary because scenes and group/global mutations remain unsuitable
 for the earliest active/hardware validation phase.
 
-The slice recommends a docs-only review/acceptance gate next.
+That review is now complete.
 
 The slice adds no implementation, tests, runtime code, CLI behavior, dispatch,
 command execution, scene execution, MIDI, port opening, package metadata
 changes, active CLI commands, hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Matrix Scene And Group Intent Slice Review
+
+`Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE_REVIEW.md` accepts
+the scene and group intent behavior parity matrix slice.
+
+Accepted slice:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE.md`
+
+Accepted slice commit:
+
+- dc578e5 Add V1.34 behavior parity scene group intent matrix slice
+
+The review accepts:
+
+- scene command rows from `SCENE_COMMANDS`
+- four-pad group mutation rows from `GROUP_COMMANDS`
+- lane-aware group mutation rows from `GROUP_COMMANDS`
+- the 21 included command keys
+- all rows as captured passive metadata
+- all rows as current modular behavior status `passive-only`
+- all rows as implementation authorization status `documentation-only`
+- `forbidden-early-scope` as planning vocabulary for scene and group mutation
+  behavior
+- future artifact and test categories as planning vocabulary only
+
+The review confirms the slice records behavior gaps rather than closing them.
+
+The review recommends a docs-only Pad 1 lane behavior matrix slice next.
+
+The review adds no implementation, tests, runtime code, CLI behavior,
+dispatch, MIDI, port opening, package metadata changes, active CLI commands,
+hardware behavior, or hardware validation.
 
 ## Next Phase Planning Gate
 

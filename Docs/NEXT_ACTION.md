@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9b34d22 Add V1.34 behavior parity mutation depth matrix review
+dc578e5 Add V1.34 behavior parity scene group intent matrix slice
 
 ## Current Phase
 
@@ -30,8 +30,7 @@ next docs-only behavior parity matrix slice for anchor/profile commands has
 now been documented and accepted. The next docs-only behavior parity matrix
 slice for mutation-depth and guarded numeric input commands has now been
 documented and accepted. The next docs-only behavior parity matrix slice for
-scene and group intent commands has now been documented and is awaiting
-review.
+scene and group intent commands has now been documented and accepted.
 
 ## Current Safety State
 
@@ -86,11 +85,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review/acceptance gate for the scene and
-group intent behavior parity matrix slice, or a pause at this clean docs-only
-matrix checkpoint.
+Next recommended task is a docs-only Pad 1 lane behavior parity matrix slice,
+or a pause at this clean accepted scene/group intent matrix slice checkpoint.
 
-The latest V1.34 behavior parity matrix slice is:
+The latest accepted V1.34 behavior parity matrix slice is:
 
 - `Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE.md`
 
@@ -112,8 +110,36 @@ The slice confirms no implementation, tests, runtime code, dispatch,
 execution, scene execution, real MIDI, port opening, active CLI behavior,
 package metadata, or hardware validation was added.
 
-The slice recommends a docs-only review/acceptance gate next before adding
-more matrix rows.
+The slice recommended a docs-only review/acceptance gate before adding more
+matrix rows. That review is now complete.
+
+The latest V1.34 behavior parity matrix scene and group intent slice review
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_SCENE_GROUP_INTENT_SLICE.md`
+- dc578e5 Add V1.34 behavior parity scene group intent matrix slice
+- scene command rows from `SCENE_COMMANDS`
+- four-pad group mutation rows from `GROUP_COMMANDS`
+- lane-aware group mutation rows from `GROUP_COMMANDS`
+- all 21 slice rows as captured passive metadata
+- all 21 slice rows as current modular behavior status `passive-only`
+- all 21 slice rows as implementation authorization status
+  `documentation-only`
+- `forbidden-early-scope` as planning vocabulary for scene and group mutation
+  behavior
+- future scene/group and lane-aware parity test categories as planning
+  vocabulary only
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, or hardware validation was added.
+
+The review recommends a docs-only Pad 1 lane behavior parity matrix slice
+next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 
