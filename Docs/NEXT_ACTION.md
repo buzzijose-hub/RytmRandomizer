@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3089a76 Add V1.34 behavior parity undo commit state matrix review
+6f0114b Add V1.34 behavior parity matrix progress review
 
 ## Current Phase
 
@@ -43,6 +43,8 @@ The next docs-only behavior parity matrix slice for undo/commit/state
 behavior has now been documented and accepted.
 The docs-only complete-matrix progress review has now been documented as the
 current matrix checkpoint.
+The docs-only behavior parity implementation readiness checkpoint has now been
+documented as the current readiness gate.
 
 ## Current Safety State
 
@@ -97,8 +99,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only behavior parity implementation readiness
-checkpoint, or a pause at this clean complete-matrix progress checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the behavior
+parity implementation readiness checkpoint, or a pause at this clean readiness
+checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -164,6 +167,29 @@ complete and reviewed.
 
 It recommends a docs-only behavior parity implementation readiness checkpoint,
 or a pause at this clean matrix checkpoint.
+
+The latest V1.34 behavior parity implementation readiness checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_READINESS_CHECKPOINT.md`
+
+It records:
+
+- current readiness to plan a first behavior-parity implementation packet
+- no direct implementation authorization from the checkpoint alone
+- current open behavior gaps
+- required preconditions before any runtime behavior implementation
+- recommended first implementation-planning target: menu/status and utility
+  behavior
+- explicit non-starters for first implementation
+- required future test categories
+- no parallel implementation recommended for the immediate first behavior
+  packet
+
+It confirms no implementation, tests, runtime code, dispatch, execution, scene
+execution, real MIDI, port opening, package metadata, active CLI behavior, or
+hardware validation was added.
+
+It recommends a docs-only review/acceptance gate next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 

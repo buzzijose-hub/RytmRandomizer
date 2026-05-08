@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3089a76
+6f0114b
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3089a76 Add V1.34 behavior parity undo commit state matrix review
+- current HEAD: 6f0114b Add V1.34 behavior parity matrix progress review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -79,13 +79,16 @@ It captures:
   matrix slice for Pad 4 lane behavior is now documented and accepted; the
   next docs-only matrix slice for undo/commit/state behavior is now
   documented and accepted; the docs-only complete-matrix progress review is
-  now documented as the current matrix checkpoint
+  now documented as the current matrix checkpoint; the docs-only behavior
+  parity implementation readiness checkpoint is now documented as the current
+  readiness gate
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only behavior parity implementation readiness
-  checkpoint, or pause at the clean complete-matrix progress checkpoint
+- next recommended task: docs-only review/acceptance gate for the behavior
+  parity implementation readiness checkpoint, or pause at the clean readiness
+  checkpoint
 - closeout command
 - stop condition
 
@@ -989,6 +992,60 @@ expansion, SysEx, GUI/capture, or hardware validation was added.
 
 The next recommended branch is a docs-only behavior parity implementation
 readiness checkpoint, or pause at this clean matrix checkpoint.
+
+## V1.34 Behavior Parity Implementation Readiness Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_READINESS_CHECKPOINT.md` records the
+readiness gate after the completed behavior parity matrix.
+
+It confirms the project is ready to plan a first behavior-parity
+implementation packet, but it does not authorize runtime implementation by
+itself.
+
+The checkpoint records what is ready:
+
+- protected V1.34 reference
+- captured V1.34 command surface as passive metadata
+- passive registry and passive CLI visibility
+- mock MIDI and mock message mapper foundations
+- mock-first active boundary and fake-provider-only adapter boundary
+- accepted behavior-parity roadmap and matrix plan
+- reviewed matrix slices for all planned behavior domains
+- complete matrix progress review
+- current closeout safety net
+
+It records what is not ready:
+
+- command routing
+- prompt/input loop behavior
+- menu/status runtime behavior
+- target pad/channel selection behavior
+- anchor/profile load and return behavior
+- mutation-depth prompt behavior
+- current-profile mutation behavior
+- selected isolated pad mutation behavior
+- scene execution
+- group mutation behavior
+- Pad 1 through Pad 4 lane behavior
+- undo/commit/state behavior
+- waveform exploration
+- real MIDI behavior
+- hardware validation
+
+The checkpoint recommends the first future implementation-planning target as a
+small, mock/passive-only packet around menu/status and utility behavior.
+
+Parallel implementation is not recommended for the immediate first behavior
+packet because routing shape, safety vocabulary, and test style need to
+stabilize first.
+
+The checkpoint adds no implementation, tests, runtime code, dispatch, command
+execution, scene execution, real MIDI dependency, `mido`, `rtmidi`, package
+metadata changes, port opening, active CLI commands, hardware behavior, or
+hardware validation.
+
+The next recommended task is a docs-only review/acceptance gate for the
+readiness checkpoint.
 
 ## Next Phase Planning Gate
 
