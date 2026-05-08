@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ee7c497 Add active-boundary strengthening progress review
 - 3495402 Add active-boundary strengthening progress report
 - 76b538f Add fake-provider adapter guard review
 - 17c625f Update checkpoint after fake-provider adapter guard
@@ -808,6 +809,39 @@ expansion exists.
 
 The review recommends a docs-only Packet 4 passive CLI safety regression sweep
 plan next.
+
+## Passive CLI Safety Regression Sweep Plan
+
+The passive CLI safety regression sweep plan defines Packet 4 from the
+mock/fake-provider active-boundary strengthening sequence.
+
+Plan document:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN.md`
+
+The plan records:
+
+- Packet 4 should remain tests-only/planning-first
+- representative passive CLI commands should remain read-only
+- future tests should prove passive CLI commands do not import real MIDI
+  modules
+- future tests should prove passive CLI commands do not import
+  `rytm_randomizer.real_midi_adapter`
+- future tests should prove passive CLI commands do not construct real MIDI
+  providers or senders
+- future tests should prove passive CLI commands do not expose active command
+  names
+- future ownership should stay limited to `tests/test_real_midi_passive_cli_safety.py`
+  and `tests/test_cli.py`
+- Packet 4 remains unimplemented until the plan is reviewed and accepted
+
+The plan confirms no runtime code, CLI behavior, active-boundary evaluation,
+sender construction, real MIDI dependency, package metadata, port opening, MIDI
+sending, active CLI command, hardware behavior, hardware validation, profile
+`"3"` active-boundary support, profile `"4"` implementation, Analog Four
+support, Pads 5-12 support, or machine/profile expansion is added.
+
+The plan recommends a documentation-only review/acceptance gate next.
 
 ## User-Facing Project Progress Report
 

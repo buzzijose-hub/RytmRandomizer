@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3495402 Add active-boundary strengthening progress report
+ee7c497 Add active-boundary strengthening progress review
 
 ## Current Phase
 
@@ -70,8 +70,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 4 passive CLI safety regression
-sweep plan, or a pause at the clean progress review checkpoint.
+Next recommended task is a documentation-only review/acceptance gate for the
+Packet 4 passive CLI safety regression sweep plan, or a pause at the clean
+planning checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -415,6 +416,34 @@ expansion exists.
 
 The review recommends a docs-only Packet 4 passive CLI safety regression sweep
 plan next.
+
+The latest Packet 4 passive CLI safety regression sweep plan is:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN.md`
+
+It records:
+
+- Packet 4 should remain tests-only/planning-first
+- representative passive CLI commands should remain read-only
+- future tests should prove passive CLI commands do not import real MIDI
+  modules
+- future tests should prove passive CLI commands do not import
+  `rytm_randomizer.real_midi_adapter`
+- future tests should prove passive CLI commands do not construct real MIDI
+  providers or senders
+- future tests should prove passive CLI commands do not expose active command
+  names
+- future ownership should stay limited to passive CLI safety tests and passive
+  CLI tests
+- Packet 4 remains unimplemented until this plan is reviewed and accepted
+
+The plan confirms no runtime code, CLI behavior, active-boundary evaluation,
+sender construction, real MIDI dependency, package metadata, port opening, MIDI
+sending, active CLI command, hardware behavior, hardware validation, profile
+`"3"` active-boundary support, profile `"4"` implementation, Analog Four
+support, Pads 5-12 support, or machine/profile expansion is added.
+
+The plan recommends review and acceptance next.
 
 The latest user-facing project progress report is:
 

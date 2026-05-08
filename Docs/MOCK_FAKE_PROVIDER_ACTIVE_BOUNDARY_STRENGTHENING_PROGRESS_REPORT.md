@@ -46,8 +46,11 @@ Remaining planned packet:
 
 - Packet 4: Passive CLI Safety Regression Sweep
 
-Packet 4 remains unimplemented and should be separately planned before any
-test or code changes.
+Packet 4 remains unimplemented. The follow-up planning document is:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN.md`
+
+That plan must be reviewed and accepted before any test or code changes.
 
 ## Packet 1 Summary
 
@@ -260,7 +263,8 @@ approved.
 
 - Option A: review and accept this progress report.
 - Option B: pause at this clean strengthening checkpoint.
-- Option C: plan Packet 4 passive CLI safety regression sweep.
+- Option C: review and accept the Packet 4 passive CLI safety regression sweep
+  plan.
 - Option D: create a tiny follow-up fake-provider adapter guard plan.
 - Option E: return to project-level roadmap/progress documentation.
 

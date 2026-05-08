@@ -171,6 +171,25 @@ plan.
 Do not add real MIDI. Do not add active CLI commands. Do not open ports. Do not
 turn on hardware.
 
+## Follow-Up Plan
+
+The follow-up Packet 4 planning document is:
+
+- `Docs/PASSIVE_CLI_SAFETY_REGRESSION_SWEEP_PLAN.md`
+
+It keeps Packet 4 tests-only/planning-first and defines future coverage for
+representative passive CLI commands remaining read-only, not importing real MIDI
+modules, not importing `rytm_randomizer.real_midi_adapter`, not constructing
+providers or senders, not exposing active command names, and not opening ports
+or sending MIDI.
+
+The follow-up plan adds no tests, runtime code, CLI behavior, active-boundary
+evaluation, sender construction, real MIDI dependency, package metadata, port
+opening, MIDI sending, active CLI command, hardware behavior, hardware
+validation, profile `"3"` active-boundary support, profile `"4"`
+implementation, Analog Four support, Pads 5-12 support, or machine/profile
+expansion.
+
 ## Decision
 
 The mock/fake-provider active-boundary strengthening progress report is
