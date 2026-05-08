@@ -15,6 +15,8 @@ from .mock_midi import MidiMessage, MockMidiSender
 
 SUPPORTED_SOURCE_KIND = "group_profile"
 SUPPORTED_SOURCE_KEY = "2"
+ACTIVE_BOUNDARY_NAME = "mock_active_boundary"
+SUPPORTED_CANDIDATE = f"{SUPPORTED_SOURCE_KIND}:{SUPPORTED_SOURCE_KEY}"
 
 
 def _freeze_metadata(metadata: Mapping[str, object] | None) -> Mapping[str, object]:
@@ -59,17 +61,34 @@ class ActiveBoundaryError(ValueError):
     """Raised when active boundary inputs are invalid for tests."""
 
 
+def _result_metadata(
+    request: ActiveBoundaryRequest,
+    reason: str | None = None,
+) -> dict[str, object]:
+    metadata: dict[str, object] = {
+        "boundary": ACTIVE_BOUNDARY_NAME,
+        "source_kind": request.source_kind,
+        "source_key": request.source_key,
+        "target": request.target,
+        "armed": request.armed,
+        "dry_run_confirmed": request.dry_run_confirmed,
+        "supported_candidate": SUPPORTED_CANDIDATE,
+        "mock_only": True,
+        "sends_real_midi": False,
+    }
+    if reason is not None:
+        metadata["reason"] = reason
+    if "operator_intent" in request.metadata:
+        metadata["operator_intent"] = request.metadata["operator_intent"]
+    return metadata
+
+
 def _failure(reason: str, request: ActiveBoundaryRequest) -> ActiveBoundaryResult:
     return ActiveBoundaryResult(
         accepted=False,
         emitted_messages=(),
         reason=reason,
-        metadata={
-            "source_kind": request.source_kind,
-            "source_key": request.source_key,
-            "mock_only": True,
-            "sends_real_midi": False,
-        },
+        metadata=_result_metadata(request, reason=reason),
     )
 
 
@@ -99,11 +118,5 @@ def evaluate_mock_active_boundary(
         accepted=True,
         emitted_messages=messages,
         reason="accepted_mock_only",
-        metadata={
-            "source_kind": request.source_kind,
-            "source_key": request.source_key,
-            "target": request.target,
-            "mock_only": True,
-            "sends_real_midi": False,
-        },
+        metadata=_result_metadata(request),
     )

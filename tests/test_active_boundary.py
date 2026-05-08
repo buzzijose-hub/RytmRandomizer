@@ -253,6 +253,67 @@ def test_failure_result_metadata_records_mock_only_safety():
     assert_mapping_is_immutable(result.metadata)
 
 
+def test_accepted_result_metadata_carries_boundary_scope_and_operator_intent():
+    from rytm_randomizer.active_boundary import (
+        ActiveBoundaryRequest,
+        evaluate_mock_active_boundary,
+    )
+    from rytm_randomizer.mock_midi import MockMidiSender
+
+    request = ActiveBoundaryRequest(
+        source_kind="group_profile",
+        source_key="2",
+        armed=True,
+        dry_run_confirmed=True,
+        target="mock-target-only",
+        metadata={"operator_intent": "load Pad 1 BD Hard anchor"},
+    )
+
+    result = evaluate_mock_active_boundary(request, MockMidiSender())
+
+    assert result.accepted is True
+    assert result.metadata["boundary"] == "mock_active_boundary"
+    assert result.metadata["supported_candidate"] == "group_profile:2"
+    assert result.metadata["target"] == "mock-target-only"
+    assert result.metadata["armed"] is True
+    assert result.metadata["dry_run_confirmed"] is True
+    assert result.metadata["operator_intent"] == "load Pad 1 BD Hard anchor"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+
+
+def test_failure_result_metadata_carries_reason_and_boundary_scope():
+    from rytm_randomizer.active_boundary import (
+        ActiveBoundaryRequest,
+        evaluate_mock_active_boundary,
+    )
+    from rytm_randomizer.mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    request = ActiveBoundaryRequest(
+        source_kind="group_profile",
+        source_key="2",
+        armed=False,
+        dry_run_confirmed=True,
+        target="mock-target-only",
+        metadata={"operator_intent": "load Pad 1 BD Hard anchor"},
+    )
+
+    result = evaluate_mock_active_boundary(request, sender)
+
+    assert result.accepted is False
+    assert result.metadata["boundary"] == "mock_active_boundary"
+    assert result.metadata["supported_candidate"] == "group_profile:2"
+    assert result.metadata["reason"] == "missing_arming"
+    assert result.metadata["target"] == "mock-target-only"
+    assert result.metadata["armed"] is False
+    assert result.metadata["dry_run_confirmed"] is True
+    assert result.metadata["operator_intent"] == "load Pad 1 BD Hard anchor"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert sender.sent_messages == ()
+
+
 def test_request_source_key_is_normalized_to_string_before_evaluation():
     from rytm_randomizer.active_boundary import (
         ActiveBoundaryRequest,
@@ -664,6 +725,8 @@ if __name__ == "__main__":
     test_result_metadata_is_copied_and_immutable()
     test_accepted_result_metadata_includes_target_and_is_immutable()
     test_failure_result_metadata_records_mock_only_safety()
+    test_accepted_result_metadata_carries_boundary_scope_and_operator_intent()
+    test_failure_result_metadata_carries_reason_and_boundary_scope()
     test_request_source_key_is_normalized_to_string_before_evaluation()
     test_request_metadata_does_not_leak_into_emitted_messages()
     test_accepted_evaluation_does_not_mutate_request_metadata_object()
