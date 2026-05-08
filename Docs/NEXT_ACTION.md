@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-04277a5 Add V1.34 behavior parity Pad 4 lane matrix review
+d8619bc Add V1.34 behavior parity undo commit state matrix slice
 
 ## Current Phase
 
@@ -40,7 +40,7 @@ now been documented and accepted.
 The next docs-only behavior parity matrix slice for Pad 4 lane behavior has
 now been documented and accepted.
 The next docs-only behavior parity matrix slice for undo/commit/state
-behavior has now been documented and is awaiting review.
+behavior has now been documented and accepted.
 
 ## Current Safety State
 
@@ -95,9 +95,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review/acceptance gate for the
-undo/commit/state behavior parity matrix slice, or a pause at this clean
-docs-only matrix checkpoint.
+Next recommended task is a docs-only complete-matrix progress review, or a
+pause at this clean accepted undo/commit/state behavior matrix slice
+checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -117,8 +117,32 @@ The slice confirms no implementation, tests, runtime code, dispatch,
 execution, scene execution, real MIDI, port opening, active CLI behavior,
 package metadata, or hardware validation was added.
 
-The slice recommends a docs-only review/acceptance gate next before any
-broader matrix progress review.
+The slice recommended a docs-only review/acceptance gate before any broader
+matrix progress review. That review is now complete.
+
+The latest V1.34 behavior parity matrix undo/commit/state slice review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_UNDO_COMMIT_STATE_SLICE_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_MATRIX_UNDO_COMMIT_STATE_SLICE.md`
+- d8619bc Add V1.34 behavior parity undo commit state matrix slice
+- state utility rows from `STATE_UTILITY_COMMANDS`
+- command keys `B`, `E`, `W`, and `U`
+- all 4 slice rows as captured passive metadata
+- all 4 slice rows as current modular behavior status `passive-only`
+- all 4 slice rows as implementation authorization status
+  `documentation-only`
+- `future-real-midi-risk` for `B` and `U` as planning vocabulary only
+- `forbidden-early-scope` for `E` and `W` as planning vocabulary only
+- future undo/commit/state parity test categories as planning vocabulary only
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, or hardware validation was added.
+
+The review recommends a docs-only complete-matrix progress review next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 
