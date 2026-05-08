@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-7276d35 Add V1.34 passive metadata completion report
+15173c3 Add V1.34 passive metadata completion review
 
 ## Current Phase
 
@@ -67,11 +67,29 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a user-facing project progress report, a review of any
-uncaptured V1.34 behavior, or a pause at the clean completion checkpoint.
+Next recommended task is a next-phase planning gate, a review of any uncaptured
+V1.34 behavior, or a pause at the clean completion checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
+
+The latest user-facing project progress report is:
+
+- `Docs/USER_FACING_PROJECT_PROGRESS_REPORT.md`
+
+It records:
+
+- full dream project rough progress: 25-30%
+- core modular software foundation rough progress: 75-85%
+- passive CLI / dry-run foundation: 95%+
+- captured V1.34 passive metadata map: 100%
+- mock MIDI / mock active-boundary foundation: 60-70%
+- real hardware validation: 0%
+- current recommendation: create a next-phase planning gate before new
+  implementation
+
+The report is documentation-only. It does not implement features, add runtime
+behavior, send MIDI, open ports, or authorize hardware validation.
 
 The latest V1.34 passive metadata completion report review is:
 
