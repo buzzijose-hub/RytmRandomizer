@@ -217,7 +217,9 @@ because report output and fixture text are tightly coupled.
 
 ## Recommendation
 
-Review and accept this plan next.
+This plan has a matching review gate:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN_REVIEW.md`
 
 After acceptance, implement a tiny Packet 2 report alignment slice only if the
 report text should expose the Packet 1 metadata fields.

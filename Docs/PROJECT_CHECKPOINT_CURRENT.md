@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a4580b1 Add active boundary report alignment plan
 - 4b41f56 Add active boundary metadata strengthening review
 - 9372a58 Update checkpoint after active boundary metadata strengthening
 - e8b3403 Strengthen active boundary metadata
@@ -458,6 +459,34 @@ The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, command execution, scene execution, MIDI, port opening, hardware
 behavior, package metadata changes, profile `"3"` active-boundary support,
 profile `"4"` implementation, or hardware validation.
+
+## Active Boundary Report Alignment Plan Review
+
+The active-boundary report alignment plan review accepts
+`Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN.md` as the current Packet 2
+planning gate.
+
+It accepts future read-only report alignment for:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- Packet 1 result metadata fields
+- failure reason metadata on failure paths
+
+Accepted future ownership remains limited to
+`rytm_randomizer/active_boundary_report.py`,
+`tests/test_active_boundary_report.py`, `tests/test_cli.py`, and deterministic
+CLI fixtures if report text changes.
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, scenes, global mutations, active CLI commands, real MIDI
+dependencies, package metadata changes, port opening, MIDI sending, hardware
+validation, Analog Four support, Pads 5-12 support, and machine/profile
+expansion frozen.
+
+The review is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, hardware behavior, package metadata changes, or hardware validation.
 
 ## User-Facing Project Progress Report
 

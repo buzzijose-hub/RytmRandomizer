@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-4b41f56 Add active boundary metadata strengthening review
+a4580b1 Add active boundary report alignment plan
 
 ## Current Phase
 
@@ -67,8 +67,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is review/acceptance of the Packet 2 active-boundary
-report alignment plan, or a pause at the clean completion checkpoint.
+Next recommended task is the tiny Packet 2 active-boundary report alignment
+implementation slice, or a pause at the clean planning checkpoint.
 
 The currently captured V1.34 command surface has no remaining passive metadata
 gaps.
@@ -199,6 +199,29 @@ It records:
 The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, MIDI, port opening, hardware behavior, package metadata changes, or
 hardware validation.
+
+The latest Packet 2 active-boundary report alignment plan review is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN.md`
+- future report alignment for Packet 1 metadata visibility
+- `boundary: mock_active_boundary`
+- `supported candidate: group_profile:2`
+- result metadata field visibility
+- failure reason metadata visibility on failure paths
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port opening, MIDI sending, hardware validation, Analog Four support,
+Pads 5-12 support, and machine/profile expansion frozen.
+
+The review recommends a tiny Packet 2 implementation slice next only if the
+read-only report should expose Packet 1 metadata fields. It adds no tests,
+runtime code, CLI behavior, dispatch, MIDI, port opening, hardware behavior,
+package metadata changes, or hardware validation.
 
 The latest user-facing project progress report is:
 

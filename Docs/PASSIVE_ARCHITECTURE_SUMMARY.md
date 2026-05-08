@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-4b41f56
+a4580b1
 
 ## Protected Reference
 
@@ -54,15 +54,15 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 4b41f56 Add active boundary metadata strengthening review
+- current HEAD: a4580b1 Add active boundary report alignment plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented and first fake-provider-only real MIDI adapter boundary present
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review/acceptance of the Packet 2 active-boundary
-  report alignment plan, or pause at the clean completion checkpoint
+- next recommended task: tiny Packet 2 active-boundary report alignment
+  implementation slice, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
@@ -291,6 +291,34 @@ The plan is documentation-only. It adds no tests, runtime code, CLI behavior,
 dispatch, command execution, scene execution, MIDI, port opening, hardware
 behavior, package metadata changes, profile `"3"` active-boundary support,
 profile `"4"` implementation, or hardware validation.
+
+## Active Boundary Report Alignment Plan Review
+
+`Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN_REVIEW.md` accepts
+`Docs/ACTIVE_BOUNDARY_REPORT_ALIGNMENT_PLAN.md` as the current Packet 2
+planning gate.
+
+Accepted future report alignment may expose:
+
+- boundary: `mock_active_boundary`
+- supported candidate: `group_profile:2`
+- Packet 1 result metadata fields
+- failure reason metadata on failure paths
+
+The review keeps the report passive/read-only. The future
+`active-boundary-report` CLI path must not evaluate active requests, construct
+senders, dispatch commands, open ports, send MIDI, or touch hardware.
+
+The review keeps profile `"3"` active-boundary support, profile `"4"`
+implementation, active CLI commands, real MIDI dependencies, package metadata
+changes, port opening, MIDI sending, hardware validation, Analog Four support,
+Pads 5-12 support, and machine/profile expansion frozen.
+
+The review recommends a tiny Packet 2 implementation slice next only if the
+read-only report should expose Packet 1 metadata fields. It adds no tests,
+runtime code, CLI behavior, dispatch, command execution, scene execution,
+MIDI, port opening, hardware behavior, package metadata changes, or hardware
+validation.
 
 ## User-Facing Project Progress Report
 
