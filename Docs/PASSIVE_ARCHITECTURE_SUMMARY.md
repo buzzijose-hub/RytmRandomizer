@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6886acf
+17c625f
 
 ## Protected Reference
 
@@ -54,17 +54,16 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6886acf Strengthen fake-provider adapter guard
+- current HEAD: 17c625f Update checkpoint after fake-provider adapter guard
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
-  and Packet 3 fake-provider adapter guard strengthening complete
+  and Packet 3 fake-provider adapter guard strengthening complete and reviewed
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: documentation-only review/acceptance gate for the
-  Packet 3 fake-provider adapter guard strengthening checkpoint, or pause at
-  the clean implementation checkpoint
+- next recommended task: broader active-boundary strengthening progress
+  report, or pause at the clean Packet 3 review checkpoint
 - closeout command
 - stop condition
 
@@ -480,6 +479,42 @@ machine/profile expansion.
 
 The next recommended task is a documentation-only review/acceptance gate for
 this checkpoint before any further adapter guard expansion.
+
+## Fake-Provider Adapter Guard Strengthening Checkpoint Review
+
+`Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_CHECKPOINT_REVIEW.md` accepts
+`Docs/FAKE_PROVIDER_ADAPTER_GUARD_STRENGTHENING_CHECKPOINT.md` as the completed
+Packet 3 checkpoint.
+
+Accepted milestone:
+
+- 6886acf Strengthen fake-provider adapter guard
+
+Accepted documentation checkpoint:
+
+- 17c625f Update checkpoint after fake-provider adapter guard
+
+The review accepts the new configured fake-port guard:
+
+- `RealMidiPortProvider.open_output()` rejects configured fake output ports
+  without a callable `send()` method
+- safe failure: `invalid_midi_output_port: <name>`
+- boundary test:
+  `test_real_midi_port_provider_rejects_configured_port_without_send`
+
+The review confirms the adapter remains fake-provider-only, explicit-provider
+only, unwired from passive CLI execution, and free of real MIDI dependencies or
+package metadata changes.
+
+The review keeps real MIDI dependencies, `mido`, `rtmidi`, package metadata,
+hardware detection, port discovery, port opening, MIDI sending, active CLI
+commands, dispatch, execution, hardware behavior, hardware validation, profile
+`"3"` active-boundary support, profile `"4"` implementation, Analog Four
+support, Pads 5-12 support, and machine/profile expansion frozen.
+
+The review recommends a broader active-boundary strengthening progress report
+next because Packet 1, Packet 2, and Packet 3 in the current strengthening
+sequence are now complete and reviewed.
 
 ## User-Facing Project Progress Report
 
