@@ -854,6 +854,10 @@ def test_active_boundary_report_exposes_no_active_behavior_or_support_expansion(
     output = normalize_newlines(result.stdout)
 
     assert "- group_profile 2: My BD Hard (Pad 1 / BD Hard)" in output
+    assert "- boundary: mock_active_boundary" in output
+    assert "- supported_candidate: group_profile:2" in output
+    assert "- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi" in output
+    assert "- failure_reason: included on failure paths" in output
     assert "- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported" in output
     assert "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - parked until separately approved" in output
     assert "- explicit arming" in output

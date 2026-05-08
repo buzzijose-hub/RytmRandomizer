@@ -9,11 +9,26 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from .active_boundary import SUPPORTED_SOURCE_KEY, SUPPORTED_SOURCE_KIND
+from .active_boundary import (
+    ACTIVE_BOUNDARY_NAME,
+    SUPPORTED_CANDIDATE,
+    SUPPORTED_SOURCE_KEY,
+    SUPPORTED_SOURCE_KIND,
+)
 from .profile_lookup import describe_group_profile
 
 UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS = ("3", "4")
 UNSUPPORTED_SOURCE_KINDS = ("scene", "command")
+RESULT_METADATA_FIELDS = (
+    "source_kind",
+    "source_key",
+    "target",
+    "armed",
+    "dry_run_confirmed",
+    "operator_intent",
+    "mock_only",
+    "sends_real_midi",
+)
 
 REQUIRED_CONDITIONS = (
     "explicit arming",
@@ -100,6 +115,12 @@ def build_active_boundary_report():
             for profile_key in UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS
         ),
         "unsupported_source_kinds": tuple(UNSUPPORTED_SOURCE_KINDS),
+        "result_metadata": {
+            "boundary": ACTIVE_BOUNDARY_NAME,
+            "supported_candidate": SUPPORTED_CANDIDATE,
+            "fields": tuple(RESULT_METADATA_FIELDS),
+            "failure_reason": "included on failure paths",
+        },
         "required_conditions": tuple(REQUIRED_CONDITIONS),
         "safe_failure_summary": tuple(SAFE_FAILURE_SUMMARY),
         "closeout_coverage": tuple(CLOSEOUT_COVERAGE),
@@ -120,6 +141,8 @@ def summarize_active_boundary_report(report=None):
     source_report = build_active_boundary_report() if report is None else report
     return {
         "title": source_report["title"],
+        "boundary": source_report["result_metadata"]["boundary"],
+        "supported_candidate": source_report["result_metadata"]["supported_candidate"],
         "accepted_key": source_report["accepted_candidate"]["profile_key"],
         "unsupported_keys": tuple(
             profile["profile_key"]
@@ -137,6 +160,7 @@ def format_active_boundary_report(report=None):
 
     source_report = build_active_boundary_report() if report is None else report
     candidate = source_report["accepted_candidate"]
+    result_metadata = source_report["result_metadata"]
     lines = [
         source_report["title"],
         "Accepted Active Boundary Candidate:",
@@ -152,6 +176,16 @@ def format_active_boundary_report(report=None):
             f"- {profile['profile_key']}: {profile['name']} "
             f"({profile['target']}) - {profile['reason']}"
         )
+
+    lines.extend(
+        [
+            "Result Metadata:",
+            f"- boundary: {result_metadata['boundary']}",
+            f"- supported_candidate: {result_metadata['supported_candidate']}",
+            f"- fields: {', '.join(result_metadata['fields'])}",
+            f"- failure_reason: {result_metadata['failure_reason']}",
+        ]
+    )
 
     lines.append("Required Conditions:")
     for condition in source_report["required_conditions"]:

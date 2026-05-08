@@ -76,6 +76,28 @@ def test_report_summarizes_active_boundary_candidate_and_unsupported_profiles():
     assert report["unsupported_source_kinds"] == ("scene", "command")
 
 
+def test_report_exposes_packet_1_result_metadata_fields():
+    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+
+    report = build_active_boundary_report()
+
+    assert report["result_metadata"] == {
+        "boundary": "mock_active_boundary",
+        "supported_candidate": "group_profile:2",
+        "fields": (
+            "source_kind",
+            "source_key",
+            "target",
+            "armed",
+            "dry_run_confirmed",
+            "operator_intent",
+            "mock_only",
+            "sends_real_midi",
+        ),
+        "failure_reason": "included on failure paths",
+    }
+
+
 def test_report_records_required_conditions_and_read_only_boundaries():
     from rytm_randomizer.active_boundary_report import build_active_boundary_report
 
@@ -111,6 +133,8 @@ def test_report_summary_is_deterministic():
 
     assert summarize_active_boundary_report() == {
         "title": "RytmRandomizer Active Boundary Report",
+        "boundary": "mock_active_boundary",
+        "supported_candidate": "group_profile:2",
         "accepted_key": "2",
         "unsupported_keys": ("3", "4"),
         "required_condition_count": 5,
@@ -134,6 +158,11 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "Unsupported Active Boundary Profiles:",
         "- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported",
         "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - parked until separately approved",
+        "Result Metadata:",
+        "- boundary: mock_active_boundary",
+        "- supported_candidate: group_profile:2",
+        "- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi",
+        "- failure_reason: included on failure paths",
         "Required Conditions:",
         "- explicit arming",
         "- dry-run confirmation",
@@ -296,6 +325,7 @@ def test_active_boundary_report_exposes_no_active_behavior_names():
 if __name__ == "__main__":
     test_importing_active_boundary_report_prints_nothing()
     test_report_summarizes_active_boundary_candidate_and_unsupported_profiles()
+    test_report_exposes_packet_1_result_metadata_fields()
     test_report_records_required_conditions_and_read_only_boundaries()
     test_report_summary_is_deterministic()
     test_formatted_report_is_deterministic_and_human_readable()
