@@ -29,7 +29,8 @@ PACKET_1A_MENU_STATUS_KEYS = (
     "R",
 )
 
-DEFERRED_UTILITY_SESSION_KEYS = ("T", "C", "Q")
+PACKET_1B_UTILITY_SESSION_KEYS = ("T", "C", "Q")
+DEFERRED_UTILITY_SESSION_KEYS = ()
 
 _SPECIAL_SCOPES = {
     "J": {
@@ -88,19 +89,8 @@ def evaluate_menu_utility_behavior(command_key):
     if key in PACKET_1A_MENU_STATUS_KEYS:
         return _accepted_menu_status_result(key)
 
-    if key in DEFERRED_UTILITY_SESSION_KEYS:
-        return MenuUtilityBehaviorResult(
-            command_key=key,
-            label=UTILITY_COMMANDS[key]["label"],
-            accepted=False,
-            reason="deferred_utility_session_command",
-            metadata={
-                "source": "UTILITY_COMMANDS",
-                "deferred": True,
-                "mock_only": True,
-                "sends_real_midi": False,
-            },
-        )
+    if key in PACKET_1B_UTILITY_SESSION_KEYS:
+        return _accepted_utility_session_result(key)
 
     return MenuUtilityBehaviorResult(
         command_key=key,
@@ -146,6 +136,71 @@ def _accepted_menu_status_result(command_key):
     )
 
 
+def _accepted_utility_session_result(command_key):
+    metadata = UTILITY_COMMANDS[command_key]
+    label = metadata["label"]
+    result_metadata = {
+        "source": "UTILITY_COMMANDS",
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+    }
+    result_metadata.update(_utility_session_metadata(command_key))
+
+    return MenuUtilityBehaviorResult(
+        command_key=command_key,
+        label=label,
+        behavior_family="utility/session",
+        accepted=True,
+        reason="supported_utility_session_intent",
+        display_lines=_utility_session_display_lines(command_key, label),
+        metadata=result_metadata,
+    )
+
+
+def _utility_session_metadata(command_key):
+    if command_key == "T":
+        return {
+            "scope": "target_selection_intent",
+            "future_prompt": "target_pad_channel_selection",
+        }
+    if command_key == "C":
+        return {
+            "scope": "midi_channel_selection_intent",
+            "future_prompt": "midi_channel_selection",
+            "opens_ports": False,
+        }
+    return {
+        "scope": "session_exit_intent",
+        "would_exit_loop": True,
+        "exits_process": False,
+    }
+
+
+def _utility_session_display_lines(command_key, label):
+    if command_key == "Q":
+        return (
+            f"{command_key}: {label}",
+            "Read-only utility/session intent.",
+            "No prompt would run.",
+            "No process would exit.",
+            "No state would change.",
+            "No MIDI would be sent.",
+        )
+
+    return (
+        f"{command_key}: {label}",
+        "Read-only utility/session intent.",
+        "No prompt would run.",
+        "No state would change.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+
+
 def _state_dependency_notes(command_key):
     if command_key == "H":
         return ("Future current-anchor state may affect displayed details.",)
@@ -158,6 +213,7 @@ def _state_dependency_notes(command_key):
 
 __all__ = [
     "DEFERRED_UTILITY_SESSION_KEYS",
+    "PACKET_1B_UTILITY_SESSION_KEYS",
     "PACKET_1A_MENU_STATUS_KEYS",
     "MenuUtilityBehaviorResult",
     "evaluate_menu_utility_behavior",

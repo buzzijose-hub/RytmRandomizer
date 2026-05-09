@@ -143,14 +143,14 @@ def test_unknown_keys_fail_safely():
     assert result.active_behavior is False
 
 
-def test_t_c_and_q_are_deferred_and_safe():
+def test_t_c_and_q_return_utility_session_intent_and_remain_safe():
     from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
 
     for command_key in ("T", "C", "Q"):
         result = evaluate_menu_utility_behavior(command_key)
 
-        assert result.accepted is False
-        assert result.reason == "deferred_utility_session_command"
+        assert result.accepted is True
+        assert result.reason == "supported_utility_session_intent"
         assert result.command_key == command_key
         assert result.prompt_required is False
         assert result.state_changed is False
@@ -158,6 +158,74 @@ def test_t_c_and_q_are_deferred_and_safe():
         assert result.opens_ports is False
         assert result.hardware_required is False
         assert result.active_behavior is False
+
+
+def test_t_returns_target_selection_intent_without_prompt_or_state_change():
+    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+
+    result = evaluate_menu_utility_behavior("T")
+
+    assert result.behavior_family == "utility/session"
+    assert result.label == "select target pad/channel"
+    assert result.metadata["source"] == "UTILITY_COMMANDS"
+    assert result.metadata["scope"] == "target_selection_intent"
+    assert result.metadata["future_prompt"] == "target_pad_channel_selection"
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["mock_only"] is True
+    assert result.display_lines == (
+        "T: select target pad/channel",
+        "Read-only utility/session intent.",
+        "No prompt would run.",
+        "No state would change.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+
+
+def test_c_returns_channel_selection_intent_without_ports_or_state_change():
+    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+
+    result = evaluate_menu_utility_behavior("C")
+
+    assert result.behavior_family == "utility/session"
+    assert result.label == "change MIDI channel"
+    assert result.metadata["source"] == "UTILITY_COMMANDS"
+    assert result.metadata["scope"] == "midi_channel_selection_intent"
+    assert result.metadata["future_prompt"] == "midi_channel_selection"
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["mock_only"] is True
+    assert result.display_lines == (
+        "C: change MIDI channel",
+        "Read-only utility/session intent.",
+        "No prompt would run.",
+        "No state would change.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+
+
+def test_q_returns_session_exit_intent_without_process_exit():
+    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+
+    result = evaluate_menu_utility_behavior("Q")
+
+    assert result.behavior_family == "utility/session"
+    assert result.label == "quit"
+    assert result.metadata["source"] == "UTILITY_COMMANDS"
+    assert result.metadata["scope"] == "session_exit_intent"
+    assert result.metadata["would_exit_loop"] is True
+    assert result.metadata["exits_process"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["mock_only"] is True
+    assert result.display_lines == (
+        "Q: quit",
+        "Read-only utility/session intent.",
+        "No prompt would run.",
+        "No process would exit.",
+        "No state would change.",
+        "No MIDI would be sent.",
+    )
 
 
 def test_result_metadata_is_copied_and_immutable():
@@ -212,7 +280,10 @@ if __name__ == "__main__":
     test_scn_returns_scene_menu_without_scene_execution()
     test_h_and_r_report_state_intent_without_runtime_state_mutation()
     test_unknown_keys_fail_safely()
-    test_t_c_and_q_are_deferred_and_safe()
+    test_t_c_and_q_return_utility_session_intent_and_remain_safe()
+    test_t_returns_target_selection_intent_without_prompt_or_state_change()
+    test_c_returns_channel_selection_intent_without_ports_or_state_change()
+    test_q_returns_session_exit_intent_without_process_exit()
     test_result_metadata_is_copied_and_immutable()
     test_passive_cli_behavior_remains_unchanged()
     test_no_real_midi_library_is_imported()
