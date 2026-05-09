@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-478a7b2 Add Packet 2C anchor profile review
+8e11826 Add Packet 2 anchor profile progress checkpoint
 
 ## Current Phase
 
@@ -86,6 +86,8 @@ The Packet 2C anchor/profile checkpoint review has now accepted the completed
 deterministic `BF` intent behavior slice.
 The broader Packet 2 anchor/profile progress checkpoint now summarizes the
 accepted `BH`, `BC`, `BS`, and `BF` read-only behavior baseline.
+The Packet 2 progress checkpoint review has now accepted that current
+read-only anchor/profile progress baseline.
 
 ## Current Safety State
 
@@ -140,9 +142,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 2 progress checkpoint review, a
+Next recommended task is a broader behavior-parity progress checkpoint, a
 docs-only Packet 2D plan only after explicit approval, or a pause at this clean
-Packet 2 progress checkpoint.
+Packet 2 progress review checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -439,6 +441,26 @@ opening, package metadata, active CLI behavior, profile `"4"` implementation,
 machine/profile expansion, or hardware validation was added.
 
 The checkpoint recommends a docs-only Packet 2 progress review next.
+
+The latest V1.34 behavior parity Packet 2 progress review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_PROGRESS_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_PROGRESS_CHECKPOINT.md`
+- current read-only anchor/profile coverage for `BH`, `BC`, `BS`, and `BF`
+- `BH` and `BC` using existing group-profile metadata
+- `BS` and `BF` using deterministic absent group-profile metadata
+- profile `"4"` / My BD Acoustic and `BA` remaining parked
+- additional Packet 2 widening requiring a separate Packet 2D plan and review
+
+The review confirms no CLI wiring, dispatch, execution, real MIDI, port
+opening, package metadata, active CLI behavior, profile `"4"` implementation,
+machine/profile expansion, or hardware validation exists.
+
+The review recommends a broader behavior-parity progress checkpoint, a
+docs-only Packet 2D plan only after explicit approval, or a pause.
 
 The latest V1.34 behavior parity matrix slice is:
 
