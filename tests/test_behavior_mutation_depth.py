@@ -26,12 +26,34 @@ LEGACY_SINGLE_PROFILE_MUTATION_CASES = (
         "strong",
     ),
 )
+CURRENT_PROFILE_PAGE_MUTATION_CASES = (
+    (
+        "S",
+        "SRC-only mutation, choose depth",
+        "src",
+    ),
+    (
+        "F",
+        "Filter-only mutation, choose depth",
+        "filter",
+    ),
+    (
+        "A",
+        "Amp-only mutation, choose depth",
+        "amp",
+    ),
+    (
+        "G",
+        "Grit-only mutation, choose depth",
+        "grit",
+    ),
+    (
+        "K",
+        "Kick body mutation, choose depth",
+        "kick_body",
+    ),
+)
 DEFERRED_PACKET_3_KEYS = (
-    "S",
-    "F",
-    "A",
-    "G",
-    "K",
     "PM",
     "PS",
     "PF",
@@ -225,6 +247,90 @@ def test_repeated_legacy_single_profile_mutation_evaluations_are_deterministic()
         )
 
 
+def test_current_profile_page_mutations_return_read_only_results():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    for command_key, expected_label, expected_area in (
+        CURRENT_PROFILE_PAGE_MUTATION_CASES
+    ):
+        result = evaluate_mutation_depth_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == "mutation-depth/current-profile-page"
+        assert result.reason == "supported_current_profile_page_mutation_intent"
+        assert result.mutation_area == expected_area
+        assert result.mutation_depth == ""
+        assert result.scope == "current_profile"
+        assert result.uses_selected_profile is False
+        assert result.depth_value is None
+        assert result.guarded_input is False
+        assert result.requires_depth_prompt_context is True
+        assert result.prompt_available is False
+        assert result.state_changed is False
+        assert result.prompt_required is True
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.display_lines
+
+
+def test_current_profile_page_mutation_s_has_expected_display_and_metadata():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    result = evaluate_mutation_depth_behavior("S")
+
+    assert result.accepted is True
+    assert result.display_lines == (
+        "S: SRC-only mutation, choose depth",
+        "Read-only current-profile page mutation intent.",
+        "Mutation area: src",
+        "Current-profile dependency is recorded only.",
+        "Future depth selection is required.",
+        "No active depth prompt exists now.",
+        "No current-profile state exists in this helper.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+    assert result.metadata["source"] == "CURRENT_PROFILE_PAGE_MUTATION_COMMANDS"
+    assert result.metadata["source_command_type"] == "mutation"
+    assert result.metadata["command_family"] == "generic_current_profile_page_mutation"
+    assert result.metadata["mutation_area"] == "src"
+    assert result.metadata["requires_depth_selection"] is True
+    assert result.metadata["scope"] == "current_profile"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+
+
+def test_repeated_current_profile_page_mutation_evaluations_are_deterministic():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    for command_key, _expected_label, _expected_area in (
+        CURRENT_PROFILE_PAGE_MUTATION_CASES
+    ):
+        assert evaluate_mutation_depth_behavior(command_key) == (
+            evaluate_mutation_depth_behavior(command_key)
+        )
+
+
 def test_mutation_depth_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_mutation_depth import MutationDepthBehaviorResult
 
@@ -363,6 +469,9 @@ if __name__ == "__main__":
     test_legacy_single_profile_mutations_return_read_only_results()
     test_legacy_single_profile_mutation_m1_has_expected_display_and_metadata()
     test_repeated_legacy_single_profile_mutation_evaluations_are_deterministic()
+    test_current_profile_page_mutations_return_read_only_results()
+    test_current_profile_page_mutation_s_has_expected_display_and_metadata()
+    test_repeated_current_profile_page_mutation_evaluations_are_deterministic()
     test_mutation_depth_metadata_is_copied_and_immutable()
     test_unknown_keys_fail_safely()
     test_deferred_packet_3_keys_fail_safely()

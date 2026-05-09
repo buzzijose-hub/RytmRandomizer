@@ -10,6 +10,7 @@ from typing import Mapping
 
 from .commands import (
     COMMANDS,
+    CURRENT_PROFILE_PAGE_MUTATION_COMMANDS,
     LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
 )
@@ -20,12 +21,10 @@ PACKET_3A_GUARDED_DEPTH_KEYS = GUARDED_MAIN_PROMPT_DEPTH_COMMANDS
 PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS = tuple(
     LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS
 )
+PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS = tuple(
+    CURRENT_PROFILE_PAGE_MUTATION_COMMANDS
+)
 DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = (
-    "S",
-    "F",
-    "A",
-    "G",
-    "K",
     "PM",
     "PS",
     "PF",
@@ -80,6 +79,9 @@ def evaluate_mutation_depth_behavior(command_key):
 
     if key in PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS:
         return _accepted_legacy_single_profile_mutation_result(key)
+
+    if key in PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS:
+        return _accepted_current_profile_page_mutation_result(key)
 
     if key in DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS:
         return MutationDepthBehaviorResult(
@@ -200,6 +202,56 @@ def _accepted_legacy_single_profile_mutation_result(command_key):
     )
 
 
+def _accepted_current_profile_page_mutation_result(command_key):
+    command_metadata = CURRENT_PROFILE_PAGE_MUTATION_COMMANDS[command_key]
+    label = command_metadata["label"]
+    mutation_area = command_metadata["mutation_area"]
+    scope = command_metadata["scope"]
+    requires_depth_selection = command_metadata["requires_depth_selection"]
+
+    return MutationDepthBehaviorResult(
+        command_key=command_key,
+        label=label,
+        behavior_family="mutation-depth/current-profile-page",
+        accepted=True,
+        reason="supported_current_profile_page_mutation_intent",
+        mutation_area=mutation_area,
+        scope=scope,
+        requires_depth_prompt_context=requires_depth_selection,
+        prompt_available=False,
+        prompt_required=requires_depth_selection,
+        display_lines=(
+            f"{command_key}: {label}",
+            "Read-only current-profile page mutation intent.",
+            f"Mutation area: {mutation_area}",
+            "Current-profile dependency is recorded only.",
+            "Future depth selection is required.",
+            "No active depth prompt exists now.",
+            "No current-profile state exists in this helper.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+        ),
+        metadata={
+            "source": "CURRENT_PROFILE_PAGE_MUTATION_COMMANDS",
+            "source_command_type": command_metadata["type"],
+            "command_family": command_metadata["command_family"],
+            "mutation_area": mutation_area,
+            "requires_depth_selection": requires_depth_selection,
+            "scope": scope,
+            "mock_only": True,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "active_behavior": False,
+            "mutates_runtime_state": False,
+        },
+    )
+
+
 def _safe_failure_metadata(source):
     return {
         "source": source,
@@ -216,6 +268,7 @@ __all__ = [
     "DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS",
     "PACKET_3A_GUARDED_DEPTH_KEYS",
     "PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS",
+    "PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS",
     "MutationDepthBehaviorResult",
     "evaluate_mutation_depth_behavior",
 ]
