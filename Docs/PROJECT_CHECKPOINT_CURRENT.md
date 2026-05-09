@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 21cd9a8 Add Packet 4B group mutation review
 - 6de4ff1 Add Packet 4B group mutation checkpoint
 - e726047 Add Packet 4B group mutation behavior
 - 3d1172b Add Packet 4B group mutation plan review
@@ -3167,6 +3168,65 @@ The next recommended task is a broader Packet 4 progress checkpoint after
 Packet 4B, a docs-only Packet 4C lane-aware group mutation plan, a more
 user-facing progress/timeline update, or a pause at this accepted Packet 4B
 implementation checkpoint.
+
+## V1.34 Behavior Parity Packet 4 Progress Checkpoint After 4B
+
+The Packet 4 progress checkpoint after 4B consolidates accepted Packet 4A
+scene intent behavior and accepted Packet 4B group mutation intent behavior.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_CHECKPOINT_AFTER_4B.md
+
+Current baseline before this documentation slice:
+
+- 21cd9a8 Add Packet 4B group mutation review
+
+Accepted Packet 4A behavior:
+
+- read-only scene intent for `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`,
+  `S3`, `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+- copied scene metadata from `SCENE_COMMANDS`
+- `S4B` early hardware scope remains forbidden
+- no scene execution
+- no state mutation
+- no command dispatch
+
+Accepted Packet 4B behavior:
+
+- read-only group mutation intent for `X`, `D`, `I`, and `4`
+- copied group metadata from `GROUP_COMMANDS`
+- deterministic group mutation mode metadata
+- deterministic mutation intensity metadata
+- `4` early hardware scope remains forbidden
+- no group mutation execution
+- no scene execution
+- no state mutation
+- no command dispatch
+
+Remaining deferred and safe Packet 4 scope:
+
+- `Y`, `V`, and `N` lane-aware group mutation intent
+- `O` and `Z` group anchor load/return behavior
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene or group state
+- command dispatch
+- MIDI or hardware behavior
+
+The checkpoint confirms Packet 4 is partially complete, not complete.
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
+
+The next recommended task is a docs-only review/acceptance gate for this
+checkpoint, a docs-only Packet 4C lane-aware group mutation plan, a more
+user-facing progress/timeline update, or a pause at this clean Packet 4
+progress checkpoint after 4B.
 
 ## Next Phase Planning Gate
 
