@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-44d5558
+1a1253a
 
 ## Protected Reference
 
@@ -56,7 +56,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 44d5558 Add behavior parity implementation progress review
+- current HEAD: 1a1253a Add Packet 3 mutation depth plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -123,14 +123,16 @@ It captures:
   that read-only behavior foundation as the current progress baseline; the
   docs-only Packet 3 mutation-depth and guarded input plan now defines the
   next non-anchor behavior packet with a recommended tiny Packet 3A scope for
-  guarded numeric inputs `1`, `2`, and `3`
+  guarded numeric inputs `1`, `2`, and `3`; the docs-only Packet 3 plan
+  review has now accepted that Packet 3A scope as the next implementation
+  gate
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the Packet 3 mutation-depth and
-  guarded input plan, pause at this planning checkpoint, or create a broader
-  user-facing progress report
+- next recommended task: implement only Packet 3A for guarded numeric inputs
+  `1`, `2`, and `3`, pause at this accepted planning checkpoint, or create a
+  short implementation checkpoint plan if more review is needed before code
 - closeout command
 - stop condition
 
@@ -1133,8 +1135,54 @@ The plan confirms no implementation, tests, runtime behavior, prompt loop,
 dispatch, execution, scene execution, real MIDI, port opening, package
 metadata, active CLI behavior, or hardware validation was added.
 
-The next recommended task is a docs-only review/acceptance gate for this
-Packet 3 plan.
+That plan is now reviewed and accepted below.
+
+## V1.34 Behavior Parity Packet 3 Mutation-Depth And Guarded Input Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN_REVIEW.md`
+accepts the Packet 3 mutation-depth and guarded input plan as the current
+planning gate.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN.md`
+
+Current baseline:
+
+- 1a1253a Add Packet 3 mutation depth plan
+
+Accepted Packet 3A scope:
+
+- `1`
+- `2`
+- `3`
+
+Accepted future behavior:
+
+- deterministic read-only guarded numeric input behavior
+- bare main-prompt `1`, `2`, and `3` remain guarded depth inputs
+- `1`, `2`, and `3` are not standalone execution commands
+- no active depth prompt exists now
+- no prompt loop, blocking input, state mutation, dispatch, execution, MIDI,
+  ports, active CLI behavior, package metadata, or hardware behavior
+
+Deferred Packet 3 scope:
+
+- `M1`, `M2`, and `M3`
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile and selected-pad state models
+
+Future ownership is accepted as:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`, only to add `=== Test: Behavior Mutation
+  Depth ===`
+
+The next recommended task is the tiny Packet 3A implementation for guarded
+numeric inputs `1`, `2`, and `3`.
 
 The previous current-session handoff was:
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 1a1253a Add Packet 3 mutation depth plan
 - 44d5558 Add behavior parity implementation progress review
 - 541f3e8 Add behavior parity implementation progress checkpoint
 - a0ae8fa Add Packet 2 anchor profile progress review
@@ -1341,8 +1342,64 @@ The plan confirms no implementation, tests, runtime code, prompt/input loop,
 dispatch, command execution, scene execution, real MIDI, port opening, package
 metadata, active CLI behavior, or hardware validation was added.
 
-The next recommended task is a docs-only review/acceptance gate for this
-Packet 3 plan.
+That plan is now reviewed and accepted below.
+
+## V1.34 Behavior Parity Packet 3 Mutation-Depth And Guarded Input Plan Review
+
+The Packet 3 mutation-depth and guarded input plan review accepts the Packet 3
+plan as the current planning gate for the next non-anchor behavior packet.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN.md
+
+Current baseline:
+
+- 1a1253a Add Packet 3 mutation depth plan
+
+Accepted Packet 3A implementation scope:
+
+- `1`
+- `2`
+- `3`
+
+Accepted future behavior:
+
+- deterministic read-only guarded numeric input behavior for bare main-prompt
+  depth values
+- `1`, `2`, and `3` are recognized as guarded depth inputs
+- `1`, `2`, and `3` are not standalone execution commands
+- bare main-prompt use remains guarded
+- no active depth prompt exists now
+
+Accepted deferred Packet 3 scope:
+
+- `M1`, `M2`, and `M3` legacy single-profile fixed-depth mutation intent
+- `S`, `F`, `A`, `G`, and `K` current-profile page mutation intent
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG` selected isolated pad
+  mutation intent
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+
+Accepted future ownership:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`, only to add `=== Test: Behavior Mutation
+  Depth ===`
+
+The review confirms no implementation, tests, runtime code, prompt/input loop,
+dispatch, command execution, scene execution, real MIDI, port opening, package
+metadata, active CLI behavior, or hardware validation was added.
+
+The next recommended task is the tiny Packet 3A implementation for guarded
+numeric inputs `1`, `2`, and `3`.
 
 ## Next Phase Planning Gate
 

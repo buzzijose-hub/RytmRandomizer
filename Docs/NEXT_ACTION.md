@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-44d5558 Add behavior parity implementation progress review
+1a1253a Add Packet 3 mutation depth plan
 
 ## Current Phase
 
@@ -96,6 +96,9 @@ accepted that read-only behavior foundation as the current progress baseline.
 The docs-only Packet 3 mutation-depth and guarded input plan now defines the
 next non-anchor behavior packet, with a recommended tiny Packet 3A scope for
 guarded numeric inputs `1`, `2`, and `3`.
+The docs-only Packet 3 mutation-depth and guarded input plan review has now
+accepted Packet 3A as the next tiny implementation scope for guarded numeric
+inputs `1`, `2`, and `3`.
 
 ## Current Safety State
 
@@ -150,11 +153,27 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to review and accept the Packet 3 mutation-depth and
-guarded input plan, pause at this planning checkpoint, or create a broader
-user-facing progress report.
+Next recommended task is to implement only Packet 3A for guarded numeric inputs
+`1`, `2`, and `3`, pause at this accepted planning checkpoint, or create a
+short implementation checkpoint plan if more review is needed before code.
 
-Do not implement Packet 3 until the plan is reviewed and accepted.
+Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3 mutation-depth and guarded input
+plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN.md`
+- future Packet 3A implementation scope limited to `1`, `2`, and `3`
+- `1`, `2`, and `3` as deterministic read-only guarded numeric input behavior
+- no prompt loop, blocking input, state mutation, dispatch, execution, real
+  MIDI, ports, package metadata, active CLI behavior, or hardware behavior
+- future ownership in `rytm_randomizer/behavior_mutation_depth.py`,
+  `tests/test_behavior_mutation_depth.py`, and one closeout label only
+- no parallel implementation for Packet 3A
 
 The latest V1.34 behavior parity Packet 3 mutation-depth and guarded input
 plan is:
