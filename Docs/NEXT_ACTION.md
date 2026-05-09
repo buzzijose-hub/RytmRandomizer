@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-7b3fe8c Add Packet 1 completion checkpoint review
+cf82881 Add Packet 2A anchor profile behavior
 
 ## Current Phase
 
@@ -66,6 +66,9 @@ Packet 1 as complete for the current intent-only behavior phase.
 The docs-only Packet 2 anchor/profile behavior plan and review have now
 accepted a tiny future implementation scope for deterministic read-only `BH`
 and `BC` anchor/profile intent behavior.
+The Packet 2A anchor/profile implementation checkpoint and review have now
+documented and accepted the completed deterministic `BH` and `BC` intent
+behavior slice.
 
 ## Current Safety State
 
@@ -120,9 +123,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 2A anchor/profile implementation for
-read-only `BH` and `BC` intent behavior, or a pause at this accepted Packet 2
-planning checkpoint.
+Next recommended task is a docs-only Packet 2B anchor/profile behavior plan,
+or a pause at this accepted Packet 2A checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -164,7 +166,48 @@ The review confirms no implementation, tests, runtime code, dispatch,
 execution, real MIDI, port opening, active CLI behavior, package metadata, or
 hardware validation was added.
 
-The review recommends the tiny Packet 2A implementation next.
+The review recommends the tiny Packet 2A implementation next. That
+implementation is now complete and reviewed.
+
+The latest V1.34 behavior parity Packet 2A anchor/profile checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2A_ANCHOR_PROFILE_CHECKPOINT.md`
+
+It records:
+
+- cf82881 Add Packet 2A anchor profile behavior
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+- `Scripts/closeout_check.ps1`
+- `PACKET_2A_ANCHOR_PROFILE_KEYS`
+- `AnchorProfileBehaviorResult`
+- `evaluate_anchor_profile_behavior(command_key)`
+- deterministic read-only `BH` intent for Pad 1 BD Hard / profile `"2"`
+- deterministic read-only `BC` intent for Pad 1 BD Classic / profile `"3"`
+- safe failure for unknown and deferred keys
+- closeout coverage through `=== Test: Behavior Anchor Profile ===`
+
+The checkpoint confirms no CLI wiring, dispatch, command execution, scene
+execution, prompt loop, selected-profile state, profile rotation, real MIDI,
+ports, package metadata, active CLI behavior, profile `"4"` implementation,
+or hardware behavior was added.
+
+The latest V1.34 behavior parity Packet 2A anchor/profile review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2A_ANCHOR_PROFILE_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2A_ANCHOR_PROFILE_CHECKPOINT.md`
+- cf82881 Add Packet 2A anchor profile behavior
+- `BH` as read-only Pad 1 BD Hard anchor/profile intent
+- `BC` as read-only Pad 1 BD Classic anchor/profile intent
+- the current Packet 2A safety boundary: no CLI wiring, dispatch, execution,
+  selected-profile state, profile rotation, real MIDI, ports, package
+  metadata, profile `"4"` implementation, or hardware behavior
+
+The review recommends a docs-only Packet 2B anchor/profile behavior plan
+next, or a pause at this clean Packet 2A checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 

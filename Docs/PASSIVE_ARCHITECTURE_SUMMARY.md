@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-7b3fe8c
+cf82881
 
 ## Protected Reference
 
@@ -39,6 +39,7 @@ The standard closeout suite currently includes:
 - active boundary
 - active boundary report
 - behavior menu utility
+- behavior anchor profile
 - real MIDI import safety
 - real MIDI passive CLI safety
 - real MIDI adapter boundary
@@ -55,7 +56,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 7b3fe8c Add Packet 1 completion checkpoint review
+- current HEAD: cf82881 Add Packet 2A anchor profile behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -99,14 +100,15 @@ It captures:
   review have now accepted Packet 1 as complete for the current intent-only
   behavior phase; the docs-only Packet 2 anchor/profile behavior plan and
   review have now accepted a tiny future implementation scope for read-only
-  `BH` and `BC` anchor/profile intent behavior
+  `BH` and `BC` anchor/profile intent behavior; the Packet 2A anchor/profile
+  implementation checkpoint and review have now documented and accepted the
+  completed deterministic `BH` and `BC` intent behavior slice
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 2A anchor/profile implementation for
-  read-only `BH` and `BC` intent behavior, or pause at the accepted Packet 2
-  planning checkpoint
+- next recommended task: docs-only Packet 2B anchor/profile behavior plan, or
+  pause at the accepted Packet 2A checkpoint
 - closeout command
 - stop condition
 
@@ -488,8 +490,67 @@ The review confirms no implementation, tests, runtime code, dispatch,
 execution, real MIDI, port opening, package metadata, active CLI behavior, or
 hardware validation was added.
 
-The next recommended task is the tiny Packet 2A implementation, or a pause at
-this accepted planning checkpoint.
+The next recommended task is a docs-only Packet 2B anchor/profile behavior
+plan, or a pause at this accepted Packet 2A checkpoint.
+
+## V1.34 Behavior Parity Packet 2A Anchor/Profile Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2A_ANCHOR_PROFILE_CHECKPOINT.md` records
+completion of the Packet 2A anchor/profile behavior implementation.
+
+Milestone commit:
+
+- cf82881 Add Packet 2A anchor profile behavior
+
+Files changed by that milestone:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+- `Scripts/closeout_check.ps1`
+
+Packet 2A adds `AnchorProfileBehaviorResult` and
+`evaluate_anchor_profile_behavior(command_key)`.
+
+Supported read-only anchor/profile keys:
+
+- `BH`
+- `BC`
+
+`BH` now models Pad 1 BD Hard anchor/profile intent for profile `"2"` with
+machine value `0`. `BC` now models Pad 1 BD Classic anchor/profile intent for
+profile `"3"` with machine value `1`.
+
+Unknown keys fail safely. Deferred anchor/profile keys fail safely. Profile
+`"4"` / BD Acoustic-related expansion remains parked. Closeout now includes
+`=== Test: Behavior Anchor Profile ===`.
+
+The checkpoint confirms no CLI wiring, command dispatch, command execution,
+scene execution, prompt/input loop, selected profile state, profile rotation,
+full group anchor loading, real MIDI dependency, `mido`, `rtmidi`, package
+metadata, port opening, active CLI command, hardware behavior, profile `"4"`
+implementation, Analog Four support, Pads 5-12 support, SysEx, GUI/capture,
+or hardware validation was added.
+
+## V1.34 Behavior Parity Packet 2A Anchor/Profile Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2A_ANCHOR_PROFILE_REVIEW.md` accepts the
+Packet 2A checkpoint and implementation commit as the current read-only
+anchor/profile behavior baseline.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2A_ANCHOR_PROFILE_CHECKPOINT.md`
+
+Accepted implementation commit:
+
+- cf82881 Add Packet 2A anchor profile behavior
+
+The review accepts the deterministic result shape, read-only `BH` and `BC`
+anchor/profile intent behavior, unknown-key safe failure, deferred-key safe
+failure, immutable result metadata, and closeout coverage.
+
+The review recommends a docs-only Packet 2B anchor/profile behavior plan
+next, or a pause at this clean checkpoint.
 
 The previous current-session handoff was:
 
