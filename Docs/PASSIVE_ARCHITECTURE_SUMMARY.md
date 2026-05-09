@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c149df0
+b0c57ba
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c149df0 Add Packet 4A scene intent review
+- current HEAD: b0c57ba Add Packet 4 progress checkpoint
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -173,14 +173,15 @@ It captures:
   checkpoint review has now accepted that completed read-only scene intent
   behavior slice; the broader Packet 4 progress checkpoint now consolidates
   accepted Packet 4A scene intent progress while confirming Packet 4 is not
-  complete
+  complete; the broader Packet 4 progress checkpoint review has now accepted
+  that current Packet 4 progress baseline
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the broader Packet 4 progress
-  checkpoint, write a more user-facing progress/timeline update, or pause at
-  the clean Packet 4 progress checkpoint
+- next recommended task: create a docs-only Packet 4B group mutation plan,
+  write a more user-facing progress/timeline update, or pause at the clean
+  Packet 4 progress review checkpoint
 - closeout command
 - stop condition
 
@@ -2531,6 +2532,66 @@ support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
 The next recommended task is a docs-only review/acceptance gate for this
 progress checkpoint, a more user-facing progress/timeline update, or a pause
 at this clean Packet 4 progress checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4 Progress Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_REVIEW.md` accepts the Packet 4
+progress checkpoint as the current behavior-parity progress baseline.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_CHECKPOINT.md`
+
+Accepted checkpoint commit:
+
+- b0c57ba Add Packet 4 progress checkpoint
+
+Accepted implementation surface:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+Accepted closeout label:
+
+- `=== Test: Behavior Scene Group ===`
+
+Accepted Packet 4A behavior:
+
+- read-only scene intent for `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`,
+  `S3`, `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+- copied scene metadata from `SCENE_COMMANDS`
+- `S4B` early hardware scope remains forbidden
+- no anchor loading
+- no scene execution
+- no state mutation
+- no command dispatch
+- no MIDI sending
+- no port opening
+- no hardware requirement
+
+Deferred Packet 4 scope remains:
+
+- group mutation behavior for `X`, `D`, `I`, and `4`
+- lane-aware group mutation behavior for `Y`, `V`, and `N`
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene or group state
+- command dispatch
+- MIDI or hardware behavior
+
+The review confirms Packet 4 remains partially complete, with group mutation
+and lane-aware group mutation deferred and separately gated.
+
+The review confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
+
+The next recommended task is a docs-only Packet 4B group mutation plan for
+`X`, `D`, `I`, and `4`, a more user-facing progress/timeline update, or a
+pause at this clean Packet 4 progress review checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 

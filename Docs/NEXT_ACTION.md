@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-c149df0 Add Packet 4A scene intent review
+b0c57ba Add Packet 4 progress checkpoint
 
 ## Current Phase
 
@@ -157,6 +157,8 @@ The Packet 4A scene intent checkpoint review has now accepted that completed
 read-only scene intent behavior slice.
 The broader Packet 4 progress checkpoint now consolidates accepted Packet 4A
 scene intent progress while confirming Packet 4 is not complete.
+The broader Packet 4 progress checkpoint review has now accepted that current
+Packet 4 progress baseline.
 
 ## Current Safety State
 
@@ -211,9 +213,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to review and accept the broader Packet 4 progress
-checkpoint, write a more user-facing progress/timeline update, or pause at
-this clean Packet 4 progress checkpoint.
+Next recommended task is to create a docs-only Packet 4B group mutation plan,
+write a more user-facing progress/timeline update, or pause at this clean
+Packet 4 progress review checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
@@ -342,6 +344,31 @@ It records:
 - Packet 4 is not complete
 
 The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
+
+The latest V1.34 behavior parity Packet 4 progress review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_CHECKPOINT.md`
+- `b0c57ba Add Packet 4 progress checkpoint`
+- current implementation surface:
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `tests/test_behavior_scene_group.py`
+- closeout coverage through `=== Test: Behavior Scene Group ===`
+- Packet 4A read-only scene intent behavior for `S0`, `S1`, `S1A`, `S1B`,
+  `S2`, `S2A`, `S2B`, `S3`, `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+
+The review confirms Packet 4 remains partially complete. Group mutation keys
+`X`, `D`, `I`, and `4` and lane-aware group mutation keys `Y`, `V`, and `N`
+remain deferred and safe.
+
+The review confirms no CLI execution wiring, dispatch, command execution,
 scene execution, group mutation execution, lane-aware group mutation
 execution, prompt/input loop, runtime state mutation, real MIDI, ports,
 package metadata, active CLI behavior, machine/profile expansion, Analog Four
