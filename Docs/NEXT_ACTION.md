@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-0bd7e7e Add Packet 3C current profile mutation checkpoint review
+1be4421 Add Packet 3 post-3C progress checkpoint
 
 ## Current Phase
 
@@ -126,6 +126,9 @@ completed deterministic `S`, `F`, `A`, `G`, and `K` behavior slice.
 The broader Packet 3 post-3C progress checkpoint and review now consolidate
 accepted Packet 3A, Packet 3B, and Packet 3C progress while confirming Packet
 3 is not complete.
+The docs-only Packet 3D selected isolated pad mutation plan and review now
+define and accept the next tiny future implementation scope for `PM`, `PS`,
+`PF`, `PA`, `PL`, `PO`, `PB`, and `PG`.
 
 ## Current Safety State
 
@@ -180,12 +183,77 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a docs-only Packet 3D selected isolated
-pad mutation-depth plan for `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and
-`PG`, write a broader behavior-parity implementation progress report, or
-pause at this clean Packet 3 post-3C progress review checkpoint.
+Next recommended task is to implement only the accepted Packet 3D read-only
+selected isolated pad mutation-depth behavior for `PM`, `PS`, `PF`, `PA`,
+`PL`, `PO`, `PB`, and `PG`, write a broader behavior-parity implementation
+progress report, or pause at this clean Packet 3D planning review checkpoint.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3D selected isolated pad mutation
+plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_PLAN.md`
+- future Packet 3D implementation scope limited to `PM`, `PS`, `PF`, `PA`,
+  `PL`, `PO`, `PB`, and `PG`
+- `PM` as read-only selected isolated pad full mutation intent using group
+  default zone/depth
+- `PS` as read-only selected isolated pad SRC mutation intent requiring future
+  depth selection
+- `PF` as read-only selected isolated pad filter mutation intent requiring
+  future depth selection
+- `PA` as read-only selected isolated pad amp mutation intent requiring future
+  depth selection
+- `PL` as read-only selected isolated pad LFO mutation intent requiring future
+  depth selection
+- `PO` as read-only selected isolated pad morph mutation intent requiring
+  future depth selection
+- `PB` as read-only selected isolated pad body mutation intent requiring
+  future depth selection
+- `PG` as read-only selected isolated pad grit mutation intent requiring
+  future depth selection
+- existing passive metadata from `ISOLATED_PAD_MUTATION_COMMANDS`
+- future ownership limited to `rytm_randomizer/behavior_mutation_depth.py` and
+  `tests/test_behavior_mutation_depth.py`
+- no closeout script update expected because `=== Test: Behavior Mutation
+  Depth ===` already covers the test file
+- no parallel implementation recommended for Packet 3D
+
+The review confirms no implementation, tests, CLI wiring, prompt loop,
+selected isolated pad state mutation, dispatch, execution, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, or hardware
+validation exists.
+
+The latest V1.34 behavior parity Packet 3D selected isolated pad mutation plan
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_PLAN.md`
+
+It records:
+
+- current baseline `1be4421 Add Packet 3 post-3C progress checkpoint`
+- future Packet 3D implementation scope limited to selected isolated pad
+  mutation-depth intent for `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and
+  `PG`
+- existing passive metadata from `ISOLATED_PAD_MUTATION_COMMANDS`
+- planned future behavior family `mutation-depth/selected-isolated-pad`
+- planned future reason `supported_selected_isolated_pad_mutation_intent`
+- planned future helper `PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS`
+- planned future helper `_accepted_selected_isolated_pad_mutation_result`
+- future ownership limited to `rytm_randomizer/behavior_mutation_depth.py` and
+  `tests/test_behavior_mutation_depth.py`
+- no closeout script update expected because `=== Test: Behavior Mutation
+  Depth ===` already covers the test file
+- no parallel implementation recommended for Packet 3D
+
+The plan confirms no implementation, tests, CLI wiring, prompt loop, selected
+isolated pad state mutation, dispatch, execution, real MIDI, ports, package
+metadata, active CLI behavior, machine/profile expansion, or hardware
+validation was added.
 
 The latest V1.34 behavior parity Packet 3 post-3C progress review is:
 
