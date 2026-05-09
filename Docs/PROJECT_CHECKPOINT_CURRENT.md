@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d7832b4 Add V1.34 behavior parity readiness review
 - e952f6b Add V1.34 behavior parity implementation readiness checkpoint
 - 6f0114b Add V1.34 behavior parity matrix progress review
 - 3089a76 Add V1.34 behavior parity undo commit state matrix review
@@ -2332,6 +2333,37 @@ The next recommended task is a docs-only first behavior-parity implementation
 packet plan for menu/status and utility behavior.
 
 The review is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
+
+## Session Handoff After Behavior Parity Readiness Review
+
+The session handoff after the behavior parity readiness review records the
+clean leave-off point for the next session.
+
+Handoff document:
+
+- `Docs/SESSION_HANDOFF_AFTER_BEHAVIOR_PARITY_READINESS_REVIEW.md`
+
+Current baseline before this handoff:
+
+- d7832b4 Add V1.34 behavior parity readiness review
+
+The handoff records:
+
+- accepted behavior parity readiness review state
+- current branch and latest accepted checkpoint
+- hardware-off status
+- V1.34 reference protection
+- package metadata absence
+- no real MIDI, no ports, no active CLI behavior, and no hardware validation
+- closeout coverage
+- resume commands
+- next recommended task: docs-only first behavior-parity implementation
+  packet plan for menu/status and utility behavior
+
+The handoff is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.

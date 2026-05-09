@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-e952f6b Add V1.34 behavior parity implementation readiness checkpoint
+d7832b4 Add V1.34 behavior parity readiness review
 
 ## Current Phase
 
@@ -47,6 +47,8 @@ The docs-only behavior parity implementation readiness checkpoint has now been
 documented as the current readiness gate.
 The docs-only behavior parity implementation readiness checkpoint review has
 now accepted that readiness gate for planning.
+The end-of-session handoff after the behavior parity readiness review has now
+been documented for tomorrow's resume point.
 
 ## Current Safety State
 
@@ -214,6 +216,20 @@ CLI behavior, or hardware validation was added.
 
 It recommends a docs-only first behavior-parity implementation packet plan for
 menu/status and utility behavior next.
+
+The latest end-of-session handoff is:
+
+- `Docs/SESSION_HANDOFF_AFTER_BEHAVIOR_PARITY_READINESS_REVIEW.md`
+
+It records:
+
+- current clean baseline at d7832b4 Add V1.34 behavior parity readiness review
+- accepted readiness review state
+- hardware-off status
+- no real MIDI, no ports, no package metadata, no active CLI behavior, and no
+  hardware validation
+- next recommended task: docs-only first behavior-parity implementation
+  packet plan for menu/status and utility behavior
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 

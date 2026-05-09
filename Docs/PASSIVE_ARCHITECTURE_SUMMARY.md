@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-e952f6b
+d7832b4
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: e952f6b Add V1.34 behavior parity implementation readiness checkpoint
+- current HEAD: d7832b4 Add V1.34 behavior parity readiness review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -82,7 +82,9 @@ It captures:
   now documented as the current matrix checkpoint; the docs-only behavior
   parity implementation readiness checkpoint is now documented as the current
   readiness gate; the docs-only behavior parity implementation readiness
-  checkpoint review has accepted that readiness gate for planning
+  checkpoint review has accepted that readiness gate for planning; the
+  end-of-session handoff after the behavior parity readiness review has now
+  been documented for tomorrow's resume point
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
@@ -98,6 +100,15 @@ orientation, and hardware-off reminders. It adds no runtime behavior and does
 not expand project scope.
 
 The latest current-session handoff is:
+
+- `Docs/SESSION_HANDOFF_AFTER_BEHAVIOR_PARITY_READINESS_REVIEW.md`
+
+It records the clean leave-off point at d7832b4, the accepted behavior parity
+readiness review state, current safety state, closeout command, stop
+condition, safe resume instructions, next recommended task, and hardware-off
+reminder.
+
+The previous current-session handoff was:
 
 - `Docs/SESSION_HANDOFF_AFTER_PACKETS_1_4_PROGRESS_REVIEW.md`
 
