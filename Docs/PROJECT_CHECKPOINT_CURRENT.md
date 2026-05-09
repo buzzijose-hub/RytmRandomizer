@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d621c67 Add Packet 4D group anchor decision note
 - 2366894 Add Packet 4C lane-aware group mutation review
 - 7d38263 Add Packet 4C lane-aware group mutation checkpoint
 - 95c432a Add Packet 4C lane-aware group mutation behavior
@@ -3595,6 +3596,70 @@ The next recommended task is a docs-only Packet 4D group anchor load/return
 plan, a broader Packet 4 near-completion checkpoint that leaves `O` and `Z`
 deferred, a more user-facing progress/timeline update, or a pause at this
 accepted Packet 4C plus `O`/`Z` decision checkpoint.
+
+## V1.34 Behavior Parity Packet 4D Group Anchor Plan
+
+The Packet 4D group anchor plan defines a tiny future implementation scope for
+read-only group anchor load/return intent behavior.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_PLAN.md
+
+Current clean baseline:
+
+- d621c67 Add Packet 4D group anchor decision note
+
+Planned future scope:
+
+- `O`: load full 4-pad group anchors
+- `Z`: return all 4 group pads to anchors
+
+Planned future behavior:
+
+- `O` accepted as read-only group anchor load intent
+- `Z` accepted as read-only group anchor return intent
+- copied passive metadata from `GROUP_COMMANDS`
+- group scope `four_pad_group`
+- `O` anchor action `load_group_anchors`
+- `Z` anchor action `return_group_anchors`
+- behavior family `scene-group/group-anchor-intent`
+- no group anchor load execution
+- no group anchor return execution
+- no group mutation execution
+- no lane-aware group mutation execution
+- no scene execution
+- no state mutation
+- no dispatch
+- no MIDI
+- no ports
+- no hardware requirement
+
+Future implementation files:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No closeout script update should be needed because `tests/test_behavior_scene_group.py`
+is already covered by:
+
+- `=== Test: Behavior Scene Group ===`
+
+The plan confirms no CLI execution wiring, dispatch, command execution, scene
+execution, group anchor load execution, group anchor return execution, group
+mutation execution, lane-aware group mutation execution, prompt/input loop,
+runtime state mutation, real MIDI, ports, package metadata, active CLI
+behavior, machine/profile expansion, Analog Four support, Pads 5-12 support,
+SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 remains not complete until this plan is reviewed and the future
+Packet 4D implementation is either completed or explicitly left deferred in a
+Packet 4 closeout decision.
+
+The next recommended task is a docs-only Packet 4D group anchor plan review, a
+broader Packet 4 near-completion checkpoint, a more user-facing
+progress/timeline update, or a pause at this clean Packet 4D planning
+checkpoint.
 
 ## Next Phase Planning Gate
 
