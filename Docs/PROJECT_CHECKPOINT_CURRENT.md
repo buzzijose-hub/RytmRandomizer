@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- fa193c3 Add Packet 2C anchor profile behavior
+- 072b00f Add Packet 2C anchor profile plan review
 - b79cf17 Add Packet 2C anchor profile plan
 - a254933 Add Packet 2B anchor profile review
 - c00a10a Add Packet 2B anchor profile checkpoint
@@ -914,6 +916,72 @@ module and one test file.
 
 The next recommended task is the tiny Packet 2C implementation, or a pause at
 this accepted planning checkpoint.
+
+## V1.34 Behavior Parity Packet 2C Anchor/Profile Checkpoint
+
+The Packet 2C anchor/profile checkpoint records completion of deterministic
+intent-only behavior for `BF`.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_CHECKPOINT.md
+
+Milestone commit:
+
+- fa193c3 Add Packet 2C anchor profile behavior
+
+Files changed by the milestone:
+
+- rytm_randomizer/behavior_anchor_profile.py
+- tests/test_behavior_anchor_profile.py
+
+No closeout script update was needed because `tests/test_behavior_anchor_profile.py`
+is already covered by `=== Test: Behavior Anchor Profile ===`.
+
+Packet 2C adds:
+
+- `PACKET_2C_ANCHOR_PROFILE_KEYS`
+- read-only `BF` support in `evaluate_anchor_profile_behavior(command_key)`
+
+`BF` now returns deterministic read-only Pad 1 BD FM profiled anchor intent:
+
+- behavior family: `anchor/profile`
+- reason: `supported_anchor_profile_intent`
+- label: `load Pad 1 BD FM profiled anchor`
+- target pad: `1`
+- anchor name: `BD FM`
+- profile key: empty string
+- machine value: `None`
+- group profile metadata exists: `False`
+
+The checkpoint records that `BF` uses no invented BD FM profile key, machine
+value, group-profile entry, or machine/profile universe expansion.
+
+Existing `BH`, `BC`, and `BS` behavior remains unchanged.
+
+Profile `"4"` / My BD Acoustic command `BA` remains parked and unsupported
+unless separately approved.
+
+The Packet 2C tests verify import silence, deterministic accepted `BF`
+behavior, absent metadata handling, stable existing behavior, safe failures,
+passive CLI regression, no real MIDI imports, no package metadata files, no
+active command names, and no Analog Four or Pads 5-12 exposure.
+
+TDD evidence:
+
+- `BF` tests were written first
+- targeted behavior test failed before implementation because `BF` was
+  unsupported
+- targeted behavior test passed after the minimal implementation
+- full closeout passed after implementation
+
+The checkpoint confirms no CLI wiring, command dispatch, command execution,
+scene execution, selected-profile state, profile rotation, real MIDI, port
+opening, package metadata, active CLI behavior, profile `"4"` implementation,
+machine/profile expansion, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 2C checkpoint review, or a
+pause at this clean implementation checkpoint.
 
 ## Next Phase Planning Gate
 

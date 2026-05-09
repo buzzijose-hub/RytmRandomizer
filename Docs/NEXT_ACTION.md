@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-b79cf17 Add Packet 2C anchor profile plan
+fa193c3 Add Packet 2C anchor profile behavior
 
 ## Current Phase
 
@@ -80,6 +80,8 @@ The docs-only Packet 2C anchor/profile behavior plan now defines a tiny future
 `BF` implementation scope while keeping profile `"4"` / `BA` parked.
 The docs-only Packet 2C anchor/profile behavior plan review has now accepted
 that tiny future `BF` implementation scope.
+The Packet 2C anchor/profile behavior implementation is now complete and ready
+for a docs-only checkpoint review.
 
 ## Current Safety State
 
@@ -134,9 +136,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 2C anchor/profile implementation for
-read-only `BF` intent behavior, or a pause at this accepted Packet 2C
-planning checkpoint.
+Next recommended task is a docs-only Packet 2C anchor/profile checkpoint
+review, or a pause at this clean implementation checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -366,6 +367,29 @@ execution, real MIDI, port opening, active CLI behavior, package metadata,
 machine/profile expansion, or hardware validation was added.
 
 The review recommends the tiny Packet 2C implementation next.
+
+The latest V1.34 behavior parity Packet 2C anchor/profile checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_CHECKPOINT.md`
+
+It records:
+
+- fa193c3 Add Packet 2C anchor profile behavior
+- Packet 2C implementation scope limited to `BF`
+- `BF` as deterministic read-only Pad 1 BD FM profiled anchor intent
+- no invented profile key for BD FM
+- no invented machine value for BD FM
+- absent group-profile metadata represented deterministically
+- `BH`, `BC`, and `BS` behavior remains unchanged
+- `BA` and profile `"4"` / My BD Acoustic remain parked
+- no closeout script update was needed because `=== Test: Behavior Anchor
+  Profile ===` already covers the test file
+
+The checkpoint confirms no CLI wiring, dispatch, execution, real MIDI, port
+opening, package metadata, active CLI behavior, machine/profile expansion,
+profile `"4"` implementation, or hardware validation was added.
+
+The checkpoint recommends a docs-only Packet 2C review next.
 
 The latest V1.34 behavior parity matrix slice is:
 
