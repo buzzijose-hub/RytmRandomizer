@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 198e20b Add Packet 4B group mutation plan
 - d9ec30d Add Packet 4 progress review
 - b0c57ba Add Packet 4 progress checkpoint
 - c149df0 Add Packet 4A scene intent review
@@ -2970,6 +2971,63 @@ support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation.
 The next recommended task is a docs-only Packet 4B group mutation plan review,
 a more user-facing progress/timeline update, or a pause at this clean Packet
 4B planning checkpoint.
+
+## V1.34 Behavior Parity Packet 4B Group Mutation Plan Review
+
+The Packet 4B group mutation plan review accepts the Packet 4B plan as the
+current future implementation gate.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4B_GROUP_MUTATION_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4B_GROUP_MUTATION_PLAN.md
+
+Accepted plan commit:
+
+- 198e20b Add Packet 4B group mutation plan
+
+Accepted future implementation scope:
+
+- `X`: balanced four-lane mutate full 4-pad group
+- `D`: deeper four-lane mutation, Pads 2-4 pushed harder
+- `I`: intense / controlled chaos four-lane mutation
+- `4`: harder / wild four-lane mutation
+
+Accepted deferred scope:
+
+- `Y`: lane-aware SRC/morph mutation on all 4 group pads
+- `V`: lane-aware filter mutation on all 4 group pads
+- `N`: lane-aware grit mutation on all 4 group pads
+- `O`: load full 4-pad group anchors
+- `Z`: return all 4 group pads to anchors
+
+Accepted future file ownership:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No future closeout script update is expected because
+`tests/test_behavior_scene_group.py` is already included under:
+
+- `=== Test: Behavior Scene Group ===`
+
+The review recommends the tiny Packet 4B implementation next and confirms
+parallel implementation is not recommended because the write set and result
+vocabulary are shared.
+
+The review adds no implementation, tests, runtime code, CLI execution wiring,
+dispatch, command execution, scene execution, group mutation execution,
+lane-aware group mutation execution, prompt/input loop, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation.
+
+The next recommended task is the tiny Packet 4B implementation for read-only
+group mutation intent behavior for `X`, `D`, `I`, and `4`, a more user-facing
+progress/timeline update, or a pause at this accepted Packet 4B planning
+checkpoint.
 
 ## Next Phase Planning Gate
 
