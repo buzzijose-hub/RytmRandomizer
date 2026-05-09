@@ -9,10 +9,24 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 GUARDED_DEPTH_KEYS = ("1", "2", "3")
+LEGACY_SINGLE_PROFILE_MUTATION_CASES = (
+    (
+        "M1",
+        "Legacy single-profile full micro mutation",
+        "micro",
+    ),
+    (
+        "M2",
+        "Legacy single-profile full groove mutation",
+        "groove",
+    ),
+    (
+        "M3",
+        "Legacy single-profile full strong mutation",
+        "strong",
+    ),
+)
 DEFERRED_PACKET_3_KEYS = (
-    "M1",
-    "M2",
-    "M3",
     "S",
     "F",
     "A",
@@ -122,6 +136,90 @@ def test_repeated_mutation_depth_evaluations_are_deterministic():
     )
 
     for command_key in GUARDED_DEPTH_KEYS:
+        assert evaluate_mutation_depth_behavior(command_key) == (
+            evaluate_mutation_depth_behavior(command_key)
+        )
+
+
+def test_legacy_single_profile_mutations_return_read_only_results():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    for command_key, expected_label, expected_depth in (
+        LEGACY_SINGLE_PROFILE_MUTATION_CASES
+    ):
+        result = evaluate_mutation_depth_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == "mutation-depth/legacy-single-profile"
+        assert result.reason == "supported_legacy_single_profile_mutation_intent"
+        assert result.mutation_area == "full"
+        assert result.mutation_depth == expected_depth
+        assert result.scope == "selected_profile"
+        assert result.uses_selected_profile is True
+        assert result.depth_value is None
+        assert result.guarded_input is False
+        assert result.requires_depth_prompt_context is False
+        assert result.prompt_available is False
+        assert result.state_changed is False
+        assert result.prompt_required is False
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.display_lines
+
+
+def test_legacy_single_profile_mutation_m1_has_expected_display_and_metadata():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    result = evaluate_mutation_depth_behavior("M1")
+
+    assert result.accepted is True
+    assert result.display_lines == (
+        "M1: Legacy single-profile full micro mutation",
+        "Read-only legacy single-profile mutation intent.",
+        "Mutation area: full",
+        "Mutation depth: micro",
+        "Selected-profile dependency is recorded only.",
+        "No selected-profile state exists in this helper.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+    assert result.metadata["source"] == "LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS"
+    assert result.metadata["source_command_type"] == "mutation"
+    assert result.metadata["command_family"] == "legacy_single_profile_mutation"
+    assert result.metadata["mutation_area"] == "full"
+    assert result.metadata["mutation_depth"] == "micro"
+    assert result.metadata["scope"] == "selected_profile"
+    assert result.metadata["uses_selected_profile"] is True
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+
+
+def test_repeated_legacy_single_profile_mutation_evaluations_are_deterministic():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    for command_key, _expected_label, _expected_depth in (
+        LEGACY_SINGLE_PROFILE_MUTATION_CASES
+    ):
         assert evaluate_mutation_depth_behavior(command_key) == (
             evaluate_mutation_depth_behavior(command_key)
         )
@@ -262,6 +360,9 @@ if __name__ == "__main__":
     test_guarded_numeric_inputs_return_read_only_results()
     test_guarded_numeric_input_1_has_expected_display_and_metadata()
     test_repeated_mutation_depth_evaluations_are_deterministic()
+    test_legacy_single_profile_mutations_return_read_only_results()
+    test_legacy_single_profile_mutation_m1_has_expected_display_and_metadata()
+    test_repeated_legacy_single_profile_mutation_evaluations_are_deterministic()
     test_mutation_depth_metadata_is_copied_and_immutable()
     test_unknown_keys_fail_safely()
     test_deferred_packet_3_keys_fail_safely()

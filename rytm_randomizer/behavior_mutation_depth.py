@@ -1,22 +1,26 @@
-"""Read-only Packet 3A mutation-depth and guarded-input behavior helpers.
+"""Read-only Packet 3 mutation-depth and guarded-input behavior helpers.
 
-This module models deterministic guarded numeric input intent without prompt
-loops, dispatching commands, opening ports, sending MIDI, or touching hardware.
+This module models deterministic mutation-depth intent without prompt loops,
+dispatching commands, opening ports, sending MIDI, or touching hardware.
 """
 
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Mapping
 
-from .commands import COMMANDS, MAIN_PROMPT_DEPTH_GUARDRAIL
+from .commands import (
+    COMMANDS,
+    LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS,
+    MAIN_PROMPT_DEPTH_GUARDRAIL,
+)
 from .constants import GUARDED_MAIN_PROMPT_DEPTH_COMMANDS
 
 
 PACKET_3A_GUARDED_DEPTH_KEYS = GUARDED_MAIN_PROMPT_DEPTH_COMMANDS
+PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS = tuple(
+    LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS
+)
 DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = (
-    "M1",
-    "M2",
-    "M3",
     "S",
     "F",
     "A",
@@ -35,7 +39,7 @@ DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = (
 
 @dataclass(frozen=True)
 class MutationDepthBehaviorResult:
-    """Immutable read-only result for Packet 3A guarded depth behavior."""
+    """Immutable read-only result for Packet 3 mutation-depth behavior."""
 
     command_key: str
     label: str = ""
@@ -43,6 +47,10 @@ class MutationDepthBehaviorResult:
     accepted: bool = False
     reason: str = "not_evaluated"
     depth_value: int | None = None
+    mutation_area: str = ""
+    mutation_depth: str = ""
+    scope: str = ""
+    uses_selected_profile: bool = False
     guarded_input: bool = False
     requires_depth_prompt_context: bool = False
     prompt_available: bool = False
@@ -63,12 +71,15 @@ class MutationDepthBehaviorResult:
 
 
 def evaluate_mutation_depth_behavior(command_key):
-    """Return a passive Packet 3A guarded numeric input behavior result."""
+    """Return a passive Packet 3 mutation-depth behavior result."""
 
     key = str(command_key)
 
     if key in PACKET_3A_GUARDED_DEPTH_KEYS:
         return _accepted_guarded_depth_result(key)
+
+    if key in PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS:
+        return _accepted_legacy_single_profile_mutation_result(key)
 
     if key in DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS:
         return MutationDepthBehaviorResult(
@@ -138,6 +149,57 @@ def _accepted_guarded_depth_result(command_key):
     )
 
 
+def _accepted_legacy_single_profile_mutation_result(command_key):
+    command_metadata = LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS[command_key]
+    label = command_metadata["label"]
+    mutation_area = command_metadata["mutation_area"]
+    mutation_depth = command_metadata["mutation_depth"]
+    scope = command_metadata["scope"]
+    uses_selected_profile = command_metadata["uses_selected_profile"]
+
+    return MutationDepthBehaviorResult(
+        command_key=command_key,
+        label=label,
+        behavior_family="mutation-depth/legacy-single-profile",
+        accepted=True,
+        reason="supported_legacy_single_profile_mutation_intent",
+        mutation_area=mutation_area,
+        mutation_depth=mutation_depth,
+        scope=scope,
+        uses_selected_profile=uses_selected_profile,
+        prompt_available=False,
+        display_lines=(
+            f"{command_key}: {label}",
+            "Read-only legacy single-profile mutation intent.",
+            f"Mutation area: {mutation_area}",
+            f"Mutation depth: {mutation_depth}",
+            "Selected-profile dependency is recorded only.",
+            "No selected-profile state exists in this helper.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+        ),
+        metadata={
+            "source": "LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS",
+            "source_command_type": command_metadata["type"],
+            "command_family": command_metadata["command_family"],
+            "mutation_area": mutation_area,
+            "mutation_depth": mutation_depth,
+            "scope": scope,
+            "uses_selected_profile": uses_selected_profile,
+            "mock_only": True,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "active_behavior": False,
+            "mutates_runtime_state": False,
+        },
+    )
+
+
 def _safe_failure_metadata(source):
     return {
         "source": source,
@@ -153,6 +215,7 @@ def _safe_failure_metadata(source):
 __all__ = [
     "DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS",
     "PACKET_3A_GUARDED_DEPTH_KEYS",
+    "PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS",
     "MutationDepthBehaviorResult",
     "evaluate_mutation_depth_behavior",
 ]
