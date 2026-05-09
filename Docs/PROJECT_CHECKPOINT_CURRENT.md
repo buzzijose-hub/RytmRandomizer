@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f27767a Add Packet 3 progress checkpoint
 - b184a7a Add Packet 3B legacy mutation depth review
 - c3baf8a Add Packet 3B legacy mutation depth checkpoint
 - 227e599 Add Packet 3B legacy mutation depth behavior
@@ -1833,6 +1834,70 @@ hardware validation exists.
 The next recommended task is a docs-only Packet 3 progress checkpoint review,
 a docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or a pause at this
 clean Packet 3 progress checkpoint.
+
+## V1.34 Behavior Parity Packet 3 Progress Review
+
+The Packet 3 progress review accepts the consolidated Packet 3 checkpoint as
+the current read-only mutation-depth progress baseline.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_PROGRESS_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_PROGRESS_CHECKPOINT.md
+
+Accepted checkpoint commit:
+
+- f27767a Add Packet 3 progress checkpoint
+
+Accepted current implementation surface:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Accepted closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Accepted Packet 3A behavior:
+
+- guarded numeric input behavior for `1`, `2`, and `3`
+- bare main-prompt use remains guarded
+- no active depth prompt exists now
+- no prompt, state mutation, dispatch, execution, MIDI, ports, or hardware
+
+Accepted Packet 3B behavior:
+
+- `M1`: read-only legacy single-profile full micro mutation intent
+- `M2`: read-only legacy single-profile full groove mutation intent
+- `M3`: read-only legacy single-profile full strong mutation intent
+
+Packet 3 is not complete.
+
+Remaining deferred Packet 3 scope:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- current-profile page mutation intent
+- selected isolated pad mutation intent
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+- mutation execution
+- command dispatch
+- CLI execution wiring
+
+The review confirms no CLI wiring, prompt loop, dispatch, command execution,
+scene execution, selected-profile state mutation, real MIDI, port opening,
+package metadata, active CLI behavior, machine/profile expansion, or hardware
+validation exists.
+
+The next recommended task is a docs-only Packet 3C plan for `S`, `F`, `A`,
+`G`, and `K`, a broader behavior-parity implementation progress checkpoint, or
+a pause at this clean Packet 3 progress review checkpoint.
 
 ## Next Phase Planning Gate
 

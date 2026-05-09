@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-b184a7a Add Packet 3B legacy mutation depth review
+f27767a Add Packet 3 progress checkpoint
 
 ## Current Phase
 
@@ -113,6 +113,8 @@ The Packet 3B legacy mutation-depth checkpoint review has now accepted the
 completed deterministic `M1`, `M2`, and `M3` behavior slice.
 The broader Packet 3 progress checkpoint now consolidates accepted Packet 3A
 and Packet 3B progress while keeping the rest of Packet 3 deferred.
+The Packet 3 progress checkpoint review has now accepted the current Packet 3
+read-only progress baseline while confirming Packet 3 is not complete.
 
 ## Current Safety State
 
@@ -167,11 +169,33 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a docs-only Packet 3 progress checkpoint
-review, create a docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or
-pause at this clean Packet 3 progress checkpoint.
+Next recommended task is to create a docs-only Packet 3C plan for `S`, `F`,
+`A`, `G`, and `K`, create a broader behavior-parity implementation progress
+checkpoint, or pause at this clean Packet 3 progress review checkpoint.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3 progress review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_PROGRESS_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_PROGRESS_CHECKPOINT.md`
+- f27767a Add Packet 3 progress checkpoint
+- Packet 3A read-only guarded numeric input behavior for `1`, `2`, and `3`
+- Packet 3B read-only legacy single-profile mutation intent for `M1`, `M2`,
+  and `M3`
+- current implementation surface in `rytm_randomizer/behavior_mutation_depth.py`
+  and `tests/test_behavior_mutation_depth.py`
+- closeout coverage through `=== Test: Behavior Mutation Depth ===`
+- Packet 3 is not complete
+- safe deferred behavior for `S`, `F`, `A`, `G`, `K`, `PM`, `PS`, `PF`,
+  `PA`, `PL`, `PO`, `PB`, and `PG`
+
+The review confirms no CLI wiring, prompt loop, dispatch, execution,
+selected-profile state mutation, real MIDI, ports, package metadata, active
+CLI behavior, machine/profile expansion, or hardware validation exists.
 
 The latest V1.34 behavior parity Packet 3 progress checkpoint is:
 
