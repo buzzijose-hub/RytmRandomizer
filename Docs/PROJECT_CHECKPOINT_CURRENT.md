@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- b79cf17 Add Packet 2C anchor profile plan
 - a254933 Add Packet 2B anchor profile review
 - c00a10a Add Packet 2B anchor profile checkpoint
 - 7872d8c Add Packet 2B anchor profile behavior
@@ -880,6 +881,39 @@ metadata, machine/profile expansion, and hardware validation out of scope.
 
 The next recommended task is a docs-only Packet 2C anchor/profile behavior
 plan review, or a pause at this clean planning checkpoint.
+
+## V1.34 Behavior Parity Packet 2C Anchor/Profile Plan Review
+
+The Packet 2C anchor/profile plan review accepts the plan as the current tiny
+implementation gate for `BF` anchor/profile intent behavior.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN.md
+
+Accepted future behavior:
+
+- deterministic read-only anchor/profile intent for `BF`
+- no invented profile key for BD FM
+- no invented machine value for BD FM
+- metadata records absent group-profile metadata
+- no prompt loop
+- no state mutation
+- no real MIDI or ports
+- no package metadata
+
+The review accepts that `BA` and profile `"4"` / My BD Acoustic remain parked
+unless separately approved.
+
+Parallel implementation remains not recommended because the write set is one
+module and one test file.
+
+The next recommended task is the tiny Packet 2C implementation, or a pause at
+this accepted planning checkpoint.
 
 ## Next Phase Planning Gate
 

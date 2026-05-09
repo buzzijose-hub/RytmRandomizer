@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a254933
+b79cf17
 
 ## Protected Reference
 
@@ -56,7 +56,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: a254933 Add Packet 2B anchor profile review
+- current HEAD: b79cf17 Add Packet 2C anchor profile plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -109,13 +109,15 @@ It captures:
   complete and the Packet 2B checkpoint review has accepted the completed
   deterministic `BS` intent behavior slice; the docs-only Packet 2C
   anchor/profile behavior plan now defines a tiny future `BF` scope while
-  keeping profile `"4"` / `BA` parked
+  keeping profile `"4"` / `BA` parked; the Packet 2C plan review has now
+  accepted that tiny future implementation scope
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 2C anchor/profile behavior plan
-  review, or pause at the clean Packet 2C planning checkpoint
+- next recommended task: tiny Packet 2C anchor/profile implementation for
+  read-only `BF` intent behavior, or pause at the accepted Packet 2C planning
+  checkpoint
 - closeout command
 - stop condition
 
@@ -740,6 +742,37 @@ machine/profile expansion, or hardware validation was added.
 
 The next recommended task is a docs-only Packet 2C plan review, or a pause at
 this clean planning checkpoint.
+
+## V1.34 Behavior Parity Packet 2C Anchor/Profile Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN_REVIEW.md` accepts
+the Packet 2C anchor/profile plan as the current planning gate.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN.md`
+
+Accepted future Packet 2C scope:
+
+- `BF`: read-only Pad 1 BD FM profiled anchor intent
+
+The review accepts deterministic absent metadata semantics for BD FM:
+
+- no invented profile key
+- no invented machine value
+- metadata should record that group-profile metadata is absent
+
+The review accepts that `BA` and profile `"4"` / My BD Acoustic remain parked
+unless separately approved.
+
+Parallel implementation remains not recommended for Packet 2C.
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, or hardware validation was added.
+
+The next recommended task is the tiny Packet 2C implementation, or a pause at
+this accepted planning checkpoint.
 
 The previous current-session handoff was:
 

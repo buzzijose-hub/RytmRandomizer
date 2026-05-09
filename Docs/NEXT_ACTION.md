@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a254933 Add Packet 2B anchor profile review
+b79cf17 Add Packet 2C anchor profile plan
 
 ## Current Phase
 
@@ -78,6 +78,8 @@ The Packet 2B anchor/profile checkpoint review has now accepted the completed
 deterministic `BS` intent behavior slice.
 The docs-only Packet 2C anchor/profile behavior plan now defines a tiny future
 `BF` implementation scope while keeping profile `"4"` / `BA` parked.
+The docs-only Packet 2C anchor/profile behavior plan review has now accepted
+that tiny future `BF` implementation scope.
 
 ## Current Safety State
 
@@ -132,8 +134,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 2C anchor/profile behavior plan
-review, or a pause at this clean Packet 2C planning checkpoint.
+Next recommended task is the tiny Packet 2C anchor/profile implementation for
+read-only `BF` intent behavior, or a pause at this accepted Packet 2C
+planning checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -340,6 +343,29 @@ scene execution, real MIDI, port opening, active CLI behavior, package
 metadata, machine/profile expansion, or hardware validation was added.
 
 The plan recommends a docs-only Packet 2C review next.
+
+The latest V1.34 behavior parity Packet 2C anchor/profile plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN.md`
+- future Packet 2C implementation scope limited to `BF`
+- `BF` as deterministic read-only Pad 1 BD FM profiled anchor intent
+- no invented profile key or machine value for BD FM
+- future tests proving `BH`, `BS`, and `BC` remain unchanged, `BF` is accepted
+  safely, absent profile metadata is represented deterministically, passive
+  CLI remains unchanged, package metadata remains absent, and V1.34 remains
+  untouched
+- `BA` and profile `"4"` / My BD Acoustic remain parked
+- no parallel implementation for Packet 2C
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, active CLI behavior, package metadata,
+machine/profile expansion, or hardware validation was added.
+
+The review recommends the tiny Packet 2C implementation next.
 
 The latest V1.34 behavior parity matrix slice is:
 
