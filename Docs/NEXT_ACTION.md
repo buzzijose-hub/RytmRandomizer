@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-21cd9a8 Add Packet 4B group mutation review
+3d8ddb3 Add Packet 4 progress checkpoint after 4B
 
 ## Current Phase
 
@@ -171,6 +171,8 @@ read-only group mutation intent behavior slice.
 The broader Packet 4 progress checkpoint after Packet 4B now consolidates
 accepted Packet 4A scene intent behavior and accepted Packet 4B group mutation
 intent behavior while confirming Packet 4 is not complete.
+The broader Packet 4 progress checkpoint after Packet 4B review has now
+accepted that current Packet 4 progress baseline.
 
 ## Current Safety State
 
@@ -225,11 +227,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review/acceptance gate for the broader
-Packet 4 progress checkpoint after Packet 4B, a docs-only Packet 4C
-lane-aware group mutation plan for `Y`, `V`, and `N`, a more user-facing
-progress/timeline update, or a pause at this clean Packet 4 progress
-checkpoint after 4B.
+Next recommended task is a docs-only Packet 4C lane-aware group mutation plan
+for `Y`, `V`, and `N`, a more user-facing progress/timeline update, or a
+pause at this accepted Packet 4 progress review after 4B checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
@@ -250,6 +250,23 @@ It consolidates:
 
 The checkpoint confirms Packet 4 remains partially complete. It recommends a
 docs-only review/acceptance gate for this checkpoint next.
+
+The latest V1.34 behavior parity Packet 4 progress review after Packet 4B is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_REVIEW_AFTER_4B.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_CHECKPOINT_AFTER_4B.md`
+- `3d8ddb3 Add Packet 4 progress checkpoint after 4B`
+- accepted Packet 4A scene intent behavior
+- accepted Packet 4B group mutation intent behavior for `X`, `D`, `I`, and
+  `4`
+- `Y`, `V`, and `N` as deferred and safe lane-aware group mutation scope
+- `O` and `Z` as unsupported/deferred and safe group anchor scope
+
+The review confirms Packet 4 remains partially complete and recommends a
+docs-only Packet 4C lane-aware group mutation plan next.
 
 The latest V1.34 behavior parity Packet 4B group mutation checkpoint is:
 
