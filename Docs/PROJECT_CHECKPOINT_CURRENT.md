@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 0bd7e7e Add Packet 3C current profile mutation checkpoint review
 - 0c83e65 Add Packet 3C current profile mutation behavior
 - 43eef7f Add Packet 3C current profile mutation plan
 - e703b57 Add Packet 3 progress checkpoint review
@@ -2095,6 +2096,71 @@ validation exists.
 The next recommended task is a broader Packet 3 progress checkpoint, a
 docs-only Packet 3D selected isolated pad mutation-depth plan, or a pause at
 this clean Packet 3C checkpoint review.
+
+## V1.34 Behavior Parity Packet 3 Post-3C Progress Checkpoint
+
+The Packet 3 post-3C progress checkpoint consolidates accepted Packet 3A,
+Packet 3B, and Packet 3C progress.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_POST_3C_PROGRESS_CHECKPOINT.md
+
+Current baseline:
+
+- 0bd7e7e Add Packet 3C current profile mutation checkpoint review
+
+Accepted Packet 3 scope:
+
+- Packet 3A: guarded numeric input behavior for `1`, `2`, and `3`
+- Packet 3B: legacy single-profile fixed-depth mutation intent for `M1`,
+  `M2`, and `M3`
+- Packet 3C: current-profile page mutation intent for `S`, `F`, `A`, `G`,
+  and `K`
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Current closeout coverage:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+The checkpoint confirms Packet 3 is not complete. Selected isolated pad
+mutation-depth keys `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG` remain
+deferred and safe until a separate Packet 3D plan and review.
+
+## V1.34 Behavior Parity Packet 3 Post-3C Progress Review
+
+The Packet 3 post-3C progress review accepts the current Packet 3 progress
+baseline after Packet 3C.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_POST_3C_PROGRESS_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_POST_3C_PROGRESS_CHECKPOINT.md
+
+The review accepts:
+
+- Packet 3A guarded numeric input behavior for `1`, `2`, and `3`
+- Packet 3B legacy single-profile mutation intent for `M1`, `M2`, and `M3`
+- Packet 3C current-profile page mutation intent for `S`, `F`, `A`, `G`,
+  and `K`
+
+The review confirms Packet 3 remains incomplete and keeps selected isolated
+pad mutation-depth behavior deferred. It also confirms no CLI wiring, prompt
+loop, dispatch, command execution, scene execution, current-profile state
+mutation, selected-profile state mutation, selected-isolated-pad state
+mutation, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, or hardware validation exists.
+
+The next recommended task is a docs-only Packet 3D selected isolated pad
+mutation-depth plan, a broader behavior-parity implementation progress report,
+or a pause at this clean Packet 3 post-3C progress review checkpoint.
 
 ## Next Phase Planning Gate
 
