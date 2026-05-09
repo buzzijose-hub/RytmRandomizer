@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-541f3e8 Add behavior parity implementation progress checkpoint
+44d5558 Add behavior parity implementation progress review
 
 ## Current Phase
 
@@ -93,6 +93,9 @@ accepted Packet 1 completion and accepted Packet 2 progress as the current
 read-only behavior foundation.
 The broader behavior-parity implementation progress checkpoint review has now
 accepted that read-only behavior foundation as the current progress baseline.
+The docs-only Packet 3 mutation-depth and guarded input plan now defines the
+next non-anchor behavior packet, with a recommended tiny Packet 3A scope for
+guarded numeric inputs `1`, `2`, and `3`.
 
 ## Current Safety State
 
@@ -147,10 +150,34 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to pause at this clean behavior-parity progress review
-checkpoint, create a docs-only Packet 2D plan only after explicit approval,
-create a docs-only plan for the next non-anchor behavior packet, or create a
-broader user-facing progress report.
+Next recommended task is to review and accept the Packet 3 mutation-depth and
+guarded input plan, pause at this planning checkpoint, or create a broader
+user-facing progress report.
+
+Do not implement Packet 3 until the plan is reviewed and accepted.
+
+The latest V1.34 behavior parity Packet 3 mutation-depth and guarded input
+plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN.md`
+
+It records:
+
+- Packet 3: Mutation-Depth And Guarded Input Behavior Parity
+- full accepted planning scope from the mutation-depth and guarded input matrix
+- recommended Packet 3A implementation scope limited to guarded numeric inputs
+  `1`, `2`, and `3`
+- `1`, `2`, and `3` as recognized but guarded main-prompt depth inputs, not
+  standalone execution commands
+- deferred Packet 3 scope for `M1`, `M2`, `M3`, `S`, `F`, `A`, `G`, `K`,
+  `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- proposed future ownership in `rytm_randomizer/behavior_mutation_depth.py`,
+  `tests/test_behavior_mutation_depth.py`, and a closeout label only
+- no parallel implementation for Packet 3A
+
+The plan confirms no implementation, tests, runtime code, prompt loop,
+dispatch, execution, scene execution, real MIDI, port opening, active CLI
+behavior, package metadata, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 

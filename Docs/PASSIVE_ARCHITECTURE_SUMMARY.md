@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-541f3e8
+44d5558
 
 ## Protected Reference
 
@@ -56,7 +56,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 541f3e8 Add behavior parity implementation progress checkpoint
+- current HEAD: 44d5558 Add behavior parity implementation progress review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -120,15 +120,17 @@ It captures:
   checkpoint now summarizes accepted Packet 1 completion and accepted Packet 2
   progress as the current read-only behavior foundation; the broader
   behavior-parity implementation progress checkpoint review has now accepted
-  that read-only behavior foundation as the current progress baseline
+  that read-only behavior foundation as the current progress baseline; the
+  docs-only Packet 3 mutation-depth and guarded input plan now defines the
+  next non-anchor behavior packet with a recommended tiny Packet 3A scope for
+  guarded numeric inputs `1`, `2`, and `3`
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: pause at the clean behavior-parity progress review
-  checkpoint, docs-only Packet 2D plan only after explicit approval, docs-only
-  plan for the next non-anchor behavior packet, or broader user-facing
-  progress report
+- next recommended task: review and accept the Packet 3 mutation-depth and
+  guarded input plan, pause at this planning checkpoint, or create a broader
+  user-facing progress report
 - closeout command
 - stop condition
 
@@ -1062,10 +1064,77 @@ The review confirms no CLI execution wiring, dispatch, execution, real MIDI,
 port opening, package metadata, active CLI behavior, profile `"4"`
 implementation, machine/profile expansion, or hardware validation exists.
 
-The next recommended task is to pause at this clean behavior-parity progress
-review checkpoint, create a docs-only Packet 2D plan only after explicit
-approval, create a docs-only plan for the next non-anchor behavior packet, or
-create a broader user-facing progress report.
+That review made the next non-anchor behavior packet a safe option. The
+Packet 3 mutation-depth and guarded input plan below now records that chosen
+planning branch.
+
+## V1.34 Behavior Parity Packet 3 Mutation-Depth And Guarded Input Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN.md`
+documents the next non-anchor behavior-parity implementation plan.
+
+Current baseline:
+
+- 44d5558 Add behavior parity implementation progress review
+
+Packet identity:
+
+- Packet 3: Mutation-Depth And Guarded Input Behavior Parity
+
+Full accepted planning scope:
+
+- `1`
+- `2`
+- `3`
+- `M1`
+- `M2`
+- `M3`
+- `S`
+- `F`
+- `A`
+- `G`
+- `K`
+- `PM`
+- `PS`
+- `PF`
+- `PA`
+- `PL`
+- `PO`
+- `PB`
+- `PG`
+
+Recommended Packet 3A scope:
+
+- `1`
+- `2`
+- `3`
+
+Packet 3A should model deterministic read-only guarded numeric input behavior
+only. Bare main-prompt `1`, `2`, and `3` should remain guarded depth inputs,
+not standalone execution commands.
+
+Deferred Packet 3 scope:
+
+- `M1`, `M2`, and `M3` legacy single-profile fixed-depth mutation intent
+- `S`, `F`, `A`, `G`, and `K` current-profile page mutation intent
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG` selected isolated pad
+  mutation intent
+- any prompt/depth context model
+- any selected-profile or selected-pad state model
+
+Future ownership is proposed as:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`, only to add `=== Test: Behavior Mutation
+  Depth ===`
+
+The plan confirms no implementation, tests, runtime behavior, prompt loop,
+dispatch, execution, scene execution, real MIDI, port opening, package
+metadata, active CLI behavior, or hardware validation was added.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 3 plan.
 
 The previous current-session handoff was:
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 44d5558 Add behavior parity implementation progress review
 - 541f3e8 Add behavior parity implementation progress checkpoint
 - a0ae8fa Add Packet 2 anchor profile progress review
 - 8e11826 Add Packet 2 anchor profile progress checkpoint
@@ -1265,10 +1266,83 @@ execution, scene execution, selected-profile state, profile rotation, real
 MIDI, port opening, package metadata, active CLI behavior, profile `"4"`
 implementation, machine/profile expansion, or hardware validation exists.
 
-The next recommended task is to pause at this clean behavior-parity progress
-review checkpoint, create a docs-only Packet 2D plan only after explicit
-approval, create a docs-only plan for the next non-anchor behavior packet, or
-create a broader user-facing progress report.
+That review made the next non-anchor behavior packet a safe option. The
+Packet 3 mutation-depth and guarded input plan below now records that chosen
+planning branch.
+
+## V1.34 Behavior Parity Packet 3 Mutation-Depth And Guarded Input Plan
+
+The Packet 3 mutation-depth and guarded input plan defines the next
+non-anchor behavior-parity implementation packet.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_MUTATION_DEPTH_GUARDED_INPUT_PLAN.md
+
+Current baseline:
+
+- 44d5558 Add behavior parity implementation progress review
+
+Packet identity:
+
+- Packet 3: Mutation-Depth And Guarded Input Behavior Parity
+
+Full accepted Packet 3 planning scope:
+
+- `1`
+- `2`
+- `3`
+- `M1`
+- `M2`
+- `M3`
+- `S`
+- `F`
+- `A`
+- `G`
+- `K`
+- `PM`
+- `PS`
+- `PF`
+- `PA`
+- `PL`
+- `PO`
+- `PB`
+- `PG`
+
+Recommended Packet 3A implementation scope:
+
+- `1`
+- `2`
+- `3`
+
+Packet 3A should model only deterministic read-only guarded numeric input
+behavior for bare main-prompt depth values. The plan records that `1`, `2`,
+and `3` are recognized as guarded depth inputs, not standalone execution
+commands.
+
+Deferred Packet 3 scope:
+
+- legacy single-profile mutation intent: `M1`, `M2`, `M3`
+- current-profile page mutation intent: `S`, `F`, `A`, `G`, `K`
+- selected isolated pad mutation intent: `PM`, `PS`, `PF`, `PA`, `PL`, `PO`,
+  `PB`, `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+
+Proposed future ownership:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`, only to add `=== Test: Behavior Mutation
+  Depth ===`
+
+The plan confirms no implementation, tests, runtime code, prompt/input loop,
+dispatch, command execution, scene execution, real MIDI, port opening, package
+metadata, active CLI behavior, or hardware validation was added.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 3 plan.
 
 ## Next Phase Planning Gate
 
