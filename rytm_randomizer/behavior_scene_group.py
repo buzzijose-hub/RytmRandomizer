@@ -15,8 +15,9 @@ from .scenes import SCENE_COMMANDS
 
 PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
 PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")
+PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS = ("Y", "V", "N")
 DEFERRED_GROUP_MUTATION_KEYS = ()
-DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ("Y", "V", "N")
+DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ()
 
 _FORBIDDEN_EARLY_HARDWARE_ACTIONS = {
     "harder",
@@ -40,6 +41,20 @@ _GROUP_MUTATION_INTENT_DETAILS = {
     "4": {
         "mode": "harder_wild_four_lane",
         "intensity": "wild",
+    },
+}
+_LANE_AWARE_GROUP_MUTATION_INTENT_DETAILS = {
+    "Y": {
+        "page": "src_morph",
+        "mode": "lane_aware_src_morph",
+    },
+    "V": {
+        "page": "filter",
+        "mode": "lane_aware_filter",
+    },
+    "N": {
+        "page": "grit",
+        "mode": "lane_aware_grit",
     },
 }
 
@@ -84,6 +99,9 @@ def evaluate_scene_group_behavior(command_key):
 
     if key in PACKET_4B_GROUP_MUTATION_INTENT_KEYS:
         return _accepted_group_mutation_intent_result(key)
+
+    if key in PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS:
+        return _accepted_lane_aware_group_mutation_intent_result(key)
 
     if key in DEFERRED_GROUP_MUTATION_KEYS:
         return SceneGroupBehaviorResult(
@@ -220,6 +238,55 @@ def _accepted_group_mutation_intent_result(command_key):
     )
 
 
+def _accepted_lane_aware_group_mutation_intent_result(command_key):
+    group_metadata = GROUP_COMMANDS[command_key]
+    label = group_metadata["label"]
+    command_type = group_metadata["type"]
+    scope = group_metadata["scope"]
+    command_family = group_metadata["command_family"]
+    intent_details = _LANE_AWARE_GROUP_MUTATION_INTENT_DETAILS[command_key]
+    lane_aware_page = intent_details["page"]
+    lane_aware_mutation_mode = intent_details["mode"]
+
+    return SceneGroupBehaviorResult(
+        command_key=command_key,
+        scene_scope=scope,
+        behavior_family="scene-group/lane-aware-group-mutation-intent",
+        accepted=True,
+        reason="supported_lane_aware_group_mutation_intent",
+        display_lines=_lane_aware_group_mutation_display_lines(
+            command_key,
+            label,
+            lane_aware_page,
+            scope,
+        ),
+        metadata={
+            "source": "GROUP_COMMANDS",
+            "source_group_command_label": label,
+            "source_group_command_type": command_type,
+            "source_group_command_scope": scope,
+            "source_group_command_family": command_family,
+            "source_group_command_executable": group_metadata["executable"],
+            "source_v134_reference_command": group_metadata[
+                "v134_reference_command"
+            ],
+            "source_scaffold_only": group_metadata["scaffold_only"],
+            "lane_aware_page": lane_aware_page,
+            "lane_aware_mutation_mode": lane_aware_mutation_mode,
+            "loads_anchors": False,
+            "executes_scene": False,
+            "executes_group_mutation": False,
+            "dispatches_command": False,
+            "mock_only": True,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "active_behavior": False,
+            "mutates_runtime_state": False,
+        },
+    )
+
+
 def _scene_display_lines(
     command_key,
     scene_name,
@@ -272,6 +339,27 @@ def _group_mutation_display_lines(
     return lines
 
 
+def _lane_aware_group_mutation_display_lines(
+    command_key,
+    label,
+    lane_aware_page,
+    scope,
+):
+    return (
+        f"{command_key}: {label}",
+        "Read-only lane-aware group mutation intent.",
+        f"Lane-aware page: {lane_aware_page}",
+        f"Group scope: {scope}",
+        "No lane-aware group mutation would execute.",
+        "No group mutation would execute.",
+        "No scene would execute.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+
+
 def _safe_failure_metadata(source):
     return {
         "source": source,
@@ -292,6 +380,7 @@ __all__ = [
     "DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS",
     "PACKET_4A_SCENE_INTENT_KEYS",
     "PACKET_4B_GROUP_MUTATION_INTENT_KEYS",
+    "PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS",
     "SceneGroupBehaviorResult",
     "evaluate_scene_group_behavior",
 ]

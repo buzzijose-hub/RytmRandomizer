@@ -46,7 +46,23 @@ GROUP_MUTATION_INTENT_EXPECTATIONS = {
         "intensity": "wild",
     },
 }
-DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ("Y", "V", "N")
+LANE_AWARE_GROUP_MUTATION_INTENT_EXPECTATIONS = {
+    "Y": {
+        "label": "lane-aware SRC/morph mutation on all 4 group pads",
+        "page": "src_morph",
+        "mode": "lane_aware_src_morph",
+    },
+    "V": {
+        "label": "lane-aware filter mutation on all 4 group pads",
+        "page": "filter",
+        "mode": "lane_aware_filter",
+    },
+    "N": {
+        "label": "lane-aware grit mutation on all 4 group pads",
+        "page": "grit",
+        "mode": "lane_aware_grit",
+    },
+}
 DEFERRED_GROUP_ANCHOR_KEYS = ("O", "Z")
 
 
@@ -300,21 +316,58 @@ def test_repeated_group_mutation_evaluations_are_deterministic():
         )
 
 
-def test_lane_aware_group_mutation_keys_remain_deferred_and_safe():
+def test_lane_aware_group_mutation_keys_return_read_only_intent_results():
     from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
 
-    for command_key in DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS:
+    for command_key, expectation in LANE_AWARE_GROUP_MUTATION_INTENT_EXPECTATIONS.items():
         result = evaluate_scene_group_behavior(command_key)
 
-        assert result.accepted is False
-        assert result.reason == "deferred_lane_aware_group_mutation_command"
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.behavior_family == (
+            "scene-group/lane-aware-group-mutation-intent"
+        )
+        assert result.reason == "supported_lane_aware_group_mutation_intent"
+        assert result.scene_scope == "four_pad_group"
+        assert result.scene_name == ""
+        assert result.scene_action == ""
+        assert result.loads_anchors is False
+        assert result.state_changed is False
+        assert result.prompt_required is False
         assert result.executes_group_mutation is False
+        assert result.executes_scene is False
         assert result.dispatches_command is False
         assert result.sends_real_midi is False
         assert result.opens_ports is False
         assert result.hardware_required is False
         assert result.active_behavior is False
         assert result.metadata["source"] == "GROUP_COMMANDS"
+        assert result.metadata["source_group_command_label"] == expectation["label"]
+        assert result.metadata["source_group_command_type"] == "mutation"
+        assert result.metadata["source_group_command_scope"] == "four_pad_group"
+        assert result.metadata["source_group_command_family"] == "lane_aware_page"
+        assert result.metadata["lane_aware_page"] == expectation["page"]
+        assert result.metadata["lane_aware_mutation_mode"] == expectation["mode"]
+        assert result.metadata["executes_group_mutation"] is False
+        assert result.metadata["mutates_runtime_state"] is False
+        assert result.display_lines[:4] == (
+            f"{command_key}: {expectation['label']}",
+            "Read-only lane-aware group mutation intent.",
+            f"Lane-aware page: {expectation['page']}",
+            "Group scope: four_pad_group",
+        )
+        assert "No lane-aware group mutation would execute." in result.display_lines
+        assert "No MIDI would be sent." in result.display_lines
+        assert "No ports would be opened." in result.display_lines
+
+
+def test_repeated_lane_aware_group_mutation_evaluations_are_deterministic():
+    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+
+    for command_key in LANE_AWARE_GROUP_MUTATION_INTENT_EXPECTATIONS:
+        assert evaluate_scene_group_behavior(command_key) == (
+            evaluate_scene_group_behavior(command_key)
+        )
 
 
 def test_group_anchor_keys_remain_unsupported_and_safe():
@@ -434,7 +487,8 @@ if __name__ == "__main__":
     test_harder_wild_group_mutation_records_early_hardware_guardrail()
     test_group_mutation_metadata_is_copied_and_immutable()
     test_repeated_group_mutation_evaluations_are_deterministic()
-    test_lane_aware_group_mutation_keys_remain_deferred_and_safe()
+    test_lane_aware_group_mutation_keys_return_read_only_intent_results()
+    test_repeated_lane_aware_group_mutation_evaluations_are_deterministic()
     test_group_anchor_keys_remain_unsupported_and_safe()
     test_packet_1_menu_utility_behavior_remains_unchanged()
     test_packet_2_anchor_profile_behavior_remains_unchanged()
