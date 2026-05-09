@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c00a10a
+a254933
 
 ## Protected Reference
 
@@ -56,7 +56,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c00a10a Add Packet 2B anchor profile checkpoint
+- current HEAD: a254933 Add Packet 2B anchor profile review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -107,14 +107,15 @@ It captures:
   future implementation scope for read-only `BS` intent behavior without
   inventing BD Sharp profile metadata; the Packet 2B implementation is now
   complete and the Packet 2B checkpoint review has accepted the completed
-  deterministic `BS` intent behavior slice
+  deterministic `BS` intent behavior slice; the docs-only Packet 2C
+  anchor/profile behavior plan now defines a tiny future `BF` scope while
+  keeping profile `"4"` / `BA` parked
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 2C anchor/profile behavior plan, a
-  broader Packet 2 progress checkpoint, or pause at the clean Packet 2B review
-  checkpoint
+- next recommended task: docs-only Packet 2C anchor/profile behavior plan
+  review, or pause at the clean Packet 2C planning checkpoint
 - closeout command
 - stop condition
 
@@ -698,6 +699,47 @@ exists.
 The next recommended task is a docs-only Packet 2C anchor/profile behavior
 plan, a broader Packet 2 progress checkpoint, or a pause at this clean Packet
 2B review checkpoint.
+
+## V1.34 Behavior Parity Packet 2C Anchor/Profile Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN.md` documents the
+next tiny anchor/profile implementation plan after Packet 2B.
+
+Baseline commit:
+
+- a254933 Add Packet 2B anchor profile review
+
+Recommended Packet 2C implementation scope:
+
+- `BF`
+
+Planned future behavior:
+
+- `BF`: read-only Pad 1 BD FM profiled anchor intent
+
+The plan records that `BF` has passive command metadata but no existing
+group-profile metadata. Future implementation must not invent a profile key,
+machine value, group-profile entry, or machine/profile universe expansion for
+BD FM. Deterministic safe absent values should be used instead.
+
+The plan keeps `BA` and profile `"4"` / My BD Acoustic parked because `BA`
+touches the profile-4 boundary and the existing group profile `"4"` is
+associated with group pad `4`, while `BA` is a Pad 1 command.
+
+Future ownership is limited to:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+
+No closeout script update is expected because `tests/test_behavior_anchor_profile.py`
+is already covered by `=== Test: Behavior Anchor Profile ===`.
+
+The plan confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 2C plan review, or a pause at
+this clean planning checkpoint.
 
 The previous current-session handoff was:
 

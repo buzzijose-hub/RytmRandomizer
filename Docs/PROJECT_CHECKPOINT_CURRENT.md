@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a254933 Add Packet 2B anchor profile review
 - c00a10a Add Packet 2B anchor profile checkpoint
 - 7872d8c Add Packet 2B anchor profile behavior
 - 96240dd Add Packet 2B anchor profile plan
@@ -834,6 +835,51 @@ support, SysEx, GUI/capture, or hardware validation exists.
 The next recommended task is a docs-only Packet 2C anchor/profile behavior
 plan, a broader Packet 2 progress checkpoint, or a pause at this clean Packet
 2B review checkpoint.
+
+## V1.34 Behavior Parity Packet 2C Anchor/Profile Plan
+
+The Packet 2C anchor/profile plan documents the next tiny implementation scope
+after Packet 2B.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2C_ANCHOR_PROFILE_PLAN.md
+
+Current baseline:
+
+- a254933 Add Packet 2B anchor profile review
+
+Recommended Packet 2C implementation scope:
+
+- `BF`
+
+Planned future behavior:
+
+- `BF` represents read-only Pad 1 BD FM profiled anchor intent
+
+The plan records that `BF` has passive command metadata but no existing
+group-profile metadata. Future implementation must not invent a BD FM profile
+key, machine value, group-profile entry, or machine/profile universe
+expansion. Deterministic safe absent values should be used instead.
+
+The plan keeps `BA` and profile `"4"` / My BD Acoustic parked because `BA`
+touches the profile-4 boundary and the existing group profile `"4"` is
+associated with group pad `4`, while `BA` is a Pad 1 command.
+
+Future file ownership is limited to:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+
+No closeout script update is expected because `tests/test_behavior_anchor_profile.py`
+is already covered by `=== Test: Behavior Anchor Profile ===`.
+
+The plan keeps implementation, tests, runtime code, dispatch, execution,
+scene execution, real MIDI, port opening, active CLI behavior, package
+metadata, machine/profile expansion, and hardware validation out of scope.
+
+The next recommended task is a docs-only Packet 2C anchor/profile behavior
+plan review, or a pause at this clean planning checkpoint.
 
 ## Next Phase Planning Gate
 
