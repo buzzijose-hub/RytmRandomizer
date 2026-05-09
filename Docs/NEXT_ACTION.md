@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-1a1253a Add Packet 3 mutation depth plan
+bda0db9 Add Packet 3A mutation depth behavior
 
 ## Current Phase
 
@@ -99,6 +99,8 @@ guarded numeric inputs `1`, `2`, and `3`.
 The docs-only Packet 3 mutation-depth and guarded input plan review has now
 accepted Packet 3A as the next tiny implementation scope for guarded numeric
 inputs `1`, `2`, and `3`.
+The Packet 3A mutation-depth behavior implementation is now complete and ready
+for a docs-only checkpoint review.
 
 ## Current Safety State
 
@@ -153,11 +155,36 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to implement only Packet 3A for guarded numeric inputs
-`1`, `2`, and `3`, pause at this accepted planning checkpoint, or create a
-short implementation checkpoint plan if more review is needed before code.
+Next recommended task is to review and accept the Packet 3A mutation-depth
+checkpoint, create a docs-only Packet 3B plan for `M1`, `M2`, and `M3` only
+after review, create a broader Packet 3 progress checkpoint, or pause at this
+clean checkpoint.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3A mutation-depth checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3A_MUTATION_DEPTH_CHECKPOINT.md`
+
+It records:
+
+- bda0db9 Add Packet 3A mutation depth behavior
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`
+- `PACKET_3A_GUARDED_DEPTH_KEYS`
+- `DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS`
+- `MutationDepthBehaviorResult`
+- `evaluate_mutation_depth_behavior(command_key)`
+- deterministic read-only guarded numeric input behavior for `1`, `2`, and `3`
+- safe failure for unknown keys
+- safe deferred behavior for `M1`, `M2`, `M3`, `S`, `F`, `A`, `G`, `K`,
+  `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- closeout coverage through `=== Test: Behavior Mutation Depth ===`
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, execution, scene
+execution, real MIDI, ports, package metadata, active CLI behavior,
+machine/profile expansion, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 3 mutation-depth and guarded input
 plan review is:

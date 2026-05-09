@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- bda0db9 Add Packet 3A mutation depth behavior
+- 0e7f3d8 Add Packet 3 mutation depth plan review
 - 1a1253a Add Packet 3 mutation depth plan
 - 44d5558 Add behavior parity implementation progress review
 - 541f3e8 Add behavior parity implementation progress checkpoint
@@ -1400,6 +1402,70 @@ metadata, active CLI behavior, or hardware validation was added.
 
 The next recommended task is the tiny Packet 3A implementation for guarded
 numeric inputs `1`, `2`, and `3`.
+
+## V1.34 Behavior Parity Packet 3A Mutation-Depth Checkpoint
+
+The Packet 3A mutation-depth checkpoint records completion of the guarded
+numeric input behavior implementation.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3A_MUTATION_DEPTH_CHECKPOINT.md
+
+Milestone commit:
+
+- bda0db9 Add Packet 3A mutation depth behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout now includes:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Supported read-only Packet 3A keys:
+
+- `1`
+- `2`
+- `3`
+
+Packet 3A adds:
+
+- `PACKET_3A_GUARDED_DEPTH_KEYS`
+- `DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS`
+- `MutationDepthBehaviorResult`
+- `evaluate_mutation_depth_behavior(command_key)`
+
+Accepted behavior:
+
+- `1`, `2`, and `3` return deterministic read-only guarded numeric input
+  behavior
+- each result records the matching depth value
+- each result records that bare main-prompt use remains guarded
+- each result records that no active depth prompt exists now
+- unknown keys fail safely
+- deferred Packet 3 mutation keys remain unsupported/safe
+
+Deferred Packet 3 scope remains:
+
+- `M1`, `M2`, and `M3`
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+
+The checkpoint confirms no CLI wiring, prompt/input loop, dispatch, command
+execution, scene execution, real MIDI, port opening, package metadata, active
+CLI behavior, machine/profile expansion, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 3A checkpoint review, a
+broader Packet 3 progress checkpoint, or a docs-only Packet 3B plan only after
+review.
 
 ## Next Phase Planning Gate
 
