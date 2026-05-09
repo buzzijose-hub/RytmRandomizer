@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-43eef7f Add Packet 3C current profile mutation plan
+0c83e65 Add Packet 3C current profile mutation behavior
 
 ## Current Phase
 
@@ -119,6 +119,10 @@ The docs-only Packet 3C current-profile mutation plan now defines a tiny
 future scope for `S`, `F`, `A`, `G`, and `K` only.
 The docs-only Packet 3C current-profile mutation plan review has now accepted
 that tiny future scope as the next implementation gate.
+The Packet 3C current-profile mutation behavior implementation is now complete
+and documented for a docs-only checkpoint review.
+The Packet 3C current-profile mutation checkpoint review has now accepted the
+completed deterministic `S`, `F`, `A`, `G`, and `K` behavior slice.
 
 ## Current Safety State
 
@@ -173,11 +177,66 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to implement only the tiny Packet 3C scope for `S`,
-`F`, `A`, `G`, and `K`, create a broader Packet 3 planning progress
-checkpoint, or pause at this clean Packet 3C planning review checkpoint.
+Next recommended task is to create a broader Packet 3 progress checkpoint,
+create a docs-only Packet 3D selected isolated pad mutation-depth plan for
+`PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`, or pause at this clean
+Packet 3C checkpoint review.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3C current-profile mutation review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_CHECKPOINT.md`
+- 0c83e65 Add Packet 3C current profile mutation behavior
+- deterministic read-only current-profile page mutation intent for `S`, `F`,
+  `A`, `G`, and `K`
+- `S` as accepted current-profile SRC page mutation intent
+- `F` as accepted current-profile filter page mutation intent
+- `A` as accepted current-profile amp page mutation intent
+- `G` as accepted current-profile grit page mutation intent
+- `K` as accepted current-profile kick body mutation intent
+- `PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS`
+- `_accepted_current_profile_page_mutation_result`
+- existing passive metadata from `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+- future depth selection requirement with no active prompt available
+- no closeout script update because `=== Test: Behavior Mutation Depth ===`
+  already covers the test file
+- selected isolated pad mutation-depth keys `PM`, `PS`, `PF`, `PA`, `PL`,
+  `PO`, `PB`, and `PG` remain deferred and safe
+
+The review confirms no CLI wiring, prompt loop, dispatch, execution,
+current-profile state mutation, real MIDI, ports, package metadata, active CLI
+behavior, machine/profile expansion, or hardware validation exists.
+
+The latest V1.34 behavior parity Packet 3C current-profile mutation checkpoint
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_CHECKPOINT.md`
+
+It records:
+
+- 0c83e65 Add Packet 3C current profile mutation behavior
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS`
+- `_accepted_current_profile_page_mutation_result`
+- accepted current-profile mutation-depth behavior for `S`, `F`, `A`, `G`,
+  and `K`
+- mutation areas `src`, `filter`, `amp`, `grit`, and `kick_body`
+- current-profile scope only
+- future depth selection required
+- active prompt unavailable
+- selected isolated pad mutation-depth keys remain deferred and safe
+- TDD red/green evidence for `tests/test_behavior_mutation_depth.py`
+- closeout coverage through `=== Test: Behavior Mutation Depth ===`
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, execution,
+current-profile state mutation, real MIDI, ports, package metadata, active CLI
+behavior, machine/profile expansion, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 3C current-profile mutation plan
 review is:

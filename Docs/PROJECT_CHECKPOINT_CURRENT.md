@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 0c83e65 Add Packet 3C current profile mutation behavior
 - 43eef7f Add Packet 3C current profile mutation plan
 - e703b57 Add Packet 3 progress checkpoint review
 - f27767a Add Packet 3 progress checkpoint
@@ -2025,6 +2026,75 @@ machine/profile expansion, or hardware validation exists.
 The next recommended task is the tiny Packet 3C implementation for `S`, `F`,
 `A`, `G`, and `K`, a broader Packet 3 planning progress checkpoint, or a pause
 at this clean Packet 3C planning review checkpoint.
+
+## V1.34 Behavior Parity Packet 3C Current-Profile Mutation Checkpoint
+
+The Packet 3C current-profile mutation checkpoint records completion of the
+tiny current-profile mutation-depth implementation slice.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_CHECKPOINT.md
+
+Milestone commit:
+
+- 0c83e65 Add Packet 3C current profile mutation behavior
+
+Files changed by that milestone:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Accepted Packet 3C scope:
+
+- `S`: current-profile SRC page mutation intent
+- `F`: current-profile filter page mutation intent
+- `A`: current-profile amp page mutation intent
+- `G`: current-profile grit page mutation intent
+- `K`: current-profile kick body mutation intent
+
+The implementation adds `PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS` and
+read-only current-profile page mutation results sourced from
+`CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`. Results require future depth
+selection but provide no active prompt, state mutation, dispatch, execution,
+MIDI, ports, or hardware behavior.
+
+No closeout script update was needed because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+Selected isolated pad mutation-depth keys `PM`, `PS`, `PF`, `PA`, `PL`, `PO`,
+`PB`, and `PG` remain deferred and safe.
+
+## V1.34 Behavior Parity Packet 3C Current-Profile Mutation Review
+
+The Packet 3C current-profile mutation review accepts the Packet 3C checkpoint
+and implementation commit as the current read-only current-profile mutation
+baseline.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_CHECKPOINT.md
+
+Accepted implementation commit:
+
+- 0c83e65 Add Packet 3C current profile mutation behavior
+
+The review accepts deterministic current-profile page mutation intent for
+`S`, `F`, `A`, `G`, and `K`; confirms Packet 3A and Packet 3B behavior remain
+unchanged; and keeps selected isolated pad mutation-depth behavior deferred.
+
+The review confirms no CLI wiring, prompt loop, dispatch, command execution,
+scene execution, current-profile state mutation, real MIDI, port opening,
+package metadata, active CLI behavior, machine/profile expansion, or hardware
+validation exists.
+
+The next recommended task is a broader Packet 3 progress checkpoint, a
+docs-only Packet 3D selected isolated pad mutation-depth plan, or a pause at
+this clean Packet 3C checkpoint review.
 
 ## Next Phase Planning Gate
 
