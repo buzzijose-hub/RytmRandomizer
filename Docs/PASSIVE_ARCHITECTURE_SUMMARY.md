@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-e507c60
+95c432a
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: e507c60 Add Packet 4C lane-aware group mutation plan
+- current HEAD: 95c432a Add Packet 4C lane-aware group mutation behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -191,15 +191,17 @@ It captures:
   implementation scope for read-only `Y`, `V`, and `N` lane-aware group
   mutation intent while keeping `O` and `Z` deferred; the docs-only Packet 4C
   lane-aware group mutation plan review has now accepted that tiny future
-  implementation scope
+  implementation scope; the Packet 4C lane-aware group mutation behavior
+  implementation is now complete and documented in a checkpoint for review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement Packet 4C read-only lane-aware group
-  mutation intent behavior for `Y`, `V`, and `N`, write a more user-facing
-  progress/timeline update, or pause at the accepted Packet 4C planning
-  checkpoint
+- next recommended task: review/accept the Packet 4C lane-aware group
+  mutation checkpoint, write a broader Packet 4 completion or near-completion
+  checkpoint, write a group anchor `O` and `Z` decision note, write a more
+  user-facing progress/timeline update, or pause at the clean Packet 4C
+  implementation checkpoint
 - closeout command
 - stop condition
 
@@ -3058,6 +3060,74 @@ The next recommended task is the tiny Packet 4C implementation for read-only
 lane-aware group mutation intent behavior for `Y`, `V`, and `N`, a more
 user-facing progress/timeline update, or a pause at this accepted Packet 4C
 planning checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4C Lane-Aware Group Mutation Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4C_LANE_AWARE_GROUP_MUTATION_CHECKPOINT.md`
+records completion of the Packet 4C read-only lane-aware group mutation intent
+behavior implementation.
+
+Milestone commit:
+
+- `95c432a Add Packet 4C lane-aware group mutation behavior`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No closeout script update was needed because `tests/test_behavior_scene_group.py`
+is already covered by `=== Test: Behavior Scene Group ===`.
+
+Accepted Packet 4C behavior:
+
+- read-only lane-aware group mutation intent for `Y`, `V`, and `N`
+- copied group metadata from `GROUP_COMMANDS`
+- deterministic lane-aware page metadata
+- deterministic lane-aware mutation mode metadata
+- `command_family` preserved as `lane_aware_page`
+- no lane-aware group mutation execution
+- no group mutation execution
+- no scene execution
+- no state mutation
+- no command dispatch
+- no MIDI sending
+- no port opening
+- no hardware requirement
+
+Deferred and safe scope remains:
+
+- `O` and `Z` group anchor load/return behavior
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene, group, or lane state
+- command dispatch
+- MIDI or hardware behavior
+
+Accepted TDD evidence:
+
+- red test failed before implementation because `Y`, `V`, and `N` were still
+  deferred
+- green `tests/test_behavior_scene_group.py` passed after implementation
+- targeted behavior and passive CLI regression tests passed
+- full closeout passed
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 is still not complete until this Packet 4C checkpoint is reviewed and
+the remaining `O` and `Z` group anchor load/return scope is resolved or
+explicitly left deferred.
+
+The next recommended task is a docs-only Packet 4C checkpoint review, a
+broader Packet 4 completion or near-completion checkpoint, a docs-only group
+anchor `O` and `Z` decision note, a more user-facing progress/timeline
+update, or a pause at this clean Packet 4C implementation checkpoint.
+Hardware remains off.
 
 The previous current-session handoff was:
 
