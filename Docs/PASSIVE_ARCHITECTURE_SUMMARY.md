@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f227b82
+c115912
 
 ## Protected Reference
 
@@ -57,7 +57,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f227b82 Add behavior parity progress report after Packet 3
+- current HEAD: c115912 Add behavior parity progress report review after
+  Packet 3
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -162,14 +163,17 @@ It captures:
   3 completion as the current read-only behavior foundation; the broader
   behavior-parity implementation progress report after Packet 3 review has
   now accepted that report as the current behavior-parity progress baseline
-  before any future Packet 4 planning
+  before any future Packet 4 planning; the docs-only Packet 4 scene and group
+  intent plan now defines the next behavior-parity planning branch and
+  recommends a tiny future Packet 4A implementation scope limited to
+  read-only scene intent behavior
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a docs-only Packet 4 behavior-parity plan,
-  write a more user-facing progress/timeline update, or pause at the clean
-  behavior-parity progress report review checkpoint
+- next recommended task: review and accept the docs-only Packet 4 scene and
+  group intent plan, write a more user-facing progress/timeline update, or
+  pause at the clean Packet 4 planning checkpoint
 - closeout command
 - stop condition
 
@@ -2204,6 +2208,58 @@ GUI/capture, or hardware validation exists.
 The next recommended task is a docs-only Packet 4 behavior-parity plan, a more
 user-facing progress/timeline update, or a pause at this clean progress report
 review checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4 Scene And Group Intent Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4_SCENE_GROUP_PLAN.md` defines the next
+behavior-parity planning branch after the accepted progress report review
+after Packet 3.
+
+Baseline commit:
+
+- c115912 Add behavior parity progress report review after Packet 3
+
+Packet identity:
+
+- Packet 4: Scene And Group Intent Behavior Parity
+
+Full Packet 4 planning scope:
+
+- scene intent commands `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`, `S3`,
+  `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+- four-pad group mutation intent commands `X`, `D`, `I`, and `4`
+- lane-aware group mutation intent commands `Y`, `V`, and `N`
+
+Recommended first future implementation subset:
+
+- Packet 4A: read-only scene intent behavior only
+
+Future Packet 4A file ownership:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+- `Scripts/closeout_check.ps1`, only to add the future test label
+
+Deferred Packet 4 scope:
+
+- group mutation execution
+- lane-aware group mutation execution
+- scene selection runtime state
+- four-pad group runtime state
+- lane model
+- dispatch
+- scene execution
+- MIDI or hardware behavior
+
+The plan confirms no implementation, tests, scene execution, group mutation
+execution, CLI execution wiring, dispatch, command execution, prompt/input
+loop, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 4 scene and group intent plan
+review, a more user-facing progress/timeline update, or a pause at this clean
+Packet 4 planning checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
@@ -8986,8 +9042,9 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a docs-only Packet 4 behavior-parity plan only after explicit
-  approval
+- review and accept the docs-only Packet 4 scene and group intent plan
+- implement only the accepted Packet 4A read-only scene intent behavior after
+  plan review
 - write a more user-facing progress/timeline update if expectation-setting is
   more useful before Packet 4 planning
 - pause at the clean mock-first active boundary review checkpoint

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f227b82 Add behavior parity progress report after Packet 3
+c115912 Add behavior parity progress report review after Packet 3
 
 ## Current Phase
 
@@ -145,6 +145,9 @@ completion as the current read-only behavior foundation.
 The broader behavior-parity implementation progress report after Packet 3
 review has now accepted that report as the current behavior-parity progress
 baseline before any future Packet 4 planning.
+The docs-only Packet 4 scene and group intent plan now defines the next
+behavior-parity planning branch and recommends a tiny future Packet 4A
+implementation scope limited to read-only scene intent behavior.
 
 ## Current Safety State
 
@@ -199,11 +202,39 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a docs-only Packet 4 behavior-parity plan,
-write a more user-facing progress/timeline update, or pause at this clean
-behavior-parity progress report review checkpoint.
+Next recommended task is to review and accept the docs-only Packet 4 scene and
+group intent plan, write a more user-facing progress/timeline update, or pause
+at this clean Packet 4 planning checkpoint.
 
 Do not implement Packet 4 or any runtime execution layer yet.
+
+The latest V1.34 behavior parity Packet 4 scene and group intent plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4_SCENE_GROUP_PLAN.md`
+
+It records:
+
+- current baseline `c115912 Add behavior parity progress report review after
+  Packet 3`
+- Packet 4 identity: Scene And Group Intent Behavior Parity
+- full Packet 4 planning scope:
+  - scene intent commands `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`,
+    `S3`, `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+  - four-pad group mutation intent commands `X`, `D`, `I`, and `4`
+  - lane-aware group mutation intent commands `Y`, `V`, and `N`
+- recommended future Packet 4A implementation scope limited to read-only
+  scene intent behavior only
+- future file ownership:
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `tests/test_behavior_scene_group.py`
+  - `Scripts/closeout_check.ps1`, only to add the future test label
+- group mutation and lane-aware group mutation deferred until separate review
+
+The plan confirms no implementation, tests, scene execution, group mutation
+execution, CLI execution wiring, dispatch, command execution, prompt/input
+loop, real MIDI, ports, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
 
 The latest V1.34 behavior parity implementation progress report after Packet
 3 review is:

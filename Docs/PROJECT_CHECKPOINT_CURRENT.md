@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c115912 Add behavior parity progress report review after Packet 3
 - f227b82 Add behavior parity progress report after Packet 3
 - 33b53ad Add Packet 3 completion review
 - 2b00cfa Add Packet 3 completion checkpoint
@@ -2513,6 +2514,61 @@ GUI/capture, or hardware validation exists.
 The next recommended task is a docs-only Packet 4 behavior-parity plan, a
 more user-facing progress/timeline update, or a pause at this clean progress
 report review checkpoint.
+
+## V1.34 Behavior Parity Packet 4 Scene And Group Intent Plan
+
+The Packet 4 scene and group intent plan defines the next behavior-parity
+planning branch after the accepted progress report review after Packet 3.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4_SCENE_GROUP_PLAN.md
+
+Baseline commit:
+
+- c115912 Add behavior parity progress report review after Packet 3
+
+Packet identity:
+
+- Packet 4: Scene And Group Intent Behavior Parity
+
+Full Packet 4 planning scope:
+
+- scene intent commands `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`, `S3`,
+  `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+- four-pad group mutation intent commands `X`, `D`, `I`, and `4`
+- lane-aware group mutation intent commands `Y`, `V`, and `N`
+
+Recommended first future implementation subset:
+
+- Packet 4A: read-only scene intent behavior only
+
+Future Packet 4A file ownership:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+- `Scripts/closeout_check.ps1`, only to add the future test label
+
+Deferred Packet 4 scope:
+
+- group mutation execution
+- lane-aware group mutation execution
+- scene selection runtime state
+- four-pad group runtime state
+- lane model
+- dispatch
+- scene execution
+- MIDI or hardware behavior
+
+The plan confirms no implementation, tests, scene execution, group mutation
+execution, CLI execution wiring, dispatch, command execution, prompt/input
+loop, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 4 scene and group intent plan
+review, a more user-facing progress/timeline update, or a pause at this clean
+Packet 4 planning checkpoint.
 
 ## Next Phase Planning Gate
 
