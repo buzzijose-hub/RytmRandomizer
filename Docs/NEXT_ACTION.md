@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-4a5e6f7 Add Packet 3D selected isolated pad mutation behavior
+5066a43 Add Packet 3D selected isolated pad mutation checkpoint review
 
 ## Current Phase
 
@@ -134,6 +134,9 @@ complete and documented for a docs-only checkpoint review.
 The Packet 3D selected isolated pad mutation checkpoint review has now
 accepted the completed deterministic `PM`, `PS`, `PF`, `PA`, `PL`, `PO`,
 `PB`, and `PG` behavior slice.
+The broader Packet 3 completion checkpoint now consolidates accepted Packet
+3A, Packet 3B, Packet 3C, and Packet 3D behavior and records Packet 3 as
+complete for the current read-only intent-only behavior phase.
 
 ## Current Safety State
 
@@ -188,11 +191,39 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a broader Packet 3 completion checkpoint,
-write a broader behavior-parity implementation progress report, or pause at
-this clean Packet 3D checkpoint review.
+Next recommended task is to review and accept the broader Packet 3 completion
+checkpoint, write a broader behavior-parity implementation progress report,
+or pause at this clean Packet 3 completion checkpoint.
 
-Do not start Packet 4 or any runtime execution layer yet.
+Do not start Packet 4 or any runtime execution layer until the Packet 3
+completion checkpoint is reviewed and accepted.
+
+The latest V1.34 behavior parity Packet 3 completion checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3_COMPLETION_CHECKPOINT.md`
+
+It records:
+
+- current baseline `5066a43 Add Packet 3D selected isolated pad mutation
+  checkpoint review`
+- Packet 3A guarded numeric input behavior accepted for `1`, `2`, and `3`
+- Packet 3B legacy single-profile mutation intent accepted for `M1`, `M2`,
+  and `M3`
+- Packet 3C current-profile page mutation intent accepted for `S`, `F`, `A`,
+  `G`, and `K`
+- Packet 3D selected isolated pad mutation intent accepted for `PM`, `PS`,
+  `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- current helper state in `rytm_randomizer/behavior_mutation_depth.py`
+- current test coverage in `tests/test_behavior_mutation_depth.py`
+- `DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = ()`
+- closeout coverage through `=== Test: Behavior Mutation Depth ===`
+- Packet 3 complete for the current read-only intent-only behavior phase
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, prompt/input loop, active depth prompt, runtime mutation
+state, real MIDI, ports, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 3D selected isolated pad mutation
 review is:

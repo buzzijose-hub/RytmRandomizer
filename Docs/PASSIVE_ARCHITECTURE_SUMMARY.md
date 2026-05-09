@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-4a5e6f7
+5066a43
 
 ## Protected Reference
 
@@ -57,7 +57,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 4a5e6f7 Add Packet 3D selected isolated pad mutation behavior
+- current HEAD: 5066a43 Add Packet 3D selected isolated pad mutation checkpoint
+  review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -152,14 +153,17 @@ It captures:
   future implementation scope for `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`,
   and `PG`; the Packet 3D selected isolated pad mutation behavior
   implementation is now complete, checkpointed, and accepted for `PM`, `PS`,
-  `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+  `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`; the broader Packet 3 completion
+  checkpoint now consolidates Packet 3A, Packet 3B, Packet 3C, and Packet 3D
+  and records Packet 3 as complete for the current read-only intent-only
+  behavior phase
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a broader Packet 3 completion checkpoint,
-  write a broader behavior-parity implementation progress report, or pause at
-  the clean Packet 3D checkpoint review
+- next recommended task: review and accept the broader Packet 3 completion
+  checkpoint, write a broader behavior-parity implementation progress report,
+  or pause at the clean Packet 3 completion checkpoint
 - closeout command
 - stop condition
 
@@ -2016,6 +2020,50 @@ validation exists.
 The next recommended task is a broader Packet 3 completion checkpoint, a
 broader behavior-parity implementation progress report, or a pause at this
 clean Packet 3D checkpoint review. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 3 Completion Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3_COMPLETION_CHECKPOINT.md` consolidates
+accepted Packet 3A, Packet 3B, Packet 3C, and Packet 3D behavior and records
+Packet 3 as complete for the current read-only intent-only behavior phase.
+
+Baseline commit:
+
+- 5066a43 Add Packet 3D selected isolated pad mutation checkpoint review
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Current closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Accepted Packet 3 scope:
+
+- Packet 3A guarded numeric input behavior for `1`, `2`, and `3`
+- Packet 3B legacy single-profile mutation intent for `M1`, `M2`, and `M3`
+- Packet 3C current-profile page mutation intent for `S`, `F`, `A`, `G`, and
+  `K`
+- Packet 3D selected isolated pad mutation intent for `PM`, `PS`, `PF`, `PA`,
+  `PL`, `PO`, `PB`, and `PG`
+
+Current helper state includes `PACKET_3A_GUARDED_DEPTH_KEYS`,
+`PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS`,
+`PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS`,
+`PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS`, and
+`DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = ()`.
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, prompt/input loop, active depth prompt, runtime mutation
+state, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 3 completion checkpoint
+review, a broader behavior-parity implementation progress report, or a pause
+at this clean Packet 3 completion checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
@@ -8798,8 +8846,6 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a broader Packet 3 completion checkpoint after the accepted Packet 3D
-  selected isolated pad mutation behavior review
 - review and accept the broader Packet 3 completion checkpoint before any
   Packet 4 behavior-parity planning
 - write a broader behavior-parity implementation progress report if more

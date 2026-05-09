@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5066a43 Add Packet 3D selected isolated pad mutation checkpoint review
 - 4a5e6f7 Add Packet 3D selected isolated pad mutation behavior
 - 1be4421 Add Packet 3 post-3C progress checkpoint
 - 0bd7e7e Add Packet 3C current profile mutation checkpoint review
@@ -2316,6 +2317,54 @@ validation exists.
 The next recommended task is a broader Packet 3 completion checkpoint, a
 broader behavior-parity implementation progress report, or a pause at this
 clean Packet 3D checkpoint review.
+
+## V1.34 Behavior Parity Packet 3 Completion Checkpoint
+
+The Packet 3 completion checkpoint consolidates accepted Packet 3A, Packet
+3B, Packet 3C, and Packet 3D behavior and records Packet 3 as complete for
+the current read-only intent-only behavior phase.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_COMPLETION_CHECKPOINT.md
+
+Baseline commit:
+
+- 5066a43 Add Packet 3D selected isolated pad mutation checkpoint review
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Current closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Accepted Packet 3 scope:
+
+- Packet 3A guarded numeric input behavior for `1`, `2`, and `3`
+- Packet 3B legacy single-profile mutation intent for `M1`, `M2`, and `M3`
+- Packet 3C current-profile page mutation intent for `S`, `F`, `A`, `G`, and
+  `K`
+- Packet 3D selected isolated pad mutation intent for `PM`, `PS`, `PF`, `PA`,
+  `PL`, `PO`, `PB`, and `PG`
+
+Current helper state includes `PACKET_3A_GUARDED_DEPTH_KEYS`,
+`PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS`,
+`PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS`,
+`PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS`, and
+`DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = ()`.
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, prompt/input loop, active depth prompt, runtime mutation
+state, real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 3 completion checkpoint
+review, a broader behavior-parity implementation progress report, or a pause
+at this clean Packet 3 completion checkpoint.
 
 ## Next Phase Planning Gate
 
