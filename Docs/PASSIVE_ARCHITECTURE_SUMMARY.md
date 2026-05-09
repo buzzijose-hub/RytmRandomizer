@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f625e86
+7b3fe8c
 
 ## Protected Reference
 
@@ -55,7 +55,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f625e86 Add Packet 1B utility session checkpoint review
+- current HEAD: 7b3fe8c Add Packet 1 completion checkpoint review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -97,13 +97,16 @@ It captures:
   now documented and accepted the completed deterministic `T`, `C`, and `Q`
   intent behavior slice; the docs-only Packet 1 completion checkpoint and
   review have now accepted Packet 1 as complete for the current intent-only
-  behavior phase
+  behavior phase; the docs-only Packet 2 anchor/profile behavior plan and
+  review have now accepted a tiny future implementation scope for read-only
+  `BH` and `BC` anchor/profile intent behavior
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 2 anchor/profile behavior plan, or
-  pause at the accepted Packet 1 completion checkpoint
+- next recommended task: tiny Packet 2A anchor/profile implementation for
+  read-only `BH` and `BC` intent behavior, or pause at the accepted Packet 2
+  planning checkpoint
 - closeout command
 - stop condition
 
@@ -416,8 +419,77 @@ behavior baseline. It keeps all future operator routing, CLI wiring,
 execution, prompt loops, real MIDI, ports, and hardware validation out of
 scope.
 
-The next recommended task is a docs-only Packet 2 anchor/profile behavior
-plan.
+The next recommended task is the tiny Packet 2A anchor/profile implementation,
+or a pause at this accepted planning checkpoint.
+
+## V1.34 Behavior Parity Packet 2 Anchor/Profile Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN.md` documents the
+next behavior-parity implementation packet plan after Packet 1.
+
+Packet identity:
+
+- Packet 2: Anchor/Profile Behavior Parity
+
+The plan records the full accepted anchor/profile planning scope from the
+matrix, then narrows the recommended Packet 2A implementation scope to:
+
+- `BH`
+- `BC`
+
+Packet 2A should model only deterministic read-only Pad 1 anchor/profile load
+intent for:
+
+- `BH`: load Pad 1 BD Hard anchor, primary default
+- `BC`: load Pad 1 BD Classic anchor
+
+The plan keeps selected-profile workflow, full group anchors, rotations, Pad
+2/3/4 behavior, non-initial Pad 1 anchors/returns, and profile `"4"` / BD
+Acoustic-related expansion deferred until separately reviewed.
+
+Future file ownership is proposed as:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+- `Scripts/closeout_check.ps1`, only to add the new test label
+
+The plan confirms no implementation, tests, runtime code, dispatch, execution,
+scene execution, prompt/input loop, real MIDI dependency, `mido`, `rtmidi`,
+package metadata, port opening, active CLI command, hardware behavior, or
+hardware validation was added.
+
+## V1.34 Behavior Parity Packet 2 Anchor/Profile Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN_REVIEW.md` accepts the
+Packet 2 anchor/profile plan as the current planning gate.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN.md`
+
+Accepted future Packet 2A scope:
+
+- `BH`: read-only Pad 1 BD Hard anchor/profile load intent
+- `BC`: read-only Pad 1 BD Classic anchor/profile load intent
+
+The review accepts deferred scope for selected-profile workflow, full group
+anchors, rotations, Pad 2/3/4 behavior, non-initial Pad 1 anchors/returns, and
+profile `"4"` / BD Acoustic-related expansion.
+
+The review accepts future ownership limited to:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+- `Scripts/closeout_check.ps1`, only to add the new test label
+
+Parallel implementation remains not recommended for Packet 2A.
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, package metadata, active CLI behavior, or
+hardware validation was added.
+
+The next recommended task is the tiny Packet 2A implementation, or a pause at
+this accepted planning checkpoint.
 
 The previous current-session handoff was:
 

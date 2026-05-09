@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 7b3fe8c Add Packet 1 completion checkpoint review
 - f625e86 Add Packet 1B utility session checkpoint review
 - 60b280e Add Packet 1B utility session behavior
 - a79f92b Add Packet 1A menu utility checkpoint review
@@ -521,8 +522,78 @@ Accepted Packet 1 slices:
 - Packet 1A menu/status behavior
 - Packet 1B utility/session intent behavior
 
-The next recommended task is a docs-only Packet 2 anchor/profile behavior
-plan, or a pause at this clean checkpoint.
+The next recommended task is the tiny Packet 2A anchor/profile implementation,
+or a pause at this accepted planning checkpoint.
+
+## V1.34 Behavior Parity Packet 2 Anchor/Profile Plan
+
+The Packet 2 anchor/profile plan documents the next tiny behavior-parity
+implementation plan after Packet 1.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN.md
+
+Current baseline:
+
+- 7b3fe8c Add Packet 1 completion checkpoint review
+
+Packet identity:
+
+- Packet 2: Anchor/Profile Behavior Parity
+
+Recommended Packet 2A implementation scope:
+
+- `BH`
+- `BC`
+
+Planned future behavior:
+
+- `BH` represents read-only Pad 1 BD Hard anchor/profile load intent
+- `BC` represents read-only Pad 1 BD Classic anchor/profile load intent
+
+The plan keeps selected-profile workflow, full group anchors, rotations, Pad
+2/3/4 behavior, non-initial Pad 1 anchors/returns, profile `"4"`
+implementation, CLI wiring, dispatch, real MIDI, port opening, package
+metadata, and hardware validation out of scope.
+
+Future file ownership is limited to:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+- `Scripts/closeout_check.ps1`, only to add the new test label
+
+## V1.34 Behavior Parity Packet 2 Anchor/Profile Plan Review
+
+The Packet 2 anchor/profile plan review accepts the plan as the current tiny
+implementation gate for `BH` and `BC` anchor/profile intent behavior.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN.md
+
+Accepted future behavior:
+
+- deterministic read-only anchor/profile intent for `BH`
+- deterministic read-only anchor/profile intent for `BC`
+- no prompt loop
+- no state mutation
+- no dispatch
+- no command execution
+- no real MIDI or ports
+- no CLI wiring
+- no package metadata
+
+Parallel implementation remains not recommended because the first
+anchor/profile result shape should stabilize in one small module and one test
+file.
+
+The next recommended task is the tiny Packet 2A implementation, or a pause at
+this accepted planning checkpoint.
 
 ## Next Phase Planning Gate
 

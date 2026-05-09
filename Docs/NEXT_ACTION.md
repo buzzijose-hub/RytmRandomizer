@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f625e86 Add Packet 1B utility session checkpoint review
+7b3fe8c Add Packet 1 completion checkpoint review
 
 ## Current Phase
 
@@ -63,6 +63,9 @@ documented and accepted the completed deterministic `T`, `C`, and `Q` intent
 behavior slice.
 The docs-only Packet 1 completion checkpoint and review have now accepted
 Packet 1 as complete for the current intent-only behavior phase.
+The docs-only Packet 2 anchor/profile behavior plan and review have now
+accepted a tiny future implementation scope for deterministic read-only `BH`
+and `BC` anchor/profile intent behavior.
 
 ## Current Safety State
 
@@ -117,8 +120,51 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 2 anchor/profile behavior plan, or
-a pause at this accepted Packet 1 completion checkpoint.
+Next recommended task is the tiny Packet 2A anchor/profile implementation for
+read-only `BH` and `BC` intent behavior, or a pause at this accepted Packet 2
+planning checkpoint.
+
+The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN.md`
+
+It records:
+
+- Packet 2: Anchor/Profile Behavior Parity
+- full planning scope from the accepted anchor/profile matrix
+- recommended Packet 2A implementation scope limited to `BH` and `BC`
+- `BH` as read-only Pad 1 BD Hard anchor/profile load intent
+- `BC` as read-only Pad 1 BD Classic anchor/profile load intent
+- deferred scope for selected-profile workflow, full group anchors, rotations,
+  Pad 2/3/4 behavior, non-initial Pad 1 anchors/returns, and profile `"4"`
+  / BD Acoustic-related expansion
+- proposed future ownership in `rytm_randomizer/behavior_anchor_profile.py`,
+  `tests/test_behavior_anchor_profile.py`, and a closeout label only
+- no parallel implementation for Packet 2A
+
+The plan confirms no implementation, tests, runtime code, dispatch,
+execution, scene execution, real MIDI, port opening, active CLI behavior,
+package metadata, or hardware validation was added.
+
+The latest V1.34 behavior parity Packet 2 anchor/profile plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_ANCHOR_PROFILE_PLAN.md`
+- Packet 2A implementation scope limited to `BH` and `BC`
+- future read-only deterministic anchor/profile intent behavior
+- future tests for import silence, deterministic accepted behavior, safety
+  flags, metadata copy/immutability, safe failures, passive CLI regression,
+  no real MIDI imports, no package metadata, and V1.34 untouched checks
+- no parallel implementation for Packet 2A
+
+The review confirms no implementation, tests, runtime code, dispatch,
+execution, real MIDI, port opening, active CLI behavior, package metadata, or
+hardware validation was added.
+
+The review recommends the tiny Packet 2A implementation next.
 
 The latest V1.34 behavior parity matrix slice is:
 
