@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3a85c52 Add behavior parity readiness session handoff
 - d7832b4 Add V1.34 behavior parity readiness review
 - e952f6b Add V1.34 behavior parity implementation readiness checkpoint
 - 6f0114b Add V1.34 behavior parity matrix progress review
@@ -2364,6 +2365,50 @@ The handoff records:
   packet plan for menu/status and utility behavior
 
 The handoff is documentation-only. It adds no implementation, tests, runtime
+code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
+opening, package metadata changes, active CLI commands, hardware behavior, or
+hardware validation.
+
+## V1.34 Behavior Parity Packet 1 Menu/Utility Plan
+
+The V1.34 behavior parity Packet 1 menu/utility plan documents the first
+behavior-parity implementation packet plan after the accepted readiness gate.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_MENU_UTILITY_PLAN.md`
+
+Current baseline before this slice:
+
+- 3a85c52 Add behavior parity readiness session handoff
+
+Packet identity:
+
+- Packet 1: Menu/Utility Behavior Parity
+
+Recommended first implementation subset:
+
+- Packet 1A: read-only menu/status behavior for `BD`, `FM`, `PD`, `SM`,
+  `P2M`, `J`, `GM`, `SCN`, `PR`, `SR`, `P3M`, `P4M`, `H`, and `R`
+
+Deferred utility/session scope:
+
+- `T`
+- `C`
+- `Q`
+
+The plan proposes future file ownership limited to:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `Scripts/closeout_check.ps1`, only to add the new test file to closeout
+
+The plan confirms no parallel implementation is recommended for Packet 1A.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 1 plan.
+
+The plan is documentation-only. It adds no implementation, tests, runtime
 code, CLI behavior, dispatch, command execution, scene execution, MIDI, port
 opening, package metadata changes, active CLI commands, hardware behavior, or
 hardware validation.

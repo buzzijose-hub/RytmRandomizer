@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d7832b4 Add V1.34 behavior parity readiness review
+3a85c52 Add behavior parity readiness session handoff
 
 ## Current Phase
 
@@ -49,6 +49,8 @@ The docs-only behavior parity implementation readiness checkpoint review has
 now accepted that readiness gate for planning.
 The end-of-session handoff after the behavior parity readiness review has now
 been documented for tomorrow's resume point.
+The docs-only first behavior-parity implementation packet plan for
+menu/status and utility behavior has now been documented.
 
 ## Current Safety State
 
@@ -103,9 +105,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only first behavior-parity implementation
-packet plan for menu/status and utility behavior, or a pause at this clean
-accepted readiness checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the first
+behavior-parity implementation packet plan, or a pause at this clean planning
+checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -230,6 +232,23 @@ It records:
   hardware validation
 - next recommended task: docs-only first behavior-parity implementation
   packet plan for menu/status and utility behavior
+
+The latest first behavior-parity implementation packet plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_MENU_UTILITY_PLAN.md`
+
+It records:
+
+- Packet 1: Menu/Utility Behavior Parity
+- recommended Packet 1A implementation scope: read-only menu/status behavior
+  for `BD`, `FM`, `PD`, `SM`, `P2M`, `J`, `GM`, `SCN`, `PR`, `SR`, `P3M`,
+  `P4M`, `H`, and `R`
+- deferred utility/session scope for `T`, `C`, and `Q`
+- proposed future file ownership
+- required future tests
+- no parallel implementation for Packet 1A
+- no real MIDI, no ports, no active CLI behavior, no package metadata, and no
+  hardware behavior
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 
