@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 478a7b2 Add Packet 2C anchor profile review
 - e2be703 Add Packet 2C anchor profile checkpoint
 - fa193c3 Add Packet 2C anchor profile behavior
 - 072b00f Add Packet 2C anchor profile plan review
@@ -1035,6 +1036,67 @@ machine/profile expansion, or hardware validation exists.
 The next recommended task is a broader Packet 2 anchor/profile progress
 checkpoint, a docs-only Packet 2D plan only after explicit approval, or a pause
 at this clean Packet 2C review checkpoint.
+
+## V1.34 Behavior Parity Packet 2 Progress Checkpoint
+
+The Packet 2 progress checkpoint consolidates the accepted anchor/profile
+behavior work after Packet 2A, Packet 2B, and Packet 2C.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2_PROGRESS_CHECKPOINT.md
+
+Current baseline:
+
+- 478a7b2 Add Packet 2C anchor profile review
+
+Implemented Packet 2 keys:
+
+- `BH`
+- `BC`
+- `BS`
+- `BF`
+
+Current behavior file:
+
+- rytm_randomizer/behavior_anchor_profile.py
+
+Current test file:
+
+- tests/test_behavior_anchor_profile.py
+
+Closeout coverage:
+
+- `=== Test: Behavior Anchor Profile ===`
+
+Accepted behavior:
+
+- `BH`: read-only Pad 1 BD Hard anchor/profile intent for profile `"2"`
+- `BC`: read-only Pad 1 BD Classic anchor/profile intent for profile `"3"`
+- `BS`: read-only Pad 1 BD Sharp anchor/profile intent with absent profile metadata
+- `BF`: read-only Pad 1 BD FM profiled anchor intent with absent profile metadata
+
+Accepted deferred scope:
+
+- selected profile workflow: `P` and `M`
+- full group anchors: `O` and `Z`
+- rotations: `BR`, `P2R`, `P3R`, and `P4R`
+- Pad 2 anchor/profile commands
+- selected isolated pad anchor return
+- Pad 3 mode and anchor commands
+- Pad 4 anchor/profile commands
+- profile `"4"` / My BD Acoustic command `BA`
+- BD FM return and discovery commands
+- BD Plastic and BD Silky anchors and returns
+
+The checkpoint confirms no CLI wiring, command dispatch, command execution,
+scene execution, selected-profile state, profile rotation, real MIDI, port
+opening, package metadata, active CLI behavior, profile `"4"` implementation,
+machine/profile expansion, or hardware validation was added.
+
+The next recommended task is a docs-only Packet 2 progress checkpoint review,
+a docs-only Packet 2D plan only after explicit approval, or a pause at this
+clean Packet 2 progress checkpoint.
 
 ## Next Phase Planning Gate
 

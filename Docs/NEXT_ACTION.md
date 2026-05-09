@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-e2be703 Add Packet 2C anchor profile checkpoint
+478a7b2 Add Packet 2C anchor profile review
 
 ## Current Phase
 
@@ -84,6 +84,8 @@ The Packet 2C anchor/profile behavior implementation is now complete and ready
 for a docs-only checkpoint review.
 The Packet 2C anchor/profile checkpoint review has now accepted the completed
 deterministic `BF` intent behavior slice.
+The broader Packet 2 anchor/profile progress checkpoint now summarizes the
+accepted `BH`, `BC`, `BS`, and `BF` read-only behavior baseline.
 
 ## Current Safety State
 
@@ -138,9 +140,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader Packet 2 anchor/profile progress
-checkpoint, a docs-only Packet 2D plan only after explicit approval, or a pause
-at this clean Packet 2C review checkpoint.
+Next recommended task is a docs-only Packet 2 progress checkpoint review, a
+docs-only Packet 2D plan only after explicit approval, or a pause at this clean
+Packet 2 progress checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -415,6 +417,28 @@ hardware validation exists.
 
 The review recommends a broader Packet 2 progress checkpoint next, or a pause
 at this clean review checkpoint.
+
+The latest V1.34 behavior parity Packet 2 progress checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2_PROGRESS_CHECKPOINT.md`
+
+It records:
+
+- Packet 2A accepted `BH` and `BC`
+- Packet 2B accepted `BS`
+- Packet 2C accepted `BF`
+- `BH` and `BC` use existing group-profile metadata for profiles `"2"` and
+  `"3"`
+- `BS` and `BF` use deterministic absent group-profile metadata semantics
+- `BA` and profile `"4"` / My BD Acoustic remain parked
+- selected profile workflow, full group anchors, rotations, Pad 2/3/4
+  behavior, BD FM return/discovery, BD Plastic, and BD Silky remain deferred
+
+The checkpoint confirms no CLI wiring, dispatch, execution, real MIDI, port
+opening, package metadata, active CLI behavior, profile `"4"` implementation,
+machine/profile expansion, or hardware validation was added.
+
+The checkpoint recommends a docs-only Packet 2 progress review next.
 
 The latest V1.34 behavior parity matrix slice is:
 
