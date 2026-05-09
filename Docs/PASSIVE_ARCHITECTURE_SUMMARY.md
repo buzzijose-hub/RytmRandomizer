@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-99fcd42
+8ef8c8b
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 99fcd42 Add Packet 3A mutation depth review
+- current HEAD: 8ef8c8b Add Packet 3B legacy mutation depth plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -130,14 +130,15 @@ It captures:
   and the Packet 3A checkpoint review has accepted the completed deterministic
   guarded numeric input behavior slice; the docs-only Packet 3B legacy
   mutation-depth plan now defines a tiny future scope for `M1`, `M2`, and
-  `M3` only
+  `M3` only; the docs-only Packet 3B legacy mutation-depth plan review has
+  accepted that tiny future scope as the next implementation gate
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the docs-only Packet 3B legacy
-  mutation-depth plan, create a broader Packet 3 progress checkpoint, or pause
-  at the clean Packet 3B planning checkpoint
+- next recommended task: implement the tiny Packet 3B legacy mutation-depth
+  scope for `M1`, `M2`, and `M3` only, create a broader Packet 3 progress
+  checkpoint, or pause at the clean Packet 3B review checkpoint
 - closeout command
 - stop condition
 
@@ -1339,6 +1340,66 @@ validation.
 The next recommended task is a docs-only Packet 3B plan review, a broader
 Packet 3 progress checkpoint, or a pause at this clean Packet 3B planning
 checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 3B Legacy Mutation-Depth Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN_REVIEW.md`
+accepts the Packet 3B legacy mutation-depth plan as the current tiny
+implementation gate.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN.md`
+
+Accepted plan commit:
+
+- 8ef8c8b Add Packet 3B legacy mutation depth plan
+
+Accepted future scope:
+
+- `M1`
+- `M2`
+- `M3`
+
+Accepted future behavior:
+
+- `M1`: deterministic read-only legacy single-profile full micro mutation
+  intent
+- `M2`: deterministic read-only legacy single-profile full groove mutation
+  intent
+- `M3`: deterministic read-only legacy single-profile full strong mutation
+  intent
+
+The review accepts existing passive metadata from
+`LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS` as the only future metadata source.
+It does not authorize invented selected-profile state, runtime mutation
+output, machine values, pad state, or hardware state.
+
+Future file ownership remains limited to:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update is expected because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+The review keeps these areas deferred:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+
+The review confirms no implementation, tests, CLI wiring, prompt loop,
+dispatch, execution, scene execution, selected-profile state mutation, real
+MIDI, ports, package metadata, active CLI behavior, machine/profile
+expansion, or hardware validation exists.
+
+The next recommended task is the tiny Packet 3B implementation for `M1`,
+`M2`, and `M3`, a broader Packet 3 progress checkpoint, or a pause at this
+clean Packet 3B review checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 

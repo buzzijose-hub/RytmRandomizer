@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-99fcd42 Add Packet 3A mutation depth review
+8ef8c8b Add Packet 3B legacy mutation depth plan
 
 ## Current Phase
 
@@ -105,6 +105,8 @@ The Packet 3A mutation-depth checkpoint review has now accepted the completed
 deterministic guarded numeric input behavior slice.
 The docs-only Packet 3B legacy mutation-depth plan now defines a tiny future
 scope for `M1`, `M2`, and `M3` only.
+The docs-only Packet 3B legacy mutation-depth plan review has now accepted
+that tiny `M1`, `M2`, and `M3` scope as the next implementation gate.
 
 ## Current Safety State
 
@@ -159,11 +161,38 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to review and accept the docs-only Packet 3B legacy
-mutation-depth plan, create a broader Packet 3 progress checkpoint, or pause
-at this clean Packet 3B planning checkpoint.
+Next recommended task is to implement the tiny Packet 3B legacy
+mutation-depth scope for `M1`, `M2`, and `M3` only, create a broader Packet 3
+progress checkpoint, or pause at this clean Packet 3B review checkpoint.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3B legacy mutation-depth plan review
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN.md`
+- 8ef8c8b Add Packet 3B legacy mutation depth plan
+- future Packet 3B implementation scope limited to `M1`, `M2`, and `M3`
+- `M1` as read-only legacy single-profile full micro mutation intent
+- `M2` as read-only legacy single-profile full groove mutation intent
+- `M3` as read-only legacy single-profile full strong mutation intent
+- existing passive metadata from `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`
+- future ownership limited to `rytm_randomizer/behavior_mutation_depth.py` and
+  `tests/test_behavior_mutation_depth.py`
+- no closeout script update expected because `=== Test: Behavior Mutation
+  Depth ===` already covers the test file
+- no parallel implementation recommended for Packet 3B
+- safe deferred behavior for `S`, `F`, `A`, `G`, `K`, `PM`, `PS`, `PF`,
+  `PA`, `PL`, `PO`, `PB`, and `PG`
+
+The review confirms no implementation, tests, CLI wiring, prompt loop,
+dispatch, execution, selected-profile state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, or hardware
+validation exists.
 
 The latest V1.34 behavior parity Packet 3B legacy mutation-depth plan is:
 

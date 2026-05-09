@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 8ef8c8b Add Packet 3B legacy mutation depth plan
 - 99fcd42 Add Packet 3A mutation depth review
 - d70c2d2 Add Packet 3A mutation depth checkpoint
 - bda0db9 Add Packet 3A mutation depth behavior
@@ -1577,6 +1578,63 @@ validation.
 
 The next recommended task is a docs-only Packet 3B plan review, a broader
 Packet 3 progress checkpoint, or a pause at this clean planning checkpoint.
+
+## V1.34 Behavior Parity Packet 3B Legacy Mutation-Depth Plan Review
+
+The Packet 3B legacy mutation-depth plan review accepts the Packet 3B plan as
+the current tiny implementation gate for `M1`, `M2`, and `M3`.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN.md
+
+Accepted plan commit:
+
+- 8ef8c8b Add Packet 3B legacy mutation depth plan
+
+Accepted future implementation scope:
+
+- `M1`
+- `M2`
+- `M3`
+
+Accepted future behavior:
+
+- `M1`: deterministic read-only legacy single-profile full micro mutation
+  intent
+- `M2`: deterministic read-only legacy single-profile full groove mutation
+  intent
+- `M3`: deterministic read-only legacy single-profile full strong mutation
+  intent
+
+Accepted metadata source:
+
+- `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS` in
+  `rytm_randomizer/commands.py`
+
+Future file ownership remains limited to:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update is expected because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+The review accepts that `S`, `F`, `A`, `G`, `K`, `PM`, `PS`, `PF`, `PA`,
+`PL`, `PO`, `PB`, and `PG` remain deferred until separately planned.
+
+The review confirms no implementation, tests, CLI wiring, prompt loop,
+dispatch, command execution, scene execution, selected-profile state mutation,
+real MIDI, port opening, package metadata, active CLI behavior,
+machine/profile expansion, or hardware validation exists.
+
+The next recommended task is the tiny Packet 3B implementation for `M1`,
+`M2`, and `M3`, a broader Packet 3 progress checkpoint, or a pause at this
+clean Packet 3B review checkpoint.
 
 ## Next Phase Planning Gate
 
