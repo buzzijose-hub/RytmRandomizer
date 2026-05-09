@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 4a5e6f7 Add Packet 3D selected isolated pad mutation behavior
 - 1be4421 Add Packet 3 post-3C progress checkpoint
 - 0bd7e7e Add Packet 3C current profile mutation checkpoint review
 - 0c83e65 Add Packet 3C current profile mutation behavior
@@ -2244,6 +2245,77 @@ hardware validation exists.
 The next recommended task is the tiny Packet 3D implementation, a broader
 behavior-parity implementation progress report, or a pause at this clean
 Packet 3D planning review checkpoint.
+
+## V1.34 Behavior Parity Packet 3D Selected Isolated Pad Mutation Checkpoint
+
+The Packet 3D selected isolated pad mutation checkpoint records completion of
+the tiny selected isolated pad mutation-depth implementation slice.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_CHECKPOINT.md
+
+Milestone commit:
+
+- 4a5e6f7 Add Packet 3D selected isolated pad mutation behavior
+
+Files changed by that milestone:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Accepted Packet 3D scope:
+
+- `PM`: selected isolated pad full mutation intent using group default zone/depth
+- `PS`: selected isolated pad SRC mutation intent requiring future depth selection
+- `PF`: selected isolated pad filter mutation intent requiring future depth selection
+- `PA`: selected isolated pad amp mutation intent requiring future depth selection
+- `PL`: selected isolated pad LFO mutation intent requiring future depth selection
+- `PO`: selected isolated pad morph mutation intent requiring future depth selection
+- `PB`: selected isolated pad body mutation intent requiring future depth selection
+- `PG`: selected isolated pad grit mutation intent requiring future depth selection
+
+The implementation adds `PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS`,
+`_accepted_selected_isolated_pad_mutation_result`, and an empty known Packet 3
+deferred key set. Results remain read-only, selected-isolated-pad scoped, and
+intent-only.
+
+No closeout script update was needed because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+Packet 3 is ready for a broader completion checkpoint.
+
+## V1.34 Behavior Parity Packet 3D Selected Isolated Pad Mutation Review
+
+The Packet 3D selected isolated pad mutation review accepts the Packet 3D
+checkpoint and implementation commit as the current read-only selected
+isolated pad mutation baseline.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_CHECKPOINT.md
+
+Accepted implementation commit:
+
+- 4a5e6f7 Add Packet 3D selected isolated pad mutation behavior
+
+The review accepts deterministic selected isolated pad mutation intent for
+`PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`; confirms Packet 3A,
+Packet 3B, and Packet 3C behavior remain unchanged; and records Packet 3 as
+ready for a broader completion checkpoint.
+
+The review confirms no CLI wiring, prompt loop, selected isolated pad runtime
+state, dispatch, command execution, scene execution, real MIDI, port opening,
+package metadata, active CLI behavior, machine/profile expansion, or hardware
+validation exists.
+
+The next recommended task is a broader Packet 3 completion checkpoint, a
+broader behavior-parity implementation progress report, or a pause at this
+clean Packet 3D checkpoint review.
 
 ## Next Phase Planning Gate
 
