@@ -104,6 +104,42 @@ def test_bc_returns_read_only_bd_classic_anchor_profile_intent():
     )
 
 
+def test_bs_returns_read_only_bd_sharp_anchor_profile_intent_without_profile_metadata():
+    from rytm_randomizer.behavior_anchor_profile import (
+        evaluate_anchor_profile_behavior,
+    )
+
+    result = evaluate_anchor_profile_behavior("BS")
+
+    assert result.accepted is True
+    assert result.command_key == "BS"
+    assert result.label == "load Pad 1 BD Sharp anchor"
+    assert result.behavior_family == "anchor/profile"
+    assert result.reason == "supported_anchor_profile_intent"
+    assert result.target_pad == 1
+    assert result.anchor_name == "BD Sharp"
+    assert result.profile_key == ""
+    assert result.machine_value is None
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "BS: load Pad 1 BD Sharp anchor",
+        "Read-only anchor/profile intent.",
+        "Target pad: 1",
+        "Anchor: BD Sharp",
+        "Profile metadata: absent",
+        "No prompt would run.",
+        "No state would change.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
 def test_anchor_profile_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_anchor_profile import AnchorProfileBehaviorResult
 
@@ -159,6 +195,29 @@ def test_bh_and_bc_metadata_contains_expected_passive_sources():
         assert result.metadata["mutates_runtime_state"] is False
 
 
+def test_bs_metadata_records_absent_group_profile_without_inventing_values():
+    from rytm_randomizer.behavior_anchor_profile import (
+        evaluate_anchor_profile_behavior,
+    )
+
+    result = evaluate_anchor_profile_behavior("BS")
+
+    assert result.metadata["source"] == "PAD1_COMMANDS"
+    assert result.metadata["source_command_type"] == "load"
+    assert result.metadata["source_profile_key"] == ""
+    assert result.metadata["source_profile_name"] == ""
+    assert result.metadata["source_profile_group_pad"] is None
+    assert result.metadata["group_profile_metadata_exists"] is False
+    assert result.metadata["target"] == "Pad 1 / BD Sharp"
+    assert result.metadata["machine_value"] is None
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+
+
 def test_repeated_anchor_profile_evaluations_are_deterministic():
     from rytm_randomizer.behavior_anchor_profile import (
         evaluate_anchor_profile_behavior,
@@ -166,6 +225,7 @@ def test_repeated_anchor_profile_evaluations_are_deterministic():
 
     assert evaluate_anchor_profile_behavior("BH") == evaluate_anchor_profile_behavior("BH")
     assert evaluate_anchor_profile_behavior("BC") == evaluate_anchor_profile_behavior("BC")
+    assert evaluate_anchor_profile_behavior("BS") == evaluate_anchor_profile_behavior("BS")
 
 
 def test_unknown_keys_fail_safely():
@@ -251,8 +311,10 @@ if __name__ == "__main__":
     test_importing_behavior_anchor_profile_prints_nothing()
     test_bh_returns_read_only_bd_hard_anchor_profile_intent()
     test_bc_returns_read_only_bd_classic_anchor_profile_intent()
+    test_bs_returns_read_only_bd_sharp_anchor_profile_intent_without_profile_metadata()
     test_anchor_profile_metadata_is_copied_and_immutable()
     test_bh_and_bc_metadata_contains_expected_passive_sources()
+    test_bs_metadata_records_absent_group_profile_without_inventing_values()
     test_repeated_anchor_profile_evaluations_are_deterministic()
     test_unknown_keys_fail_safely()
     test_deferred_anchor_profile_keys_fail_safely()

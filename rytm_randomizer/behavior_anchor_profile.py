@@ -1,4 +1,4 @@
-"""Read-only Packet 2A anchor/profile behavior helpers.
+"""Read-only Packet 2 anchor/profile behavior helpers.
 
 This module models deterministic anchor/profile intent without dispatching
 commands, opening ports, sending MIDI, or touching hardware.
@@ -13,21 +13,28 @@ from .profile_lookup import describe_group_profile
 
 
 PACKET_2A_ANCHOR_PROFILE_KEYS = ("BH", "BC")
+PACKET_2B_ANCHOR_PROFILE_KEYS = ("BS",)
+SUPPORTED_ANCHOR_PROFILE_KEYS = (
+    *PACKET_2A_ANCHOR_PROFILE_KEYS,
+    *PACKET_2B_ANCHOR_PROFILE_KEYS,
+)
 
 _COMMAND_PROFILE_KEYS = {
     "BH": "2",
     "BC": "3",
+    "BS": "",
 }
 
 _COMMAND_ANCHOR_NAMES = {
     "BH": "BD Hard",
     "BC": "BD Classic",
+    "BS": "BD Sharp",
 }
 
 
 @dataclass(frozen=True)
 class AnchorProfileBehaviorResult:
-    """Immutable read-only result for Packet 2A anchor/profile behavior."""
+    """Immutable read-only result for Packet 2 anchor/profile behavior."""
 
     command_key: str
     label: str = ""
@@ -53,11 +60,11 @@ class AnchorProfileBehaviorResult:
 
 
 def evaluate_anchor_profile_behavior(command_key):
-    """Return a passive Packet 2A anchor/profile behavior result."""
+    """Return a passive Packet 2 anchor/profile behavior result."""
 
     key = str(command_key)
 
-    if key in PACKET_2A_ANCHOR_PROFILE_KEYS:
+    if key in SUPPORTED_ANCHOR_PROFILE_KEYS:
         return _accepted_anchor_profile_result(key)
 
     if key in COMMANDS:
@@ -79,11 +86,11 @@ def evaluate_anchor_profile_behavior(command_key):
 def _accepted_anchor_profile_result(command_key):
     command_metadata = PAD1_COMMANDS[command_key]
     profile_key = _COMMAND_PROFILE_KEYS[command_key]
-    profile = describe_group_profile(profile_key)
+    profile = describe_group_profile(profile_key) if profile_key else None
     anchor_name = _COMMAND_ANCHOR_NAMES[command_key]
     target_pad = command_metadata["pad"]
     label = command_metadata["label"]
-    machine_value = profile["machine_value"]
+    machine_value = profile["machine_value"] if profile else None
 
     return AnchorProfileBehaviorResult(
         command_key=command_key,
@@ -99,7 +106,7 @@ def _accepted_anchor_profile_result(command_key):
             "Read-only anchor/profile intent.",
             f"Target pad: {target_pad}",
             f"Anchor: {anchor_name}",
-            f"Profile key: {profile_key}",
+            _profile_display_line(profile_key),
             "No prompt would run.",
             "No state would change.",
             "No MIDI would be sent.",
@@ -110,8 +117,9 @@ def _accepted_anchor_profile_result(command_key):
             "source": "PAD1_COMMANDS",
             "source_command_type": command_metadata["type"],
             "source_profile_key": profile_key,
-            "source_profile_name": profile["name"],
-            "source_profile_group_pad": profile["group_pad"],
+            "source_profile_name": profile["name"] if profile else "",
+            "source_profile_group_pad": profile["group_pad"] if profile else None,
+            "group_profile_metadata_exists": bool(profile),
             "target": f"Pad {target_pad} / {anchor_name}",
             "machine_value": machine_value,
             "mock_only": True,
@@ -122,6 +130,12 @@ def _accepted_anchor_profile_result(command_key):
             "mutates_runtime_state": False,
         },
     )
+
+
+def _profile_display_line(profile_key):
+    if profile_key:
+        return f"Profile key: {profile_key}"
+    return "Profile metadata: absent"
 
 
 def _safe_failure_metadata(source):
@@ -138,6 +152,8 @@ def _safe_failure_metadata(source):
 
 __all__ = [
     "PACKET_2A_ANCHOR_PROFILE_KEYS",
+    "PACKET_2B_ANCHOR_PROFILE_KEYS",
+    "SUPPORTED_ANCHOR_PROFILE_KEYS",
     "AnchorProfileBehaviorResult",
     "evaluate_anchor_profile_behavior",
 ]
