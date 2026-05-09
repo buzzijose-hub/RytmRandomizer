@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- b184a7a Add Packet 3B legacy mutation depth review
 - c3baf8a Add Packet 3B legacy mutation depth checkpoint
 - 227e599 Add Packet 3B legacy mutation depth behavior
 - 8ef8c8b Add Packet 3B legacy mutation depth plan
@@ -1768,6 +1769,70 @@ validation exists.
 The next recommended task is a broader Packet 3 progress checkpoint, a
 docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or a pause at this
 clean Packet 3B review checkpoint.
+
+## V1.34 Behavior Parity Packet 3 Progress Checkpoint
+
+The Packet 3 progress checkpoint consolidates the accepted mutation-depth and
+guarded input behavior work after Packet 3A and Packet 3B.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3_PROGRESS_CHECKPOINT.md
+
+Current baseline:
+
+- b184a7a Add Packet 3B legacy mutation depth review
+
+Current Packet 3 implementation surface:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Current closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Accepted Packet 3A behavior:
+
+- guarded numeric input behavior for `1`, `2`, and `3`
+- bare main-prompt use remains guarded
+- no active depth prompt exists now
+- no prompt, state mutation, dispatch, execution, MIDI, ports, or hardware
+
+Accepted Packet 3B behavior:
+
+- `M1`: read-only legacy single-profile full micro mutation intent
+- `M2`: read-only legacy single-profile full groove mutation intent
+- `M3`: read-only legacy single-profile full strong mutation intent
+
+Current behavior helper state:
+
+- `PACKET_3A_GUARDED_DEPTH_KEYS`
+- `PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS`
+- `DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS`
+- `MutationDepthBehaviorResult`
+- `evaluate_mutation_depth_behavior(command_key)`
+
+Packet 3 is not complete.
+
+Remaining deferred Packet 3 scope:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+- mutation execution
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, command
+execution, scene execution, selected-profile state mutation, real MIDI, port
+opening, package metadata, active CLI behavior, machine/profile expansion, or
+hardware validation exists.
+
+The next recommended task is a docs-only Packet 3 progress checkpoint review,
+a docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or a pause at this
+clean Packet 3 progress checkpoint.
 
 ## Next Phase Planning Gate
 

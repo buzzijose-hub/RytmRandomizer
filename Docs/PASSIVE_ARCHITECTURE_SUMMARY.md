@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c3baf8a
+b184a7a
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c3baf8a Add Packet 3B legacy mutation depth checkpoint
+- current HEAD: b184a7a Add Packet 3B legacy mutation depth review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -134,14 +134,16 @@ It captures:
   accepted that tiny future scope as the next implementation gate; the Packet
   3B legacy mutation-depth behavior implementation is now complete and ready
   for a docs-only checkpoint review; the Packet 3B checkpoint review has now
-  accepted the completed deterministic `M1`, `M2`, and `M3` behavior slice
+  accepted the completed deterministic `M1`, `M2`, and `M3` behavior slice;
+  the broader Packet 3 progress checkpoint now consolidates accepted Packet 3A
+  and Packet 3B progress while keeping the rest of Packet 3 deferred
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a broader Packet 3 progress checkpoint, create
-  a docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or pause at the
-  clean Packet 3B review checkpoint
+- next recommended task: create a docs-only Packet 3 progress checkpoint
+  review, create a docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`,
+  or pause at the clean Packet 3 progress checkpoint
 - closeout command
 - stop condition
 
@@ -1522,6 +1524,67 @@ validation exists.
 The next recommended task is a broader Packet 3 progress checkpoint, a
 docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or a pause at this
 clean Packet 3B review checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 3 Progress Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3_PROGRESS_CHECKPOINT.md` consolidates the
+accepted mutation-depth and guarded input behavior work after Packet 3A and
+Packet 3B.
+
+Current baseline:
+
+- b184a7a Add Packet 3B legacy mutation depth review
+
+Current Packet 3 implementation surface:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+Current closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Accepted Packet 3A behavior:
+
+- guarded numeric input behavior for `1`, `2`, and `3`
+- bare main-prompt use remains guarded
+- no active depth prompt exists now
+- no prompt, state mutation, dispatch, execution, MIDI, ports, or hardware
+
+Accepted Packet 3B behavior:
+
+- `M1`: read-only legacy single-profile full micro mutation intent
+- `M2`: read-only legacy single-profile full groove mutation intent
+- `M3`: read-only legacy single-profile full strong mutation intent
+
+Current behavior helper state:
+
+- `PACKET_3A_GUARDED_DEPTH_KEYS`
+- `PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS`
+- `DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS`
+- `MutationDepthBehaviorResult`
+- `evaluate_mutation_depth_behavior(command_key)`
+
+Packet 3 is not complete.
+
+Remaining deferred Packet 3 scope:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+- mutation execution
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, execution, scene
+execution, selected-profile state mutation, real MIDI, ports, package
+metadata, active CLI behavior, machine/profile expansion, or hardware
+validation exists.
+
+The next recommended task is a docs-only Packet 3 progress checkpoint review,
+a docs-only Packet 3C plan for `S`, `F`, `A`, `G`, and `K`, or a pause at this
+clean Packet 3 progress checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
