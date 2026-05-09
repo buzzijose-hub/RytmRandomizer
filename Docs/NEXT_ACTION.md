@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-8e11826 Add Packet 2 anchor profile progress checkpoint
+a0ae8fa Add Packet 2 anchor profile progress review
 
 ## Current Phase
 
@@ -88,6 +88,9 @@ The broader Packet 2 anchor/profile progress checkpoint now summarizes the
 accepted `BH`, `BC`, `BS`, and `BF` read-only behavior baseline.
 The Packet 2 progress checkpoint review has now accepted that current
 read-only anchor/profile progress baseline.
+The broader behavior-parity implementation progress checkpoint now summarizes
+accepted Packet 1 completion and accepted Packet 2 progress as the current
+read-only behavior foundation.
 
 ## Current Safety State
 
@@ -142,9 +145,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader behavior-parity progress checkpoint, a
-docs-only Packet 2D plan only after explicit approval, or a pause at this clean
-Packet 2 progress review checkpoint.
+Next recommended task is a docs-only review of the broader behavior-parity
+implementation progress checkpoint, a docs-only Packet 2D plan only after
+explicit approval, a docs-only plan for the next non-anchor behavior packet, or
+a pause at this clean behavior-parity progress checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -461,6 +465,28 @@ machine/profile expansion, or hardware validation exists.
 
 The review recommends a broader behavior-parity progress checkpoint, a
 docs-only Packet 2D plan only after explicit approval, or a pause.
+
+The latest V1.34 behavior parity implementation progress checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_CHECKPOINT.md`
+
+It records:
+
+- Packet 1 is complete and accepted for menu/status and utility/session intent
+- Packet 2 has accepted read-only anchor/profile progress for `BH`, `BC`,
+  `BS`, and `BF`
+- Packet 2 is not complete for the full anchor/profile matrix
+- additional Packet 2 widening requires a separate Packet 2D plan and review
+- next non-anchor behavior packets remain deferred until separately planned
+- behavior helpers remain separate from CLI execution, dispatch, active
+  behavior, real MIDI, ports, and hardware
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, real MIDI, port opening, package metadata, active CLI
+behavior, profile `"4"` implementation, machine/profile expansion, or hardware
+validation was added.
+
+The checkpoint recommends a docs-only review/acceptance gate next.
 
 The latest V1.34 behavior parity matrix slice is:
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a0ae8fa Add Packet 2 anchor profile progress review
 - 8e11826 Add Packet 2 anchor profile progress checkpoint
 - 478a7b2 Add Packet 2C anchor profile review
 - e2be703 Add Packet 2C anchor profile checkpoint
@@ -1150,6 +1151,72 @@ machine/profile expansion, or hardware validation exists.
 The next recommended task is a broader behavior-parity progress checkpoint, a
 docs-only Packet 2D plan only after explicit approval, or a pause at this clean
 Packet 2 progress review checkpoint.
+
+## V1.34 Behavior Parity Implementation Progress Checkpoint
+
+The behavior-parity implementation progress checkpoint consolidates the current
+read-only behavior foundation after accepted Packet 1 completion and accepted
+Packet 2 progress.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_CHECKPOINT.md
+
+Current baseline:
+
+- a0ae8fa Add Packet 2 anchor profile progress review
+
+Accepted implementation progress:
+
+- Packet 1 is complete and accepted for menu/status and utility/session intent
+- Packet 2 has accepted read-only anchor/profile progress
+
+Current behavior helper modules:
+
+- rytm_randomizer/behavior_menu_utility.py
+- rytm_randomizer/behavior_anchor_profile.py
+
+Current behavior test files:
+
+- tests/test_behavior_menu_utility.py
+- tests/test_behavior_anchor_profile.py
+
+Current behavior closeout labels:
+
+- `=== Test: Behavior Menu Utility ===`
+- `=== Test: Behavior Anchor Profile ===`
+
+Accepted Packet 1 keys:
+
+- `BD`, `FM`, `PD`, `SM`, `P2M`, `J`, `GM`, `SCN`, `PR`, `SR`, `P3M`,
+  `P4M`, `H`, `R`, `T`, `C`, and `Q`
+
+Accepted Packet 2 keys:
+
+- `BH`, `BC`, `BS`, and `BF`
+
+Still deferred:
+
+- additional Packet 2 widening
+- selected profile workflow
+- full group anchors
+- rotations
+- Pad 2/3/4 anchor/profile behavior
+- profile `"4"` / My BD Acoustic command `BA`
+- mutation-depth and guarded numeric input behavior
+- scene and group intent behavior
+- Pad lane behavior packets
+- undo/commit/state behavior
+
+The checkpoint confirms no CLI execution wiring, command dispatch, command
+execution, scene execution, selected-profile state, profile rotation, real
+MIDI, port opening, package metadata, active CLI behavior, profile `"4"`
+implementation, machine/profile expansion, or hardware validation was added.
+
+The next recommended task is a docs-only review of this broader
+behavior-parity implementation progress checkpoint, a docs-only Packet 2D plan
+only after explicit approval, a docs-only plan for the next non-anchor
+behavior packet, or a pause at this clean checkpoint.
 
 ## Next Phase Planning Gate
 

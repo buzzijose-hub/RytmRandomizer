@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-8e11826
+a0ae8fa
 
 ## Protected Reference
 
@@ -56,7 +56,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 8e11826 Add Packet 2 anchor profile progress checkpoint
+- current HEAD: a0ae8fa Add Packet 2 anchor profile progress review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -116,14 +116,17 @@ It captures:
   broader Packet 2 anchor/profile progress checkpoint now summarizes the
   accepted `BH`, `BC`, `BS`, and `BF` read-only behavior baseline; the Packet
   2 progress checkpoint review has now accepted that current anchor/profile
-  progress baseline
+  progress baseline; the broader behavior-parity implementation progress
+  checkpoint now summarizes accepted Packet 1 completion and accepted Packet 2
+  progress as the current read-only behavior foundation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: broader behavior-parity progress checkpoint,
-  docs-only Packet 2D plan only after explicit approval, or pause at the clean
-  Packet 2 progress review checkpoint
+- next recommended task: docs-only review of the broader behavior-parity
+  implementation progress checkpoint, docs-only Packet 2D plan only after
+  explicit approval, docs-only plan for the next non-anchor behavior packet, or
+  pause at the clean behavior-parity progress checkpoint
 - closeout command
 - stop condition
 
@@ -971,6 +974,59 @@ validation exists.
 The next recommended task is a broader behavior-parity progress checkpoint, a
 docs-only Packet 2D plan only after explicit approval, or a pause at this clean
 Packet 2 progress review checkpoint.
+
+## V1.34 Behavior Parity Implementation Progress Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_CHECKPOINT.md` consolidates
+the current behavior-parity implementation progress after accepted Packet 1
+completion and accepted Packet 2 progress.
+
+Current baseline:
+
+- a0ae8fa Add Packet 2 anchor profile progress review
+
+Accepted implementation progress:
+
+- Packet 1 is complete and accepted for menu/status and utility/session intent
+- Packet 2 has accepted read-only anchor/profile progress for `BH`, `BC`,
+  `BS`, and `BF`
+
+Current behavior helper modules:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `rytm_randomizer/behavior_anchor_profile.py`
+
+Current behavior test files:
+
+- `tests/test_behavior_menu_utility.py`
+- `tests/test_behavior_anchor_profile.py`
+
+Current behavior closeout labels:
+
+- `=== Test: Behavior Menu Utility ===`
+- `=== Test: Behavior Anchor Profile ===`
+
+Still deferred:
+
+- additional Packet 2 widening
+- selected profile workflow
+- full group anchors
+- rotations
+- Pad 2/3/4 anchor/profile behavior
+- profile `"4"` / My BD Acoustic command `BA`
+- mutation-depth and guarded numeric input behavior
+- scene and group intent behavior
+- Pad lane behavior packets
+- undo/commit/state behavior
+
+The checkpoint confirms the behavior helpers remain separate from CLI
+execution, dispatch, active behavior, real MIDI, ports, package metadata, and
+hardware validation.
+
+The next recommended task is a docs-only review of this broader
+behavior-parity implementation progress checkpoint, a docs-only Packet 2D plan
+only after explicit approval, a docs-only plan for the next non-anchor behavior
+packet, or a pause.
 
 The previous current-session handoff was:
 
