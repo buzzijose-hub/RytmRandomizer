@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f27767a Add Packet 3 progress checkpoint
+e703b57 Add Packet 3 progress checkpoint review
 
 ## Current Phase
 
@@ -115,6 +115,8 @@ The broader Packet 3 progress checkpoint now consolidates accepted Packet 3A
 and Packet 3B progress while keeping the rest of Packet 3 deferred.
 The Packet 3 progress checkpoint review has now accepted the current Packet 3
 read-only progress baseline while confirming Packet 3 is not complete.
+The docs-only Packet 3C current-profile mutation plan now defines a tiny
+future scope for `S`, `F`, `A`, `G`, and `K` only.
 
 ## Current Safety State
 
@@ -169,11 +171,39 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to create a docs-only Packet 3C plan for `S`, `F`,
-`A`, `G`, and `K`, create a broader behavior-parity implementation progress
-checkpoint, or pause at this clean Packet 3 progress review checkpoint.
+Next recommended task is to review and accept the docs-only Packet 3C
+current-profile mutation plan, pause at this clean Packet 3C planning
+checkpoint, or create a broader Packet 3 planning progress checkpoint.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3C current-profile mutation plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_PLAN.md`
+
+It records:
+
+- current baseline `e703b57 Add Packet 3 progress checkpoint review`
+- future Packet 3C implementation scope limited to `S`, `F`, `A`, `G`, and
+  `K`
+- `S` as read-only current-profile SRC page mutation intent
+- `F` as read-only current-profile filter page mutation intent
+- `A` as read-only current-profile amp page mutation intent
+- `G` as read-only current-profile grit page mutation intent
+- `K` as read-only current-profile kick body mutation intent
+- existing passive metadata from `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS`
+- future ownership limited to `rytm_randomizer/behavior_mutation_depth.py` and
+  `tests/test_behavior_mutation_depth.py`
+- no closeout script update expected because `=== Test: Behavior Mutation
+  Depth ===` already covers the test file
+- no parallel implementation recommended for Packet 3C
+- selected isolated pad mutation-depth keys `PM`, `PS`, `PF`, `PA`, `PL`,
+  `PO`, `PB`, and `PG` remain deferred and safe
+
+The plan confirms no implementation, tests, CLI wiring, prompt loop, dispatch,
+execution, current-profile state mutation, real MIDI, ports, package metadata,
+active CLI behavior, machine/profile expansion, or hardware validation was
+added.
 
 The latest V1.34 behavior parity Packet 3 progress review is:
 

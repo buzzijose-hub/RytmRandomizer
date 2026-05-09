@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e703b57 Add Packet 3 progress checkpoint review
 - f27767a Add Packet 3 progress checkpoint
 - b184a7a Add Packet 3B legacy mutation depth review
 - c3baf8a Add Packet 3B legacy mutation depth checkpoint
@@ -1898,6 +1899,66 @@ validation exists.
 The next recommended task is a docs-only Packet 3C plan for `S`, `F`, `A`,
 `G`, and `K`, a broader behavior-parity implementation progress checkpoint, or
 a pause at this clean Packet 3 progress review checkpoint.
+
+## V1.34 Behavior Parity Packet 3C Current-Profile Mutation Plan
+
+The Packet 3C current-profile mutation plan defines the next tiny
+mutation-depth behavior implementation scope after accepted Packet 3A and
+Packet 3B progress.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_PLAN.md
+
+Current baseline:
+
+- e703b57 Add Packet 3 progress checkpoint review
+
+Planned Packet 3C scope:
+
+- `S`: read-only current-profile SRC page mutation intent
+- `F`: read-only current-profile filter page mutation intent
+- `A`: read-only current-profile amp page mutation intent
+- `G`: read-only current-profile grit page mutation intent
+- `K`: read-only current-profile kick body mutation intent
+
+Existing passive metadata source:
+
+- `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS` in `rytm_randomizer/commands.py`
+
+Future file ownership:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update is expected because the test file is already covered
+by:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Packet 3C is planning only. It does not implement tests or behavior.
+
+Deferred Packet 3 scope after Packet 3C planning:
+
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- selected isolated pad mutation intent
+- prompt/depth context runtime
+- current-profile state model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+- mutation execution
+- command dispatch
+- CLI execution wiring
+
+The plan confirms no implementation, tests, CLI wiring, prompt loop, dispatch,
+command execution, scene execution, current-profile state mutation, real MIDI,
+port opening, package metadata, active CLI behavior, machine/profile
+expansion, or hardware validation exists.
+
+The next recommended task is a docs-only Packet 3C plan review, a pause at the
+clean Packet 3C planning checkpoint, or a broader Packet 3 planning progress
+checkpoint.
 
 ## Next Phase Planning Gate
 

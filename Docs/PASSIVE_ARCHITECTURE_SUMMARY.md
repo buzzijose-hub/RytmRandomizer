@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f27767a
+e703b57
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: f27767a Add Packet 3 progress checkpoint
+- current HEAD: e703b57 Add Packet 3 progress checkpoint review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -138,14 +138,16 @@ It captures:
   the broader Packet 3 progress checkpoint now consolidates accepted Packet 3A
   and Packet 3B progress while keeping the rest of Packet 3 deferred; the
   Packet 3 progress checkpoint review has now accepted that current read-only
-  Packet 3 progress baseline while confirming Packet 3 is not complete
+  Packet 3 progress baseline while confirming Packet 3 is not complete; the
+  docs-only Packet 3C current-profile mutation plan now defines a tiny future
+  scope for `S`, `F`, `A`, `G`, and `K` only
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a docs-only Packet 3C plan for `S`, `F`, `A`,
-  `G`, and `K`, create a broader behavior-parity implementation progress
-  checkpoint, or pause at the clean Packet 3 progress review checkpoint
+- next recommended task: review and accept the docs-only Packet 3C
+  current-profile mutation plan, pause at the clean Packet 3C planning
+  checkpoint, or create a broader Packet 3 planning progress checkpoint
 - closeout command
 - stop condition
 
@@ -1639,6 +1641,48 @@ The next recommended task is a docs-only Packet 3C plan for `S`, `F`, `A`,
 `G`, and `K`, a broader behavior-parity implementation progress checkpoint, or
 a pause at this clean Packet 3 progress review checkpoint. Hardware remains
 off.
+
+## V1.34 Behavior Parity Packet 3C Current-Profile Mutation Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3C_CURRENT_PROFILE_MUTATION_PLAN.md`
+defines the next tiny mutation-depth behavior implementation scope after
+accepted Packet 3A and Packet 3B progress.
+
+Current baseline:
+
+- e703b57 Add Packet 3 progress checkpoint review
+
+Planned Packet 3C scope:
+
+- `S`: read-only current-profile SRC page mutation intent
+- `F`: read-only current-profile filter page mutation intent
+- `A`: read-only current-profile amp page mutation intent
+- `G`: read-only current-profile grit page mutation intent
+- `K`: read-only current-profile kick body mutation intent
+
+Existing passive metadata source:
+
+- `CURRENT_PROFILE_PAGE_MUTATION_COMMANDS` in `rytm_randomizer/commands.py`
+
+Future file ownership:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update is expected because the test file is already covered
+by `=== Test: Behavior Mutation Depth ===`.
+
+Packet 3C is planning only. It does not implement tests or behavior.
+Selected isolated pad mutation-depth keys `PM`, `PS`, `PF`, `PA`, `PL`, `PO`,
+`PB`, and `PG` remain deferred and safe.
+
+The plan confirms no implementation, tests, CLI wiring, prompt loop, dispatch,
+execution, current-profile state mutation, real MIDI, ports, package metadata,
+active CLI behavior, machine/profile expansion, or hardware validation exists.
+
+The next recommended task is a docs-only Packet 3C plan review, a pause at the
+clean Packet 3C planning checkpoint, or a broader Packet 3 planning progress
+checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
