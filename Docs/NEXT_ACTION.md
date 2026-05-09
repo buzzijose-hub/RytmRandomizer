@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2ad9009 Add Packet 1A menu utility behavior
+a79f92b Add Packet 1A menu utility checkpoint review
 
 ## Current Phase
 
@@ -55,6 +55,9 @@ The docs-only first behavior-parity implementation packet plan review has now
 accepted Packet 1A for a tiny scoped implementation.
 The Packet 1A menu/status implementation checkpoint and review have now
 documented and accepted the completed read-only menu/status behavior slice.
+The docs-only Packet 1B utility/session behavior plan and review have now
+accepted a tiny future implementation scope for deterministic `T`, `C`, and
+`Q` intent behavior.
 
 ## Current Safety State
 
@@ -109,9 +112,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 1B utility/session behavior plan
-for deferred `T`, `C`, and `Q`, or a pause at this accepted Packet 1A
-checkpoint.
+Next recommended task is the tiny Packet 1B implementation for deterministic
+`T`, `C`, and `Q` utility/session intent behavior, or a pause at this
+accepted Packet 1B plan checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -315,6 +318,41 @@ It accepts:
 
 The review recommends a docs-only Packet 1B utility/session behavior plan
 next.
+
+The latest V1.34 behavior parity Packet 1B utility/session plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN.md`
+
+It records:
+
+- a79f92b Add Packet 1A menu utility checkpoint review
+- Packet 1B scope for utility/session intent behavior
+- command keys `T`, `C`, and `Q`
+- `T` as future target pad/channel selection intent only
+- `C` as future MIDI-channel selection intent only
+- `Q` as future command-loop exit intent only
+- no prompt loop, state mutation, process exit, CLI wiring, real MIDI, ports,
+  package metadata, or hardware behavior
+- future implementation ownership limited to
+  `rytm_randomizer/behavior_menu_utility.py` and
+  `tests/test_behavior_menu_utility.py`
+- no closeout script update expected because the test file is already covered
+
+The latest V1.34 behavior parity Packet 1B utility/session plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN.md`
+- Packet 1B as deterministic utility/session intent behavior for `T`, `C`,
+  and `Q`
+- future tests proving `T` and `C` do not prompt, block, mutate state, open
+  ports, or send MIDI
+- future tests proving `Q` does not call `sys.exit` or terminate the process
+- serial implementation with no parallel agents recommended
+
+The review recommends the tiny Packet 1B implementation next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 

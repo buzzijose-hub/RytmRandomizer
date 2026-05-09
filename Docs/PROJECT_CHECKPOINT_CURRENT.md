@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a79f92b Add Packet 1A menu utility checkpoint review
 - 2ad9009 Add Packet 1A menu utility behavior
 - 2a41615 Add V1.34 behavior parity Packet 1 plan
 - 3a85c52 Add behavior parity readiness session handoff
@@ -345,6 +346,73 @@ unknown-key safe failure, immutable result metadata, and closeout coverage.
 
 The next recommended task is a docs-only Packet 1B utility/session behavior
 plan for `T`, `C`, and `Q`, or a pause at this clean checkpoint.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Plan
+
+The Packet 1B utility/session plan documents the next tiny implementation
+scope after Packet 1A.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN.md
+
+Baseline commit:
+
+- a79f92b Add Packet 1A menu utility checkpoint review
+
+Planned command scope:
+
+- `T`
+- `C`
+- `Q`
+
+Planned future behavior:
+
+- `T` represents target pad/channel selection intent only
+- `C` represents MIDI-channel selection intent only
+- `Q` represents command-loop exit intent only
+
+The plan keeps Packet 1B free of prompt loops, blocking input, actual state
+mutation, process exit, CLI wiring, dispatch, real MIDI, port opening, package
+metadata, hardware behavior, and hardware validation.
+
+Future file ownership is limited to:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+
+No closeout update is expected because `tests/test_behavior_menu_utility.py`
+is already covered by `=== Test: Behavior Menu Utility ===`.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Plan Review
+
+The Packet 1B utility/session plan review accepts the plan as the current tiny
+implementation gate for `T`, `C`, and `Q` intent behavior.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN.md
+
+Accepted future behavior:
+
+- deterministic target-selection intent for `T`
+- deterministic MIDI-channel-selection intent for `C`
+- deterministic session-exit intent for `Q`
+- no prompt loop
+- no state mutation
+- no process exit
+- no real MIDI or ports
+- no CLI wiring
+
+Parallel implementation remains not recommended because the write set is one
+module and one test file.
+
+The next recommended task is the tiny Packet 1B implementation, or a pause at
+this accepted planning checkpoint.
 
 ## Next Phase Planning Gate
 

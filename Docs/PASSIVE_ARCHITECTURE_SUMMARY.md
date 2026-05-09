@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-2ad9009
+a79f92b
 
 ## Protected Reference
 
@@ -55,7 +55,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 2ad9009 Add Packet 1A menu utility behavior
+- current HEAD: a79f92b Add Packet 1A menu utility checkpoint review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -90,14 +90,17 @@ It captures:
   behavior has now been documented; the docs-only first behavior-parity
   implementation packet plan review has accepted Packet 1A for a tiny scoped
   implementation; the Packet 1A implementation checkpoint and review have now
-  documented and accepted the completed read-only menu/status behavior slice
+  documented and accepted the completed read-only menu/status behavior slice;
+  the docs-only Packet 1B utility/session behavior plan and review have now
+  accepted a tiny future implementation scope for deterministic `T`, `C`, and
+  `Q` intent behavior
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 1B utility/session behavior plan
-  for deferred `T`, `C`, and `Q`, or pause at the accepted Packet 1A
-  checkpoint
+- next recommended task: tiny Packet 1B implementation for deterministic
+  `T`, `C`, and `Q` utility/session intent behavior, or pause at the accepted
+  Packet 1B plan checkpoint
 - closeout command
 - stop condition
 
@@ -257,6 +260,67 @@ unknown-key safe failure, immutable result metadata, and closeout coverage.
 
 The review recommends a docs-only Packet 1B utility/session behavior plan
 next. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN.md` documents the
+next tiny behavior-parity implementation plan after Packet 1A.
+
+Baseline commit:
+
+- a79f92b Add Packet 1A menu utility checkpoint review
+
+Packet 1B scope:
+
+- `T`
+- `C`
+- `Q`
+
+Planned future meanings:
+
+- `T`: target pad/channel selection intent only
+- `C`: MIDI-channel selection intent only
+- `Q`: command-loop exit intent only
+
+The plan requires future implementation to avoid prompt loops, blocking input,
+state mutation, `sys.exit`, process termination, CLI wiring, dispatch, real
+MIDI, port opening, package metadata, hardware behavior, and hardware
+validation.
+
+Future file ownership is limited to:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+
+No closeout update is expected because `tests/test_behavior_menu_utility.py`
+is already covered by `=== Test: Behavior Menu Utility ===`.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN_REVIEW.md` accepts
+the Packet 1B plan as the current tiny implementation plan for utility/session
+intent behavior.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_PLAN.md`
+
+Accepted future behavior:
+
+- deterministic target-selection intent for `T`
+- deterministic MIDI-channel-selection intent for `C`
+- deterministic session-exit intent for `Q`
+- no prompt loop
+- no state mutation
+- no process exit
+- no real MIDI or ports
+- no CLI wiring
+
+Parallel implementation remains not recommended because ownership is
+concentrated in one module and one test file.
+
+The next recommended task is the tiny Packet 1B implementation. Hardware
+remains off.
 
 The previous current-session handoff was:
 
