@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e726047 Add Packet 4B group mutation behavior
+- 3d1172b Add Packet 4B group mutation plan review
 - 198e20b Add Packet 4B group mutation plan
 - d9ec30d Add Packet 4 progress review
 - b0c57ba Add Packet 4 progress checkpoint
@@ -3028,6 +3030,77 @@ The next recommended task is the tiny Packet 4B implementation for read-only
 group mutation intent behavior for `X`, `D`, `I`, and `4`, a more user-facing
 progress/timeline update, or a pause at this accepted Packet 4B planning
 checkpoint.
+
+## V1.34 Behavior Parity Packet 4B Group Mutation Checkpoint
+
+The Packet 4B group mutation checkpoint records completion of the read-only
+group mutation intent behavior implementation.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4B_GROUP_MUTATION_CHECKPOINT.md
+
+Milestone commit:
+
+- e726047 Add Packet 4B group mutation behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No closeout script update was needed because `tests/test_behavior_scene_group.py`
+was already included under:
+
+- `=== Test: Behavior Scene Group ===`
+
+Accepted Packet 4B behavior:
+
+- read-only group mutation intent for `X`, `D`, `I`, and `4`
+- copied group metadata from `GROUP_COMMANDS`
+- deterministic group mutation mode metadata
+- deterministic mutation intensity metadata
+- `4` early hardware scope remains forbidden
+- no group mutation execution
+- no scene execution
+- no state mutation
+- no command dispatch
+- no MIDI sending
+- no port opening
+- no hardware requirement
+
+Deferred and safe scope remains:
+
+- `Y`, `V`, and `N` lane-aware group mutation intent
+- `O` and `Z` group anchor load/return behavior
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene or group state
+- command dispatch
+- MIDI or hardware behavior
+
+Accepted TDD evidence:
+
+- red test failed before implementation because `X`, `D`, `I`, and `4` were
+  still deferred
+- green `tests/test_behavior_scene_group.py` passed after implementation
+- targeted behavior and passive CLI regression tests passed
+- full closeout passed
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 is still not complete because lane-aware group mutation intent for
+`Y`, `V`, and `N` remains deferred.
+
+The next recommended task is a docs-only Packet 4B checkpoint review, a
+docs-only Packet 4C lane-aware group mutation plan, a broader Packet 4
+progress checkpoint after Packet 4B, a more user-facing progress/timeline
+update, or a pause at this clean Packet 4B implementation checkpoint.
 
 ## Next Phase Planning Gate
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-198e20b Add Packet 4B group mutation plan
+e726047 Add Packet 4B group mutation behavior
 
 ## Current Phase
 
@@ -164,6 +164,8 @@ implementation scope for read-only `X`, `D`, `I`, and `4` group mutation
 intent behavior while keeping `Y`, `V`, `N`, `O`, and `Z` deferred.
 The docs-only Packet 4B group mutation plan review has now accepted that tiny
 future implementation scope.
+The Packet 4B group mutation behavior implementation is now complete and
+documented in a checkpoint for review.
 
 ## Current Safety State
 
@@ -218,13 +220,42 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 4B implementation for read-only group
-mutation intent behavior for `X`, `D`, `I`, and `4`, a more user-facing
-progress/timeline update, or a pause at this accepted Packet 4B planning
-checkpoint.
+Next recommended task is a docs-only Packet 4B group mutation checkpoint
+review, a docs-only Packet 4C lane-aware group mutation plan for `Y`, `V`,
+and `N`, a broader Packet 4 progress checkpoint after Packet 4B, a more
+user-facing progress/timeline update, or a pause at this clean Packet 4B
+implementation checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
+
+The latest V1.34 behavior parity Packet 4B group mutation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4B_GROUP_MUTATION_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone `e726047 Add Packet 4B group mutation behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `tests/test_behavior_scene_group.py`
+- no closeout script update needed because `tests/test_behavior_scene_group.py`
+  was already covered by `=== Test: Behavior Scene Group ===`
+- read-only group mutation intent behavior for `X`, `D`, `I`, and `4`
+- `4` early hardware scope remains forbidden
+- `Y`, `V`, and `N` remain deferred and safe
+- `O` and `Z` remain unsupported and safe
+- Packet 1, Packet 2, Packet 3, Packet 4A, and passive CLI behavior remain
+  unchanged
+- TDD red/green evidence, targeted regression evidence, and full closeout
+  evidence
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation was
+added.
 
 The latest V1.34 behavior parity Packet 4B group mutation plan is:
 
