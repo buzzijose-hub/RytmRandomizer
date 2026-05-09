@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 99fcd42 Add Packet 3A mutation depth review
 - d70c2d2 Add Packet 3A mutation depth checkpoint
 - bda0db9 Add Packet 3A mutation depth behavior
 - 0e7f3d8 Add Packet 3 mutation depth plan review
@@ -1516,6 +1517,66 @@ CLI behavior, machine/profile expansion, or hardware validation exists.
 The next recommended task is a docs-only Packet 3B plan for `M1`, `M2`, and
 `M3` only, a broader Packet 3 progress checkpoint, or a pause at this clean
 Packet 3A review checkpoint.
+
+## V1.34 Behavior Parity Packet 3B Legacy Mutation-Depth Plan
+
+The Packet 3B legacy mutation-depth plan defines the next tiny future
+mutation-depth implementation scope after accepted Packet 3A.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_PLAN.md
+
+Current baseline:
+
+- 99fcd42 Add Packet 3A mutation depth review
+
+Packet identity:
+
+- Packet 3B: Legacy Single-Profile Mutation-Depth Behavior Parity
+
+Recommended future implementation scope:
+
+- `M1`
+- `M2`
+- `M3`
+
+Planned future behavior:
+
+- `M1`: read-only legacy single-profile full micro mutation intent
+- `M2`: read-only legacy single-profile full groove mutation intent
+- `M3`: read-only legacy single-profile full strong mutation intent
+
+The plan requires future Packet 3B behavior to use existing passive metadata
+from `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS` in
+`rytm_randomizer/commands.py`. It must not invent selected-profile state,
+runtime mutation output, machine values, pad state, or hardware state.
+
+Future file ownership is limited to:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update is expected because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+Deferred Packet 3 scope remains:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+
+The plan explicitly keeps Packet 3B documentation-only. It adds no
+implementation, tests, CLI wiring, prompt loop, dispatch, command execution,
+scene execution, selected-profile state mutation, real MIDI, port opening,
+package metadata, active CLI behavior, machine/profile expansion, or hardware
+validation.
+
+The next recommended task is a docs-only Packet 3B plan review, a broader
+Packet 3 progress checkpoint, or a pause at this clean planning checkpoint.
 
 ## Next Phase Planning Gate
 
