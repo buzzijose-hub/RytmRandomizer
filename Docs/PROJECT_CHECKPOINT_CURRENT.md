@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 7e91dc0 Add Packet 4A scene intent behavior
 - 9ad10d2 Add Packet 4 scene group behavior plan
 - c115912 Add behavior parity progress report review after Packet 3
 - f227b82 Add behavior parity progress report after Packet 3
@@ -2636,6 +2637,85 @@ Pads 5-12 support, SysEx, GUI/capture, or hardware validation was added.
 The next recommended task is to implement only the accepted Packet 4A
 read-only scene intent behavior, write a more user-facing progress/timeline
 update, or pause at this clean Packet 4 planning review checkpoint.
+
+## V1.34 Behavior Parity Packet 4A Scene Intent Checkpoint
+
+The Packet 4A scene intent checkpoint records completion of the first Packet 4
+implementation slice.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4A_SCENE_INTENT_CHECKPOINT.md
+
+Implementation milestone:
+
+- 7e91dc0 Add Packet 4A scene intent behavior
+
+Implementation files:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout coverage added:
+
+- `=== Test: Behavior Scene Group ===`
+
+Implemented read-only scene intent keys:
+
+- `S0`
+- `S1`
+- `S1A`
+- `S1B`
+- `S2`
+- `S2A`
+- `S2B`
+- `S3`
+- `S3A`
+- `S3B`
+- `S4`
+- `S4A`
+- `S4B`
+- `S5`
+
+Accepted behavior:
+
+- deterministic read-only scene intent
+- copied metadata from `SCENE_COMMANDS`
+- no anchor loading
+- no scene execution
+- no state mutation
+- no command dispatch
+- no MIDI sending
+- no port opening
+- no hardware requirement
+- `S4B` early hardware scope remains forbidden
+
+Deferred Packet 4 scope remains:
+
+- group mutation behavior for `X`, `D`, `I`, and `4`
+- lane-aware group mutation behavior for `Y`, `V`, and `N`
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene or group state
+- command dispatch
+- MIDI or hardware behavior
+
+The checkpoint records TDD red/green evidence, targeted regression evidence,
+full closeout evidence, empty V1.34 reference diff, empty package metadata
+diff, absent package metadata files, and clean git status after implementation.
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation was
+added.
+
+The next recommended task is to review and accept this Packet 4A checkpoint,
+write a more user-facing progress/timeline update, or pause at this clean
+Packet 4A checkpoint.
 
 ## Next Phase Planning Gate
 

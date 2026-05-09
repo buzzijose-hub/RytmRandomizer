@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9ad10d2 Add Packet 4 scene group behavior plan
+7e91dc0 Add Packet 4A scene intent behavior
 
 ## Current Phase
 
@@ -151,6 +151,8 @@ implementation scope limited to read-only scene intent behavior.
 The docs-only Packet 4 scene and group intent plan review has now accepted
 that plan and limits the next implementation scope to Packet 4A read-only
 scene intent behavior.
+The Packet 4A scene intent behavior implementation is now complete and
+documented in a checkpoint for review.
 
 ## Current Safety State
 
@@ -205,9 +207,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to implement only the accepted Packet 4A read-only
-scene intent behavior, write a more user-facing progress/timeline update, or
-pause at this clean Packet 4 planning review checkpoint.
+Next recommended task is to review and accept the Packet 4A scene intent
+checkpoint, write a more user-facing progress/timeline update, or pause at
+this clean Packet 4A checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
@@ -264,6 +266,32 @@ execution wiring, dispatch, command execution, prompt/input loop, real MIDI,
 ports, package metadata, active CLI behavior, machine/profile expansion,
 Analog Four support, Pads 5-12 support, SysEx, GUI/capture, or hardware
 validation was added.
+
+The latest V1.34 behavior parity Packet 4A scene intent checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4A_SCENE_INTENT_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone `7e91dc0 Add Packet 4A scene intent behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `tests/test_behavior_scene_group.py`
+  - `Scripts/closeout_check.ps1`
+- closeout coverage through `=== Test: Behavior Scene Group ===`
+- read-only scene intent behavior for `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`,
+  `S2B`, `S3`, `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+- `S4B` early hardware scope remains forbidden
+- `X`, `D`, `I`, `4`, `Y`, `V`, and `N` remain deferred and safe
+- Packet 1, Packet 2, Packet 3, and passive CLI behavior remain unchanged
+- TDD red/green evidence and full closeout evidence
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation was
+added.
 
 The latest V1.34 behavior parity implementation progress report after Packet
 3 review is:
