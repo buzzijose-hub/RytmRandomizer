@@ -53,7 +53,66 @@ CURRENT_PROFILE_PAGE_MUTATION_CASES = (
         "kick_body",
     ),
 )
-DEFERRED_PACKET_3_KEYS = (
+SELECTED_ISOLATED_PAD_MUTATION_CASES = (
+    (
+        "PM",
+        "mutate selected isolated pad only using its group default zone/depth",
+        "full",
+        False,
+        True,
+    ),
+    (
+        "PS",
+        "mutate selected isolated pad SRC only, choose depth",
+        "src",
+        True,
+        False,
+    ),
+    (
+        "PF",
+        "mutate selected isolated pad Filter only, choose depth",
+        "filter",
+        True,
+        False,
+    ),
+    (
+        "PA",
+        "mutate selected isolated pad Amp only, choose depth",
+        "amp",
+        True,
+        False,
+    ),
+    (
+        "PL",
+        "mutate selected isolated pad LFO only, choose depth",
+        "lfo",
+        True,
+        False,
+    ),
+    (
+        "PO",
+        "mutate selected isolated pad Morph only, choose depth",
+        "morph",
+        True,
+        False,
+    ),
+    (
+        "PB",
+        "mutate selected isolated pad Body only, choose depth",
+        "body",
+        True,
+        False,
+    ),
+    (
+        "PG",
+        "mutate selected isolated pad Grit only, choose depth",
+        "grit",
+        True,
+        False,
+    ),
+)
+DEFERRED_PACKET_3_KEYS = ()
+PACKET_3D_KEYS = (
     "PM",
     "PS",
     "PF",
@@ -331,6 +390,142 @@ def test_repeated_current_profile_page_mutation_evaluations_are_deterministic():
         )
 
 
+def test_selected_isolated_pad_mutations_return_read_only_results():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    for (
+        command_key,
+        expected_label,
+        expected_area,
+        requires_depth,
+        uses_group_default,
+    ) in SELECTED_ISOLATED_PAD_MUTATION_CASES:
+        result = evaluate_mutation_depth_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == "mutation-depth/selected-isolated-pad"
+        assert result.reason == "supported_selected_isolated_pad_mutation_intent"
+        assert result.mutation_area == expected_area
+        assert result.mutation_depth == ""
+        assert result.scope == "selected_isolated_pad"
+        assert result.uses_selected_profile is False
+        assert result.depth_value is None
+        assert result.guarded_input is False
+        assert result.requires_depth_prompt_context is requires_depth
+        assert result.prompt_available is False
+        assert result.state_changed is False
+        assert result.prompt_required is requires_depth
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.metadata["uses_group_default_zone_depth"] is uses_group_default
+        assert result.display_lines
+
+
+def test_selected_isolated_pad_mutation_pm_has_expected_display_and_metadata():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    result = evaluate_mutation_depth_behavior("PM")
+
+    assert result.accepted is True
+    assert result.display_lines == (
+        "PM: mutate selected isolated pad only using its group default zone/depth",
+        "Read-only selected isolated pad mutation intent.",
+        "Mutation area: full",
+        "Selected-isolated-pad dependency is recorded only.",
+        "Uses group default zone/depth.",
+        "No selected-isolated-pad state exists in this helper.",
+        "No active depth prompt exists now.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+    assert result.metadata["source"] == "ISOLATED_PAD_MUTATION_COMMANDS"
+    assert result.metadata["source_command_type"] == "mutation"
+    assert result.metadata["command_family"] == "isolated_pad_mutation"
+    assert result.metadata["mutation_area"] == "full"
+    assert result.metadata["uses_group_default_zone_depth"] is True
+    assert result.metadata["requires_depth_selection"] is False
+    assert result.metadata["scope"] == "selected_isolated_pad"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+
+
+def test_selected_isolated_pad_mutation_ps_has_expected_display_and_metadata():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    result = evaluate_mutation_depth_behavior("PS")
+
+    assert result.accepted is True
+    assert result.display_lines == (
+        "PS: mutate selected isolated pad SRC only, choose depth",
+        "Read-only selected isolated pad mutation intent.",
+        "Mutation area: src",
+        "Selected-isolated-pad dependency is recorded only.",
+        "Future depth selection is required.",
+        "No active depth prompt exists now.",
+        "No selected-isolated-pad state exists in this helper.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+    assert result.metadata["source"] == "ISOLATED_PAD_MUTATION_COMMANDS"
+    assert result.metadata["source_command_type"] == "mutation"
+    assert result.metadata["command_family"] == "isolated_pad_mutation"
+    assert result.metadata["mutation_area"] == "src"
+    assert result.metadata["uses_group_default_zone_depth"] is False
+    assert result.metadata["requires_depth_selection"] is True
+    assert result.metadata["scope"] == "selected_isolated_pad"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+
+
+def test_repeated_selected_isolated_pad_mutation_evaluations_are_deterministic():
+    from rytm_randomizer.behavior_mutation_depth import (
+        evaluate_mutation_depth_behavior,
+    )
+
+    for command_key, _label, _area, _requires_depth, _uses_default in (
+        SELECTED_ISOLATED_PAD_MUTATION_CASES
+    ):
+        assert evaluate_mutation_depth_behavior(command_key) == (
+            evaluate_mutation_depth_behavior(command_key)
+        )
+
+
+def test_packet_3d_keys_are_no_longer_deferred():
+    from rytm_randomizer.behavior_mutation_depth import (
+        DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS,
+    )
+
+    assert not set(PACKET_3D_KEYS).intersection(DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS)
+
+
 def test_mutation_depth_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_mutation_depth import MutationDepthBehaviorResult
 
@@ -472,6 +667,11 @@ if __name__ == "__main__":
     test_current_profile_page_mutations_return_read_only_results()
     test_current_profile_page_mutation_s_has_expected_display_and_metadata()
     test_repeated_current_profile_page_mutation_evaluations_are_deterministic()
+    test_selected_isolated_pad_mutations_return_read_only_results()
+    test_selected_isolated_pad_mutation_pm_has_expected_display_and_metadata()
+    test_selected_isolated_pad_mutation_ps_has_expected_display_and_metadata()
+    test_repeated_selected_isolated_pad_mutation_evaluations_are_deterministic()
+    test_packet_3d_keys_are_no_longer_deferred()
     test_mutation_depth_metadata_is_copied_and_immutable()
     test_unknown_keys_fail_safely()
     test_deferred_packet_3_keys_fail_safely()

@@ -11,6 +11,7 @@ from typing import Mapping
 from .commands import (
     COMMANDS,
     CURRENT_PROFILE_PAGE_MUTATION_COMMANDS,
+    ISOLATED_PAD_MUTATION_COMMANDS,
     LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS,
     MAIN_PROMPT_DEPTH_GUARDRAIL,
 )
@@ -24,16 +25,10 @@ PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS = tuple(
 PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS = tuple(
     CURRENT_PROFILE_PAGE_MUTATION_COMMANDS
 )
-DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = (
-    "PM",
-    "PS",
-    "PF",
-    "PA",
-    "PL",
-    "PO",
-    "PB",
-    "PG",
+PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS = tuple(
+    ISOLATED_PAD_MUTATION_COMMANDS
 )
+DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = ()
 
 
 @dataclass(frozen=True)
@@ -82,6 +77,9 @@ def evaluate_mutation_depth_behavior(command_key):
 
     if key in PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS:
         return _accepted_current_profile_page_mutation_result(key)
+
+    if key in PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS:
+        return _accepted_selected_isolated_pad_mutation_result(key)
 
     if key in DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS:
         return MutationDepthBehaviorResult(
@@ -252,6 +250,81 @@ def _accepted_current_profile_page_mutation_result(command_key):
     )
 
 
+def _accepted_selected_isolated_pad_mutation_result(command_key):
+    command_metadata = ISOLATED_PAD_MUTATION_COMMANDS[command_key]
+    label = command_metadata["label"]
+    mutation_area = command_metadata["mutation_area"]
+    scope = command_metadata["scope"]
+    requires_depth_selection = command_metadata.get("requires_depth_selection", False)
+    uses_group_default_zone_depth = command_metadata.get(
+        "uses_group_default_zone_depth", False
+    )
+
+    if uses_group_default_zone_depth:
+        mode_line = "Uses group default zone/depth."
+        state_line = "No selected-isolated-pad state exists in this helper."
+        display_lines = (
+            f"{command_key}: {label}",
+            "Read-only selected isolated pad mutation intent.",
+            f"Mutation area: {mutation_area}",
+            "Selected-isolated-pad dependency is recorded only.",
+            mode_line,
+            state_line,
+            "No active depth prompt exists now.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+        )
+    else:
+        display_lines = (
+            f"{command_key}: {label}",
+            "Read-only selected isolated pad mutation intent.",
+            f"Mutation area: {mutation_area}",
+            "Selected-isolated-pad dependency is recorded only.",
+            "Future depth selection is required.",
+            "No active depth prompt exists now.",
+            "No selected-isolated-pad state exists in this helper.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+        )
+
+    return MutationDepthBehaviorResult(
+        command_key=command_key,
+        label=label,
+        behavior_family="mutation-depth/selected-isolated-pad",
+        accepted=True,
+        reason="supported_selected_isolated_pad_mutation_intent",
+        mutation_area=mutation_area,
+        scope=scope,
+        requires_depth_prompt_context=requires_depth_selection,
+        prompt_available=False,
+        prompt_required=requires_depth_selection,
+        display_lines=display_lines,
+        metadata={
+            "source": "ISOLATED_PAD_MUTATION_COMMANDS",
+            "source_command_type": command_metadata["type"],
+            "command_family": command_metadata["command_family"],
+            "mutation_area": mutation_area,
+            "uses_group_default_zone_depth": uses_group_default_zone_depth,
+            "requires_depth_selection": requires_depth_selection,
+            "scope": scope,
+            "mock_only": True,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "active_behavior": False,
+            "mutates_runtime_state": False,
+        },
+    )
+
+
 def _safe_failure_metadata(source):
     return {
         "source": source,
@@ -269,6 +342,7 @@ __all__ = [
     "PACKET_3A_GUARDED_DEPTH_KEYS",
     "PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS",
     "PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS",
+    "PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS",
     "MutationDepthBehaviorResult",
     "evaluate_mutation_depth_behavior",
 ]
