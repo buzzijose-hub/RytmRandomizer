@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2ad9009 Add Packet 1A menu utility behavior
 - 2a41615 Add V1.34 behavior parity Packet 1 plan
 - 3a85c52 Add behavior parity readiness session handoff
 - d7832b4 Add V1.34 behavior parity readiness review
@@ -286,6 +287,64 @@ Recent checkpoint history:
 - 50b83f9 Add modularization rules
 - a762bd0 Add capture tools and project docs
 - cc5ce71 Baseline V1.34 expanded scene layer checkpoint
+
+## V1.34 Behavior Parity Packet 1A Menu/Utility Checkpoint
+
+The Packet 1A menu/utility checkpoint records completion of the first tiny
+behavior-parity implementation packet.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_CHECKPOINT.md
+
+Milestone commit:
+
+- 2ad9009 Add Packet 1A menu utility behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `Scripts/closeout_check.ps1`
+
+The milestone adds `MenuUtilityBehaviorResult` and
+`evaluate_menu_utility_behavior(command_key)` for read-only menu/status
+behavior keys `BD`, `FM`, `PD`, `SM`, `P2M`, `J`, `GM`, `SCN`, `PR`, `SR`,
+`P3M`, `P4M`, `H`, and `R`.
+
+`T`, `C`, and `Q` remain deferred and safe. Unknown keys fail safely. Closeout
+now includes `=== Test: Behavior Menu Utility ===`.
+
+The checkpoint confirms no CLI wiring, command dispatch, command execution,
+scene execution, prompt/input loop, runtime state mutation, real MIDI
+dependency, `mido`, `rtmidi`, package metadata, port discovery, port opening,
+MIDI sending, active CLI command, hardware behavior, profile 3
+active-boundary support, profile 4 implementation, Analog Four support, Pads
+5-12 support, SysEx, GUI/capture, or hardware validation was added.
+
+## V1.34 Behavior Parity Packet 1A Menu/Utility Review
+
+The Packet 1A menu/utility review accepts the checkpoint and implementation
+commit as the current read-only menu/status behavior baseline.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_CHECKPOINT.md
+
+Accepted implementation commit:
+
+- 2ad9009 Add Packet 1A menu utility behavior
+
+The review accepts the deterministic result shape, read-only menu/status
+support for the 14 Packet 1A keys, deferred/safe `T`, `C`, and `Q` behavior,
+unknown-key safe failure, immutable result metadata, and closeout coverage.
+
+The next recommended task is a docs-only Packet 1B utility/session behavior
+plan for `T`, `C`, and `Q`, or a pause at this clean checkpoint.
 
 ## Next Phase Planning Gate
 

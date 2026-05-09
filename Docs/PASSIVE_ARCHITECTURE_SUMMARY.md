@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-2a41615
+2ad9009
 
 ## Protected Reference
 
@@ -38,6 +38,7 @@ The standard closeout suite currently includes:
 - mock-only active candidate
 - active boundary
 - active boundary report
+- behavior menu utility
 - real MIDI import safety
 - real MIDI passive CLI safety
 - real MIDI adapter boundary
@@ -54,7 +55,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 2a41615 Add V1.34 behavior parity Packet 1 plan
+- current HEAD: 2ad9009 Add Packet 1A menu utility behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -88,13 +89,15 @@ It captures:
   behavior-parity implementation packet plan for menu/status and utility
   behavior has now been documented; the docs-only first behavior-parity
   implementation packet plan review has accepted Packet 1A for a tiny scoped
-  implementation
+  implementation; the Packet 1A implementation checkpoint and review have now
+  documented and accepted the completed read-only menu/status behavior slice
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 1A implementation for read-only
-  menu/status behavior, or pause at the accepted Packet 1 plan checkpoint
+- next recommended task: docs-only Packet 1B utility/session behavior plan
+  for deferred `T`, `C`, and `Q`, or pause at the accepted Packet 1A
+  checkpoint
 - closeout command
 - stop condition
 
@@ -185,8 +188,75 @@ execution, scene execution, prompt/input loop, real MIDI dependency, `mido`,
 `rtmidi`, package metadata changes, port opening, active CLI commands,
 hardware behavior, or hardware validation was added.
 
-The next recommended task is the tiny Packet 1A implementation for read-only
-menu/status behavior.
+The next recommended task is now a docs-only Packet 1B utility/session
+behavior plan for deferred `T`, `C`, and `Q`, or a pause at this accepted
+Packet 1A checkpoint.
+
+## V1.34 Behavior Parity Packet 1A Menu/Utility Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_CHECKPOINT.md` records
+completion of the first tiny behavior-parity implementation packet.
+
+Milestone commit:
+
+- 2ad9009 Add Packet 1A menu utility behavior
+
+Files changed by that milestone:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `Scripts/closeout_check.ps1`
+
+Packet 1A adds `MenuUtilityBehaviorResult` and
+`evaluate_menu_utility_behavior(command_key)`.
+
+Supported read-only menu/status keys:
+
+- `BD`
+- `FM`
+- `PD`
+- `SM`
+- `P2M`
+- `J`
+- `GM`
+- `SCN`
+- `PR`
+- `SR`
+- `P3M`
+- `P4M`
+- `H`
+- `R`
+
+The milestone keeps `T`, `C`, and `Q` deferred and safe. Unknown keys fail
+safely. Closeout now includes `=== Test: Behavior Menu Utility ===`.
+
+It adds no CLI wiring, command dispatch, command execution, scene execution,
+prompt/input loop, runtime state mutation, real MIDI dependency, `mido`,
+`rtmidi`, package metadata, port discovery, port opening, MIDI sending,
+active CLI command, hardware behavior, profile 3 active-boundary support,
+profile 4 implementation, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation.
+
+## V1.34 Behavior Parity Packet 1A Menu/Utility Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_REVIEW.md` accepts the
+Packet 1A checkpoint and implementation commit as the current read-only
+menu/status behavior baseline.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_CHECKPOINT.md`
+
+Accepted implementation commit:
+
+- 2ad9009 Add Packet 1A menu utility behavior
+
+The review accepts the deterministic result shape, read-only menu/status
+support for the 14 Packet 1A keys, deferred/safe `T`, `C`, and `Q` behavior,
+unknown-key safe failure, immutable result metadata, and closeout coverage.
+
+The review recommends a docs-only Packet 1B utility/session behavior plan
+next. Hardware remains off.
 
 The previous current-session handoff was:
 

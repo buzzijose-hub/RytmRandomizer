@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2a41615 Add V1.34 behavior parity Packet 1 plan
+2ad9009 Add Packet 1A menu utility behavior
 
 ## Current Phase
 
@@ -53,6 +53,8 @@ The docs-only first behavior-parity implementation packet plan for
 menu/status and utility behavior has now been documented.
 The docs-only first behavior-parity implementation packet plan review has now
 accepted Packet 1A for a tiny scoped implementation.
+The Packet 1A menu/status implementation checkpoint and review have now
+documented and accepted the completed read-only menu/status behavior slice.
 
 ## Current Safety State
 
@@ -107,8 +109,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 1A implementation for read-only
-menu/status behavior, or a pause at this accepted Packet 1 plan checkpoint.
+Next recommended task is a docs-only Packet 1B utility/session behavior plan
+for deferred `T`, `C`, and `Q`, or a pause at this accepted Packet 1A
+checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -271,6 +274,47 @@ It accepts:
 The review confirms no implementation, tests, runtime code, dispatch,
 execution, real MIDI, port opening, package metadata, active CLI behavior, or
 hardware validation was added.
+
+The latest V1.34 behavior parity Packet 1A menu/utility checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_CHECKPOINT.md`
+
+It records:
+
+- 2ad9009 Add Packet 1A menu utility behavior
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `Scripts/closeout_check.ps1`
+- `MenuUtilityBehaviorResult`
+- `evaluate_menu_utility_behavior(command_key)`
+- read-only menu/status support for `BD`, `FM`, `PD`, `SM`, `P2M`, `J`,
+  `GM`, `SCN`, `PR`, `SR`, `P3M`, `P4M`, `H`, and `R`
+- deferred/safe behavior for `T`, `C`, and `Q`
+- safe failure for unknown keys
+- closeout coverage through `=== Test: Behavior Menu Utility ===`
+
+The checkpoint confirms no CLI wiring, dispatch, command execution, scene
+execution, prompt/input loop, runtime state mutation, real MIDI dependency,
+`mido`, `rtmidi`, package metadata, port discovery, port opening, MIDI
+sending, active CLI command, hardware behavior, or hardware validation was
+added.
+
+The latest V1.34 behavior parity Packet 1A menu/utility review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1A_MENU_UTILITY_CHECKPOINT.md`
+- 2ad9009 Add Packet 1A menu utility behavior
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `Scripts/closeout_check.ps1`
+- read-only menu/status behavior for Packet 1A
+- deferred `T`, `C`, and `Q` behavior as safe and still unimplemented
+
+The review recommends a docs-only Packet 1B utility/session behavior plan
+next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 
