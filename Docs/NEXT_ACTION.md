@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5cad62b Add Packet 2A anchor profile checkpoint review
+7872d8c Add Packet 2B anchor profile behavior
 
 ## Current Phase
 
@@ -72,6 +72,8 @@ behavior slice.
 The docs-only Packet 2B anchor/profile behavior plan and review have now
 accepted a tiny future implementation scope for deterministic read-only `BS`
 anchor/profile intent behavior without inventing BD Sharp profile metadata.
+The Packet 2B anchor/profile behavior implementation is now complete and ready
+for a docs-only checkpoint review.
 
 ## Current Safety State
 
@@ -126,9 +128,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 2B anchor/profile implementation for
-read-only `BS` intent behavior, or a pause at this accepted Packet 2B
-planning checkpoint.
+Next recommended task is a docs-only Packet 2B anchor/profile checkpoint
+review, or a pause at this clean Packet 2B implementation checkpoint.
 
 The latest V1.34 behavior parity Packet 2 anchor/profile plan is:
 
@@ -258,6 +259,31 @@ execution, real MIDI, port opening, active CLI behavior, package metadata,
 machine/profile expansion, or hardware validation was added.
 
 The review recommends the tiny Packet 2B implementation next.
+
+The latest V1.34 behavior parity Packet 2B anchor/profile checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_2B_ANCHOR_PROFILE_CHECKPOINT.md`
+
+It records:
+
+- 7872d8c Add Packet 2B anchor profile behavior
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+- `PACKET_2B_ANCHOR_PROFILE_KEYS`
+- `SUPPORTED_ANCHOR_PROFILE_KEYS`
+- deterministic read-only `BS` intent for Pad 1 BD Sharp
+- empty profile key and `None` machine value for `BS`
+- metadata that explicitly records absent group-profile metadata
+- stable existing `BH` and `BC` behavior
+- no closeout script update because `=== Test: Behavior Anchor Profile ===`
+  already covers the test file
+
+The checkpoint confirms no CLI wiring, dispatch, command execution, scene
+execution, prompt loop, selected-profile state, profile rotation, real MIDI,
+ports, package metadata, machine/profile expansion, active CLI behavior,
+profile `"4"` implementation, or hardware behavior was added.
+
+The checkpoint recommends a docs-only Packet 2B review next.
 
 The latest V1.34 behavior parity matrix slice is:
 

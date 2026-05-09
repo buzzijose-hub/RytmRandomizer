@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5cad62b
+7872d8c
 
 ## Protected Reference
 
@@ -105,14 +105,14 @@ It captures:
   completed deterministic `BH` and `BC` intent behavior slice; the docs-only
   Packet 2B anchor/profile behavior plan and review have now accepted a tiny
   future implementation scope for read-only `BS` intent behavior without
-  inventing BD Sharp profile metadata
+  inventing BD Sharp profile metadata; the Packet 2B implementation is now
+  complete and ready for checkpoint review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 2B anchor/profile implementation for
-  read-only `BS` intent behavior, or pause at the accepted Packet 2B planning
-  checkpoint
+- next recommended task: docs-only Packet 2B anchor/profile checkpoint review,
+  or pause at the clean Packet 2B implementation checkpoint
 - closeout command
 - stop condition
 
@@ -621,8 +621,45 @@ The review confirms no implementation, tests, runtime code, dispatch,
 execution, real MIDI, port opening, package metadata, active CLI behavior,
 machine/profile expansion, or hardware validation was added.
 
-The next recommended task is the tiny Packet 2B implementation, or a pause at
-this accepted planning checkpoint.
+The Packet 2B implementation is now complete and documented in the Packet 2B
+checkpoint.
+
+## V1.34 Behavior Parity Packet 2B Anchor/Profile Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_2B_ANCHOR_PROFILE_CHECKPOINT.md` records
+completion of the Packet 2B anchor/profile behavior implementation.
+
+Milestone commit:
+
+- 7872d8c Add Packet 2B anchor profile behavior
+
+Files changed by that milestone:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+
+Packet 2B adds deterministic read-only anchor/profile intent handling for:
+
+- `BS`
+
+`BS` now models Pad 1 BD Sharp anchor/profile intent with no invented
+group-profile metadata. It uses an empty profile key, `None` machine value,
+and metadata that records group-profile metadata as absent.
+
+Existing `BH` and `BC` behavior remains unchanged. Unknown keys fail safely.
+Deferred anchor/profile keys fail safely. Profile `"4"` / My BD Acoustic
+remains parked.
+
+No closeout script update was needed because `tests/test_behavior_anchor_profile.py`
+is already covered by `=== Test: Behavior Anchor Profile ===`.
+
+The checkpoint confirms no CLI wiring, dispatch, command execution, scene
+execution, prompt loop, selected-profile state, profile rotation, real MIDI,
+ports, package metadata, machine/profile expansion, active CLI behavior,
+profile `"4"` implementation, or hardware behavior was added.
+
+The next recommended task is a docs-only Packet 2B checkpoint review, or a
+pause at this clean implementation checkpoint.
 
 The previous current-session handoff was:
 
