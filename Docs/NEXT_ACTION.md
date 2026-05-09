@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3d8ddb3 Add Packet 4 progress checkpoint after 4B
+baebeab Add Packet 4 progress review after 4B
 
 ## Current Phase
 
@@ -173,6 +173,9 @@ accepted Packet 4A scene intent behavior and accepted Packet 4B group mutation
 intent behavior while confirming Packet 4 is not complete.
 The broader Packet 4 progress checkpoint after Packet 4B review has now
 accepted that current Packet 4 progress baseline.
+The docs-only Packet 4C lane-aware group mutation plan now defines the next
+tiny future implementation scope for read-only `Y`, `V`, and `N` lane-aware
+group mutation intent while keeping `O` and `Z` deferred.
 
 ## Current Safety State
 
@@ -227,12 +230,37 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 4C lane-aware group mutation plan
-for `Y`, `V`, and `N`, a more user-facing progress/timeline update, or a
-pause at this accepted Packet 4 progress review after 4B checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the Packet 4C
+lane-aware group mutation plan, a more user-facing progress/timeline update,
+or a pause at this clean Packet 4C planning checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
+
+The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4C_LANE_AWARE_GROUP_MUTATION_PLAN.md`
+
+It records:
+
+- current baseline `baebeab Add Packet 4 progress review after 4B`
+- future Packet 4C scope limited to read-only lane-aware group mutation
+  intent for `Y`, `V`, and `N`
+- `O` and `Z` remain deferred group anchor load/return keys
+- future file ownership limited to:
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `tests/test_behavior_scene_group.py`
+- no expected `Scripts/closeout_check.ps1` update because
+  `tests/test_behavior_scene_group.py` is already in closeout
+- no parallelization recommended for the future implementation because the
+  write set and result vocabulary are shared
+
+The plan confirms no implementation, tests, scene execution, group mutation
+execution, lane-aware group mutation execution, CLI execution wiring,
+dispatch, command execution, prompt/input loop, real MIDI, ports, package
+metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation was
+added.
 
 The latest V1.34 behavior parity Packet 4 progress checkpoint after Packet 4B
 is:
