@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 227e599 Add Packet 3B legacy mutation depth behavior
 - 8ef8c8b Add Packet 3B legacy mutation depth plan
 - 99fcd42 Add Packet 3A mutation depth review
 - d70c2d2 Add Packet 3A mutation depth checkpoint
@@ -1635,6 +1636,74 @@ machine/profile expansion, or hardware validation exists.
 The next recommended task is the tiny Packet 3B implementation for `M1`,
 `M2`, and `M3`, a broader Packet 3 progress checkpoint, or a pause at this
 clean Packet 3B review checkpoint.
+
+## V1.34 Behavior Parity Packet 3B Legacy Mutation-Depth Checkpoint
+
+The Packet 3B legacy mutation-depth checkpoint records completion of
+deterministic read-only legacy mutation intent behavior for `M1`, `M2`, and
+`M3`.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_CHECKPOINT.md
+
+Milestone commit:
+
+- 227e599 Add Packet 3B legacy mutation depth behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update was needed because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+Implemented Packet 3B keys:
+
+- `M1`
+- `M2`
+- `M3`
+
+Accepted behavior:
+
+- `M1`: read-only legacy single-profile full micro mutation intent
+- `M2`: read-only legacy single-profile full groove mutation intent
+- `M3`: read-only legacy single-profile full strong mutation intent
+
+The implementation adds `PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS` and
+uses existing passive metadata from `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`.
+It records mutation area `full`, fixed mutation depths, selected-profile scope,
+and selected-profile dependency only.
+
+Existing Packet 3A behavior for `1`, `2`, and `3` remains unchanged.
+
+Deferred Packet 3 scope remains:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+- mutation execution
+
+The checkpoint records TDD evidence:
+
+- new Packet 3B tests were written first
+- focused behavior test failed before implementation because `M1` remained
+  unsupported/deferred
+- focused behavior test passed after the minimal implementation
+- full closeout passed after implementation
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, command
+execution, scene execution, selected-profile state mutation, real MIDI, port
+opening, package metadata, active CLI behavior, machine/profile expansion, or
+hardware validation was added.
+
+The next recommended task is a docs-only Packet 3B checkpoint review, a
+broader Packet 3 progress checkpoint, or a pause at this clean implementation
+checkpoint.
 
 ## Next Phase Planning Gate
 

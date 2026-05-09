@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-8ef8c8b Add Packet 3B legacy mutation depth plan
+227e599 Add Packet 3B legacy mutation depth behavior
 
 ## Current Phase
 
@@ -107,6 +107,8 @@ The docs-only Packet 3B legacy mutation-depth plan now defines a tiny future
 scope for `M1`, `M2`, and `M3` only.
 The docs-only Packet 3B legacy mutation-depth plan review has now accepted
 that tiny `M1`, `M2`, and `M3` scope as the next implementation gate.
+The Packet 3B legacy mutation-depth behavior implementation is now complete
+and ready for a docs-only checkpoint review.
 
 ## Current Safety State
 
@@ -161,11 +163,36 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is to implement the tiny Packet 3B legacy
-mutation-depth scope for `M1`, `M2`, and `M3` only, create a broader Packet 3
-progress checkpoint, or pause at this clean Packet 3B review checkpoint.
+Next recommended task is to create a docs-only Packet 3B checkpoint review,
+create a broader Packet 3 progress checkpoint, or pause at this clean Packet
+3B implementation checkpoint.
 
 Do not implement the rest of Packet 3 yet.
+
+The latest V1.34 behavior parity Packet 3B legacy mutation-depth checkpoint
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_CHECKPOINT.md`
+
+It records:
+
+- 227e599 Add Packet 3B legacy mutation depth behavior
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS`
+- deterministic read-only legacy mutation intent for `M1`, `M2`, and `M3`
+- `M1` fixed mutation depth `micro`
+- `M2` fixed mutation depth `groove`
+- `M3` fixed mutation depth `strong`
+- existing Packet 3A behavior for `1`, `2`, and `3` remains unchanged
+- safe deferred behavior for `S`, `F`, `A`, `G`, `K`, `PM`, `PS`, `PF`,
+  `PA`, `PL`, `PO`, `PB`, and `PG`
+- closeout coverage through `=== Test: Behavior Mutation Depth ===`
+- TDD evidence for red and green focused behavior tests
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, execution,
+selected-profile state mutation, real MIDI, ports, package metadata, active
+CLI behavior, machine/profile expansion, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 3B legacy mutation-depth plan review
 is:

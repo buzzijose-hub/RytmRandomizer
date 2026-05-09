@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-8ef8c8b
+227e599
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 8ef8c8b Add Packet 3B legacy mutation depth plan
+- current HEAD: 227e599 Add Packet 3B legacy mutation depth behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -131,14 +131,16 @@ It captures:
   guarded numeric input behavior slice; the docs-only Packet 3B legacy
   mutation-depth plan now defines a tiny future scope for `M1`, `M2`, and
   `M3` only; the docs-only Packet 3B legacy mutation-depth plan review has
-  accepted that tiny future scope as the next implementation gate
+  accepted that tiny future scope as the next implementation gate; the Packet
+  3B legacy mutation-depth behavior implementation is now complete and ready
+  for a docs-only checkpoint review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement the tiny Packet 3B legacy mutation-depth
-  scope for `M1`, `M2`, and `M3` only, create a broader Packet 3 progress
-  checkpoint, or pause at the clean Packet 3B review checkpoint
+- next recommended task: create a docs-only Packet 3B checkpoint review,
+  create a broader Packet 3 progress checkpoint, or pause at the clean Packet
+  3B implementation checkpoint
 - closeout command
 - stop condition
 
@@ -1400,6 +1402,66 @@ expansion, or hardware validation exists.
 The next recommended task is the tiny Packet 3B implementation for `M1`,
 `M2`, and `M3`, a broader Packet 3 progress checkpoint, or a pause at this
 clean Packet 3B review checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 3B Legacy Mutation-Depth Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3B_LEGACY_MUTATION_DEPTH_CHECKPOINT.md`
+records completion of deterministic read-only legacy mutation intent behavior
+for `M1`, `M2`, and `M3`.
+
+Milestone commit:
+
+- 227e599 Add Packet 3B legacy mutation depth behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+
+No closeout script update was needed because `tests/test_behavior_mutation_depth.py`
+is already covered by `=== Test: Behavior Mutation Depth ===`.
+
+Implemented Packet 3B keys:
+
+- `M1`
+- `M2`
+- `M3`
+
+Accepted behavior:
+
+- `M1`: read-only legacy single-profile full micro mutation intent
+- `M2`: read-only legacy single-profile full groove mutation intent
+- `M3`: read-only legacy single-profile full strong mutation intent
+
+Packet 3B adds `PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS` and uses
+existing passive metadata from `LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS`. It
+records mutation area `full`, fixed mutation depths, selected-profile scope,
+and selected-profile dependency only.
+
+Existing Packet 3A behavior for `1`, `2`, and `3` remains unchanged.
+
+Deferred Packet 3 scope remains:
+
+- `S`, `F`, `A`, `G`, and `K`
+- `PM`, `PS`, `PF`, `PA`, `PL`, `PO`, `PB`, and `PG`
+- prompt/depth context model
+- selected-profile state model
+- selected-isolated-pad state model
+- runtime mutation result model
+- mutation execution
+
+The checkpoint records TDD evidence: Packet 3B tests failed before
+implementation because `M1` remained unsupported/deferred, then passed after
+the minimal implementation.
+
+The checkpoint confirms no CLI wiring, prompt loop, dispatch, execution, scene
+execution, selected-profile state mutation, real MIDI, ports, package
+metadata, active CLI behavior, machine/profile expansion, or hardware
+validation was added.
+
+The next recommended task is a docs-only Packet 3B checkpoint review, a
+broader Packet 3 progress checkpoint, or a pause at this clean implementation
+checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
