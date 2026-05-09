@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-7d38263 Add Packet 4C lane-aware group mutation checkpoint
+2366894 Add Packet 4C lane-aware group mutation review
 
 ## Current Phase
 
@@ -182,6 +182,8 @@ The Packet 4C lane-aware group mutation behavior implementation is now
 complete and documented in a checkpoint for review.
 The Packet 4C lane-aware group mutation checkpoint review has now accepted
 that completed read-only lane-aware group mutation intent behavior slice.
+The docs-only Packet 4D group anchor decision note now keeps `O` and `Z`
+deferred and safe until a separate read-only intent-only plan is approved.
 
 ## Current Safety State
 
@@ -236,10 +238,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader Packet 4 completion or near-completion
-checkpoint, a docs-only group anchor `O` and `Z` decision note, a more
-user-facing progress/timeline update, or a pause at this accepted Packet 4C
-implementation checkpoint.
+Next recommended task is a docs-only Packet 4D group anchor load/return plan,
+a broader Packet 4 near-completion checkpoint that leaves `O` and `Z`
+deferred, a more user-facing progress/timeline update, or a pause at this
+accepted Packet 4C plus `O`/`Z` decision checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
@@ -294,6 +296,25 @@ It records:
 The review confirms no runtime or hardware behavior is authorized and
 recommends either a docs-only `O`/`Z` decision note, a broader Packet 4
 near-completion checkpoint, a user-facing progress/timeline update, or a pause.
+
+The latest V1.34 behavior parity Packet 4D group anchor decision note is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_DECISION_NOTE.md`
+
+It records:
+
+- `O`: load full 4-pad group anchors
+- `Z`: return all 4 group pads to anchors
+- `O` and `Z` remain deferred and safe for now
+- any future `O`/`Z` support must be separately approved as a tiny read-only
+  intent-only Packet 4D implementation plan
+- Packet 4 remains partially complete until `O` and `Z` are either implemented
+  as read-only intent behavior or explicitly left deferred in a Packet 4
+  closeout decision
+
+The decision note confirms no group anchor load execution, group anchor return
+execution, runtime anchor state, dispatch, MIDI, ports, package metadata,
+active CLI behavior, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2366894 Add Packet 4C lane-aware group mutation review
 - 7d38263 Add Packet 4C lane-aware group mutation checkpoint
 - 95c432a Add Packet 4C lane-aware group mutation behavior
 - e507c60 Add Packet 4C lane-aware group mutation plan
@@ -3544,6 +3545,56 @@ The next recommended task is a broader Packet 4 completion or near-completion
 checkpoint, a docs-only group anchor `O` and `Z` decision note, a more
 user-facing progress/timeline update, or a pause at this accepted Packet 4C
 implementation checkpoint.
+
+## V1.34 Behavior Parity Packet 4D Group Anchor Decision Note
+
+The Packet 4D group anchor decision note decides how to treat the remaining
+Packet 4 group anchor commands before any implementation.
+
+Decision note:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_DECISION_NOTE.md
+
+Current clean baseline:
+
+- 2366894 Add Packet 4C lane-aware group mutation review
+
+Remaining Packet 4 group anchor commands:
+
+- `O`: load full 4-pad group anchors
+- `Z`: return all 4 group pads to anchors
+
+Decision:
+
+- `O` and `Z` remain deferred and safe for now.
+- Do not implement `O` or `Z` behavior in this slice.
+- Any future `O`/`Z` support must be separately approved as a tiny read-only
+  intent-only Packet 4D implementation plan before code or tests change.
+
+Reasons:
+
+- Packet 4A already covers read-only scene intent.
+- Packet 4B already covers read-only group mutation intent.
+- Packet 4C already covers read-only lane-aware group mutation intent.
+- `O` and `Z` imply group anchor load/return semantics across multiple pads.
+- A dedicated plan should decide the exact read-only metadata shape before any
+  implementation.
+
+The decision note confirms no CLI execution wiring, dispatch, command
+execution, scene execution, group anchor load execution, group anchor return
+execution, group mutation execution, lane-aware group mutation execution,
+prompt/input loop, runtime state mutation, real MIDI, ports, package metadata,
+active CLI behavior, machine/profile expansion, Analog Four support, Pads 5-12
+support, SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 is not complete until `O` and `Z` are either implemented as read-only
+intent behavior through a separately approved Packet 4D slice or explicitly
+left deferred in a Packet 4 closeout decision.
+
+The next recommended task is a docs-only Packet 4D group anchor load/return
+plan, a broader Packet 4 near-completion checkpoint that leaves `O` and `Z`
+deferred, a more user-facing progress/timeline update, or a pause at this
+accepted Packet 4C plus `O`/`Z` decision checkpoint.
 
 ## Next Phase Planning Gate
 

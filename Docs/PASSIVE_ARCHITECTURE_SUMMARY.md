@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-7d38263
+2366894
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 7d38263 Add Packet 4C lane-aware group mutation checkpoint
+- current HEAD: 2366894 Add Packet 4C lane-aware group mutation review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -193,15 +193,17 @@ It captures:
   lane-aware group mutation plan review has now accepted that tiny future
   implementation scope; the Packet 4C lane-aware group mutation behavior
   implementation is now complete, checkpointed, and accepted in a docs-only
-  review
+  review; the docs-only Packet 4D group anchor decision note now keeps `O`
+  and `Z` deferred and safe until a separate read-only intent-only plan is
+  approved
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a broader Packet 4 completion or
-  near-completion checkpoint, write a group anchor `O` and `Z` decision note,
-  write a more user-facing progress/timeline update, or pause at the accepted
-  Packet 4C implementation checkpoint
+- next recommended task: write a docs-only Packet 4D group anchor load/return
+  plan, write a broader Packet 4 near-completion checkpoint that leaves `O`
+  and `Z` deferred, write a more user-facing progress/timeline update, or
+  pause at the accepted Packet 4C plus `O`/`Z` decision checkpoint
 - closeout command
 - stop condition
 
@@ -3195,6 +3197,53 @@ The next recommended task is a broader Packet 4 completion or near-completion
 checkpoint, a docs-only group anchor `O` and `Z` decision note, a more
 user-facing progress/timeline update, or a pause at this accepted Packet 4C
 implementation checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4D Group Anchor Decision Note
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_DECISION_NOTE.md` decides how
+to treat the remaining Packet 4 group anchor commands before any
+implementation.
+
+Current clean baseline:
+
+- `2366894 Add Packet 4C lane-aware group mutation review`
+
+Remaining Packet 4 group anchor commands:
+
+- `O`: load full 4-pad group anchors
+- `Z`: return all 4 group pads to anchors
+
+Decision:
+
+- `O` and `Z` remain deferred and safe for now.
+- Do not implement `O` or `Z` behavior in this slice.
+- Any future `O`/`Z` support must be separately approved as a tiny read-only
+  intent-only Packet 4D implementation plan before code or tests change.
+
+Reasons:
+
+- Packet 4A already covers read-only scene intent.
+- Packet 4B already covers read-only group mutation intent.
+- Packet 4C already covers read-only lane-aware group mutation intent.
+- `O` and `Z` imply group anchor load/return semantics across multiple pads.
+- A dedicated plan should decide the exact read-only metadata shape before any
+  implementation.
+
+The decision note confirms no CLI execution wiring, dispatch, command
+execution, scene execution, group anchor load execution, group anchor return
+execution, group mutation execution, lane-aware group mutation execution,
+prompt/input loop, runtime state mutation, real MIDI, ports, package metadata,
+active CLI behavior, machine/profile expansion, Analog Four support, Pads 5-12
+support, SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 is not complete until `O` and `Z` are either implemented as read-only
+intent behavior through a separately approved Packet 4D slice or explicitly
+left deferred in a Packet 4 closeout decision.
+
+The next recommended task is a docs-only Packet 4D group anchor load/return
+plan, a broader Packet 4 near-completion checkpoint that leaves `O` and `Z`
+deferred, a more user-facing progress/timeline update, or a pause at this
+accepted Packet 4C plus `O`/`Z` decision checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
