@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d70c2d2 Add Packet 3A mutation depth checkpoint
 - bda0db9 Add Packet 3A mutation depth behavior
 - 0e7f3d8 Add Packet 3 mutation depth plan review
 - 1a1253a Add Packet 3 mutation depth plan
@@ -1466,6 +1467,55 @@ CLI behavior, machine/profile expansion, or hardware validation was added.
 The next recommended task is a docs-only Packet 3A checkpoint review, a
 broader Packet 3 progress checkpoint, or a docs-only Packet 3B plan only after
 review.
+
+## V1.34 Behavior Parity Packet 3A Mutation-Depth Review
+
+The Packet 3A mutation-depth review accepts the Packet 3A checkpoint as the
+current read-only guarded numeric input behavior baseline.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3A_MUTATION_DEPTH_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_3A_MUTATION_DEPTH_CHECKPOINT.md
+
+Accepted implementation commit:
+
+- bda0db9 Add Packet 3A mutation depth behavior
+
+Accepted checkpoint commit:
+
+- d70c2d2 Add Packet 3A mutation depth checkpoint
+
+Accepted behavior:
+
+- `1`, `2`, and `3` return deterministic read-only guarded numeric input
+  behavior
+- depth value is recorded from the command key
+- bare main-prompt use remains guarded
+- no active depth prompt exists now
+- unknown keys fail safely
+- deferred Packet 3 mutation keys remain unsupported/safe
+
+Accepted files:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`
+
+Accepted closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+The review confirms no CLI wiring, prompt/input loop, dispatch, command
+execution, scene execution, real MIDI, port opening, package metadata, active
+CLI behavior, machine/profile expansion, or hardware validation exists.
+
+The next recommended task is a docs-only Packet 3B plan for `M1`, `M2`, and
+`M3` only, a broader Packet 3 progress checkpoint, or a pause at this clean
+Packet 3A review checkpoint.
 
 ## Next Phase Planning Gate
 

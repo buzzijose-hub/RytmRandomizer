@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-bda0db9
+d70c2d2
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: bda0db9 Add Packet 3A mutation depth behavior
+- current HEAD: d70c2d2 Add Packet 3A mutation depth checkpoint
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -127,15 +127,15 @@ It captures:
   guarded numeric inputs `1`, `2`, and `3`; the docs-only Packet 3 plan
   review has now accepted that Packet 3A scope as the next implementation
   gate; the Packet 3A mutation-depth behavior implementation is now complete
-  and ready for a docs-only checkpoint review
+  and the Packet 3A checkpoint review has accepted the completed deterministic
+  guarded numeric input behavior slice
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: review and accept the Packet 3A mutation-depth
-  checkpoint, create a docs-only Packet 3B plan for `M1`, `M2`, and `M3` only
-  after review, create a broader Packet 3 progress checkpoint, or pause at the
-  clean checkpoint
+- next recommended task: create a docs-only Packet 3B plan for `M1`, `M2`,
+  and `M3` only, create a broader Packet 3 progress checkpoint, or pause at
+  the clean Packet 3A review checkpoint
 - closeout command
 - stop condition
 
@@ -1241,6 +1241,46 @@ Deferred Packet 3 scope remains:
 The next recommended task is a docs-only Packet 3A checkpoint review, a
 broader Packet 3 progress checkpoint, or a docs-only Packet 3B plan only after
 review.
+
+## V1.34 Behavior Parity Packet 3A Mutation-Depth Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_3A_MUTATION_DEPTH_REVIEW.md` accepts the
+Packet 3A mutation-depth checkpoint as the current read-only guarded numeric
+input behavior baseline.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_3A_MUTATION_DEPTH_CHECKPOINT.md`
+
+Accepted commits:
+
+- bda0db9 Add Packet 3A mutation depth behavior
+- d70c2d2 Add Packet 3A mutation depth checkpoint
+
+Accepted files:
+
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `tests/test_behavior_mutation_depth.py`
+- `Scripts/closeout_check.ps1`
+
+Accepted closeout label:
+
+- `=== Test: Behavior Mutation Depth ===`
+
+Accepted behavior:
+
+- deterministic read-only guarded numeric input behavior for `1`, `2`, and `3`
+- bare main-prompt `1`, `2`, and `3` remain guarded depth inputs
+- no active depth prompt exists now
+- unknown keys fail safely
+- deferred Packet 3 mutation keys remain unsupported/safe
+- no prompt loop, state mutation, dispatch, execution, real MIDI, ports,
+  active CLI behavior, package metadata, machine/profile expansion, or
+  hardware behavior
+
+The next recommended task is a docs-only Packet 3B plan for `M1`, `M2`, and
+`M3` only, a broader Packet 3 progress checkpoint, or a pause at this clean
+Packet 3A review checkpoint.
 
 The previous current-session handoff was:
 
