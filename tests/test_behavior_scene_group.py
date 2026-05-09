@@ -24,8 +24,30 @@ SCENE_INTENT_KEYS = (
     "S4B",
     "S5",
 )
-DEFERRED_GROUP_MUTATION_KEYS = ("X", "D", "I", "4")
+GROUP_MUTATION_INTENT_EXPECTATIONS = {
+    "X": {
+        "label": "balanced four-lane mutate full 4-pad group",
+        "mode": "balanced_four_lane",
+        "intensity": "balanced",
+    },
+    "D": {
+        "label": "deeper four-lane mutation, Pads 2-4 pushed harder",
+        "mode": "deeper_four_lane",
+        "intensity": "deeper",
+    },
+    "I": {
+        "label": "intense / controlled chaos four-lane mutation",
+        "mode": "intense_controlled_chaos",
+        "intensity": "intense",
+    },
+    "4": {
+        "label": "harder / wild four-lane mutation",
+        "mode": "harder_wild_four_lane",
+        "intensity": "wild",
+    },
+}
 DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ("Y", "V", "N")
+DEFERRED_GROUP_ANCHOR_KEYS = ("O", "Z")
 
 
 def run_cli(*args):
@@ -195,21 +217,87 @@ def test_unknown_keys_fail_safely():
     assert result.active_behavior is False
 
 
-def test_group_mutation_keys_remain_deferred_and_safe():
+def test_group_mutation_keys_return_read_only_intent_results():
     from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
 
-    for command_key in DEFERRED_GROUP_MUTATION_KEYS:
+    for command_key, expectation in GROUP_MUTATION_INTENT_EXPECTATIONS.items():
         result = evaluate_scene_group_behavior(command_key)
 
-        assert result.accepted is False
-        assert result.reason == "deferred_group_mutation_command"
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.behavior_family == "scene-group/group-mutation-intent"
+        assert result.reason == "supported_group_mutation_intent"
+        assert result.scene_scope == "four_pad_group"
+        assert result.scene_name == ""
+        assert result.scene_action == ""
+        assert result.loads_anchors is False
+        assert result.state_changed is False
+        assert result.prompt_required is False
         assert result.executes_group_mutation is False
+        assert result.executes_scene is False
         assert result.dispatches_command is False
         assert result.sends_real_midi is False
         assert result.opens_ports is False
         assert result.hardware_required is False
         assert result.active_behavior is False
         assert result.metadata["source"] == "GROUP_COMMANDS"
+        assert result.metadata["source_group_command_label"] == expectation["label"]
+        assert result.metadata["source_group_command_type"] == "mutation"
+        assert result.metadata["source_group_command_scope"] == "four_pad_group"
+        assert result.metadata["group_mutation_mode"] == expectation["mode"]
+        assert result.metadata["mutation_intensity"] == expectation["intensity"]
+        assert result.metadata["executes_group_mutation"] is False
+        assert result.metadata["mutates_runtime_state"] is False
+        assert result.display_lines[:4] == (
+            f"{command_key}: {expectation['label']}",
+            "Read-only group mutation intent.",
+            f"Group mutation mode: {expectation['mode']}",
+            "Group scope: four_pad_group",
+        )
+        assert "No group mutation would execute." in result.display_lines
+        assert "No MIDI would be sent." in result.display_lines
+        assert "No ports would be opened." in result.display_lines
+
+
+def test_harder_wild_group_mutation_records_early_hardware_guardrail():
+    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+
+    result = evaluate_scene_group_behavior("4")
+
+    assert result.accepted is True
+    assert result.metadata["forbidden_early_hardware_scope"] is True
+    assert "Early hardware scope: forbidden." in result.display_lines
+
+
+def test_group_mutation_metadata_is_copied_and_immutable():
+    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.commands import GROUP_COMMANDS
+
+    result = evaluate_scene_group_behavior("X")
+    original_label = GROUP_COMMANDS["X"]["label"]
+
+    GROUP_COMMANDS["X"]["label"] = "changed"
+
+    try:
+        assert result.metadata["source_group_command_label"] == original_label
+
+        try:
+            result.metadata["source_group_command_label"] = "mutated"
+        except TypeError:
+            pass
+        else:
+            raise AssertionError("metadata should be immutable")
+    finally:
+        GROUP_COMMANDS["X"]["label"] = original_label
+
+
+def test_repeated_group_mutation_evaluations_are_deterministic():
+    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+
+    for command_key in GROUP_MUTATION_INTENT_EXPECTATIONS:
+        assert evaluate_scene_group_behavior(command_key) == (
+            evaluate_scene_group_behavior(command_key)
+        )
 
 
 def test_lane_aware_group_mutation_keys_remain_deferred_and_safe():
@@ -220,6 +308,24 @@ def test_lane_aware_group_mutation_keys_remain_deferred_and_safe():
 
         assert result.accepted is False
         assert result.reason == "deferred_lane_aware_group_mutation_command"
+        assert result.executes_group_mutation is False
+        assert result.dispatches_command is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.metadata["source"] == "GROUP_COMMANDS"
+
+
+def test_group_anchor_keys_remain_unsupported_and_safe():
+    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+
+    for command_key in DEFERRED_GROUP_ANCHOR_KEYS:
+        result = evaluate_scene_group_behavior(command_key)
+
+        assert result.accepted is False
+        assert result.reason == "unsupported_scene_group_command"
+        assert result.executes_scene is False
         assert result.executes_group_mutation is False
         assert result.dispatches_command is False
         assert result.sends_real_midi is False
@@ -324,8 +430,12 @@ if __name__ == "__main__":
     test_scene_group_metadata_is_copied_and_immutable()
     test_repeated_scene_group_evaluations_are_deterministic()
     test_unknown_keys_fail_safely()
-    test_group_mutation_keys_remain_deferred_and_safe()
+    test_group_mutation_keys_return_read_only_intent_results()
+    test_harder_wild_group_mutation_records_early_hardware_guardrail()
+    test_group_mutation_metadata_is_copied_and_immutable()
+    test_repeated_group_mutation_evaluations_are_deterministic()
     test_lane_aware_group_mutation_keys_remain_deferred_and_safe()
+    test_group_anchor_keys_remain_unsupported_and_safe()
     test_packet_1_menu_utility_behavior_remains_unchanged()
     test_packet_2_anchor_profile_behavior_remains_unchanged()
     test_packet_3_mutation_depth_behavior_remains_unchanged()

@@ -1,7 +1,8 @@
-"""Read-only Packet 4A scene/group intent behavior helpers.
+"""Read-only Packet 4 scene/group intent behavior helpers.
 
-This module models deterministic scene intent without dispatching commands,
-executing scenes, opening ports, sending MIDI, or touching hardware.
+This module models deterministic scene and group mutation intent without
+dispatching commands, executing scenes, opening ports, sending MIDI, or
+touching hardware.
 """
 
 from dataclasses import dataclass, field
@@ -13,13 +14,33 @@ from .scenes import SCENE_COMMANDS
 
 
 PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
-DEFERRED_GROUP_MUTATION_KEYS = ("X", "D", "I", "4")
+PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")
+DEFERRED_GROUP_MUTATION_KEYS = ()
 DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ("Y", "V", "N")
 
 _FORBIDDEN_EARLY_HARDWARE_ACTIONS = {
     "harder",
     "wild_controlled",
     "wild_maximum",
+}
+_FORBIDDEN_EARLY_HARDWARE_GROUP_MUTATION_KEYS = {"4"}
+_GROUP_MUTATION_INTENT_DETAILS = {
+    "X": {
+        "mode": "balanced_four_lane",
+        "intensity": "balanced",
+    },
+    "D": {
+        "mode": "deeper_four_lane",
+        "intensity": "deeper",
+    },
+    "I": {
+        "mode": "intense_controlled_chaos",
+        "intensity": "intense",
+    },
+    "4": {
+        "mode": "harder_wild_four_lane",
+        "intensity": "wild",
+    },
 }
 
 
@@ -60,6 +81,9 @@ def evaluate_scene_group_behavior(command_key):
 
     if key in PACKET_4A_SCENE_INTENT_KEYS:
         return _accepted_scene_intent_result(key)
+
+    if key in PACKET_4B_GROUP_MUTATION_INTENT_KEYS:
+        return _accepted_group_mutation_intent_result(key)
 
     if key in DEFERRED_GROUP_MUTATION_KEYS:
         return SceneGroupBehaviorResult(
@@ -144,6 +168,58 @@ def _accepted_scene_intent_result(command_key):
     )
 
 
+def _accepted_group_mutation_intent_result(command_key):
+    group_metadata = GROUP_COMMANDS[command_key]
+    label = group_metadata["label"]
+    command_type = group_metadata["type"]
+    scope = group_metadata["scope"]
+    intent_details = _GROUP_MUTATION_INTENT_DETAILS[command_key]
+    group_mutation_mode = intent_details["mode"]
+    mutation_intensity = intent_details["intensity"]
+    forbidden_early_hardware_scope = (
+        command_key in _FORBIDDEN_EARLY_HARDWARE_GROUP_MUTATION_KEYS
+    )
+
+    return SceneGroupBehaviorResult(
+        command_key=command_key,
+        scene_scope=scope,
+        behavior_family="scene-group/group-mutation-intent",
+        accepted=True,
+        reason="supported_group_mutation_intent",
+        display_lines=_group_mutation_display_lines(
+            command_key,
+            label,
+            group_mutation_mode,
+            scope,
+            forbidden_early_hardware_scope,
+        ),
+        metadata={
+            "source": "GROUP_COMMANDS",
+            "source_group_command_label": label,
+            "source_group_command_type": command_type,
+            "source_group_command_scope": scope,
+            "source_group_command_executable": group_metadata["executable"],
+            "source_v134_reference_command": group_metadata[
+                "v134_reference_command"
+            ],
+            "source_scaffold_only": group_metadata["scaffold_only"],
+            "group_mutation_mode": group_mutation_mode,
+            "mutation_intensity": mutation_intensity,
+            "loads_anchors": False,
+            "executes_scene": False,
+            "executes_group_mutation": False,
+            "dispatches_command": False,
+            "forbidden_early_hardware_scope": forbidden_early_hardware_scope,
+            "mock_only": True,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "active_behavior": False,
+            "mutates_runtime_state": False,
+        },
+    )
+
+
 def _scene_display_lines(
     command_key,
     scene_name,
@@ -158,6 +234,32 @@ def _scene_display_lines(
         f"Scene scope: {scene_scope}",
         "No scene would execute.",
         "No anchors would load.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+
+    if forbidden_early_hardware_scope:
+        return (*lines, "Early hardware scope: forbidden.")
+
+    return lines
+
+
+def _group_mutation_display_lines(
+    command_key,
+    label,
+    group_mutation_mode,
+    scope,
+    forbidden_early_hardware_scope,
+):
+    lines = (
+        f"{command_key}: {label}",
+        "Read-only group mutation intent.",
+        f"Group mutation mode: {group_mutation_mode}",
+        f"Group scope: {scope}",
+        "No group mutation would execute.",
+        "No scene would execute.",
         "No state would change.",
         "No command would dispatch.",
         "No MIDI would be sent.",
@@ -189,6 +291,7 @@ __all__ = [
     "DEFERRED_GROUP_MUTATION_KEYS",
     "DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS",
     "PACKET_4A_SCENE_INTENT_KEYS",
+    "PACKET_4B_GROUP_MUTATION_INTENT_KEYS",
     "SceneGroupBehaviorResult",
     "evaluate_scene_group_behavior",
 ]
