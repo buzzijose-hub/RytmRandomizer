@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3b2c2fe
+c149df0
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3b2c2fe Add Packet 4A scene intent checkpoint
+- current HEAD: c149df0 Add Packet 4A scene intent review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -171,14 +171,16 @@ It captures:
   Packet 4A scene intent behavior implementation is now complete and
   documented in a checkpoint for review; the Packet 4A scene intent
   checkpoint review has now accepted that completed read-only scene intent
-  behavior slice
+  behavior slice; the broader Packet 4 progress checkpoint now consolidates
+  accepted Packet 4A scene intent progress while confirming Packet 4 is not
+  complete
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a broader Packet 4 progress checkpoint, write
-  a more user-facing progress/timeline update, or pause at the clean Packet 4A
-  review checkpoint
+- next recommended task: review and accept the broader Packet 4 progress
+  checkpoint, write a more user-facing progress/timeline update, or pause at
+  the clean Packet 4 progress checkpoint
 - closeout command
 - stop condition
 
@@ -2468,6 +2470,67 @@ support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
 The next recommended task is to create a broader Packet 4 progress checkpoint,
 write a more user-facing progress/timeline update, or pause at this clean
 Packet 4A review checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4 Progress Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4_PROGRESS_CHECKPOINT.md` consolidates
+accepted Packet 4A scene intent progress while confirming Packet 4 is not
+complete.
+
+Current baseline:
+
+- c149df0 Add Packet 4A scene intent review
+
+Current Packet 4 identity:
+
+- Scene And Group Intent Behavior Parity
+
+Accepted Packet 4A behavior:
+
+- read-only scene intent for `S0`, `S1`, `S1A`, `S1B`, `S2`, `S2A`, `S2B`,
+  `S3`, `S3A`, `S3B`, `S4`, `S4A`, `S4B`, and `S5`
+- copied scene metadata from `SCENE_COMMANDS`
+- `S4B` early hardware scope remains forbidden
+- no anchor loading
+- no scene execution
+- no state mutation
+- no command dispatch
+- no MIDI sending
+- no port opening
+- no hardware requirement
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+Current closeout coverage:
+
+- `=== Test: Behavior Scene Group ===`
+
+Current deferred Packet 4 scope:
+
+- group mutation behavior for `X`, `D`, `I`, and `4`
+- lane-aware group mutation behavior for `Y`, `V`, and `N`
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene or group state
+- command dispatch
+- MIDI or hardware behavior
+
+The checkpoint confirms Packet 4 is not complete. Any Packet 4B widening must
+start with a separate docs-only plan and review.
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group mutation execution, lane-aware group mutation
+execution, prompt/input loop, runtime state mutation, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress checkpoint, a more user-facing progress/timeline update, or a pause
+at this clean Packet 4 progress checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
