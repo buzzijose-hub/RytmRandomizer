@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5cad62b Add Packet 2A anchor profile checkpoint review
 - cf82881 Add Packet 2A anchor profile behavior
 - 7b3fe8c Add Packet 1 completion checkpoint review
 - f625e86 Add Packet 1B utility session checkpoint review
@@ -671,8 +672,83 @@ Accepted behavior:
 - no CLI wiring
 - no package metadata
 
-The next recommended task is a docs-only Packet 2B anchor/profile behavior
-plan, or a pause at this accepted review checkpoint.
+The next recommended task is the tiny Packet 2B anchor/profile implementation,
+or a pause at this accepted planning checkpoint.
+
+## V1.34 Behavior Parity Packet 2B Anchor/Profile Plan
+
+The Packet 2B anchor/profile plan documents the next tiny implementation scope
+after Packet 2A.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2B_ANCHOR_PROFILE_PLAN.md
+
+Current baseline:
+
+- 5cad62b Add Packet 2A anchor profile checkpoint review
+
+Recommended Packet 2B implementation scope:
+
+- `BS`
+
+Planned future behavior:
+
+- `BS` represents read-only Pad 1 BD Sharp anchor/profile load intent
+
+The plan records that `BS` has passive command metadata but no existing
+group-profile metadata. Future implementation must not invent a BD Sharp
+profile key, machine value, group-profile entry, or machine/profile universe
+expansion. Deterministic safe absent values should be used instead.
+
+Future file ownership is limited to:
+
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `tests/test_behavior_anchor_profile.py`
+
+No closeout script update is expected because `tests/test_behavior_anchor_profile.py`
+is already covered by:
+
+- `=== Test: Behavior Anchor Profile ===`
+
+The plan keeps selected-profile workflow, full group anchors, rotations, Pad
+2/3/4 behavior, profile `"4"` implementation, CLI wiring, dispatch, real
+MIDI, port opening, package metadata, machine/profile expansion, and hardware
+validation out of scope.
+
+## V1.34 Behavior Parity Packet 2B Anchor/Profile Plan Review
+
+The Packet 2B anchor/profile plan review accepts the plan as the current tiny
+implementation gate for `BS` anchor/profile intent behavior.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2B_ANCHOR_PROFILE_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_2B_ANCHOR_PROFILE_PLAN.md
+
+Accepted future behavior:
+
+- deterministic read-only anchor/profile intent for `BS`
+- no invented profile key for BD Sharp
+- no invented machine value for BD Sharp
+- metadata records absent group-profile metadata
+- no prompt loop
+- no state mutation
+- no dispatch
+- no command execution
+- no real MIDI or ports
+- no CLI wiring
+- no package metadata
+- no machine/profile expansion
+
+Parallel implementation remains not recommended because the write set is one
+module and one test file.
+
+The next recommended task is the tiny Packet 2B implementation, or a pause at
+this accepted planning checkpoint.
 
 ## Next Phase Planning Gate
 
