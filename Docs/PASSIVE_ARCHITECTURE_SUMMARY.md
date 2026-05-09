@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-60b280e
+f625e86
 
 ## Protected Reference
 
@@ -55,7 +55,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 60b280e Add Packet 1B utility session behavior
+- current HEAD: f625e86 Add Packet 1B utility session checkpoint review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -95,13 +95,15 @@ It captures:
   accepted a tiny future implementation scope for deterministic `T`, `C`, and
   `Q` intent behavior; the Packet 1B implementation checkpoint and review have
   now documented and accepted the completed deterministic `T`, `C`, and `Q`
-  intent behavior slice
+  intent behavior slice; the docs-only Packet 1 completion checkpoint and
+  review have now accepted Packet 1 as complete for the current intent-only
+  behavior phase
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 1 completion checkpoint, or pause
-  at the accepted Packet 1B checkpoint
+- next recommended task: docs-only Packet 2 anchor/profile behavior plan, or
+  pause at the accepted Packet 1 completion checkpoint
 - closeout command
 - stop condition
 
@@ -371,6 +373,51 @@ wiring, real MIDI, ports, package metadata, hardware behavior, or hardware
 validation was added.
 
 The review recommends a docs-only Packet 1 completion checkpoint next.
+
+## V1.34 Behavior Parity Packet 1 Completion Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_CHECKPOINT.md` records Packet 1
+completion for the current intent-only behavior phase.
+
+Baseline commit:
+
+- f625e86 Add Packet 1B utility session checkpoint review
+
+Packet 1 accepted scope:
+
+- Packet 1A menu/status behavior
+- Packet 1B utility/session intent behavior
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- closeout label `=== Test: Behavior Menu Utility ===`
+
+Packet 1 now covers menu/status keys `BD`, `FM`, `PD`, `SM`, `P2M`, `J`,
+`GM`, `SCN`, `PR`, `SR`, `P3M`, `P4M`, `H`, and `R`, plus utility/session
+keys `T`, `C`, and `Q`.
+
+Packet 1 remains read-only and adds no CLI wiring, dispatch, command
+execution, scene execution, prompt/input loop, real MIDI, ports, package
+metadata, hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Packet 1 Completion Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_REVIEW.md` accepts Packet 1 as
+complete for the current intent-only behavior phase.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_CHECKPOINT.md`
+
+The review accepts Packet 1A and Packet 1B as the current menu/utility
+behavior baseline. It keeps all future operator routing, CLI wiring,
+execution, prompt loops, real MIDI, ports, and hardware validation out of
+scope.
+
+The next recommended task is a docs-only Packet 2 anchor/profile behavior
+plan.
 
 The previous current-session handoff was:
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-60b280e Add Packet 1B utility session behavior
+f625e86 Add Packet 1B utility session checkpoint review
 
 ## Current Phase
 
@@ -61,6 +61,8 @@ accepted a tiny future implementation scope for deterministic `T`, `C`, and
 The Packet 1B utility/session implementation checkpoint and review have now
 documented and accepted the completed deterministic `T`, `C`, and `Q` intent
 behavior slice.
+The docs-only Packet 1 completion checkpoint and review have now accepted
+Packet 1 as complete for the current intent-only behavior phase.
 
 ## Current Safety State
 
@@ -115,8 +117,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 1 completion checkpoint, or a
-pause at this accepted Packet 1B checkpoint.
+Next recommended task is a docs-only Packet 2 anchor/profile behavior plan, or
+a pause at this accepted Packet 1 completion checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -386,6 +388,34 @@ It accepts:
   package metadata, or hardware behavior
 
 The review recommends a docs-only Packet 1 completion checkpoint next.
+
+The latest V1.34 behavior parity Packet 1 completion checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_CHECKPOINT.md`
+
+It records:
+
+- f625e86 Add Packet 1B utility session checkpoint review
+- Packet 1A menu/status behavior as accepted
+- Packet 1B utility/session intent behavior as accepted
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- closeout coverage through `=== Test: Behavior Menu Utility ===`
+- Packet 1 as complete for the current intent-only behavior phase
+
+The latest V1.34 behavior parity Packet 1 completion review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_CHECKPOINT.md`
+- Packet 1A menu/status behavior
+- Packet 1B utility/session intent behavior
+- the current Packet 1 safety boundary: no CLI wiring, dispatch, execution,
+  prompt loop, real MIDI, ports, package metadata, or hardware behavior
+
+The review recommends a docs-only Packet 2 anchor/profile behavior plan next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 

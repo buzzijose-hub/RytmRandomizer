@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f625e86 Add Packet 1B utility session checkpoint review
 - 60b280e Add Packet 1B utility session behavior
 - a79f92b Add Packet 1A menu utility checkpoint review
 - 2ad9009 Add Packet 1A menu utility behavior
@@ -472,6 +473,56 @@ MIDI-channel-selection intent for `C`, and session-exit intent for `Q`.
 
 The next recommended task is a docs-only Packet 1 completion checkpoint, or a
 pause at this clean checkpoint.
+
+## V1.34 Behavior Parity Packet 1 Completion Checkpoint
+
+The Packet 1 completion checkpoint records Packet 1 as complete for the
+current intent-only behavior phase.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_CHECKPOINT.md
+
+Baseline commit:
+
+- f625e86 Add Packet 1B utility session checkpoint review
+
+Packet 1 accepted scope:
+
+- Packet 1A menu/status behavior
+- Packet 1B utility/session intent behavior
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- closeout label `=== Test: Behavior Menu Utility ===`
+
+Packet 1 remains read-only and adds no CLI wiring, command dispatch, command
+execution, scene execution, prompt/input loop, blocking input, runtime state
+mutation, real MIDI dependency, package metadata, port opening, MIDI sending,
+active CLI command, hardware behavior, or hardware validation.
+
+## V1.34 Behavior Parity Packet 1 Completion Review
+
+The Packet 1 completion review accepts Packet 1 as complete for the current
+intent-only behavior phase.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1_COMPLETION_CHECKPOINT.md
+
+Accepted Packet 1 slices:
+
+- Packet 1A menu/status behavior
+- Packet 1B utility/session intent behavior
+
+The next recommended task is a docs-only Packet 2 anchor/profile behavior
+plan, or a pause at this clean checkpoint.
 
 ## Next Phase Planning Gate
 
