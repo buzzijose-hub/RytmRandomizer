@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3a85c52
+2a41615
 
 ## Protected Reference
 
@@ -54,7 +54,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3a85c52 Add behavior parity readiness session handoff
+- current HEAD: 2a41615 Add V1.34 behavior parity Packet 1 plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -86,14 +86,15 @@ It captures:
   end-of-session handoff after the behavior parity readiness review has now
   been documented for tomorrow's resume point; the docs-only first
   behavior-parity implementation packet plan for menu/status and utility
-  behavior has now been documented
+  behavior has now been documented; the docs-only first behavior-parity
+  implementation packet plan review has accepted Packet 1A for a tiny scoped
+  implementation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only review/acceptance gate for the first
-  behavior-parity implementation packet plan, or pause at the clean planning
-  checkpoint
+- next recommended task: tiny Packet 1A implementation for read-only
+  menu/status behavior, or pause at the accepted Packet 1 plan checkpoint
 - closeout command
 - stop condition
 
@@ -146,6 +147,46 @@ hardware behavior, or hardware validation.
 
 The next recommended task is a docs-only review/acceptance gate for the Packet
 1 plan.
+
+## V1.34 Behavior Parity Packet 1 Menu/Utility Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1_MENU_UTILITY_PLAN_REVIEW.md` accepts the
+Packet 1 menu/utility plan as the current first implementation plan.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1_MENU_UTILITY_PLAN.md`
+
+Accepted plan commit:
+
+- 2a41615 Add V1.34 behavior parity Packet 1 plan
+
+The review accepts Packet 1A as the first implementation subset:
+
+- read-only menu/status behavior for `BD`, `FM`, `PD`, `SM`, `P2M`, `J`,
+  `GM`, `SCN`, `PR`, `SR`, `P3M`, `P4M`, `H`, and `R`
+
+The review accepts deferred scope for:
+
+- `T`
+- `C`
+- `Q`
+
+The review accepts future file ownership limited to:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `Scripts/closeout_check.ps1`, only to add the new test file to closeout
+
+Parallel implementation remains not recommended for Packet 1A.
+
+The review confirms no implementation, tests, runtime code, dispatch, command
+execution, scene execution, prompt/input loop, real MIDI dependency, `mido`,
+`rtmidi`, package metadata changes, port opening, active CLI commands,
+hardware behavior, or hardware validation was added.
+
+The next recommended task is the tiny Packet 1A implementation for read-only
+menu/status behavior.
 
 The previous current-session handoff was:
 
