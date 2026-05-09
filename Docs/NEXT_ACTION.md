@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-a79f92b Add Packet 1A menu utility checkpoint review
+60b280e Add Packet 1B utility session behavior
 
 ## Current Phase
 
@@ -58,6 +58,9 @@ documented and accepted the completed read-only menu/status behavior slice.
 The docs-only Packet 1B utility/session behavior plan and review have now
 accepted a tiny future implementation scope for deterministic `T`, `C`, and
 `Q` intent behavior.
+The Packet 1B utility/session implementation checkpoint and review have now
+documented and accepted the completed deterministic `T`, `C`, and `Q` intent
+behavior slice.
 
 ## Current Safety State
 
@@ -112,9 +115,8 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 1B implementation for deterministic
-`T`, `C`, and `Q` utility/session intent behavior, or a pause at this
-accepted Packet 1B plan checkpoint.
+Next recommended task is a docs-only Packet 1 completion checkpoint, or a
+pause at this accepted Packet 1B checkpoint.
 
 The latest V1.34 behavior parity matrix slice is:
 
@@ -353,6 +355,37 @@ It accepts:
 - serial implementation with no parallel agents recommended
 
 The review recommends the tiny Packet 1B implementation next.
+
+The latest V1.34 behavior parity Packet 1B utility/session checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_CHECKPOINT.md`
+
+It records:
+
+- 60b280e Add Packet 1B utility session behavior
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+- `PACKET_1B_UTILITY_SESSION_KEYS`
+- deterministic utility/session intent handling for `T`, `C`, and `Q`
+- `T` as target-selection intent without prompt or state mutation
+- `C` as MIDI-channel-selection intent without prompt, ports, or state mutation
+- `Q` as session-exit intent without `sys.exit` or process termination
+- no closeout script update because `tests/test_behavior_menu_utility.py` is
+  already covered
+
+The latest V1.34 behavior parity Packet 1B utility/session review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_REVIEW.md`
+
+It accepts:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_CHECKPOINT.md`
+- 60b280e Add Packet 1B utility session behavior
+- `T`, `C`, and `Q` as accepted read-only utility/session intent behavior
+- no prompt loop, state mutation, process exit, CLI wiring, real MIDI, ports,
+  package metadata, or hardware behavior
+
+The review recommends a docs-only Packet 1 completion checkpoint next.
 
 The latest accepted V1.34 behavior parity matrix slice before that is:
 

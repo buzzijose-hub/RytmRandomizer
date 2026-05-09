@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 60b280e Add Packet 1B utility session behavior
 - a79f92b Add Packet 1A menu utility checkpoint review
 - 2ad9009 Add Packet 1A menu utility behavior
 - 2a41615 Add V1.34 behavior parity Packet 1 plan
@@ -413,6 +414,64 @@ module and one test file.
 
 The next recommended task is the tiny Packet 1B implementation, or a pause at
 this accepted planning checkpoint.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Checkpoint
+
+The Packet 1B utility/session checkpoint records completion of deterministic
+intent-only behavior for `T`, `C`, and `Q`.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_CHECKPOINT.md
+
+Milestone commit:
+
+- 60b280e Add Packet 1B utility session behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+
+Behavior added:
+
+- `T` target-selection intent without prompt or state mutation
+- `C` MIDI-channel-selection intent without prompt, ports, or state mutation
+- `Q` session-exit intent without `sys.exit` or process termination
+
+No closeout script update was needed because `tests/test_behavior_menu_utility.py`
+is already covered by `=== Test: Behavior Menu Utility ===`.
+
+The checkpoint confirms no CLI wiring, command dispatch, command execution,
+scene execution, prompt/input loop, blocking input, runtime state mutation,
+MIDI channel mutation, target pad/channel mutation, process exit, real MIDI
+dependency, `mido`, `rtmidi`, package metadata, port discovery, port opening,
+MIDI sending, active CLI command, hardware behavior, profile 3
+active-boundary support, profile 4 implementation, Analog Four support, Pads
+5-12 support, SysEx, GUI/capture, or hardware validation was added.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Review
+
+The Packet 1B utility/session review accepts the checkpoint and implementation
+commit as the current read-only utility/session intent baseline.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_REVIEW.md
+
+Accepted checkpoint:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_CHECKPOINT.md
+
+Accepted implementation commit:
+
+- 60b280e Add Packet 1B utility session behavior
+
+The review accepts deterministic target-selection intent for `T`,
+MIDI-channel-selection intent for `C`, and session-exit intent for `Q`.
+
+The next recommended task is a docs-only Packet 1 completion checkpoint, or a
+pause at this clean checkpoint.
 
 ## Next Phase Planning Gate
 

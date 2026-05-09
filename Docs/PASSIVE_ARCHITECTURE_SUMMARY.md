@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-a79f92b
+60b280e
 
 ## Protected Reference
 
@@ -55,7 +55,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: a79f92b Add Packet 1A menu utility checkpoint review
+- current HEAD: 60b280e Add Packet 1B utility session behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -93,14 +93,15 @@ It captures:
   documented and accepted the completed read-only menu/status behavior slice;
   the docs-only Packet 1B utility/session behavior plan and review have now
   accepted a tiny future implementation scope for deterministic `T`, `C`, and
-  `Q` intent behavior
+  `Q` intent behavior; the Packet 1B implementation checkpoint and review have
+  now documented and accepted the completed deterministic `T`, `C`, and `Q`
+  intent behavior slice
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 1B implementation for deterministic
-  `T`, `C`, and `Q` utility/session intent behavior, or pause at the accepted
-  Packet 1B plan checkpoint
+- next recommended task: docs-only Packet 1 completion checkpoint, or pause
+  at the accepted Packet 1B checkpoint
 - closeout command
 - stop condition
 
@@ -321,6 +322,55 @@ concentrated in one module and one test file.
 
 The next recommended task is the tiny Packet 1B implementation. Hardware
 remains off.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_CHECKPOINT.md` records
+completion of the Packet 1B utility/session behavior implementation.
+
+Milestone commit:
+
+- 60b280e Add Packet 1B utility session behavior
+
+Files changed by that milestone:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `tests/test_behavior_menu_utility.py`
+
+Packet 1B adds deterministic read-only utility/session intent handling for:
+
+- `T`
+- `C`
+- `Q`
+
+`T` now represents target-selection intent without prompt or state mutation.
+`C` now represents MIDI-channel-selection intent without prompt, ports, or
+state mutation. `Q` now represents session-exit intent without `sys.exit` or
+process termination.
+
+No closeout script update was needed because `tests/test_behavior_menu_utility.py`
+is already covered by `=== Test: Behavior Menu Utility ===`.
+
+## V1.34 Behavior Parity Packet 1B Utility/Session Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_REVIEW.md` accepts the
+Packet 1B implementation checkpoint as the current deterministic
+utility/session intent baseline.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_1B_UTILITY_SESSION_CHECKPOINT.md`
+
+Accepted implementation commit:
+
+- 60b280e Add Packet 1B utility session behavior
+
+The review accepts `T`, `C`, and `Q` as read-only utility/session intent
+behavior. It confirms no prompt loop, state mutation, process exit, CLI
+wiring, real MIDI, ports, package metadata, hardware behavior, or hardware
+validation was added.
+
+The review recommends a docs-only Packet 1 completion checkpoint next.
 
 The previous current-session handoff was:
 
