@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-b0c57ba
+d9ec30d
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: b0c57ba Add Packet 4 progress checkpoint
+- current HEAD: d9ec30d Add Packet 4 progress review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -174,14 +174,17 @@ It captures:
   behavior slice; the broader Packet 4 progress checkpoint now consolidates
   accepted Packet 4A scene intent progress while confirming Packet 4 is not
   complete; the broader Packet 4 progress checkpoint review has now accepted
-  that current Packet 4 progress baseline
+  that current Packet 4 progress baseline; the docs-only Packet 4B group
+  mutation plan now defines a tiny future implementation scope for read-only
+  `X`, `D`, `I`, and `4` group mutation intent behavior while keeping `Y`,
+  `V`, `N`, `O`, and `Z` deferred
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a docs-only Packet 4B group mutation plan,
-  write a more user-facing progress/timeline update, or pause at the clean
-  Packet 4 progress review checkpoint
+- next recommended task: review/accept the docs-only Packet 4B group mutation
+  plan, write a more user-facing progress/timeline update, or pause at the
+  clean Packet 4B planning checkpoint
 - closeout command
 - stop condition
 
@@ -2592,6 +2595,57 @@ support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation exists.
 The next recommended task is a docs-only Packet 4B group mutation plan for
 `X`, `D`, `I`, and `4`, a more user-facing progress/timeline update, or a
 pause at this clean Packet 4 progress review checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4B Group Mutation Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4B_GROUP_MUTATION_PLAN.md` defines the next
+tiny future behavior-parity implementation scope after the accepted Packet 4
+progress review.
+
+Current baseline before the planning slice:
+
+- `d9ec30d Add Packet 4 progress review`
+
+Planned Packet 4B scope:
+
+- `X`: balanced four-lane mutate full 4-pad group
+- `D`: deeper four-lane mutation, Pads 2-4 pushed harder
+- `I`: intense / controlled chaos four-lane mutation
+- `4`: harder / wild four-lane mutation
+
+The plan keeps the following scope deferred:
+
+- `Y`, `V`, and `N` lane-aware group mutation intent
+- `O` and `Z` group anchor load/return behavior
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene or group state
+- command dispatch
+- CLI execution wiring
+- MIDI or hardware behavior
+
+Planned future file ownership:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No future closeout script update is expected because
+`tests/test_behavior_scene_group.py` is already covered by
+`=== Test: Behavior Scene Group ===`.
+
+The plan recommends one focused TDD implementation slice instead of parallel
+implementation because the write set and result vocabulary are shared.
+
+The plan adds no implementation, tests, runtime code, CLI execution wiring,
+dispatch, command execution, scene execution, group mutation execution,
+lane-aware group mutation execution, prompt/input loop, real MIDI, ports,
+package metadata, active CLI behavior, machine/profile expansion, Analog Four
+support, Pads 5-12 support, SysEx, GUI/capture, or hardware validation.
+
+The next recommended task is a docs-only Packet 4B group mutation plan review,
+a more user-facing progress/timeline update, or a pause at this clean Packet
+4B planning checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 
