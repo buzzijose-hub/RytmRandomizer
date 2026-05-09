@@ -14,21 +14,25 @@ from .profile_lookup import describe_group_profile
 
 PACKET_2A_ANCHOR_PROFILE_KEYS = ("BH", "BC")
 PACKET_2B_ANCHOR_PROFILE_KEYS = ("BS",)
+PACKET_2C_ANCHOR_PROFILE_KEYS = ("BF",)
 SUPPORTED_ANCHOR_PROFILE_KEYS = (
     *PACKET_2A_ANCHOR_PROFILE_KEYS,
     *PACKET_2B_ANCHOR_PROFILE_KEYS,
+    *PACKET_2C_ANCHOR_PROFILE_KEYS,
 )
 
 _COMMAND_PROFILE_KEYS = {
     "BH": "2",
     "BC": "3",
     "BS": "",
+    "BF": "",
 }
 
 _COMMAND_ANCHOR_NAMES = {
     "BH": "BD Hard",
     "BC": "BD Classic",
     "BS": "BD Sharp",
+    "BF": "BD FM",
 }
 
 
@@ -153,6 +157,7 @@ def _safe_failure_metadata(source):
 __all__ = [
     "PACKET_2A_ANCHOR_PROFILE_KEYS",
     "PACKET_2B_ANCHOR_PROFILE_KEYS",
+    "PACKET_2C_ANCHOR_PROFILE_KEYS",
     "SUPPORTED_ANCHOR_PROFILE_KEYS",
     "AnchorProfileBehaviorResult",
     "evaluate_anchor_profile_behavior",
