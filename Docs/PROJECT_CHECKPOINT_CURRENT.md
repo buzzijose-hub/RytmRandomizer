@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- e507c60 Add Packet 4C lane-aware group mutation plan
 - baebeab Add Packet 4 progress review after 4B
 - 3d8ddb3 Add Packet 4 progress checkpoint after 4B
 - 21cd9a8 Add Packet 4B group mutation review
@@ -3336,6 +3337,67 @@ validation was added.
 The next recommended task is a docs-only Packet 4C lane-aware group mutation
 plan review, a more user-facing progress/timeline update, or a pause at this
 clean Packet 4C planning checkpoint.
+
+## V1.34 Behavior Parity Packet 4C Lane-Aware Group Mutation Plan Review
+
+The Packet 4C lane-aware group mutation plan review accepts the Packet 4C plan
+as the current future implementation gate.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4C_LANE_AWARE_GROUP_MUTATION_PLAN_REVIEW.md
+
+Accepted plan:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4C_LANE_AWARE_GROUP_MUTATION_PLAN.md
+
+Accepted plan commit:
+
+- e507c60 Add Packet 4C lane-aware group mutation plan
+
+Accepted future implementation scope:
+
+- `Y`: lane-aware SRC/morph mutation on all 4 group pads
+- `V`: lane-aware filter mutation on all 4 group pads
+- `N`: lane-aware grit mutation on all 4 group pads
+
+Accepted deferred scope:
+
+- `O`: load full 4-pad group anchors
+- `Z`: return all 4 group pads to anchors
+- scene execution
+- group mutation execution
+- lane-aware group mutation execution
+- runtime scene, group, or lane state
+- command dispatch
+- CLI execution wiring
+- MIDI or hardware behavior
+
+Accepted future file ownership:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No future closeout script update is expected because
+`tests/test_behavior_scene_group.py` is already covered by:
+
+- `=== Test: Behavior Scene Group ===`
+
+The review recommends the tiny Packet 4C implementation next and confirms
+parallel implementation is not recommended because the write set and result
+vocabulary are shared.
+
+The review confirms no implementation, tests, runtime code, CLI execution
+wiring, dispatch, command execution, scene execution, group mutation
+execution, lane-aware group mutation execution, prompt/input loop, real MIDI,
+ports, package metadata, active CLI behavior, machine/profile expansion,
+Analog Four support, Pads 5-12 support, SysEx, GUI/capture, or hardware
+validation was added.
+
+The next recommended task is the tiny Packet 4C implementation for read-only
+lane-aware group mutation intent behavior for `Y`, `V`, and `N`, a more
+user-facing progress/timeline update, or a pause at this accepted Packet 4C
+planning checkpoint.
 
 ## Next Phase Planning Gate
 
