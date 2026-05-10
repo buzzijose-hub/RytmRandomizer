@@ -186,3 +186,16 @@ Packet 6 is not complete.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Packet 6C Plan Follow-Up
+
+The docs-only Packet 6C Pad 2 lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6C_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It recommends a future tiny Packet 6C implementation scope limited to:
+
+- `P2C` only
+
+It adds no implementation, tests, dispatch, command execution, MIDI, ports,
+package metadata, active behavior, runtime behavior, or hardware behavior.
