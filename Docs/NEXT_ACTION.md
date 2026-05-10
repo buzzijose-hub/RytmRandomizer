@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5b18e4b Add next Packet 7 command selection after Packet 7C
+bcd4a5d Add next Packet 7 command selection review after Packet 7C
 
 ## Current Phase
 
@@ -426,9 +426,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 7D Pad 3 lane behavior plan for
-`SB` only, a user-facing progress/timeline update, or a pause at this accepted
-selection checkpoint.
+Next recommended task is a docs-only Packet 7D Pad 3 lane behavior plan review,
+a tiny TDD Packet 7D implementation for read-only `SB` only after review, or a
+pause at this planning checkpoint.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -2445,6 +2445,44 @@ It records:
 
 The review recommends a docs-only Packet 7D Pad 3 lane behavior plan for `SB`
 only.
+
+## Latest Packet 7D Pad 3 Lane Behavior Plan
+
+The latest docs-only Packet 7D Pad 3 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_7D_PAD3_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `bcd4a5d Add next Packet 7 command selection review after Packet 7C`
+- accepted upstream branch:
+  - docs-only Packet 7D Pad 3 lane behavior planning for `SB` only
+- recommended future Packet 7D implementation scope:
+  - `SB` only
+- proposed read-only behavior:
+  - Pad 3 SY Raw Bandpass mid-bass mode-load intent
+  - source metadata `PAD3_COMMANDS`
+  - target pad `3`
+  - lane `Pad 3 SY Raw lane`
+  - behavior family `pad3-lane/sy-raw-bandpass-mid-bass-mode`
+  - lane action `load_pad3_sy_raw_bandpass_mid_bass_mode`
+- preserved behavior:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `P3M` as Packet 1 menu/status behavior
+- deferred Pad 3 scope:
+  - `SX`
+  - `SW`
+  - `P3R`
+  - `P3X`
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only Packet 7D plan review.
 
 ## Latest Next Packet 7 Command Selection Checkpoint Review After Packet 7A
 
