@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3eac0bd Add behavior parity progress report review after Packet 6F
+c5b48b8 Add Packet 6G Pad 2 lane behavior plan
 
 ## Current Phase
 
@@ -8225,3 +8225,33 @@ or hardware behavior.
 
 Next recommended task is a docs-only review/acceptance gate for this Packet
 6G plan.
+
+## Latest Packet 6G Pad 2 Lane Behavior Plan Review
+
+The latest Packet 6G Pad 2 lane behavior plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6G_PAD2_LANE_BEHAVIOR_PLAN_REVIEW.md`
+
+It records:
+
+- accepted Packet 6G plan:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_6G_PAD2_LANE_BEHAVIOR_PLAN.md`
+- accepted Packet 6G plan milestone:
+  - `c5b48b8 Add Packet 6G Pad 2 lane behavior plan`
+- accepted future Packet 6G implementation scope:
+  - `P2G` only
+- accepted future behavior:
+  - read-only Pad 2 grit/noise discovery intent
+  - existing `PAD2_COMMANDS` metadata
+  - deterministic copied metadata
+  - no runtime Pad 2 state
+  - no discovery execution
+  - no dispatch, MIDI, ports, active behavior, or hardware behavior
+- excluded Packet 6 scope:
+  - `P2M`
+  - `P2R`
+  - `P2X`
+  - `P2Z`
+
+The review recommends the tiny TDD Packet 6G implementation for read-only
+`P2G` intent only.

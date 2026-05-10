@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3eac0bd
+c5b48b8
 
 ## Protected Reference
 
@@ -10908,6 +10908,40 @@ runtime behavior, or hardware behavior.
 
 The next recommended task is a docs-only review/acceptance gate for this
 Packet 6G plan.
+
+## Packet 6G Pad 2 Lane Behavior Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_6G_PAD2_LANE_BEHAVIOR_PLAN_REVIEW.md`
+accepts the Packet 6G plan.
+
+Accepted future Packet 6G implementation scope:
+
+- `P2G` only
+
+Accepted behavior:
+
+- read-only Pad 2 grit/noise discovery intent
+- existing `PAD2_COMMANDS` metadata
+- deterministic copied metadata
+- no runtime Pad 2 state
+- no discovery execution
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
+
+Excluded Packet 6 scope remains:
+
+- `P2M`
+- `P2R`
+- `P2X`
+- `P2Z`
+
+The review recommends the tiny TDD Packet 6G implementation for read-only
+`P2G` intent only.
 
 ## Behavior-Parity Progress Report After Packet 5A
 
