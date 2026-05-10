@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 50745b3 Add Packet 5A Pad 1 lane behavior
 - 6dced15 Add Packet 5 Pad 1 lane behavior plan
 - cccde44 Add behavior parity next packet planning gate review
 - 82bd9e6 Add behavior parity next packet planning gate
@@ -4395,8 +4396,7 @@ Confirmed absent behavior:
 
 Next recommended task:
 
-- tiny Packet 5A read-only Pad 1 current BD engine lane behavior
-  implementation for `BR` and `BM`
+- docs-only Packet 5A Pad 1 lane behavior checkpoint review
 
 ## Next Phase Planning Gate
 
@@ -11259,3 +11259,58 @@ Load anchors remain permanent.
 Capture features may be added later, but capture does not replace validated anchors.
 
 Validated anchors remain the safety net.
+
+## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint
+
+The Packet 5A Pad 1 lane behavior checkpoint records completion of the tiny
+read-only `BR`/`BM` implementation slice.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5A_PAD_1_LANE_BEHAVIOR_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `50745b3 Add Packet 5A Pad 1 lane behavior`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout suite now includes:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Accepted behavior:
+
+- `BR`: read-only Pad 1 current BD engine rotation intent
+- `BM`: read-only Pad 1 current BD engine safe mutation intent
+- copied metadata from `PAD1_COMMANDS`
+- target pad `1`
+- lane `Pad 1 BD engine`
+- no prompt loop
+- no state mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no hardware requirement
+
+Deferred Packet 5 Pad 1 lane scope remains safe:
+
+- BD FM discovery/return behavior
+- BD Plastic anchor/discovery/return behavior
+- BD Silky anchor/discovery/return behavior
+- Pad 1 BD Acoustic anchor behavior
+- deeper Pad 1 lane state modeling
+- runtime mutation/execution behavior
+
+The implementation adds no real MIDI, `mido`, `rtmidi`, port opening, MIDI
+sending, active CLI behavior, package metadata, Analog Four support, Pads 5-12
+support, SysEx, GUI/capture, or hardware behavior.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task is a docs-only Packet 5A checkpoint review.

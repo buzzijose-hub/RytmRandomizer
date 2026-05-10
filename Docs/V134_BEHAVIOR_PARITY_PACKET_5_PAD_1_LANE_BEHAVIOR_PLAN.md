@@ -590,3 +590,21 @@ The first future implementation target should be Packet 5A: read-only Pad 1
 current BD engine lane intent behavior for `BR` and `BM`.
 
 No implementation is added.
+
+## 24. Packet 5A Implementation Follow-Up
+
+Packet 5A was implemented after this plan and its review were accepted.
+
+Implementation milestone:
+
+- `50745b3 Add Packet 5A Pad 1 lane behavior`
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5A_PAD_1_LANE_BEHAVIOR_CHECKPOINT.md`
+
+The implementation remains limited to read-only Pad 1 current BD engine lane
+intent for `BR` and `BM`. It adds no Pad 1 engine rotation execution, Pad 1
+current-engine mutation execution, BD FM/Plastic/Silky discovery execution,
+dispatch, MIDI, ports, package metadata, active CLI behavior, or hardware
+behavior.

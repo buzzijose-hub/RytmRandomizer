@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-6dced15
+50745b3
 
 ## Protected Reference
 
@@ -41,6 +41,8 @@ The standard closeout suite currently includes:
 - behavior menu utility
 - behavior anchor profile
 - behavior mutation depth
+- behavior scene group
+- behavior pad 1 lane
 - real MIDI import safety
 - real MIDI passive CLI safety
 - real MIDI adapter boundary
@@ -57,7 +59,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 6dced15 Add Packet 5 Pad 1 lane behavior plan
+- current HEAD: 50745b3 Add Packet 5A Pad 1 lane behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -220,14 +222,15 @@ It captures:
   been documented and recommends a tiny future Packet 5A read-only `BR`/`BM`
   implementation scope; the docs-only Packet 5 Pad 1 lane behavior plan review
   has now accepted that Packet 5A `BR`/`BM` scope as the next tiny
-  implementation branch
+  implementation branch; the Packet 5A read-only Pad 1 lane behavior
+  implementation is now complete and documented in a checkpoint for review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement the tiny Packet 5A read-only Pad 1 current
-  BD engine lane behavior for `BR` and `BM`, write a more user-facing
-  progress/timeline update, or pause at the clean planning checkpoint
+- next recommended task: review the Packet 5A Pad 1 lane behavior checkpoint,
+  write a broader behavior-parity progress report after Packet 5A, or pause at
+  the clean implementation checkpoint
 - closeout command
 - stop condition
 
@@ -3856,13 +3859,14 @@ Deferred Packet 5 scope:
 - BD Plastic load/discovery/anchor-return intent
 - BD Silky load/discovery/anchor-return intent
 
-The review confirms no implementation, tests, CLI execution wiring, dispatch,
-runtime execution, Pad 1 lane mutation execution, MIDI, ports, package
-metadata, active CLI behavior, hardware behavior, or hardware validation
-exists.
+At review time, the review confirmed no implementation, tests, CLI execution
+wiring, dispatch, runtime execution, Pad 1 lane mutation execution, MIDI,
+ports, package metadata, active CLI behavior, hardware behavior, or hardware
+validation existed.
 
-The next recommended task is the tiny Packet 5A read-only Pad 1 current BD
-engine lane behavior implementation for `BR` and `BM`. Hardware remains off.
+Packet 5A has since been implemented as a tiny read-only Pad 1 current BD
+engine lane behavior slice for `BR` and `BM`. The next recommended task is a
+docs-only Packet 5A checkpoint review. Hardware remains off.
 
 The previous current-session handoff was:
 
@@ -10777,3 +10781,47 @@ Before any hardware-facing layer is considered, the project should require:
 - no automatic port opening
 - manual user confirmation before hardware send
 - tests proving no accidental execution
+
+## Packet 5A Pad 1 Lane Behavior Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5A_PAD_1_LANE_BEHAVIOR_CHECKPOINT.md`
+records completion of the first Packet 5 implementation slice.
+
+Implementation milestone:
+
+- `50745b3 Add Packet 5A Pad 1 lane behavior`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout suite update:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Accepted Packet 5A behavior:
+
+- `BR`: read-only Pad 1 current BD engine rotation intent
+- `BM`: read-only Pad 1 current BD engine safe mutation intent
+- metadata copied from `PAD1_COMMANDS`
+- current-engine dependency recorded only
+- future safe mutation depth recorded only for `BM`
+- deferred Packet 5 Pad 1 lane keys fail safely
+- already-covered menu/status and anchor/profile context is not reimplemented
+
+Confirmed absent behavior:
+
+- no Pad 1 engine rotation execution
+- no Pad 1 current-engine mutation execution
+- no BD FM, BD Plastic, or BD Silky discovery execution
+- no dispatch
+- no command execution
+- no MIDI
+- no port opening
+- no active CLI behavior
+- no package metadata
+- no hardware behavior
+
+The next recommended task is a docs-only Packet 5A checkpoint review.

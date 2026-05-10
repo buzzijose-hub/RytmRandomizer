@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-6dced15 Add Packet 5 Pad 1 lane behavior plan
+50745b3 Add Packet 5A Pad 1 lane behavior
 
 ## Current Phase
 
@@ -213,6 +213,8 @@ The docs-only Packet 5 Pad 1 lane behavior plan has now been documented and
 recommends a tiny future Packet 5A read-only `BR`/`BM` implementation scope.
 The docs-only Packet 5 Pad 1 lane behavior plan review has now accepted that
 Packet 5A `BR`/`BM` scope as the next tiny implementation branch.
+The Packet 5A read-only Pad 1 lane behavior implementation is now complete
+and documented in a checkpoint for review.
 
 ## Current Safety State
 
@@ -267,13 +269,14 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 5A read-only Pad 1 current BD engine
-lane behavior implementation for `BR` and `BM`, a more user-facing
-progress/timeline update, or a pause at this clean planning checkpoint.
+Next recommended task is a docs-only Packet 5A Pad 1 lane behavior checkpoint
+review, a broader behavior-parity progress report after Packet 5A, or a pause
+at this clean implementation checkpoint.
 
-Do not implement scene execution, group mutation execution, lane-aware group
-mutation execution, group anchor loading, group anchor return, dispatch, MIDI,
-ports, active CLI behavior, or any runtime execution layer yet.
+Do not implement BD FM discovery execution, BD Plastic discovery execution, BD
+Silky discovery execution, Pad 1 engine rotation execution, Pad 1 current-engine
+mutation execution, dispatch, MIDI, ports, active CLI behavior, package
+metadata, or any runtime execution layer yet.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation
 checkpoint is:
@@ -669,11 +672,11 @@ It records:
   - `Scripts/closeout_check.ps1`, only to add the new test to closeout
 - no immediate parallel implementation recommendation
 
-The review confirms no implementation, tests, CLI execution wiring, dispatch,
-runtime execution, Pad 1 lane mutation execution, MIDI, ports, package
-metadata, active CLI behavior, hardware behavior, or hardware validation
-exists. It recommends a tiny Packet 5A TDD implementation next, limited to
-read-only `BR`/`BM` intent behavior.
+At review time, the review confirmed no implementation, tests, CLI execution
+wiring, dispatch, runtime execution, Pad 1 lane mutation execution, MIDI,
+ports, package metadata, active CLI behavior, hardware behavior, or hardware
+validation existed. Packet 5A has since been implemented as a tiny read-only
+`BR`/`BM` intent behavior slice and is now documented for checkpoint review.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
 
@@ -5786,6 +5789,38 @@ boundary implementation slice. It plans `rytm_randomizer/active_boundary.py`,
 Boundary ===`. The planned boundary remains candidate-specific for group
 profile `"2"` / My BD Hard, uses `MockMidiSender` only, keeps passive CLI
 separate, keeps real MIDI absent, and keeps profile `"4"` parked.
+
+## Latest Packet 5A Pad 1 Lane Behavior Checkpoint
+
+The latest V1.34 behavior parity Packet 5A Pad 1 lane behavior checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5A_PAD_1_LANE_BEHAVIOR_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone `50745b3 Add Packet 5A Pad 1 lane behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+  - `Scripts/closeout_check.ps1`
+- closeout label:
+  - `=== Test: Behavior Pad 1 Lane ===`
+- read-only Pad 1 current BD engine lane intent behavior for `BR` and `BM`
+- `BR` lane action `rotate_profiled_bd_engine`
+- `BM` lane action `safe_current_engine_mutation`
+- current-engine dependency recorded only
+- future safe mutation depth recorded only for `BM`
+- deferred Packet 5 Pad 1 lane keys still fail safely
+- already-covered Packet 1 and Packet 2 context keys are not reimplemented
+- no Pad 1 engine rotation execution
+- no Pad 1 current-engine mutation execution
+- no BD FM, BD Plastic, or BD Silky discovery execution
+- no dispatch, MIDI, ports, active CLI behavior, package metadata, or hardware
+  behavior
+
+The checkpoint confirms full closeout passed, V1.34 reference diff was empty,
+package metadata diff was empty, and git status was clean after the
+implementation milestone.
 
 ## Do-Not-Touch Files
 
