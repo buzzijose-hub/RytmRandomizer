@@ -97,6 +97,70 @@ def test_p3a_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_sa_returns_read_only_pad3_sy_raw_anchor_return_intent():
+    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+
+    result = evaluate_pad3_lane_behavior("SA")
+
+    assert result.command_key == "SA"
+    assert result.accepted is True
+    assert result.reason == "supported_pad3_sy_raw_anchor_return_intent"
+    assert result.label == "return Pad 3 SY Raw to anchor"
+    assert result.behavior_family == "pad3-lane/sy-raw-anchor-return"
+    assert result.target_pad == 3
+    assert result.lane == "Pad 3 SY Raw lane"
+    assert result.lane_action == "return_pad3_sy_raw_anchor"
+    assert result.intent_kind == "anchor_return"
+    assert result.anchor_concept == "Pad 3 SY Raw anchor"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_lane_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "SA: return Pad 3 SY Raw to anchor",
+        "Read-only Pad 3 SY Raw anchor return intent.",
+        "Target pad: 3",
+        "Lane: Pad 3 SY Raw lane",
+        "Lane action: return_pad3_sy_raw_anchor",
+        "Pad 3 SY Raw anchor dependency is recorded only.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No lane state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_sa_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+
+    result = evaluate_pad3_lane_behavior("SA")
+
+    assert result.metadata["source"] == "PAD3_COMMANDS"
+    assert result.metadata["command_type"] == "anchor_return"
+    assert result.metadata["target_pad"] == 3
+    assert result.metadata["lane"] == "pad_3_sy_raw_lane"
+    assert result.metadata["behavior_family"] == "pad3-lane/sy-raw-anchor-return"
+    assert result.metadata["lane_action"] == "return_pad3_sy_raw_anchor"
+    assert result.metadata["intent_kind"] == "anchor_return"
+    assert result.metadata["anchor_concept"] == "Pad 3 SY Raw anchor"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_pad3_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
 
@@ -109,6 +173,16 @@ def test_pad3_lane_metadata_is_copied_and_immutable():
 
     fresh_result = evaluate_pad3_lane_behavior("P3A")
     assert fresh_result.metadata["source"] == "PAD3_COMMANDS"
+
+    sa_result = evaluate_pad3_lane_behavior("SA")
+
+    try:
+        sa_result.metadata["source"] = "mutated"
+    except TypeError:
+        pass
+
+    fresh_sa_result = evaluate_pad3_lane_behavior("SA")
+    assert fresh_sa_result.metadata["source"] == "PAD3_COMMANDS"
 
 
 def test_deferred_packet_7_pad3_lane_keys_fail_safely():
@@ -123,7 +197,6 @@ def test_deferred_packet_7_pad3_lane_keys_fail_safely():
         "SL",
         "SB",
         "SX",
-        "SA",
         "P3R",
         "P3X",
     )
@@ -221,6 +294,8 @@ if __name__ == "__main__":
     test_importing_behavior_pad3_lane_prints_nothing()
     test_p3a_returns_read_only_pad3_sy_raw_home_anchor_intent()
     test_p3a_metadata_contains_expected_passive_sources()
+    test_sa_returns_read_only_pad3_sy_raw_anchor_return_intent()
+    test_sa_metadata_contains_expected_passive_sources()
     test_pad3_lane_metadata_is_copied_and_immutable()
     test_deferred_packet_7_pad3_lane_keys_fail_safely()
     test_unknown_keys_fail_safely()
