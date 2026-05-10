@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-e82cab7 Add behavior parity progress report after Packet 6J
+ccc9499 Add behavior parity progress report review after Packet 6J
 
 ## Current Phase
 
@@ -2121,6 +2121,34 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Next Packet Selection Checkpoint After Packet 6J
+
+The latest next behavior-parity packet selection checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_SELECTION_CHECKPOINT_AFTER_PACKET_6J.md`
+
+It records:
+
+- current clean baseline:
+  - `ccc9499 Add behavior parity progress report review after Packet 6J`
+- Packet 6 current Pad 2 lane command helper scope is covered by read-only
+  intent helpers
+- candidate next branches:
+  - more Packet 2 anchor/profile progress
+  - more Packet 5 Pad 1 lane behavior progress
+  - Packet 7 Pad 3 lane behavior planning
+  - user-facing progress/timeline update
+  - pause
+- recommended next branch:
+  - docs-only Packet 7 Pad 3 lane behavior planning
+
+The checkpoint adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this selection
+checkpoint.
 
 ## Latest Packet 6I Pad 2 Lane Behavior Checkpoint Review
 
