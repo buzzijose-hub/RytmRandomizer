@@ -13,10 +13,10 @@ from .commands import COMMANDS, PAD3_COMMANDS
 
 PACKET_7A_PAD3_LANE_KEYS = ("P3A",)
 PACKET_7B_PAD3_LANE_KEYS = ("SA",)
+PACKET_7C_PAD3_LANE_KEYS = ("SL",)
 DEFERRED_PACKET_7_PAD3_LANE_KEYS = (
     "P3M",
     "SW",
-    "SL",
     "SB",
     "SX",
     "P3R",
@@ -38,6 +38,7 @@ class Pad3LaneBehaviorResult:
     lane_action: str = ""
     intent_kind: str = ""
     anchor_concept: str = ""
+    mode_concept: str = ""
     display_lines: tuple[str, ...] = ()
     state_changed: bool = False
     prompt_required: bool = False
@@ -64,6 +65,8 @@ def evaluate_pad3_lane_behavior(command_key):
         return _accepted_p3a_result()
     if key == "SA":
         return _accepted_sa_result()
+    if key == "SL":
+        return _accepted_sl_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -190,6 +193,61 @@ def _accepted_sa_result():
     )
 
 
+def _accepted_sl_result():
+    metadata = PAD3_COMMANDS["SL"]
+    label = metadata["label"]
+    lane_action = "load_pad3_sy_raw_lp1_bassline_mode"
+    mode_concept = "Pad 3 SY Raw LP1 bassline mode"
+
+    result_metadata = {
+        "source": "PAD3_COMMANDS",
+        "command_type": metadata["type"],
+        "target_pad": metadata["pad"],
+        "lane": "pad_3_sy_raw_lane",
+        "behavior_family": "pad3-lane/sy-raw-lp1-bassline-mode",
+        "lane_action": lane_action,
+        "intent_kind": "mode_load",
+        "mode_concept": mode_concept,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return Pad3LaneBehaviorResult(
+        command_key="SL",
+        label=label,
+        behavior_family="pad3-lane/sy-raw-lp1-bassline-mode",
+        accepted=True,
+        reason="supported_pad3_sy_raw_lp1_bassline_mode_intent",
+        target_pad=3,
+        lane="Pad 3 SY Raw lane",
+        lane_action=lane_action,
+        intent_kind="mode_load",
+        mode_concept=mode_concept,
+        display_lines=(
+            f"SL: {label}",
+            "Read-only Pad 3 SY Raw LP1 bassline mode-load intent.",
+            "Target pad: 3",
+            "Lane: Pad 3 SY Raw lane",
+            f"Lane action: {lane_action}",
+            "Pad 3 SY Raw LP1 bassline mode dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
 def _unsupported_result(command_key):
     return Pad3LaneBehaviorResult(
         command_key=command_key,
@@ -210,6 +268,7 @@ __all__ = [
     "DEFERRED_PACKET_7_PAD3_LANE_KEYS",
     "PACKET_7A_PAD3_LANE_KEYS",
     "PACKET_7B_PAD3_LANE_KEYS",
+    "PACKET_7C_PAD3_LANE_KEYS",
     "Pad3LaneBehaviorResult",
     "evaluate_pad3_lane_behavior",
 ]
