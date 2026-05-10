@@ -324,3 +324,23 @@ read-only intent-only behavior phase.
 No active behavior was added.
 
 Hardware remains off.
+
+## Checkpoint Review Follow-Up
+
+The Packet 5D BD Silky lane behavior checkpoint has now been reviewed and
+accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5D_BD_SILKY_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+The review accepts:
+
+- implementation milestone `36b7f55 Add Packet 5D BD Silky lane behavior`
+- checkpoint milestone `1bfb704 Add Packet 5D BD Silky lane behavior
+  checkpoint`
+- read-only Packet 5D behavior for `BI`, `ST`, `SK`, `SC`, and `SBH`
+- unchanged Packet 5A, Packet 5B, Packet 5C, and Packet 1 `SM` behavior
+- `BA` as still deferred/safe
+
+The review recommends a broader behavior-parity progress report after Packet
+5D before choosing Pad 1 BD Acoustic behavior, deeper lane state modeling, or
+a pause.
