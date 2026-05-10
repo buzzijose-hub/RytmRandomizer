@@ -232,3 +232,15 @@ Hardware remains off.
 
 No implementation, real MIDI, ports, active behavior, package metadata,
 runtime execution, or hardware behavior exists.
+
+## 11. User Progress Timeline Follow-Up
+
+A user-facing progress and timeline update now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_USER_PROGRESS_TIMELINE_AFTER_PACKET_5_LANE_STATE_DESCRIPTORS.md`
+
+It summarizes what the current passive/mock and behavior-parity foundation
+means for the broader dream project, why the recent work has been slower and
+more safety-focused, and why the next safe step is a docs-only behavior-parity
+planning gate rather than runtime execution, MIDI, ports, active behavior, or
+hardware.
