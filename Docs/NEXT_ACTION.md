@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-ec31843 Add behavior parity progress report after Packet 7E
+2ae919b Add behavior parity progress report review after Packet 7E
 
 ## Current Phase
 
@@ -2228,6 +2228,49 @@ It records:
 
 The review recommends a docs-only next Packet 7 command selection checkpoint
 before choosing between `SW`, `P3R`, and `P3X`.
+
+## Latest Next Packet 7 Command Selection After Packet 7E
+
+The latest next Packet 7 command selection checkpoint after Packet 7E is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7E.md`
+
+It records:
+
+- current clean baseline:
+  - `2ae919b Add behavior parity progress report review after Packet 7E`
+- accepted Packet 7 scope:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `SB`
+  - `SX`
+- preserved Packet 1 ownership:
+  - `P3M`
+- remaining deferred/safe Packet 7 scope:
+  - `SW`
+  - `P3R`
+  - `P3X`
+- recommended next planning branch:
+  - docs-only Packet 7F Pad 3 lane behavior plan for `SW` only
+- proposed future read-only behavior:
+  - Pad 3 SY Raw Wave + Balance discovery intent
+  - existing `PAD3_COMMANDS` metadata
+  - target pad `3`
+  - lane `Pad 3 SY Raw lane`
+  - behavior family `pad3-lane/sy-raw-wave-balance-discovery`
+  - lane action `describe_pad3_sy_raw_wave_balance_discovery_intent`
+  - intent kind `discovery`
+  - no runtime Pad 3 state
+  - no discovery execution
+  - no dispatch, MIDI, ports, active behavior, or hardware behavior
+
+The selection checkpoint adds no implementation, tests, CLI wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this
+selection checkpoint.
 
 ## Latest Packet 7E Pad 3 Lane Behavior Plan
 

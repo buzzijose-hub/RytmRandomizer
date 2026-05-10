@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2ae919b Add behavior parity progress report review after Packet 7E
 - ec31843 Add behavior parity progress report after Packet 7E
 - 598d4cb Add Packet 7E Pad 3 lane behavior checkpoint review
 - 37df9ed Add Packet 7E Pad 3 lane behavior checkpoint
@@ -11806,6 +11807,46 @@ behavior, and hardware behavior remain absent.
 
 Next recommended task is a docs-only next Packet 7 command selection
 checkpoint after Packet 7E.
+
+## V1.34 Behavior Parity Next Packet 7 Command Selection After Packet 7E
+
+A docs-only next Packet 7 command selection checkpoint after Packet 7E has now
+been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7E.md`
+
+Current baseline before the selection checkpoint:
+
+- `2ae919b Add behavior parity progress report review after Packet 7E`
+
+Accepted Packet 7 progress:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+- `SX`
+
+`P3M` remains covered by Packet 1 menu/status behavior.
+
+Deferred/safe Packet 7 scope remains:
+
+- `SW`
+- `P3R`
+- `P3X`
+
+Recommended next planning branch:
+
+- docs-only Packet 7F Pad 3 lane behavior plan for `SW` only
+
+The selection checkpoint proposes future read-only Pad 3 SY Raw Wave + Balance
+discovery intent without runtime Pad 3 state, discovery execution, dispatch,
+MIDI, ports, package metadata, active behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this selection
+checkpoint.
 
 ## Latest Behavior-Parity Progress Report After Packet 7C Review
 

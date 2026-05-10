@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-ec31843
+2ae919b
 
 ## Protected Reference
 
@@ -11167,6 +11167,43 @@ behavior, and hardware behavior remain absent.
 
 The next recommended task is a docs-only next Packet 7 command selection
 checkpoint after Packet 7E.
+
+## Next Packet 7 Command Selection After Packet 7E
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7E.md`
+documents the next safe Packet 7 command selection after the accepted Packet
+7E progress report review.
+
+Current baseline before the selection checkpoint:
+
+- `2ae919b Add behavior parity progress report review after Packet 7E`
+
+Accepted Packet 7 progress:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+- `SX`
+
+`P3M` remains Packet 1 menu/status behavior.
+
+Deferred/safe Packet 7 scope:
+
+- `SW`
+- `P3R`
+- `P3X`
+
+Recommended next planning branch:
+
+- docs-only Packet 7F Pad 3 lane behavior plan for `SW` only
+
+The selection checkpoint adds no implementation, tests, CLI execution wiring,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+selection checkpoint.
 
 ## Packet 7C Pad 3 Lane Behavior Checkpoint Review
 
