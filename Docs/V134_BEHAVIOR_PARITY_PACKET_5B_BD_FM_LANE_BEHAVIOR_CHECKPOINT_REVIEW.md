@@ -290,3 +290,13 @@ Packet 5B.
 No active behavior was added.
 
 Hardware remains off.
+
+## Progress Report Follow-Up
+
+A broader behavior-parity progress report after Packet 5B now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_5B.md`
+
+It summarizes accepted Packet 5A and Packet 5B progress while confirming
+Packet 5 is not complete and runtime mutation, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior remain absent.
