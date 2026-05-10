@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 47805bc Add next behavior parity planning gate after Packet 5 descriptors
 - 9def18b Add behavior parity user progress timeline after Packet 5 descriptors
 - d9ba6ac Add behavior parity progress report review after Packet 5 lane state descriptors
 - 1661ab7 Add behavior parity progress report after Packet 5 lane state descriptors
@@ -12948,6 +12949,49 @@ MIDI, ports, package metadata, active behavior, or hardware behavior.
 
 Next recommended task is a docs-only review/acceptance gate for this planning
 decision or a docs-only Packet 6 Pad 2 lane behavior plan.
+
+## V1.34 Behavior Parity Next Planning Gate Review After Packet 5 Descriptors
+
+The next behavior-parity planning gate after the Packet 5 descriptor timeline
+has now been reviewed and accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PLANNING_GATE_AFTER_PACKET_5_DESCRIPTORS_REVIEW.md`
+
+Accepted planning gate:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PLANNING_GATE_AFTER_PACKET_5_DESCRIPTORS.md`
+
+Accepted milestone:
+
+- `47805bc Add next behavior parity planning gate after Packet 5 descriptors`
+
+Accepted decision:
+
+- do not pursue runtime Pad 1 lane state next
+- keep runtime Pad 1 lane state deferred
+- choose docs-only Packet 6 Pad 2 lane behavior planning as the next safe
+  branch
+
+The accepted future Pad 2 command family is:
+
+- `P2M`
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+- `P2G`
+- `P2R`
+- `P2X`
+- `P2Z`
+
+The review adds no implementation, tests, runtime execution, dispatch, MIDI,
+ports, package metadata, active behavior, or hardware behavior.
+
+Next recommended task is a docs-only Packet 6 Pad 2 lane behavior plan.
 
 ## Hardware Manual Reference Inventory
 
