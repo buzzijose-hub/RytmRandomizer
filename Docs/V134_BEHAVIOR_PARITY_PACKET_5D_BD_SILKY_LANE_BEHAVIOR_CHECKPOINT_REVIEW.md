@@ -330,3 +330,14 @@ Packet 5D.
 No active behavior was added.
 
 Hardware remains off.
+
+## Progress Report Follow-Up
+
+A broader behavior-parity progress report after Packet 5D now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_5D.md`
+
+It summarizes accepted Packet 5A, Packet 5B, Packet 5C, and Packet 5D progress
+while confirming Packet 5 is not complete and Pad 1 BD Acoustic behavior,
+deeper lane state modeling, runtime mutation, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior remain absent.
