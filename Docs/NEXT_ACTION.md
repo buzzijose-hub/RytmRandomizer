@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-1c2796b Add Packet 6C Pad 2 lane behavior checkpoint
+3aa1575 Add Packet 6C Pad 2 lane behavior checkpoint review
 
 ## Current Phase
 
@@ -332,6 +332,8 @@ The tiny Packet 6C read-only Pad 2 lane behavior implementation is now
 complete for `P2C` only and documented in a checkpoint for review.
 The docs-only review gate for that checkpoint has now accepted Packet 6C as
 complete for read-only `P2C` intent only.
+The broader Packet 6 progress report after Packet 6C has now been documented
+as the current consolidation checkpoint.
 
 ## Current Safety State
 
@@ -386,9 +388,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader Packet 6 progress update after Packet 6C,
-a docs-only Packet 6D Pad 2 lane behavior plan, or a pause at this clean
-accepted checkpoint review.
+Next recommended task is a docs-only review/acceptance gate for the broader
+Packet 6 progress report after Packet 6C, a docs-only Packet 6D Pad 2 lane
+behavior plan, or a pause at this clean progress checkpoint.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -2108,6 +2110,30 @@ It records:
 
 The review recommends a broader Packet 6 progress update after Packet 6C
 before widening Pad 2 scope again.
+
+## Latest Behavior-Parity Progress Report After Packet 6C
+
+The latest broader behavior-parity implementation progress report after Packet
+6C is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_6C.md`
+
+It records:
+
+- current baseline:
+  - `3aa1575 Add Packet 6C Pad 2 lane behavior checkpoint review`
+- accepted Packet 6 progress:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+- `P2M` remains covered by Packet 1 menu/status behavior
+- Packet 6 is not complete
+- deferred/safe Pad 2 lane scope:
+  - `P2F`, `P2T`, `P2P`, `P2G`, `P2R`, `P2X`, `P2Z`
+- no CLI execution wiring, dispatch, command execution, MIDI, ports, package
+  metadata, active behavior, or hardware behavior
+
+The report recommends a docs-only review/acceptance gate next.
 
 ## Latest Packet 5 Pad 1 Lane State Descriptor Checkpoint Review
 
