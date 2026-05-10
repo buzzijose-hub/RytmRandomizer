@@ -16,6 +16,7 @@ from .scenes import SCENE_COMMANDS
 PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
 PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")
 PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS = ("Y", "V", "N")
+PACKET_4D_GROUP_ANCHOR_INTENT_KEYS = ("O", "Z")
 DEFERRED_GROUP_MUTATION_KEYS = ()
 DEFERRED_LANE_AWARE_GROUP_MUTATION_KEYS = ()
 
@@ -55,6 +56,16 @@ _LANE_AWARE_GROUP_MUTATION_INTENT_DETAILS = {
     "N": {
         "page": "grit",
         "mode": "lane_aware_grit",
+    },
+}
+_GROUP_ANCHOR_INTENT_DETAILS = {
+    "O": {
+        "anchor_action": "load_group_anchors",
+        "reason": "supported_group_anchor_load_intent",
+    },
+    "Z": {
+        "anchor_action": "return_group_anchors",
+        "reason": "supported_group_anchor_return_intent",
     },
 }
 
@@ -102,6 +113,9 @@ def evaluate_scene_group_behavior(command_key):
 
     if key in PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS:
         return _accepted_lane_aware_group_mutation_intent_result(key)
+
+    if key in PACKET_4D_GROUP_ANCHOR_INTENT_KEYS:
+        return _accepted_group_anchor_intent_result(key)
 
     if key in DEFERRED_GROUP_MUTATION_KEYS:
         return SceneGroupBehaviorResult(
@@ -287,6 +301,52 @@ def _accepted_lane_aware_group_mutation_intent_result(command_key):
     )
 
 
+def _accepted_group_anchor_intent_result(command_key):
+    group_metadata = GROUP_COMMANDS[command_key]
+    label = group_metadata["label"]
+    command_type = group_metadata["type"]
+    scope = group_metadata["scope"]
+    intent_details = _GROUP_ANCHOR_INTENT_DETAILS[command_key]
+    anchor_action = intent_details["anchor_action"]
+
+    return SceneGroupBehaviorResult(
+        command_key=command_key,
+        scene_scope=scope,
+        behavior_family="scene-group/group-anchor-intent",
+        accepted=True,
+        reason=intent_details["reason"],
+        display_lines=_group_anchor_display_lines(
+            command_key,
+            label,
+            anchor_action,
+            scope,
+        ),
+        metadata={
+            "source": "GROUP_COMMANDS",
+            "source_group_command_label": label,
+            "source_group_command_type": command_type,
+            "source_group_command_scope": scope,
+            "source_group_command_executable": group_metadata["executable"],
+            "source_v134_reference_command": group_metadata[
+                "v134_reference_command"
+            ],
+            "source_scaffold_only": group_metadata["scaffold_only"],
+            "anchor_action": anchor_action,
+            "loads_anchors": False,
+            "executes_scene": False,
+            "executes_group_anchor": False,
+            "executes_group_mutation": False,
+            "dispatches_command": False,
+            "mock_only": True,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "active_behavior": False,
+            "mutates_runtime_state": False,
+        },
+    )
+
+
 def _scene_display_lines(
     command_key,
     scene_name,
@@ -360,6 +420,27 @@ def _lane_aware_group_mutation_display_lines(
     )
 
 
+def _group_anchor_display_lines(
+    command_key,
+    label,
+    anchor_action,
+    scope,
+):
+    return (
+        f"{command_key}: {label}",
+        "Read-only group anchor intent.",
+        f"Group anchor action: {anchor_action}",
+        f"Group scope: {scope}",
+        "No group anchor load or return would execute.",
+        "No group mutation would execute.",
+        "No scene would execute.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+    )
+
+
 def _safe_failure_metadata(source):
     return {
         "source": source,
@@ -381,6 +462,7 @@ __all__ = [
     "PACKET_4A_SCENE_INTENT_KEYS",
     "PACKET_4B_GROUP_MUTATION_INTENT_KEYS",
     "PACKET_4C_LANE_AWARE_GROUP_MUTATION_INTENT_KEYS",
+    "PACKET_4D_GROUP_ANCHOR_INTENT_KEYS",
     "SceneGroupBehaviorResult",
     "evaluate_scene_group_behavior",
 ]

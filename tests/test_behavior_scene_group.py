@@ -63,7 +63,20 @@ LANE_AWARE_GROUP_MUTATION_INTENT_EXPECTATIONS = {
         "mode": "lane_aware_grit",
     },
 }
-DEFERRED_GROUP_ANCHOR_KEYS = ("O", "Z")
+GROUP_ANCHOR_INTENT_EXPECTATIONS = {
+    "O": {
+        "label": "load full 4-pad group anchors",
+        "command_type": "load",
+        "anchor_action": "load_group_anchors",
+        "reason": "supported_group_anchor_load_intent",
+    },
+    "Z": {
+        "label": "return all 4 group pads to anchors",
+        "command_type": "anchor_return",
+        "anchor_action": "return_group_anchors",
+        "reason": "supported_group_anchor_return_intent",
+    },
+}
 
 
 def run_cli(*args):
@@ -370,14 +383,22 @@ def test_repeated_lane_aware_group_mutation_evaluations_are_deterministic():
         )
 
 
-def test_group_anchor_keys_remain_unsupported_and_safe():
+def test_group_anchor_keys_return_read_only_intent_results():
     from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
 
-    for command_key in DEFERRED_GROUP_ANCHOR_KEYS:
+    for command_key, expectation in GROUP_ANCHOR_INTENT_EXPECTATIONS.items():
         result = evaluate_scene_group_behavior(command_key)
 
-        assert result.accepted is False
-        assert result.reason == "unsupported_scene_group_command"
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.behavior_family == "scene-group/group-anchor-intent"
+        assert result.reason == expectation["reason"]
+        assert result.scene_scope == "four_pad_group"
+        assert result.scene_name == ""
+        assert result.scene_action == ""
+        assert result.loads_anchors is False
+        assert result.state_changed is False
+        assert result.prompt_required is False
         assert result.executes_scene is False
         assert result.executes_group_mutation is False
         assert result.dispatches_command is False
@@ -386,6 +407,36 @@ def test_group_anchor_keys_remain_unsupported_and_safe():
         assert result.hardware_required is False
         assert result.active_behavior is False
         assert result.metadata["source"] == "GROUP_COMMANDS"
+        assert result.metadata["source_group_command_label"] == expectation["label"]
+        assert result.metadata["source_group_command_type"] == expectation["command_type"]
+        assert result.metadata["source_group_command_scope"] == "four_pad_group"
+        assert result.metadata["anchor_action"] == expectation["anchor_action"]
+        assert result.metadata["loads_anchors"] is False
+        assert result.metadata["executes_group_anchor"] is False
+        assert result.metadata["executes_group_mutation"] is False
+        assert result.metadata["mutates_runtime_state"] is False
+        assert result.display_lines == (
+            f"{command_key}: {expectation['label']}",
+            "Read-only group anchor intent.",
+            f"Group anchor action: {expectation['anchor_action']}",
+            "Group scope: four_pad_group",
+            "No group anchor load or return would execute.",
+            "No group mutation would execute.",
+            "No scene would execute.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+        )
+
+
+def test_repeated_group_anchor_evaluations_are_deterministic():
+    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+
+    for command_key in GROUP_ANCHOR_INTENT_EXPECTATIONS:
+        assert evaluate_scene_group_behavior(command_key) == (
+            evaluate_scene_group_behavior(command_key)
+        )
 
 
 def test_packet_1_menu_utility_behavior_remains_unchanged():
@@ -489,7 +540,8 @@ if __name__ == "__main__":
     test_repeated_group_mutation_evaluations_are_deterministic()
     test_lane_aware_group_mutation_keys_return_read_only_intent_results()
     test_repeated_lane_aware_group_mutation_evaluations_are_deterministic()
-    test_group_anchor_keys_remain_unsupported_and_safe()
+    test_group_anchor_keys_return_read_only_intent_results()
+    test_repeated_group_anchor_evaluations_are_deterministic()
     test_packet_1_menu_utility_behavior_remains_unchanged()
     test_packet_2_anchor_profile_behavior_remains_unchanged()
     test_packet_3_mutation_depth_behavior_remains_unchanged()
