@@ -1,13 +1,12 @@
-# V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint
+# V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
 ## Purpose
 
-Record completion of the Packet 5A read-only Pad 1 current BD engine lane
-behavior implementation for `BR` and `BM`.
+Review and accept the Packet 5A Pad 1 lane behavior checkpoint.
 
-This checkpoint documents the completed behavior slice. It adds no further
-implementation, tests, CLI wiring, dispatch, MIDI, port opening, package
-metadata, active behavior, or hardware behavior.
+This is a documentation-only review checkpoint. It adds no implementation,
+tests, CLI wiring, dispatch, MIDI, port opening, package metadata, active
+behavior, or hardware behavior.
 
 ## Current Clean Baseline
 
@@ -15,9 +14,9 @@ Current branch:
 
 - `modularize-v1.34`
 
-Current HEAD before this documentation slice:
+Current HEAD before this slice:
 
-- `50745b3 Add Packet 5A Pad 1 lane behavior`
+- `05d69c8 Add Packet 5A Pad 1 lane behavior checkpoint`
 
 Current phase:
 
@@ -27,8 +26,8 @@ Current phase:
 - Packet 3 complete
 - Packet 4 complete
 - Packet 5 Pad 1 lane behavior plan accepted
-- Packet 5A Pad 1 current BD engine lane intent implemented
-- Packet 5A checkpoint now created for review
+- Packet 5A Pad 1 current BD engine lane intent implemented and checkpointed
+- Packet 5A checkpoint now reviewed and accepted
 
 Hardware status:
 
@@ -36,54 +35,69 @@ Hardware status:
 - Analog Four MKII off
 - hardware not required
 
-## Milestone Commit
+## Review Decision
 
-Implementation milestone:
+Accepted checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5A_PAD_1_LANE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted implementation milestone:
 
 - `50745b3 Add Packet 5A Pad 1 lane behavior`
 
-Files changed by the milestone:
+Accepted checkpoint milestone:
+
+- `05d69c8 Add Packet 5A Pad 1 lane behavior checkpoint`
+
+Accepted implementation files:
 
 - `rytm_randomizer/behavior_pad1_lane.py`
 - `tests/test_behavior_pad1_lane.py`
 - `Scripts/closeout_check.ps1`
 
-Closeout suite update:
+Accepted closeout coverage:
 
-- added `=== Test: Behavior Pad 1 Lane ===`
-- added `tests/test_behavior_pad1_lane.py`
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Decision:
+
+- Packet 5A checkpoint accepted.
+- Read-only Packet 5A Pad 1 current BD engine lane intent behavior accepted.
+- Packet 5 is not complete.
+- No runtime or hardware behavior is authorized by this review.
 
 ## Accepted Packet 5A Behavior
 
-Implemented read-only Pad 1 current BD engine lane intent commands:
+Accepted read-only Pad 1 current BD engine lane intent commands:
 
 - `BR`: rotate Pad 1 to the next profiled BD engine
 - `BM`: safely mutate the currently loaded Pad 1 BD engine
 
-Accepted behavior:
+Accepted semantics:
 
-- `BR` is accepted as read-only current-engine rotation intent
-- `BM` is accepted as read-only current-engine safe mutation intent
-- copied passive metadata from `PAD1_COMMANDS`
-- target pad is `1`
-- lane is `Pad 1 BD engine`
-- `BR` lane action is `rotate_profiled_bd_engine`
-- `BM` lane action is `safe_current_engine_mutation`
-- current-engine dependency is recorded only
-- future safe mutation depth dependency is recorded only for `BM`
+- metadata-only behavior
+- copied metadata from `PAD1_COMMANDS`
+- target pad `1`
+- lane `Pad 1 BD engine`
+- `BR` lane action `rotate_profiled_bd_engine`
+- `BM` lane action `safe_current_engine_mutation`
+- behavior family `pad1-lane/current-bd-engine`
+- reason `supported_pad1_current_engine_lane_intent`
+- current-engine dependency recorded only
+- future safe mutation depth recorded only for `BM`
 - no Pad 1 engine rotation execution
 - no Pad 1 current-engine mutation execution
 - no lane state mutation
-- no prompt loop
-- no dispatch
+- no prompt/input loop
+- no command dispatch
 - no command execution
 - no MIDI
-- no ports
+- no port opening
 - no hardware requirement
 
 ## Accepted Implementation Surface
 
-Implementation surface:
+The accepted Packet 5A implementation surface includes:
 
 - `PACKET_5A_PAD1_CURRENT_ENGINE_KEYS`
 - `DEFERRED_PACKET_5_PAD1_LANE_KEYS`
@@ -93,7 +107,7 @@ Implementation surface:
 - behavior family `pad1-lane/current-bd-engine`
 - reason `supported_pad1_current_engine_lane_intent`
 
-Deferred Packet 5 keys still fail safely:
+Deferred Packet 5 Pad 1 lane keys remain safe:
 
 - `FT`
 - `FK`
@@ -110,7 +124,7 @@ Deferred Packet 5 keys still fail safely:
 - `SC`
 - `SBH`
 
-Already-covered context keys are not reimplemented:
+Already-covered context remains outside Packet 5A:
 
 - `FM`
 - `PD`
@@ -142,7 +156,7 @@ Accepted test coverage confirms:
 - no Analog Four support is exposed
 - no Pads 5-12 support is exposed
 
-## TDD Evidence
+## Accepted TDD Evidence
 
 Red command:
 
@@ -163,7 +177,7 @@ python .\tests\test_behavior_pad1_lane.py
 
 Green result:
 
-- passed after the tiny read-only implementation.
+- Packet 5A behavior tests passed after implementation.
 
 Targeted regression commands:
 
@@ -177,13 +191,7 @@ python .\tests\test_cli.py
 
 Targeted regression result:
 
-- passed silently
-
-Full closeout command:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
-```
+- passed
 
 Full closeout result:
 
@@ -191,42 +199,44 @@ Full closeout result:
 
 ## Confirmed Absent Behavior
 
-The implementation adds no:
+This review confirms the project still has:
 
-- Pad 1 engine rotation execution
-- Pad 1 current-engine mutation execution
-- BD FM discovery execution
-- BD Plastic discovery execution
-- BD Silky discovery execution
-- anchor return execution
-- lane state mutation
-- prompt/input loop
-- command dispatch
-- CLI execution wiring
-- active CLI command
-- `execute-command`
-- `send-command`
-- `hardware-test`
-- real MIDI dependency
-- `mido`
-- `rtmidi`
-- package metadata
-- port discovery
-- port opening
-- MIDI sending
-- hardware behavior
-- hardware validation
-- Analog Four support
-- Pads 5-12 support
-- machine/profile expansion
-- SysEx
-- GUI/capture
+- no Pad 1 engine rotation execution
+- no Pad 1 current-engine mutation execution
+- no BD FM discovery execution
+- no BD Plastic discovery execution
+- no BD Silky discovery execution
+- no anchor return execution
+- no lane state mutation
+- no prompt/input loop
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no scene execution
+- no real MIDI dependency
+- no `mido`
+- no `rtmidi`
+- no package metadata changes
+- no port discovery
+- no port opening
+- no MIDI sending
+- no active CLI command
+- no `execute-command`
+- no `send-command`
+- no `hardware-test`
+- no hardware behavior
+- no hardware validation
+- no machine/profile expansion
+- no Analog Four support
+- no Pads 5-12 support
+- no SysEx
+- no GUI/capture
 
 `rytm_hybrid_randomizer_v134.py` remains untouched.
 
-## Packet 5 Status After This Checkpoint
+## Packet 5 Status
 
-Accepted Packet 5 progress:
+Accepted Packet 5 implementation progress:
 
 - Packet 5A read-only Pad 1 current BD engine lane intent for `BR` and `BM`
 
@@ -239,18 +249,20 @@ Deferred Packet 5 scope remains:
 - BD Silky anchor/discovery/return behavior
 - Pad 1 BD Acoustic anchor behavior
 - deeper Pad 1 lane state modeling
-- any runtime mutation or execution behavior
+- runtime mutation/execution behavior
 
-## Next Recommended Task
+## Next Safe Options
 
-At checkpoint creation time, the next recommended task was a docs-only Packet
-5A checkpoint review.
+Safe next options:
 
-After review, choose whether to:
+- broader behavior-parity progress report after Packet 5A
+- Packet 5B docs-only plan for a tiny next Pad 1 lane slice
+- user-facing progress/timeline update
+- pause at this accepted Packet 5A checkpoint
 
-- create a Packet 5B docs-only plan for a tiny next Pad 1 lane slice
-- write a broader behavior-parity progress report after Packet 5A
-- pause at this clean implementation checkpoint
+## Recommendation
+
+Create a broader behavior-parity progress report after Packet 5A next.
 
 Do not implement BD FM, BD Plastic, BD Silky, Pad 1 BD Acoustic, runtime
 mutation, dispatch, MIDI, ports, active CLI behavior, package metadata, or
@@ -258,19 +270,11 @@ hardware behavior without a separate plan and review.
 
 ## Decision
 
-Packet 5A Pad 1 lane behavior implementation is complete for the current
-read-only intent-only behavior phase.
+Packet 5A checkpoint accepted.
 
-No active behavior was added.
+Packet 5A read-only Pad 1 current BD engine lane behavior accepted for `BR`
+and `BM`.
+
+Packet 5 is not complete.
 
 Hardware remains off.
-
-## Checkpoint Review Follow-Up
-
-This checkpoint was reviewed and accepted in:
-
-- `Docs/V134_BEHAVIOR_PARITY_PACKET_5A_PAD_1_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
-
-The review accepts Packet 5A read-only Pad 1 current BD engine lane behavior
-for `BR` and `BM` and recommends a broader behavior-parity progress report
-after Packet 5A next.
