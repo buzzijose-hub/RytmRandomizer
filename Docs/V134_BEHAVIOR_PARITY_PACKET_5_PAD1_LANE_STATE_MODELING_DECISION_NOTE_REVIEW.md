@@ -199,3 +199,14 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 12. Lane-State Modeling Plan Follow-Up
+
+A docs-only deeper Packet 5 Pad 1 lane state modeling plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD1_LANE_STATE_MODELING_PLAN.md`
+
+It defines future read-only lane-state vocabulary, possible static descriptor
+fields, future file ownership, and test requirements. It adds no
+implementation, tests, CLI wiring, dispatch, MIDI, ports, package metadata,
+active behavior, runtime execution, or hardware behavior.

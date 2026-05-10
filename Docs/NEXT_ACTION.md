@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d731764 Add Packet 5 Pad 1 lane state modeling decision note
+a8ae115 Add Packet 5 Pad 1 lane state modeling decision review
 
 ## Current Phase
 
@@ -284,6 +284,8 @@ keeps deeper lane state modeling deferred until separately reviewed and
 planned.
 The docs-only review gate for that decision note has now accepted it as the
 current Packet 5 lane-state planning checkpoint.
+The docs-only deeper Packet 5 Pad 1 lane state modeling plan has now been
+documented as the current planning checkpoint before any implementation.
 
 ## Current Safety State
 
@@ -338,9 +340,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only deeper Packet 5 Pad 1 lane state
-modeling plan, a user-facing progress/timeline update, or a pause at this
-accepted decision note review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the deeper
+Packet 5 Pad 1 lane state modeling plan, a user-facing progress/timeline
+update, or a pause at this clean planning checkpoint.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -6870,6 +6872,31 @@ It records:
 The review recommends a docs-only deeper Packet 5 Pad 1 lane state modeling
 plan, a user-facing progress/timeline update, or a pause at this accepted
 decision note review checkpoint.
+
+## Latest Packet 5 Pad 1 Lane State Modeling Plan
+
+The latest deeper Packet 5 Pad 1 lane state modeling plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD1_LANE_STATE_MODELING_PLAN.md`
+
+It records:
+
+- current baseline:
+  - `a8ae115 Add Packet 5 Pad 1 lane state modeling decision review`
+- planning-only lane-state vocabulary
+- future read-only lane families for accepted Packet 5 keys
+- proposed descriptor fields for future static metadata
+- likely future file ownership:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- Packet 5 accepted progress through Packet 5E
+- Packet 5 is not complete
+- no implementation, tests, runtime lane state, runtime state mutation,
+  dispatch, command execution, MIDI, ports, package metadata, active behavior,
+  or hardware behavior is authorized
+
+The plan recommends a docs-only review/acceptance gate next before any
+test-first implementation.
 
 ## Latest Hardware Manual Reference Inventory
 
