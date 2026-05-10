@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5216d72 Add behavior parity progress report after Packet 5C
+bfe1e72 Add behavior parity progress report review after Packet 5C
 
 ## Current Phase
 
@@ -247,6 +247,9 @@ The broader behavior-parity progress report after Packet 5C has now been
 documented as the current consolidation checkpoint.
 The broader behavior-parity progress report after Packet 5C review has now
 accepted that consolidation checkpoint.
+The docs-only Packet 5D BD Silky lane behavior plan has now been documented
+and recommends a tiny future read-only `BI`/`ST`/`SK`/`SC`/`SBH`
+implementation scope.
 
 ## Current Safety State
 
@@ -301,13 +304,13 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 5D BD Silky lane behavior plan, a
-user-facing progress/timeline update, or a pause at this accepted Packet 5C
-progress report review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the Packet 5D
+BD Silky lane behavior plan, a user-facing progress/timeline update, or a
+pause at this Packet 5D planning checkpoint.
 
-Do not implement BD Plastic execution, BD Silky behavior, Pad 1 BD Acoustic
-behavior, runtime mutation, dispatch, MIDI, ports, active CLI behavior, package
-metadata, or any runtime execution layer yet.
+Do not implement BD Silky execution, Pad 1 BD Acoustic behavior, runtime
+mutation, dispatch, MIDI, ports, active CLI behavior, package metadata, or any
+runtime execution layer yet.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation
 checkpoint is:
@@ -6367,6 +6370,41 @@ It records:
 The review recommends a docs-only Packet 5D BD Silky lane behavior plan if
 continuing implementation, a user-facing progress/timeline update, or a pause
 at this accepted progress report checkpoint.
+
+## Latest Packet 5D BD Silky Lane Behavior Plan
+
+The latest V1.34 behavior parity Packet 5D BD Silky lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5D_BD_SILKY_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline `bfe1e72 Add behavior parity progress report review after
+  Packet 5C`
+- Packet 5D identity:
+  - Pad 1 BD Silky Lane Behavior Parity
+- planned future Packet 5D scope:
+  - `BI`: load Pad 1 BD Silky profiled anchor
+  - `ST`: BD Silky smooth tone discovery
+  - `SK`: BD Silky kick/body discovery
+  - `SC`: BD Silky click/dust discovery
+  - `SBH`: return Pad 1 BD Silky to anchor
+- already-covered context:
+  - `SM`: show BD Silky menu/status
+- planned future implementation files:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update expected because `tests/test_behavior_pad1_lane.py`
+  is already covered by `=== Test: Behavior Pad 1 Lane ===`
+- Packet 5A, Packet 5B, and Packet 5C behavior must remain unchanged
+- Pad 1 BD Acoustic behavior, runtime mutation, dispatch, MIDI, ports, package
+  metadata, active behavior, and hardware behavior remain deferred
+
+The plan adds no implementation, tests, CLI wiring, MIDI, ports, package
+metadata, active behavior, or hardware behavior.
+
+The plan recommends a docs-only Packet 5D review/acceptance gate next before
+any implementation.
 
 ## Do-Not-Touch Files
 

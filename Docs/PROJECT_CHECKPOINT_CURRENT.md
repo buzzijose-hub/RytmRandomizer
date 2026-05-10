@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- bfe1e72 Add behavior parity progress report review after Packet 5C
 - 5216d72 Add behavior parity progress report after Packet 5C
 - 61072b7 Add Packet 5C BD Plastic lane behavior checkpoint review
 - 9faecea Add Packet 5C BD Plastic lane behavior checkpoint
@@ -12049,6 +12050,49 @@ GUI/capture, or hardware validation exists.
 Next recommended task is a docs-only Packet 5D BD Silky lane behavior plan, a
 user-facing progress/timeline update, or a pause at this accepted progress
 report checkpoint.
+
+## V1.34 Behavior Parity Packet 5D BD Silky Lane Behavior Plan
+
+The Packet 5D BD Silky lane behavior plan defines the next tiny Packet 5
+planning branch after the accepted behavior-parity progress report review
+after Packet 5C.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5D_BD_SILKY_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline:
+
+- `bfe1e72 Add behavior parity progress report review after Packet 5C`
+
+Planned future Packet 5D scope:
+
+- `BI`: load Pad 1 BD Silky profiled anchor
+- `ST`: BD Silky smooth tone discovery
+- `SK`: BD Silky kick/body discovery
+- `SC`: BD Silky click/dust discovery
+- `SBH`: return Pad 1 BD Silky to anchor
+
+Already-covered context:
+
+- `SM`: show BD Silky menu/status
+
+Allowed future implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update is expected because `tests/test_behavior_pad1_lane.py`
+is already covered by `=== Test: Behavior Pad 1 Lane ===`.
+
+The plan keeps Packet 5A, Packet 5B, and Packet 5C behavior unchanged. Pad 1
+BD Acoustic behavior, runtime mutation, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior remain deferred.
+
+This documentation slice adds no implementation, tests, CLI wiring, dispatch,
+MIDI, ports, package metadata, active behavior, or hardware behavior.
+
+Next recommended task is a docs-only Packet 5D plan review/acceptance gate.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 

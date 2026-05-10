@@ -358,3 +358,24 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 18. Packet 5D Plan Follow-Up
+
+A docs-only Packet 5D BD Silky lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5D_BD_SILKY_LANE_BEHAVIOR_PLAN.md`
+
+The plan defines a future read-only Pad 1 BD Silky behavior scope for:
+
+- `BI`: load Pad 1 BD Silky profiled anchor
+- `ST`: BD Silky smooth tone discovery
+- `SK`: BD Silky kick/body discovery
+- `SC`: BD Silky click/dust discovery
+- `SBH`: return Pad 1 BD Silky to anchor
+
+The plan keeps `SM` as already-covered Packet 1 menu/status context. It keeps
+Pad 1 BD Acoustic behavior, runtime mutation, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior deferred.
+
+The plan adds no implementation, tests, CLI wiring, MIDI, ports, package
+metadata, active behavior, or hardware behavior.
