@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d6ecbac
+1d4c16e
 
 ## Protected Reference
 
@@ -59,7 +59,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d6ecbac Add Packet 5E BD Acoustic anchor behavior plan
+- current HEAD: 1d4c16e Add Packet 5E BD Acoustic anchor behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -268,14 +268,17 @@ It captures:
   docs-only Packet 5E BD Acoustic anchor behavior plan has now been documented
   and recommends a tiny future read-only `BA` implementation scope; the
   docs-only Packet 5E BD Acoustic anchor behavior plan review has now accepted
-  that tiny future read-only `BA` implementation scope
+  that tiny future read-only `BA` implementation scope; the Packet 5E
+  read-only Pad 1 BD Acoustic anchor behavior implementation is now complete
+  and documented in a checkpoint for review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 5E TDD implementation for read-only Pad 1
-  BD Acoustic `BA` anchor intent behavior, user-facing progress/timeline
-  update, or pause at this accepted Packet 5E planning checkpoint
+- next recommended task: docs-only Packet 5E checkpoint review, broader
+  behavior-parity progress report after Packet 5E, user-facing
+  progress/timeline update, or pause at this clean Packet 5E implementation
+  checkpoint
 - closeout command
 - stop condition
 
@@ -11715,6 +11718,39 @@ metadata, active behavior, or hardware behavior.
 
 The next recommended task is the tiny Packet 5E TDD implementation for
 read-only Pad 1 BD Acoustic `BA` anchor intent behavior.
+
+## Packet 5E BD Acoustic Anchor Behavior Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5E_BD_ACOUSTIC_ANCHOR_BEHAVIOR_CHECKPOINT.md`
+records completion of the Packet 5E read-only BD Acoustic anchor behavior
+slice.
+
+Implementation milestone:
+
+- `1d4c16e Add Packet 5E BD Acoustic anchor behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+Accepted behavior:
+
+- `BA`: read-only Pad 1 BD Acoustic anchor/load intent
+- metadata copied from `PAD1_COMMANDS`
+- target pad `1`
+- lane `Pad 1 BD Acoustic`
+- lane action `load_bd_acoustic_anchor`
+- BD Acoustic anchor dependency recorded only
+- group profile `"4"` not recorded as a dependency
+- Pad 4 not recorded as a dependency
+
+Packet 5A, Packet 5B, Packet 5C, and Packet 5D behavior remain unchanged.
+
+The checkpoint adds no CLI execution wiring, dispatch, command execution,
+MIDI, ports, package metadata, active behavior, or hardware behavior.
+
+The next recommended task is a docs-only Packet 5E checkpoint review.
 
 ## Hardware Manual Reference Inventory
 
