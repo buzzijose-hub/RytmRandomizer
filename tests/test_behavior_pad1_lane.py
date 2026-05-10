@@ -304,12 +304,144 @@ SUPPORTED_PAD1_BD_PLASTIC_CASES = (
     ),
 )
 
+SUPPORTED_PAD1_BD_SILKY_CASES = (
+    (
+        "BI",
+        "load Pad 1 BD Silky profiled anchor",
+        "pad1-lane/bd-silky-anchor-load",
+        "supported_pad1_bd_silky_anchor_load_intent",
+        "load_bd_silky_profiled_anchor",
+        "pad1_bd_silky_profiled_anchor",
+        "",
+        False,
+        (
+            "BI: load Pad 1 BD Silky profiled anchor",
+            "Read-only Pad 1 BD Silky lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Silky",
+            "Lane action: load_bd_silky_profiled_anchor",
+            "BD Silky anchor/profile dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "ST",
+        "BD Silky smooth tone discovery",
+        "pad1-lane/bd-silky-discovery",
+        "supported_pad1_bd_silky_discovery_intent",
+        "bd_silky_smooth_tone_discovery",
+        "pad1_bd_silky_engine_profile",
+        "future_bd_silky_discovery_depth",
+        True,
+        (
+            "ST: BD Silky smooth tone discovery",
+            "Read-only Pad 1 BD Silky lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Silky",
+            "Lane action: bd_silky_smooth_tone_discovery",
+            "BD Silky engine/profile dependency is recorded only.",
+            "Future BD Silky discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "SK",
+        "BD Silky kick/body discovery",
+        "pad1-lane/bd-silky-discovery",
+        "supported_pad1_bd_silky_discovery_intent",
+        "bd_silky_kick_body_discovery",
+        "pad1_bd_silky_engine_profile",
+        "future_bd_silky_discovery_depth",
+        True,
+        (
+            "SK: BD Silky kick/body discovery",
+            "Read-only Pad 1 BD Silky lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Silky",
+            "Lane action: bd_silky_kick_body_discovery",
+            "BD Silky engine/profile dependency is recorded only.",
+            "Future BD Silky discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "SC",
+        "BD Silky click/dust discovery",
+        "pad1-lane/bd-silky-discovery",
+        "supported_pad1_bd_silky_discovery_intent",
+        "bd_silky_click_dust_discovery",
+        "pad1_bd_silky_engine_profile",
+        "future_bd_silky_discovery_depth",
+        True,
+        (
+            "SC: BD Silky click/dust discovery",
+            "Read-only Pad 1 BD Silky lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Silky",
+            "Lane action: bd_silky_click_dust_discovery",
+            "BD Silky engine/profile dependency is recorded only.",
+            "Future BD Silky discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "SBH",
+        "return Pad 1 BD Silky to anchor",
+        "pad1-lane/bd-silky-anchor-return",
+        "supported_pad1_bd_silky_anchor_return_intent",
+        "return_bd_silky_to_anchor",
+        "pad1_bd_silky_anchor_state",
+        "",
+        False,
+        (
+            "SBH: return Pad 1 BD Silky to anchor",
+            "Read-only Pad 1 BD Silky lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Silky",
+            "Lane action: return_bd_silky_to_anchor",
+            "BD Silky anchor dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+)
+
 DEFERRED_PAD1_LANE_KEYS = (
-    "BI",
-    "ST",
-    "SK",
-    "SC",
-    "SBH",
+    "BA",
 )
 
 ALREADY_COVERED_PAD1_CONTEXT_KEYS = ("FM", "PD", "SM", "BH", "BC", "BS", "BF")
@@ -615,6 +747,107 @@ def test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources():
         assert result.metadata["executes_command"] is False
 
 
+def test_bi_st_sk_sc_and_sbh_return_read_only_bd_silky_lane_intents():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    for (
+        command_key,
+        expected_label,
+        expected_family,
+        expected_reason,
+        expected_lane_action,
+        expected_engine_dependency,
+        expected_depth_dependency,
+        expected_depth_required,
+        expected_display,
+    ) in SUPPORTED_PAD1_BD_SILKY_CASES:
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == expected_family
+        assert result.reason == expected_reason
+        assert result.target_pad == 1
+        assert result.lane == "Pad 1 BD Silky"
+        assert result.lane_action == expected_lane_action
+        assert result.engine_dependency == expected_engine_dependency
+        assert result.depth_dependency == expected_depth_dependency
+        assert result.state_changed is False
+        assert result.prompt_required is False
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.mutates_lane_state is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.display_lines == expected_display
+        assert result.metadata["requires_depth_selection"] is expected_depth_required
+
+
+def test_bi_st_sk_sc_and_sbh_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    expected = {
+        "BI": {
+            "source_command_type": "load",
+            "lane_action": "load_bd_silky_profiled_anchor",
+            "requires_bd_silky_engine_profile": False,
+            "requires_bd_silky_anchor": True,
+            "requires_depth_selection": False,
+        },
+        "ST": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_silky_smooth_tone_discovery",
+            "requires_bd_silky_engine_profile": True,
+            "requires_bd_silky_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "SK": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_silky_kick_body_discovery",
+            "requires_bd_silky_engine_profile": True,
+            "requires_bd_silky_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "SC": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_silky_click_dust_discovery",
+            "requires_bd_silky_engine_profile": True,
+            "requires_bd_silky_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "SBH": {
+            "source_command_type": "anchor_return",
+            "lane_action": "return_bd_silky_to_anchor",
+            "requires_bd_silky_engine_profile": False,
+            "requires_bd_silky_anchor": True,
+            "requires_depth_selection": False,
+        },
+    }
+
+    for command_key, expected_metadata in expected.items():
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.metadata["source"] == "PAD1_COMMANDS"
+        assert result.metadata["source_command_scope"] == "pad_1"
+        assert result.metadata["source_v134_reference_command"] is True
+        assert result.metadata["source_scaffold_only"] is True
+        assert result.metadata["target_pad"] == 1
+        assert result.metadata["lane"] == "pad_1_bd_silky"
+        for key, value in expected_metadata.items():
+            assert result.metadata[key] == value
+        assert result.metadata["mock_only"] is True
+        assert result.metadata["sends_real_midi"] is False
+        assert result.metadata["opens_ports"] is False
+        assert result.metadata["hardware_required"] is False
+        assert result.metadata["active_behavior"] is False
+        assert result.metadata["mutates_runtime_state"] is False
+        assert result.metadata["dispatches_command"] is False
+        assert result.metadata["executes_command"] is False
+
+
 def test_pad1_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad1_lane import Pad1LaneBehaviorResult
 
@@ -647,6 +880,11 @@ def test_repeated_pad1_lane_evaluations_are_deterministic():
     assert evaluate_pad1_lane_behavior("PK") == evaluate_pad1_lane_behavior("PK")
     assert evaluate_pad1_lane_behavior("PX") == evaluate_pad1_lane_behavior("PX")
     assert evaluate_pad1_lane_behavior("PBH") == evaluate_pad1_lane_behavior("PBH")
+    assert evaluate_pad1_lane_behavior("BI") == evaluate_pad1_lane_behavior("BI")
+    assert evaluate_pad1_lane_behavior("ST") == evaluate_pad1_lane_behavior("ST")
+    assert evaluate_pad1_lane_behavior("SK") == evaluate_pad1_lane_behavior("SK")
+    assert evaluate_pad1_lane_behavior("SC") == evaluate_pad1_lane_behavior("SC")
+    assert evaluate_pad1_lane_behavior("SBH") == evaluate_pad1_lane_behavior("SBH")
 
 
 def test_deferred_packet_5_pad1_lane_keys_fail_safely():
@@ -787,6 +1025,8 @@ if __name__ == "__main__":
     test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources()
     test_bp_pt_pk_px_and_pbh_return_read_only_bd_plastic_lane_intents()
     test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources()
+    test_bi_st_sk_sc_and_sbh_return_read_only_bd_silky_lane_intents()
+    test_bi_st_sk_sc_and_sbh_metadata_contains_expected_passive_sources()
     test_pad1_lane_metadata_is_copied_and_immutable()
     test_repeated_pad1_lane_evaluations_are_deterministic()
     test_deferred_packet_5_pad1_lane_keys_fail_safely()

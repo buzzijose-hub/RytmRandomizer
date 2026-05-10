@@ -14,12 +14,9 @@ from .commands import COMMANDS, PAD1_COMMANDS
 PACKET_5A_PAD1_CURRENT_ENGINE_KEYS = ("BR", "BM")
 PACKET_5B_PAD1_BD_FM_KEYS = ("FT", "FK", "FG", "FZ")
 PACKET_5C_PAD1_BD_PLASTIC_KEYS = ("BP", "PT", "PK", "PX", "PBH")
+PACKET_5D_PAD1_BD_SILKY_KEYS = ("BI", "ST", "SK", "SC", "SBH")
 DEFERRED_PACKET_5_PAD1_LANE_KEYS = (
-    "BI",
-    "ST",
-    "SK",
-    "SC",
-    "SBH",
+    "BA",
 )
 
 _LANE_ACTIONS = {
@@ -34,6 +31,11 @@ _LANE_ACTIONS = {
     "PK": "bd_plastic_kick_body_discovery",
     "PX": "bd_plastic_rubber_experimental_discovery",
     "PBH": "return_bd_plastic_to_anchor",
+    "BI": "load_bd_silky_profiled_anchor",
+    "ST": "bd_silky_smooth_tone_discovery",
+    "SK": "bd_silky_kick_body_discovery",
+    "SC": "bd_silky_click_dust_discovery",
+    "SBH": "return_bd_silky_to_anchor",
 }
 
 _DEPTH_DEPENDENCIES = {
@@ -48,6 +50,11 @@ _DEPTH_DEPENDENCIES = {
     "PK": "future_bd_plastic_discovery_depth",
     "PX": "future_bd_plastic_discovery_depth",
     "PBH": "",
+    "BI": "",
+    "ST": "future_bd_silky_discovery_depth",
+    "SK": "future_bd_silky_discovery_depth",
+    "SC": "future_bd_silky_discovery_depth",
+    "SBH": "",
 }
 
 _REQUIRES_DEPTH_SELECTION = {
@@ -62,6 +69,11 @@ _REQUIRES_DEPTH_SELECTION = {
     "PK": True,
     "PX": True,
     "PBH": False,
+    "BI": False,
+    "ST": True,
+    "SK": True,
+    "SC": True,
+    "SBH": False,
 }
 
 _BEHAVIOR_FAMILIES = {
@@ -76,6 +88,11 @@ _BEHAVIOR_FAMILIES = {
     "PK": "pad1-lane/bd-plastic-discovery",
     "PX": "pad1-lane/bd-plastic-discovery",
     "PBH": "pad1-lane/bd-plastic-anchor-return",
+    "BI": "pad1-lane/bd-silky-anchor-load",
+    "ST": "pad1-lane/bd-silky-discovery",
+    "SK": "pad1-lane/bd-silky-discovery",
+    "SC": "pad1-lane/bd-silky-discovery",
+    "SBH": "pad1-lane/bd-silky-anchor-return",
 }
 
 _REASONS = {
@@ -90,6 +107,11 @@ _REASONS = {
     "PK": "supported_pad1_bd_plastic_discovery_intent",
     "PX": "supported_pad1_bd_plastic_discovery_intent",
     "PBH": "supported_pad1_bd_plastic_anchor_return_intent",
+    "BI": "supported_pad1_bd_silky_anchor_load_intent",
+    "ST": "supported_pad1_bd_silky_discovery_intent",
+    "SK": "supported_pad1_bd_silky_discovery_intent",
+    "SC": "supported_pad1_bd_silky_discovery_intent",
+    "SBH": "supported_pad1_bd_silky_anchor_return_intent",
 }
 
 _LANES = {
@@ -104,6 +126,11 @@ _LANES = {
     "PK": "Pad 1 BD Plastic",
     "PX": "Pad 1 BD Plastic",
     "PBH": "Pad 1 BD Plastic",
+    "BI": "Pad 1 BD Silky",
+    "ST": "Pad 1 BD Silky",
+    "SK": "Pad 1 BD Silky",
+    "SC": "Pad 1 BD Silky",
+    "SBH": "Pad 1 BD Silky",
 }
 
 _LANE_METADATA = {
@@ -118,6 +145,11 @@ _LANE_METADATA = {
     "PK": "pad_1_bd_plastic",
     "PX": "pad_1_bd_plastic",
     "PBH": "pad_1_bd_plastic",
+    "BI": "pad_1_bd_silky",
+    "ST": "pad_1_bd_silky",
+    "SK": "pad_1_bd_silky",
+    "SC": "pad_1_bd_silky",
+    "SBH": "pad_1_bd_silky",
 }
 
 _ENGINE_DEPENDENCIES = {
@@ -132,6 +164,11 @@ _ENGINE_DEPENDENCIES = {
     "PK": "pad1_bd_plastic_engine_profile",
     "PX": "pad1_bd_plastic_engine_profile",
     "PBH": "pad1_bd_plastic_anchor_state",
+    "BI": "pad1_bd_silky_profiled_anchor",
+    "ST": "pad1_bd_silky_engine_profile",
+    "SK": "pad1_bd_silky_engine_profile",
+    "SC": "pad1_bd_silky_engine_profile",
+    "SBH": "pad1_bd_silky_anchor_state",
 }
 
 _INTENT_LINES = {
@@ -146,6 +183,11 @@ _INTENT_LINES = {
     "PK": "Read-only Pad 1 BD Plastic lane intent.",
     "PX": "Read-only Pad 1 BD Plastic lane intent.",
     "PBH": "Read-only Pad 1 BD Plastic lane intent.",
+    "BI": "Read-only Pad 1 BD Silky lane intent.",
+    "ST": "Read-only Pad 1 BD Silky lane intent.",
+    "SK": "Read-only Pad 1 BD Silky lane intent.",
+    "SC": "Read-only Pad 1 BD Silky lane intent.",
+    "SBH": "Read-only Pad 1 BD Silky lane intent.",
 }
 
 _DEPENDENCY_LINES = {
@@ -160,6 +202,11 @@ _DEPENDENCY_LINES = {
     "PK": "BD Plastic engine/profile dependency is recorded only.",
     "PX": "BD Plastic engine/profile dependency is recorded only.",
     "PBH": "BD Plastic anchor dependency is recorded only.",
+    "BI": "BD Silky anchor/profile dependency is recorded only.",
+    "ST": "BD Silky engine/profile dependency is recorded only.",
+    "SK": "BD Silky engine/profile dependency is recorded only.",
+    "SC": "BD Silky engine/profile dependency is recorded only.",
+    "SBH": "BD Silky anchor dependency is recorded only.",
 }
 
 
@@ -203,6 +250,7 @@ def evaluate_pad1_lane_behavior(command_key):
         *PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
         *PACKET_5B_PAD1_BD_FM_KEYS,
         *PACKET_5C_PAD1_BD_PLASTIC_KEYS,
+        *PACKET_5D_PAD1_BD_SILKY_KEYS,
     ):
         return _accepted_pad1_lane_result(key)
 
@@ -329,6 +377,15 @@ def _accepted_metadata(
             }
         )
 
+    if command_key in PACKET_5D_PAD1_BD_SILKY_KEYS:
+        metadata.update(
+            {
+                "requires_current_engine_state": False,
+                "requires_bd_silky_engine_profile": command_key in ("ST", "SK", "SC"),
+                "requires_bd_silky_anchor": command_key in ("BI", "SBH"),
+            }
+        )
+
     return metadata
 
 
@@ -341,6 +398,9 @@ def _depth_display_lines(command_key, depth_dependency):
 
     if command_key in PACKET_5C_PAD1_BD_PLASTIC_KEYS:
         return ("Future BD Plastic discovery depth is recorded only.",)
+
+    if command_key in PACKET_5D_PAD1_BD_SILKY_KEYS:
+        return ("Future BD Silky discovery depth is recorded only.",)
 
     return ("Future safe mutation depth is recorded only.",)
 
@@ -364,6 +424,7 @@ __all__ = [
     "PACKET_5A_PAD1_CURRENT_ENGINE_KEYS",
     "PACKET_5B_PAD1_BD_FM_KEYS",
     "PACKET_5C_PAD1_BD_PLASTIC_KEYS",
+    "PACKET_5D_PAD1_BD_SILKY_KEYS",
     "Pad1LaneBehaviorResult",
     "evaluate_pad1_lane_behavior",
 ]
