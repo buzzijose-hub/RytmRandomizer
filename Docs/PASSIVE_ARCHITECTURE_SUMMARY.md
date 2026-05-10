@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-762ece4
+794aabb
 
 ## Protected Reference
 
@@ -10932,6 +10932,46 @@ ports, package metadata, active behavior, runtime behavior, or hardware
 behavior is authorized.
 
 The next recommended task is a docs-only Packet 7 Pad 3 lane behavior plan.
+
+## Packet 7 Pad 3 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_7_PAD3_LANE_BEHAVIOR_PLAN.md` documents the
+next tiny Pad 3 lane behavior planning slice.
+
+Current baseline before the plan:
+
+- `794aabb Add next behavior parity packet selection review after Packet 6J`
+
+Recommended future implementation scope:
+
+- `P3A`: return Pad 3 to SY Raw Mid Bass anchor / home
+
+Proposed read-only behavior:
+
+- Pad 3 SY Raw Mid Bass home anchor return intent
+- source metadata `PAD3_COMMANDS`
+- target pad `3`
+- lane `Pad 3 SY Raw lane`
+- behavior family `pad3-lane/sy-raw-mid-bass-home-anchor`
+- lane action `return_pad3_sy_raw_mid_bass_home_anchor`
+- intent kind `anchor_return`
+
+Deferred Pad 3 scope:
+
+- `P3M`: already covered by Packet 1 menu/status behavior
+- `SW`
+- `SL`
+- `SB`
+- `SX`
+- `SA`
+- `P3R`
+- `P3X`
+
+The plan confirms no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior is authorized.
+
+The next recommended task is a docs-only Packet 7 plan review.
 
 ## Packet 6I Pad 2 Lane Behavior Plan
 

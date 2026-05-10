@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 794aabb Add next behavior parity packet selection review after Packet 6J
 - 762ece4 Add next behavior parity packet selection after Packet 6J
 - ccc9499 Add behavior parity progress report review after Packet 6J
 - e82cab7 Add behavior parity progress report after Packet 6J
@@ -11479,6 +11480,49 @@ ports, package metadata, active behavior, runtime behavior, or hardware
 behavior is authorized.
 
 Next recommended task is a docs-only Packet 7 Pad 3 lane behavior plan.
+
+## Latest Packet 7 Pad 3 Lane Behavior Plan
+
+The docs-only Packet 7 Pad 3 lane behavior plan has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_7_PAD3_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `794aabb Add next behavior parity packet selection review after Packet 6J`
+
+Recommended future Packet 7 implementation scope:
+
+- `P3A` only
+
+Proposed read-only behavior:
+
+- Pad 3 SY Raw Mid Bass home anchor return intent
+- source metadata `PAD3_COMMANDS`
+- target pad `3`
+- lane `Pad 3 SY Raw lane`
+- behavior family `pad3-lane/sy-raw-mid-bass-home-anchor`
+- lane action `return_pad3_sy_raw_mid_bass_home_anchor`
+- intent kind `anchor_return`
+
+Deferred Pad 3 scope:
+
+- `P3M`: covered by Packet 1 menu/status behavior
+- `SW`
+- `SL`
+- `SB`
+- `SX`
+- `SA`
+- `P3R`
+- `P3X`
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only Packet 7 plan review.
 
 ## Latest Packet 6I Pad 2 Lane Behavior Plan
 
