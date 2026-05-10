@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 3e617a7 Add behavior parity progress report after Packet 4
 - e93d459 Add Packet 4 completion checkpoint review
 - 18e72da Add Packet 4 completion checkpoint
 - 737a8f8 Add Packet 4D group anchor checkpoint review
@@ -4065,6 +4066,71 @@ hardware validation exists.
 Next recommended task:
 
 - docs-only review/acceptance gate for this progress report
+
+## V1.34 Behavior Parity Implementation Progress Report After Packet 4 Review
+
+The broader behavior-parity implementation progress report after Packet 4
+review accepts the report as the current behavior-parity progress baseline
+before any next packet planning.
+
+Review document:
+
+- Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_4_REVIEW.md
+
+Accepted progress report:
+
+- Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_4.md
+
+Accepted progress report milestone:
+
+- 3e617a7 Add behavior parity progress report after Packet 4
+
+Accepted current behavior-parity state:
+
+- Packet 1 complete for menu/status and utility/session intent.
+- Packet 2 has accepted read-only anchor/profile progress.
+- Packet 3 complete for mutation-depth and guarded input intent.
+- Packet 4 complete for scene and group intent.
+
+Accepted behavior helper surface:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `rytm_randomizer/behavior_scene_group.py`
+
+Accepted behavior closeout coverage:
+
+- `=== Test: Behavior Menu Utility ===`
+- `=== Test: Behavior Anchor Profile ===`
+- `=== Test: Behavior Mutation Depth ===`
+- `=== Test: Behavior Scene Group ===`
+
+Still deferred:
+
+- remaining Packet 2 anchor/profile widening
+- selected profile workflow
+- rotations
+- Pad 1 lane behavior
+- Pad 2 lane behavior
+- Pad 3 lane behavior
+- Pad 4 lane behavior
+- BD FM, BD Plastic, and BD Silky discovery/return behavior
+- profile `"4"` / My BD Acoustic command `BA`
+- undo/commit/state behavior
+- runtime prompt behavior
+- active execution behavior
+- real MIDI or hardware behavior
+
+The review confirms no CLI execution wiring, dispatch, runtime execution,
+MIDI, ports, package metadata, active CLI behavior, hardware behavior, or
+hardware validation exists.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task:
+
+- docs-only next behavior-parity packet planning gate
 
 ## Next Phase Planning Gate
 

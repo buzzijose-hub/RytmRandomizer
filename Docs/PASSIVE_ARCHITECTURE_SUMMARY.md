@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-e93d459
+3e617a7
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: e93d459 Add Packet 4 completion checkpoint review
+- current HEAD: 3e617a7 Add behavior parity progress report after Packet 4
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -209,16 +209,16 @@ It captures:
   behavior phase; the broader behavior-parity implementation progress report
   after Packet 4 now summarizes Packet 1 completion, Packet 2 accepted
   progress, Packet 3 completion, and Packet 4 completion as the current
-  read-only behavior foundation
+  read-only behavior foundation; the broader behavior-parity implementation
+  progress report after Packet 4 review has now accepted that report as the
+  current progress baseline before any next packet planning
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a docs-only review/acceptance gate for the
-  broader behavior-parity implementation progress report after Packet 4,
-  write a more user-facing progress/timeline update, write a docs-only next
-  behavior-parity packet planning gate, or pause at the clean progress report
-  checkpoint
+- next recommended task: write a docs-only next behavior-parity packet
+  planning gate, write a more user-facing progress/timeline update, or pause
+  at the clean progress report review checkpoint
 - closeout command
 - stop condition
 
@@ -3630,6 +3630,59 @@ hardware validation exists.
 
 The next recommended task is a docs-only review/acceptance gate for this
 progress report. Hardware remains off.
+
+## V1.34 Behavior Parity Implementation Progress Report After Packet 4 Review
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_4_REVIEW.md`
+accepts
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_4.md`
+as the current behavior-parity progress baseline before any next packet
+planning.
+
+Accepted progress report milestone:
+
+- `3e617a7 Add behavior parity progress report after Packet 4`
+
+Accepted current behavior-parity state:
+
+- Packet 1 complete for menu/status and utility/session intent
+- Packet 2 has accepted read-only anchor/profile progress
+- Packet 3 complete for mutation-depth and guarded input intent
+- Packet 4 complete for scene and group intent
+
+Accepted behavior helper surface:
+
+- `rytm_randomizer/behavior_menu_utility.py`
+- `rytm_randomizer/behavior_anchor_profile.py`
+- `rytm_randomizer/behavior_mutation_depth.py`
+- `rytm_randomizer/behavior_scene_group.py`
+
+Accepted behavior closeout coverage:
+
+- `=== Test: Behavior Menu Utility ===`
+- `=== Test: Behavior Anchor Profile ===`
+- `=== Test: Behavior Mutation Depth ===`
+- `=== Test: Behavior Scene Group ===`
+
+Still deferred:
+
+- remaining Packet 2 anchor/profile widening
+- selected profile workflow
+- rotations
+- Pad 1 through Pad 4 lane behavior
+- BD FM, BD Plastic, and BD Silky discovery/return behavior
+- profile `"4"` / My BD Acoustic command `BA`
+- undo/commit/state behavior
+- runtime prompt behavior
+- active execution behavior
+- real MIDI or hardware behavior
+
+The review confirms no CLI execution wiring, dispatch, runtime execution,
+MIDI, ports, package metadata, active CLI behavior, hardware behavior, or
+hardware validation exists.
+
+The next recommended task is a docs-only next behavior-parity packet planning
+gate. Hardware remains off.
 
 The previous current-session handoff was:
 
