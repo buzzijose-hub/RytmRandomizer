@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-05d69c8 Add Packet 5A Pad 1 lane behavior checkpoint
+217e86c Add Packet 5A Pad 1 lane behavior checkpoint review
 
 ## Current Phase
 
@@ -217,6 +217,8 @@ The Packet 5A read-only Pad 1 lane behavior implementation is now complete
 and documented in a checkpoint for review.
 The Packet 5A Pad 1 lane behavior checkpoint review has now accepted the
 completed read-only `BR`/`BM` behavior slice.
+The broader behavior-parity progress report after Packet 5A has now been
+documented as the current consolidation checkpoint.
 
 ## Current Safety State
 
@@ -271,9 +273,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader behavior-parity progress report after
-Packet 5A, a Packet 5B docs-only plan for a tiny next Pad 1 lane slice, or a
-pause at this accepted Packet 5A checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the broader
+behavior-parity progress report after Packet 5A, a Packet 5B docs-only plan
+for a tiny next Pad 1 lane slice, or a pause at this clean progress report
+checkpoint.
 
 Do not implement BD FM discovery execution, BD Plastic discovery execution, BD
 Silky discovery execution, Pad 1 engine rotation execution, Pad 1 current-engine
@@ -5849,6 +5852,45 @@ It records:
 
 The review recommends a broader behavior-parity progress report after Packet
 5A next.
+
+## Latest Behavior-Parity Progress Report After Packet 5A
+
+The latest broader behavior-parity progress report is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_5A.md`
+
+It records:
+
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5A accepted progress
+- Packet 5 not complete
+- current behavior helpers:
+  - `rytm_randomizer/behavior_menu_utility.py`
+  - `rytm_randomizer/behavior_anchor_profile.py`
+  - `rytm_randomizer/behavior_mutation_depth.py`
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `rytm_randomizer/behavior_pad1_lane.py`
+- current behavior closeout labels:
+  - `=== Test: Behavior Menu Utility ===`
+  - `=== Test: Behavior Anchor Profile ===`
+  - `=== Test: Behavior Mutation Depth ===`
+  - `=== Test: Behavior Scene Group ===`
+  - `=== Test: Behavior Pad 1 Lane ===`
+- deferred Packet 5 scope:
+  - BD FM discovery/return behavior
+  - BD Plastic anchor/discovery/return behavior
+  - BD Silky anchor/discovery/return behavior
+  - Pad 1 BD Acoustic anchor behavior
+  - deeper Pad 1 lane state modeling
+  - runtime mutation/execution behavior
+- no CLI execution wiring, dispatch, MIDI, ports, active behavior, package
+  metadata, or hardware behavior
+
+The report recommends a docs-only review/acceptance gate next before choosing
+Packet 5B or pausing for a more user-facing progress/timeline update.
 
 ## Do-Not-Touch Files
 

@@ -262,7 +262,8 @@ Safe next options:
 
 ## Recommendation
 
-Create a broader behavior-parity progress report after Packet 5A next.
+At review time, the recommendation was to create a broader behavior-parity
+progress report after Packet 5A next.
 
 Do not implement BD FM, BD Plastic, BD Silky, Pad 1 BD Acoustic, runtime
 mutation, dispatch, MIDI, ports, active CLI behavior, package metadata, or
@@ -278,3 +279,12 @@ and `BM`.
 Packet 5 is not complete.
 
 Hardware remains off.
+
+## Progress Report Follow-Up
+
+A broader behavior-parity progress report after Packet 5A now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_5A.md`
+
+It records Packet 5A as accepted progress while confirming Packet 5 is not
+complete and recommends a docs-only review/acceptance gate next.
