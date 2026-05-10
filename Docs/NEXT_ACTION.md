@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-47805bc Add next behavior parity planning gate after Packet 5 descriptors
+02fc13a Add next behavior parity planning gate review after Packet 5 descriptors
 
 ## Current Phase
 
@@ -304,6 +304,8 @@ timeline has now been documented and recommends Packet 6 Pad 2 lane behavior
 planning as the next safe branch.
 The docs-only review gate for that planning decision has now accepted Packet
 6 Pad 2 lane behavior planning as the next safe branch.
+The docs-only Packet 6 Pad 2 lane behavior plan has now been documented and
+recommends a tiny future Packet 6A scope for read-only `P2B` intent only.
 
 ## Current Safety State
 
@@ -358,8 +360,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 6 Pad 2 lane behavior plan or a
-pause at this accepted planning-gate review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the Packet 6
+Pad 2 lane behavior plan, a tiny TDD Packet 6A implementation only if the plan
+is accepted, or a pause at this planning checkpoint.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -2230,6 +2233,42 @@ It records:
   - `P2Z`
 
 The review recommends a docs-only Packet 6 Pad 2 lane behavior plan next.
+
+## Latest Packet 6 Pad 2 Lane Behavior Plan
+
+The latest Packet 6 Pad 2 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline before the plan:
+  - `02fc13a Add next behavior parity planning gate review after Packet 5 descriptors`
+- accepted preceding decision:
+  - keep runtime Pad 1 lane state deferred
+  - proceed with docs-only Packet 6 Pad 2 lane behavior planning
+- existing Pad 2 command family:
+  - `P2M`
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+  - `P2R`
+  - `P2X`
+  - `P2Z`
+- `P2M` is already covered as menu/status intent in Packet 1
+- recommended future Packet 6A implementation scope:
+  - `P2B` only
+- likely future files:
+  - `rytm_randomizer/behavior_pad2_lane.py`
+  - `tests/test_behavior_pad2_lane.py`
+- no implementation, tests, runtime execution, dispatch, MIDI, ports, package
+  metadata, active behavior, or hardware behavior is authorized by the plan
+
+The plan recommends a docs-only review/acceptance gate next.
 
 The latest V1.34 behavior parity implementation progress review is:
 

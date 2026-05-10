@@ -189,3 +189,15 @@ Next recommended branch:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Packet 6 Plan Follow-Up
+
+The docs-only Packet 6 Pad 2 lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It recommends a future tiny Packet 6A implementation scope limited to read-only
+`P2B` intent only.
+
+It adds no implementation, tests, dispatch, command execution, MIDI, ports,
+package metadata, active behavior, runtime behavior, or hardware behavior.
