@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-0bef95a
+7900a90
 
 ## Protected Reference
 
@@ -59,7 +59,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 0bef95a Add behavior parity progress report after Packet 5B
+- current HEAD: 7900a90 Add behavior parity progress report review after
+  Packet 5B
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -239,14 +240,15 @@ It captures:
   broader behavior-parity progress report after Packet 5B has now been
   documented as the current consolidation checkpoint; the broader
   behavior-parity progress report after Packet 5B review has now accepted that
-  consolidation checkpoint
+  consolidation checkpoint; the docs-only Packet 5C BD Plastic lane behavior
+  plan has now been documented
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 5C Pad 1 lane behavior plan,
-  user-facing progress/timeline update, or pause at the accepted Packet 5B
-  progress report review checkpoint
+- next recommended task: docs-only review/acceptance gate for the Packet 5C
+  BD Plastic lane behavior plan, user-facing progress/timeline update, or
+  pause at the clean Packet 5C planning checkpoint
 - closeout command
 - stop condition
 
@@ -11133,6 +11135,36 @@ ports, package metadata, active behavior, or hardware behavior was added.
 The next recommended task is a docs-only Packet 5C Pad 1 lane behavior plan, a
 user-facing progress/timeline update, or a pause at this accepted progress
 report checkpoint.
+
+## Packet 5C BD Plastic Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5C_BD_PLASTIC_LANE_BEHAVIOR_PLAN.md` defines
+the next tiny Packet 5 planning slice.
+
+Planned Packet 5C scope:
+
+- `BP`: load Pad 1 BD Plastic profiled anchor
+- `PT`: BD Plastic tone/modulation discovery
+- `PK`: BD Plastic kick/body discovery
+- `PX`: BD Plastic rubber/experimental discovery
+- `PBH`: return Pad 1 BD Plastic to anchor
+
+Already-covered context:
+
+- `PD`: show BD Plastic menu/status, covered by Packet 1
+
+Future implementation should remain limited to:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+The plan keeps Packet 5A `BR`/`BM` behavior and Packet 5B `FT`/`FK`/`FG`/`FZ`
+behavior unchanged. It keeps BD Silky, Pad 1 BD Acoustic, runtime mutation,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+and hardware behavior deferred.
+
+At plan time, the next recommended task is a docs-only review/acceptance gate
+for this plan.
 
 ## Packet 5A Pad 1 Lane Behavior Checkpoint Review
 

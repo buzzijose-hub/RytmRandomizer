@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-0bef95a Add behavior parity progress report after Packet 5B
+7900a90 Add behavior parity progress report review after Packet 5B
 
 ## Current Phase
 
@@ -234,6 +234,9 @@ The broader behavior-parity progress report after Packet 5B has now been
 documented as the current consolidation checkpoint.
 The broader behavior-parity progress report after Packet 5B review has now
 accepted that consolidation checkpoint.
+The docs-only Packet 5C BD Plastic lane behavior plan has now been documented
+and recommends a tiny future read-only `BP`/`PT`/`PK`/`PX`/`PBH`
+implementation scope.
 
 ## Current Safety State
 
@@ -288,9 +291,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 5C Pad 1 lane behavior plan, a
-user-facing progress/timeline update, or a pause at this clean accepted Packet
-5B progress report review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the Packet 5C
+BD Plastic lane behavior plan, a user-facing progress/timeline update, or a
+pause at this clean Packet 5C planning checkpoint.
 
 Do not implement BD FM discovery execution, BD Plastic discovery execution, BD
 Silky discovery execution, Pad 1 engine rotation execution, Pad 1 current-engine
@@ -6134,6 +6137,39 @@ It records:
 The review recommends a docs-only Packet 5C plan if continuing
 implementation, a user-facing progress/timeline update, or a pause at this
 accepted progress report checkpoint.
+
+## Latest Packet 5C BD Plastic Lane Behavior Plan
+
+The latest V1.34 behavior parity Packet 5C BD Plastic lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5C_BD_PLASTIC_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline
+  `7900a90 Add behavior parity progress report review after Packet 5B`
+- Packet 5C identity:
+  - Pad 1 BD Plastic Lane Behavior Parity
+- future implementation scope:
+  - `BP`: load Pad 1 BD Plastic profiled anchor
+  - `PT`: BD Plastic tone/modulation discovery
+  - `PK`: BD Plastic kick/body discovery
+  - `PX`: BD Plastic rubber/experimental discovery
+  - `PBH`: return Pad 1 BD Plastic to anchor
+- already-covered context:
+  - `PD`: show BD Plastic menu/status
+- future file ownership:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update expected because `=== Test: Behavior Pad 1 Lane ===`
+  already covers `tests/test_behavior_pad1_lane.py`
+- Packet 5A and Packet 5B behavior must remain unchanged
+- BD Silky, Pad 1 BD Acoustic, runtime mutation, dispatch, MIDI, ports,
+  package metadata, active behavior, and hardware behavior remain deferred
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch, MIDI,
+ports, package metadata, active behavior, or hardware behavior. It recommends a
+docs-only review/acceptance gate next.
 
 ## Do-Not-Touch Files
 

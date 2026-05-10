@@ -359,3 +359,13 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 17. Packet 5C Plan Follow-Up
+
+A docs-only Packet 5C BD Plastic lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5C_BD_PLASTIC_LANE_BEHAVIOR_PLAN.md`
+
+It plans a future read-only `BP`/`PT`/`PK`/`PX`/`PBH` implementation scope
+while keeping BD Silky, Pad 1 BD Acoustic, runtime mutation, dispatch, MIDI,
+ports, active behavior, package metadata, and hardware behavior deferred.

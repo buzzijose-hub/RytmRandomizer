@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 7900a90 Add behavior parity progress report review after Packet 5B
 - 0bef95a Add behavior parity progress report after Packet 5B
 - 2a66ac8 Add Packet 5B BD FM lane behavior checkpoint review
 - ba16340 Add Packet 5B BD FM lane behavior checkpoint
@@ -11728,6 +11729,53 @@ GUI/capture, or hardware validation exists.
 Next recommended task is a docs-only Packet 5C Pad 1 lane behavior plan, a
 user-facing progress/timeline update, or a pause at this accepted progress
 report checkpoint.
+
+## V1.34 Behavior Parity Packet 5C BD Plastic Lane Behavior Plan
+
+The Packet 5C BD Plastic lane behavior plan defines the next tiny Packet 5
+planning slice after accepted Packet 5B progress.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5C_BD_PLASTIC_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline:
+
+- `7900a90 Add behavior parity progress report review after Packet 5B`
+
+Planned future Packet 5C scope:
+
+- `BP`: load Pad 1 BD Plastic profiled anchor
+- `PT`: BD Plastic tone/modulation discovery
+- `PK`: BD Plastic kick/body discovery
+- `PX`: BD Plastic rubber/experimental discovery
+- `PBH`: return Pad 1 BD Plastic to anchor
+
+Already-covered context:
+
+- `PD`: show BD Plastic menu/status, covered by Packet 1
+
+Allowed future implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update should be required because
+`tests/test_behavior_pad1_lane.py` is already covered by
+`=== Test: Behavior Pad 1 Lane ===`.
+
+The plan keeps Packet 5A `BR`/`BM` behavior and Packet 5B `FT`/`FK`/`FG`/`FZ`
+behavior unchanged.
+
+The plan keeps BD Silky, Pad 1 BD Acoustic, deeper lane state modeling,
+runtime mutation, prompt loops, command dispatch, MIDI, ports, package
+metadata, active behavior, Analog Four, Pads 5-12, SysEx, GUI/capture, and
+hardware behavior deferred.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+At plan time, the next recommended task is a docs-only review/acceptance gate
+for this Packet 5C plan.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
