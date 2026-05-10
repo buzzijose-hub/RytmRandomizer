@@ -440,9 +440,37 @@ SUPPORTED_PAD1_BD_SILKY_CASES = (
     ),
 )
 
-DEFERRED_PAD1_LANE_KEYS = (
-    "BA",
+SUPPORTED_PAD1_BD_ACOUSTIC_ANCHOR_CASES = (
+    (
+        "BA",
+        "load Pad 1 BD Acoustic anchor",
+        "pad1-lane/bd-acoustic-anchor-load",
+        "supported_pad1_bd_acoustic_anchor_load_intent",
+        "load_bd_acoustic_anchor",
+        "pad1_bd_acoustic_anchor_state",
+        "",
+        False,
+        (
+            "BA: load Pad 1 BD Acoustic anchor",
+            "Read-only Pad 1 BD Acoustic anchor intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Acoustic",
+            "Lane action: load_bd_acoustic_anchor",
+            "BD Acoustic anchor dependency is recorded only.",
+            "Group profile 4 is not used by this Pad 1 command.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
 )
+
+DEFERRED_PAD1_LANE_KEYS = ()
 
 ALREADY_COVERED_PAD1_CONTEXT_KEYS = ("FM", "PD", "SM", "BH", "BC", "BS", "BF")
 
@@ -848,6 +876,79 @@ def test_bi_st_sk_sc_and_sbh_metadata_contains_expected_passive_sources():
         assert result.metadata["executes_command"] is False
 
 
+def test_ba_returns_read_only_bd_acoustic_anchor_intent():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    for (
+        command_key,
+        expected_label,
+        expected_family,
+        expected_reason,
+        expected_lane_action,
+        expected_engine_dependency,
+        expected_depth_dependency,
+        expected_depth_required,
+        expected_display,
+    ) in SUPPORTED_PAD1_BD_ACOUSTIC_ANCHOR_CASES:
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == expected_family
+        assert result.reason == expected_reason
+        assert result.target_pad == 1
+        assert result.lane == "Pad 1 BD Acoustic"
+        assert result.lane_action == expected_lane_action
+        assert result.engine_dependency == expected_engine_dependency
+        assert result.depth_dependency == expected_depth_dependency
+        assert result.state_changed is False
+        assert result.prompt_required is False
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.mutates_lane_state is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.display_lines == expected_display
+        assert result.metadata["requires_depth_selection"] is expected_depth_required
+
+
+def test_ba_metadata_contains_expected_passive_source_without_profile_4_or_pad_4():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    result = evaluate_pad1_lane_behavior("BA")
+
+    expected = {
+        "source": "PAD1_COMMANDS",
+        "source_command_type": "load",
+        "source_command_scope": "pad_1",
+        "source_v134_reference_command": True,
+        "source_scaffold_only": True,
+        "target_pad": 1,
+        "lane": "pad_1_bd_acoustic",
+        "lane_family": "bd_acoustic",
+        "lane_action": "load_bd_acoustic_anchor",
+        "requires_current_engine_state": False,
+        "requires_bd_acoustic_anchor": True,
+        "requires_group_profile_4": False,
+        "requires_pad_4": False,
+        "requires_depth_selection": False,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+        "executes_command": False,
+    }
+
+    for key, value in expected.items():
+        assert result.metadata[key] == value
+
+
 def test_pad1_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad1_lane import Pad1LaneBehaviorResult
 
@@ -885,6 +986,7 @@ def test_repeated_pad1_lane_evaluations_are_deterministic():
     assert evaluate_pad1_lane_behavior("SK") == evaluate_pad1_lane_behavior("SK")
     assert evaluate_pad1_lane_behavior("SC") == evaluate_pad1_lane_behavior("SC")
     assert evaluate_pad1_lane_behavior("SBH") == evaluate_pad1_lane_behavior("SBH")
+    assert evaluate_pad1_lane_behavior("BA") == evaluate_pad1_lane_behavior("BA")
 
 
 def test_deferred_packet_5_pad1_lane_keys_fail_safely():
@@ -1027,6 +1129,8 @@ if __name__ == "__main__":
     test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources()
     test_bi_st_sk_sc_and_sbh_return_read_only_bd_silky_lane_intents()
     test_bi_st_sk_sc_and_sbh_metadata_contains_expected_passive_sources()
+    test_ba_returns_read_only_bd_acoustic_anchor_intent()
+    test_ba_metadata_contains_expected_passive_source_without_profile_4_or_pad_4()
     test_pad1_lane_metadata_is_copied_and_immutable()
     test_repeated_pad1_lane_evaluations_are_deterministic()
     test_deferred_packet_5_pad1_lane_keys_fail_safely()

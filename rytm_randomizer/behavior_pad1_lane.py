@@ -15,9 +15,8 @@ PACKET_5A_PAD1_CURRENT_ENGINE_KEYS = ("BR", "BM")
 PACKET_5B_PAD1_BD_FM_KEYS = ("FT", "FK", "FG", "FZ")
 PACKET_5C_PAD1_BD_PLASTIC_KEYS = ("BP", "PT", "PK", "PX", "PBH")
 PACKET_5D_PAD1_BD_SILKY_KEYS = ("BI", "ST", "SK", "SC", "SBH")
-DEFERRED_PACKET_5_PAD1_LANE_KEYS = (
-    "BA",
-)
+PACKET_5E_PAD1_BD_ACOUSTIC_KEYS = ("BA",)
+DEFERRED_PACKET_5_PAD1_LANE_KEYS = ()
 
 _LANE_ACTIONS = {
     "BR": "rotate_profiled_bd_engine",
@@ -36,6 +35,7 @@ _LANE_ACTIONS = {
     "SK": "bd_silky_kick_body_discovery",
     "SC": "bd_silky_click_dust_discovery",
     "SBH": "return_bd_silky_to_anchor",
+    "BA": "load_bd_acoustic_anchor",
 }
 
 _DEPTH_DEPENDENCIES = {
@@ -55,6 +55,7 @@ _DEPTH_DEPENDENCIES = {
     "SK": "future_bd_silky_discovery_depth",
     "SC": "future_bd_silky_discovery_depth",
     "SBH": "",
+    "BA": "",
 }
 
 _REQUIRES_DEPTH_SELECTION = {
@@ -74,6 +75,7 @@ _REQUIRES_DEPTH_SELECTION = {
     "SK": True,
     "SC": True,
     "SBH": False,
+    "BA": False,
 }
 
 _BEHAVIOR_FAMILIES = {
@@ -93,6 +95,7 @@ _BEHAVIOR_FAMILIES = {
     "SK": "pad1-lane/bd-silky-discovery",
     "SC": "pad1-lane/bd-silky-discovery",
     "SBH": "pad1-lane/bd-silky-anchor-return",
+    "BA": "pad1-lane/bd-acoustic-anchor-load",
 }
 
 _REASONS = {
@@ -112,6 +115,7 @@ _REASONS = {
     "SK": "supported_pad1_bd_silky_discovery_intent",
     "SC": "supported_pad1_bd_silky_discovery_intent",
     "SBH": "supported_pad1_bd_silky_anchor_return_intent",
+    "BA": "supported_pad1_bd_acoustic_anchor_load_intent",
 }
 
 _LANES = {
@@ -131,6 +135,7 @@ _LANES = {
     "SK": "Pad 1 BD Silky",
     "SC": "Pad 1 BD Silky",
     "SBH": "Pad 1 BD Silky",
+    "BA": "Pad 1 BD Acoustic",
 }
 
 _LANE_METADATA = {
@@ -150,6 +155,7 @@ _LANE_METADATA = {
     "SK": "pad_1_bd_silky",
     "SC": "pad_1_bd_silky",
     "SBH": "pad_1_bd_silky",
+    "BA": "pad_1_bd_acoustic",
 }
 
 _ENGINE_DEPENDENCIES = {
@@ -169,6 +175,7 @@ _ENGINE_DEPENDENCIES = {
     "SK": "pad1_bd_silky_engine_profile",
     "SC": "pad1_bd_silky_engine_profile",
     "SBH": "pad1_bd_silky_anchor_state",
+    "BA": "pad1_bd_acoustic_anchor_state",
 }
 
 _INTENT_LINES = {
@@ -188,6 +195,7 @@ _INTENT_LINES = {
     "SK": "Read-only Pad 1 BD Silky lane intent.",
     "SC": "Read-only Pad 1 BD Silky lane intent.",
     "SBH": "Read-only Pad 1 BD Silky lane intent.",
+    "BA": "Read-only Pad 1 BD Acoustic anchor intent.",
 }
 
 _DEPENDENCY_LINES = {
@@ -207,6 +215,7 @@ _DEPENDENCY_LINES = {
     "SK": "BD Silky engine/profile dependency is recorded only.",
     "SC": "BD Silky engine/profile dependency is recorded only.",
     "SBH": "BD Silky anchor dependency is recorded only.",
+    "BA": "BD Acoustic anchor dependency is recorded only.",
 }
 
 
@@ -251,6 +260,7 @@ def evaluate_pad1_lane_behavior(command_key):
         *PACKET_5B_PAD1_BD_FM_KEYS,
         *PACKET_5C_PAD1_BD_PLASTIC_KEYS,
         *PACKET_5D_PAD1_BD_SILKY_KEYS,
+        *PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
     ):
         return _accepted_pad1_lane_result(key)
 
@@ -295,6 +305,7 @@ def _accepted_pad1_lane_result(command_key):
         f"Lane: {lane}",
         f"Lane action: {lane_action}",
         _DEPENDENCY_LINES[command_key],
+        *_separation_display_lines(command_key),
         *_depth_display_lines(command_key, depth_dependency),
         "No prompt would run.",
         "No state would change.",
@@ -386,7 +397,25 @@ def _accepted_metadata(
             }
         )
 
+    if command_key in PACKET_5E_PAD1_BD_ACOUSTIC_KEYS:
+        metadata.update(
+            {
+                "lane_family": "bd_acoustic",
+                "requires_current_engine_state": False,
+                "requires_bd_acoustic_anchor": True,
+                "requires_group_profile_4": False,
+                "requires_pad_4": False,
+            }
+        )
+
     return metadata
+
+
+def _separation_display_lines(command_key):
+    if command_key in PACKET_5E_PAD1_BD_ACOUSTIC_KEYS:
+        return ("Group profile 4 is not used by this Pad 1 command.",)
+
+    return ()
 
 
 def _depth_display_lines(command_key, depth_dependency):
@@ -425,6 +454,7 @@ __all__ = [
     "PACKET_5B_PAD1_BD_FM_KEYS",
     "PACKET_5C_PAD1_BD_PLASTIC_KEYS",
     "PACKET_5D_PAD1_BD_SILKY_KEYS",
+    "PACKET_5E_PAD1_BD_ACOUSTIC_KEYS",
     "Pad1LaneBehaviorResult",
     "evaluate_pad1_lane_behavior",
 ]
