@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-48b9ded
+2ca23ab
 
 ## Protected Reference
 
@@ -59,7 +59,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 48b9ded Add behavior parity progress report after Packet 5E
+- current HEAD: 2ca23ab Add behavior parity progress report review after
+  Packet 5E
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -281,9 +282,9 @@ It captures:
 - current passive CLI capability
 - known safe passive commands
 - next recommended task: docs-only review/acceptance gate for the broader
-  deeper Packet 5 Pad 1 lane state modeling decision note, user-facing
-  progress/timeline update, or pause at this clean progress report review
-  checkpoint
+  review/acceptance gate for the deeper Packet 5 Pad 1 lane state modeling
+  decision note, a docs-only lane-state modeling plan, user-facing
+  progress/timeline update, or pause at this clean decision checkpoint
 - closeout command
 - stop condition
 
@@ -11870,6 +11871,32 @@ behavior is authorized.
 The next recommended task is a docs-only deeper Packet 5 Pad 1 lane state
 modeling decision note, a user-facing progress/timeline update, or a pause at
 this accepted progress report review checkpoint.
+
+## Packet 5 Pad 1 Lane State Modeling Decision Note
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD1_LANE_STATE_MODELING_DECISION_NOTE.md`
+keeps deeper Packet 5 Pad 1 lane state modeling deferred until separately
+reviewed and planned.
+
+Current baseline:
+
+- `2ca23ab Add behavior parity progress report review after Packet 5E`
+
+Current decision:
+
+- Packet 5 has accepted read-only progress through Packet 5E.
+- Packet 5 is not complete.
+- Deeper Pad 1 lane state modeling remains deferred.
+- Future lane-state concepts are planning vocabulary only.
+
+The decision note confirms no runtime lane state, runtime selected profile
+state, runtime anchor state, runtime state mutation, prompt/input loop,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+or hardware behavior is authorized.
+
+The next recommended task is a docs-only review/acceptance gate for the
+decision note, a docs-only lane-state modeling plan, a user-facing
+progress/timeline update, or a pause at this clean decision checkpoint.
 
 ## Hardware Manual Reference Inventory
 

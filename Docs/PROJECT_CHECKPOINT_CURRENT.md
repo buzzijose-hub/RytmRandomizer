@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2ca23ab Add behavior parity progress report review after Packet 5E
 - 48b9ded Add behavior parity progress report after Packet 5E
 - edd3233 Add Packet 5E BD Acoustic anchor behavior checkpoint review
 - 5db9095 Add Packet 5E BD Acoustic anchor behavior checkpoint
@@ -12595,6 +12596,36 @@ behavior is authorized.
 The next recommended task is a docs-only deeper Packet 5 Pad 1 lane state
 modeling decision note, a user-facing progress/timeline update, or a pause at
 this accepted progress report review checkpoint.
+
+## V1.34 Behavior Parity Packet 5 Pad 1 Lane State Modeling Decision Note
+
+The deeper Packet 5 Pad 1 lane state modeling decision note keeps deeper
+runtime-adjacent Pad 1 lane state work deferred until separately reviewed and
+planned.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD1_LANE_STATE_MODELING_DECISION_NOTE.md`
+
+Current baseline before the decision note:
+
+- `2ca23ab Add behavior parity progress report review after Packet 5E`
+
+Current decision:
+
+- deeper Pad 1 lane state modeling remains deferred
+- Packet 5 has accepted read-only progress through Packet 5E
+- Packet 5 is not complete
+- future lane-state concepts are planning vocabulary only
+
+The decision note confirms no runtime lane state, runtime selected profile
+state, runtime anchor state, runtime state mutation, prompt/input loop,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+or hardware behavior is authorized.
+
+Next recommended task is a docs-only review/acceptance gate for the decision
+note, a docs-only lane-state modeling plan, a user-facing progress/timeline
+update, or a pause at this clean decision checkpoint.
 
 ## Hardware Manual Reference Inventory
 

@@ -263,3 +263,15 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 12. Pad 1 Lane State Modeling Decision Follow-Up
+
+A docs-only decision note for deeper Packet 5 Pad 1 lane state modeling now
+exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD1_LANE_STATE_MODELING_DECISION_NOTE.md`
+
+It keeps deeper Pad 1 lane state modeling deferred until separately reviewed
+and planned. It adds no implementation, tests, CLI wiring, dispatch, MIDI,
+ports, package metadata, active behavior, runtime execution, or hardware
+behavior.
