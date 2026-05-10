@@ -289,6 +289,70 @@ def test_sb_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_sx_returns_read_only_pad3_sy_raw_sci_fi_motion_accent_mode_intent():
+    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+
+    result = evaluate_pad3_lane_behavior("SX")
+
+    assert result.command_key == "SX"
+    assert result.accepted is True
+    assert result.reason == "supported_pad3_sy_raw_sci_fi_motion_accent_mode_intent"
+    assert result.label == "Pad 3 SY Raw sci-fi motion accent mode"
+    assert result.behavior_family == "pad3-lane/sy-raw-sci-fi-motion-accent-mode"
+    assert result.target_pad == 3
+    assert result.lane == "Pad 3 SY Raw lane"
+    assert result.lane_action == "load_pad3_sy_raw_sci_fi_motion_accent_mode"
+    assert result.intent_kind == "mode_load"
+    assert result.mode_concept == "Pad 3 SY Raw sci-fi motion accent mode"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_lane_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "SX: Pad 3 SY Raw sci-fi motion accent mode",
+        "Read-only Pad 3 SY Raw sci-fi motion accent mode-load intent.",
+        "Target pad: 3",
+        "Lane: Pad 3 SY Raw lane",
+        "Lane action: load_pad3_sy_raw_sci_fi_motion_accent_mode",
+        "Pad 3 SY Raw sci-fi motion accent mode dependency is recorded only.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No lane state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_sx_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+
+    result = evaluate_pad3_lane_behavior("SX")
+
+    assert result.metadata["source"] == "PAD3_COMMANDS"
+    assert result.metadata["command_type"] == "load"
+    assert result.metadata["target_pad"] == 3
+    assert result.metadata["lane"] == "pad_3_sy_raw_lane"
+    assert result.metadata["behavior_family"] == "pad3-lane/sy-raw-sci-fi-motion-accent-mode"
+    assert result.metadata["lane_action"] == "load_pad3_sy_raw_sci_fi_motion_accent_mode"
+    assert result.metadata["intent_kind"] == "mode_load"
+    assert result.metadata["mode_concept"] == "Pad 3 SY Raw sci-fi motion accent mode"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_pad3_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
 
@@ -332,6 +396,16 @@ def test_pad3_lane_metadata_is_copied_and_immutable():
     fresh_sb_result = evaluate_pad3_lane_behavior("SB")
     assert fresh_sb_result.metadata["source"] == "PAD3_COMMANDS"
 
+    sx_result = evaluate_pad3_lane_behavior("SX")
+
+    try:
+        sx_result.metadata["source"] = "mutated"
+    except TypeError:
+        pass
+
+    fresh_sx_result = evaluate_pad3_lane_behavior("SX")
+    assert fresh_sx_result.metadata["source"] == "PAD3_COMMANDS"
+
 
 def test_deferred_packet_7_pad3_lane_keys_fail_safely():
     from rytm_randomizer.behavior_pad3_lane import (
@@ -342,7 +416,6 @@ def test_deferred_packet_7_pad3_lane_keys_fail_safely():
     assert DEFERRED_PACKET_7_PAD3_LANE_KEYS == (
         "P3M",
         "SW",
-        "SX",
         "P3R",
         "P3X",
     )
@@ -446,6 +519,8 @@ if __name__ == "__main__":
     test_sl_metadata_contains_expected_passive_sources()
     test_sb_returns_read_only_pad3_sy_raw_bandpass_mid_bass_mode_intent()
     test_sb_metadata_contains_expected_passive_sources()
+    test_sx_returns_read_only_pad3_sy_raw_sci_fi_motion_accent_mode_intent()
+    test_sx_metadata_contains_expected_passive_sources()
     test_pad3_lane_metadata_is_copied_and_immutable()
     test_deferred_packet_7_pad3_lane_keys_fail_safely()
     test_unknown_keys_fail_safely()
