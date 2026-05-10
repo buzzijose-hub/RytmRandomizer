@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9f5eb5f Add Packet 5B BD FM lane behavior
+- f87e7de Add Packet 5B BD FM lane behavior plan review
 - 322fd38 Add Packet 5B BD FM lane behavior plan
 - 22c3e2c Add behavior parity progress report review after Packet 5A
 - 37b20b4 Add behavior parity progress report after Packet 5A
@@ -11516,6 +11518,58 @@ Analog Four, Pads 5-12, SysEx, GUI/capture, and hardware behavior deferred.
 
 Next recommended task is the tiny Packet 5B implementation for read-only BD FM
 lane intent behavior.
+
+## V1.34 Behavior Parity Packet 5B BD FM Lane Behavior Checkpoint
+
+The Packet 5B BD FM lane behavior checkpoint records completion of the
+read-only `FT`/`FK`/`FG`/`FZ` implementation slice.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `9f5eb5f Add Packet 5B BD FM lane behavior`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update was needed because `tests/test_behavior_pad1_lane.py`
+was already covered by:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Implemented read-only Packet 5B behavior:
+
+- `FT`: BD FM tone/FM discovery
+- `FK`: BD FM kick/body discovery
+- `FG`: BD FM grit discovery
+- `FZ`: return Pad 1 BD FM to anchor
+
+Accepted behavior:
+
+- `FT`, `FK`, and `FG` record BD FM engine/profile dependency only
+- `FT`, `FK`, and `FG` record future BD FM discovery depth dependency only
+- `FZ` records BD FM anchor dependency only
+- Packet 5A `BR`/`BM` behavior remains unchanged
+- BD Plastic, BD Silky, and Pad 1 BD Acoustic remain deferred
+- runtime mutation/execution behavior remains absent
+
+The checkpoint confirms red/green TDD evidence, targeted regression evidence,
+full closeout evidence, empty V1.34 reference diff, empty package metadata
+diff, and clean git status after the implementation milestone.
+
+The implementation adds no real MIDI, `mido`, `rtmidi`, port opening, MIDI
+sending, CLI execution wiring, dispatch, active CLI behavior, package metadata,
+Analog Four support, Pads 5-12 support, SysEx, GUI/capture, or hardware
+behavior.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task is a docs-only Packet 5B checkpoint review.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 

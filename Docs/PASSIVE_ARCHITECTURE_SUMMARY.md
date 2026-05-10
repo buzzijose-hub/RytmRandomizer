@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-322fd38
+9f5eb5f
 
 ## Protected Reference
 
@@ -59,7 +59,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 322fd38 Add Packet 5B BD FM lane behavior plan
+- current HEAD: 9f5eb5f Add Packet 5B BD FM lane behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -232,14 +232,16 @@ It captures:
   any Packet 5B planning; the docs-only Packet 5B BD FM lane behavior plan has
   now been documented and recommends a tiny future `FT`/`FK`/`FG`/`FZ`
   implementation scope; the docs-only Packet 5B BD FM lane behavior plan
-  review has now accepted that scope as the next tiny implementation branch
+  review has now accepted that scope as the next tiny implementation branch;
+  the Packet 5B read-only Pad 1 BD FM lane behavior implementation is now
+  complete and documented in a checkpoint for review
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: implement the tiny Packet 5B read-only `FT`/`FK`/`FG`/
-  `FZ` behavior slice, write a user-facing progress/timeline update, or pause
-  at the clean planning checkpoint
+- next recommended task: docs-only Packet 5B checkpoint review, broader
+  behavior-parity progress report after Packet 5B, user-facing
+  progress/timeline update, or pause at the clean implementation checkpoint
 - closeout command
 - stop condition
 
@@ -10985,6 +10987,37 @@ Analog Four, Pads 5-12, SysEx, GUI/capture, and hardware behavior deferred.
 
 The next recommended task is the tiny Packet 5B TDD implementation for
 read-only BD FM lane intent behavior.
+
+## Packet 5B BD FM Lane Behavior Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_CHECKPOINT.md`
+records completion of the Packet 5B read-only BD FM lane behavior slice.
+
+Implementation milestone:
+
+- `9f5eb5f Add Packet 5B BD FM lane behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update was needed because `=== Test: Behavior Pad 1 Lane ===`
+already covers `tests/test_behavior_pad1_lane.py`.
+
+Implemented read-only Packet 5B behavior:
+
+- `FT`: BD FM tone/FM discovery
+- `FK`: BD FM kick/body discovery
+- `FG`: BD FM grit discovery
+- `FZ`: return Pad 1 BD FM to anchor
+
+The checkpoint records that BD FM dependencies are metadata-only, Packet 5A
+`BR`/`BM` behavior remains unchanged, BD Plastic/BD Silky/Pad 1 BD Acoustic
+remain deferred, and no runtime mutation, dispatch, command execution, MIDI,
+ports, package metadata, active behavior, or hardware behavior was added.
+
+The next recommended task is a docs-only Packet 5B checkpoint review.
 
 ## Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
