@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d621c67
+0eb382e
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d621c67 Add Packet 4D group anchor decision note
+- current HEAD: 0eb382e Add Packet 4D group anchor plan
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -196,15 +196,16 @@ It captures:
   review; the docs-only Packet 4D group anchor decision note now keeps `O`
   and `Z` deferred and safe until a separate read-only intent-only plan is
   approved; the docs-only Packet 4D group anchor plan now defines a tiny
-  future read-only intent-only scope for `O` and `Z`
+  future read-only intent-only scope for `O` and `Z`; the docs-only Packet 4D
+  group anchor plan review has now accepted that future implementation scope
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a docs-only Packet 4D group anchor plan review,
-  write a broader Packet 4 near-completion checkpoint, write a more
-  user-facing progress/timeline update, or pause at the clean Packet 4D
-  planning checkpoint
+- next recommended task: implement the tiny Packet 4D read-only group anchor
+  load/return intent behavior for `O` and `Z`, write a broader Packet 4
+  near-completion checkpoint, write a more user-facing progress/timeline
+  update, or pause at the accepted Packet 4D planning checkpoint
 - closeout command
 - stop condition
 
@@ -3304,6 +3305,69 @@ The next recommended task is a docs-only Packet 4D group anchor plan review, a
 broader Packet 4 near-completion checkpoint, a more user-facing
 progress/timeline update, or a pause at this clean Packet 4D planning
 checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4D Group Anchor Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_PLAN_REVIEW.md` accepts the
+Packet 4D group anchor plan as the current planning gate for the remaining
+`O` and `Z` Packet 4 scope.
+
+Accepted plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_PLAN.md`
+
+Accepted planning milestone:
+
+- `0eb382e Add Packet 4D group anchor plan`
+
+Accepted future scope:
+
+- `O`: read-only group anchor load intent
+- `Z`: read-only group anchor return intent
+
+Accepted future behavior:
+
+- copied passive metadata from `GROUP_COMMANDS`
+- group scope `four_pad_group`
+- `O` anchor action `load_group_anchors`
+- `Z` anchor action `return_group_anchors`
+- behavior family `scene-group/group-anchor-intent`
+- `O` reason `supported_group_anchor_load_intent`
+- `Z` reason `supported_group_anchor_return_intent`
+- no group anchor load execution
+- no group anchor return execution
+- no group mutation execution
+- no lane-aware group mutation execution
+- no scene execution
+- no state mutation
+- no dispatch
+- no MIDI
+- no ports
+- no hardware requirement
+
+Accepted future implementation files:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No closeout script update should be needed because `tests/test_behavior_scene_group.py`
+is already covered by `=== Test: Behavior Scene Group ===`.
+
+The review confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group anchor load execution, group anchor return execution,
+group mutation execution, lane-aware group mutation execution, prompt/input
+loop, runtime state mutation, real MIDI, ports, package metadata, active CLI
+behavior, machine/profile expansion, Analog Four support, Pads 5-12 support,
+SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 remains not complete until the future Packet 4D implementation is
+completed or `O` and `Z` are explicitly left deferred in a Packet 4 closeout
+decision.
+
+The next recommended task is the tiny Packet 4D implementation for read-only
+group anchor load/return intent behavior for `O` and `Z`, a broader Packet 4
+near-completion checkpoint, a more user-facing progress/timeline update, or a
+pause at this accepted Packet 4D planning checkpoint. Hardware remains off.
 
 The previous current-session handoff was:
 

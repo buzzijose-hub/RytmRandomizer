@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d621c67 Add Packet 4D group anchor decision note
+0eb382e Add Packet 4D group anchor plan
 
 ## Current Phase
 
@@ -186,6 +186,8 @@ The docs-only Packet 4D group anchor decision note now keeps `O` and `Z`
 deferred and safe until a separate read-only intent-only plan is approved.
 The docs-only Packet 4D group anchor plan now defines a tiny future read-only
 intent-only scope for `O` and `Z`.
+The docs-only Packet 4D group anchor plan review has now accepted that future
+implementation scope.
 
 ## Current Safety State
 
@@ -240,10 +242,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 4D group anchor plan review, a
-broader Packet 4 near-completion checkpoint, a more user-facing
-progress/timeline update, or a pause at this clean Packet 4D planning
-checkpoint.
+Next recommended task is the tiny Packet 4D implementation for read-only group
+anchor load/return intent behavior for `O` and `Z`, a broader Packet 4
+near-completion checkpoint, a more user-facing progress/timeline update, or a
+pause at this accepted Packet 4D planning checkpoint.
 
 Do not implement full Packet 4, group mutation behavior, lane-aware group
 mutation behavior, scene execution, or any runtime execution layer yet.
@@ -342,6 +344,29 @@ The plan confirms no group anchor load execution, group anchor return
 execution, scene execution, group mutation execution, dispatch, MIDI, ports,
 package metadata, active CLI behavior, or hardware validation is added by the
 plan.
+
+The latest V1.34 behavior parity Packet 4D group anchor plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_PLAN_REVIEW.md`
+
+It records:
+
+- accepted plan document
+  `Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_PLAN.md`
+- accepted planning milestone `0eb382e Add Packet 4D group anchor plan`
+- future implementation scope limited to read-only intent-only behavior for
+  `O` and `Z`
+- expected future constant `PACKET_4D_GROUP_ANCHOR_INTENT_KEYS`
+- expected future behavior family `scene-group/group-anchor-intent`
+- expected future anchor actions `load_group_anchors` and
+  `return_group_anchors`
+- future implementation files:
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `tests/test_behavior_scene_group.py`
+
+The review confirms no implementation, tests, CLI wiring, runtime group anchor
+load/return behavior, dispatch, MIDI, ports, package metadata, active CLI
+behavior, or hardware validation was added.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
 
