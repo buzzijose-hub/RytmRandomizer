@@ -14,9 +14,9 @@ from .commands import COMMANDS, PAD2_COMMANDS
 PACKET_6A_PAD2_LANE_KEYS = ("P2B",)
 PACKET_6B_PAD2_LANE_KEYS = ("P2H",)
 PACKET_6C_PAD2_LANE_KEYS = ("P2C",)
+PACKET_6D_PAD2_LANE_KEYS = ("P2F",)
 DEFERRED_PACKET_6_PAD2_LANE_KEYS = (
     "P2M",
-    "P2F",
     "P2T",
     "P2P",
     "P2G",
@@ -68,6 +68,8 @@ def evaluate_pad2_lane_behavior(command_key):
         return _accepted_p2h_result()
     if key == "P2C":
         return _accepted_p2c_result()
+    if key == "P2F":
+        return _accepted_p2f_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -249,6 +251,61 @@ def _accepted_p2c_result():
     )
 
 
+def _accepted_p2f_result():
+    metadata = PAD2_COMMANDS["P2F"]
+    label = metadata["label"]
+    lane_action = "load_pad2_sd_fm_anchor"
+    anchor_concept = "Pad 2 SD FM anchor"
+
+    result_metadata = {
+        "source": "PAD2_COMMANDS",
+        "command_type": metadata["type"],
+        "target_pad": metadata["pad"],
+        "lane": "pad_2_secondary_lane",
+        "behavior_family": "pad2-lane/sd-fm-anchor",
+        "lane_action": lane_action,
+        "intent_kind": "anchor_load",
+        "anchor_concept": anchor_concept,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return Pad2LaneBehaviorResult(
+        command_key="P2F",
+        label=label,
+        behavior_family="pad2-lane/sd-fm-anchor",
+        accepted=True,
+        reason="supported_pad2_sd_fm_anchor_intent",
+        target_pad=2,
+        lane="Pad 2 secondary lane",
+        lane_action=lane_action,
+        intent_kind="anchor_load",
+        anchor_concept=anchor_concept,
+        display_lines=(
+            f"P2F: {label}",
+            "Read-only Pad 2 SD FM anchor intent.",
+            "Target pad: 2",
+            "Lane: Pad 2 secondary lane",
+            f"Lane action: {lane_action}",
+            "Pad 2 SD FM anchor dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
 def _unsupported_result(command_key):
     return Pad2LaneBehaviorResult(
         command_key=command_key,
@@ -270,6 +327,7 @@ __all__ = [
     "PACKET_6A_PAD2_LANE_KEYS",
     "PACKET_6B_PAD2_LANE_KEYS",
     "PACKET_6C_PAD2_LANE_KEYS",
+    "PACKET_6D_PAD2_LANE_KEYS",
     "Pad2LaneBehaviorResult",
     "evaluate_pad2_lane_behavior",
 ]
