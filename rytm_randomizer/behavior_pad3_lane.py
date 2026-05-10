@@ -16,9 +16,9 @@ PACKET_7B_PAD3_LANE_KEYS = ("SA",)
 PACKET_7C_PAD3_LANE_KEYS = ("SL",)
 PACKET_7D_PAD3_LANE_KEYS = ("SB",)
 PACKET_7E_PAD3_LANE_KEYS = ("SX",)
+PACKET_7F_PAD3_LANE_KEYS = ("SW",)
 DEFERRED_PACKET_7_PAD3_LANE_KEYS = (
     "P3M",
-    "SW",
     "P3R",
     "P3X",
 )
@@ -71,6 +71,8 @@ def evaluate_pad3_lane_behavior(command_key):
         return _accepted_sb_result()
     if key == "SX":
         return _accepted_sx_result()
+    if key == "SW":
+        return _accepted_sw_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -362,6 +364,60 @@ def _accepted_sx_result():
     )
 
 
+def _accepted_sw_result():
+    metadata = PAD3_COMMANDS["SW"]
+    label = metadata["label"]
+    lane_action = "describe_pad3_sy_raw_wave_balance_discovery_intent"
+    discovery_concept = "Pad 3 SY Raw Wave + Balance discovery"
+
+    result_metadata = {
+        "source": "PAD3_COMMANDS",
+        "command_type": metadata["type"],
+        "target_pad": metadata["pad"],
+        "lane": "pad_3_sy_raw_lane",
+        "behavior_family": "pad3-lane/sy-raw-wave-balance-discovery",
+        "lane_action": lane_action,
+        "intent_kind": "discovery",
+        "discovery_concept": discovery_concept,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return Pad3LaneBehaviorResult(
+        command_key="SW",
+        label=label,
+        behavior_family="pad3-lane/sy-raw-wave-balance-discovery",
+        accepted=True,
+        reason="supported_pad3_sy_raw_wave_balance_discovery_intent",
+        target_pad=3,
+        lane="Pad 3 SY Raw lane",
+        lane_action=lane_action,
+        intent_kind="discovery",
+        display_lines=(
+            f"SW: {label}",
+            "Read-only Pad 3 SY Raw Wave + Balance discovery intent.",
+            "Target pad: 3",
+            "Lane: Pad 3 SY Raw lane",
+            f"Lane action: {lane_action}",
+            f"Discovery concept: {discovery_concept}",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
 def _unsupported_result(command_key):
     return Pad3LaneBehaviorResult(
         command_key=command_key,
@@ -385,6 +441,7 @@ __all__ = [
     "PACKET_7C_PAD3_LANE_KEYS",
     "PACKET_7D_PAD3_LANE_KEYS",
     "PACKET_7E_PAD3_LANE_KEYS",
+    "PACKET_7F_PAD3_LANE_KEYS",
     "Pad3LaneBehaviorResult",
     "evaluate_pad3_lane_behavior",
 ]
