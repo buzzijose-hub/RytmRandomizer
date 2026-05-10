@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-82bd9e6
+cccde44
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 82bd9e6 Add behavior parity next packet planning gate
+- current HEAD: cccde44 Add behavior parity next packet planning gate review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -216,14 +216,16 @@ It captures:
   lane behavior planning as the next branch without authorizing
   implementation; the docs-only review gate for that next behavior-parity
   packet planning gate has now accepted Packet 5 Pad 1 Lane Behavior planning
-  as the next branch
+  as the next branch; the docs-only Packet 5 Pad 1 lane behavior plan has now
+  been documented and recommends a tiny future Packet 5A read-only `BR`/`BM`
+  implementation scope
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a docs-only Packet 5 Pad 1 lane behavior plan,
-  write a more user-facing progress/timeline update, or pause at the clean
-  planning checkpoint
+- next recommended task: write a docs-only review/acceptance gate for the
+  Packet 5 Pad 1 lane behavior plan, write a more user-facing
+  progress/timeline update, or pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
@@ -3769,6 +3771,55 @@ hardware behavior, or hardware validation exists.
 
 The next recommended task is a docs-only Packet 5 Pad 1 lane behavior plan.
 Hardware remains off.
+
+## V1.34 Behavior Parity Packet 5 Pad 1 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD_1_LANE_BEHAVIOR_PLAN.md` documents the
+Packet 5 Pad 1 lane behavior plan.
+
+Current baseline:
+
+- `cccde44 Add behavior parity next packet planning gate review`
+
+Packet identity:
+
+- Packet 5: Pad 1 Lane Behavior Parity
+
+Full Packet 5 planning surface:
+
+- `BR`, `BM`
+- `FM`, `FT`, `FK`, `FG`, `FZ`
+- `BP`, `PD`, `PT`, `PK`, `PX`, `PBH`
+- `BI`, `SM`, `ST`, `SK`, `SC`, `SBH`
+
+Already-covered context:
+
+- `FM`, `PD`, and `SM` remain Packet 1 menu/status behavior
+- `BH`, `BC`, `BS`, and `BF` remain Packet 2 anchor/profile behavior
+
+Recommended first future implementation scope:
+
+- Packet 5A read-only Pad 1 current BD engine lane intent for `BR` and `BM`
+
+Deferred Packet 5 scope:
+
+- BD FM discovery and anchor-return intent
+- BD Plastic load/discovery/anchor-return intent
+- BD Silky load/discovery/anchor-return intent
+
+Future file ownership:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+- `Scripts/closeout_check.ps1`, only to add the new test file to closeout
+
+The plan confirms no implementation, tests, CLI execution wiring, dispatch,
+runtime execution, Pad 1 lane mutation execution, MIDI, ports, package
+metadata, active CLI behavior, hardware behavior, or hardware validation
+exists.
+
+The next recommended task is a docs-only review/acceptance gate for the Packet
+5 plan. Hardware remains off.
 
 The previous current-session handoff was:
 
@@ -10551,8 +10602,8 @@ Current modularization work remains behind these boundaries:
 
 Recommended passive layers before runtime work:
 
-- create a docs-only Packet 5 Pad 1 lane behavior plan after accepting the
-  next packet planning gate review
+- review and accept the docs-only Packet 5 Pad 1 lane behavior plan before
+  any Packet 5A implementation
 - review and accept the docs-only Packet 4 scene and group intent plan
 - implement only the accepted Packet 4A read-only scene intent behavior after
   plan review

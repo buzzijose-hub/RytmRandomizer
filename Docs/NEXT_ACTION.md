@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-82bd9e6 Add behavior parity next packet planning gate
+cccde44 Add behavior parity next packet planning gate review
 
 ## Current Phase
 
@@ -209,6 +209,8 @@ The docs-only next behavior-parity packet planning gate now recommends Packet
 implementation.
 The docs-only review gate for that next behavior-parity packet planning gate
 has now accepted Packet 5 Pad 1 Lane Behavior planning as the next branch.
+The docs-only Packet 5 Pad 1 lane behavior plan has now been documented and
+recommends a tiny future Packet 5A read-only `BR`/`BM` implementation scope.
 
 ## Current Safety State
 
@@ -263,9 +265,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 5 Pad 1 lane behavior plan, a more
-user-facing progress/timeline update, or a pause at this clean planning
-checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the Packet 5
+Pad 1 lane behavior plan, a more user-facing progress/timeline update, or a
+pause at this clean planning checkpoint.
 
 Do not implement scene execution, group mutation execution, lane-aware group
 mutation execution, group anchor loading, group anchor return, dispatch, MIDI,
@@ -599,6 +601,42 @@ The review confirms no implementation, tests, CLI execution wiring, dispatch,
 runtime execution, MIDI, ports, package metadata, active CLI behavior, hardware
 behavior, or hardware validation exists. It recommends a docs-only Packet 5
 Pad 1 lane behavior plan next.
+
+The latest V1.34 behavior parity Packet 5 Pad 1 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD_1_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline
+  `cccde44 Add behavior parity next packet planning gate review`
+- Packet 5 identity:
+  - Pad 1 Lane Behavior Parity
+- full Packet 5 planning surface:
+  - `BR`, `BM`
+  - `FM`, `FT`, `FK`, `FG`, `FZ`
+  - `BP`, `PD`, `PT`, `PK`, `PX`, `PBH`
+  - `BI`, `SM`, `ST`, `SK`, `SC`, `SBH`
+- already-covered context:
+  - `FM`, `PD`, and `SM` remain Packet 1 menu/status behavior
+  - `BH`, `BC`, `BS`, and `BF` remain Packet 2 anchor/profile behavior
+- recommended first future implementation scope:
+  - Packet 5A read-only Pad 1 current BD engine lane intent for `BR` and `BM`
+- deferred Packet 5 scope:
+  - BD FM discovery/anchor-return intent
+  - BD Plastic load/discovery/anchor-return intent
+  - BD Silky load/discovery/anchor-return intent
+- future file ownership:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+  - `Scripts/closeout_check.ps1`, only to add the new test to closeout
+- no immediate parallel implementation recommendation
+
+The plan confirms no implementation, tests, CLI execution wiring, dispatch,
+runtime execution, Pad 1 lane mutation execution, MIDI, ports, package
+metadata, active CLI behavior, hardware behavior, or hardware validation
+exists. It recommends a docs-only review gate next, followed by a tiny Packet
+5A read-only `BR`/`BM` implementation only if accepted.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
 

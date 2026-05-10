@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- cccde44 Add behavior parity next packet planning gate review
 - 82bd9e6 Add behavior parity next packet planning gate
 - aa2fa92 Add behavior parity progress report after Packet 4 review
 - 3e617a7 Add behavior parity progress report after Packet 4
@@ -4255,6 +4256,80 @@ Confirmed absent behavior:
 Next recommended task:
 
 - docs-only Packet 5 Pad 1 lane behavior plan
+
+## V1.34 Behavior Parity Packet 5 Pad 1 Lane Behavior Plan
+
+The Packet 5 Pad 1 lane behavior plan defines the next behavior-parity
+implementation packet after the accepted next packet planning gate review.
+
+Plan document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD_1_LANE_BEHAVIOR_PLAN.md
+
+Current baseline:
+
+- cccde44 Add behavior parity next packet planning gate review
+
+Packet identity:
+
+- Packet 5: Pad 1 Lane Behavior Parity
+
+Full Packet 5 planning surface:
+
+- `BR`, `BM`
+- `FM`, `FT`, `FK`, `FG`, `FZ`
+- `BP`, `PD`, `PT`, `PK`, `PX`, `PBH`
+- `BI`, `SM`, `ST`, `SK`, `SC`, `SBH`
+
+Already-covered context:
+
+- `FM`, `PD`, and `SM` remain Packet 1 menu/status behavior.
+- `BH`, `BC`, `BS`, and `BF` remain Packet 2 anchor/profile behavior.
+
+Recommended first future implementation scope:
+
+- Packet 5A read-only Pad 1 current BD engine lane intent for `BR` and `BM`
+
+Deferred Packet 5 scope:
+
+- BD FM discovery/anchor-return intent
+- BD Plastic load/discovery/anchor-return intent
+- BD Silky load/discovery/anchor-return intent
+
+Future implementation ownership:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+- `Scripts/closeout_check.ps1`, only to add the new test file to closeout
+
+This plan does not implement Packet 5 and does not authorize implementation
+by itself. It recommends a docs-only Packet 5 plan review before any Packet 5A
+implementation.
+
+Confirmed absent behavior:
+
+- no implementation
+- no tests
+- no CLI execution wiring
+- no dispatch
+- no runtime execution
+- no Pad 1 lane mutation execution
+- no MIDI
+- no ports
+- no package metadata
+- no active CLI command
+- no hardware behavior
+- no hardware validation
+- no Analog Four support
+- no Pads 5-12 support
+- no SysEx
+- no GUI/capture
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this Packet 5 plan
 
 ## Next Phase Planning Gate
 
