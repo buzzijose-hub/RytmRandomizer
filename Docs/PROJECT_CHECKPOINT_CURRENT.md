@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- fbc80fb Add behavior parity progress report review after Packet 6G
 - db04bb0 Add behavior parity progress report after Packet 6G
 - 0cdc059 Add Packet 6G Pad 2 lane behavior checkpoint review
 - 829b151 Add Packet 6G Pad 2 lane behavior checkpoint
@@ -11667,6 +11668,50 @@ hardware behavior remain absent.
 Next recommended task is a docs-only Packet 6H Pad 2 lane behavior plan, a
 user-facing progress/timeline update after Packet 6G, or a pause at this
 clean checkpoint.
+
+## V1.34 Behavior Parity Packet 6H Pad 2 Lane Behavior Plan
+
+The docs-only Packet 6H Pad 2 lane behavior plan has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6H_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+Current clean baseline before this planning slice:
+
+- `fbc80fb Add behavior parity progress report review after Packet 6G`
+
+Accepted preceding Packet 6 progress:
+
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+- `P2G`
+
+Recommended future Packet 6H implementation scope:
+
+- `P2R` only
+
+The plan describes future read-only Pad 2 profile rotation intent behavior
+using existing `PAD2_COMMANDS` metadata, while preserving all accepted Packet
+6 behavior.
+
+Remaining deferred/safe Packet 6 scope after the plan:
+
+- `P2X`
+- `P2Z`
+
+`P2M` remains covered by Packet 1 menu/status behavior.
+
+The plan authorizes no implementation, tests, dispatch, command execution,
+MIDI, ports, package metadata, active behavior, runtime behavior, or hardware
+behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+6H plan.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 5A
 

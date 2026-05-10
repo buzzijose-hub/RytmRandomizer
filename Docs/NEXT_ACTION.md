@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-db04bb0 Add behavior parity progress report after Packet 6G
+fbc80fb Add behavior parity progress report review after Packet 6G
 
 ## Current Phase
 
@@ -2217,6 +2217,42 @@ It records:
 
 The review recommends a docs-only Packet 6H Pad 2 lane behavior plan next if
 continuing behavior-parity implementation.
+
+## Latest Packet 6H Pad 2 Lane Behavior Plan
+
+The latest Packet 6H Pad 2 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6H_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `fbc80fb Add behavior parity progress report review after Packet 6G`
+- accepted preceding Packet 6 progress:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+- recommended future Packet 6H implementation scope:
+  - `P2R` only
+- proposed read-only behavior:
+  - Pad 2 profile rotation intent
+  - lane action `describe_pad2_profile_rotation_intent`
+  - behavior family `pad2-lane/profile-rotation`
+  - rotation concept `Pad 2 profiled secondary-lane engine rotation`
+- remaining deferred/safe Packet 6 scope:
+  - `P2X`
+  - `P2Z`
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+6H plan.
 
 ## Latest Packet 6G Pad 2 Lane Behavior Checkpoint Review
 

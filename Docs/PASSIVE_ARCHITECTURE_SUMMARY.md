@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-db04bb0
+fbc80fb
 
 ## Protected Reference
 
@@ -11082,6 +11082,34 @@ hardware behavior is authorized.
 
 The next recommended task is a docs-only Packet 6H Pad 2 lane behavior plan
 if continuing behavior-parity implementation.
+
+## Packet 6H Pad 2 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_6H_PAD2_LANE_BEHAVIOR_PLAN.md` documents
+the next tiny Packet 6H planning slice for read-only `P2R` Pad 2 profile
+rotation intent.
+
+Accepted Packet 6 behavior before this plan:
+
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+- `P2G`
+
+Recommended future Packet 6H implementation scope:
+
+- `P2R` only
+
+The plan keeps `P2X` and `P2Z` deferred/safe, with `P2M` covered by Packet 1
+menu/status behavior. It adds no tests, implementation, CLI wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 6H plan.
 
 ## Behavior-Parity Progress Report After Packet 5A
 
