@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9d88b2b Add Packet 5C BD Plastic lane behavior plan
+2067d43 Add Packet 5C BD Plastic lane behavior
 
 ## Current Phase
 
@@ -239,6 +239,8 @@ and recommends a tiny future read-only `BP`/`PT`/`PK`/`PX`/`PBH`
 implementation scope.
 The docs-only Packet 5C BD Plastic lane behavior plan review has now accepted
 that scope as the next tiny implementation branch.
+The Packet 5C read-only Pad 1 BD Plastic lane behavior implementation is now
+complete and documented in a checkpoint for review.
 
 ## Current Safety State
 
@@ -293,13 +295,13 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 5C implementation for read-only Pad 1
-BD Plastic lane intent behavior, a user-facing progress/timeline update, or a
-pause at this accepted Packet 5C planning checkpoint.
+Next recommended task is a docs-only Packet 5C BD Plastic lane behavior
+checkpoint review, a broader behavior-parity progress report after Packet 5C,
+a user-facing progress/timeline update, or a pause at this clean Packet 5C
+implementation checkpoint.
 
-Do not implement BD FM discovery execution, BD Plastic discovery execution, BD
-Silky discovery execution, Pad 1 engine rotation execution, Pad 1 current-engine
-mutation execution, dispatch, MIDI, ports, active CLI behavior, package
+Do not implement BD Plastic execution, BD Silky behavior, Pad 1 BD Acoustic
+behavior, runtime mutation, dispatch, MIDI, ports, active CLI behavior, package
 metadata, or any runtime execution layer yet.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation
@@ -6209,6 +6211,43 @@ It records:
 The review adds no implementation, tests, CLI execution wiring, dispatch,
 MIDI, ports, package metadata, active behavior, or hardware behavior. It
 recommends the tiny Packet 5C TDD implementation next.
+
+## Latest Packet 5C BD Plastic Lane Behavior Checkpoint
+
+The latest V1.34 behavior parity Packet 5C BD Plastic lane behavior checkpoint
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5C_BD_PLASTIC_LANE_BEHAVIOR_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone `2067d43 Add Packet 5C BD Plastic lane behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update needed because `tests/test_behavior_pad1_lane.py`
+  was already covered by `=== Test: Behavior Pad 1 Lane ===`
+- read-only Pad 1 BD Plastic lane intent behavior for `BP`, `PT`, `PK`, `PX`,
+  and `PBH`
+- `BP` lane action `load_bd_plastic_profiled_anchor`
+- `PT` lane action `bd_plastic_tone_modulation_discovery`
+- `PK` lane action `bd_plastic_kick_body_discovery`
+- `PX` lane action `bd_plastic_rubber_experimental_discovery`
+- `PBH` lane action `return_bd_plastic_to_anchor`
+- BD Plastic anchor/profile dependency recorded only for `BP`
+- BD Plastic engine/profile dependency recorded only for `PT`, `PK`, and `PX`
+- future BD Plastic discovery depth dependency recorded only for `PT`, `PK`,
+  and `PX`
+- BD Plastic anchor dependency recorded only for `PBH`
+- Packet 5A `BR`/`BM` behavior remains unchanged
+- Packet 5B `FT`/`FK`/`FG`/`FZ` behavior remains unchanged
+- BD Silky, Pad 1 BD Acoustic, runtime mutation, dispatch, MIDI, ports,
+  package metadata, active behavior, and hardware behavior remain deferred
+
+The checkpoint confirms TDD red/green evidence, targeted regression evidence,
+full closeout evidence, empty V1.34 reference diff, empty package metadata
+diff, and clean git status after the implementation milestone. It recommends a
+docs-only Packet 5C checkpoint review next.
 
 ## Do-Not-Touch Files
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 2067d43 Add Packet 5C BD Plastic lane behavior
 - 9d88b2b Add Packet 5C BD Plastic lane behavior plan
 - 7900a90 Add behavior parity progress report review after Packet 5B
 - 0bef95a Add behavior parity progress report after Packet 5B
@@ -11824,6 +11825,62 @@ Pads 5-12, SysEx, GUI/capture, and hardware behavior deferred.
 
 Next recommended task is the tiny Packet 5C implementation for read-only Pad 1
 BD Plastic lane intent behavior.
+
+## V1.34 Behavior Parity Packet 5C BD Plastic Lane Behavior Checkpoint
+
+The Packet 5C BD Plastic lane behavior checkpoint records completion of the
+read-only `BP`/`PT`/`PK`/`PX`/`PBH` implementation slice.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5C_BD_PLASTIC_LANE_BEHAVIOR_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `2067d43 Add Packet 5C BD Plastic lane behavior`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update was needed because `tests/test_behavior_pad1_lane.py`
+was already covered by:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Implemented read-only Packet 5C behavior:
+
+- `BP`: load Pad 1 BD Plastic profiled anchor
+- `PT`: BD Plastic tone/modulation discovery
+- `PK`: BD Plastic kick/body discovery
+- `PX`: BD Plastic rubber/experimental discovery
+- `PBH`: return Pad 1 BD Plastic to anchor
+
+Accepted behavior:
+
+- `BP` records BD Plastic anchor/profile dependency only
+- `PT`, `PK`, and `PX` record BD Plastic engine/profile dependency only
+- `PT`, `PK`, and `PX` record future BD Plastic discovery depth dependency
+  only
+- `PBH` records BD Plastic anchor dependency only
+- Packet 5A `BR`/`BM` behavior remains unchanged
+- Packet 5B `FT`/`FK`/`FG`/`FZ` behavior remains unchanged
+- BD Silky and Pad 1 BD Acoustic remain deferred
+- runtime mutation/execution behavior remains absent
+
+The checkpoint confirms red/green TDD evidence, targeted regression evidence,
+full closeout evidence, empty V1.34 reference diff, empty package metadata
+diff, and clean git status after the implementation milestone.
+
+The implementation adds no real MIDI, `mido`, `rtmidi`, port opening, MIDI
+sending, CLI execution wiring, dispatch, active CLI behavior, package metadata,
+Analog Four support, Pads 5-12 support, SysEx, GUI/capture, or hardware
+behavior.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task is a docs-only Packet 5C checkpoint review.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
