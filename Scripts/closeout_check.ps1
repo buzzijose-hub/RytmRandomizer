@@ -112,6 +112,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_behavior_scene_group.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_scene_group.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Behavior Pad 1 Lane ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_behavior_pad1_lane.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_pad1_lane.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== Test: Mock MIDI ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_mock_midi.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_midi.log" | Add-Content $summary
 
