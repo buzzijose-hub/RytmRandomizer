@@ -247,3 +247,14 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 14. Decision Note Review Follow-Up
+
+A docs-only review/acceptance gate for this decision note now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5_PAD1_LANE_STATE_MODELING_DECISION_NOTE_REVIEW.md`
+
+It accepts the decision note while keeping deeper Pad 1 lane state modeling
+deferred until a separate docs-only plan is created and reviewed. It adds no
+implementation, tests, CLI wiring, dispatch, MIDI, ports, package metadata,
+active behavior, runtime execution, or hardware behavior.
