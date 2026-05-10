@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-bf8c00c
+32404ce
 
 ## Protected Reference
 
@@ -10939,6 +10939,50 @@ or hardware behavior was added.
 
 The next recommended task is a docs-only Packet 7B Pad 3 lane behavior plan
 for `SA` only.
+
+## Packet 7B Pad 3 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_7B_PAD3_LANE_BEHAVIOR_PLAN.md` documents
+the next tiny Pad 3 lane behavior planning slice.
+
+Current baseline before the plan:
+
+- `32404ce Add next Packet 7 command selection review after Packet 7A`
+
+Recommended future implementation scope:
+
+- `SA`: return Pad 3 SY Raw to anchor
+
+Proposed read-only behavior:
+
+- Pad 3 SY Raw anchor return intent
+- source metadata `PAD3_COMMANDS`
+- target pad `3`
+- lane `Pad 3 SY Raw lane`
+- behavior family `pad3-lane/sy-raw-anchor-return`
+- lane action `return_pad3_sy_raw_anchor`
+- intent kind `anchor_return`
+
+Already implemented Packet 7 scope:
+
+- `P3A`
+
+Deferred Pad 3 scope:
+
+- `SL`
+- `SB`
+- `SX`
+- `SW`
+- `P3R`
+- `P3X`
+
+`P3M` remains covered by Packet 1 menu/status behavior.
+
+The plan confirms no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior is authorized.
+
+The next recommended task is a docs-only Packet 7B plan review.
 
 ## Next Packet Selection Checkpoint Review After Packet 6J
 
