@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-d9ba6ac Add behavior parity progress report review after Packet 5 lane state descriptors
+9def18b Add behavior parity user progress timeline after Packet 5 descriptors
 
 ## Current Phase
 
@@ -299,6 +299,9 @@ The docs-only review gate for that progress report has now accepted it as the
 current behavior-parity progress baseline.
 A user-facing progress and timeline update after the Packet 5 lane-state
 descriptor progress report review has now been documented.
+A docs-only next behavior-parity planning gate after the Packet 5 descriptor
+timeline has now been documented and recommends Packet 6 Pad 2 lane behavior
+planning as the next safe branch.
 
 ## Current Safety State
 
@@ -353,8 +356,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next behavior-parity planning gate or a
-pause at this accepted consolidation checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the next
+behavior-parity planning gate, a docs-only Packet 6 Pad 2 lane behavior plan,
+or a pause at this accepted consolidation checkpoint.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -2160,6 +2164,41 @@ It records:
 
 The timeline keeps hardware off and confirms no runtime execution, dispatch,
 MIDI, ports, package metadata, active behavior, or hardware behavior exists.
+
+## Latest Next Behavior-Parity Planning Gate After Packet 5 Descriptors
+
+The latest next behavior-parity planning gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PLANNING_GATE_AFTER_PACKET_5_DESCRIPTORS.md`
+
+It records:
+
+- current baseline before the planning gate:
+  - `9def18b Add behavior parity user progress timeline after Packet 5 descriptors`
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted progress through static Pad 1 lane-state descriptors
+- Packet 5 remains incomplete
+- runtime Pad 1 lane state remains deferred
+- next recommended branch:
+  - docs-only Packet 6 Pad 2 lane behavior planning
+- likely future Pad 2 command family:
+  - `P2M`
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+  - `P2R`
+  - `P2X`
+  - `P2Z`
+
+The planning gate adds no implementation, tests, runtime execution, dispatch,
+MIDI, ports, package metadata, active behavior, or hardware behavior.
 
 The latest V1.34 behavior parity implementation progress review is:
 

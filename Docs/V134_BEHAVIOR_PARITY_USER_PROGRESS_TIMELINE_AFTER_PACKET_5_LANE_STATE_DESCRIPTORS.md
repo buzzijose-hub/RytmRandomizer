@@ -248,3 +248,15 @@ The current best next step is a docs-only next behavior-parity planning gate.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 14. Next Planning Gate Follow-Up
+
+A docs-only next behavior-parity planning gate now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PLANNING_GATE_AFTER_PACKET_5_DESCRIPTORS.md`
+
+It recommends keeping runtime Pad 1 lane state deferred and choosing a
+docs-only Packet 6 Pad 2 lane behavior plan as the next safe branch.
+
+It adds no implementation, tests, dispatch, command execution, MIDI, ports,
+package metadata, active behavior, runtime behavior, or hardware behavior.

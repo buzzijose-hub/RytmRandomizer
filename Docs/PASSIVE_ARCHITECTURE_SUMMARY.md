@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-d9ba6ac
+9def18b
 
 ## Protected Reference
 
@@ -59,7 +59,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: d9ba6ac Add behavior parity progress report review after Packet 5 lane state descriptors
+- current HEAD: 9def18b Add behavior parity user progress timeline after Packet 5 descriptors
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -12111,6 +12111,30 @@ underway, and runtime state modeling, active execution, real MIDI, and
 hardware validation have not started.
 
 The next recommended task is a docs-only next behavior-parity planning gate.
+
+## Next Behavior-Parity Planning Gate After Packet 5 Descriptors
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PLANNING_GATE_AFTER_PACKET_5_DESCRIPTORS.md`
+documents the next safe behavior-parity branch after the Packet 5 descriptor
+timeline.
+
+Current baseline before the planning gate:
+
+- `9def18b Add behavior parity user progress timeline after Packet 5 descriptors`
+
+Decision:
+
+- keep runtime Pad 1 lane state deferred
+- do not jump into runtime execution, dispatch, MIDI, ports, active behavior,
+  or hardware
+- choose docs-only Packet 6 Pad 2 lane behavior planning as the next safe
+  branch
+
+The planning gate adds no implementation, tests, runtime execution, dispatch,
+MIDI, ports, package metadata, active behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for the
+planning decision or a docs-only Packet 6 Pad 2 lane behavior plan.
 
 ## Hardware Manual Reference Inventory
 
