@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-bd91a16 Add Packet 6J Pad 2 lane behavior
+ac274b6 Add Packet 6J Pad 2 lane behavior checkpoint review
 
 ## Current Phase
 
@@ -2323,6 +2323,35 @@ They record:
 
 The review recommends a broader Packet 6 completion/progress report after
 Packet 6J.
+
+## Latest Behavior-Parity Progress Report After Packet 6J
+
+The latest broader behavior-parity implementation progress report is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_6J.md`
+
+It records:
+
+- current clean baseline:
+  - `ac274b6 Add Packet 6J Pad 2 lane behavior checkpoint review`
+- accepted Packet 6 command helper scope:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+  - `P2R`
+  - `P2X`
+  - `P2Z`
+- `P2M` remains covered by Packet 1 menu/status behavior
+- current Packet 6 command helper scope is covered by read-only intent helpers
+- runtime Pad 2 lane state, selected Pad 2 profile runtime state, runtime
+  anchor loading, mutation/discovery/anchor-return execution, dispatch, MIDI,
+  ports, package metadata, active behavior, and hardware behavior remain absent
+
+The report recommends a docs-only review/acceptance gate next.
 
 ## Latest Packet 6I Pad 2 Lane Behavior Plan
 
