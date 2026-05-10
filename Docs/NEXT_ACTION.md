@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-8435420 Add next Packet 7 command selection after Packet 7D
+6874c99 Add next Packet 7 command selection review after Packet 7D
 
 ## Current Phase
 
@@ -2121,6 +2121,48 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Packet 7E Pad 3 Lane Behavior Plan
+
+The latest Packet 7E Pad 3 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_7E_PAD3_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `6874c99 Add next Packet 7 command selection review after Packet 7D`
+- accepted upstream selection review:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7D_REVIEW.md`
+- planned future Packet 7E scope:
+  - `SX` only
+- proposed read-only behavior:
+  - Pad 3 SY Raw sci-fi motion accent mode-load intent
+  - source metadata `PAD3_COMMANDS`
+  - target pad `3`
+  - lane `Pad 3 SY Raw lane`
+  - behavior family `pad3-lane/sy-raw-sci-fi-motion-accent-mode`
+  - lane action `load_pad3_sy_raw_sci_fi_motion_accent_mode`
+  - intent kind `mode_load`
+  - mode concept `Pad 3 SY Raw sci-fi motion accent mode`
+- preserved Packet 7 behavior:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `SB`
+- preserved Packet 1 ownership:
+  - `P3M`
+- deferred/safe Packet 7 scope:
+  - `SW`
+  - `P3R`
+  - `P3X`
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for the Packet 7E
+plan.
 
 ## Latest Next Packet Selection Checkpoint After Packet 6J
 
