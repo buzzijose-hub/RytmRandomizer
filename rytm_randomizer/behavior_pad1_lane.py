@@ -250,6 +250,37 @@ class Pad1LaneBehaviorResult:
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
+@dataclass(frozen=True)
+class Pad1LaneStateDescriptor:
+    """Immutable static descriptor for read-only Pad 1 lane context."""
+
+    source_key: str
+    supported: bool = False
+    reason: str = "unknown_command"
+    target_pad: int | None = None
+    lane_family: str = ""
+    lane_action: str = ""
+    intent_kind: str = ""
+    requires_current_engine: bool = False
+    requires_anchor: bool = False
+    requires_profiled_engine: bool = False
+    anchor_key: str = ""
+    return_key: str = ""
+    discovery_depth: str = ""
+    mutation_depth: str = ""
+    metadata_only: bool = True
+    executes: bool = False
+    sends_midi: bool = False
+    opens_ports: bool = False
+    hardware_required: bool = False
+    notes: tuple[str, ...] = ()
+    metadata: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self):
+        object.__setattr__(self, "notes", tuple(self.notes))
+        object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
+
+
 def evaluate_pad1_lane_behavior(command_key):
     """Return a passive Packet 5 Pad 1 lane behavior result."""
 
@@ -285,6 +316,97 @@ def evaluate_pad1_lane_behavior(command_key):
         accepted=False,
         reason="unknown_command",
         metadata=_safe_failure_metadata("unknown"),
+    )
+
+
+def describe_pad1_lane_state(command_key):
+    """Return a static read-only Pad 1 lane-state descriptor."""
+
+    key = str(command_key)
+
+    if key in (
+        *PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
+        *PACKET_5B_PAD1_BD_FM_KEYS,
+        *PACKET_5C_PAD1_BD_PLASTIC_KEYS,
+        *PACKET_5D_PAD1_BD_SILKY_KEYS,
+        *PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
+    ):
+        return _accepted_pad1_lane_state_descriptor(key)
+
+    if key in COMMANDS:
+        return Pad1LaneStateDescriptor(
+            source_key=key,
+            supported=False,
+            reason="unsupported_pad1_lane_command",
+            metadata=_safe_state_metadata("COMMANDS"),
+        )
+
+    return Pad1LaneStateDescriptor(
+        source_key=key,
+        supported=False,
+        reason="unknown_command",
+        metadata=_safe_state_metadata("unknown"),
+    )
+
+
+def _accepted_pad1_lane_state_descriptor(command_key):
+    behavior = evaluate_pad1_lane_behavior(command_key)
+    intent_kind = _STATE_INTENT_KINDS[command_key]
+    lane_family = _STATE_LANE_FAMILIES[command_key]
+    depth_dependency = _DEPTH_DEPENDENCIES[command_key]
+    discovery_depth = depth_dependency if intent_kind == "discovery" else ""
+    mutation_depth = depth_dependency if intent_kind == "mutation" else ""
+    requires_anchor = intent_kind in ("anchor_load", "anchor_return")
+    requires_profiled_engine = intent_kind == "discovery"
+    anchor_key = command_key if requires_anchor else ""
+    return_key = command_key if intent_kind == "anchor_return" else ""
+
+    metadata = dict(behavior.metadata)
+    metadata.update(
+        {
+            "source_key": command_key,
+            "lane_family": lane_family,
+            "intent_kind": intent_kind,
+            "requires_current_engine": command_key
+            in PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
+            "requires_anchor": requires_anchor,
+            "requires_profiled_engine": requires_profiled_engine,
+            "anchor_key": anchor_key,
+            "return_key": return_key,
+            "discovery_depth": discovery_depth,
+            "mutation_depth": mutation_depth,
+            "metadata_only": True,
+            "executes": False,
+            "sends_real_midi": False,
+            "opens_ports": False,
+            "hardware_required": False,
+            "mutates_runtime_state": False,
+            "dispatches_command": False,
+        }
+    )
+
+    return Pad1LaneStateDescriptor(
+        source_key=command_key,
+        supported=True,
+        reason=behavior.reason,
+        target_pad=behavior.target_pad,
+        lane_family=lane_family,
+        lane_action=behavior.lane_action,
+        intent_kind=intent_kind,
+        requires_current_engine=command_key in PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
+        requires_anchor=requires_anchor,
+        requires_profiled_engine=requires_profiled_engine,
+        anchor_key=anchor_key,
+        return_key=return_key,
+        discovery_depth=discovery_depth,
+        mutation_depth=mutation_depth,
+        metadata_only=True,
+        executes=False,
+        sends_midi=False,
+        opens_ports=False,
+        hardware_required=False,
+        notes=behavior.display_lines,
+        metadata=metadata,
     )
 
 
@@ -448,6 +570,60 @@ def _safe_failure_metadata(source):
     }
 
 
+def _safe_state_metadata(source):
+    metadata = _safe_failure_metadata(source)
+    metadata.update(
+        {
+            "metadata_only": True,
+            "executes": False,
+            "mutates_runtime_state": False,
+            "dispatches_command": False,
+        }
+    )
+    return metadata
+
+
+_STATE_LANE_FAMILIES = {
+    "BR": "current_bd_engine",
+    "BM": "current_bd_engine",
+    "FT": "bd_fm",
+    "FK": "bd_fm",
+    "FG": "bd_fm",
+    "FZ": "bd_fm",
+    "BP": "bd_plastic",
+    "PT": "bd_plastic",
+    "PK": "bd_plastic",
+    "PX": "bd_plastic",
+    "PBH": "bd_plastic",
+    "BI": "bd_silky",
+    "ST": "bd_silky",
+    "SK": "bd_silky",
+    "SC": "bd_silky",
+    "SBH": "bd_silky",
+    "BA": "bd_acoustic",
+}
+
+_STATE_INTENT_KINDS = {
+    "BR": "rotation",
+    "BM": "mutation",
+    "FT": "discovery",
+    "FK": "discovery",
+    "FG": "discovery",
+    "FZ": "anchor_return",
+    "BP": "anchor_load",
+    "PT": "discovery",
+    "PK": "discovery",
+    "PX": "discovery",
+    "PBH": "anchor_return",
+    "BI": "anchor_load",
+    "ST": "discovery",
+    "SK": "discovery",
+    "SC": "discovery",
+    "SBH": "anchor_return",
+    "BA": "anchor_load",
+}
+
+
 __all__ = [
     "DEFERRED_PACKET_5_PAD1_LANE_KEYS",
     "PACKET_5A_PAD1_CURRENT_ENGINE_KEYS",
@@ -456,5 +632,7 @@ __all__ = [
     "PACKET_5D_PAD1_BD_SILKY_KEYS",
     "PACKET_5E_PAD1_BD_ACOUSTIC_KEYS",
     "Pad1LaneBehaviorResult",
+    "Pad1LaneStateDescriptor",
+    "describe_pad1_lane_state",
     "evaluate_pad1_lane_behavior",
 ]

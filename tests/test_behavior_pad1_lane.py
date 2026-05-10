@@ -1119,6 +1119,145 @@ def test_no_out_of_scope_support_is_exposed():
     assert "Pads 5-12 support" not in module_text
 
 
+def test_describe_pad1_lane_state_maps_accepted_keys_to_static_lane_families():
+    from rytm_randomizer.behavior_pad1_lane import (
+        describe_pad1_lane_state,
+        evaluate_pad1_lane_behavior,
+    )
+
+    expected = {
+        "BR": ("current_bd_engine", "rotation"),
+        "BM": ("current_bd_engine", "mutation"),
+        "FT": ("bd_fm", "discovery"),
+        "FK": ("bd_fm", "discovery"),
+        "FG": ("bd_fm", "discovery"),
+        "FZ": ("bd_fm", "anchor_return"),
+        "BP": ("bd_plastic", "anchor_load"),
+        "PT": ("bd_plastic", "discovery"),
+        "PK": ("bd_plastic", "discovery"),
+        "PX": ("bd_plastic", "discovery"),
+        "PBH": ("bd_plastic", "anchor_return"),
+        "BI": ("bd_silky", "anchor_load"),
+        "ST": ("bd_silky", "discovery"),
+        "SK": ("bd_silky", "discovery"),
+        "SC": ("bd_silky", "discovery"),
+        "SBH": ("bd_silky", "anchor_return"),
+        "BA": ("bd_acoustic", "anchor_load"),
+    }
+
+    for command_key, (expected_family, expected_kind) in expected.items():
+        descriptor = describe_pad1_lane_state(command_key)
+        behavior = evaluate_pad1_lane_behavior(command_key)
+
+        assert descriptor.supported is True
+        assert descriptor.source_key == command_key
+        assert descriptor.target_pad == 1
+        assert descriptor.lane_family == expected_family
+        assert descriptor.intent_kind == expected_kind
+        assert descriptor.lane_action == behavior.lane_action
+        assert descriptor.metadata_only is True
+        assert descriptor.executes is False
+        assert descriptor.sends_midi is False
+        assert descriptor.opens_ports is False
+        assert descriptor.hardware_required is False
+
+
+def test_describe_pad1_lane_state_records_static_dependency_flags():
+    from rytm_randomizer.behavior_pad1_lane import describe_pad1_lane_state
+
+    current_engine = describe_pad1_lane_state("BM")
+    assert current_engine.requires_current_engine is True
+    assert current_engine.requires_anchor is False
+    assert current_engine.requires_profiled_engine is False
+    assert current_engine.mutation_depth == "future_safe_mutation_depth"
+    assert current_engine.discovery_depth == ""
+
+    discovery = describe_pad1_lane_state("FT")
+    assert discovery.requires_current_engine is False
+    assert discovery.requires_anchor is False
+    assert discovery.requires_profiled_engine is True
+    assert discovery.discovery_depth == "future_bd_fm_discovery_depth"
+    assert discovery.mutation_depth == ""
+
+    anchor_return = describe_pad1_lane_state("FZ")
+    assert anchor_return.requires_current_engine is False
+    assert anchor_return.requires_anchor is True
+    assert anchor_return.requires_profiled_engine is False
+    assert anchor_return.anchor_key == "FZ"
+    assert anchor_return.return_key == "FZ"
+
+    acoustic_anchor = describe_pad1_lane_state("BA")
+    assert acoustic_anchor.requires_current_engine is False
+    assert acoustic_anchor.requires_anchor is True
+    assert acoustic_anchor.requires_profiled_engine is False
+    assert acoustic_anchor.anchor_key == "BA"
+    assert acoustic_anchor.return_key == ""
+    assert acoustic_anchor.metadata["requires_group_profile_4"] is False
+    assert acoustic_anchor.metadata["requires_pad_4"] is False
+
+
+def test_describe_pad1_lane_state_metadata_is_copied_and_immutable():
+    from rytm_randomizer.behavior_pad1_lane import describe_pad1_lane_state
+
+    descriptor = describe_pad1_lane_state("BA")
+
+    assert descriptor.metadata["source"] == "PAD1_COMMANDS"
+
+    try:
+        descriptor.metadata["source"] = "changed"
+    except TypeError:
+        pass
+    else:
+        raise AssertionError("descriptor metadata should be immutable")
+
+    fresh_descriptor = describe_pad1_lane_state("BA")
+
+    assert fresh_descriptor.metadata["source"] == "PAD1_COMMANDS"
+    assert fresh_descriptor.metadata["lane_family"] == "bd_acoustic"
+
+
+def test_describe_pad1_lane_state_unknown_and_unsupported_keys_fail_safely():
+    from rytm_randomizer.behavior_pad1_lane import describe_pad1_lane_state
+
+    unsupported = describe_pad1_lane_state("BD")
+    assert unsupported.supported is False
+    assert unsupported.reason == "unsupported_pad1_lane_command"
+    assert unsupported.metadata_only is True
+    assert unsupported.executes is False
+    assert unsupported.sends_midi is False
+    assert unsupported.opens_ports is False
+    assert unsupported.hardware_required is False
+    assert unsupported.metadata["source"] == "COMMANDS"
+
+    unknown = describe_pad1_lane_state("DOES_NOT_EXIST")
+    assert unknown.supported is False
+    assert unknown.reason == "unknown_command"
+    assert unknown.target_pad is None
+    assert unknown.lane_family == ""
+    assert unknown.intent_kind == ""
+    assert unknown.metadata_only is True
+    assert unknown.executes is False
+    assert unknown.sends_midi is False
+    assert unknown.opens_ports is False
+    assert unknown.hardware_required is False
+    assert unknown.metadata["source"] == "unknown"
+
+
+def test_describe_pad1_lane_state_exposes_no_runtime_or_hardware_behavior():
+    from rytm_randomizer.behavior_pad1_lane import describe_pad1_lane_state
+
+    for command_key in ("BR", "BM", "FT", "FZ", "BP", "PBH", "BI", "SBH", "BA"):
+        descriptor = describe_pad1_lane_state(command_key)
+
+        assert descriptor.metadata["metadata_only"] is True
+        assert descriptor.metadata["executes"] is False
+        assert descriptor.metadata["sends_real_midi"] is False
+        assert descriptor.metadata["opens_ports"] is False
+        assert descriptor.metadata["hardware_required"] is False
+        assert descriptor.metadata["mutates_runtime_state"] is False
+        assert descriptor.metadata["dispatches_command"] is False
+
+
 if __name__ == "__main__":
     test_importing_behavior_pad1_lane_prints_nothing()
     test_br_and_bm_return_read_only_pad1_lane_intents()
@@ -1143,3 +1282,8 @@ if __name__ == "__main__":
     test_no_package_metadata_files_are_introduced()
     test_behavior_pad1_lane_exposes_no_active_behavior_names()
     test_no_out_of_scope_support_is_exposed()
+    test_describe_pad1_lane_state_maps_accepted_keys_to_static_lane_families()
+    test_describe_pad1_lane_state_records_static_dependency_flags()
+    test_describe_pad1_lane_state_metadata_is_copied_and_immutable()
+    test_describe_pad1_lane_state_unknown_and_unsupported_keys_fail_safely()
+    test_describe_pad1_lane_state_exposes_no_runtime_or_hardware_behavior()
