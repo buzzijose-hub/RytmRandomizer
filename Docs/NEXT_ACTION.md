@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f58f0e4 Add behavior parity progress report after Packet 6F
+3eac0bd Add behavior parity progress report review after Packet 6F
 
 ## Current Phase
 
@@ -8189,3 +8189,39 @@ powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
 
 Do not turn on Analog Rytm or Analog Four until explicitly entering a
 hardware-facing validation phase.
+
+## Latest Packet 6G Pad 2 Lane Behavior Plan
+
+The latest Packet 6G Pad 2 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6G_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `3eac0bd Add behavior parity progress report review after Packet 6F`
+- accepted preceding Packet 6 progress:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+- recommended future Packet 6G implementation scope:
+  - `P2G` only
+- proposed read-only behavior:
+  - Pad 2 grit/noise discovery intent
+  - lane action `describe_pad2_grit_noise_discovery_intent`
+  - behavior family `pad2-lane/grit-noise-discovery`
+  - discovery concept `Pad 2 grit/noise discovery`
+- remaining deferred/safe Packet 6 scope:
+  - `P2R`
+  - `P2X`
+  - `P2Z`
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+6G plan.

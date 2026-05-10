@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-f58f0e4
+3eac0bd
 
 ## Protected Reference
 
@@ -10881,6 +10881,33 @@ Confirmed absent behavior:
 
 The next recommended task is a broader behavior-parity progress report after
 Packet 5A.
+
+## Packet 6G Pad 2 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_6G_PAD2_LANE_BEHAVIOR_PLAN.md` documents
+the next tiny Packet 6G planning slice for read-only `P2G` Pad 2 grit/noise
+discovery intent.
+
+Accepted Packet 6 behavior before this plan:
+
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+
+Recommended future Packet 6G implementation scope:
+
+- `P2G` only
+
+The plan keeps `P2R`, `P2X`, and `P2Z` deferred/safe, with `P2M` covered by
+Packet 1 menu/status behavior. It adds no tests, implementation, CLI wiring,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 6G plan.
 
 ## Behavior-Parity Progress Report After Packet 5A
 
