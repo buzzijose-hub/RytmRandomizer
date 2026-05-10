@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-abb9b3f Add behavior parity progress report after Packet 6I
+4fafe1a Add behavior parity progress report review after Packet 6I
 
 ## Current Phase
 
@@ -2214,6 +2214,45 @@ It records:
 
 The review recommends a docs-only Packet 6J Pad 2 lane behavior plan for
 `P2Z` if continuing behavior-parity implementation.
+
+## Latest Packet 6J Pad 2 Lane Behavior Plan
+
+The latest Packet 6J Pad 2 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6J_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `4fafe1a Add behavior parity progress report review after Packet 6I`
+- accepted preceding Packet 6 progress:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+  - `P2R`
+  - `P2X`
+- recommended future Packet 6J implementation scope:
+  - `P2Z` only
+- proposed read-only behavior:
+  - Pad 2 current-profile anchor return intent
+  - lane action `describe_pad2_current_profile_anchor_return_intent`
+  - behavior family `pad2-lane/current-profile-anchor-return`
+  - selected-profile dependency recorded only as `current_pad2_profile_state`
+- remaining deferred/safe current Packet 6 command scope:
+  - none if `P2Z` is later implemented and accepted
+
+`P2M` remains covered by Packet 1 menu/status behavior.
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+6J plan.
 
 ## Latest Packet 6I Pad 2 Lane Behavior Plan
 

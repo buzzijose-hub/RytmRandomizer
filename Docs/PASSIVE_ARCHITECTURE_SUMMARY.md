@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-abb9b3f
+4fafe1a
 
 ## Protected Reference
 
@@ -11103,6 +11103,41 @@ added.
 
 The next recommended task is a docs-only Packet 6J Pad 2 lane behavior plan
 for `P2Z` if continuing.
+
+## Packet 6J Pad 2 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_6J_PAD2_LANE_BEHAVIOR_PLAN.md` documents
+the next tiny Pad 2 lane behavior planning slice.
+
+Current baseline before the plan:
+
+- `4fafe1a Add behavior parity progress report review after Packet 6I`
+
+Accepted Packet 6 scope entering Packet 6J:
+
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+- `P2G`
+- `P2R`
+- `P2X`
+
+Recommended future implementation scope:
+
+- `P2Z`: return current Pad 2 profile to anchor
+
+The proposed behavior is read-only current-profile anchor return intent. It
+records selected-profile dependency only as metadata and does not add runtime
+Pad 2 state, runtime anchor loading, anchor-return execution, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, or hardware
+behavior.
+
+`P2M` remains covered by Packet 1 menu/status behavior.
+
+The next recommended task is a docs-only Packet 6J plan review.
 
 ## Packet 6G Pad 2 Lane Behavior Plan
 
