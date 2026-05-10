@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9faecea Add Packet 5C BD Plastic lane behavior checkpoint
+61072b7 Add Packet 5C BD Plastic lane behavior checkpoint review
 
 ## Current Phase
 
@@ -243,6 +243,8 @@ The Packet 5C read-only Pad 1 BD Plastic lane behavior implementation is now
 complete and documented in a checkpoint for review.
 The Packet 5C BD Plastic lane behavior checkpoint review has now accepted the
 completed read-only implementation slice.
+The broader behavior-parity progress report after Packet 5C has now been
+documented as the current consolidation checkpoint.
 
 ## Current Safety State
 
@@ -297,10 +299,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader behavior-parity progress report after
-Packet 5C, a user-facing progress/timeline update, a docs-only Packet 5D BD
-Silky lane behavior plan, or a pause at this accepted Packet 5C checkpoint
-review.
+Next recommended task is a docs-only review/acceptance gate for the broader
+behavior-parity progress report after Packet 5C, a user-facing
+progress/timeline update, a docs-only Packet 5D BD Silky lane behavior plan,
+or a pause at this clean progress report checkpoint.
 
 Do not implement BD Plastic execution, BD Silky behavior, Pad 1 BD Acoustic
 behavior, runtime mutation, dispatch, MIDI, ports, active CLI behavior, package
@@ -6278,6 +6280,51 @@ It records:
 
 The review recommends a broader behavior-parity progress report after Packet
 5C next.
+
+## Latest Behavior-Parity Progress Report After Packet 5C
+
+The latest broader behavior-parity progress report is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_5C.md`
+
+It records:
+
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5A accepted progress
+- Packet 5B accepted progress
+- Packet 5C accepted progress
+- Packet 5 not complete
+- current behavior helpers:
+  - `rytm_randomizer/behavior_menu_utility.py`
+  - `rytm_randomizer/behavior_anchor_profile.py`
+  - `rytm_randomizer/behavior_mutation_depth.py`
+  - `rytm_randomizer/behavior_scene_group.py`
+  - `rytm_randomizer/behavior_pad1_lane.py`
+- current behavior closeout labels:
+  - `=== Test: Behavior Menu Utility ===`
+  - `=== Test: Behavior Anchor Profile ===`
+  - `=== Test: Behavior Mutation Depth ===`
+  - `=== Test: Behavior Scene Group ===`
+  - `=== Test: Behavior Pad 1 Lane ===`
+- accepted Packet 5C behavior:
+  - `BP`: read-only BD Plastic profiled anchor/load intent
+  - `PT`: read-only BD Plastic tone/modulation discovery intent
+  - `PK`: read-only BD Plastic kick/body discovery intent
+  - `PX`: read-only BD Plastic rubber/experimental discovery intent
+  - `PBH`: read-only BD Plastic anchor-return intent
+- deferred Packet 5 scope:
+  - BD Silky behavior
+  - Pad 1 BD Acoustic behavior
+  - deeper Pad 1 lane state modeling
+  - runtime mutation/execution behavior
+- no CLI execution wiring, dispatch, MIDI, ports, package metadata, active
+  behavior, or hardware behavior
+
+The report recommends a docs-only review/acceptance gate next before choosing
+Packet 5D, a user-facing progress/timeline update, or a pause.
 
 ## Do-Not-Touch Files
 
