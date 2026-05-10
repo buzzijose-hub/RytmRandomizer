@@ -282,3 +282,13 @@ read-only intent-only behavior phase.
 No active behavior was added.
 
 Hardware remains off.
+
+## Checkpoint Review Follow-Up
+
+This checkpoint was reviewed and accepted in:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+The review accepts Packet 5B read-only Pad 1 BD FM lane behavior for `FT`,
+`FK`, `FG`, and `FZ` and recommends a broader behavior-parity progress report
+after Packet 5B next.

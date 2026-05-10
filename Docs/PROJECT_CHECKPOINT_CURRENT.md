@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ba16340 Add Packet 5B BD FM lane behavior checkpoint
 - 9f5eb5f Add Packet 5B BD FM lane behavior
 - f87e7de Add Packet 5B BD FM lane behavior plan review
 - 322fd38 Add Packet 5B BD FM lane behavior plan
@@ -11570,6 +11571,56 @@ behavior.
 `rytm_hybrid_randomizer_v134.py` remains untouched.
 
 Next recommended task is a docs-only Packet 5B checkpoint review.
+
+## V1.34 Behavior Parity Packet 5B BD FM Lane Behavior Checkpoint Review
+
+The Packet 5B BD FM lane behavior checkpoint review accepts the completed
+read-only `FT`/`FK`/`FG`/`FZ` implementation slice.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `9f5eb5f Add Packet 5B BD FM lane behavior`
+- `ba16340 Add Packet 5B BD FM lane behavior checkpoint`
+
+Accepted closeout coverage:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Accepted read-only Packet 5B behavior:
+
+- `FT`: BD FM tone/FM discovery
+- `FK`: BD FM kick/body discovery
+- `FG`: BD FM grit discovery
+- `FZ`: return Pad 1 BD FM to anchor
+
+The review confirms Packet 5A `BR`/`BM` behavior remains stable and Packet 5
+is not complete.
+
+Deferred Packet 5 scope remains:
+
+- BD Plastic anchor/discovery/return behavior
+- BD Silky anchor/discovery/return behavior
+- Pad 1 BD Acoustic anchor behavior
+- deeper Pad 1 lane state modeling
+- runtime mutation/execution behavior
+
+The review confirms no CLI execution wiring, dispatch, command execution,
+scene execution, MIDI, ports, package metadata, active CLI behavior,
+machine/profile expansion, Analog Four support, Pads 5-12 support, SysEx,
+GUI/capture, or hardware validation was added.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task is a broader behavior-parity progress report after
+Packet 5B.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
