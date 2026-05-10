@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 22c3e2c Add behavior parity progress report review after Packet 5A
 - 37b20b4 Add behavior parity progress report after Packet 5A
 - 217e86c Add Packet 5A Pad 1 lane behavior checkpoint review
 - 05d69c8 Add Packet 5A Pad 1 lane behavior checkpoint
@@ -11414,8 +11415,60 @@ SysEx, GUI/capture, or hardware behavior.
 
 `rytm_hybrid_randomizer_v134.py` remains untouched.
 
-Next recommended task is a Packet 5B docs-only plan for the next tiny Pad 1
-lane slice.
+At review time, the next recommended task was a Packet 5B docs-only plan for
+the next tiny Pad 1 lane slice.
+
+## V1.34 Behavior Parity Packet 5B BD FM Lane Behavior Plan
+
+The Packet 5B BD FM lane behavior plan defines the next tiny Packet 5 planning
+slice after accepted Packet 5A progress.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline:
+
+- `22c3e2c Add behavior parity progress report review after Packet 5A`
+
+Planned future Packet 5B scope:
+
+- `FT`: BD FM tone/FM discovery
+- `FK`: BD FM kick/body discovery
+- `FG`: BD FM grit discovery
+- `FZ`: return Pad 1 BD FM to anchor
+
+Already-covered context:
+
+- `FM`: show BD FM menu/status, covered by Packet 1
+- `BF`: load Pad 1 BD FM profiled anchor, covered by Packet 2
+
+Future implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update is expected because `tests/test_behavior_pad1_lane.py`
+is already covered by:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Deferred Packet 5 scope remains:
+
+- BD Plastic anchor/discovery/return behavior
+- BD Silky anchor/discovery/return behavior
+- Pad 1 BD Acoustic anchor behavior
+- deeper Pad 1 lane state modeling
+- runtime mutation/execution behavior
+
+The plan adds no real MIDI, `mido`, `rtmidi`, port opening, MIDI sending,
+active CLI behavior, package metadata, Analog Four support, Pads 5-12 support,
+SysEx, GUI/capture, or hardware behavior.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet 5B
+plan.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 

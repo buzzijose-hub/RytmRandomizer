@@ -323,3 +323,13 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 16. Packet 5B Plan Follow-Up
+
+A docs-only Packet 5B BD FM lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md`
+
+It plans a future read-only `FT`/`FK`/`FG`/`FZ` implementation scope while
+keeping BD Plastic, BD Silky, Pad 1 BD Acoustic, runtime mutation, MIDI, ports,
+active behavior, package metadata, and hardware behavior deferred.

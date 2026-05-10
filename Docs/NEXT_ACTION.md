@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-37b20b4 Add behavior parity progress report after Packet 5A
+22c3e2c Add behavior parity progress report review after Packet 5A
 
 ## Current Phase
 
@@ -222,6 +222,8 @@ documented as the current consolidation checkpoint.
 The broader behavior-parity progress report after Packet 5A review has now
 accepted that report as the current behavior-parity progress baseline before
 any Packet 5B planning.
+The docs-only Packet 5B BD FM lane behavior plan has now been documented and
+recommends a tiny future read-only `FT`/`FK`/`FG`/`FZ` implementation scope.
 
 ## Current Safety State
 
@@ -276,9 +278,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a Packet 5B docs-only plan for the next tiny Pad 1
-lane slice, a user-facing progress/timeline update, or a pause at this clean
-progress report review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the Packet 5B
+BD FM lane behavior plan, a user-facing progress/timeline update, or a pause
+at this clean planning checkpoint.
 
 Do not implement BD FM discovery execution, BD Plastic discovery execution, BD
 Silky discovery execution, Pad 1 engine rotation execution, Pad 1 current-engine
@@ -5917,6 +5919,41 @@ It records:
   package metadata, active behavior, or hardware behavior is authorized
 
 The review recommends a Packet 5B docs-only plan if continuing implementation.
+
+## Latest Packet 5B BD FM Lane Behavior Plan
+
+The latest V1.34 behavior parity Packet 5B BD FM lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline `22c3e2c Add behavior parity progress report review after
+  Packet 5A`
+- Packet 5B identity:
+  - Pad 1 BD FM Lane Behavior Parity
+- future implementation scope:
+  - `FT`: BD FM tone/FM discovery
+  - `FK`: BD FM kick/body discovery
+  - `FG`: BD FM grit discovery
+  - `FZ`: return Pad 1 BD FM to anchor
+- already-covered context:
+  - `FM`: Packet 1 menu/status behavior
+  - `BF`: Packet 2 anchor/profile behavior
+- future file ownership:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update expected because `=== Test: Behavior Pad 1 Lane ===`
+  already covers `tests/test_behavior_pad1_lane.py`
+- deferred Packet 5 scope:
+  - BD Plastic behavior
+  - BD Silky behavior
+  - `BA` Pad 1 BD Acoustic behavior
+  - runtime mutation/execution behavior
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch, MIDI,
+ports, package metadata, active behavior, or hardware behavior. It recommends a
+docs-only review/acceptance gate next.
 
 ## Do-Not-Touch Files
 

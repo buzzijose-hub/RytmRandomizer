@@ -452,3 +452,13 @@ This progress report was reviewed and accepted in:
 
 The review accepts the current read-only behavior foundation and recommends a
 Packet 5B docs-only plan before any next Packet 5 implementation.
+
+## 19. Packet 5B Plan Follow-Up
+
+A docs-only Packet 5B BD FM lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md`
+
+It plans a future read-only `FT`/`FK`/`FG`/`FZ` implementation scope and adds
+no implementation, tests, MIDI, ports, active behavior, package metadata, or
+hardware behavior.

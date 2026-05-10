@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-37b20b4
+22c3e2c
 
 ## Protected Reference
 
@@ -59,7 +59,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 37b20b4 Add behavior parity progress report after Packet 5A
+- current HEAD: 22c3e2c Add behavior parity progress report review after Packet
+  5A
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -229,14 +230,16 @@ It captures:
   Packet 5A has now been documented as the current consolidation checkpoint;
   the broader behavior-parity progress report after Packet 5A review has now
   accepted that report as the current behavior-parity progress baseline before
-  any Packet 5B planning
+  any Packet 5B planning; the docs-only Packet 5B BD FM lane behavior plan has
+  now been documented and recommends a tiny future `FT`/`FK`/`FG`/`FZ`
+  implementation scope
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: create a Packet 5B docs-only plan, write a
-  user-facing progress/timeline update, or pause at the clean progress report
-  review checkpoint
+- next recommended task: review and accept the Packet 5B BD FM lane behavior
+  plan, write a user-facing progress/timeline update, or pause at the clean
+  planning checkpoint
 - closeout command
 - stop condition
 
@@ -10909,8 +10912,46 @@ implementation and authorizes no runtime prompt behavior, dispatch, command
 execution, MIDI, ports, package metadata, active behavior, or hardware
 behavior.
 
-The next recommended task is a Packet 5B docs-only plan for the next tiny Pad
-1 lane slice.
+At review time, the next recommended task was a Packet 5B docs-only plan for
+the next tiny Pad 1 lane slice.
+
+## Packet 5B BD FM Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md` defines the
+next tiny Packet 5 planning slice.
+
+Planned Packet 5B scope:
+
+- `FT`: BD FM tone/FM discovery
+- `FK`: BD FM kick/body discovery
+- `FG`: BD FM grit discovery
+- `FZ`: return Pad 1 BD FM to anchor
+
+Already-covered context:
+
+- `FM`: Packet 1 menu/status behavior
+- `BF`: Packet 2 anchor/profile behavior
+
+Future implementation ownership:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update is expected because `=== Test: Behavior Pad 1 Lane ===`
+already covers `tests/test_behavior_pad1_lane.py`.
+
+Deferred Packet 5 scope remains:
+
+- BD Plastic anchor/discovery/return behavior
+- BD Silky anchor/discovery/return behavior
+- Pad 1 BD Acoustic anchor behavior
+- deeper Pad 1 lane state modeling
+- runtime mutation/execution behavior
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch, MIDI,
+ports, package metadata, active behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this plan.
 
 ## Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
