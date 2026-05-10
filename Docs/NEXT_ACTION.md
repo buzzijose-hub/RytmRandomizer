@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-cd0d489 Add Packet 6B Pad 2 lane behavior checkpoint
+7032770 Add Packet 6B Pad 2 lane behavior checkpoint review
 
 ## Current Phase
 
@@ -320,6 +320,8 @@ The tiny Packet 6B read-only Pad 2 lane behavior implementation is now
 complete for `P2H` only and documented in a checkpoint for review.
 The docs-only review gate for that checkpoint has now accepted Packet 6B as
 complete for read-only `P2H` intent only.
+The broader Packet 6 progress report after Packet 6B has now been documented
+as the current consolidation checkpoint.
 
 ## Current Safety State
 
@@ -374,8 +376,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader docs-only Packet 6 progress update after
-Packet 6B, or a pause at this accepted checkpoint review.
+Next recommended task is a docs-only review/acceptance gate for the broader
+Packet 6 progress report after Packet 6B, or a pause at this clean
+consolidation checkpoint.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -2471,6 +2474,29 @@ It records:
 
 The review recommends a broader Packet 6 progress update after Packet 6B
 before any future Pad 2 scope widening.
+
+## Latest Behavior-Parity Progress Report After Packet 6B
+
+The latest broader behavior-parity implementation progress report after
+Packet 6B is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_6B.md`
+
+It records:
+
+- current baseline:
+  - `7032770 Add Packet 6B Pad 2 lane behavior checkpoint review`
+- accepted Packet 6 progress:
+  - `P2B`: load Pad 2 BD Classic rolling low percussion / home
+  - `P2H`: load Pad 2 SD Hard pressure snare
+- `P2M` remains covered by Packet 1 menu/status behavior
+- Packet 6 is not complete
+- deferred/safe Pad 2 lane scope:
+  - `P2C`, `P2F`, `P2T`, `P2P`, `P2G`, `P2R`, `P2X`, `P2Z`
+- no CLI execution wiring, dispatch, command execution, MIDI, ports, package
+  metadata, active behavior, or hardware behavior
+
+The report recommends a docs-only review/acceptance gate next.
 
 The latest V1.34 behavior parity implementation progress review is:
 
