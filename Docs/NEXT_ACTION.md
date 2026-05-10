@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9c792ba Add Packet 6H Pad 2 lane behavior
+615c2a1 Add Packet 6H Pad 2 lane behavior checkpoint
 
 ## Current Phase
 
@@ -2121,6 +2121,38 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Packet 6H Pad 2 Lane Behavior Checkpoint Review
+
+The latest Packet 6H Pad 2 lane behavior checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6H_PAD2_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+It records:
+
+- accepted checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_6H_PAD2_LANE_BEHAVIOR_CHECKPOINT.md`
+- accepted implementation milestone:
+  - `9c792ba Add Packet 6H Pad 2 lane behavior`
+- accepted checkpoint milestone:
+  - `615c2a1 Add Packet 6H Pad 2 lane behavior checkpoint`
+- accepted read-only Packet 6H behavior:
+  - `P2R`: rotate Pad 2 through profiled secondary-lane engines
+- preserved read-only Packet 6 behavior:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+- remaining deferred/safe Packet 6 scope:
+  - `P2M`
+  - `P2X`
+  - `P2Z`
+
+The review recommends a broader Packet 6 progress update after Packet 6H
+before any future Pad 2 scope widening.
 
 ## Latest Packet 6G Pad 2 Lane Behavior Checkpoint Review
 
