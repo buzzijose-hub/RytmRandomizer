@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- bb1c87b Add behavior parity progress report review after Packet 6H
 - 03ea69d Add behavior parity progress report after Packet 6H
 - 90e20c4 Add Packet 6H Pad 2 lane behavior checkpoint review
 - 615c2a1 Add Packet 6H Pad 2 lane behavior checkpoint
@@ -11405,6 +11406,45 @@ support, SysEx, GUI/capture, or hardware behavior.
 
 Next recommended task is a broader behavior-parity progress report after
 Packet 5A.
+
+## Latest Packet 6I Pad 2 Lane Behavior Plan
+
+The docs-only Packet 6I Pad 2 lane behavior plan has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6I_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `bb1c87b Add behavior parity progress report review after Packet 6H`
+
+Accepted Packet 6 scope before Packet 6I:
+
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+- `P2G`
+- `P2R`
+
+Recommended future Packet 6I scope:
+
+- `P2X` only
+
+The plan keeps `P2Z` deferred/safe and keeps `P2M` covered by Packet 1
+menu/status behavior.
+
+The planned `P2X` behavior is read-only Pad 2 current-profile safe mutation
+intent. It records selected-profile dependency as metadata only and does not
+authorize selected Pad 2 profile runtime state, mutation execution, dispatch,
+MIDI, ports, package metadata, active behavior, runtime execution, or hardware
+behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+6I plan.
 
 ## V1.34 Behavior Parity Packet 6G Pad 2 Lane Behavior Plan
 

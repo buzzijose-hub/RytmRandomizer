@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-03ea69d
+bb1c87b
 
 ## Protected Reference
 
@@ -10881,6 +10881,43 @@ Confirmed absent behavior:
 
 The next recommended task is a broader behavior-parity progress report after
 Packet 5A.
+
+## Packet 6I Pad 2 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_6I_PAD2_LANE_BEHAVIOR_PLAN.md` documents
+the next tiny Pad 2 lane behavior planning slice.
+
+Current baseline before the plan:
+
+- `bb1c87b Add behavior parity progress report review after Packet 6H`
+
+Accepted Packet 6 scope entering Packet 6I:
+
+- `P2B`
+- `P2H`
+- `P2C`
+- `P2F`
+- `P2T`
+- `P2P`
+- `P2G`
+- `P2R`
+
+Recommended future implementation scope:
+
+- `P2X`: safely mutate the currently loaded Pad 2 profile
+
+The proposed behavior is read-only current-profile safe mutation intent. It
+records selected-profile dependency only as metadata and does not add runtime
+Pad 2 state, mutation execution, dispatch, command execution, MIDI, ports,
+package metadata, active behavior, or hardware behavior.
+
+Deferred/safe Packet 6 scope after this plan:
+
+- `P2Z`
+
+`P2M` remains covered by Packet 1 menu/status behavior.
+
+The next recommended task is a docs-only Packet 6I plan review.
 
 ## Packet 6G Pad 2 Lane Behavior Plan
 

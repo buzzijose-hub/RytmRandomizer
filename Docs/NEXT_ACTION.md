@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-03ea69d Add behavior parity progress report after Packet 6H
+bb1c87b Add behavior parity progress report review after Packet 6H
 
 ## Current Phase
 
@@ -2121,6 +2121,44 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Packet 6I Pad 2 Lane Behavior Plan
+
+The latest Packet 6I Pad 2 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6I_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `bb1c87b Add behavior parity progress report review after Packet 6H`
+- accepted preceding Packet 6 progress:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+  - `P2P`
+  - `P2G`
+  - `P2R`
+- recommended future Packet 6I implementation scope:
+  - `P2X` only
+- proposed read-only behavior:
+  - Pad 2 current-profile safe mutation intent
+  - lane action `describe_pad2_current_profile_safe_mutation_intent`
+  - behavior family `pad2-lane/current-profile-safe-mutation`
+  - selected-profile dependency recorded only as `current_pad2_profile_state`
+- remaining deferred/safe Packet 6 scope:
+  - `P2Z`
+
+`P2M` remains covered by Packet 1 menu/status behavior.
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+6I plan.
 
 ## Latest Packet 6H Pad 2 Lane Behavior Checkpoint Review
 
