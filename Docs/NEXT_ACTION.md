@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-c2b4e02 Add Packet 5D BD Silky lane behavior plan
+36b7f55 Add Packet 5D BD Silky lane behavior
 
 ## Current Phase
 
@@ -252,6 +252,10 @@ and recommends a tiny future read-only `BI`/`ST`/`SK`/`SC`/`SBH`
 implementation scope.
 The docs-only Packet 5D BD Silky lane behavior plan review has now accepted
 that scope as the next tiny implementation branch.
+The Packet 5D read-only Pad 1 BD Silky lane behavior implementation is now
+complete for `BI`, `ST`, `SK`, `SC`, and `SBH`. A hardware manual reference
+inventory has now recorded local Dropbox manual paths for future planning
+without copying PDFs into the repository.
 
 ## Current Safety State
 
@@ -306,9 +310,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is the tiny Packet 5D TDD implementation for read-only
-Pad 1 BD Silky lane behavior, a user-facing progress/timeline update, or a
-pause at this accepted Packet 5D planning checkpoint.
+Next recommended task is a docs-only Packet 5D implementation checkpoint, a
+user-facing progress/timeline update, or a pause at this clean manual-reference
+inventory checkpoint.
 
 Do not implement BD Silky execution, Pad 1 BD Acoustic behavior, runtime
 mutation, dispatch, MIDI, ports, active CLI behavior, package metadata, or any
@@ -6444,6 +6448,49 @@ metadata, active behavior, or hardware behavior.
 
 The review recommends the tiny Packet 5D TDD implementation next if continuing
 implementation.
+
+## Latest Packet 5D BD Silky Lane Behavior Implementation
+
+The latest Packet 5D BD Silky lane behavior implementation milestone is:
+
+- `36b7f55 Add Packet 5D BD Silky lane behavior`
+
+It records:
+
+- implementation files:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- implemented read-only Pad 1 BD Silky lane behavior:
+  - `BI`: load Pad 1 BD Silky profiled anchor
+  - `ST`: BD Silky smooth tone discovery
+  - `SK`: BD Silky kick/body discovery
+  - `SC`: BD Silky click/dust discovery
+  - `SBH`: return Pad 1 BD Silky to anchor
+- `BA` remains deferred/safe
+- Packet 5A, Packet 5B, Packet 5C, and Packet 1 `SM` behavior remain
+  unchanged
+- no CLI execution wiring, dispatch, MIDI, ports, package metadata, active
+  behavior, or hardware behavior
+
+The next behavior-parity task should be a docs-only Packet 5D implementation
+checkpoint.
+
+## Latest Hardware Manual Reference Inventory
+
+The latest hardware manual reference inventory is:
+
+- `Docs/HARDWARE_MANUAL_REFERENCE_INVENTORY.md`
+
+It records local reference paths for:
+
+- Analog Rytm MKII manual:
+  - `C:\Users\Jose Buzzi\Dropbox\Utilities\elektron-analog-rytm-mkii-manual.pdf`
+- Analog Four MKII manual:
+  - `C:\Users\Jose Buzzi\Dropbox\Utilities\Analog-Four-MKII-User-Manual_ENG_OS1.40A_200303.pdf`
+
+The inventory keeps the PDFs outside the repository. It adds no implementation,
+tests, MIDI, ports, dispatch, package metadata, active behavior, hardware
+behavior, or hardware validation.
 
 ## Do-Not-Touch Files
 

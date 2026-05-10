@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-c2b4e02
+36b7f55
 
 ## Protected Reference
 
@@ -59,7 +59,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: c2b4e02 Add Packet 5D BD Silky lane behavior plan
+- current HEAD: 36b7f55 Add Packet 5D BD Silky lane behavior
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -252,14 +252,17 @@ It captures:
   5D BD Silky lane behavior plan has now been documented and recommends a tiny
   future read-only `BI`/`ST`/`SK`/`SC`/`SBH` implementation scope; the
   docs-only Packet 5D BD Silky lane behavior plan review has now accepted that
-  scope as the next tiny implementation branch
+  scope as the next tiny implementation branch; the Packet 5D read-only Pad 1
+  BD Silky lane behavior implementation is now complete; a hardware manual
+  reference inventory has now recorded local Dropbox paths for future planning
+  without copying PDFs into the repository
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: tiny Packet 5D TDD implementation for read-only Pad 1
-  BD Silky lane behavior, user-facing progress/timeline update, or pause at
-  this accepted Packet 5D planning checkpoint
+- next recommended task: docs-only Packet 5D implementation checkpoint,
+  user-facing progress/timeline update, or pause at this clean
+  manual-reference inventory checkpoint
 - closeout command
 - stop condition
 
@@ -11442,6 +11445,50 @@ active behavior, and hardware behavior remain deferred.
 
 The next recommended task is the tiny Packet 5D TDD implementation for
 read-only Pad 1 BD Silky lane behavior.
+
+## Packet 5D BD Silky Lane Behavior Implementation
+
+The Packet 5D BD Silky lane behavior implementation is complete.
+
+Milestone:
+
+- `36b7f55 Add Packet 5D BD Silky lane behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+Implemented read-only behavior:
+
+- `BI`: load Pad 1 BD Silky profiled anchor
+- `ST`: BD Silky smooth tone discovery
+- `SK`: BD Silky kick/body discovery
+- `SC`: BD Silky click/dust discovery
+- `SBH`: return Pad 1 BD Silky to anchor
+
+`BA` remains deferred/safe. Packet 5A, Packet 5B, Packet 5C, and Packet 1
+`SM` behavior remain unchanged.
+
+No CLI execution wiring, dispatch, command execution, MIDI, ports, package
+metadata, active behavior, or hardware behavior was added.
+
+The next behavior-parity task is a docs-only Packet 5D implementation
+checkpoint.
+
+## Hardware Manual Reference Inventory
+
+`Docs/HARDWARE_MANUAL_REFERENCE_INVENTORY.md` records local manual paths for
+future planning without copying PDFs into the repository.
+
+Manual references:
+
+- `C:\Users\Jose Buzzi\Dropbox\Utilities\elektron-analog-rytm-mkii-manual.pdf`
+- `C:\Users\Jose Buzzi\Dropbox\Utilities\Analog-Four-MKII-User-Manual_ENG_OS1.40A_200303.pdf`
+
+The inventory is reference-only. It adds no implementation, tests, MIDI, ports,
+dispatch, package metadata, active behavior, hardware behavior, or hardware
+validation.
 
 ## Packet 5A Pad 1 Lane Behavior Checkpoint Review
 

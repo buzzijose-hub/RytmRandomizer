@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 36b7f55 Add Packet 5D BD Silky lane behavior
 - c2b4e02 Add Packet 5D BD Silky lane behavior plan
 - bfe1e72 Add behavior parity progress report review after Packet 5C
 - 5216d72 Add behavior parity progress report after Packet 5C
@@ -12142,6 +12143,54 @@ package metadata, active behavior, or hardware behavior.
 
 Next recommended task is the tiny Packet 5D TDD implementation for read-only
 Pad 1 BD Silky lane behavior.
+
+## V1.34 Behavior Parity Packet 5D BD Silky Lane Behavior Implementation
+
+The Packet 5D BD Silky lane behavior implementation is complete.
+
+Milestone:
+
+- `36b7f55 Add Packet 5D BD Silky lane behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+Implemented read-only behavior:
+
+- `BI`: load Pad 1 BD Silky profiled anchor
+- `ST`: BD Silky smooth tone discovery
+- `SK`: BD Silky kick/body discovery
+- `SC`: BD Silky click/dust discovery
+- `SBH`: return Pad 1 BD Silky to anchor
+
+`BA` remains deferred/safe. Packet 5A, Packet 5B, Packet 5C, and Packet 1
+`SM` behavior remain unchanged.
+
+No CLI execution wiring, dispatch, command execution, MIDI, ports, package
+metadata, active behavior, or hardware behavior was added.
+
+Next recommended behavior-parity task is a docs-only Packet 5D implementation
+checkpoint.
+
+## Hardware Manual Reference Inventory
+
+The hardware manual reference inventory records local manual paths for future
+planning without copying PDFs into the repository.
+
+Document:
+
+- `Docs/HARDWARE_MANUAL_REFERENCE_INVENTORY.md`
+
+Manual references:
+
+- `C:\Users\Jose Buzzi\Dropbox\Utilities\elektron-analog-rytm-mkii-manual.pdf`
+- `C:\Users\Jose Buzzi\Dropbox\Utilities\Analog-Four-MKII-User-Manual_ENG_OS1.40A_200303.pdf`
+
+The inventory is reference-only. It adds no implementation, tests, MIDI, ports,
+dispatch, package metadata, active behavior, hardware behavior, or hardware
+validation.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 
