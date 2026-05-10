@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 322fd38 Add Packet 5B BD FM lane behavior plan
 - 22c3e2c Add behavior parity progress report review after Packet 5A
 - 37b20b4 Add behavior parity progress report after Packet 5A
 - 217e86c Add Packet 5A Pad 1 lane behavior checkpoint review
@@ -11467,8 +11468,54 @@ SysEx, GUI/capture, or hardware behavior.
 
 `rytm_hybrid_randomizer_v134.py` remains untouched.
 
-Next recommended task is a docs-only review/acceptance gate for this Packet 5B
-plan.
+At plan time, the next recommended task was a docs-only review/acceptance gate
+for this Packet 5B plan.
+
+## V1.34 Behavior Parity Packet 5B BD FM Lane Behavior Plan Review
+
+The Packet 5B BD FM lane behavior plan review accepts the next tiny Packet 5
+planning slice after accepted Packet 5A progress.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN_REVIEW.md`
+
+Accepted plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md`
+
+Accepted plan milestone:
+
+- `322fd38 Add Packet 5B BD FM lane behavior plan`
+
+Accepted future Packet 5B scope:
+
+- `FT`: BD FM tone/FM discovery
+- `FK`: BD FM kick/body discovery
+- `FG`: BD FM grit discovery
+- `FZ`: return Pad 1 BD FM to anchor
+
+Accepted future implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+No closeout script update is expected because `tests/test_behavior_pad1_lane.py`
+is already covered by:
+
+- `=== Test: Behavior Pad 1 Lane ===`
+
+The review confirms `FM` and `BF` are already-covered context, not Packet 5B
+reimplementation targets.
+
+The review keeps BD Plastic, BD Silky, Pad 1 BD Acoustic, runtime mutation,
+prompt loops, command dispatch, MIDI, ports, package metadata, active behavior,
+Analog Four, Pads 5-12, SysEx, GUI/capture, and hardware behavior deferred.
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task is the tiny Packet 5B implementation for read-only BD FM
+lane intent behavior.
 
 ## V1.34 Behavior Parity Packet 5A Pad 1 Lane Behavior Checkpoint Review
 

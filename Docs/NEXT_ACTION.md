@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-22c3e2c Add behavior parity progress report review after Packet 5A
+322fd38 Add Packet 5B BD FM lane behavior plan
 
 ## Current Phase
 
@@ -224,6 +224,8 @@ accepted that report as the current behavior-parity progress baseline before
 any Packet 5B planning.
 The docs-only Packet 5B BD FM lane behavior plan has now been documented and
 recommends a tiny future read-only `FT`/`FK`/`FG`/`FZ` implementation scope.
+The docs-only Packet 5B BD FM lane behavior plan review has now accepted that
+scope as the next tiny implementation branch.
 
 ## Current Safety State
 
@@ -278,9 +280,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review/acceptance gate for the Packet 5B
-BD FM lane behavior plan, a user-facing progress/timeline update, or a pause
-at this clean planning checkpoint.
+Next recommended task is the tiny Packet 5B implementation for read-only
+`FT`/`FK`/`FG`/`FZ` BD FM lane intent behavior, a user-facing
+progress/timeline update, or a pause at this clean planning checkpoint.
 
 Do not implement BD FM discovery execution, BD Plastic discovery execution, BD
 Silky discovery execution, Pad 1 engine rotation execution, Pad 1 current-engine
@@ -5954,6 +5956,39 @@ It records:
 The plan adds no implementation, tests, CLI execution wiring, dispatch, MIDI,
 ports, package metadata, active behavior, or hardware behavior. It recommends a
 docs-only review/acceptance gate next.
+
+## Latest Packet 5B BD FM Lane Behavior Plan Review
+
+The latest V1.34 behavior parity Packet 5B BD FM lane behavior plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN_REVIEW.md`
+
+It records:
+
+- accepted plan document
+  `Docs/V134_BEHAVIOR_PARITY_PACKET_5B_BD_FM_LANE_BEHAVIOR_PLAN.md`
+- accepted plan milestone `322fd38 Add Packet 5B BD FM lane behavior plan`
+- accepted Packet 5B identity:
+  - Pad 1 BD FM Lane Behavior Parity
+- accepted future implementation scope:
+  - `FT`: BD FM tone/FM discovery
+  - `FK`: BD FM kick/body discovery
+  - `FG`: BD FM grit discovery
+  - `FZ`: return Pad 1 BD FM to anchor
+- future file ownership:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update expected because `=== Test: Behavior Pad 1 Lane ===`
+  already covers `tests/test_behavior_pad1_lane.py`
+- no parallel implementation for Packet 5B because ownership is concentrated
+  in one helper and one test file
+- BD Plastic, BD Silky, Pad 1 BD Acoustic, runtime mutation, dispatch, MIDI,
+  ports, package metadata, active behavior, and hardware behavior remain
+  deferred
+
+The review adds no implementation, tests, CLI execution wiring, dispatch,
+MIDI, ports, package metadata, active behavior, or hardware behavior. It
+recommends the tiny Packet 5B TDD implementation next.
 
 ## Do-Not-Touch Files
 
