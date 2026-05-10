@@ -1,13 +1,12 @@
-# V1.34 Behavior Parity Packet 5E BD Acoustic Anchor Behavior Checkpoint
+# V1.34 Behavior Parity Packet 5E BD Acoustic Anchor Behavior Checkpoint Review
 
 ## Purpose
 
-Record completion of the Packet 5E read-only Pad 1 BD Acoustic anchor behavior
-implementation for `BA`.
+Review and accept the Packet 5E BD Acoustic anchor behavior checkpoint.
 
-This checkpoint documents the completed behavior slice. It adds no further
-implementation, tests, CLI wiring, dispatch, MIDI, port opening, package
-metadata, active behavior, or hardware behavior.
+This is a documentation-only review checkpoint. It adds no implementation,
+tests, CLI wiring, dispatch, MIDI, port opening, package metadata, active
+behavior, or hardware behavior.
 
 ## Current Clean Baseline
 
@@ -15,9 +14,9 @@ Current branch:
 
 - `modularize-v1.34`
 
-Current HEAD before this documentation slice:
+Current HEAD before this slice:
 
-- `1d4c16e Add Packet 5E BD Acoustic anchor behavior`
+- `5db9095 Add Packet 5E BD Acoustic anchor behavior checkpoint`
 
 Current phase:
 
@@ -30,9 +29,8 @@ Current phase:
 - Packet 5B complete and accepted
 - Packet 5C complete and accepted
 - Packet 5D complete and accepted
-- Packet 5E BD Acoustic anchor behavior plan and review accepted
-- Packet 5E BD Acoustic anchor intent implemented
-- Packet 5E checkpoint now created for review
+- Packet 5E BD Acoustic anchor behavior implemented and checkpointed
+- Packet 5E checkpoint now reviewed and accepted
 
 Hardware status:
 
@@ -40,77 +38,93 @@ Hardware status:
 - Analog Four MKII off
 - hardware not required
 
-## Milestone Commit
+## Review Decision
 
-Implementation milestone:
+Accepted checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5E_BD_ACOUSTIC_ANCHOR_BEHAVIOR_CHECKPOINT.md`
+
+Accepted implementation milestone:
 
 - `1d4c16e Add Packet 5E BD Acoustic anchor behavior`
 
-Files changed by the milestone:
+Accepted checkpoint milestone:
+
+- `5db9095 Add Packet 5E BD Acoustic anchor behavior checkpoint`
+
+Accepted implementation files:
 
 - `rytm_randomizer/behavior_pad1_lane.py`
 - `tests/test_behavior_pad1_lane.py`
 
-Closeout suite update:
+Accepted closeout coverage:
 
-- no closeout script update was needed
-- `tests/test_behavior_pad1_lane.py` was already covered by
-  `=== Test: Behavior Pad 1 Lane ===`
+- `=== Test: Behavior Pad 1 Lane ===`
+
+Decision:
+
+- Packet 5E checkpoint accepted.
+- Read-only Packet 5E Pad 1 BD Acoustic anchor intent behavior accepted.
+- Packet 5 is not complete.
+- No runtime or hardware behavior is authorized by this review.
 
 ## Accepted Packet 5E Behavior
 
-Implemented read-only Pad 1 BD Acoustic anchor intent command:
+Accepted read-only Pad 1 BD Acoustic anchor intent command:
 
 - `BA`: load Pad 1 BD Acoustic anchor
 
-Accepted behavior:
+Accepted semantics:
 
-- `BA` is accepted as read-only Pad 1 BD Acoustic anchor/load intent
-- copied passive metadata from `PAD1_COMMANDS`
-- target pad is `1`
-- lane is `Pad 1 BD Acoustic`
-- lane action is `load_bd_acoustic_anchor`
-- behavior family is `pad1-lane/bd-acoustic-anchor-load`
-- reason is `supported_pad1_bd_acoustic_anchor_load_intent`
-- BD Acoustic anchor dependency is recorded only
-- group profile `"4"` is not recorded as a dependency
-- Pad 4 is not recorded as a dependency
+- metadata-only behavior
+- copied metadata from `PAD1_COMMANDS`
+- target pad `1`
+- lane `Pad 1 BD Acoustic`
+- lane action `load_bd_acoustic_anchor`
+- behavior family `pad1-lane/bd-acoustic-anchor-load`
+- reason `supported_pad1_bd_acoustic_anchor_load_intent`
+- BD Acoustic anchor dependency recorded only
+- group profile `"4"` not recorded as a dependency
+- Pad 4 not recorded as a dependency
 - no BD Acoustic anchor/load execution
 - no group profile `"4"` support
 - no Pad 4 BD Acoustic behavior
 - no lane state mutation
-- no prompt loop
-- no dispatch
+- no prompt/input loop
+- no command dispatch
 - no command execution
 - no MIDI
-- no ports
+- no port opening
 - no hardware requirement
 
 ## Accepted Implementation Surface
 
-Implementation surface:
+The accepted Packet 5E implementation surface includes:
 
 - `PACKET_5E_PAD1_BD_ACOUSTIC_KEYS`
-- `DEFERRED_PACKET_5_PAD1_LANE_KEYS`
+- existing `PACKET_5A_PAD1_CURRENT_ENGINE_KEYS`
+- existing `PACKET_5B_PAD1_BD_FM_KEYS`
+- existing `PACKET_5C_PAD1_BD_PLASTIC_KEYS`
+- existing `PACKET_5D_PAD1_BD_SILKY_KEYS`
+- existing `DEFERRED_PACKET_5_PAD1_LANE_KEYS`
 - `Pad1LaneBehaviorResult`
 - `evaluate_pad1_lane_behavior`
 - metadata source `PAD1_COMMANDS`
-- behavior family `pad1-lane/bd-acoustic-anchor-load`
 - reason `supported_pad1_bd_acoustic_anchor_load_intent`
 
-Accepted Packet 5A behavior remains unchanged:
+Accepted Packet 5A behavior remains stable:
 
 - `BR`: rotate Pad 1 to the next profiled BD engine
 - `BM`: safely mutate the currently loaded Pad 1 BD engine
 
-Accepted Packet 5B behavior remains unchanged:
+Accepted Packet 5B behavior remains stable:
 
 - `FT`: BD FM tone/FM discovery
 - `FK`: BD FM kick/body discovery
 - `FG`: BD FM grit discovery
 - `FZ`: return Pad 1 BD FM to anchor
 
-Accepted Packet 5C behavior remains unchanged:
+Accepted Packet 5C behavior remains stable:
 
 - `BP`: load Pad 1 BD Plastic profiled anchor
 - `PT`: BD Plastic tone/modulation discovery
@@ -118,7 +132,7 @@ Accepted Packet 5C behavior remains unchanged:
 - `PX`: BD Plastic rubber/experimental discovery
 - `PBH`: return Pad 1 BD Plastic to anchor
 
-Accepted Packet 5D behavior remains unchanged:
+Accepted Packet 5D behavior remains stable:
 
 - `BI`: load Pad 1 BD Silky profiled anchor
 - `ST`: BD Silky smooth tone discovery
@@ -126,7 +140,7 @@ Accepted Packet 5D behavior remains unchanged:
 - `SC`: BD Silky click/dust discovery
 - `SBH`: return Pad 1 BD Silky to anchor
 
-Already-covered context keys are not reimplemented:
+Already-covered context remains outside Packet 5E:
 
 - `FM`
 - `PD`
@@ -164,7 +178,7 @@ Accepted test coverage confirms:
 - no Analog Four support is exposed
 - no Pads 5-12 support is exposed
 
-## TDD Evidence
+## Accepted TDD Evidence
 
 Red command:
 
@@ -185,7 +199,7 @@ python .\tests\test_behavior_pad1_lane.py
 
 Green result:
 
-- passed after the tiny read-only implementation
+- Packet 5E behavior tests passed after implementation
 
 Targeted regression commands:
 
@@ -199,13 +213,7 @@ python .\tests\test_cli.py
 
 Targeted regression result:
 
-- passed silently
-
-Full closeout command:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
-```
+- passed
 
 Full closeout result:
 
@@ -213,47 +221,42 @@ Full closeout result:
 
 ## Confirmed Absent Behavior
 
-The implementation adds no:
+This review confirms the project still has:
 
-- BD Acoustic anchor/load execution
-- group profile `"4"` support
-- Pad 4 BD Acoustic behavior
-- BD Silky anchor/load execution
-- BD Silky discovery execution
-- BD Plastic anchor/load execution
-- BD Plastic discovery execution
-- BD FM discovery execution
-- Pad 1 engine rotation execution
-- Pad 1 current-engine mutation execution
-- deeper Pad 1 lane state modeling
-- lane state mutation
-- prompt/input loop
-- command dispatch
-- CLI execution wiring
-- active CLI command
-- `execute-command`
-- `send-command`
-- `hardware-test`
-- real MIDI dependency
-- `mido`
-- `rtmidi`
-- package metadata
-- port discovery
-- port opening
-- MIDI sending
-- hardware behavior
-- hardware validation
-- Analog Four support
-- Pads 5-12 support
-- machine/profile expansion
-- SysEx
-- GUI/capture
+- no BD Acoustic anchor/load execution
+- no group profile `"4"` support
+- no Pad 4 BD Acoustic behavior
+- no deeper Pad 1 lane state modeling
+- no runtime selected Pad 1 machine/profile state
+- no runtime anchor loading
+- no runtime mutation execution
+- no runtime discovery execution
+- no lane state mutation
+- no prompt/input loop
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no scene execution
+- no real MIDI dependency
+- no `mido`
+- no `rtmidi`
+- no package metadata changes
+- no port discovery
+- no port opening
+- no MIDI sending
+- no hardware behavior
+- no hardware validation
+- no Analog Four support
+- no Pads 5-12 support
+- no machine/profile expansion
+- no SysEx
+- no GUI/capture
 
 `rytm_hybrid_randomizer_v134.py` remains untouched.
 
 Package metadata remains untouched.
 
-## Packet 5 Status After This Checkpoint
+## Packet 5 Status After Review
 
 Accepted Packet 5 progress:
 
@@ -289,47 +292,39 @@ Deferred out-of-scope behavior remains:
 - active execution behavior
 - real MIDI or hardware behavior
 
-## Next Recommended Task
+## Safe Next Options
 
-The next recommended task is a docs-only Packet 5E checkpoint review.
+Safe next options:
 
-After review, choose whether to:
+- broader behavior-parity progress report after Packet 5E
+- docs-only deeper Packet 5 Pad 1 lane state modeling plan
+- user-facing progress/timeline update
+- pause at this accepted Packet 5E review checkpoint
 
-- create a broader behavior-parity progress report after Packet 5E
-- plan deeper Packet 5 Pad 1 lane state modeling
-- write a user-facing progress/timeline update
-- pause at this clean implementation checkpoint
+## Recommendation
 
-Do not implement deeper lane state, runtime mutation, dispatch, MIDI, ports,
-active CLI behavior, package metadata, Pad 4 BD Acoustic behavior, group
-profile `"4"` support, or hardware behavior without a separate plan and
-review.
+Create a broader behavior-parity progress report after Packet 5E next.
+
+Reason:
+
+- Packet 5 now has five accepted slices
+- Packet 5 is still not complete
+- explicit Pad 1 BD Acoustic anchor intent is now covered
+- deeper Pad 1 lane state modeling remains the next meaningful Packet 5
+  decision point
+- a progress report will make the next decision clearer before choosing deeper
+  lane state modeling, runtime-adjacent planning, or a pause
+
+Keep deeper lane state modeling, runtime mutation, dispatch, MIDI, ports,
+package metadata, active behavior, and hardware behavior deferred.
 
 ## Decision
 
-Packet 5E BD Acoustic anchor behavior implementation is complete for the
-current read-only intent-only behavior phase.
+Packet 5E checkpoint accepted.
+
+The next recommended task is a broader behavior-parity progress report after
+Packet 5E.
 
 No active behavior was added.
 
 Hardware remains off.
-
-## Checkpoint Review Follow-Up
-
-The Packet 5E BD Acoustic anchor behavior checkpoint has now been reviewed and
-accepted:
-
-- `Docs/V134_BEHAVIOR_PARITY_PACKET_5E_BD_ACOUSTIC_ANCHOR_BEHAVIOR_CHECKPOINT_REVIEW.md`
-
-The review accepts:
-
-- implementation milestone `1d4c16e Add Packet 5E BD Acoustic anchor behavior`
-- checkpoint milestone `5db9095 Add Packet 5E BD Acoustic anchor behavior
-  checkpoint`
-- read-only Packet 5E behavior for `BA`
-- unchanged Packet 5A, Packet 5B, Packet 5C, and Packet 5D behavior
-- group profile `"4"` and Pad 4 BD Acoustic behavior as still deferred/safe
-
-The review recommends a broader behavior-parity progress report after Packet
-5E before choosing deeper Pad 1 lane state modeling, runtime-adjacent
-planning, or a pause.
