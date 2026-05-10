@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-18e72da Add Packet 4 completion checkpoint
+e93d459 Add Packet 4 completion checkpoint review
 
 ## Current Phase
 
@@ -197,6 +197,10 @@ The broader Packet 4 completion checkpoint now consolidates accepted Packet
 complete for the current read-only intent-only behavior phase.
 The Packet 4 completion checkpoint review has now accepted Packet 4 as
 complete for the current read-only intent-only behavior phase.
+The broader behavior-parity implementation progress report after Packet 4 now
+summarizes Packet 1 completion, Packet 2 accepted progress, Packet 3
+completion, and Packet 4 completion as the current read-only behavior
+foundation.
 
 ## Current Safety State
 
@@ -251,10 +255,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a broader behavior-parity implementation progress
-report after Packet 4, a more user-facing progress/timeline update, a docs-only
-next behavior-parity packet planning gate, or a pause at this clean Packet 4
-completion review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the broader
+behavior-parity implementation progress report after Packet 4, a more
+user-facing progress/timeline update, a docs-only next behavior-parity packet
+planning gate, or a pause at this clean progress report checkpoint.
 
 Do not implement scene execution, group mutation execution, lane-aware group
 mutation execution, group anchor loading, group anchor return, dispatch, MIDI,
@@ -469,6 +473,37 @@ group mutation execution, group anchor load/return execution, dispatch, MIDI,
 ports, package metadata, active CLI behavior, hardware behavior, or hardware
 validation exists. It recommends a broader behavior-parity implementation
 progress report after Packet 4 next.
+
+The latest V1.34 behavior parity implementation progress report after Packet
+4 is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_4.md`
+
+It records:
+
+- current baseline `e93d459 Add Packet 4 completion checkpoint review`
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- current behavior helper surface:
+  - `rytm_randomizer/behavior_menu_utility.py`
+  - `rytm_randomizer/behavior_anchor_profile.py`
+  - `rytm_randomizer/behavior_mutation_depth.py`
+  - `rytm_randomizer/behavior_scene_group.py`
+- current behavior closeout coverage:
+  - `=== Test: Behavior Menu Utility ===`
+  - `=== Test: Behavior Anchor Profile ===`
+  - `=== Test: Behavior Mutation Depth ===`
+  - `=== Test: Behavior Scene Group ===`
+- deferred future areas including remaining anchor/profile widening, Pad 1
+  through Pad 4 lane behavior, undo/commit/state behavior, active execution,
+  real MIDI, and hardware behavior
+
+The report confirms no CLI execution wiring, dispatch, runtime execution,
+MIDI, ports, package metadata, active CLI behavior, hardware behavior, or
+hardware validation exists. It recommends a docs-only review/acceptance gate
+for the report next.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
 
