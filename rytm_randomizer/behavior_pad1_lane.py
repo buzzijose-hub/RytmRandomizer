@@ -13,12 +13,8 @@ from .commands import COMMANDS, PAD1_COMMANDS
 
 PACKET_5A_PAD1_CURRENT_ENGINE_KEYS = ("BR", "BM")
 PACKET_5B_PAD1_BD_FM_KEYS = ("FT", "FK", "FG", "FZ")
+PACKET_5C_PAD1_BD_PLASTIC_KEYS = ("BP", "PT", "PK", "PX", "PBH")
 DEFERRED_PACKET_5_PAD1_LANE_KEYS = (
-    "BP",
-    "PT",
-    "PK",
-    "PX",
-    "PBH",
     "BI",
     "ST",
     "SK",
@@ -33,6 +29,11 @@ _LANE_ACTIONS = {
     "FK": "bd_fm_kick_body_discovery",
     "FG": "bd_fm_grit_discovery",
     "FZ": "return_bd_fm_to_anchor",
+    "BP": "load_bd_plastic_profiled_anchor",
+    "PT": "bd_plastic_tone_modulation_discovery",
+    "PK": "bd_plastic_kick_body_discovery",
+    "PX": "bd_plastic_rubber_experimental_discovery",
+    "PBH": "return_bd_plastic_to_anchor",
 }
 
 _DEPTH_DEPENDENCIES = {
@@ -42,6 +43,11 @@ _DEPTH_DEPENDENCIES = {
     "FK": "future_bd_fm_discovery_depth",
     "FG": "future_bd_fm_discovery_depth",
     "FZ": "",
+    "BP": "",
+    "PT": "future_bd_plastic_discovery_depth",
+    "PK": "future_bd_plastic_discovery_depth",
+    "PX": "future_bd_plastic_discovery_depth",
+    "PBH": "",
 }
 
 _REQUIRES_DEPTH_SELECTION = {
@@ -51,6 +57,11 @@ _REQUIRES_DEPTH_SELECTION = {
     "FK": True,
     "FG": True,
     "FZ": False,
+    "BP": False,
+    "PT": True,
+    "PK": True,
+    "PX": True,
+    "PBH": False,
 }
 
 _BEHAVIOR_FAMILIES = {
@@ -60,6 +71,11 @@ _BEHAVIOR_FAMILIES = {
     "FK": "pad1-lane/bd-fm-discovery",
     "FG": "pad1-lane/bd-fm-discovery",
     "FZ": "pad1-lane/bd-fm-anchor-return",
+    "BP": "pad1-lane/bd-plastic-anchor-load",
+    "PT": "pad1-lane/bd-plastic-discovery",
+    "PK": "pad1-lane/bd-plastic-discovery",
+    "PX": "pad1-lane/bd-plastic-discovery",
+    "PBH": "pad1-lane/bd-plastic-anchor-return",
 }
 
 _REASONS = {
@@ -69,6 +85,11 @@ _REASONS = {
     "FK": "supported_pad1_bd_fm_discovery_intent",
     "FG": "supported_pad1_bd_fm_discovery_intent",
     "FZ": "supported_pad1_bd_fm_anchor_return_intent",
+    "BP": "supported_pad1_bd_plastic_anchor_load_intent",
+    "PT": "supported_pad1_bd_plastic_discovery_intent",
+    "PK": "supported_pad1_bd_plastic_discovery_intent",
+    "PX": "supported_pad1_bd_plastic_discovery_intent",
+    "PBH": "supported_pad1_bd_plastic_anchor_return_intent",
 }
 
 _LANES = {
@@ -78,6 +99,11 @@ _LANES = {
     "FK": "Pad 1 BD FM",
     "FG": "Pad 1 BD FM",
     "FZ": "Pad 1 BD FM",
+    "BP": "Pad 1 BD Plastic",
+    "PT": "Pad 1 BD Plastic",
+    "PK": "Pad 1 BD Plastic",
+    "PX": "Pad 1 BD Plastic",
+    "PBH": "Pad 1 BD Plastic",
 }
 
 _LANE_METADATA = {
@@ -87,6 +113,11 @@ _LANE_METADATA = {
     "FK": "pad_1_bd_fm",
     "FG": "pad_1_bd_fm",
     "FZ": "pad_1_bd_fm",
+    "BP": "pad_1_bd_plastic",
+    "PT": "pad_1_bd_plastic",
+    "PK": "pad_1_bd_plastic",
+    "PX": "pad_1_bd_plastic",
+    "PBH": "pad_1_bd_plastic",
 }
 
 _ENGINE_DEPENDENCIES = {
@@ -96,6 +127,11 @@ _ENGINE_DEPENDENCIES = {
     "FK": "pad1_bd_fm_engine_profile",
     "FG": "pad1_bd_fm_engine_profile",
     "FZ": "pad1_bd_fm_anchor_state",
+    "BP": "pad1_bd_plastic_profiled_anchor",
+    "PT": "pad1_bd_plastic_engine_profile",
+    "PK": "pad1_bd_plastic_engine_profile",
+    "PX": "pad1_bd_plastic_engine_profile",
+    "PBH": "pad1_bd_plastic_anchor_state",
 }
 
 _INTENT_LINES = {
@@ -105,6 +141,11 @@ _INTENT_LINES = {
     "FK": "Read-only Pad 1 BD FM discovery intent.",
     "FG": "Read-only Pad 1 BD FM discovery intent.",
     "FZ": "Read-only Pad 1 BD FM anchor-return intent.",
+    "BP": "Read-only Pad 1 BD Plastic lane intent.",
+    "PT": "Read-only Pad 1 BD Plastic lane intent.",
+    "PK": "Read-only Pad 1 BD Plastic lane intent.",
+    "PX": "Read-only Pad 1 BD Plastic lane intent.",
+    "PBH": "Read-only Pad 1 BD Plastic lane intent.",
 }
 
 _DEPENDENCY_LINES = {
@@ -114,12 +155,17 @@ _DEPENDENCY_LINES = {
     "FK": "BD FM engine/profile dependency is recorded only.",
     "FG": "BD FM engine/profile dependency is recorded only.",
     "FZ": "BD FM anchor dependency is recorded only.",
+    "BP": "BD Plastic anchor/profile dependency is recorded only.",
+    "PT": "BD Plastic engine/profile dependency is recorded only.",
+    "PK": "BD Plastic engine/profile dependency is recorded only.",
+    "PX": "BD Plastic engine/profile dependency is recorded only.",
+    "PBH": "BD Plastic anchor dependency is recorded only.",
 }
 
 
 @dataclass(frozen=True)
 class Pad1LaneBehaviorResult:
-    """Immutable read-only result for Packet 5A Pad 1 lane behavior."""
+    """Immutable read-only result for Packet 5 Pad 1 lane behavior."""
 
     command_key: str
     label: str = ""
@@ -153,7 +199,11 @@ def evaluate_pad1_lane_behavior(command_key):
 
     key = str(command_key)
 
-    if key in (*PACKET_5A_PAD1_CURRENT_ENGINE_KEYS, *PACKET_5B_PAD1_BD_FM_KEYS):
+    if key in (
+        *PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
+        *PACKET_5B_PAD1_BD_FM_KEYS,
+        *PACKET_5C_PAD1_BD_PLASTIC_KEYS,
+    ):
         return _accepted_pad1_lane_result(key)
 
     if key in DEFERRED_PACKET_5_PAD1_LANE_KEYS:
@@ -269,6 +319,16 @@ def _accepted_metadata(
             }
         )
 
+    if command_key in PACKET_5C_PAD1_BD_PLASTIC_KEYS:
+        metadata.update(
+            {
+                "requires_current_engine_state": False,
+                "requires_bd_plastic_engine_profile": command_key
+                in ("PT", "PK", "PX"),
+                "requires_bd_plastic_anchor": command_key in ("BP", "PBH"),
+            }
+        )
+
     return metadata
 
 
@@ -278,6 +338,9 @@ def _depth_display_lines(command_key, depth_dependency):
 
     if command_key in PACKET_5B_PAD1_BD_FM_KEYS:
         return ("Future BD FM discovery depth is recorded only.",)
+
+    if command_key in PACKET_5C_PAD1_BD_PLASTIC_KEYS:
+        return ("Future BD Plastic discovery depth is recorded only.",)
 
     return ("Future safe mutation depth is recorded only.",)
 
@@ -300,6 +363,7 @@ __all__ = [
     "DEFERRED_PACKET_5_PAD1_LANE_KEYS",
     "PACKET_5A_PAD1_CURRENT_ENGINE_KEYS",
     "PACKET_5B_PAD1_BD_FM_KEYS",
+    "PACKET_5C_PAD1_BD_PLASTIC_KEYS",
     "Pad1LaneBehaviorResult",
     "evaluate_pad1_lane_behavior",
 ]

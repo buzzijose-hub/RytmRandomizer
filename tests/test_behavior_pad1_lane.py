@@ -168,12 +168,143 @@ SUPPORTED_PAD1_BD_FM_CASES = (
     ),
 )
 
+SUPPORTED_PAD1_BD_PLASTIC_CASES = (
+    (
+        "BP",
+        "load Pad 1 BD Plastic profiled anchor",
+        "pad1-lane/bd-plastic-anchor-load",
+        "supported_pad1_bd_plastic_anchor_load_intent",
+        "load_bd_plastic_profiled_anchor",
+        "pad1_bd_plastic_profiled_anchor",
+        "",
+        False,
+        (
+            "BP: load Pad 1 BD Plastic profiled anchor",
+            "Read-only Pad 1 BD Plastic lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Plastic",
+            "Lane action: load_bd_plastic_profiled_anchor",
+            "BD Plastic anchor/profile dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "PT",
+        "BD Plastic tone/modulation discovery",
+        "pad1-lane/bd-plastic-discovery",
+        "supported_pad1_bd_plastic_discovery_intent",
+        "bd_plastic_tone_modulation_discovery",
+        "pad1_bd_plastic_engine_profile",
+        "future_bd_plastic_discovery_depth",
+        True,
+        (
+            "PT: BD Plastic tone/modulation discovery",
+            "Read-only Pad 1 BD Plastic lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Plastic",
+            "Lane action: bd_plastic_tone_modulation_discovery",
+            "BD Plastic engine/profile dependency is recorded only.",
+            "Future BD Plastic discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "PK",
+        "BD Plastic kick/body discovery",
+        "pad1-lane/bd-plastic-discovery",
+        "supported_pad1_bd_plastic_discovery_intent",
+        "bd_plastic_kick_body_discovery",
+        "pad1_bd_plastic_engine_profile",
+        "future_bd_plastic_discovery_depth",
+        True,
+        (
+            "PK: BD Plastic kick/body discovery",
+            "Read-only Pad 1 BD Plastic lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Plastic",
+            "Lane action: bd_plastic_kick_body_discovery",
+            "BD Plastic engine/profile dependency is recorded only.",
+            "Future BD Plastic discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "PX",
+        "BD Plastic rubber/experimental discovery",
+        "pad1-lane/bd-plastic-discovery",
+        "supported_pad1_bd_plastic_discovery_intent",
+        "bd_plastic_rubber_experimental_discovery",
+        "pad1_bd_plastic_engine_profile",
+        "future_bd_plastic_discovery_depth",
+        True,
+        (
+            "PX: BD Plastic rubber/experimental discovery",
+            "Read-only Pad 1 BD Plastic lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Plastic",
+            "Lane action: bd_plastic_rubber_experimental_discovery",
+            "BD Plastic engine/profile dependency is recorded only.",
+            "Future BD Plastic discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "PBH",
+        "return Pad 1 BD Plastic to anchor",
+        "pad1-lane/bd-plastic-anchor-return",
+        "supported_pad1_bd_plastic_anchor_return_intent",
+        "return_bd_plastic_to_anchor",
+        "pad1_bd_plastic_anchor_state",
+        "",
+        False,
+        (
+            "PBH: return Pad 1 BD Plastic to anchor",
+            "Read-only Pad 1 BD Plastic lane intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD Plastic",
+            "Lane action: return_bd_plastic_to_anchor",
+            "BD Plastic anchor dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+)
+
 DEFERRED_PAD1_LANE_KEYS = (
-    "BP",
-    "PT",
-    "PK",
-    "PX",
-    "PBH",
     "BI",
     "ST",
     "SK",
@@ -383,6 +514,107 @@ def test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources():
         assert result.metadata["executes_command"] is False
 
 
+def test_bp_pt_pk_px_and_pbh_return_read_only_bd_plastic_lane_intents():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    for (
+        command_key,
+        expected_label,
+        expected_family,
+        expected_reason,
+        expected_lane_action,
+        expected_engine_dependency,
+        expected_depth_dependency,
+        expected_depth_required,
+        expected_display,
+    ) in SUPPORTED_PAD1_BD_PLASTIC_CASES:
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == expected_family
+        assert result.reason == expected_reason
+        assert result.target_pad == 1
+        assert result.lane == "Pad 1 BD Plastic"
+        assert result.lane_action == expected_lane_action
+        assert result.engine_dependency == expected_engine_dependency
+        assert result.depth_dependency == expected_depth_dependency
+        assert result.state_changed is False
+        assert result.prompt_required is False
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.mutates_lane_state is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.display_lines == expected_display
+        assert result.metadata["requires_depth_selection"] is expected_depth_required
+
+
+def test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    expected = {
+        "BP": {
+            "source_command_type": "load",
+            "lane_action": "load_bd_plastic_profiled_anchor",
+            "requires_bd_plastic_engine_profile": False,
+            "requires_bd_plastic_anchor": True,
+            "requires_depth_selection": False,
+        },
+        "PT": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_plastic_tone_modulation_discovery",
+            "requires_bd_plastic_engine_profile": True,
+            "requires_bd_plastic_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "PK": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_plastic_kick_body_discovery",
+            "requires_bd_plastic_engine_profile": True,
+            "requires_bd_plastic_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "PX": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_plastic_rubber_experimental_discovery",
+            "requires_bd_plastic_engine_profile": True,
+            "requires_bd_plastic_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "PBH": {
+            "source_command_type": "anchor_return",
+            "lane_action": "return_bd_plastic_to_anchor",
+            "requires_bd_plastic_engine_profile": False,
+            "requires_bd_plastic_anchor": True,
+            "requires_depth_selection": False,
+        },
+    }
+
+    for command_key, expected_metadata in expected.items():
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.metadata["source"] == "PAD1_COMMANDS"
+        assert result.metadata["source_command_scope"] == "pad_1"
+        assert result.metadata["source_v134_reference_command"] is True
+        assert result.metadata["source_scaffold_only"] is True
+        assert result.metadata["target_pad"] == 1
+        assert result.metadata["lane"] == "pad_1_bd_plastic"
+        for key, value in expected_metadata.items():
+            assert result.metadata[key] == value
+        assert result.metadata["mock_only"] is True
+        assert result.metadata["sends_real_midi"] is False
+        assert result.metadata["opens_ports"] is False
+        assert result.metadata["hardware_required"] is False
+        assert result.metadata["active_behavior"] is False
+        assert result.metadata["mutates_runtime_state"] is False
+        assert result.metadata["dispatches_command"] is False
+        assert result.metadata["executes_command"] is False
+
+
 def test_pad1_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad1_lane import Pad1LaneBehaviorResult
 
@@ -410,6 +642,11 @@ def test_repeated_pad1_lane_evaluations_are_deterministic():
     assert evaluate_pad1_lane_behavior("FK") == evaluate_pad1_lane_behavior("FK")
     assert evaluate_pad1_lane_behavior("FG") == evaluate_pad1_lane_behavior("FG")
     assert evaluate_pad1_lane_behavior("FZ") == evaluate_pad1_lane_behavior("FZ")
+    assert evaluate_pad1_lane_behavior("BP") == evaluate_pad1_lane_behavior("BP")
+    assert evaluate_pad1_lane_behavior("PT") == evaluate_pad1_lane_behavior("PT")
+    assert evaluate_pad1_lane_behavior("PK") == evaluate_pad1_lane_behavior("PK")
+    assert evaluate_pad1_lane_behavior("PX") == evaluate_pad1_lane_behavior("PX")
+    assert evaluate_pad1_lane_behavior("PBH") == evaluate_pad1_lane_behavior("PBH")
 
 
 def test_deferred_packet_5_pad1_lane_keys_fail_safely():
@@ -548,6 +785,8 @@ if __name__ == "__main__":
     test_br_and_bm_metadata_contains_expected_passive_sources()
     test_ft_fk_fg_and_fz_return_read_only_bd_fm_lane_intents()
     test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources()
+    test_bp_pt_pk_px_and_pbh_return_read_only_bd_plastic_lane_intents()
+    test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources()
     test_pad1_lane_metadata_is_copied_and_immutable()
     test_repeated_pad1_lane_evaluations_are_deterministic()
     test_deferred_packet_5_pad1_lane_keys_fail_safely()
