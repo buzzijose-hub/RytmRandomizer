@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-670c9a0
+ffa2f19
 
 ## Protected Reference
 
@@ -10951,6 +10951,44 @@ behavior, or hardware behavior.
 
 The next recommended task is a docs-only Packet 7F Pad 3 lane behavior plan
 for `SW` only.
+
+## Packet 7F Pad 3 Lane Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_7F_PAD3_LANE_BEHAVIOR_PLAN.md` documents
+the next tiny Packet 7 Pad 3 lane behavior planning branch.
+
+Current baseline before the plan:
+
+- `ffa2f19 Add next Packet 7 command selection review after Packet 7E`
+
+The plan accepts the upstream Packet 7E command selection review and limits
+the future Packet 7F implementation scope to:
+
+- `SW`: Pad 3 SY Raw Wave + Balance discovery
+
+Proposed future read-only behavior:
+
+- existing `PAD3_COMMANDS` metadata
+- target pad `3`
+- lane `Pad 3 SY Raw lane`
+- behavior family `pad3-lane/sy-raw-wave-balance-discovery`
+- lane action `describe_pad3_sy_raw_wave_balance_discovery_intent`
+- intent kind `discovery`
+- discovery concept `Pad 3 SY Raw Wave + Balance discovery`
+
+Already accepted Packet 7 behavior remains `P3A`, `SA`, `SL`, `SB`, and
+`SX`. `P3M` remains owned by Packet 1 menu/status behavior.
+
+Deferred/safe Packet 7 scope remains:
+
+- `P3R`
+- `P3X`
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+The next recommended task is a docs-only Packet 7F plan review.
 
 ## Next Packet 7 Command Selection Checkpoint Review After Packet 7B
 

@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ffa2f19 Add next Packet 7 command selection review after Packet 7E
 - 670c9a0 Add next Packet 7 command selection after Packet 7E
 - 2ae919b Add behavior parity progress report review after Packet 7E
 - ec31843 Add behavior parity progress report after Packet 7E
@@ -11536,6 +11537,56 @@ or hardware behavior was added.
 
 Next recommended task is a docs-only Packet 7F Pad 3 lane behavior plan for
 `SW` only.
+
+## V1.34 Behavior Parity Packet 7F Pad 3 Lane Behavior Plan
+
+The docs-only Packet 7F Pad 3 lane behavior plan has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_7F_PAD3_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `ffa2f19 Add next Packet 7 command selection review after Packet 7E`
+
+The plan records:
+
+- accepted upstream selection review:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7E_REVIEW.md`
+- recommended future Packet 7F implementation scope:
+  - `SW` only
+- proposed read-only behavior:
+  - Pad 3 SY Raw Wave + Balance discovery intent
+  - existing `PAD3_COMMANDS` metadata
+  - target pad `3`
+  - lane `Pad 3 SY Raw lane`
+  - behavior family `pad3-lane/sy-raw-wave-balance-discovery`
+  - lane action `describe_pad3_sy_raw_wave_balance_discovery_intent`
+  - intent kind `discovery`
+  - discovery concept `Pad 3 SY Raw Wave + Balance discovery`
+
+Already accepted Packet 7 behavior remains:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+- `SX`
+
+`P3M` remains Packet 1 menu/status behavior.
+
+Deferred/safe Packet 7 scope remains:
+
+- `P3R`
+- `P3X`
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for the
+Packet 7F plan.
 
 ## Latest Next Packet 7 Command Selection Checkpoint Review After Packet 7B
 
