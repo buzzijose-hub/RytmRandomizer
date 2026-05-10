@@ -415,6 +415,70 @@ def test_p2p_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_p2g_returns_read_only_pad2_grit_noise_discovery_intent():
+    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+
+    result = evaluate_pad2_lane_behavior("P2G")
+
+    assert result.command_key == "P2G"
+    assert result.accepted is True
+    assert result.reason == "supported_pad2_grit_noise_discovery_intent"
+    assert result.label == "Pad 2 grit / noise discovery"
+    assert result.behavior_family == "pad2-lane/grit-noise-discovery"
+    assert result.target_pad == 2
+    assert result.lane == "Pad 2 secondary lane"
+    assert result.lane_action == "describe_pad2_grit_noise_discovery_intent"
+    assert result.intent_kind == "discovery_intent"
+    assert result.anchor_concept == ""
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_lane_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "P2G: Pad 2 grit / noise discovery",
+        "Read-only Pad 2 grit/noise discovery intent.",
+        "Target pad: 2",
+        "Lane: Pad 2 secondary lane",
+        "Lane action: describe_pad2_grit_noise_discovery_intent",
+        "Discovery concept: Pad 2 grit/noise discovery",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No lane state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_p2g_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+
+    result = evaluate_pad2_lane_behavior("P2G")
+
+    assert result.metadata["source"] == "PAD2_COMMANDS"
+    assert result.metadata["command_type"] == "mutation"
+    assert result.metadata["target_pad"] == 2
+    assert result.metadata["lane"] == "pad_2_secondary_lane"
+    assert result.metadata["behavior_family"] == "pad2-lane/grit-noise-discovery"
+    assert result.metadata["lane_action"] == "describe_pad2_grit_noise_discovery_intent"
+    assert result.metadata["intent_kind"] == "discovery_intent"
+    assert result.metadata["discovery_concept"] == "Pad 2 grit/noise discovery"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_pad2_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
 
@@ -436,7 +500,7 @@ def test_pad2_lane_metadata_is_copied_and_immutable():
 def test_deferred_packet_6_pad2_lane_keys_fail_safely():
     from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
 
-    for command_key in ("P2M", "P2G", "P2R", "P2X", "P2Z"):
+    for command_key in ("P2M", "P2R", "P2X", "P2Z"):
         result = evaluate_pad2_lane_behavior(command_key)
 
         assert result.accepted is False
@@ -537,6 +601,8 @@ if __name__ == "__main__":
     test_p2t_metadata_contains_expected_passive_sources()
     test_p2p_returns_read_only_pad2_pressure_body_discovery_intent()
     test_p2p_metadata_contains_expected_passive_sources()
+    test_p2g_returns_read_only_pad2_grit_noise_discovery_intent()
+    test_p2g_metadata_contains_expected_passive_sources()
     test_pad2_lane_metadata_is_copied_and_immutable()
     test_deferred_packet_6_pad2_lane_keys_fail_safely()
     test_unknown_keys_fail_safely()
