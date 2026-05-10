@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2cc6ca3 Add Packet 6F Pad 2 lane behavior
+f7dfefa Add Packet 6F Pad 2 lane behavior checkpoint
 
 ## Current Phase
 
@@ -330,6 +330,8 @@ The docs-only review gate for the Packet 6F plan has now accepted that tiny
 future Packet 6F scope.
 The tiny Packet 6F read-only Pad 2 lane behavior implementation is now
 complete for `P2P` only and documented in a checkpoint for review.
+The docs-only review gate for that checkpoint has now accepted Packet 6F as
+complete for read-only `P2P` intent only.
 The docs-only Packet 6D Pad 2 lane behavior plan has now been documented and
 recommends a tiny future Packet 6D scope for read-only `P2F` intent only.
 The docs-only review gate for the Packet 6D plan has now accepted that tiny
@@ -420,9 +422,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only review/acceptance gate for the Packet 6F
-Pad 2 lane behavior checkpoint, a broader Packet 6 progress update after
-Packet 6F, or a pause at this clean implementation checkpoint.
+Next recommended task is a broader Packet 6 progress update after Packet 6F,
+a docs-only Packet 6G Pad 2 lane behavior plan, or a pause at this clean
+accepted checkpoint review.
 
 Do not implement deeper Pad 1 lane state modeling, Pad 1 BD Acoustic
 execution, group profile `"4"` support, Pad 4 BD Acoustic behavior, runtime
@@ -2453,6 +2455,37 @@ It records:
   behavior
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Packet 6F Pad 2 Lane Behavior Checkpoint Review
+
+The latest Packet 6F Pad 2 lane behavior checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6F_PAD2_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+It records:
+
+- accepted checkpoint document:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_6F_PAD2_LANE_BEHAVIOR_CHECKPOINT.md`
+- accepted implementation milestone:
+  - `2cc6ca3 Add Packet 6F Pad 2 lane behavior`
+- accepted checkpoint milestone:
+  - `f7dfefa Add Packet 6F Pad 2 lane behavior checkpoint`
+- accepted read-only Packet 6F behavior:
+  - `P2P`: Pad 2 pressure / body discovery
+- preserved read-only Packet 6 behavior:
+  - `P2B`
+  - `P2H`
+  - `P2C`
+  - `P2F`
+  - `P2T`
+- remaining deferred/safe Packet 6 scope:
+  - `P2M`, `P2G`, `P2R`, `P2X`, `P2Z`
+- no runtime Pad 2 state, runtime discovery execution, dispatch, command
+  execution, MIDI, ports, package metadata, active behavior, or hardware
+  behavior
+
+The review recommends a broader Packet 6 progress update after Packet 6F
+before widening Pad 2 scope again.
 
 ## Latest Packet 6C Pad 2 Lane Behavior Checkpoint Review
 
