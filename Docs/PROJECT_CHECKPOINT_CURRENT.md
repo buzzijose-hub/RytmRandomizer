@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 809d095 Add behavior parity progress report review after Packet 7D
 - 1da1431 Add behavior parity progress report after Packet 7D
 - 117f65b Add Packet 7D Pad 3 lane behavior checkpoint review
 - ab1aef5 Add Packet 7D Pad 3 lane behavior checkpoint
@@ -12144,6 +12145,45 @@ behavior, and hardware behavior remain absent.
 
 Next recommended task is a docs-only next Packet 7 command selection
 checkpoint after Packet 7D.
+
+## Latest Next Packet 7 Command Selection Checkpoint After Packet 7D
+
+A docs-only next Packet 7 command selection checkpoint after Packet 7D has now
+been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7D.md`
+
+Current baseline before the selection checkpoint:
+
+- `809d095 Add behavior parity progress report review after Packet 7D`
+
+Decision:
+
+- choose docs-only Packet 7E Pad 3 lane behavior planning as the next safe
+  branch
+- recommend `SX` only as the next future implementation scope
+
+Accepted current Packet 7 progress:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+
+Remaining deferred/safe Packet 7 scope:
+
+- `SW`
+- `P3R`
+- `P3X`
+
+The checkpoint adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this selection
+checkpoint.
 
 ## Latest Next Packet 7 Command Selection Checkpoint Review After Packet 7A
 
