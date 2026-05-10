@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-36b7f55 Add Packet 5D BD Silky lane behavior
+bcd57c3 Add hardware manual reference inventory
 
 ## Current Phase
 
@@ -256,6 +256,8 @@ The Packet 5D read-only Pad 1 BD Silky lane behavior implementation is now
 complete for `BI`, `ST`, `SK`, `SC`, and `SBH`. A hardware manual reference
 inventory has now recorded local Dropbox manual paths for future planning
 without copying PDFs into the repository.
+The docs-only Packet 5D BD Silky lane behavior checkpoint has now documented
+that completed read-only implementation slice.
 
 ## Current Safety State
 
@@ -310,9 +312,9 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only Packet 5D implementation checkpoint, a
-user-facing progress/timeline update, or a pause at this clean manual-reference
-inventory checkpoint.
+Next recommended task is a docs-only Packet 5D checkpoint review, a
+user-facing progress/timeline update, or a pause at this clean Packet 5D
+implementation checkpoint.
 
 Do not implement BD Silky execution, Pad 1 BD Acoustic behavior, runtime
 mutation, dispatch, MIDI, ports, active CLI behavior, package metadata, or any
@@ -6474,6 +6476,36 @@ It records:
 
 The next behavior-parity task should be a docs-only Packet 5D implementation
 checkpoint.
+
+## Latest Packet 5D BD Silky Lane Behavior Checkpoint
+
+The latest V1.34 behavior parity Packet 5D BD Silky lane behavior checkpoint
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5D_BD_SILKY_LANE_BEHAVIOR_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone:
+  - `36b7f55 Add Packet 5D BD Silky lane behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update needed because `tests/test_behavior_pad1_lane.py`
+  was already covered by `=== Test: Behavior Pad 1 Lane ===`
+- implemented read-only Packet 5D behavior:
+  - `BI`: load Pad 1 BD Silky profiled anchor
+  - `ST`: BD Silky smooth tone discovery
+  - `SK`: BD Silky kick/body discovery
+  - `SC`: BD Silky click/dust discovery
+  - `SBH`: return Pad 1 BD Silky to anchor
+- `BA` remains deferred/safe
+- Packet 5A, Packet 5B, Packet 5C, and Packet 1 `SM` behavior remain
+  unchanged
+- no CLI execution wiring, dispatch, MIDI, ports, package metadata, active
+  behavior, or hardware behavior
+
+The checkpoint recommends a docs-only Packet 5D checkpoint review next.
 
 ## Latest Hardware Manual Reference Inventory
 

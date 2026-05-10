@@ -594,3 +594,18 @@ Silky lane intent behavior for `BI`, `ST`, `SK`, `SC`, and `SBH`.
 
 The review keeps Pad 1 BD Acoustic, runtime mutation, dispatch, MIDI, ports,
 package metadata, active behavior, and hardware behavior deferred.
+
+## 21. Implementation Follow-Up
+
+Packet 5D read-only Pad 1 BD Silky lane behavior was implemented in:
+
+- `36b7f55 Add Packet 5D BD Silky lane behavior`
+
+The implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5D_BD_SILKY_LANE_BEHAVIOR_CHECKPOINT.md`
+
+The implementation covers `BI`, `ST`, `SK`, `SC`, and `SBH` as read-only
+intent behavior only. It keeps Pad 1 BD Acoustic, runtime mutation, dispatch,
+MIDI, ports, package metadata, active behavior, and hardware behavior
+deferred.
