@@ -1,4 +1,4 @@
-"""Read-only Packet 5A Pad 1 current-engine lane behavior helpers.
+"""Read-only Packet 5 Pad 1 lane behavior helpers.
 
 This module models deterministic Pad 1 lane intent without prompt loops,
 dispatching commands, opening ports, sending MIDI, or touching hardware.
@@ -12,11 +12,8 @@ from .commands import COMMANDS, PAD1_COMMANDS
 
 
 PACKET_5A_PAD1_CURRENT_ENGINE_KEYS = ("BR", "BM")
+PACKET_5B_PAD1_BD_FM_KEYS = ("FT", "FK", "FG", "FZ")
 DEFERRED_PACKET_5_PAD1_LANE_KEYS = (
-    "FT",
-    "FK",
-    "FG",
-    "FZ",
     "BP",
     "PT",
     "PK",
@@ -32,16 +29,91 @@ DEFERRED_PACKET_5_PAD1_LANE_KEYS = (
 _LANE_ACTIONS = {
     "BR": "rotate_profiled_bd_engine",
     "BM": "safe_current_engine_mutation",
+    "FT": "bd_fm_tone_fm_discovery",
+    "FK": "bd_fm_kick_body_discovery",
+    "FG": "bd_fm_grit_discovery",
+    "FZ": "return_bd_fm_to_anchor",
 }
 
 _DEPTH_DEPENDENCIES = {
     "BR": "",
     "BM": "future_safe_mutation_depth",
+    "FT": "future_bd_fm_discovery_depth",
+    "FK": "future_bd_fm_discovery_depth",
+    "FG": "future_bd_fm_discovery_depth",
+    "FZ": "",
 }
 
 _REQUIRES_DEPTH_SELECTION = {
     "BR": False,
     "BM": True,
+    "FT": True,
+    "FK": True,
+    "FG": True,
+    "FZ": False,
+}
+
+_BEHAVIOR_FAMILIES = {
+    "BR": "pad1-lane/current-bd-engine",
+    "BM": "pad1-lane/current-bd-engine",
+    "FT": "pad1-lane/bd-fm-discovery",
+    "FK": "pad1-lane/bd-fm-discovery",
+    "FG": "pad1-lane/bd-fm-discovery",
+    "FZ": "pad1-lane/bd-fm-anchor-return",
+}
+
+_REASONS = {
+    "BR": "supported_pad1_current_engine_lane_intent",
+    "BM": "supported_pad1_current_engine_lane_intent",
+    "FT": "supported_pad1_bd_fm_discovery_intent",
+    "FK": "supported_pad1_bd_fm_discovery_intent",
+    "FG": "supported_pad1_bd_fm_discovery_intent",
+    "FZ": "supported_pad1_bd_fm_anchor_return_intent",
+}
+
+_LANES = {
+    "BR": "Pad 1 BD engine",
+    "BM": "Pad 1 BD engine",
+    "FT": "Pad 1 BD FM",
+    "FK": "Pad 1 BD FM",
+    "FG": "Pad 1 BD FM",
+    "FZ": "Pad 1 BD FM",
+}
+
+_LANE_METADATA = {
+    "BR": "pad_1_bd_engine",
+    "BM": "pad_1_bd_engine",
+    "FT": "pad_1_bd_fm",
+    "FK": "pad_1_bd_fm",
+    "FG": "pad_1_bd_fm",
+    "FZ": "pad_1_bd_fm",
+}
+
+_ENGINE_DEPENDENCIES = {
+    "BR": "current_pad1_bd_engine_state",
+    "BM": "current_pad1_bd_engine_state",
+    "FT": "pad1_bd_fm_engine_profile",
+    "FK": "pad1_bd_fm_engine_profile",
+    "FG": "pad1_bd_fm_engine_profile",
+    "FZ": "pad1_bd_fm_anchor_state",
+}
+
+_INTENT_LINES = {
+    "BR": "Read-only Pad 1 current-engine lane intent.",
+    "BM": "Read-only Pad 1 current-engine lane intent.",
+    "FT": "Read-only Pad 1 BD FM discovery intent.",
+    "FK": "Read-only Pad 1 BD FM discovery intent.",
+    "FG": "Read-only Pad 1 BD FM discovery intent.",
+    "FZ": "Read-only Pad 1 BD FM anchor-return intent.",
+}
+
+_DEPENDENCY_LINES = {
+    "BR": "Current-engine dependency is recorded only.",
+    "BM": "Current-engine dependency is recorded only.",
+    "FT": "BD FM engine/profile dependency is recorded only.",
+    "FK": "BD FM engine/profile dependency is recorded only.",
+    "FG": "BD FM engine/profile dependency is recorded only.",
+    "FZ": "BD FM anchor dependency is recorded only.",
 }
 
 
@@ -77,11 +149,11 @@ class Pad1LaneBehaviorResult:
 
 
 def evaluate_pad1_lane_behavior(command_key):
-    """Return a passive Packet 5A Pad 1 current-engine lane behavior result."""
+    """Return a passive Packet 5 Pad 1 lane behavior result."""
 
     key = str(command_key)
 
-    if key in PACKET_5A_PAD1_CURRENT_ENGINE_KEYS:
+    if key in (*PACKET_5A_PAD1_CURRENT_ENGINE_KEYS, *PACKET_5B_PAD1_BD_FM_KEYS):
         return _accepted_pad1_lane_result(key)
 
     if key in DEFERRED_PACKET_5_PAD1_LANE_KEYS:
@@ -115,15 +187,17 @@ def _accepted_pad1_lane_result(command_key):
     lane_action = _LANE_ACTIONS[command_key]
     depth_dependency = _DEPTH_DEPENDENCIES[command_key]
     requires_depth_selection = _REQUIRES_DEPTH_SELECTION[command_key]
+    lane = _LANES[command_key]
+    engine_dependency = _ENGINE_DEPENDENCIES[command_key]
 
     display_lines = (
         f"{command_key}: {label}",
-        "Read-only Pad 1 current-engine lane intent.",
+        _INTENT_LINES[command_key],
         f"Target pad: {target_pad}",
-        "Lane: Pad 1 BD engine",
+        f"Lane: {lane}",
         f"Lane action: {lane_action}",
-        "Current-engine dependency is recorded only.",
-        *_depth_display_lines(depth_dependency),
+        _DEPENDENCY_LINES[command_key],
+        *_depth_display_lines(command_key, depth_dependency),
         "No prompt would run.",
         "No state would change.",
         "No command would dispatch.",
@@ -138,41 +212,72 @@ def _accepted_pad1_lane_result(command_key):
         command_key=command_key,
         label=label,
         accepted=True,
-        reason="supported_pad1_current_engine_lane_intent",
+        behavior_family=_BEHAVIOR_FAMILIES[command_key],
+        reason=_REASONS[command_key],
         target_pad=target_pad,
-        lane="Pad 1 BD engine",
+        lane=lane,
         lane_action=lane_action,
-        engine_dependency="current_pad1_bd_engine_state",
+        engine_dependency=engine_dependency,
         depth_dependency=depth_dependency,
         display_lines=display_lines,
-        metadata={
-            "source": "PAD1_COMMANDS",
-            "source_command_type": command_metadata["type"],
-            "source_command_scope": command_metadata["scope"],
-            "source_v134_reference_command": command_metadata[
-                "v134_reference_command"
-            ],
-            "source_scaffold_only": command_metadata["scaffold_only"],
-            "target_pad": target_pad,
-            "lane": "pad_1_bd_engine",
-            "lane_action": lane_action,
-            "requires_current_engine_state": True,
-            "requires_depth_selection": requires_depth_selection,
-            "mock_only": True,
-            "sends_real_midi": False,
-            "opens_ports": False,
-            "hardware_required": False,
-            "active_behavior": False,
-            "mutates_runtime_state": False,
-            "dispatches_command": False,
-            "executes_command": False,
-        },
+        metadata=_accepted_metadata(
+            command_key,
+            command_metadata,
+            target_pad,
+            lane_action,
+            requires_depth_selection,
+        ),
     )
 
 
-def _depth_display_lines(depth_dependency):
+def _accepted_metadata(
+    command_key,
+    command_metadata,
+    target_pad,
+    lane_action,
+    requires_depth_selection,
+):
+    metadata = {
+        "source": "PAD1_COMMANDS",
+        "source_command_type": command_metadata["type"],
+        "source_command_scope": command_metadata["scope"],
+        "source_v134_reference_command": command_metadata[
+            "v134_reference_command"
+        ],
+        "source_scaffold_only": command_metadata["scaffold_only"],
+        "target_pad": target_pad,
+        "lane": _LANE_METADATA[command_key],
+        "lane_action": lane_action,
+        "requires_current_engine_state": True,
+        "requires_depth_selection": requires_depth_selection,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+        "executes_command": False,
+    }
+
+    if command_key in PACKET_5B_PAD1_BD_FM_KEYS:
+        metadata.update(
+            {
+                "requires_current_engine_state": False,
+                "requires_bd_fm_engine_profile": command_key in ("FT", "FK", "FG"),
+                "requires_bd_fm_anchor": command_key == "FZ",
+            }
+        )
+
+    return metadata
+
+
+def _depth_display_lines(command_key, depth_dependency):
     if not depth_dependency:
         return ()
+
+    if command_key in PACKET_5B_PAD1_BD_FM_KEYS:
+        return ("Future BD FM discovery depth is recorded only.",)
 
     return ("Future safe mutation depth is recorded only.",)
 
@@ -194,6 +299,7 @@ def _safe_failure_metadata(source):
 __all__ = [
     "DEFERRED_PACKET_5_PAD1_LANE_KEYS",
     "PACKET_5A_PAD1_CURRENT_ENGINE_KEYS",
+    "PACKET_5B_PAD1_BD_FM_KEYS",
     "Pad1LaneBehaviorResult",
     "evaluate_pad1_lane_behavior",
 ]

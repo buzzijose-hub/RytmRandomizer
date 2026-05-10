@@ -58,11 +58,117 @@ SUPPORTED_PAD1_LANE_CASES = (
     ),
 )
 
+SUPPORTED_PAD1_BD_FM_CASES = (
+    (
+        "FT",
+        "BD FM tone/FM discovery",
+        "pad1-lane/bd-fm-discovery",
+        "supported_pad1_bd_fm_discovery_intent",
+        "bd_fm_tone_fm_discovery",
+        "pad1_bd_fm_engine_profile",
+        "future_bd_fm_discovery_depth",
+        True,
+        (
+            "FT: BD FM tone/FM discovery",
+            "Read-only Pad 1 BD FM discovery intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD FM",
+            "Lane action: bd_fm_tone_fm_discovery",
+            "BD FM engine/profile dependency is recorded only.",
+            "Future BD FM discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "FK",
+        "BD FM kick/body discovery",
+        "pad1-lane/bd-fm-discovery",
+        "supported_pad1_bd_fm_discovery_intent",
+        "bd_fm_kick_body_discovery",
+        "pad1_bd_fm_engine_profile",
+        "future_bd_fm_discovery_depth",
+        True,
+        (
+            "FK: BD FM kick/body discovery",
+            "Read-only Pad 1 BD FM discovery intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD FM",
+            "Lane action: bd_fm_kick_body_discovery",
+            "BD FM engine/profile dependency is recorded only.",
+            "Future BD FM discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "FG",
+        "BD FM grit discovery",
+        "pad1-lane/bd-fm-discovery",
+        "supported_pad1_bd_fm_discovery_intent",
+        "bd_fm_grit_discovery",
+        "pad1_bd_fm_engine_profile",
+        "future_bd_fm_discovery_depth",
+        True,
+        (
+            "FG: BD FM grit discovery",
+            "Read-only Pad 1 BD FM discovery intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD FM",
+            "Lane action: bd_fm_grit_discovery",
+            "BD FM engine/profile dependency is recorded only.",
+            "Future BD FM discovery depth is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+    (
+        "FZ",
+        "return Pad 1 BD FM to anchor",
+        "pad1-lane/bd-fm-anchor-return",
+        "supported_pad1_bd_fm_anchor_return_intent",
+        "return_bd_fm_to_anchor",
+        "pad1_bd_fm_anchor_state",
+        "",
+        False,
+        (
+            "FZ: return Pad 1 BD FM to anchor",
+            "Read-only Pad 1 BD FM anchor-return intent.",
+            "Target pad: 1",
+            "Lane: Pad 1 BD FM",
+            "Lane action: return_bd_fm_to_anchor",
+            "BD FM anchor dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+    ),
+)
+
 DEFERRED_PAD1_LANE_KEYS = (
-    "FT",
-    "FK",
-    "FG",
-    "FZ",
     "BP",
     "PT",
     "PK",
@@ -183,6 +289,100 @@ def test_br_and_bm_metadata_contains_expected_passive_sources():
         assert result.metadata["executes_command"] is False
 
 
+def test_ft_fk_fg_and_fz_return_read_only_bd_fm_lane_intents():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    for (
+        command_key,
+        expected_label,
+        expected_family,
+        expected_reason,
+        expected_lane_action,
+        expected_engine_dependency,
+        expected_depth_dependency,
+        expected_depth_required,
+        expected_display,
+    ) in SUPPORTED_PAD1_BD_FM_CASES:
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.accepted is True
+        assert result.command_key == command_key
+        assert result.label == expected_label
+        assert result.behavior_family == expected_family
+        assert result.reason == expected_reason
+        assert result.target_pad == 1
+        assert result.lane == "Pad 1 BD FM"
+        assert result.lane_action == expected_lane_action
+        assert result.engine_dependency == expected_engine_dependency
+        assert result.depth_dependency == expected_depth_dependency
+        assert result.state_changed is False
+        assert result.prompt_required is False
+        assert result.dispatches_command is False
+        assert result.executes_command is False
+        assert result.mutates_lane_state is False
+        assert result.sends_real_midi is False
+        assert result.opens_ports is False
+        assert result.hardware_required is False
+        assert result.active_behavior is False
+        assert result.display_lines == expected_display
+        assert result.metadata["requires_depth_selection"] is expected_depth_required
+
+
+def test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad1_lane import evaluate_pad1_lane_behavior
+
+    expected = {
+        "FT": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_fm_tone_fm_discovery",
+            "requires_bd_fm_engine_profile": True,
+            "requires_bd_fm_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "FK": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_fm_kick_body_discovery",
+            "requires_bd_fm_engine_profile": True,
+            "requires_bd_fm_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "FG": {
+            "source_command_type": "mutation",
+            "lane_action": "bd_fm_grit_discovery",
+            "requires_bd_fm_engine_profile": True,
+            "requires_bd_fm_anchor": False,
+            "requires_depth_selection": True,
+        },
+        "FZ": {
+            "source_command_type": "anchor_return",
+            "lane_action": "return_bd_fm_to_anchor",
+            "requires_bd_fm_engine_profile": False,
+            "requires_bd_fm_anchor": True,
+            "requires_depth_selection": False,
+        },
+    }
+
+    for command_key, expected_metadata in expected.items():
+        result = evaluate_pad1_lane_behavior(command_key)
+
+        assert result.metadata["source"] == "PAD1_COMMANDS"
+        assert result.metadata["source_command_scope"] == "pad_1"
+        assert result.metadata["source_v134_reference_command"] is True
+        assert result.metadata["source_scaffold_only"] is True
+        assert result.metadata["target_pad"] == 1
+        assert result.metadata["lane"] == "pad_1_bd_fm"
+        for key, value in expected_metadata.items():
+            assert result.metadata[key] == value
+        assert result.metadata["mock_only"] is True
+        assert result.metadata["sends_real_midi"] is False
+        assert result.metadata["opens_ports"] is False
+        assert result.metadata["hardware_required"] is False
+        assert result.metadata["active_behavior"] is False
+        assert result.metadata["mutates_runtime_state"] is False
+        assert result.metadata["dispatches_command"] is False
+        assert result.metadata["executes_command"] is False
+
+
 def test_pad1_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad1_lane import Pad1LaneBehaviorResult
 
@@ -206,6 +406,10 @@ def test_repeated_pad1_lane_evaluations_are_deterministic():
 
     assert evaluate_pad1_lane_behavior("BR") == evaluate_pad1_lane_behavior("BR")
     assert evaluate_pad1_lane_behavior("BM") == evaluate_pad1_lane_behavior("BM")
+    assert evaluate_pad1_lane_behavior("FT") == evaluate_pad1_lane_behavior("FT")
+    assert evaluate_pad1_lane_behavior("FK") == evaluate_pad1_lane_behavior("FK")
+    assert evaluate_pad1_lane_behavior("FG") == evaluate_pad1_lane_behavior("FG")
+    assert evaluate_pad1_lane_behavior("FZ") == evaluate_pad1_lane_behavior("FZ")
 
 
 def test_deferred_packet_5_pad1_lane_keys_fail_safely():
@@ -342,6 +546,8 @@ if __name__ == "__main__":
     test_importing_behavior_pad1_lane_prints_nothing()
     test_br_and_bm_return_read_only_pad1_lane_intents()
     test_br_and_bm_metadata_contains_expected_passive_sources()
+    test_ft_fk_fg_and_fz_return_read_only_bd_fm_lane_intents()
+    test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources()
     test_pad1_lane_metadata_is_copied_and_immutable()
     test_repeated_pad1_lane_evaluations_are_deterministic()
     test_deferred_packet_5_pad1_lane_keys_fail_safely()
