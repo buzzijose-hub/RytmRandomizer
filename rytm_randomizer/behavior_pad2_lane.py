@@ -13,9 +13,9 @@ from .commands import COMMANDS, PAD2_COMMANDS
 
 PACKET_6A_PAD2_LANE_KEYS = ("P2B",)
 PACKET_6B_PAD2_LANE_KEYS = ("P2H",)
+PACKET_6C_PAD2_LANE_KEYS = ("P2C",)
 DEFERRED_PACKET_6_PAD2_LANE_KEYS = (
     "P2M",
-    "P2C",
     "P2F",
     "P2T",
     "P2P",
@@ -66,6 +66,8 @@ def evaluate_pad2_lane_behavior(command_key):
         return _accepted_p2b_result()
     if key == "P2H":
         return _accepted_p2h_result()
+    if key == "P2C":
+        return _accepted_p2c_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -192,6 +194,61 @@ def _accepted_p2h_result():
     )
 
 
+def _accepted_p2c_result():
+    metadata = PAD2_COMMANDS["P2C"]
+    label = metadata["label"]
+    lane_action = "load_pad2_sd_classic_anchor"
+    anchor_concept = "Pad 2 SD Classic anchor"
+
+    result_metadata = {
+        "source": "PAD2_COMMANDS",
+        "command_type": metadata["type"],
+        "target_pad": metadata["pad"],
+        "lane": "pad_2_secondary_lane",
+        "behavior_family": "pad2-lane/sd-classic-anchor",
+        "lane_action": lane_action,
+        "intent_kind": "anchor_load",
+        "anchor_concept": anchor_concept,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return Pad2LaneBehaviorResult(
+        command_key="P2C",
+        label=label,
+        behavior_family="pad2-lane/sd-classic-anchor",
+        accepted=True,
+        reason="supported_pad2_sd_classic_anchor_intent",
+        target_pad=2,
+        lane="Pad 2 secondary lane",
+        lane_action=lane_action,
+        intent_kind="anchor_load",
+        anchor_concept=anchor_concept,
+        display_lines=(
+            f"P2C: {label}",
+            "Read-only Pad 2 SD Classic anchor intent.",
+            "Target pad: 2",
+            "Lane: Pad 2 secondary lane",
+            f"Lane action: {lane_action}",
+            "Pad 2 SD Classic anchor dependency is recorded only.",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
 def _unsupported_result(command_key):
     return Pad2LaneBehaviorResult(
         command_key=command_key,
@@ -212,6 +269,7 @@ __all__ = [
     "DEFERRED_PACKET_6_PAD2_LANE_KEYS",
     "PACKET_6A_PAD2_LANE_KEYS",
     "PACKET_6B_PAD2_LANE_KEYS",
+    "PACKET_6C_PAD2_LANE_KEYS",
     "Pad2LaneBehaviorResult",
     "evaluate_pad2_lane_behavior",
 ]

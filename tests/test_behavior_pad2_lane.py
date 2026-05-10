@@ -159,6 +159,70 @@ def test_p2h_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_p2c_returns_read_only_pad2_sd_classic_anchor_intent():
+    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+
+    result = evaluate_pad2_lane_behavior("P2C")
+
+    assert result.command_key == "P2C"
+    assert result.accepted is True
+    assert result.reason == "supported_pad2_sd_classic_anchor_intent"
+    assert result.label == "load Pad 2 SD Classic rolling snare"
+    assert result.behavior_family == "pad2-lane/sd-classic-anchor"
+    assert result.target_pad == 2
+    assert result.lane == "Pad 2 secondary lane"
+    assert result.lane_action == "load_pad2_sd_classic_anchor"
+    assert result.intent_kind == "anchor_load"
+    assert result.anchor_concept == "Pad 2 SD Classic anchor"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_lane_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "P2C: load Pad 2 SD Classic rolling snare",
+        "Read-only Pad 2 SD Classic anchor intent.",
+        "Target pad: 2",
+        "Lane: Pad 2 secondary lane",
+        "Lane action: load_pad2_sd_classic_anchor",
+        "Pad 2 SD Classic anchor dependency is recorded only.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No lane state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_p2c_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+
+    result = evaluate_pad2_lane_behavior("P2C")
+
+    assert result.metadata["source"] == "PAD2_COMMANDS"
+    assert result.metadata["command_type"] == "load"
+    assert result.metadata["target_pad"] == 2
+    assert result.metadata["lane"] == "pad_2_secondary_lane"
+    assert result.metadata["behavior_family"] == "pad2-lane/sd-classic-anchor"
+    assert result.metadata["lane_action"] == "load_pad2_sd_classic_anchor"
+    assert result.metadata["intent_kind"] == "anchor_load"
+    assert result.metadata["anchor_concept"] == "Pad 2 SD Classic anchor"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_pad2_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
 
@@ -180,7 +244,7 @@ def test_pad2_lane_metadata_is_copied_and_immutable():
 def test_deferred_packet_6_pad2_lane_keys_fail_safely():
     from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
 
-    for command_key in ("P2M", "P2C", "P2F", "P2T", "P2P", "P2G", "P2R", "P2X", "P2Z"):
+    for command_key in ("P2M", "P2F", "P2T", "P2P", "P2G", "P2R", "P2X", "P2Z"):
         result = evaluate_pad2_lane_behavior(command_key)
 
         assert result.accepted is False
@@ -273,6 +337,8 @@ if __name__ == "__main__":
     test_p2b_metadata_contains_expected_passive_sources()
     test_p2h_returns_read_only_pad2_sd_hard_anchor_intent()
     test_p2h_metadata_contains_expected_passive_sources()
+    test_p2c_returns_read_only_pad2_sd_classic_anchor_intent()
+    test_p2c_metadata_contains_expected_passive_sources()
     test_pad2_lane_metadata_is_copied_and_immutable()
     test_deferred_packet_6_pad2_lane_keys_fail_safely()
     test_unknown_keys_fail_safely()
