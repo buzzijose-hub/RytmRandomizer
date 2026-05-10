@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- b076110 Add Packet 4D group anchor behavior
 - 0eb382e Add Packet 4D group anchor plan
 - d621c67 Add Packet 4D group anchor decision note
 - 2366894 Add Packet 4C lane-aware group mutation review
@@ -3729,6 +3730,74 @@ The next recommended task is the tiny Packet 4D implementation for read-only
 group anchor load/return intent behavior for `O` and `Z`, a broader Packet 4
 near-completion checkpoint, a more user-facing progress/timeline update, or a
 pause at this accepted Packet 4D planning checkpoint.
+
+## V1.34 Behavior Parity Packet 4D Group Anchor Checkpoint
+
+The Packet 4D group anchor checkpoint records completion of the read-only group
+anchor load/return intent behavior implementation.
+
+Checkpoint document:
+
+- Docs/V134_BEHAVIOR_PARITY_PACKET_4D_GROUP_ANCHOR_CHECKPOINT.md
+
+Milestone commit:
+
+- b076110 Add Packet 4D group anchor behavior
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+No closeout script update was needed because `tests/test_behavior_scene_group.py`
+was already included under:
+
+- `=== Test: Behavior Scene Group ===`
+
+Accepted Packet 4D behavior:
+
+- `O`: read-only group anchor load intent
+- `Z`: read-only group anchor return intent
+- copied passive metadata from `GROUP_COMMANDS`
+- group scope `four_pad_group`
+- `O` anchor action `load_group_anchors`
+- `Z` anchor action `return_group_anchors`
+- behavior family `scene-group/group-anchor-intent`
+- `O` reason `supported_group_anchor_load_intent`
+- `Z` reason `supported_group_anchor_return_intent`
+- no group anchor load execution
+- no group anchor return execution
+- no group mutation execution
+- no lane-aware group mutation execution
+- no scene execution
+- no state mutation
+- no dispatch
+- no MIDI
+- no ports
+- no hardware requirement
+
+Accepted TDD evidence:
+
+- red `tests/test_behavior_scene_group.py` failed before implementation
+  because `O` and `Z` were still unsupported
+- green `tests/test_behavior_scene_group.py` passed after implementation
+- targeted behavior and passive CLI regression tests passed
+- full closeout passed
+
+The checkpoint confirms no CLI execution wiring, dispatch, command execution,
+scene execution, group anchor load execution, group anchor return execution,
+group mutation execution, lane-aware group mutation execution, prompt/input
+loop, runtime state mutation, real MIDI, ports, package metadata, active CLI
+behavior, machine/profile expansion, Analog Four support, Pads 5-12 support,
+SysEx, GUI/capture, or hardware validation exists.
+
+Packet 4 has now covered the planned scene and group intent surface for the
+current read-only intent-only behavior phase.
+
+The next recommended task is a docs-only Packet 4D group anchor checkpoint
+review, a broader Packet 4 completion checkpoint, a more user-facing
+progress/timeline update, or a pause at this clean Packet 4D implementation
+checkpoint.
 
 ## Next Phase Planning Gate
 
