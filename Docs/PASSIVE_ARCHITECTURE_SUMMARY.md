@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-739b983
+737a8f8
 
 ## Protected Reference
 
@@ -57,7 +57,7 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 739b983 Add Packet 4D group anchor checkpoint
+- current HEAD: 737a8f8 Add Packet 4D group anchor checkpoint review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -201,14 +201,18 @@ It captures:
   the Packet 4D group anchor behavior implementation is now complete and
   documented in a checkpoint for review; the Packet 4D group anchor
   checkpoint review has now accepted that completed read-only group anchor
-  intent behavior slice
+  intent behavior slice; the broader Packet 4 completion checkpoint now
+  consolidates accepted Packet 4A, Packet 4B, Packet 4C, and Packet 4D
+  behavior and records Packet 4 as complete for the current read-only
+  intent-only behavior phase
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a broader Packet 4 completion checkpoint, write
-  a more user-facing progress/timeline update, or pause at the accepted Packet
-  4D implementation checkpoint
+- next recommended task: write a docs-only Packet 4 completion checkpoint
+  review, write a broader behavior-parity implementation progress report
+  after Packet 4, write a more user-facing progress/timeline update, or pause
+  at the clean Packet 4 completion checkpoint
 - closeout command
 - stop condition
 
@@ -3494,6 +3498,45 @@ current read-only intent-only behavior phase.
 The next recommended task is a broader Packet 4 completion checkpoint, a more
 user-facing progress/timeline update, or a pause at this accepted Packet 4D
 implementation checkpoint. Hardware remains off.
+
+## V1.34 Behavior Parity Packet 4 Completion Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_4_COMPLETION_CHECKPOINT.md` consolidates
+accepted Packet 4A, Packet 4B, Packet 4C, and Packet 4D behavior and records
+Packet 4 as complete for the current read-only intent-only behavior phase.
+
+Current baseline:
+
+- `737a8f8 Add Packet 4D group anchor checkpoint review`
+
+Packet identity:
+
+- Scene And Group Intent Behavior Parity
+
+Accepted implementation surface:
+
+- `rytm_randomizer/behavior_scene_group.py`
+- `tests/test_behavior_scene_group.py`
+
+Accepted closeout coverage:
+
+- `=== Test: Behavior Scene Group ===`
+
+Completed Packet 4 slices:
+
+- Packet 4A: read-only scene intent behavior
+- Packet 4B: read-only group mutation intent behavior
+- Packet 4C: read-only lane-aware group mutation intent behavior
+- Packet 4D: read-only group anchor load/return intent behavior
+
+The checkpoint confirms Packet 4 is complete only for the current read-only
+intent-only behavior phase. It does not add or authorize scene execution,
+group mutation execution, lane-aware group mutation execution, group anchor
+load/return execution, dispatch, MIDI, ports, active CLI behavior, hardware
+behavior, or hardware validation.
+
+The next recommended task is a docs-only Packet 4 completion checkpoint
+review. Hardware remains off.
 
 The previous current-session handoff was:
 
