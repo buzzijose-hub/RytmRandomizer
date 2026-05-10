@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-3e617a7 Add behavior parity progress report after Packet 4
+aa2fa92 Add behavior parity progress report after Packet 4 review
 
 ## Current Phase
 
@@ -204,6 +204,9 @@ foundation.
 The broader behavior-parity implementation progress report after Packet 4
 review has now accepted that report as the current behavior-parity progress
 baseline before any next packet planning.
+The docs-only next behavior-parity packet planning gate now recommends Packet
+5 Pad 1 lane behavior planning as the next branch, without authorizing
+implementation.
 
 ## Current Safety State
 
@@ -258,9 +261,10 @@ python -m rytm_randomizer.cli active-boundary-report
 
 ## Next Recommended Task
 
-Next recommended task is a docs-only next behavior-parity packet planning gate,
-a more user-facing progress/timeline update, or a pause at this clean progress
-report review checkpoint.
+Next recommended task is a docs-only review/acceptance gate for the next
+behavior-parity packet planning gate, a docs-only Packet 5 Pad 1 lane behavior
+plan, a more user-facing progress/timeline update, or a pause at this clean
+planning checkpoint.
 
 Do not implement scene execution, group mutation execution, lane-aware group
 mutation execution, group anchor loading, group anchor return, dispatch, MIDI,
@@ -535,6 +539,35 @@ The review confirms no CLI execution wiring, dispatch, runtime execution,
 MIDI, ports, package metadata, active CLI behavior, hardware behavior, or
 hardware validation exists. It recommends a docs-only next behavior-parity
 packet planning gate if continuing.
+
+The latest V1.34 behavior parity next packet planning gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE.md`
+
+It records:
+
+- current baseline
+  `aa2fa92 Add behavior parity progress report after Packet 4 review`
+- current accepted state:
+  - Packet 1 complete
+  - Packet 2 accepted progress
+  - Packet 3 complete
+  - Packet 4 complete
+- safe next branch options
+- recommended next branch:
+  - Packet 5 Pad 1 Lane Behavior planning
+- candidate Pad 1 lane planning surface:
+  - `BR`, `BM`
+  - `FM`, `FT`, `FK`, `FG`, `FZ`
+  - `BP`, `PD`, `PT`, `PK`, `PX`, `PBH`
+  - `BI`, `SM`, `ST`, `SK`, `SC`, `SBH`
+- preconditions before any future Packet 5 implementation
+- no immediate parallel implementation recommendation
+
+The gate confirms no implementation, tests, CLI execution wiring, dispatch,
+runtime execution, MIDI, ports, package metadata, active CLI behavior, hardware
+behavior, or hardware validation exists. It recommends a docs-only review gate
+next, followed by a docs-only Packet 5 Pad 1 lane behavior plan if accepted.
 
 The latest V1.34 behavior parity Packet 4C lane-aware group mutation plan is:
 

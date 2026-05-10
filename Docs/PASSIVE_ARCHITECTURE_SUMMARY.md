@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-3e617a7
+aa2fa92
 
 ## Protected Reference
 
@@ -57,7 +57,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: 3e617a7 Add behavior parity progress report after Packet 4
+- current HEAD: aa2fa92 Add behavior parity progress report after Packet 4
+  review
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -211,14 +212,18 @@ It captures:
   progress, Packet 3 completion, and Packet 4 completion as the current
   read-only behavior foundation; the broader behavior-parity implementation
   progress report after Packet 4 review has now accepted that report as the
-  current progress baseline before any next packet planning
+  current progress baseline before any next packet planning; the docs-only
+  next behavior-parity packet planning gate now recommends Packet 5 Pad 1
+  lane behavior planning as the next branch without authorizing
+  implementation
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: write a docs-only next behavior-parity packet
-  planning gate, write a more user-facing progress/timeline update, or pause
-  at the clean progress report review checkpoint
+- next recommended task: write a docs-only review/acceptance gate for the
+  next behavior-parity packet planning gate, write a docs-only Packet 5 Pad 1
+  lane behavior plan, write a more user-facing progress/timeline update, or
+  pause at the clean planning checkpoint
 - closeout command
 - stop condition
 
@@ -3683,6 +3688,49 @@ hardware validation exists.
 
 The next recommended task is a docs-only next behavior-parity packet planning
 gate. Hardware remains off.
+
+## V1.34 Behavior Parity Next Packet Planning Gate
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE.md` records the safe
+decision point after the accepted behavior-parity progress report after Packet
+4 review.
+
+Current baseline:
+
+- `aa2fa92 Add behavior parity progress report after Packet 4 review`
+
+Current accepted behavior-parity state:
+
+- Packet 1 complete for menu/status and utility/session intent
+- Packet 2 has accepted read-only anchor/profile progress
+- Packet 3 complete for mutation-depth and guarded input intent
+- Packet 4 complete for scene and group intent
+
+Safe next branch options:
+
+- Packet 5 Pad 1 Lane Behavior planning
+- remaining anchor/profile widening planning
+- undo/commit/state behavior planning
+- user-facing progress/timeline update
+- pause at the accepted post-Packet-4 progress checkpoint
+
+Recommended next branch:
+
+- Packet 5 Pad 1 Lane Behavior planning
+
+Candidate Packet 5 planning surface:
+
+- `BR`, `BM`
+- `FM`, `FT`, `FK`, `FG`, `FZ`
+- `BP`, `PD`, `PT`, `PK`, `PX`, `PBH`
+- `BI`, `SM`, `ST`, `SK`, `SC`, `SBH`
+
+The gate confirms no implementation, tests, CLI execution wiring, dispatch,
+runtime execution, MIDI, ports, package metadata, active CLI behavior,
+hardware behavior, or hardware validation exists.
+
+The next recommended task is a docs-only review/acceptance gate for this
+planning gate. Hardware remains off.
 
 The previous current-session handoff was:
 

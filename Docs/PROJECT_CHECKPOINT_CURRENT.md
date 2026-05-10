@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- aa2fa92 Add behavior parity progress report after Packet 4 review
 - 3e617a7 Add behavior parity progress report after Packet 4
 - e93d459 Add Packet 4 completion checkpoint review
 - 18e72da Add Packet 4 completion checkpoint
@@ -4131,6 +4132,72 @@ hardware validation exists.
 Next recommended task:
 
 - docs-only next behavior-parity packet planning gate
+
+## V1.34 Behavior Parity Next Packet Planning Gate
+
+The next behavior-parity packet planning gate records the safe decision point
+after the accepted behavior-parity progress report after Packet 4 review.
+
+Planning gate:
+
+- Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE.md
+
+Current baseline:
+
+- aa2fa92 Add behavior parity progress report after Packet 4 review
+
+Current accepted behavior-parity state:
+
+- Packet 1 complete for menu/status and utility/session intent.
+- Packet 2 has accepted read-only anchor/profile progress.
+- Packet 3 complete for mutation-depth and guarded input intent.
+- Packet 4 complete for scene and group intent.
+
+Safe next branch options:
+
+- Packet 5 Pad 1 Lane Behavior planning
+- remaining anchor/profile widening planning
+- undo/commit/state behavior planning
+- user-facing progress/timeline update
+- pause at the accepted post-Packet-4 progress checkpoint
+
+Recommended next branch:
+
+- Packet 5 Pad 1 Lane Behavior planning
+
+Candidate Packet 5 planning surface:
+
+- `BR`, `BM`
+- `FM`, `FT`, `FK`, `FG`, `FZ`
+- `BP`, `PD`, `PT`, `PK`, `PX`, `PBH`
+- `BI`, `SM`, `ST`, `SK`, `SC`, `SBH`
+
+This gate does not implement Packet 5 and does not authorize implementation.
+It recommends a docs-only Packet 5 plan after a review/acceptance gate.
+
+Confirmed absent behavior:
+
+- no implementation
+- no tests
+- no CLI execution wiring
+- no dispatch
+- no runtime execution
+- no MIDI
+- no ports
+- no package metadata
+- no active CLI command
+- no hardware behavior
+- no hardware validation
+- no Analog Four support
+- no Pads 5-12 support
+- no SysEx
+- no GUI/capture
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this planning gate
 
 ## Next Phase Planning Gate
 
