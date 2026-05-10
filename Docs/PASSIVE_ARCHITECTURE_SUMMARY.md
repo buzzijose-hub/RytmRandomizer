@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-b79b285
+d3b226c
 
 ## Protected Reference
 
@@ -59,7 +59,8 @@ The closeout workflow also checks:
 It captures:
 
 - current branch: modularize-v1.34
-- current HEAD: b79b285 Add behavior parity progress report after Packet 5D
+- current HEAD: d3b226c Add behavior parity progress report review after
+  Packet 5D
 - current phase: Passive/Mock Foundation Phase with mock-first active boundary
   implemented, first fake-provider-only real MIDI adapter boundary present,
   Packets 1, 2, and 3 in the current strengthening sequence complete and
@@ -264,15 +265,17 @@ It captures:
   now been documented as the current consolidation checkpoint before choosing
   Packet 5E, deeper lane state modeling, a progress/timeline update, or a
   pause; the docs-only review gate for the Packet 5D progress report has now
-  accepted that report as the current behavior-parity progress baseline
+  accepted that report as the current behavior-parity progress baseline; the
+  docs-only Packet 5E BD Acoustic anchor behavior plan has now been documented
+  and recommends a tiny future read-only `BA` implementation scope
 - current safety state
 - hardware-off reminder
 - current passive CLI capability
 - known safe passive commands
-- next recommended task: docs-only Packet 5E Pad 1 BD Acoustic `BA` behavior
-  plan, deeper Packet 5 lane-state modeling decision note, user-facing
-  progress/timeline update, or pause at this accepted Packet 5D progress
-  review checkpoint
+- next recommended task: docs-only Packet 5E plan review/acceptance gate,
+  deeper Packet 5 lane-state modeling decision note, user-facing
+  progress/timeline update, or pause at this clean Packet 5E planning
+  checkpoint
 - closeout command
 - stop condition
 
@@ -11639,6 +11642,42 @@ metadata, active behavior, or hardware behavior is authorized.
 
 The next recommended task is a docs-only Packet 5E Pad 1 BD Acoustic `BA`
 behavior plan if continuing behavior-parity implementation.
+
+## Packet 5E BD Acoustic Anchor Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_5E_BD_ACOUSTIC_ANCHOR_BEHAVIOR_PLAN.md`
+defines the next tiny Packet 5 planning branch.
+
+Current baseline before the plan:
+
+- `d3b226c Add behavior parity progress report review after Packet 5D`
+
+Planned future Packet 5E scope:
+
+- `BA`: load Pad 1 BD Acoustic anchor
+
+Important separation:
+
+- `BA` is a Pad 1 command from `PAD1_COMMANDS`
+- group profile `"4"` / My BD Acoustic remains parked in mock mapper work
+- group profile `"4"` is associated with Pad 4 / BD Acoustic in passive mock
+  mapper report context
+- Packet 5E does not authorize group profile `"4"` support
+- Packet 5E does not authorize Pad 4 BD Acoustic behavior
+
+Allowed future implementation files:
+
+- `rytm_randomizer/behavior_pad1_lane.py`
+- `tests/test_behavior_pad1_lane.py`
+
+Packet 5A, Packet 5B, Packet 5C, and Packet 5D behavior must remain
+unchanged.
+
+The plan adds no implementation, tests, CLI wiring, MIDI, ports, package
+metadata, active behavior, or hardware behavior.
+
+The next recommended task is a docs-only Packet 5E plan review/acceptance
+gate.
 
 ## Hardware Manual Reference Inventory
 

@@ -390,3 +390,20 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata, runtime execution, or
 hardware behavior exists.
+
+## 19. Packet 5E Plan Follow-Up
+
+A docs-only Packet 5E BD Acoustic anchor behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5E_BD_ACOUSTIC_ANCHOR_BEHAVIOR_PLAN.md`
+
+The plan defines a future read-only Pad 1 BD Acoustic anchor behavior scope for:
+
+- `BA`: load Pad 1 BD Acoustic anchor
+
+The plan keeps group profile `"4"` / My BD Acoustic, Pad 4 BD Acoustic
+behavior, deeper Pad 1 lane state modeling, runtime mutation, dispatch, MIDI,
+ports, package metadata, active behavior, and hardware behavior deferred.
+
+The plan adds no implementation, tests, CLI wiring, MIDI, ports, package
+metadata, active behavior, or hardware behavior.

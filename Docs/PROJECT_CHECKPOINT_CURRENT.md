@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- d3b226c Add behavior parity progress report review after Packet 5D
 - b79b285 Add behavior parity progress report after Packet 5D
 - f81d4cd Add Packet 5D BD Silky lane behavior checkpoint review
 - 1bfb704 Add Packet 5D BD Silky lane behavior checkpoint
@@ -12343,6 +12344,44 @@ The review records:
 
 Next recommended task is a docs-only Packet 5E Pad 1 BD Acoustic `BA` behavior
 plan if continuing behavior-parity implementation.
+
+## V1.34 Behavior Parity Packet 5E BD Acoustic Anchor Behavior Plan
+
+The Packet 5E BD Acoustic anchor behavior plan defines the next tiny Packet 5
+planning branch.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_5E_BD_ACOUSTIC_ANCHOR_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `d3b226c Add behavior parity progress report review after Packet 5D`
+
+Planned future Packet 5E scope:
+
+- `BA`: load Pad 1 BD Acoustic anchor
+
+The plan records:
+
+- `BA` is a Pad 1 command from `PAD1_COMMANDS`
+- group profile `"4"` / My BD Acoustic remains parked in mock mapper work
+- group profile `"4"` is associated with Pad 4 / BD Acoustic in passive mock
+  mapper report context
+- future implementation, if accepted, should touch only:
+  - `rytm_randomizer/behavior_pad1_lane.py`
+  - `tests/test_behavior_pad1_lane.py`
+- no closeout script update is expected
+- Packet 5A, Packet 5B, Packet 5C, and Packet 5D behavior must remain
+  unchanged
+- group profile `"4"`, Pad 4 BD Acoustic behavior, deeper lane state modeling,
+  runtime mutation, dispatch, command execution, MIDI, ports, package metadata,
+  active behavior, and hardware behavior remain deferred
+
+The plan adds no implementation, tests, CLI wiring, MIDI, ports, package
+metadata, active behavior, or hardware behavior.
+
+Next recommended task is a docs-only Packet 5E plan review/acceptance gate.
 
 ## Hardware Manual Reference Inventory
 
