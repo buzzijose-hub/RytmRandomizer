@@ -188,3 +188,16 @@ Packet 6 is not complete.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Packet 6D Plan Follow-Up
+
+The docs-only Packet 6D Pad 2 lane behavior plan now exists:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_6D_PAD2_LANE_BEHAVIOR_PLAN.md`
+
+It recommends a future tiny Packet 6D implementation scope limited to:
+
+- `P2F` only
+
+It adds no implementation, tests, dispatch, command execution, MIDI, ports,
+package metadata, active behavior, runtime behavior, or hardware behavior.
