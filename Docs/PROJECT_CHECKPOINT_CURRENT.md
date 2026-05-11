@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f8f6f22 Add Packet 9C undo commit state behavior plan
 - c3a3e14 Add behavior parity progress report review after Packet 9B
 - 66b228c Add behavior parity progress report after Packet 9B
 - 96d8c10 Add Packet 9B undo commit state behavior checkpoint review
@@ -12618,6 +12619,49 @@ active behavior, or hardware behavior.
 
 Next recommended task is a docs-only review/acceptance gate for the Packet 9C
 plan.
+
+## Latest Packet 9C Undo Commit State Behavior Plan Review
+
+The docs-only Packet 9C undo/commit/state behavior plan has now been reviewed
+and accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_PLAN_REVIEW.md`
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Accepted plan milestone:
+
+- `f8f6f22 Add Packet 9C undo commit state behavior plan`
+
+Accepted future Packet 9C implementation scope:
+
+- `W` only
+
+Accepted future behavior:
+
+- `W`: waveform exploration only
+- existing `STATE_UTILITY_COMMANDS` metadata
+- target scope `waveform_exploration`
+- behavior family `undo-commit-state/waveform-exploration`
+- state action `describe_waveform_exploration_intent`
+- intent kind `waveform_exploration`
+- exploration concept `waveform exploration only`
+- lifecycle effect `described_only`
+- no waveform exploration execution
+- no runtime state mutation
+- no dispatch, MIDI, ports, active behavior, or hardware behavior
+
+Preserved and deferred scope:
+
+- `B` remains unchanged
+- `E` remains unchanged
+- `U` remains deferred/safe
+- `H` and `R` remain Packet 1 menu/status behavior
+
+Next recommended task is a tiny TDD Packet 9C implementation for read-only
+`W` intent only.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
