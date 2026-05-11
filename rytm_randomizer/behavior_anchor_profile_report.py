@@ -24,12 +24,13 @@ REPORT_TITLE = "RytmRandomizer Anchor/Profile Behavior Report"
 
 ANCHOR_PROFILE_SAFETY = {
     "read_only": True,
+    "passive_cli_visibility": "present",
     "real_midi": "absent",
     "port_opening": "absent",
     "midi_sending": "absent",
     "active_behavior": "absent",
+    "active_cli_wiring": "absent",
     "hardware_required": False,
-    "cli_wiring": "absent",
     "runtime_state": "absent",
     "package_metadata_changes": "absent",
 }
@@ -166,7 +167,7 @@ def build_anchor_profile_report():
         "parked_sections": deepcopy(PARKED_SECTIONS),
         "safety": deepcopy(ANCHOR_PROFILE_SAFETY),
         "closeout_coverage": tuple(CLOSEOUT_COVERAGE),
-        "recommended_next_branch": "docs-only review/checkpoint before CLI wiring",
+        "recommended_next_branch": "documentation checkpoint after passive CLI visibility",
         "source": {
             "report_module": "rytm_randomizer.behavior_anchor_profile_report",
             "in_memory_only": True,

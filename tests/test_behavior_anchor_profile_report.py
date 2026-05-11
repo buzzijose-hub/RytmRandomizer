@@ -180,12 +180,13 @@ def test_report_records_safety_boundaries_and_closeout_coverage():
 
     assert report["safety"] == {
         "read_only": True,
+        "passive_cli_visibility": "present",
         "real_midi": "absent",
         "port_opening": "absent",
         "midi_sending": "absent",
         "active_behavior": "absent",
+        "active_cli_wiring": "absent",
         "hardware_required": False,
-        "cli_wiring": "absent",
         "runtime_state": "absent",
         "package_metadata_changes": "absent",
     }
@@ -245,15 +246,16 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved",
         "Safety:",
         "- read_only: True",
+        "- passive_cli_visibility: present",
         "- real_midi: absent",
         "- port_opening: absent",
         "- midi_sending: absent",
         "- active_behavior: absent",
+        "- active_cli_wiring: absent",
         "- hardware_required: False",
-        "- cli_wiring: absent",
         "- runtime_state: absent",
         "- package_metadata_changes: absent",
-        "Recommended Next Branch: docs-only review/checkpoint before CLI wiring",
+        "Recommended Next Branch: documentation checkpoint after passive CLI visibility",
     ]
 
 
@@ -297,12 +299,18 @@ def test_no_real_midi_library_is_imported():
     assert "rtmidi" not in sys.modules
 
 
-def test_passive_cli_behavior_remains_unchanged_and_no_cli_wiring_is_added():
+def test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_unchanged():
     help_result = run_cli("--help")
+    anchor_profile_result = run_cli("anchor-profile-report")
     report_result = run_cli("report")
 
     assert help_result.returncode == 0
-    assert "anchor-profile-report" not in help_result.stdout
+    assert "anchor-profile-report" in help_result.stdout
+    assert anchor_profile_result.returncode == 0
+    assert "RytmRandomizer Anchor/Profile Behavior Report" in anchor_profile_result.stdout
+    assert "execute-command" not in anchor_profile_result.stdout
+    assert "send-command" not in anchor_profile_result.stdout
+    assert "hardware-test" not in anchor_profile_result.stdout
     assert report_result.returncode == 0
     assert normalize_newlines(report_result.stdout) == fixture_text(
         "registry_report_expected.txt"
@@ -362,7 +370,7 @@ if __name__ == "__main__":
     test_returned_report_data_is_copied_and_mutation_safe()
     test_report_module_does_not_call_cli_or_mock_message_mapping()
     test_no_real_midi_library_is_imported()
-    test_passive_cli_behavior_remains_unchanged_and_no_cli_wiring_is_added()
+    test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_unchanged()
     test_pz_and_profile_4_behavior_remains_unchanged()
     test_behavior_anchor_profile_report_exposes_no_active_behavior_names()
     test_no_package_metadata_files_are_introduced()

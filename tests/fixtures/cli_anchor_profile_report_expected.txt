@@ -1,0 +1,26 @@
+RytmRandomizer Anchor/Profile Behavior Report
+Supported Anchor/Profile Sections:
+- direct_packet_2_anchor_profile: BH, BC, BS, BF
+- pad1_lane_anchor_profile: FZ, BP, PBH, BI, SBH, BA
+- pad2_lane_anchor_profile: P2B, P2H, P2C, P2F, P2Z
+- pad3_anchor: P3A, SA
+- pad4_anchor: P4A
+- group_anchor: O, Z
+- current_anchor_state: B, E
+- selected_profile_workflow: P, M
+- selected_isolated_pad_target: L
+Parked/Safe Scope:
+- PZ: selected_isolated_pad_anchor_return - deferred_selected_isolated_pad_anchor_return
+- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved
+Safety:
+- read_only: True
+- passive_cli_visibility: present
+- real_midi: absent
+- port_opening: absent
+- midi_sending: absent
+- active_behavior: absent
+- active_cli_wiring: absent
+- hardware_required: False
+- runtime_state: absent
+- package_metadata_changes: absent
+Recommended Next Branch: documentation checkpoint after passive CLI visibility

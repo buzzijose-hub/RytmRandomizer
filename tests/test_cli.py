@@ -6,7 +6,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "mock-mapper-report | active-boundary-report | "
+    "mock-mapper-report | active-boundary-report | anchor-profile-report | "
     "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
     "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -84,6 +84,16 @@ def test_active_boundary_report_help_exits_zero_and_matches_fixture():
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_active_boundary_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_anchor_profile_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("anchor-profile-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_anchor_profile_report_help_expected.txt"
     )
     assert result.stderr == ""
 
@@ -236,6 +246,16 @@ def test_active_boundary_report_command_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_anchor_profile_report_command_exits_zero_and_matches_fixture():
+    result = run_cli("anchor-profile-report")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_anchor_profile_report_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_report_command_is_deterministic():
     first = run_cli("report")
     second = run_cli("report")
@@ -269,6 +289,17 @@ def test_active_boundary_report_command_is_deterministic():
     assert second.stderr == ""
 
 
+def test_anchor_profile_report_command_is_deterministic():
+    first = run_cli("anchor-profile-report")
+    second = run_cli("anchor-profile-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
 def test_top_level_help_exposes_no_active_execution_commands():
     result = run_cli("--help")
     output = normalize_newlines(result.stdout)
@@ -293,6 +324,8 @@ def test_cli_source_does_not_evaluate_active_boundary_or_construct_sender():
 
     assert "evaluate_mock_active_boundary" not in source
     assert "MockMidiSender" not in source
+    assert "evaluate_anchor_profile_behavior" not in source
+    assert "evaluate_pad1_lane_behavior" not in source
 
 
 def test_mock_mapper_report_command_imports_no_real_midi_libraries():
@@ -335,6 +368,34 @@ def test_active_boundary_report_command_imports_no_real_midi_libraries():
                 "from rytm_randomizer.cli import main\n"
                 "with redirect_stdout(StringIO()):\n"
                 "    code = main(['active-boundary-report'])\n"
+                "assert code == 0\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_anchor_profile_report_command_imports_no_real_midi_libraries():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "from contextlib import redirect_stdout\n"
+                "from io import StringIO\n"
+                "from rytm_randomizer.cli import main\n"
+                "with redirect_stdout(StringIO()):\n"
+                "    code = main(['anchor-profile-report'])\n"
                 "assert code == 0\n"
                 "assert 'mido' not in sys.modules\n"
                 "assert 'rtmidi' not in sys.modules\n"
@@ -735,6 +796,14 @@ def test_unknown_active_boundary_report_arguments_fail_safely():
     assert normalize_newlines(result.stderr) == USAGE
 
 
+def test_unknown_anchor_profile_report_arguments_fail_safely():
+    result = run_cli("anchor-profile-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
 def test_unknown_list_arguments_fail_safely():
     result = run_cli("list-commands", "--mutate")
 
@@ -910,6 +979,45 @@ def test_active_boundary_report_output_keeps_passive_safety_explicit():
     assert "- command_execution: absent" in output
     assert "- scene_execution: absent" in output
     assert "- hardware_behavior: absent" in output
+
+
+def test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("anchor-profile-report")
+    output = normalize_newlines(result.stdout)
+
+    assert "- direct_packet_2_anchor_profile: BH, BC, BS, BF" in output
+    assert "- pad1_lane_anchor_profile: FZ, BP, PBH, BI, SBH, BA" in output
+    assert "- pad2_lane_anchor_profile: P2B, P2H, P2C, P2F, P2Z" in output
+    assert "- pad3_anchor: P3A, SA" in output
+    assert "- pad4_anchor: P4A" in output
+    assert "- group_anchor: O, Z" in output
+    assert "- current_anchor_state: B, E" in output
+    assert "- selected_profile_workflow: P, M" in output
+    assert "- selected_isolated_pad_target: L" in output
+    assert "- PZ: selected_isolated_pad_anchor_return - deferred_selected_isolated_pad_anchor_return" in output
+    assert "- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved" in output
+    assert "- read_only: True" in output
+    assert "- passive_cli_visibility: present" in output
+    assert "- real_midi: absent" in output
+    assert "- port_opening: absent" in output
+    assert "- midi_sending: absent" in output
+    assert "- active_behavior: absent" in output
+    assert "- active_cli_wiring: absent" in output
+    assert "- hardware_required: False" in output
+    assert "- runtime_state: absent" in output
+    assert "- package_metadata_changes: absent" in output
+    assert "execute-command" not in output
+    assert "send-command" not in output
+    assert "hardware-test" not in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
 
 
 def test_inspect_command_exposes_no_active_behavior_or_support_expansion():
@@ -1171,6 +1279,7 @@ if __name__ == "__main__":
     test_report_help_exits_zero_and_matches_fixture()
     test_mock_mapper_report_help_exits_zero_and_matches_fixture()
     test_active_boundary_report_help_exits_zero_and_matches_fixture()
+    test_anchor_profile_report_help_exits_zero_and_matches_fixture()
     test_inspect_command_help_exits_zero_and_matches_fixture()
     test_inspect_scene_help_exits_zero_and_matches_fixture()
     test_inspect_group_profile_help_exits_zero_and_matches_fixture()
@@ -1186,13 +1295,16 @@ if __name__ == "__main__":
     test_report_command_exits_zero_and_matches_fixture()
     test_mock_mapper_report_command_exits_zero_and_matches_fixture()
     test_active_boundary_report_command_exits_zero_and_matches_fixture()
+    test_anchor_profile_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_mock_mapper_report_command_is_deterministic()
     test_active_boundary_report_command_is_deterministic()
+    test_anchor_profile_report_command_is_deterministic()
     test_top_level_help_exposes_no_active_execution_commands()
     test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
     test_mock_mapper_report_command_imports_no_real_midi_libraries()
     test_active_boundary_report_command_imports_no_real_midi_libraries()
+    test_anchor_profile_report_command_imports_no_real_midi_libraries()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
     test_inspect_command_known_key_is_deterministic()
     test_inspect_scene_known_key_exits_zero_and_matches_fixture()
@@ -1231,6 +1343,7 @@ if __name__ == "__main__":
     test_unknown_report_arguments_fail_safely()
     test_unknown_mock_mapper_report_arguments_fail_safely()
     test_unknown_active_boundary_report_arguments_fail_safely()
+    test_unknown_anchor_profile_report_arguments_fail_safely()
     test_unknown_list_arguments_fail_safely()
     test_missing_search_query_fails_safely()
     test_unknown_search_arguments_fail_safely()
@@ -1245,6 +1358,7 @@ if __name__ == "__main__":
     test_active_boundary_report_exposes_no_active_behavior_or_support_expansion()
     test_active_boundary_report_output_keeps_boundary_profiles_explicit()
     test_active_boundary_report_output_keeps_passive_safety_explicit()
+    test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion()
     test_inspect_command_exposes_no_active_behavior_or_support_expansion()
     test_inspect_scene_exposes_no_active_behavior_or_support_expansion()
     test_inspect_group_profile_exposes_no_active_behavior_or_support_expansion()

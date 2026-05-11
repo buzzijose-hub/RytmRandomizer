@@ -1,0 +1,17 @@
+RytmRandomizer passive CLI: anchor-profile-report
+
+Usage:
+  python -m rytm_randomizer.cli anchor-profile-report
+  python -m rytm_randomizer.cli anchor-profile-report --help
+
+Behavior:
+  Prints the deterministic read-only anchor/profile behavior report to stdout.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no runtime state
+  no hardware mutation
+  no hardware required
