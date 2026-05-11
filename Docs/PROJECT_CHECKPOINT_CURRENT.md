@@ -21,7 +21,35 @@ modularize-v1.34
 
 Current HEAD:
 
-84c0e6b Add anchor state plan after selected target review
+3e75dfc Add anchor state plan review
+
+## V1.34 Behavior Parity Selected Isolated Pad Runtime-State Plan After Anchor State Review
+
+The selected isolated pad runtime-state boundary after the accepted anchor
+state plan review has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_AFTER_ANCHOR_STATE_REVIEW.md`
+
+Current baseline:
+
+- `3e75dfc Add anchor state plan review`
+
+Current decision:
+
+- define selected isolated pad runtime-state boundary only
+- keep selected isolated pad runtime state unimplemented
+- keep selected target state unimplemented
+- keep anchor state unimplemented
+- keep runtime state unimplemented
+- keep `PZ` parked
+- do not add CLI execution wiring, dispatch, MIDI, ports, package metadata
+  changes, active behavior, runtime execution, hardware capture, or hardware
+  behavior
+
+The next recommended task is a docs-only review/acceptance gate for this
+selected isolated pad runtime-state plan.
 
 ## V1.34 Behavior Parity Anchor State Plan Review After Selected Target Review
 

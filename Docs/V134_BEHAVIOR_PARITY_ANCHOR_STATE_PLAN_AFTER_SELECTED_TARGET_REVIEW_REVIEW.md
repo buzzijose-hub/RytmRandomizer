@@ -320,3 +320,13 @@ Runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 17. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_AFTER_ANCHOR_STATE_REVIEW.md`
+
+That plan describes the future selected isolated pad runtime-state boundary
+while keeping selected isolated pad runtime state unimplemented, selected
+target state unimplemented, anchor state unimplemented, and `PZ` parked.
