@@ -190,3 +190,13 @@ utility behavior planning.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 12. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11_SELECTED_ISOLATED_PAD_UTILITY_BEHAVIOR_PLAN.md`
+
+That plan defines the Packet 11 selected isolated pad utility behavior
+planning surface and recommends Packet 11A `L` only as the first future
+implementation target.

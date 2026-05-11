@@ -19,6 +19,38 @@ Current branch:
 
 modularize-v1.34
 
+## V1.34 Behavior Parity Packet 11 Selected Isolated Pad Utility Behavior Plan
+
+Packet 11 selected isolated pad utility behavior has now been planned.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11_SELECTED_ISOLATED_PAD_UTILITY_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `740e9a0 Add next packet planning gate review after Packet 10`
+
+Packet 11 planning surface:
+
+- `L`: select isolated single-pad mutation target, default Pad 3
+- `PZ`: return selected isolated pad to anchor only
+
+Recommended future first implementation subset:
+
+- Packet 11A `L` only
+
+Deferred/safe Packet 11 scope:
+
+- `PZ`: return selected isolated pad to anchor only
+
+The plan confirms no selected isolated pad runtime state, selected-pad
+switching execution, selected-pad anchor return execution, mutation execution,
+dispatch, MIDI, ports, package metadata, active behavior, or hardware behavior
+is authorized.
+
+The next recommended task is a docs-only Packet 11 plan review.
+
 ## V1.34 Behavior Parity Next Packet Planning Gate Review After Packet 10
 
 The next behavior-parity packet planning gate after Packet 10 has now been

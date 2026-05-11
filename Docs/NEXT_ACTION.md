@@ -6,7 +6,37 @@ modularize-v1.34
 
 ## Current HEAD
 
-7f95862 Add next packet planning gate after Packet 10
+740e9a0 Add next packet planning gate review after Packet 10
+
+## Latest Packet 11 Selected Isolated Pad Utility Behavior Plan
+
+The latest V1.34 behavior parity Packet 11 selected isolated pad utility
+behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11_SELECTED_ISOLATED_PAD_UTILITY_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline:
+  - `740e9a0 Add next packet planning gate review after Packet 10`
+- Packet 11 planning surface:
+  - `L`: select isolated single-pad mutation target, default Pad 3
+  - `PZ`: return selected isolated pad to anchor only
+- passive metadata source:
+  - `ISOLATED_PAD_UTILITY_COMMANDS`
+- recommended future first implementation subset:
+  - Packet 11A `L` only
+- deferred/safe Packet 11 scope:
+  - `PZ`
+- expected future file ownership:
+  - `rytm_randomizer/behavior_selected_isolated_pad.py`
+  - `tests/test_behavior_selected_isolated_pad.py`
+- no selected isolated pad runtime state, selected-pad switching execution,
+  selected-pad anchor return execution, mutation execution, dispatch, MIDI,
+  ports, package metadata, active behavior, or hardware behavior is authorized
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 11 plan.
 
 ## Latest Behavior-Parity Next Packet Planning Gate After Packet 10 Review
 
