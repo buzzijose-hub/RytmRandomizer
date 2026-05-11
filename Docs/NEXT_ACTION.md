@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5dc1986 Add next packet planning gate after Packet 8C
+5f4dc64 Add next packet planning gate review after Packet 8C
 
 ## Current Phase
 
@@ -2469,6 +2469,40 @@ Next recommended task:
 Do not implement undo/commit/state behavior, dispatch, MIDI, ports, package
 metadata changes, active behavior, runtime execution, or hardware behavior
 without a separate Packet 9 plan and review.
+
+## Latest Packet 9 Undo Commit State Behavior Plan
+
+The latest V1.34 behavior parity Packet 9 undo/commit/state behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `5f4dc64 Add next packet planning gate review after Packet 8C`
+
+The plan defines the Packet 9 planning surface:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+- `U`: undo previous script-generated state
+
+Recommended future Packet 9A implementation scope:
+
+- `B` only
+
+Preserved Packet 1 ownership:
+
+- `H`: show current anchor
+- `R`: print current script state
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata changes, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task:
+
+- docs-only Packet 9 plan review.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 

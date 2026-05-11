@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5dc1986
+5f4dc64
 
 ## Protected Reference
 
@@ -11735,6 +11735,38 @@ runtime behavior, or hardware behavior.
 
 The next recommended task is a docs-only Packet 9 undo/commit/state behavior
 plan.
+
+## V1.34 Behavior Parity Packet 9 Undo Commit State Behavior Plan
+
+The Packet 9 undo/commit/state behavior plan is now documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `5f4dc64 Add next packet planning gate review after Packet 8C`
+
+The plan records:
+
+- full Packet 9 planning surface:
+  - `B`
+  - `E`
+  - `W`
+  - `U`
+- recommended future Packet 9A implementation scope:
+  - `B` only
+- preserved Packet 1 ownership:
+  - `H`
+  - `R`
+- likely future implementation files:
+  - `rytm_randomizer/behavior_undo_commit_state.py`
+  - `tests/test_behavior_undo_commit_state.py`
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only Packet 9 plan review.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 

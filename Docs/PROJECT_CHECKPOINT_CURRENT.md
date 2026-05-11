@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5f4dc64 Add next packet planning gate review after Packet 8C
 - 5dc1986 Add next packet planning gate after Packet 8C
 - 9247bff Add behavior parity progress report review after Packet 8C
 - 93664df Add behavior parity progress report after Packet 8C
@@ -12066,6 +12067,38 @@ dispatch, command execution, MIDI, ports, package metadata changes, active
 behavior, or hardware behavior.
 
 Next recommended task is a docs-only Packet 9 undo/commit/state behavior plan.
+
+## Latest Packet 9 Undo Commit State Behavior Plan
+
+The Packet 9 undo/commit/state behavior plan has now been documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `5f4dc64 Add next packet planning gate review after Packet 8C`
+
+The plan records:
+
+- full Packet 9 planning surface:
+  - `B`
+  - `E`
+  - `W`
+  - `U`
+- recommended future Packet 9A implementation scope:
+  - `B` only
+- preserved Packet 1 ownership:
+  - `H`
+  - `R`
+- likely future implementation files:
+  - `rytm_randomizer/behavior_undo_commit_state.py`
+  - `tests/test_behavior_undo_commit_state.py`
+
+The plan adds no implementation, tests, CLI wiring, runtime execution,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+Next recommended task is a docs-only Packet 9 plan review.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
