@@ -479,6 +479,75 @@ def test_p3r_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_p3x_returns_read_only_pad3_current_mode_safe_mutation_intent():
+    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+
+    result = evaluate_pad3_lane_behavior("P3X")
+
+    assert result.command_key == "P3X"
+    assert result.accepted is True
+    assert result.reason == "supported_pad3_sy_raw_current_mode_safe_mutation_intent"
+    assert result.label == "safely mutate the currently loaded Pad 3 mode"
+    assert result.behavior_family == "pad3-lane/sy-raw-current-mode-safe-mutation"
+    assert result.target_pad == 3
+    assert result.lane == "Pad 3 SY Raw lane"
+    assert result.lane_action == "describe_pad3_sy_raw_current_mode_safe_mutation_intent"
+    assert result.intent_kind == "mutation"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_lane_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "P3X: safely mutate the currently loaded Pad 3 mode",
+        "Read-only Pad 3 SY Raw current mode safe mutation intent.",
+        "Target pad: 3",
+        "Lane: Pad 3 SY Raw lane",
+        "Lane action: describe_pad3_sy_raw_current_mode_safe_mutation_intent",
+        "Mutation concept: Pad 3 SY Raw current mode safe mutation",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No lane state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_p3x_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+
+    result = evaluate_pad3_lane_behavior("P3X")
+
+    assert result.metadata["source"] == "PAD3_COMMANDS"
+    assert result.metadata["command_type"] == "mutation"
+    assert result.metadata["target_pad"] == 3
+    assert result.metadata["lane"] == "pad_3_sy_raw_lane"
+    assert result.metadata["behavior_family"] == "pad3-lane/sy-raw-current-mode-safe-mutation"
+    assert (
+        result.metadata["lane_action"]
+        == "describe_pad3_sy_raw_current_mode_safe_mutation_intent"
+    )
+    assert result.metadata["intent_kind"] == "mutation"
+    assert (
+        result.metadata["mutation_concept"]
+        == "Pad 3 SY Raw current mode safe mutation"
+    )
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_pad3_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
 
@@ -552,6 +621,16 @@ def test_pad3_lane_metadata_is_copied_and_immutable():
     fresh_p3r_result = evaluate_pad3_lane_behavior("P3R")
     assert fresh_p3r_result.metadata["source"] == "PAD3_COMMANDS"
 
+    p3x_result = evaluate_pad3_lane_behavior("P3X")
+
+    try:
+        p3x_result.metadata["source"] = "mutated"
+    except TypeError:
+        pass
+
+    fresh_p3x_result = evaluate_pad3_lane_behavior("P3X")
+    assert fresh_p3x_result.metadata["source"] == "PAD3_COMMANDS"
+
 
 def test_deferred_packet_7_pad3_lane_keys_fail_safely():
     from rytm_randomizer.behavior_pad3_lane import (
@@ -559,10 +638,7 @@ def test_deferred_packet_7_pad3_lane_keys_fail_safely():
         evaluate_pad3_lane_behavior,
     )
 
-    assert DEFERRED_PACKET_7_PAD3_LANE_KEYS == (
-        "P3M",
-        "P3X",
-    )
+    assert DEFERRED_PACKET_7_PAD3_LANE_KEYS == ("P3M",)
 
     for command_key in DEFERRED_PACKET_7_PAD3_LANE_KEYS:
         result = evaluate_pad3_lane_behavior(command_key)
@@ -669,6 +745,8 @@ if __name__ == "__main__":
     test_sw_metadata_contains_expected_passive_sources()
     test_p3r_returns_read_only_pad3_sy_raw_mode_rotation_intent()
     test_p3r_metadata_contains_expected_passive_sources()
+    test_p3x_returns_read_only_pad3_current_mode_safe_mutation_intent()
+    test_p3x_metadata_contains_expected_passive_sources()
     test_pad3_lane_metadata_is_copied_and_immutable()
     test_deferred_packet_7_pad3_lane_keys_fail_safely()
     test_unknown_keys_fail_safely()
