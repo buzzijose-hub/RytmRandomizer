@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-b64c09b
+f35d716
+
+## Latest PZ Implementation Plan After Runtime-State Modules Readiness Review
+
+`Docs/V134_BEHAVIOR_PARITY_PZ_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_MODULES_READINESS_REVIEW.md`
+documents the future `PZ` implementation plan after the accepted readiness
+decision review.
+
+Current plan:
+
+- `PZ` remains unimplemented in this slice
+- future `PZ` work should be a read-only/inert runtime-readiness helper
+- future `PZ` work should not execute anchor return
+- future `PZ` work should not switch pads
+- future `PZ` work should not mutate runtime state
+- future `PZ` implementation, if approved later, should stay in:
+  - `rytm_randomizer/behavior_selected_isolated_pad.py`
+  - `tests/test_behavior_selected_isolated_pad.py`
+
+The next recommended task is a docs-only review/acceptance gate for this `PZ`
+implementation plan.
+
+No MIDI, ports, package metadata changes, active behavior, runtime execution,
+`PZ` implementation, or hardware behavior is authorized.
 
 ## Latest PZ Implementation Readiness Decision Review After Runtime-State Modules Progress Review
 

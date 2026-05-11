@@ -21,7 +21,40 @@ modularize-v1.34
 
 Current HEAD:
 
-b64c09b Add PZ readiness decision after runtime-state modules
+f35d716 Add PZ readiness decision review after runtime-state modules
+
+## V1.34 Behavior Parity PZ Implementation Plan After Runtime-State Modules Readiness Review
+
+The `PZ` implementation plan after the accepted runtime-state modules
+readiness review has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_MODULES_READINESS_REVIEW.md`
+
+Current baseline:
+
+- `f35d716 Add PZ readiness decision review after runtime-state modules`
+
+Current decision:
+
+- `PZ` remains unimplemented in this slice
+- future `PZ` work should be a read-only/inert runtime-readiness helper
+- future `PZ` work should not execute anchor return
+- future `PZ` work should not switch pads
+- future `PZ` work should not mutate runtime state
+- future `PZ` implementation, if approved later, should stay in:
+  - `rytm_randomizer/behavior_selected_isolated_pad.py`
+  - `tests/test_behavior_selected_isolated_pad.py`
+- no closeout script update is expected because `Behavior Selected Isolated
+  Pad` already covers the test file
+
+The plan authorizes no `PZ` implementation, profile `4` mock mapper support,
+mutation execution, dispatch, MIDI, ports, package metadata changes, active
+behavior, runtime execution, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this `PZ`
+implementation plan.
 
 ## V1.34 Behavior Parity PZ Implementation Readiness Decision Review After Runtime-State Modules Progress Review
 

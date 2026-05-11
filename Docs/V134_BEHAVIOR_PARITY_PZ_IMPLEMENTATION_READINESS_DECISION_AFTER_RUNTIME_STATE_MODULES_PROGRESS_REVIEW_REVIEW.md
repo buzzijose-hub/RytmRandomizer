@@ -206,3 +206,12 @@ The `PZ` implementation readiness decision is accepted.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 11. PZ Implementation Plan Status
+
+The next `PZ` implementation plan is documented in:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_MODULES_READINESS_REVIEW.md`
+
+The plan keeps `PZ` unimplemented in its slice and defines only a future
+read-only/inert runtime-readiness helper shape.
