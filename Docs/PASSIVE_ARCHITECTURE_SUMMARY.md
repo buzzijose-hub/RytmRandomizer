@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-b111fc0
+ccf410d
+
+## Latest First Runtime-Adjacent Mock-Only Test Plan
+
+`Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_ADJACENT_MOCK_ONLY_TEST_PLAN.md`
+documents the first runtime-adjacent mock-only test plan after the accepted
+runtime/execution boundary review.
+
+Candidate:
+
+- `PZ`: return selected isolated pad to anchor only
+
+Plan summary:
+
+- `PZ` remains read-only runtime-adjacent readiness
+- future test direction is safe-failure coverage, not execution
+- execution remains outside the current project phase
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for the test
+plan.
+
+No implementation, tests, dispatch, command execution, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is authorized.
 
 ## Latest Runtime/Execution Boundary Decision Note Review After PZ Timeline Review
 

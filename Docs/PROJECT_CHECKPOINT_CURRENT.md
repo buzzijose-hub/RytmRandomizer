@@ -21,7 +21,51 @@ modularize-v1.34
 
 Current HEAD:
 
-b111fc0 Add runtime execution boundary decision after PZ
+ccf410d Add runtime execution boundary decision review after PZ
+
+## V1.34 Behavior Parity First Runtime-Adjacent Mock-Only Test Plan
+
+The first runtime-adjacent mock-only test plan has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_ADJACENT_MOCK_ONLY_TEST_PLAN.md`
+
+Current baseline:
+
+- `ccf410d Add runtime execution boundary decision review after PZ`
+
+Candidate:
+
+- `PZ`: return selected isolated pad to anchor only
+
+Plan summary:
+
+- `PZ` remains read-only runtime-adjacent readiness
+- future tests should prove safe-failure behavior before any implementation
+- the future test direction is mock-only and non-hardware-facing
+- execution remains outside the current project phase
+- real MIDI, ports, package metadata changes, active behavior, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this test plan
+
+Confirmed boundaries:
+
+- no implementation
+- no new tests
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime/Execution Boundary Decision Note Review After PZ Timeline Review
 

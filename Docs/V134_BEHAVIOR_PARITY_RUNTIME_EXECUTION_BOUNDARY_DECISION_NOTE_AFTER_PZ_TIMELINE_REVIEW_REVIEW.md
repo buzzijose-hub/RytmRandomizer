@@ -195,3 +195,12 @@ The next recommended task is a first runtime-adjacent mock-only test plan.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The first runtime-adjacent mock-only test plan after this accepted boundary is:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_ADJACENT_MOCK_ONLY_TEST_PLAN.md`
+
+That plan selects `PZ` as the first documentation-only mock-test candidate and
+keeps execution outside the current project phase.
