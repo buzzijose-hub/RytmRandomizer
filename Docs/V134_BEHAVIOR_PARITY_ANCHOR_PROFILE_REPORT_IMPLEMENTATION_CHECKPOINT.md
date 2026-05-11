@@ -218,6 +218,8 @@ Protected checks:
 Safe next options:
 
 - docs-only review/acceptance gate for this implementation checkpoint
+- follow-up review gate:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
 - docs-only decision note for whether to add passive CLI visibility later
 - broader user-facing progress/timeline update
 - pause at this clean checkpoint

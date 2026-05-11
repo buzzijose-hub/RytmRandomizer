@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-05d09f3
+8ed64ee
+
+## Latest Anchor/Profile Behavior Report Implementation Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+accepts the read-only anchor/profile behavior report implementation checkpoint.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_IMPLEMENTATION_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `05d09f3 Add read-only anchor profile behavior report`
+
+Accepted checkpoint milestone:
+
+- `8ed64ee Update checkpoint after anchor profile behavior report`
+
+The review accepts `rytm_randomizer/behavior_anchor_profile_report.py` and
+`tests/test_behavior_anchor_profile_report.py` as the current read-only
+anchor/profile behavior report surface and focused coverage. It keeps CLI
+wiring, `PZ`, profile `4` mock mapper support, selected isolated pad runtime
+state, selected-pad switching execution, selected-pad anchor return execution,
+mutation execution, dispatch, MIDI, ports, package metadata changes, active
+behavior, runtime execution, and hardware behavior out of scope.
+
+The next recommended task is a docs-only decision note for passive CLI
+visibility before adding any CLI command for this report.
 
 ## Latest Anchor/Profile Behavior Report Implementation Checkpoint
 
