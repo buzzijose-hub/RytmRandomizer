@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 8bec2b5 Add Packet 9A undo commit state behavior checkpoint review
 - ea652d9 Add Packet 9A undo commit state behavior checkpoint
 - 5e4cbdf Add Packet 9A undo commit state behavior
 - bb5f801 Add Packet 9 undo commit state behavior plan
@@ -12219,6 +12220,49 @@ hardware behavior was added.
 
 Next recommended task is a broader behavior-parity progress report after
 Packet 9A.
+
+## Latest Behavior Parity Progress Report After Packet 9A
+
+The broader behavior-parity implementation progress report after Packet 9A has
+now been documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9A.md`
+
+Current baseline before the report:
+
+- `8bec2b5 Add Packet 9A undo commit state behavior checkpoint review`
+
+The report consolidates:
+
+- Packet 1 completion
+- Packet 2 accepted read-only anchor/profile progress
+- Packet 3 completion
+- Packet 4 completion
+- Packet 5 accepted Pad 1 lane behavior progress
+- Packet 6 Pad 2 command-helper coverage
+- Packet 7 Pad 3 lane behavior completion
+- Packet 8 Pad 4 command-helper coverage
+- Packet 9A `B` current-anchor return intent
+
+Packet 9 current accepted scope:
+
+- `B`
+
+Packet 9 deferred/safe scope:
+
+- `E`
+- `W`
+- `U`
+
+`H` and `R` remain covered by Packet 1 menu/status behavior.
+
+The report confirms runtime state mutation, anchor restore execution, anchor
+commit execution, waveform exploration execution, undo-stack mutation,
+dispatch, MIDI, ports, package metadata changes, active behavior, and hardware
+behavior remain absent.
+
+Next recommended task is a docs-only review/acceptance gate for this progress
+report.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
