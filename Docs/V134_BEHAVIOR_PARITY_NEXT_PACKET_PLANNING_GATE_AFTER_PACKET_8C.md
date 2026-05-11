@@ -279,3 +279,19 @@ behavior planning.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 15. Review Status
+
+This planning gate is reviewed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_8C_REVIEW.md`
+
+The review accepts Packet 9 undo/commit/state behavior planning as the next
+recommended behavior-parity branch.
+
+The review does not authorize implementation by itself. It only authorizes a
+docs-only Packet 9 plan next.
+
+No implementation, tests, CLI wiring, dispatch, command execution, MIDI, ports,
+package metadata changes, active behavior, runtime behavior, or hardware
+behavior is added by the review.
