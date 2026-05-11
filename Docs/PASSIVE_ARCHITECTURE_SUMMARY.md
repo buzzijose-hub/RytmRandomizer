@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-23b1f5a
+cacc31d
+
+## Latest Behavior-Parity Progress Report After Packet 9 Review
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9_REVIEW.md`
+accepts the broader behavior-parity implementation progress report after
+Packet 9.
+
+Accepted behavior-parity state:
+
+- Packet 1 complete
+- Packet 2 accepted as meaningful anchor/profile progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted as meaningful Pad 1 lane progress
+- Packet 6 Pad 2 command-helper scope covered
+- Packet 7 complete
+- Packet 8 Pad 4 command-helper scope covered
+- Packet 9 covered for the current read-only intent-only phase
+
+The review recommends a docs-only next behavior-parity packet planning gate or
+a user-facing progress/timeline update before choosing more implementation.
 
 ## Latest Behavior-Parity Progress Report After Packet 9
 
