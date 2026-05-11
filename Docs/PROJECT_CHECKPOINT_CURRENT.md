@@ -21,7 +21,56 @@ modularize-v1.34
 
 Current HEAD:
 
-c881dcb Add runtime adjacent mock-only progress report after PZ tests
+ebf2d5d Add runtime adjacent mock-only progress report review
+
+## V1.34 Behavior Parity Runtime-Adjacent Next Branch Selection After PZ Tests
+
+The next runtime-adjacent branch after the accepted `PZ` tests progress report
+review has now been selected.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_PZ_TESTS.md`
+
+Current baseline:
+
+- `ebf2d5d Add runtime adjacent mock-only progress report review`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_PZ_TESTS_REVIEW.md`
+
+Selected next branch:
+
+- docs-only `B` runtime-adjacent mock-only safe-failure test plan
+
+Decision summary:
+
+- `PZ` remains the only accepted runtime-adjacent mock-only safe-failure
+  candidate
+- `B` is selected for planning only
+- no `B` tests or implementation are added
+- no current anchor return execution is added
+- no runtime mutation, dispatch, command execution, MIDI, ports, package
+  metadata changes, active behavior, or hardware behavior are added
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this branch selection note
+
+Confirmed boundaries:
+
+- no current anchor return execution
+- no selected pad switching execution
+- no selected pad anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime-Adjacent Mock-Only Progress Report After PZ Tests Review
 
