@@ -469,16 +469,37 @@ Before any future selected isolated pad runtime-state implementation:
 
 Safe next options:
 
-- docs-only review/acceptance gate for this updated implementation plan
+- docs-only review/acceptance gate for this updated implementation plan:
+  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_REVIEWS_REVIEW.md`
 - docs-only implementation readiness decision for selected target, anchor, and
   selected isolated pad runtime-state modules
 - docs-only progress/timeline update
 - pause at this clean planning checkpoint
 
-## 20. Recommendation
+## 20. Follow-On Review
 
-Proceed with a docs-only review/acceptance gate for this updated selected
-isolated pad runtime-state implementation plan.
+The follow-on docs-only review gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_REVIEWS_REVIEW.md`
+
+It accepts this updated selected isolated pad runtime-state implementation plan
+as the current planning boundary.
+
+It keeps selected target state unimplemented.
+
+It keeps anchor state unimplemented.
+
+It keeps selected isolated pad runtime state unimplemented.
+
+It keeps `PZ` parked.
+
+It authorizes no implementation, tests, CLI commands, runtime state, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
+## 21. Recommendation
+
+Proceed with a docs-only implementation readiness decision for the selected
+target, anchor, and selected isolated pad runtime-state modules.
 
 Do not implement selected target state yet.
 
@@ -491,7 +512,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 21. Decision Summary
+## 22. Decision Summary
 
 Selected isolated pad runtime-state implementation planning is updated after
 selected target state and anchor state implementation plan reviews.
