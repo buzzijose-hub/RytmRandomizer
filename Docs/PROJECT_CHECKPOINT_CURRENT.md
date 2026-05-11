@@ -19,6 +19,35 @@ Current branch:
 
 modularize-v1.34
 
+## V1.34 Behavior Parity Progress Report After Packet 10
+
+The broader behavior-parity implementation progress report after Packet 10 has
+now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_10.md`
+
+Current baseline before the report:
+
+- `64f752a Add Packet 10 completion checkpoint review`
+
+The report consolidates accepted behavior-parity progress through Packet 10.
+
+Accepted Packet 10 scope:
+
+- `P`: selected-profile workflow/profile-machine selection intent
+- `M`: selected-profile anchor-load intent
+
+Packet 10 is covered for the current read-only intent-only behavior phase.
+
+The report confirms selected-profile runtime state, profile switching
+execution, machine changes, anchor loading execution, dispatch, MIDI, ports,
+package metadata, active behavior, and hardware behavior remain absent.
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
+
 ## V1.34 Behavior Parity Packet 10 Completion Checkpoint Review
 
 Packet 10 selected-profile workflow completion has now been reviewed and
