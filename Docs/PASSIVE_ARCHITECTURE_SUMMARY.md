@@ -8,7 +8,27 @@ modularize-v1.34
 
 Current HEAD:
 
-113d0d0
+d5e4d8b
+
+## Latest Behavior-Parity Remaining-Gap Audit After Packet 11A Review
+
+`Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_PACKET_11A_REVIEW.md`
+accepts the remaining-gap audit after Packet 11A.
+
+Accepted Packet 11 state:
+
+- `L`: covered and accepted for read-only selected isolated pad target intent
+- `PZ`: deferred/safe
+
+Accepted audit finding:
+
+- do not implement `PZ` immediately
+- create a docs-only `PZ` decision note next
+
+The review keeps selected isolated pad runtime state, selected-pad switching
+execution, selected-pad anchor return execution, mutation execution, dispatch,
+MIDI, ports, package metadata changes, active behavior, runtime execution,
+and hardware behavior out of scope.
 
 ## Latest Behavior-Parity Remaining-Gap Audit After Packet 11A
 

@@ -269,6 +269,10 @@ Package metadata remains untouched.
 
 ## 11. Safe Next Options
 
+This audit was reviewed and accepted in:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_PACKET_11A_REVIEW.md`
+
 Safe next options:
 
 - docs-only review/acceptance gate for this remaining-gap audit
