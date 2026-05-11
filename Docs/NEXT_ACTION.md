@@ -6,7 +6,49 @@ modularize-v1.34
 
 ## Current HEAD
 
-b92c4ba Add behavior parity user progress report review after anchor profile CLI visibility
+ff6df01 Add runtime-state vocabulary decision note
+
+## Latest Runtime-State Vocabulary Decision Note Review
+
+The latest runtime-state vocabulary decision note review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_VOCABULARY_DECISION_NOTE_REVIEW.md`
+
+It accepts:
+
+- decision note:
+  - `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_VOCABULARY_DECISION_NOTE.md`
+- decision note milestone:
+  - `ff6df01 Add runtime-state vocabulary decision note`
+
+Accepted vocabulary:
+
+- passive metadata
+- read-only behavior intent
+- descriptor state
+- mock state
+- runtime state
+- hardware state
+- soft capture
+- true hardware capture
+- anchor state
+- selected target state
+- mutation result state
+- armed state
+
+Accepted current decision:
+
+- runtime-state vocabulary is accepted for planning
+- runtime state remains unimplemented
+- `PZ` remains parked
+- profile `4` mock mapper support remains parked
+
+The next recommended task is either a docs-only `PZ` behavior plan or a
+docs-only runtime-state vocabulary plan if more detail is needed first.
+
+No runtime state implementation, `PZ` implementation, profile `4` mock mapper
+support, mutation execution, dispatch, MIDI, ports, package metadata, active
+behavior, runtime execution, or hardware behavior is authorized.
 
 ## Latest Runtime-State Vocabulary Decision Note
 

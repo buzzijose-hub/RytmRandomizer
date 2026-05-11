@@ -327,3 +327,13 @@ Runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this decision slice.
+
+## 13. Review Status
+
+This decision note is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_VOCABULARY_DECISION_NOTE_REVIEW.md`
+
+That review accepts the runtime-state vocabulary for planning while keeping
+runtime state unimplemented, `PZ` parked, and profile `4` mock mapper support
+parked.
