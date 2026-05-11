@@ -21,7 +21,34 @@ modularize-v1.34
 
 Current HEAD:
 
-04f21b6 Add behavior parity progress timeline after anchor profile CLI preview
+394ce13 Add behavior parity progress timeline review
+
+## V1.34 Behavior Parity PZ Next-Step Decision Note After Anchor/Profile CLI Preview
+
+The current `PZ` next-step decision note after the passive anchor/profile
+report CLI preview has now been created.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_NEXT_STEP_DECISION_NOTE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW.md`
+
+Current baseline:
+
+- `394ce13 Add behavior parity progress timeline review`
+
+Current decision:
+
+- keep `PZ` parked
+
+The note confirms that passive anchor/profile report visibility improves
+reporting but does not add selected isolated pad runtime state or selected pad
+anchor return execution. It authorizes no `PZ` implementation, selected-pad
+switching execution, selected-pad anchor return execution, mutation execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, runtime
+execution, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+current `PZ` next-step decision note.
 
 ## V1.34 Behavior Parity Progress Timeline Update Review After Anchor/Profile CLI Preview
 

@@ -172,3 +172,13 @@ or a remaining behavior-parity gap audit.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 12. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_NEXT_STEP_DECISION_NOTE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW.md`
+
+That decision note keeps `PZ` parked after the passive anchor/profile report
+CLI preview and recommends review/acceptance before any further behavior-parity
+branch.
