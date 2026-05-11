@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 13c074f Add Packet 8B Pad 4 lane behavior
 - b95cd81 Add Packet 8B Pad 4 lane behavior plan
 - 2ca46ab Add behavior parity progress report review after Packet 8A
 - 78e790a Add behavior parity progress report after Packet 8A
@@ -12051,6 +12052,37 @@ mapper.
 
 Next recommended task is a tiny TDD Packet 8B implementation for read-only
 `P4R` rotation intent only.
+
+## Latest Packet 8B Pad 4 Lane Behavior Checkpoint And Review
+
+The Packet 8B Pad 4 lane behavior checkpoint and review now record and accept
+the completed tiny implementation:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_CHECKPOINT.md`
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted implementation milestone:
+
+- `13c074f Add Packet 8B Pad 4 lane behavior`
+
+Accepted read-only scope:
+
+- `P4R`: rotate Pad 4 through BD Acoustic behavior modes
+
+Current Packet 8 boundary:
+
+- `P4A` accepted
+- `P4R` accepted
+- `P4X` deferred/safe
+
+`P4M` remains Packet 1 menu/status behavior.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper.
+
+Next recommended task is a short behavior-parity progress report after Packet
+8B, or a docs-only Packet 8C plan for `P4X` if continuing implementation
+work.
 
 ## Latest Next Packet Planning Gate After Packet 7 Review
 

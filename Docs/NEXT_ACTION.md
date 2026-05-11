@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-b95cd81 Add Packet 8B Pad 4 lane behavior plan
+13c074f Add Packet 8B Pad 4 lane behavior
 
 ## Current Phase
 
@@ -2471,6 +2471,50 @@ Next recommended task:
 Do not widen beyond `P4R`, and do not add runtime Pad 4 state, rotation
 execution, mutation execution, dispatch, MIDI, ports, package metadata
 changes, active behavior, or hardware behavior.
+
+## Latest Packet 8B Pad 4 Lane Behavior Checkpoint And Review
+
+The latest Packet 8B Pad 4 lane behavior implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_CHECKPOINT.md`
+
+The latest Packet 8B checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted implementation milestone:
+
+- `13c074f Add Packet 8B Pad 4 lane behavior`
+
+Accepted read-only Packet 8B behavior:
+
+- `P4R`: rotate Pad 4 through BD Acoustic behavior modes
+
+Current Packet 8 boundary:
+
+- `P4A` accepted
+- `P4R` accepted
+- `P4X` deferred/safe
+- `P4M` remains Packet 1 menu/status behavior
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper
+
+TDD evidence:
+
+- focused Pad 4 test failed while `P4R` was still unsupported
+- focused Pad 4 test passed after the minimal `P4R` helper was added
+- full closeout passed
+
+Next safe options:
+
+- behavior-parity progress report after Packet 8B
+- docs-only Packet 8C plan for `P4X`
+- pause at this clean checkpoint
+
+Recommendation:
+
+- write a short behavior-parity progress report after Packet 8B before
+  choosing `P4X`.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
