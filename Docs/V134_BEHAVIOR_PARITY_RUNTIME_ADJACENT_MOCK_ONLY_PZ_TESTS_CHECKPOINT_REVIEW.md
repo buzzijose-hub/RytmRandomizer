@@ -1,14 +1,13 @@
-# V1.34 Behavior Parity Runtime-Adjacent Mock-Only PZ Tests Checkpoint
+# V1.34 Behavior Parity Runtime-Adjacent Mock-Only PZ Tests Checkpoint Review
 
 ## 1. Purpose
 
-Record the completed tiny test-only `PZ` runtime-adjacent safe-failure test
-slice.
+Review and accept
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT.md`
+as the checkpoint for the completed test-only `PZ` runtime-adjacent
+safe-failure test slice.
 
-This checkpoint documents what was added, what was proven, and what remains
-intentionally absent.
-
-This is a documentation-only checkpoint.
+This is a documentation-only review gate.
 
 It adds no implementation, tests, CLI wiring, runtime execution, dispatch,
 MIDI, ports, package metadata changes, active behavior, or hardware behavior.
@@ -19,16 +18,16 @@ Current branch:
 
 - `modularize-v1.34`
 
-Current HEAD before this checkpoint slice:
+Current HEAD before this review slice:
 
-- `11cf66e Add runtime adjacent mock-only PZ tests`
+- `8ca44ad Add runtime adjacent mock-only PZ tests checkpoint`
 
 Current phase:
 
 - Passive/Mock Foundation Phase
 - behavior-parity implementation phase
-- first runtime-adjacent mock-only `PZ` test slice complete
-- checkpoint now being documented
+- first runtime-adjacent mock-only `PZ` tests complete
+- `PZ` tests checkpoint created and now being reviewed
 
 Hardware status:
 
@@ -36,30 +35,36 @@ Hardware status:
 - Analog Four MKII off
 - hardware not required
 
-## 3. Milestone Summary
+## 3. Review Decision
 
-Implementation milestone:
+The runtime-adjacent mock-only `PZ` tests checkpoint is accepted.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT.md`
+
+Accepted implementation milestone:
 
 - `11cf66e Add runtime adjacent mock-only PZ tests`
 
-Files changed by the milestone:
+Accepted checkpoint milestone:
 
-- `tests/test_runtime_adjacent_mock_only_pz.py`
-- `Scripts/closeout_check.ps1`
+- `8ca44ad Add runtime adjacent mock-only PZ tests checkpoint`
 
-Closeout coverage added:
+This review accepts the test milestone only as test-only safe-failure
+coverage.
 
-- `=== Test: Runtime-Adjacent Mock-Only PZ ===`
+It does not authorize execution.
 
-This milestone adds test-only safe-failure coverage.
+It does not authorize active behavior.
 
-It does not add production behavior.
+It does not authorize real MIDI.
 
-It does not change runtime execution.
+It does not authorize hardware validation.
 
-## 4. What The Tests Prove
+## 4. Accepted Test Coverage
 
-The new tests prove:
+The accepted test-only coverage proves:
 
 - runtime-adjacent `PZ` modules import without printing
 - default `PZ` readiness fails safely
@@ -78,7 +83,7 @@ The new tests prove:
 - no real MIDI libraries are imported
 - no active command names are exposed by the runtime-adjacent path
 
-## 5. PZ Safety Meaning
+## 5. Accepted PZ Safety Meaning
 
 `PZ` remains:
 
@@ -98,19 +103,19 @@ The new tests prove:
 - open ports
 - touch hardware
 
-## 6. Closeout Evidence
-
-The full closeout suite passed after the implementation milestone.
+## 6. Accepted Closeout Coverage
 
 The closeout suite now includes:
 
 - `Runtime-Adjacent Mock-Only PZ`
 
-Protected checks:
+The accepted implementation milestone passed:
 
-- V1.34 reference diff was empty
-- package metadata diff was empty
-- git status was clean
+- focused `PZ` runtime-adjacent mock-only test
+- full closeout
+- empty V1.34 reference diff
+- empty package metadata diff
+- clean git status
 
 ## 7. Confirmed Absent Behavior
 
@@ -145,35 +150,27 @@ The following remain intentionally absent:
 
 Package metadata remains untouched.
 
-## 8. Current Interpretation
-
-The project now has a first runtime-adjacent mock-only test surface for `PZ`.
-
-This is progress toward safe runtime planning.
-
-It is not execution.
-
-It is not active behavior.
-
-It is not MIDI behavior.
-
-It is not hardware validation.
-
-## 9. Safe Next Options
+## 8. Safe Next Options
 
 Safe next branches:
 
-- Option A: review/accept this `PZ` test checkpoint
-- Option B: create a broader runtime-adjacent mock-only progress report
+- Option A: create a broader runtime-adjacent mock-only progress report
+- Option B: pause at this accepted test checkpoint
 - Option C: plan the next mock-only safe-failure candidate
-- Option D: pause at this clean test milestone
+- Option D: create a next-branch selection note before choosing more work
 
-## 10. Recommendation
+## 9. Recommendation
 
-Do a docs-only review/acceptance gate for this checkpoint next.
+Prefer a broader runtime-adjacent mock-only progress report next.
 
-After that, prefer a broader runtime-adjacent mock-only progress report before
-selecting another candidate.
+That report should summarize:
+
+- accepted runtime/execution boundary
+- accepted first runtime-adjacent mock-only test plan
+- accepted `PZ` test-only milestone
+- current closeout coverage
+- what remains absent
+- safe next branch options
 
 Do not implement execution.
 
@@ -183,25 +180,16 @@ Do not open ports.
 
 Do not turn on hardware.
 
-## 11. Decision
+## 10. Decision
 
-The test-only `PZ` runtime-adjacent safe-failure milestone is documented.
+The runtime-adjacent mock-only `PZ` tests checkpoint is accepted.
 
-The next recommended task is a docs-only review/acceptance gate for this
-checkpoint.
-
-Hardware remains off.
-
-No implementation in this slice.
-
-## 12. Review Status
-
-This checkpoint is reviewed and accepted by:
-
-- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT_REVIEW.md`
-
-The review accepts `PZ` as the first runtime-adjacent mock-only candidate with
+`PZ` is now the first runtime-adjacent mock-only candidate with accepted
 test-only safe-failure coverage.
 
 The next recommended task is a broader runtime-adjacent mock-only progress
 report.
+
+Hardware remains off.
+
+No implementation in this slice.

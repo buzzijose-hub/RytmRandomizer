@@ -21,7 +21,53 @@ modularize-v1.34
 
 Current HEAD:
 
-11cf66e Add runtime adjacent mock-only PZ tests
+8ca44ad Add runtime adjacent mock-only PZ tests checkpoint
+
+## V1.34 Behavior Parity Runtime-Adjacent Mock-Only PZ Tests Checkpoint Review
+
+The runtime-adjacent mock-only `PZ` tests checkpoint has now been reviewed and
+accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `11cf66e Add runtime adjacent mock-only PZ tests`
+- `8ca44ad Add runtime adjacent mock-only PZ tests checkpoint`
+
+Accepted decision:
+
+- `PZ` is the first runtime-adjacent mock-only candidate with accepted
+  test-only safe-failure coverage
+- missing, unsupported, stale, and invalid contexts fail safely
+- `MockMidiSender` remains empty for failed readiness
+- passive CLI `preview-command PZ` remains read-only
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- broader runtime-adjacent mock-only progress report
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime-Adjacent Mock-Only PZ Tests Checkpoint
 
