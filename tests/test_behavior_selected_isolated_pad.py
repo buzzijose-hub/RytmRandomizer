@@ -36,11 +36,15 @@ def test_l_returns_read_only_selected_isolated_pad_target_intent():
     from rytm_randomizer.behavior_selected_isolated_pad import (
         DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
+        PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
+        SUPPORTED_SELECTED_ISOLATED_PAD_KEYS,
         evaluate_selected_isolated_pad_behavior,
     )
 
     assert PACKET_11A_SELECTED_ISOLATED_PAD_KEYS == ("L",)
-    assert DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS == ("PZ",)
+    assert PACKET_11B_SELECTED_ISOLATED_PAD_KEYS == ("PZ",)
+    assert DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS == ()
+    assert SUPPORTED_SELECTED_ISOLATED_PAD_KEYS == ("L", "PZ")
 
     result = evaluate_selected_isolated_pad_behavior("L")
 
@@ -149,9 +153,12 @@ def test_repeated_selected_isolated_pad_evaluations_are_deterministic():
     assert evaluate_selected_isolated_pad_behavior("L") == (
         evaluate_selected_isolated_pad_behavior("L")
     )
+    assert evaluate_selected_isolated_pad_behavior("PZ") == (
+        evaluate_selected_isolated_pad_behavior("PZ")
+    )
 
 
-def test_pz_remains_deferred_and_safe():
+def test_pz_reports_read_only_anchor_return_readiness_for_default_context():
     from rytm_randomizer.behavior_selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
@@ -160,10 +167,16 @@ def test_pz_remains_deferred_and_safe():
 
     assert result.command_key == "PZ"
     assert result.accepted is False
-    assert result.reason == "deferred_selected_isolated_pad_anchor_return"
+    assert result.reason == "anchor_unavailable_for_selected_target"
+    assert result.label == "return selected isolated pad to anchor only"
+    assert result.behavior_family == "selected-isolated-pad/anchor-return-readiness"
+    assert result.source_scope == "selected_isolated_pad"
+    assert result.utility_action == "describe_selected_isolated_pad_anchor_return_readiness"
+    assert result.intent_kind == "selected_isolated_pad_anchor_return_readiness"
+    assert result.target_pad == 3
     assert result.anchor_return_intent is True
     assert result.anchor_return_executed is False
-    assert result.selected_isolated_pad_runtime_state_exists is False
+    assert result.selected_isolated_pad_runtime_state_exists is True
     assert result.state_changed is False
     assert result.prompt_required is False
     assert result.dispatches_command is False
@@ -174,9 +187,81 @@ def test_pz_remains_deferred_and_safe():
     assert result.hardware_required is False
     assert result.active_behavior is False
     assert result.metadata["source"] == "ISOLATED_PAD_UTILITY_COMMANDS"
+    assert result.metadata["behavior_family"] == (
+        "selected-isolated-pad/anchor-return-readiness"
+    )
+    assert result.metadata["utility_action"] == (
+        "describe_selected_isolated_pad_anchor_return_readiness"
+    )
+    assert result.metadata["intent_kind"] == (
+        "selected_isolated_pad_anchor_return_readiness"
+    )
+    assert result.metadata["runtime_state_source"] == (
+        "selected_isolated_pad_runtime_state"
+    )
+    assert result.metadata["runtime_state"] == "passive-default"
+    assert result.metadata["target_pad"] == 3
+    assert result.metadata["target_state"] == "defaulted"
+    assert result.metadata["target_anchor_status"] == "anchor-unavailable"
+    assert result.metadata["anchor_state"] == "unknown"
+    assert result.metadata["reason"] == "anchor_unavailable_for_selected_target"
+    assert result.metadata["safe_failure_code"] == (
+        "anchor_unavailable_for_selected_target"
+    )
+    assert result.metadata["pz_ready"] is False
+    assert result.metadata["pz_executed"] is False
     assert result.metadata["anchor_return_intent"] is True
     assert result.metadata["anchor_return_executed"] is False
     assert result.metadata["mock_only"] is True
+
+
+def test_pz_consumes_injected_runtime_state_without_mutating_it():
+    from rytm_randomizer.anchor_state import build_unknown_anchor_state
+    from rytm_randomizer.behavior_selected_isolated_pad import (
+        evaluate_selected_isolated_pad_behavior,
+    )
+    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+        build_missing_selected_target_runtime_state,
+    )
+
+    runtime_state = build_missing_selected_target_runtime_state(
+        anchor_state=build_unknown_anchor_state()
+    )
+    result = evaluate_selected_isolated_pad_behavior("PZ", runtime_state=runtime_state)
+
+    assert runtime_state.target_anchor_status == "target-missing"
+    assert runtime_state.pz_executed is False
+    assert runtime_state.state_changed is False
+    assert result.accepted is False
+    assert result.reason == "missing_selected_target_state"
+    assert result.target_pad is None
+    assert result.selected_isolated_pad_runtime_state_exists is True
+    assert result.anchor_return_intent is True
+    assert result.anchor_return_executed is False
+    assert result.state_changed is False
+    assert result.mutates_runtime_state is False
+    assert result.dispatches_command is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.metadata["runtime_state"] == "invalid"
+    assert result.metadata["target_anchor_status"] == "target-missing"
+    assert result.metadata["safe_failure_code"] == "missing_selected_target_state"
+
+
+def test_pz_metadata_is_copied_and_immutable():
+    from rytm_randomizer.behavior_selected_isolated_pad import (
+        evaluate_selected_isolated_pad_behavior,
+    )
+
+    result = evaluate_selected_isolated_pad_behavior("PZ")
+
+    try:
+        result.metadata["runtime_state"] = "mutated"
+    except TypeError:
+        pass
+
+    fresh_result = evaluate_selected_isolated_pad_behavior("PZ")
+    assert fresh_result.metadata["runtime_state"] == "passive-default"
 
 
 def test_unknown_keys_fail_safely():
@@ -277,7 +362,9 @@ if __name__ == "__main__":
     test_l_metadata_contains_expected_passive_sources()
     test_selected_isolated_pad_metadata_is_copied_and_immutable()
     test_repeated_selected_isolated_pad_evaluations_are_deterministic()
-    test_pz_remains_deferred_and_safe()
+    test_pz_reports_read_only_anchor_return_readiness_for_default_context()
+    test_pz_consumes_injected_runtime_state_without_mutating_it()
+    test_pz_metadata_is_copied_and_immutable()
     test_unknown_keys_fail_safely()
     test_packet_1_selected_pad_status_behavior_remains_unchanged()
     test_packet_3_selected_isolated_pad_mutation_behavior_remains_unchanged()

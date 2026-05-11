@@ -11,11 +11,17 @@ from types import MappingProxyType
 from typing import Mapping
 
 from .commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
+from .selected_isolated_pad_runtime_state import (
+    build_passive_default_selected_isolated_pad_runtime_state,
+)
 
 
 PACKET_11A_SELECTED_ISOLATED_PAD_KEYS = ("L",)
-DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS = ("PZ",)
-SUPPORTED_SELECTED_ISOLATED_PAD_KEYS = PACKET_11A_SELECTED_ISOLATED_PAD_KEYS
+PACKET_11B_SELECTED_ISOLATED_PAD_KEYS = ("PZ",)
+DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS = ()
+SUPPORTED_SELECTED_ISOLATED_PAD_KEYS = (
+    PACKET_11A_SELECTED_ISOLATED_PAD_KEYS + PACKET_11B_SELECTED_ISOLATED_PAD_KEYS
+)
 
 
 @dataclass(frozen=True)
@@ -54,7 +60,7 @@ class SelectedIsolatedPadBehaviorResult:
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_selected_isolated_pad_behavior(command_key):
+def evaluate_selected_isolated_pad_behavior(command_key, runtime_state=None):
     """Return a passive Packet 11 behavior result for selected isolated pad utilities."""
 
     key = str(command_key)
@@ -63,7 +69,7 @@ def evaluate_selected_isolated_pad_behavior(command_key):
         return _accepted_l_result()
 
     if key == "PZ":
-        return _deferred_pz_result()
+        return _pz_readiness_result(runtime_state)
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -144,24 +150,95 @@ def _accepted_l_result():
     )
 
 
-def _deferred_pz_result():
+def _pz_readiness_result(runtime_state=None):
     metadata = ISOLATED_PAD_UTILITY_COMMANDS["PZ"]
+    behavior_family = "selected-isolated-pad/anchor-return-readiness"
+    utility_action = "describe_selected_isolated_pad_anchor_return_readiness"
+    intent_kind = "selected_isolated_pad_anchor_return_readiness"
+    selected_runtime_state = runtime_state
+
+    if selected_runtime_state is None:
+        selected_runtime_state = build_passive_default_selected_isolated_pad_runtime_state()
+
+    pz_ready = bool(getattr(selected_runtime_state, "pz_ready", False))
+    reason = str(getattr(selected_runtime_state, "reason", "missing_runtime_state"))
+    safe_failure_code = str(
+        getattr(selected_runtime_state, "safe_failure_code", "missing_runtime_state")
+    )
+    target_pad = getattr(selected_runtime_state, "target_pad", None)
+    runtime_state_value = str(getattr(selected_runtime_state, "runtime_state", ""))
+    target_anchor_status = str(
+        getattr(selected_runtime_state, "target_anchor_status", "")
+    )
+    anchor_state = str(getattr(selected_runtime_state, "anchor_state", ""))
 
     return SelectedIsolatedPadBehaviorResult(
         command_key="PZ",
         label=metadata["label"],
-        accepted=False,
-        reason="deferred_selected_isolated_pad_anchor_return",
+        behavior_family=behavior_family,
+        accepted=pz_ready,
+        reason=reason,
         source_scope=metadata["scope"],
-        utility_action="deferred_selected_isolated_pad_anchor_return",
-        intent_kind="selected_isolated_pad_anchor_return",
+        utility_action=utility_action,
+        intent_kind=intent_kind,
+        target_pad=target_pad,
         anchor_return_intent=True,
+        selected_isolated_pad_runtime_state_exists=True,
+        display_lines=(
+            f"PZ: {metadata['label']}",
+            "Read-only selected isolated pad anchor return readiness.",
+            f"Source scope: {metadata['scope']}",
+            f"Utility action: {utility_action}",
+            f"Intent kind: {intent_kind}",
+            f"Runtime state: {runtime_state_value}",
+            f"Target pad: {target_pad}",
+            f"Target-anchor status: {target_anchor_status}",
+            f"Anchor state: {anchor_state}",
+            f"PZ ready: {pz_ready}",
+            f"Safe failure code: {safe_failure_code}",
+            "Anchor return is described only.",
+            "No selected pad switch would execute.",
+            "No anchor would return.",
+            "No runtime state would mutate.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
         metadata={
             **_safe_failure_metadata("ISOLATED_PAD_UTILITY_COMMANDS"),
             "command_type": metadata["type"],
             "source_scope": metadata["scope"],
-            "utility_action": "deferred_selected_isolated_pad_anchor_return",
-            "intent_kind": "selected_isolated_pad_anchor_return",
+            "behavior_family": behavior_family,
+            "utility_action": utility_action,
+            "intent_kind": intent_kind,
+            "runtime_state_source": "selected_isolated_pad_runtime_state",
+            "runtime_state": runtime_state_value,
+            "target_pad": target_pad,
+            "target_state": str(getattr(selected_runtime_state, "target_state", "")),
+            "target_source": str(getattr(selected_runtime_state, "target_source", "")),
+            "target_command_key": str(
+                getattr(selected_runtime_state, "target_command_key", "")
+            ),
+            "target_anchor_status": target_anchor_status,
+            "anchor_pad": getattr(selected_runtime_state, "anchor_pad", None),
+            "anchor_state": anchor_state,
+            "anchor_source": str(getattr(selected_runtime_state, "anchor_source", "")),
+            "anchor_identity": str(
+                getattr(selected_runtime_state, "anchor_identity", "")
+            ),
+            "operation_kind": str(
+                getattr(selected_runtime_state, "operation_kind", "")
+            ),
+            "supported": bool(getattr(selected_runtime_state, "supported", False)),
+            "stale": bool(getattr(selected_runtime_state, "stale", False)),
+            "valid": bool(getattr(selected_runtime_state, "valid", False)),
+            "reason": reason,
+            "safe_failure_code": safe_failure_code,
+            "pz_ready": pz_ready,
+            "pz_executed": bool(getattr(selected_runtime_state, "pz_executed", False)),
+            "selected_isolated_pad_runtime_state_exists": True,
             "anchor_return_intent": True,
             "anchor_return_executed": False,
         },
@@ -197,6 +274,7 @@ def _safe_failure_metadata(source):
 __all__ = [
     "DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS",
     "PACKET_11A_SELECTED_ISOLATED_PAD_KEYS",
+    "PACKET_11B_SELECTED_ISOLATED_PAD_KEYS",
     "SUPPORTED_SELECTED_ISOLATED_PAD_KEYS",
     "SelectedIsolatedPadBehaviorResult",
     "evaluate_selected_isolated_pad_behavior",

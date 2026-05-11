@@ -318,7 +318,7 @@ def test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_un
     assert report_result.stderr == ""
 
 
-def test_pz_and_profile_4_behavior_remains_unchanged():
+def test_pz_readiness_and_profile_4_behavior_remain_safe():
     from rytm_randomizer.behavior_selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
@@ -330,7 +330,13 @@ def test_pz_and_profile_4_behavior_remains_unchanged():
     pz = evaluate_selected_isolated_pad_behavior("PZ")
 
     assert pz.accepted is False
-    assert pz.reason == "deferred_selected_isolated_pad_anchor_return"
+    assert pz.reason == "anchor_unavailable_for_selected_target"
+    assert pz.utility_action == "describe_selected_isolated_pad_anchor_return_readiness"
+    assert pz.anchor_return_intent is True
+    assert pz.anchor_return_executed is False
+    assert pz.sends_real_midi is False
+    assert pz.opens_ports is False
+    assert pz.hardware_required is False
 
     try:
         map_group_profile_to_mock_messages("4")
@@ -371,6 +377,6 @@ if __name__ == "__main__":
     test_report_module_does_not_call_cli_or_mock_message_mapping()
     test_no_real_midi_library_is_imported()
     test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_unchanged()
-    test_pz_and_profile_4_behavior_remains_unchanged()
+    test_pz_readiness_and_profile_4_behavior_remain_safe()
     test_behavior_anchor_profile_report_exposes_no_active_behavior_names()
     test_no_package_metadata_files_are_introduced()
