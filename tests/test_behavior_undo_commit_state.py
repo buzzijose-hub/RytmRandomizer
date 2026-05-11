@@ -176,6 +176,80 @@ def test_e_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_w_returns_read_only_waveform_exploration_intent():
+    from rytm_randomizer.behavior_undo_commit_state import (
+        evaluate_undo_commit_state_behavior,
+    )
+
+    result = evaluate_undo_commit_state_behavior("W")
+
+    assert result.command_key == "W"
+    assert result.accepted is True
+    assert result.reason == "supported_waveform_exploration_intent"
+    assert result.label == "waveform exploration only"
+    assert result.behavior_family == "undo-commit-state/waveform-exploration"
+    assert result.target_scope == "waveform_exploration"
+    assert result.state_action == "describe_waveform_exploration_intent"
+    assert result.intent_kind == "waveform_exploration"
+    assert result.exploration_concept == "waveform exploration only"
+    assert result.lifecycle_effect == "described_only"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_runtime_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "W: waveform exploration only",
+        "Read-only waveform exploration intent.",
+        "Target scope: waveform_exploration",
+        "State action: describe_waveform_exploration_intent",
+        "Exploration concept: waveform exploration only",
+        "Lifecycle effect: described_only",
+        "No prompt would run.",
+        "No state would change.",
+        "No waveform would be selected.",
+        "No waveform would be randomized.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No runtime state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_w_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_undo_commit_state import (
+        evaluate_undo_commit_state_behavior,
+    )
+
+    result = evaluate_undo_commit_state_behavior("W")
+
+    assert result.metadata["source"] == "STATE_UTILITY_COMMANDS"
+    assert result.metadata["command_type"] == "exploration"
+    assert result.metadata["source_scope"] == "waveform"
+    assert result.metadata["target_scope"] == "waveform_exploration"
+    assert (
+        result.metadata["behavior_family"]
+        == "undo-commit-state/waveform-exploration"
+    )
+    assert result.metadata["state_action"] == "describe_waveform_exploration_intent"
+    assert result.metadata["intent_kind"] == "waveform_exploration"
+    assert result.metadata["exploration_concept"] == "waveform exploration only"
+    assert result.metadata["lifecycle_effect"] == "described_only"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_undo_commit_state_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_undo_commit_state import (
         evaluate_undo_commit_state_behavior,
@@ -196,11 +270,13 @@ def test_deferred_packet_9_undo_commit_state_keys_fail_safely():
     from rytm_randomizer.behavior_undo_commit_state import (
         DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS,
         PACKET_9B_UNDO_COMMIT_STATE_KEYS,
+        PACKET_9C_UNDO_COMMIT_STATE_KEYS,
         evaluate_undo_commit_state_behavior,
     )
 
     assert PACKET_9B_UNDO_COMMIT_STATE_KEYS == ("E",)
-    assert DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS == ("W", "U")
+    assert PACKET_9C_UNDO_COMMIT_STATE_KEYS == ("W",)
+    assert DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS == ("U",)
 
     for command_key in DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS:
         result = evaluate_undo_commit_state_behavior(command_key)
@@ -308,6 +384,8 @@ if __name__ == "__main__":
     test_b_metadata_contains_expected_passive_sources()
     test_e_returns_read_only_current_state_anchor_commit_intent()
     test_e_metadata_contains_expected_passive_sources()
+    test_w_returns_read_only_waveform_exploration_intent()
+    test_w_metadata_contains_expected_passive_sources()
     test_undo_commit_state_metadata_is_copied_and_immutable()
     test_deferred_packet_9_undo_commit_state_keys_fail_safely()
     test_unknown_keys_fail_safely()
