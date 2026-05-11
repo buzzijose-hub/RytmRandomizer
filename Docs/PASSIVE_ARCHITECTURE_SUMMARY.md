@@ -8,7 +8,26 @@ modularize-v1.34
 
 Current HEAD:
 
-d5e4d8b
+586a33c
+
+## Latest PZ Decision Note After Packet 11A
+
+`Docs/V134_BEHAVIOR_PARITY_PZ_DECISION_NOTE_AFTER_PACKET_11A.md` records the
+current `PZ` decision after the accepted remaining-gap audit.
+
+Accepted Packet 11 state:
+
+- `L`: covered and accepted for read-only selected isolated pad target intent
+- `PZ`: deferred/safe
+
+Decision:
+
+- keep `PZ` parked for now
+
+The decision note keeps selected isolated pad runtime state, selected-pad
+switching execution, selected-pad anchor return execution, mutation execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, runtime
+execution, and hardware behavior out of scope.
 
 ## Latest Behavior-Parity Remaining-Gap Audit After Packet 11A Review
 
