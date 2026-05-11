@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-0b38b7b Add Packet 8C Pad 4 lane behavior checkpoint
+091800e Add Packet 8C Pad 4 lane behavior checkpoint review
 
 ## Current Phase
 
@@ -2533,6 +2533,42 @@ was added.
 Next recommended task:
 
 - broader behavior-parity progress report after Packet 8C.
+
+## Latest Behavior Parity Progress Report After Packet 8C
+
+The latest broader behavior-parity progress report after Packet 8C is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_8C.md`
+
+Current baseline before the report:
+
+- `091800e Add Packet 8C Pad 4 lane behavior checkpoint review`
+
+The report consolidates accepted behavior-parity progress through:
+
+- Packet 1 menu/status and utility behavior
+- Packet 2 meaningful anchor/profile progress
+- Packet 3 mutation-depth and guarded input behavior
+- Packet 4 scene and group intent behavior
+- Packet 5 meaningful Pad 1 lane behavior progress
+- Packet 6 Pad 2 command-helper coverage
+- Packet 7 Pad 3 lane behavior completion
+- Packet 8 Pad 4 command-helper coverage
+
+Current Packet 8 command-helper boundary:
+
+- `P4A` accepted
+- `P4R` accepted
+- `P4X` accepted
+- `P4M` remains Packet 1 menu/status behavior
+
+The report adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata changes, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this progress report.
 
 ## Latest Behavior Parity Progress Report After Packet 8A Review
 
