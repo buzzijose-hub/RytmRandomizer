@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-291cee5 Add Packet 9C undo commit state behavior
+b180b4c Add Packet 9C undo commit state behavior checkpoint
 
 ## Latest Packet 9C Undo Commit State Behavior Checkpoint
 
@@ -37,6 +37,36 @@ It records:
   package metadata, active behavior, or hardware behavior was added
 
 The checkpoint recommends a docs-only Packet 9C checkpoint review next.
+
+## Latest Packet 9C Undo Commit State Behavior Checkpoint Review
+
+The latest V1.34 behavior parity Packet 9C undo/commit/state behavior
+checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+It records:
+
+- accepted checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+- accepted implementation milestone:
+  - `291cee5 Add Packet 9C undo commit state behavior`
+- accepted checkpoint milestone:
+  - `b180b4c Add Packet 9C undo commit state behavior checkpoint`
+- accepted read-only Packet 9C behavior:
+  - `W`: waveform exploration only
+- accepted Packet 9 scope:
+  - `B`: back to current anchor
+  - `E`: commit current state as new anchor
+  - `W`: waveform exploration only
+- remaining deferred/safe Packet 9 scope:
+  - `U`: undo previous script-generated state
+- no waveform exploration execution, waveform selection, waveform
+  randomization, runtime undo behavior, dispatch, command execution, MIDI,
+  ports, package metadata, active behavior, or hardware behavior was added
+
+The review recommends a broader behavior-parity progress report after Packet
+9C before choosing `U`, a user-facing progress/timeline update, or a pause.
 
 ## Current Phase
 

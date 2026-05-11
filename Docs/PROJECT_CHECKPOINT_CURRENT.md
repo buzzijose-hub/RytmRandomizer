@@ -60,8 +60,45 @@ active behavior, runtime execution, or hardware behavior was added.
 
 The next recommended task is a docs-only checkpoint review.
 
+## V1.34 Behavior Parity Packet 9C Undo Commit State Behavior Checkpoint Review
+
+The Packet 9C undo/commit/state behavior checkpoint has now been reviewed and
+accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `291cee5 Add Packet 9C undo commit state behavior`
+- `b180b4c Add Packet 9C undo commit state behavior checkpoint`
+
+Accepted read-only Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+
+Deferred/safe Packet 9 scope:
+
+- `U`: undo previous script-generated state
+
+The review confirms no waveform exploration execution, waveform selection,
+waveform randomization, runtime undo behavior, dispatch, command execution,
+MIDI, ports, package metadata, active behavior, runtime execution, or hardware
+behavior was added.
+
+The next recommended task is a broader behavior-parity progress report after
+Packet 9C.
+
 Recent checkpoint history:
 
+- b180b4c Add Packet 9C undo commit state behavior checkpoint
 - 291cee5 Add Packet 9C undo commit state behavior
 - f8f6f22 Add Packet 9C undo commit state behavior plan
 - c3a3e14 Add behavior parity progress report review after Packet 9B
