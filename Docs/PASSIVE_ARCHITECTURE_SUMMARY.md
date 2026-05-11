@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-93664df
+9247bff
 
 ## Protected Reference
 
@@ -11668,6 +11668,40 @@ runtime behavior, or hardware behavior.
 
 The next recommended task is a docs-only next behavior-parity packet planning
 gate.
+
+## V1.34 Behavior Parity Next Packet Planning Gate After Packet 8C
+
+The next behavior-parity packet planning gate after Packet 8C is now
+documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_8C.md`
+
+Current baseline before the planning gate:
+
+- `9247bff Add behavior parity progress report review after Packet 8C`
+
+The planning gate recommends:
+
+- Packet 9 undo/commit/state behavior planning
+
+Candidate Packet 9 planning surface:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+- `U`: undo previous script-generated state
+
+Packet 1 ownership remains:
+
+- `H`: show current anchor
+- `R`: print current script state
+
+The gate adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+planning gate.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 

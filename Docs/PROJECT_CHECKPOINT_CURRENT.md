@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 9247bff Add behavior parity progress report review after Packet 8C
 - 93664df Add behavior parity progress report after Packet 8C
 - 091800e Add Packet 8C Pad 4 lane behavior checkpoint review
 - 0b38b7b Add Packet 8C Pad 4 lane behavior checkpoint
@@ -11999,6 +12000,38 @@ ports, package metadata changes, active behavior, and hardware behavior remain
 absent.
 
 Next recommended task is a docs-only next behavior-parity packet planning
+gate.
+
+## Latest Next Behavior-Parity Packet Planning Gate After Packet 8C
+
+The next behavior-parity packet planning gate after Packet 8C has now been
+documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_8C.md`
+
+Current baseline before the planning gate:
+
+- `9247bff Add behavior parity progress report review after Packet 8C`
+
+The planning gate records:
+
+- accepted Packet 1 through Packet 8 read-only behavior foundation
+- recommended next branch:
+  - Packet 9 undo/commit/state behavior planning
+- candidate Packet 9 planning surface:
+  - `B`
+  - `E`
+  - `W`
+  - `U`
+- Packet 1 ownership preserved for:
+  - `H`
+  - `R`
+
+The planning gate adds no implementation, tests, CLI wiring, runtime
+execution, dispatch, command execution, MIDI, ports, package metadata changes,
+active behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this planning
 gate.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
