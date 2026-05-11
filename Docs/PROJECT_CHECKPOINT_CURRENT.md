@@ -21,7 +21,38 @@ modularize-v1.34
 
 Current HEAD:
 
-6a27b2f Update checkpoint after anchor profile report CLI preview
+6ba7a06 Add anchor profile report CLI preview review
+
+## V1.34 Behavior Parity Progress Timeline Update After Anchor/Profile CLI Preview
+
+The broader behavior-parity progress/timeline update after the accepted
+anchor/profile report CLI preview has now been created.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_UPDATE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW.md`
+
+Current baseline:
+
+- `6ba7a06 Add anchor profile report CLI preview review`
+
+Current state:
+
+- passive/mock foundation
+- V1.34 behavior-parity implementation packets
+- passive behavior reports and CLI visibility
+- `anchor-profile-report` implemented and accepted
+
+The report records that passive CLI / dry-run / visibility is now very mature,
+read-only behavior-parity coverage is strong, `PZ` remains parked, group
+profile `4` mock mapper support remains parked, and real hardware validation
+remains at 0%.
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress/timeline update. The report authorizes no selected isolated pad
+runtime state, selected-pad switching execution, selected-pad anchor return
+execution, mutation execution, dispatch, MIDI, ports, package metadata changes,
+active behavior, runtime execution, or hardware behavior.
 
 ## V1.34 Behavior Parity Anchor/Profile Report CLI Preview Implementation Checkpoint Review
 

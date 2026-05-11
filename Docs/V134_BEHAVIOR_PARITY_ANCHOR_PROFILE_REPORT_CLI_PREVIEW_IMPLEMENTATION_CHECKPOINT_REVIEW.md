@@ -186,6 +186,8 @@ The CLI can show anchor/profile behavior visibility while preserving:
 Safe next options:
 
 - broader behavior-parity progress/timeline update
+- follow-up progress/timeline update:
+  - `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_UPDATE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW.md`
 - docs-only phase review for the current behavior-parity visibility layer
 - pause at this clean checkpoint
 
