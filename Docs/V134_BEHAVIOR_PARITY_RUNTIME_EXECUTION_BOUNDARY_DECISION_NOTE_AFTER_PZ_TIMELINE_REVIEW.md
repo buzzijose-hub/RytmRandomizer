@@ -235,3 +235,14 @@ decision note.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 14. Review Status
+
+This decision note is reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_EXECUTION_BOUNDARY_DECISION_NOTE_AFTER_PZ_TIMELINE_REVIEW_REVIEW.md`
+
+The review accepts the runtime/execution boundary as the current planning
+gate.
+
+The next recommended task is a first runtime-adjacent mock-only test plan.
