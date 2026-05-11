@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 0508582 Add behavior parity progress report review after Packet 7F
 - 730bb0e Add behavior parity progress report after Packet 7F
 - 82751a5 Add Packet 7F Pad 3 lane behavior checkpoint review
 - 2143099 Add Packet 7F Pad 3 lane behavior checkpoint
@@ -11962,6 +11963,51 @@ package metadata, active behavior, and hardware behavior remain absent.
 
 Next recommended task is a docs-only next Packet 7 command selection
 checkpoint before choosing between `P3R` and `P3X`.
+
+## V1.34 Behavior Parity Next Packet 7 Command Selection Checkpoint After Packet 7F
+
+The docs-only next Packet 7 command selection checkpoint after Packet 7F has
+now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7F.md`
+
+Current baseline before the selection checkpoint:
+
+- `0508582 Add behavior parity progress report review after Packet 7F`
+
+Accepted Packet 7 progress:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+- `SX`
+- `SW`
+
+Preserved Packet 1 ownership:
+
+- `P3M`: show Pad 3 SY Raw bass / synth-percussion menu
+
+Remaining deferred/safe Packet 7 scope:
+
+- `P3R`
+- `P3X`
+
+Recommended next planning branch:
+
+- docs-only Packet 7G Pad 3 lane behavior plan for `P3R` only
+
+The checkpoint records `P3R` as the safer next branch because read-only
+rotation intent is narrower than current-mode mutation behavior.
+
+The checkpoint adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for the
+selection checkpoint.
 
 ## V1.34 Behavior Parity Packet 7F Pad 3 Lane Behavior Checkpoint
 

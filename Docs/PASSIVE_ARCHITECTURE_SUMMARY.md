@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-730bb0e
+0508582
 
 ## Protected Reference
 
@@ -11304,6 +11304,44 @@ hardware behavior remain absent.
 
 The next recommended task is a docs-only next Packet 7 command selection
 checkpoint before choosing between `P3R` and `P3X`.
+
+## Next Packet 7 Command Selection After Packet 7F
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7F.md`
+documents the next Packet 7 command selection checkpoint.
+
+Accepted Packet 7 scope:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+- `SX`
+- `SW`
+
+`P3M` remains Packet 1 menu/status behavior.
+
+Remaining deferred/safe Packet 7 scope:
+
+- `P3R`
+- `P3X`
+
+Recommended next planning branch:
+
+- docs-only Packet 7G Pad 3 lane behavior plan for `P3R` only
+
+Reason:
+
+- `P3R` is narrower than `P3X`
+- `P3R` can be modeled as read-only rotation intent without runtime Pad 3
+  state
+- `P3X` remains deferred/safe until separately planned and reviewed
+
+The checkpoint adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate.
 
 ## Packet 7F Pad 3 Lane Behavior Checkpoint
 
