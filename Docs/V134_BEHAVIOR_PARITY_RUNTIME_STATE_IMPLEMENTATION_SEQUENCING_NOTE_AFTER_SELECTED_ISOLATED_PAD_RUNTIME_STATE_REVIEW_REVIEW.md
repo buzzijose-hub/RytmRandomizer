@@ -295,14 +295,36 @@ Before any future implementation:
 
 Safe next options:
 
-- docs-only selected target state implementation plan
+- docs-only selected target state implementation plan:
+  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_SEQUENCING_REVIEW.md`
 - docs-only selected target state implementation planning gate
 - user-facing progress/timeline update
 - pause at this clean accepted sequencing checkpoint
 
-## 15. Recommendation
+## 15. Follow-On Selected Target State Implementation Plan
 
-Proceed with a docs-only selected target state implementation plan.
+The follow-on docs-only selected target state implementation plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_SEQUENCING_REVIEW.md`
+
+It documents the smallest future implementation surface for selected isolated
+pad target state.
+
+It keeps selected target state unimplemented.
+
+It keeps anchor state unimplemented.
+
+It keeps selected isolated pad runtime state unimplemented.
+
+It keeps `PZ` parked.
+
+It authorizes no implementation, tests, CLI commands, runtime state, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
+## 16. Recommendation
+
+Proceed with a docs-only review/acceptance gate for the selected target state
+implementation plan.
 
 Do not implement selected target state yet.
 
@@ -315,7 +337,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 16. Decision Summary
+## 17. Decision Summary
 
 `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_IMPLEMENTATION_SEQUENCING_NOTE_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_REVIEW.md`
 is accepted for planning.

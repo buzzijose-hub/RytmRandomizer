@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-806f5fb
+be9e91a
+
+## Latest Selected Target State Implementation Plan After Runtime-State Sequencing Review
+
+`Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_SEQUENCING_REVIEW.md`
+documents the future selected target state implementation surface after the
+accepted runtime-state implementation sequencing review.
+
+Current baseline:
+
+- `be9e91a Add runtime-state implementation sequencing review`
+
+Current decision:
+
+- selected target state implementation is planned only
+- selected target state remains unimplemented
+- anchor state remains unimplemented
+- selected isolated pad runtime state remains unimplemented
+- runtime state remains unimplemented
+- `PZ` remains parked
+
+The next recommended task is a docs-only review/acceptance gate for this
+selected target state implementation plan. No MIDI, ports, package metadata
+changes, active behavior, runtime execution, or hardware behavior is
+authorized.
 
 ## Latest Runtime-State Implementation Sequencing Note Review After Selected Isolated Pad Runtime-State Review
 
