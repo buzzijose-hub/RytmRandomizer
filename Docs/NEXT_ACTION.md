@@ -6,7 +6,37 @@ modularize-v1.34
 
 ## Current HEAD
 
-4cf244d Add PZ decision note after Packet 11A
+dc5fc0d Add PZ decision note review after Packet 11A
+
+## Latest Remaining Anchor/Profile Widening Audit After PZ Decision
+
+The latest V1.34 behavior parity remaining anchor/profile widening audit is:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_ANCHOR_PROFILE_WIDENING_AUDIT_AFTER_PZ_DECISION.md`
+
+It records:
+
+- current baseline:
+  - `dc5fc0d Add PZ decision note review after Packet 11A`
+- accepted Packet 11A state:
+  - `L`: covered and accepted for read-only selected isolated pad target intent
+  - `PZ`: parked/deferred
+- current direct Packet 2 anchor/profile coverage:
+  - `BH`
+  - `BC`
+  - `BS`
+  - `BF`
+- related read-only anchor/profile surfaces across Pad 1-4 lane, group anchor,
+  current-anchor state, selected-profile, and selected-isolated-pad helpers
+- parked/safe scope:
+  - `PZ`
+  - group profile `4` mock mapper support
+- no selected isolated pad runtime state, selected-pad switching execution,
+  selected-pad anchor return execution, mutation execution, dispatch, MIDI,
+  ports, package metadata, active behavior, or hardware behavior is authorized
+
+The next recommended task is a docs-only review/acceptance gate for this
+remaining anchor/profile widening audit.
 
 ## Latest PZ Decision Note After Packet 11A Review
 

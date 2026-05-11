@@ -170,6 +170,10 @@ Safe next options:
 - user-facing behavior-parity progress/timeline update
 - pause at this clean accepted `PZ` decision checkpoint
 
+The follow-up remaining anchor/profile widening audit is:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_ANCHOR_PROFILE_WIDENING_AUDIT_AFTER_PZ_DECISION.md`
+
 ## 9. Recommendation
 
 Prefer a docs-only remaining anchor/profile widening audit next.
