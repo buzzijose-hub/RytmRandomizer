@@ -8,7 +8,27 @@ modularize-v1.34
 
 Current HEAD:
 
-cacc31d
+1b5665c
+
+## Latest Behavior-Parity Next Packet Planning Gate After Packet 9
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_9.md`
+documents the next safe behavior-parity planning branch after the accepted
+Packet 9 progress report review.
+
+Recommended next branch:
+
+- Packet 10 selected-profile workflow planning
+
+Candidate Packet 10 planning surface:
+
+- `P`: select/switch profile and change Rytm machine
+- `M`: load selected profile anchor
+
+The gate keeps selected-profile runtime state, profile switching, machine
+changes, anchor loading execution, dispatch, MIDI, ports, package metadata,
+active behavior, and hardware behavior out of scope. It recommends a
+docs-only review/acceptance gate next.
 
 ## Latest Behavior-Parity Progress Report After Packet 9 Review
 

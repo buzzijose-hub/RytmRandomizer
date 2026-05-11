@@ -6,7 +6,39 @@ modularize-v1.34
 
 ## Current HEAD
 
-cacc31d Add behavior parity progress report after Packet 9
+1b5665c Add behavior parity progress report review after Packet 9
+
+## Latest Behavior-Parity Next Packet Planning Gate After Packet 9
+
+The latest V1.34 behavior parity next packet planning gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_9.md`
+
+It records:
+
+- current baseline:
+  - `1b5665c Add behavior parity progress report review after Packet 9`
+- accepted behavior-parity state:
+  - Packet 1 complete
+  - Packet 2 accepted as meaningful anchor/profile progress
+  - Packet 3 complete
+  - Packet 4 complete
+  - Packet 5 accepted as meaningful Pad 1 lane progress
+  - Packet 6 Pad 2 command-helper scope covered
+  - Packet 7 complete
+  - Packet 8 Pad 4 command-helper scope covered
+  - Packet 9 covered for the current read-only intent-only phase
+- recommended next branch:
+  - docs-only Packet 10 selected-profile workflow behavior planning
+- candidate Packet 10 planning surface:
+  - `P`: select/switch profile and change Rytm machine
+  - `M`: load selected profile anchor
+- no selected-profile runtime state, profile switching, machine change, anchor
+  loading, dispatch, MIDI, ports, package metadata, active behavior, or
+  hardware behavior is authorized
+
+The next recommended task is a docs-only review/acceptance gate for this
+planning gate.
 
 ## Latest Behavior-Parity Progress Report After Packet 9 Review
 
