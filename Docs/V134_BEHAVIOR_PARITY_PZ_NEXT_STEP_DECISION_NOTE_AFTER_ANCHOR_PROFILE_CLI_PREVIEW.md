@@ -210,3 +210,12 @@ The next recommended branch is a docs-only review/acceptance gate for this note.
 Hardware remains off.
 
 No implementation in this decision slice.
+
+## 12. Review Status
+
+This current `PZ` next-step decision note is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_NEXT_STEP_DECISION_NOTE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW_REVIEW.md`
+
+The review accepts this note, keeps `PZ` parked, and recommends a remaining
+behavior-parity gap audit after anchor/profile CLI visibility next.

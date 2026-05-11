@@ -8,7 +8,32 @@ modularize-v1.34
 
 Current HEAD:
 
-394ce13
+64bc345
+
+## Latest PZ Next-Step Decision Review After Anchor/Profile CLI Preview
+
+`Docs/V134_BEHAVIOR_PARITY_PZ_NEXT_STEP_DECISION_NOTE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW_REVIEW.md`
+accepts the current `PZ` next-step decision note after the passive
+`anchor-profile-report` CLI preview.
+
+Accepted decision note:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_NEXT_STEP_DECISION_NOTE_AFTER_ANCHOR_PROFILE_CLI_PREVIEW.md`
+
+Accepted milestone:
+
+- `64bc345 Add PZ next-step decision after anchor profile CLI preview`
+
+Accepted current decision:
+
+- keep `PZ` parked
+
+The next recommended branch is a remaining behavior-parity gap audit after
+anchor/profile CLI visibility. The review authorizes no `PZ` implementation,
+selected isolated pad runtime state, selected-pad switching execution,
+selected-pad anchor return execution, mutation execution, dispatch, MIDI,
+ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior.
 
 ## Latest PZ Next-Step Decision Note After Anchor/Profile CLI Preview
 
