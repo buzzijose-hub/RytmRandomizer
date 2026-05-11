@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5f4dc64
+bb5f801
 
 ## Protected Reference
 
@@ -11767,6 +11767,42 @@ command execution, MIDI, ports, package metadata changes, active behavior,
 runtime behavior, or hardware behavior.
 
 The next recommended task is a docs-only Packet 9 plan review.
+
+## V1.34 Behavior Parity Packet 9 Undo Commit State Behavior Plan Review
+
+The Packet 9 undo/commit/state behavior plan is now reviewed and accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN_REVIEW.md`
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Accepted milestone:
+
+- `bb5f801 Add Packet 9 undo commit state behavior plan`
+
+Accepted future Packet 9A implementation scope:
+
+- `B`: back to current anchor
+
+Deferred/safe Packet 9 scope:
+
+- `E`
+- `W`
+- `U`
+
+Preserved Packet 1 ownership:
+
+- `H`
+- `R`
+
+The review adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a tiny TDD Packet 9A implementation for read-only
+`B` intent only.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 

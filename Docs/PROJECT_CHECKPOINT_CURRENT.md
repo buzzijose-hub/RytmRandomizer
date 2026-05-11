@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- bb5f801 Add Packet 9 undo commit state behavior plan
 - 5f4dc64 Add next packet planning gate review after Packet 8C
 - 5dc1986 Add next packet planning gate after Packet 8C
 - 9247bff Add behavior parity progress report review after Packet 8C
@@ -12099,6 +12100,43 @@ dispatch, command execution, MIDI, ports, package metadata changes, active
 behavior, or hardware behavior.
 
 Next recommended task is a docs-only Packet 9 plan review.
+
+## Latest Packet 9 Undo Commit State Behavior Plan Review
+
+The Packet 9 undo/commit/state behavior plan has now been reviewed and
+accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN_REVIEW.md`
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Accepted milestone:
+
+- `bb5f801 Add Packet 9 undo commit state behavior plan`
+
+Accepted future Packet 9A implementation scope:
+
+- `B`: back to current anchor
+
+Deferred/safe Packet 9 scope:
+
+- `E`
+- `W`
+- `U`
+
+Preserved Packet 1 ownership:
+
+- `H`
+- `R`
+
+The review adds no implementation, tests, CLI wiring, runtime execution,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+Next recommended task is a tiny TDD Packet 9A implementation for read-only
+`B` intent only.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
