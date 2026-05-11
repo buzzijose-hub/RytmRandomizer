@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-3cbd925
+05d09f3
+
+## Latest Anchor/Profile Behavior Report Implementation Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_IMPLEMENTATION_CHECKPOINT.md`
+documents the read-only anchor/profile behavior report implementation
+milestone.
+
+Implementation milestone:
+
+- `05d09f3 Add read-only anchor profile behavior report`
+
+New implementation surface:
+
+- `rytm_randomizer/behavior_anchor_profile_report.py`
+- `tests/test_behavior_anchor_profile_report.py`
+
+Closeout now includes:
+
+- `=== Test: Behavior Anchor Profile Report ===`
+
+The report summarizes existing read-only anchor/profile behavior coverage and
+parked scope in deterministic in-memory data. It keeps CLI wiring, `PZ`,
+profile `4` mock mapper support, selected isolated pad runtime state,
+selected-pad switching execution, selected-pad anchor return execution,
+mutation execution, dispatch, MIDI, ports, package metadata changes, active
+behavior, runtime execution, and hardware behavior out of scope.
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation checkpoint.
 
 ## Latest Anchor/Profile Widening Plan Review After PZ Decision
 

@@ -219,6 +219,10 @@ Safe next options:
 - broader user-facing progress/timeline update
 - pause at this clean checkpoint
 
+The follow-up implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_IMPLEMENTATION_CHECKPOINT.md`
+
 ## 12. Recommendation
 
 Proceed next with the tiny read-only anchor/profile behavior report
