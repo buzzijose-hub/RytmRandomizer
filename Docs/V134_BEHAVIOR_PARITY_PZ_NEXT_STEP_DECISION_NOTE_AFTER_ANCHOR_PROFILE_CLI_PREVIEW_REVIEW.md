@@ -187,3 +187,12 @@ anchor/profile CLI visibility.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 12. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_ANCHOR_PROFILE_CLI_VISIBILITY.md`
+
+That audit keeps `PZ` parked, keeps profile `4` parked, and summarizes the
+remaining behavior-parity gaps after anchor/profile CLI visibility.

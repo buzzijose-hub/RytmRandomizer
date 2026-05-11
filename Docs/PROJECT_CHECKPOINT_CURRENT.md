@@ -21,7 +21,35 @@ modularize-v1.34
 
 Current HEAD:
 
-64bc345 Add PZ next-step decision after anchor profile CLI preview
+3b7605e Add PZ next-step decision review after anchor profile CLI preview
+
+## V1.34 Behavior Parity Remaining Gap Audit After Anchor/Profile CLI Visibility
+
+The remaining behavior-parity gap audit after anchor/profile CLI visibility has
+now been created.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_ANCHOR_PROFILE_CLI_VISIBILITY.md`
+
+Current baseline:
+
+- `3b7605e Add PZ next-step decision review after anchor profile CLI preview`
+
+The audit records that current read-only behavior-parity coverage is broad and
+that the remaining gaps are mostly boundary decisions rather than missing
+read-only helpers.
+
+Primary parked gaps:
+
+- `PZ`
+- group profile `4` mock mapper support
+
+The next recommended task is a docs-only review/acceptance gate for this audit.
+The audit authorizes no `PZ` implementation, profile `4` mock mapper support,
+selected isolated pad runtime state, selected-pad anchor return execution,
+mutation execution, dispatch, MIDI, ports, package metadata changes, active
+behavior, runtime execution, or hardware behavior.
 
 ## V1.34 Behavior Parity PZ Next-Step Decision Review After Anchor/Profile CLI Preview
 
