@@ -135,34 +135,108 @@ def test_selected_profile_metadata_is_copied_and_immutable():
     assert fresh_result.metadata["source"] == "PROFILE_WORKFLOW_COMMANDS"
 
 
-def test_m_remains_deferred_and_fails_safely():
+def test_m_returns_read_only_selected_profile_anchor_load_intent():
     from rytm_randomizer.behavior_selected_profile import (
         DEFERRED_PACKET_10_SELECTED_PROFILE_KEYS,
         PACKET_10A_SELECTED_PROFILE_KEYS,
+        PACKET_10B_SELECTED_PROFILE_KEYS,
         evaluate_selected_profile_behavior,
     )
 
     assert PACKET_10A_SELECTED_PROFILE_KEYS == ("P",)
-    assert DEFERRED_PACKET_10_SELECTED_PROFILE_KEYS == ("M",)
+    assert PACKET_10B_SELECTED_PROFILE_KEYS == ("M",)
+    assert DEFERRED_PACKET_10_SELECTED_PROFILE_KEYS == ()
 
     result = evaluate_selected_profile_behavior("M")
 
     assert result.command_key == "M"
-    assert result.accepted is False
-    assert result.reason == "unsupported_packet_10_selected_profile_key"
-    assert result.uses_selected_profile is False
+    assert result.accepted is True
+    assert result.reason == "supported_selected_profile_anchor_load_intent"
+    assert result.label == "load selected profile anchor"
+    assert (
+        result.behavior_family
+        == "selected-profile-workflow/selected-profile-anchor-load"
+    )
+    assert result.source_scope == "selected_profile"
+    assert result.workflow_action == "describe_selected_profile_anchor_load_intent"
+    assert result.intent_kind == "selected_profile_anchor_load"
+    assert result.selects_profile is False
+    assert result.machine_change_intent is False
+    assert result.uses_selected_profile is True
+    assert result.selected_profile_dependency == "current_selected_profile_state"
+    assert result.anchor_load_intent is True
     assert result.selected_profile_runtime_state_exists is False
     assert result.machine_change_executed is False
     assert result.anchor_load_executed is False
     assert result.state_changed is False
+    assert result.prompt_required is False
     assert result.dispatches_command is False
     assert result.executes_command is False
+    assert result.mutates_runtime_state is False
     assert result.sends_real_midi is False
     assert result.opens_ports is False
     assert result.hardware_required is False
     assert result.active_behavior is False
+    assert result.display_lines == (
+        "M: load selected profile anchor",
+        "Read-only selected-profile anchor-load intent.",
+        "Source scope: selected_profile",
+        "Workflow action: describe_selected_profile_anchor_load_intent",
+        "Intent kind: selected_profile_anchor_load",
+        "Selected-profile dependency: current_selected_profile_state",
+        "Selected-profile anchor load is described only.",
+        "No selected-profile state would be read.",
+        "No selected-profile state would be created.",
+        "No anchor would load.",
+        "No machine would change.",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No runtime state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_m_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_selected_profile import (
+        evaluate_selected_profile_behavior,
+    )
+
+    result = evaluate_selected_profile_behavior("M")
+
+    assert result.metadata["source"] == "PROFILE_WORKFLOW_COMMANDS"
+    assert result.metadata["command_type"] == "anchor_load"
+    assert result.metadata["source_scope"] == "selected_profile"
+    assert (
+        result.metadata["behavior_family"]
+        == "selected-profile-workflow/selected-profile-anchor-load"
+    )
+    assert (
+        result.metadata["workflow_action"]
+        == "describe_selected_profile_anchor_load_intent"
+    )
+    assert result.metadata["intent_kind"] == "selected_profile_anchor_load"
+    assert result.metadata["selects_profile"] is False
+    assert result.metadata["machine_change_intent"] is False
+    assert result.metadata["uses_selected_profile"] is True
+    assert (
+        result.metadata["selected_profile_dependency"]
+        == "current_selected_profile_state"
+    )
+    assert result.metadata["anchor_load_intent"] is True
+    assert result.metadata["selected_profile_runtime_state_exists"] is False
+    assert result.metadata["machine_change_executed"] is False
+    assert result.metadata["anchor_load_executed"] is False
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
 
 
 def test_unknown_keys_fail_safely():
@@ -278,7 +352,8 @@ if __name__ == "__main__":
     test_p_returns_read_only_profile_selection_machine_change_intent()
     test_p_metadata_contains_expected_passive_sources()
     test_selected_profile_metadata_is_copied_and_immutable()
-    test_m_remains_deferred_and_fails_safely()
+    test_m_returns_read_only_selected_profile_anchor_load_intent()
+    test_m_metadata_contains_expected_passive_sources()
     test_unknown_keys_fail_safely()
     test_packet_2_anchor_profile_behavior_remains_unchanged()
     test_packet_3_legacy_single_profile_behavior_remains_unchanged()
