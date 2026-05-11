@@ -21,7 +21,45 @@ modularize-v1.34
 
 Current HEAD:
 
-fdbf825 Add runtime state modules readiness review
+af5859d Add local dev tooling notes
+
+## V1.34 Behavior Parity Selected Target State Implementation Review After Runtime-State Modules Readiness Review
+
+The selected target state implementation after the accepted runtime-state
+modules readiness review has now been reviewed and accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_REVIEW_AFTER_RUNTIME_STATE_MODULES_READINESS_REVIEW.md`
+
+Accepted implementation:
+
+- `rytm_randomizer/selected_target_state.py`
+
+Accepted tests:
+
+- `tests/test_selected_target_state.py`
+
+Accepted milestone:
+
+- `12869c3 Add selected target state implementation`
+
+Accepted decision:
+
+- selected target state is accepted as the first implemented runtime-state module
+- defaulted Pad 3 target state from passive `L` context is accepted
+- unset, unsupported, stale, and invalid safe-failure states are accepted
+- anchor state remains unimplemented
+- selected isolated pad runtime state remains unimplemented
+- runtime state remains limited to selected target state only
+- `PZ` remains parked
+
+The next recommended task is a first test-first anchor state implementation
+slice, or a docs-only anchor state implementation packet plan if one more
+planning gate is desired. The review authorizes no selected isolated pad
+runtime-state implementation, `PZ` implementation, profile `4` mock mapper
+support, mutation execution, dispatch, MIDI, ports, package metadata changes,
+active behavior, runtime execution, or hardware behavior.
 
 ## V1.34 Behavior Parity Selected Target State Implementation After Runtime-State Modules Readiness Review
 

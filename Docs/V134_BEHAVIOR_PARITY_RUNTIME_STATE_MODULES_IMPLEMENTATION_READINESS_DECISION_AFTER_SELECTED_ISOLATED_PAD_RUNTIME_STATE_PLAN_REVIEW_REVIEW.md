@@ -352,12 +352,30 @@ It adds no anchor state, selected isolated pad runtime state, `PZ`, MIDI,
 ports, package metadata changes, active behavior, runtime execution, or
 hardware behavior.
 
-## 15. Recommendation
+## 15. Follow-On Implementation Review
 
-Proceed with a docs-only review/acceptance gate for the selected target state
-implementation.
+The follow-on docs-only selected target state implementation review is:
 
-Do not implement anchor state yet.
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_REVIEW_AFTER_RUNTIME_STATE_MODULES_READINESS_REVIEW.md`
+
+It accepts selected target state as the first implemented runtime-state module.
+
+It keeps anchor state unimplemented.
+
+It keeps selected isolated pad runtime state unimplemented.
+
+It keeps `PZ` parked.
+
+It authorizes no MIDI, ports, package metadata changes, active behavior,
+runtime execution, or hardware behavior.
+
+## 16. Recommendation
+
+Proceed with a first test-first anchor state implementation slice, or create a
+docs-only anchor state implementation packet plan if one more planning gate is
+desired.
+
+Do not implement anchor state in this review slice.
 
 Do not implement selected isolated pad runtime state yet.
 
@@ -366,7 +384,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 16. Decision Summary
+## 17. Decision Summary
 
 `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW.md`
 is accepted for planning.
