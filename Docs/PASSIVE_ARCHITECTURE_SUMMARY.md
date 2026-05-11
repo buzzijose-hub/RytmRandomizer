@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-b04aa8d
+de911d0
+
+## Latest PZ Read-Only Runtime Readiness Behavior Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_PZ_READ_ONLY_RUNTIME_READINESS_BEHAVIOR_CHECKPOINT_REVIEW.md`
+accepts the completed `PZ` read-only runtime-readiness behavior checkpoint.
+
+Accepted milestones:
+
+- `b04aa8d Add PZ read-only runtime readiness behavior`
+- `de911d0 Add PZ runtime readiness behavior checkpoint`
+
+Accepted `PZ` state:
+
+- read-only selected isolated pad anchor-return readiness helper
+- no longer deferred, but still inert
+- can inspect conservative selected isolated pad runtime-state data without
+  mutation
+- default context safely reports unavailable anchor readiness
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch or command execution
+- no MIDI or ports
+- no active behavior or hardware behavior
+
+The next recommended task is a broader behavior-parity progress report after
+`PZ`, or a pause at this clean accepted checkpoint.
 
 ## Latest PZ Read-Only Runtime Readiness Behavior Checkpoint
 

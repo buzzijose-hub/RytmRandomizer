@@ -21,7 +21,53 @@ modularize-v1.34
 
 Current HEAD:
 
-b04aa8d Add PZ read-only runtime readiness behavior
+de911d0 Add PZ runtime readiness behavior checkpoint
+
+## V1.34 Behavior Parity PZ Read-Only Runtime Readiness Behavior Checkpoint Review
+
+The `PZ` read-only runtime-readiness behavior checkpoint has now been reviewed
+and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_READ_ONLY_RUNTIME_READINESS_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_READ_ONLY_RUNTIME_READINESS_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `b04aa8d Add PZ read-only runtime readiness behavior`
+- `de911d0 Add PZ runtime readiness behavior checkpoint`
+
+Accepted behavior:
+
+- `PZ` is a read-only selected isolated pad anchor-return readiness helper
+- `PZ` is no longer deferred, but remains inert
+- default `PZ` context safely reports `anchor_unavailable_for_selected_target`
+- injected selected isolated pad runtime-state data can be inspected without
+  mutation
+- `anchor_return_intent` is descriptive only
+- `anchor_return_executed` remains false
+- `selected_pad_switch_executed` remains false
+- `state_changed` remains false
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
+
+The next recommended task is a broader behavior-parity progress report after
+`PZ`, or a pause at this clean accepted checkpoint.
 
 ## V1.34 Behavior Parity PZ Read-Only Runtime Readiness Behavior Checkpoint
 
