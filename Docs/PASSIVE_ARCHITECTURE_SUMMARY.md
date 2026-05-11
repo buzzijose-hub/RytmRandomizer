@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-3e75dfc
+6ed1c9c
+
+## Latest Selected Isolated Pad Runtime-State Plan Review After Anchor State Review
+
+`Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_AFTER_ANCHOR_STATE_REVIEW_REVIEW.md`
+accepts the selected isolated pad runtime-state plan as the current planning
+boundary after the accepted anchor state plan review.
+
+Accepted selected isolated pad runtime-state plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_AFTER_ANCHOR_STATE_REVIEW.md`
+
+Accepted milestone:
+
+- `6ed1c9c Add selected isolated pad runtime-state plan`
+
+The review accepts uninitialized, passive-default, explicit-target,
+target-anchor-matched, target-anchor-mismatched, unsupported, stale, and
+invalid as future selected isolated pad runtime-state planning values.
+Selected isolated pad runtime state remains unimplemented, selected target
+state remains unimplemented, anchor state remains unimplemented, runtime state
+remains unimplemented, and `PZ` remains parked.
+
+The next recommended task is a broader behavior-parity progress report after
+selected target, anchor, and selected isolated pad runtime-state planning. No
+MIDI, ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior is authorized.
 
 ## Latest Selected Isolated Pad Runtime-State Plan After Anchor State Review
 
