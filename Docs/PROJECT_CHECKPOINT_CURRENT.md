@@ -19,6 +19,37 @@ Current branch:
 
 modularize-v1.34
 
+## V1.34 Behavior Parity Progress Report After Packet 9
+
+The broader behavior-parity implementation progress report after Packet 9 has
+now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9.md`
+
+Current baseline before the report:
+
+- `23b1f5a Add Packet 9 completion checkpoint review`
+
+The report consolidates accepted behavior-parity progress through Packet 9.
+
+Accepted Packet 9 scope:
+
+- `B`: current-anchor return intent
+- `E`: current-state anchor commit intent
+- `W`: waveform-exploration intent
+- `U`: state-history undo intent
+
+Packet 9 is covered for the current read-only intent-only behavior phase.
+
+The report confirms runtime undo behavior, anchor commit/restore execution,
+waveform exploration execution, dispatch, MIDI, ports, package metadata,
+active behavior, and hardware behavior remain absent.
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
+
 ## V1.34 Behavior Parity Packet 9 Completion Checkpoint
 
 The broader Packet 9 completion checkpoint has now been documented.
@@ -379,6 +410,7 @@ Packet 9C.
 
 Recent checkpoint history:
 
+- 23b1f5a Add Packet 9 completion checkpoint review
 - 5700bb6 Add Packet 9 completion checkpoint
 - 3cb5f59 Add Packet 9D undo commit state behavior checkpoint review
 - 72897df Add Packet 9D undo commit state behavior checkpoint
