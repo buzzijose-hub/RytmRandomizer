@@ -356,3 +356,13 @@ Runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this planning slice.
+
+## 20. Review Status
+
+This behavior plan is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_BEHAVIOR_PLAN_AFTER_RUNTIME_STATE_VOCABULARY_REVIEW.md`
+
+That review accepts the `PZ` behavior plan for planning while keeping `PZ`
+parked, runtime state unimplemented, and selected pad anchor return execution
+unimplemented.
