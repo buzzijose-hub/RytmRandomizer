@@ -21,7 +21,54 @@ modularize-v1.34
 
 Current HEAD:
 
-dec00f1 Add runtime adjacent mock-only progress report after B tests
+e943f2b Add runtime adjacent mock-only progress report review after B tests
+
+## V1.34 Behavior Parity Runtime-Adjacent Next Branch Selection After B Tests
+
+The runtime-adjacent next branch after accepted `PZ` and `B` safe-failure
+tests has now been selected.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_B_TESTS.md`
+
+Current baseline:
+
+- `e943f2b Add runtime adjacent mock-only progress report review after B tests`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_B_TESTS_REVIEW.md`
+
+Selected next branch:
+
+- user-facing behavior-parity progress/timeline update after `PZ` and `B`
+
+Decision summary:
+
+- accepted runtime-adjacent mock-only safe-failure surfaces remain `PZ` and
+  `B`
+- no third runtime-adjacent mock-only candidate is selected yet
+- no tests, implementation, execution path, MIDI, ports, package metadata
+  changes, active behavior, or hardware behavior are added
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this branch selection note
+
+Confirmed boundaries:
+
+- no current anchor return execution
+- no selected pad switching execution
+- no selected pad anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime-Adjacent Mock-Only Progress Report After B Tests Review
 

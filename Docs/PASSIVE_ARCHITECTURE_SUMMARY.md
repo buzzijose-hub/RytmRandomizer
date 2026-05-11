@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-dec00f1
+e943f2b
+
+## Latest Runtime-Adjacent Next Branch Selection After B Tests
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_B_TESTS.md`
+selects the next runtime-adjacent branch after the accepted `PZ` and `B`
+progress report review.
+
+Selected next branch:
+
+- user-facing behavior-parity progress/timeline update after `PZ` and `B`
+
+Current accepted state:
+
+- `PZ` remains the first runtime-adjacent mock-only safe-failure surface
+- `B` remains the second runtime-adjacent mock-only safe-failure surface
+- no third runtime-adjacent mock-only candidate is selected yet
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for this
+branch selection note.
+
+No dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this selection note.
 
 ## Latest Runtime-Adjacent Mock-Only Progress Report After B Tests Review
 
