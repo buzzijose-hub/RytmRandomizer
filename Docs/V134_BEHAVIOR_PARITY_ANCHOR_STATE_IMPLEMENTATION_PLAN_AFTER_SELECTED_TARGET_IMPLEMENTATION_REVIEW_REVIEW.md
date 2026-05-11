@@ -439,3 +439,23 @@ It keeps the following planned or parked:
 The next recommended task after that follow-on implementation is a docs-only
 review/acceptance gate for `rytm_randomizer/anchor_state.py` and
 `tests/test_anchor_state.py`.
+
+## 20. Follow-On Implementation Review
+
+The follow-on conservative anchor state implementation has now been reviewed
+and accepted in:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_IMPLEMENTATION_REVIEW_AFTER_SELECTED_TARGET_STATE_IMPLEMENTATION_REVIEW.md`
+
+Accepted milestone:
+
+- `2dec917 Add anchor state implementation`
+
+The implementation review accepts only unknown, unsupported, stale, and
+invalid anchor safe-failure states.
+
+Static, software-known, and soft-captured anchors remain unimplemented.
+
+Selected isolated pad runtime state remains unimplemented.
+
+`PZ` remains parked.
