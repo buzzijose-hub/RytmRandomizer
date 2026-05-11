@@ -206,3 +206,14 @@ Closeout now covers:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Progress Report
+
+The broader runtime-adjacent mock-only progress after accepted `PZ` and `B`
+safe-failure tests is summarized in:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_B_TESTS.md`
+
+That report keeps `PZ` and `B` at test-only safe-failure altitude and
+recommends a docs-only review/acceptance gate before choosing any additional
+runtime-adjacent mock-only candidate.

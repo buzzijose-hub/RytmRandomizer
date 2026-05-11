@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-2e588a7
+a2274b1
+
+## Latest Runtime-Adjacent Mock-Only Progress Report After B Tests
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_B_TESTS.md`
+summarizes the current runtime-adjacent mock-only state after accepted `PZ`
+and `B` safe-failure tests.
+
+Current accepted state:
+
+- `PZ` is accepted as the first runtime-adjacent mock-only safe-failure surface
+- `B` is accepted as the second runtime-adjacent mock-only safe-failure surface
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- closeout includes `Runtime-Adjacent Mock-Only B`
+- `PZ` remains read-only selected isolated pad anchor-return readiness
+- `B` remains read-only current-anchor return intent readiness
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
+
+No dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this report.
 
 ## Latest Runtime-Adjacent Mock-Only B Tests Checkpoint Review
 
