@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-07b63aa Add behavior parity progress report after Packet 8B
+6f8b60f Add behavior parity progress report review after Packet 8B
 
 ## Current Phase
 
@@ -2400,6 +2400,37 @@ Next recommended task:
 Do not implement `P4X`, dispatch, MIDI, ports, package metadata changes,
 active behavior, runtime execution, or hardware behavior without the separate
 Packet 8C plan and review.
+
+## Latest Packet 8C Pad 4 Lane Behavior Plan
+
+The latest V1.34 behavior parity Packet 8C Pad 4 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8C_PAD4_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `6f8b60f Add behavior parity progress report review after Packet 8B`
+
+The plan defines future Packet 8C scope:
+
+- `P4X`: safely mutate the currently loaded Pad 4 mode
+
+Accepted current Packet 8 baseline entering the plan:
+
+- `P4A` accepted
+- `P4R` accepted
+- `P4X` deferred/safe
+- `P4M` remains Packet 1 menu/status behavior
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata changes, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task:
+
+- docs-only Packet 8C plan review.
 
 ## Latest Behavior Parity Progress Report After Packet 8A Review
 
