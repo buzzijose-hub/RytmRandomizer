@@ -217,3 +217,21 @@ Hardware remains off.
 
 No real MIDI, ports, active behavior, package metadata changes, runtime
 execution, or hardware behavior exists.
+
+## 12. Review Status
+
+This checkpoint is reviewed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8A_PAD4_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+The review accepts Packet 8A read-only Pad 4 lane behavior for `P4A`.
+
+Deferred/safe Packet 8 scope remains:
+
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper.

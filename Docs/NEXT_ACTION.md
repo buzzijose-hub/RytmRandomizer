@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-05e0cf0 Add Packet 8A Pad 4 lane behavior
+fbffa77 Add Packet 8A Pad 4 lane behavior checkpoint
 
 ## Current Phase
 
@@ -2281,6 +2281,44 @@ package metadata changes, active behavior, or hardware behavior was added.
 Next recommended task:
 
 - docs-only Packet 8A checkpoint review.
+
+## Latest Packet 8A Pad 4 Lane Behavior Checkpoint Review
+
+The latest Packet 8A Pad 4 lane behavior checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8A_PAD4_LANE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted implementation milestone:
+
+- `05e0cf0 Add Packet 8A Pad 4 lane behavior`
+
+Accepted checkpoint milestone:
+
+- `fbffa77 Add Packet 8A Pad 4 lane behavior checkpoint`
+
+Accepted read-only behavior:
+
+- `P4A`: return Pad 4 to BD Acoustic body/accent anchor / home
+
+Current Packet 8 boundary:
+
+- `P4A` accepted
+- `P4R` deferred/safe
+- `P4X` deferred/safe
+- `P4M` remains Packet 1 menu/status behavior
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper
+
+Next safe options:
+
+- behavior-parity progress report after Packet 8A
+- docs-only Packet 8B plan for `P4R`
+- pause at this clean checkpoint
+
+Recommendation:
+
+- write a short behavior-parity progress report after Packet 8A before
+  choosing `P4R`.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
