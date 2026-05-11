@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-45fb5cd
+c024b5a
 
 ## Protected Reference
 
@@ -11969,6 +11969,42 @@ runtime behavior, or hardware behavior.
 The next recommended task is a docs-only Packet 9B plan for `E` only, a
 user-facing progress/timeline update, or a pause at this accepted progress
 baseline.
+
+## V1.34 Behavior Parity Packet 9B Undo Commit State Behavior Plan
+
+The docs-only Packet 9B undo/commit/state behavior plan is now documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9B_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `c024b5a Add behavior parity progress report review after Packet 9A`
+
+The plan records:
+
+- accepted Packet 9A read-only `B` behavior
+- recommended future Packet 9B read-only `E` behavior
+- `W` and `U` deferred/safe
+- `H` and `R` preserved as Packet 1 menu/status behavior
+- no closeout script update expected
+
+Accepted future Packet 9B planning vocabulary:
+
+- command key: `E`
+- source metadata: `STATE_UTILITY_COMMANDS`
+- target scope: `current_anchor_state`
+- behavior family: `undo-commit-state/current-state-anchor-commit`
+- state action: `describe_current_state_anchor_commit_intent`
+- intent kind: `anchor_commit`
+- anchor concept: current state as new anchor
+- lifecycle effect: described only
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 9B plan.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 
