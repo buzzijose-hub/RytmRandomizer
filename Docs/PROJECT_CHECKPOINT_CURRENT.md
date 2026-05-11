@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- f25e550 Add behavior parity progress report review after Packet 7
 - 930294a Add behavior parity progress report after Packet 7
 - a813766 Add Packet 7 completion checkpoint review
 - b77de2b Add Packet 7 completion checkpoint
@@ -12344,6 +12345,48 @@ The review confirms the next packet has not been selected yet after Packet 7.
 
 Next recommended task is a docs-only next behavior-parity packet planning gate
 if continuing.
+
+## V1.34 Behavior Parity Next Packet Planning Gate After Packet 7
+
+The next behavior-parity packet planning gate after Packet 7 has now been
+documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_7.md`
+
+Current baseline before the planning gate:
+
+- `f25e550 Add behavior parity progress report review after Packet 7`
+
+Accepted behavior-parity baseline:
+
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted progress
+- Packet 6 Pad 2 command-helper scope covered
+- Packet 7 complete
+
+Recommended next branch:
+
+- Packet 8 Pad 4 Lane Behavior planning
+
+Candidate Packet 8 commands:
+
+- `P4A`
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior.
+
+The planning gate adds no implementation, tests, CLI execution wiring,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+runtime behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this planning
+decision.
 
 ## V1.34 Behavior Parity Progress Report Review After Packet 7F
 

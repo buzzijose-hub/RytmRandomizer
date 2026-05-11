@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-930294a
+f25e550
 
 ## Protected Reference
 
@@ -11668,6 +11668,43 @@ metadata, active behavior, and hardware behavior remain absent.
 
 The next recommended task is a docs-only next behavior-parity packet planning
 gate if continuing.
+
+## Next Packet Planning Gate After Packet 7
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_7.md`
+documents the next behavior-parity packet planning gate after Packet 7.
+
+Current baseline before the planning gate:
+
+- `f25e550 Add behavior parity progress report review after Packet 7`
+
+Accepted behavior-parity baseline:
+
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted progress
+- Packet 6 Pad 2 command-helper scope covered
+- Packet 7 complete
+
+Recommended next branch:
+
+- Packet 8 Pad 4 Lane Behavior planning
+
+Candidate Packet 8 commands:
+
+- `P4A`
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior.
+
+The planning gate confirms runtime execution, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior remain absent.
+
+The next recommended task is a docs-only review/acceptance gate for this
+planning decision.
 
 ## Packet 7F Pad 3 Lane Behavior Checkpoint Review
 
