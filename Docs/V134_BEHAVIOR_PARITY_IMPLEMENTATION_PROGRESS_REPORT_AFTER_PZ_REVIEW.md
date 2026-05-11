@@ -197,6 +197,11 @@ Safe next options:
 - plan another read-only behavior-parity slice only after separate review
 - create a future runtime/execution boundary decision note, documentation-only
 
+Follow-up status:
+
+- next branch selection created:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PZ.md`
+
 ## 9. Recommendation
 
 Prefer a next behavior-parity branch selection checkpoint before any further
