@@ -8,7 +8,38 @@ modularize-v1.34
 
 Current HEAD:
 
-cb5b282
+5d717fa
+
+## Latest Runtime-State Planning Progress Report Review After Selected Isolated Pad Review
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_PLANNING_PROGRESS_REPORT_AFTER_SELECTED_ISOLATED_PAD_REVIEW_REVIEW.md`
+accepts the runtime-state planning progress report as the current
+runtime-adjacent planning checkpoint.
+
+Accepted progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_PLANNING_PROGRESS_REPORT_AFTER_SELECTED_ISOLATED_PAD_REVIEW.md`
+
+Accepted milestone:
+
+- `5d717fa Add runtime-state planning progress report`
+
+The review accepts the consolidated planning state for runtime-state
+vocabulary, `PZ` behavior planning, selected target state planning, anchor
+state planning, and selected isolated pad runtime-state planning.
+
+Current decision:
+
+- `PZ` remains parked
+- selected target state remains unimplemented
+- anchor state remains unimplemented
+- selected isolated pad runtime state remains unimplemented
+- runtime state remains unimplemented
+- passive commands remain read-only
+
+The next recommended task is a docs-only `PZ` implementation readiness
+decision note. No MIDI, ports, package metadata changes, active behavior,
+runtime execution, or hardware behavior is authorized.
 
 ## Latest Runtime-State Planning Progress Report After Selected Isolated Pad Review
 

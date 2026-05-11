@@ -362,3 +362,12 @@ Selected isolated pad runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this progress report.
+
+## 17. Follow-Up Status
+
+This progress report is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_PLANNING_PROGRESS_REPORT_AFTER_SELECTED_ISOLATED_PAD_REVIEW_REVIEW.md`
+
+That review accepts this report as the current runtime-adjacent planning
+checkpoint while keeping runtime state unimplemented and `PZ` parked.
