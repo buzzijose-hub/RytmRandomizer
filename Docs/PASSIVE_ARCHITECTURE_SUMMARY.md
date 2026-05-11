@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-e7bc6ab
+ad5980e
+
+## Latest Anchor State Implementation Plan After Selected Target Implementation Review
+
+`Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_IMPLEMENTATION_REVIEW.md`
+documents the future anchor state implementation surface after the accepted
+selected target state implementation plan review.
+
+Current baseline:
+
+- `ad5980e Add selected target state implementation plan review`
+
+Current decision:
+
+- anchor state implementation is planned only
+- anchor state remains unimplemented
+- selected target state remains unimplemented
+- selected isolated pad runtime state remains unimplemented
+- runtime state remains unimplemented
+- `PZ` remains parked
+
+The next recommended task is a docs-only review/acceptance gate for this
+anchor state implementation plan. No MIDI, ports, package metadata changes,
+active behavior, runtime execution, or hardware behavior is authorized.
 
 ## Latest Selected Target State Implementation Plan Review After Runtime-State Sequencing Review
 
