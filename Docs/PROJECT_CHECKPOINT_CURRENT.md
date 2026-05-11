@@ -21,7 +21,41 @@ modularize-v1.34
 
 Current HEAD:
 
-570513d Add PZ implementation readiness review
+861b7d7 Add selected isolated pad runtime-state implementation plan
+
+## V1.34 Behavior Parity Selected Isolated Pad Runtime-State Implementation Plan Review After PZ Readiness Review
+
+The selected isolated pad runtime-state implementation plan after the accepted
+`PZ` implementation readiness review has now been reviewed and accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_PZ_READINESS_REVIEW_REVIEW.md`
+
+Accepted implementation plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_PZ_READINESS_REVIEW.md`
+
+Accepted milestone:
+
+- `861b7d7 Add selected isolated pad runtime-state implementation plan`
+
+Accepted decision:
+
+- selected isolated pad runtime-state implementation plan is accepted for
+  planning
+- selected isolated pad runtime state remains unimplemented
+- selected target state remains unimplemented
+- anchor state remains unimplemented
+- runtime state remains unimplemented
+- `PZ` remains parked
+
+The next recommended task is a docs-only runtime-state implementation
+sequencing note before any implementation. The review authorizes no selected
+isolated pad runtime-state implementation, selected target state
+implementation, anchor state implementation, `PZ` implementation, profile `4`
+mock mapper support, mutation execution, dispatch, MIDI, ports, package
+metadata changes, active behavior, runtime execution, or hardware behavior.
 
 ## V1.34 Behavior Parity Selected Isolated Pad Runtime-State Implementation Plan After PZ Readiness Review
 
