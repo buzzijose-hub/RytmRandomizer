@@ -176,7 +176,15 @@ The latest confirmed clean closeout before this handoff was recorded at:
 
 ## 8. Recommended Resume Task
 
-Resume with:
+Packet 11A was implemented after this handoff in:
+
+- `3f79697 Add Packet 11A selected isolated pad behavior`
+
+The latest Packet 11A checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11A_SELECTED_ISOLATED_PAD_BEHAVIOR_CHECKPOINT.md`
+
+Original resume task:
 
 - tiny TDD Packet 11A implementation for read-only `L` intent only
 
