@@ -212,6 +212,8 @@ Safe next options:
 
 - docs-only decision note for whether to add passive CLI visibility for the
   anchor/profile behavior report
+- follow-up decision note:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_VISIBILITY_DECISION_NOTE.md`
 - passive CLI visibility implementation only after a separate approved decision
 - broader user-facing progress/timeline update
 - pause at this clean checkpoint
