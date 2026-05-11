@@ -2648,6 +2648,49 @@ Next recommended task:
 
 - docs-only review/acceptance gate for this progress report.
 
+## Latest Behavior Parity Progress Report After Packet 9A Review
+
+The latest broader behavior-parity progress report after Packet 9A review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9A_REVIEW.md`
+
+Accepted progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9A.md`
+
+Accepted progress report milestone:
+
+- `45fb5cd Add behavior parity progress report after Packet 9A`
+
+Accepted current behavior-parity state:
+
+- Packet 1 complete
+- Packet 2 accepted anchor/profile progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted Pad 1 progress
+- Packet 6 Pad 2 command-helper scope covered
+- Packet 7 complete
+- Packet 8 Pad 4 command-helper scope covered
+- Packet 9A `B` current-anchor return intent accepted
+
+Accepted Packet 9 boundary:
+
+- `B` accepted
+- `E` deferred/safe
+- `W` deferred/safe
+- `U` deferred/safe
+- `H` and `R` remain Packet 1 menu/status behavior
+
+The review adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata changes, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task:
+
+- docs-only Packet 9B plan for `E` only, user-facing progress/timeline update,
+  or pause at this accepted progress baseline.
+
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
 The latest broader behavior-parity progress report after Packet 8B review is:
