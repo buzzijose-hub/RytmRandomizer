@@ -21,7 +21,50 @@ modularize-v1.34
 
 Current HEAD:
 
-5a0100d Add selected isolated pad runtime state readiness review
+be4e485 Add selected isolated pad runtime state implementation
+
+## V1.34 Behavior Parity Selected Isolated Pad Runtime-State Implementation Review After Readiness Review
+
+The selected isolated pad runtime-state implementation after the readiness
+review has now been reviewed and accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_REVIEW_AFTER_READINESS_REVIEW.md`
+
+Accepted implementation:
+
+- `rytm_randomizer/selected_isolated_pad_runtime_state.py`
+
+Accepted tests:
+
+- `tests/test_selected_isolated_pad_runtime_state.py`
+
+Accepted closeout update:
+
+- `Scripts/closeout_check.ps1`
+- closeout label:
+  - `Selected Isolated Pad Runtime State`
+
+Accepted milestone:
+
+- `be4e485 Add selected isolated pad runtime state implementation`
+
+Accepted decision:
+
+- selected isolated pad runtime state is accepted as the conservative
+  validation layer after selected target state and anchor state
+- uninitialized, passive-default, missing, unsupported, stale, and invalid
+  safe-failure outcomes are accepted
+- selected target state remains separate
+- anchor state remains separate
+- `PZ` remains parked
+
+The next recommended task is a docs-only runtime-state modules implementation
+completion/progress checkpoint. The review authorizes no `PZ`
+implementation, profile `4` mock mapper support, mutation execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, runtime
+execution, or hardware behavior.
 
 ## V1.34 Behavior Parity Selected Isolated Pad Runtime-State Implementation After Readiness Review
 
