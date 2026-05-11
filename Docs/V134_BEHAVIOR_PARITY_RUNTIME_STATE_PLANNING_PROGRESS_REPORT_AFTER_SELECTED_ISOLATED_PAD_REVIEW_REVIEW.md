@@ -321,3 +321,13 @@ Selected isolated pad runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 15. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_IMPLEMENTATION_READINESS_DECISION_NOTE_AFTER_RUNTIME_STATE_PLANNING_REVIEW.md`
+
+That decision note records that `PZ` is not ready for implementation yet and
+recommends a docs-only selected isolated pad runtime-state implementation plan
+as the next safe planning branch.
