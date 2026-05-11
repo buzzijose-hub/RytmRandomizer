@@ -250,6 +250,87 @@ def test_w_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_u_returns_read_only_state_history_undo_intent():
+    from rytm_randomizer.behavior_undo_commit_state import (
+        evaluate_undo_commit_state_behavior,
+    )
+
+    result = evaluate_undo_commit_state_behavior("U")
+
+    assert result.command_key == "U"
+    assert result.accepted is True
+    assert result.reason == "supported_state_history_undo_intent"
+    assert result.label == "undo previous script-generated state"
+    assert result.behavior_family == "undo-commit-state/script-generated-state-undo"
+    assert result.target_scope == "script_generated_state_history"
+    assert (
+        result.state_action
+        == "describe_previous_script_generated_state_undo_intent"
+    )
+    assert result.intent_kind == "state_history_undo"
+    assert result.history_concept == "previous script-generated state"
+    assert result.lifecycle_effect == "described_only"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_runtime_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "U: undo previous script-generated state",
+        "Read-only previous script-generated state undo intent.",
+        "Target scope: script_generated_state_history",
+        "State action: describe_previous_script_generated_state_undo_intent",
+        "History concept: previous script-generated state",
+        "Lifecycle effect: described_only",
+        "No prompt would run.",
+        "No state would change.",
+        "No undo stack would be inspected.",
+        "No undo stack would be mutated.",
+        "No undo would execute.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No runtime state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_u_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_undo_commit_state import (
+        evaluate_undo_commit_state_behavior,
+    )
+
+    result = evaluate_undo_commit_state_behavior("U")
+
+    assert result.metadata["source"] == "STATE_UTILITY_COMMANDS"
+    assert result.metadata["command_type"] == "state_history"
+    assert result.metadata["source_scope"] == "script_generated_state"
+    assert result.metadata["target_scope"] == "script_generated_state_history"
+    assert (
+        result.metadata["behavior_family"]
+        == "undo-commit-state/script-generated-state-undo"
+    )
+    assert (
+        result.metadata["state_action"]
+        == "describe_previous_script_generated_state_undo_intent"
+    )
+    assert result.metadata["intent_kind"] == "state_history_undo"
+    assert result.metadata["history_concept"] == "previous script-generated state"
+    assert result.metadata["lifecycle_effect"] == "described_only"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_undo_commit_state_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_undo_commit_state import (
         evaluate_undo_commit_state_behavior,
@@ -271,12 +352,14 @@ def test_deferred_packet_9_undo_commit_state_keys_fail_safely():
         DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS,
         PACKET_9B_UNDO_COMMIT_STATE_KEYS,
         PACKET_9C_UNDO_COMMIT_STATE_KEYS,
+        PACKET_9D_UNDO_COMMIT_STATE_KEYS,
         evaluate_undo_commit_state_behavior,
     )
 
     assert PACKET_9B_UNDO_COMMIT_STATE_KEYS == ("E",)
     assert PACKET_9C_UNDO_COMMIT_STATE_KEYS == ("W",)
-    assert DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS == ("U",)
+    assert PACKET_9D_UNDO_COMMIT_STATE_KEYS == ("U",)
+    assert DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS == ()
 
     for command_key in DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS:
         result = evaluate_undo_commit_state_behavior(command_key)
@@ -386,6 +469,8 @@ if __name__ == "__main__":
     test_e_metadata_contains_expected_passive_sources()
     test_w_returns_read_only_waveform_exploration_intent()
     test_w_metadata_contains_expected_passive_sources()
+    test_u_returns_read_only_state_history_undo_intent()
+    test_u_metadata_contains_expected_passive_sources()
     test_undo_commit_state_metadata_is_copied_and_immutable()
     test_deferred_packet_9_undo_commit_state_keys_fail_safely()
     test_unknown_keys_fail_safely()
