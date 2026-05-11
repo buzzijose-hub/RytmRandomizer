@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-994c943
+f119281
+
+## Latest Behavior-Parity Progress Timeline After PZ
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ.md` provides a
+user-facing progress and timeline update after `PZ`.
+
+Current phase summary:
+
+- passive/mock foundation is mature
+- behavior-parity read-only layer is strong
+- `PZ` is covered at read-only runtime-readiness altitude
+- runtime/execution planning is the likely next phase
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+Recommended next task:
+
+- docs-only review/acceptance gate for the timeline update
+
+Likely next branch after review:
+
+- future runtime/execution boundary decision note
 
 ## Latest Behavior-Parity Next Branch Selection After PZ
 

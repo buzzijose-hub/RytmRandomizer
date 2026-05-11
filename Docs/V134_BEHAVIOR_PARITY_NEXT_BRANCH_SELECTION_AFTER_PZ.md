@@ -183,6 +183,11 @@ After the user-facing timeline update, safe next options may include:
 - first runtime-adjacent test plan, documentation-only
 - active-boundary planning update, documentation-only
 
+Follow-up status:
+
+- progress/timeline update created:
+  - `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ.md`
+
 None of those should add real MIDI, ports, active behavior, or hardware
 behavior without separate approval.
 

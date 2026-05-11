@@ -6,7 +6,45 @@ modularize-v1.34
 
 ## Current HEAD
 
-994c943 Add behavior parity progress report review after PZ
+f119281 Add next behavior parity branch selection after PZ
+
+## Latest Behavior-Parity Progress Timeline After PZ
+
+The latest user-facing behavior-parity progress timeline after `PZ` is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ.md`
+
+It records:
+
+- current baseline:
+  - `f119281 Add next behavior parity branch selection after PZ`
+- `PZ` is now represented at read-only runtime-readiness altitude
+- behavior-parity read-only foundation is strong
+- active execution remains unstarted
+- real MIDI and hardware validation remain unstarted
+- the realistic next phase is runtime/execution boundary planning and
+  mock-only test planning, not hardware
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this timeline update
+
+Likely next branch after review:
+
+- future runtime/execution boundary decision note
+
+Confirmed boundaries:
+
+- no implementation
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After PZ
 
