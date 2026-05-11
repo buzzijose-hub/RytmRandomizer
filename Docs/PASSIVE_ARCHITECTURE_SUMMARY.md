@@ -8,7 +8,26 @@ modularize-v1.34
 
 Current HEAD:
 
-b4d0bb8
+916f550
+
+## Latest Packet 9D Undo Commit State Behavior Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+documents the next tiny Packet 9 planning branch.
+
+Current accepted Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+
+Planned future Packet 9D scope:
+
+- `U`: undo previous script-generated state
+
+The plan proposes read-only undo intent only and confirms no undo-stack
+behavior, runtime mutation, dispatch, MIDI, ports, package metadata, active
+behavior, or hardware behavior is authorized.
 
 ## Latest Behavior-Parity Progress Report After Packet 9C Review
 

@@ -6,7 +6,36 @@ modularize-v1.34
 
 ## Current HEAD
 
-b4d0bb8 Add behavior parity progress report after Packet 9C
+916f550 Add behavior parity progress report review after Packet 9C
+
+## Latest Packet 9D Undo Commit State Behavior Plan
+
+The latest V1.34 behavior parity Packet 9D undo/commit/state behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current baseline:
+  - `916f550 Add behavior parity progress report review after Packet 9C`
+- accepted Packet 9 progress:
+  - `B`: back to current anchor
+  - `E`: commit current state as new anchor
+  - `W`: waveform exploration only
+- planned future Packet 9D scope:
+  - `U`: undo previous script-generated state
+- proposed future read-only behavior:
+  - source metadata `STATE_UTILITY_COMMANDS`
+  - source scope `script_generated_state`
+  - target scope `script_generated_state_history`
+  - behavior family `undo-commit-state/script-generated-state-undo`
+  - state action `describe_previous_script_generated_state_undo_intent`
+  - intent kind `state_history_undo`
+  - history concept `previous script-generated state`
+- no undo-stack behavior, runtime mutation, dispatch, MIDI, ports, package
+  metadata, active behavior, or hardware behavior is authorized
+
+The plan recommends a docs-only Packet 9D plan review next.
 
 ## Latest Behavior-Parity Progress Report After Packet 9C Review
 
