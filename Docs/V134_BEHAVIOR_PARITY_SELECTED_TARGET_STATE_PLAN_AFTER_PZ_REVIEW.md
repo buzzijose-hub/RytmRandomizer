@@ -343,3 +343,13 @@ Runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this planning slice.
+
+## 19. Review Status
+
+This selected target state plan is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_PLAN_AFTER_PZ_REVIEW_REVIEW.md`
+
+That review accepts the selected target state plan for planning while keeping
+selected target state unimplemented, `PZ` parked, and anchor state as future
+planning scope.
