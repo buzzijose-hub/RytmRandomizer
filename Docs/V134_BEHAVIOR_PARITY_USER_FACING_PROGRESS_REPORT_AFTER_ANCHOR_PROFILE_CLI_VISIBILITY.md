@@ -290,3 +290,13 @@ progress report.
 Hardware remains off.
 
 No implementation in this report slice.
+
+## 15. Review Status
+
+This progress report is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_USER_FACING_PROGRESS_REPORT_AFTER_ANCHOR_PROFILE_CLI_VISIBILITY_REVIEW.md`
+
+The review accepts this report as the current user-facing behavior-parity
+progress snapshot and recommends a docs-only runtime-state vocabulary decision
+note next.
