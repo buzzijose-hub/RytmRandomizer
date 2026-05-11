@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-13c074f Add Packet 8B Pad 4 lane behavior
+cea0ff6 Add Packet 8B Pad 4 lane behavior checkpoint review
 
 ## Current Phase
 
@@ -2515,6 +2515,45 @@ Recommendation:
 
 - write a short behavior-parity progress report after Packet 8B before
   choosing `P4X`.
+
+## Latest Behavior Parity Progress Report After Packet 8B
+
+The latest broader behavior-parity progress report after Packet 8B is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_8B.md`
+
+Current baseline before the report:
+
+- `cea0ff6 Add Packet 8B Pad 4 lane behavior checkpoint review`
+
+The report consolidates accepted behavior-parity progress through:
+
+- Packet 1 menu/status and utility behavior
+- Packet 2 meaningful anchor/profile progress
+- Packet 3 mutation-depth and guarded input behavior
+- Packet 4 scene/group intent behavior
+- Packet 5 meaningful Pad 1 lane progress
+- Packet 6 Pad 2 command-helper coverage
+- Packet 7 Pad 3 lane completion
+- Packet 8A Pad 4 `P4A` anchor/home intent
+- Packet 8B Pad 4 `P4R` rotation intent
+
+Current Packet 8 boundary:
+
+- `P4A` accepted
+- `P4R` accepted
+- `P4X` deferred/safe
+- `P4M` remains Packet 1 menu/status behavior
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper
+
+The report confirms no CLI execution wiring, dispatch, command execution,
+runtime Pad 4 state, MIDI, ports, package metadata changes, active behavior,
+or hardware behavior.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this progress report.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
