@@ -6,7 +6,46 @@ modularize-v1.34
 
 ## Current HEAD
 
-6ed1c9c Add selected isolated pad runtime-state plan
+cb5b282 Add selected isolated pad runtime-state review
+
+## Latest Runtime-State Planning Progress Report After Selected Isolated Pad Review
+
+The latest runtime-state planning progress report is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_PLANNING_PROGRESS_REPORT_AFTER_SELECTED_ISOLATED_PAD_REVIEW.md`
+
+It follows:
+
+- selected isolated pad runtime-state plan review:
+  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_AFTER_ANCHOR_STATE_REVIEW_REVIEW.md`
+- review milestone:
+  - `cb5b282 Add selected isolated pad runtime-state review`
+
+It consolidates:
+
+- runtime-state vocabulary
+- `PZ` behavior planning
+- selected target state planning
+- anchor state planning
+- selected isolated pad runtime-state planning
+
+It records:
+
+- `PZ` remains parked
+- runtime state remains unimplemented
+- selected target state remains unimplemented
+- anchor state remains unimplemented
+- selected isolated pad runtime state remains unimplemented
+- passive commands remain read-only
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
+
+No selected isolated pad runtime-state implementation, selected target state
+implementation, anchor state implementation, `PZ` implementation, profile `4`
+mock mapper support, mutation execution, dispatch, MIDI, ports, package
+metadata, active behavior, runtime execution, or hardware behavior is
+authorized.
 
 ## Latest Selected Isolated Pad Runtime-State Plan Review After Anchor State Review
 
