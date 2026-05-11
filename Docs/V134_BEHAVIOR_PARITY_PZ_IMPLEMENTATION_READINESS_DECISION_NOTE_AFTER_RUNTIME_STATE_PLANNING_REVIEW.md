@@ -246,3 +246,13 @@ readiness decision note.
 Hardware remains off.
 
 No implementation in this decision note.
+
+## 12. Follow-Up Status
+
+This decision note is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_IMPLEMENTATION_READINESS_DECISION_NOTE_AFTER_RUNTIME_STATE_PLANNING_REVIEW_REVIEW.md`
+
+That review accepts the readiness decision that `PZ` is not ready for
+implementation yet and recommends a docs-only selected isolated pad
+runtime-state implementation plan as the next safe planning branch.
