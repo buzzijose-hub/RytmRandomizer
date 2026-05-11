@@ -6,7 +6,34 @@ modularize-v1.34
 
 ## Current HEAD
 
-35cbd72 Add Packet 10 progress checkpoint review
+2f2e763 Add Packet 10B selected profile workflow plan
+
+## Latest Packet 10B Selected Profile Workflow Plan Review
+
+The latest V1.34 behavior parity Packet 10B selected-profile workflow plan
+review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_PLAN_REVIEW.md`
+
+It records:
+
+- accepted plan:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+- accepted plan milestone:
+  - `2f2e763 Add Packet 10B selected profile workflow plan`
+- accepted future implementation target:
+  - Packet 10B `M` only
+- accepted future behavior:
+  - read-only selected-profile anchor-load intent
+- expected future file ownership:
+  - `rytm_randomizer/behavior_selected_profile.py`
+  - `tests/test_behavior_selected_profile.py`
+- no selected-profile runtime state, anchor loading execution, machine
+  changes, dispatch, MIDI, ports, package metadata, active behavior, or
+  hardware behavior is authorized
+
+The next recommended task is a tiny TDD Packet 10B implementation for
+read-only `M` intent only.
 
 ## Latest Packet 10B Selected Profile Workflow Plan
 
