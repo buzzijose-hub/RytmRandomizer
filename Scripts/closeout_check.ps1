@@ -104,6 +104,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_behavior_anchor_profile.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_anchor_profile.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Behavior Anchor Profile Report ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_behavior_anchor_profile_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_anchor_profile_report.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== Test: Behavior Mutation Depth ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_behavior_mutation_depth.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_mutation_depth.log" | Add-Content $summary
 
