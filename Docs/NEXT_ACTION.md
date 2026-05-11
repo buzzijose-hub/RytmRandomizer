@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-48c2efc Add next packet planning gate after Packet 7
+fa7d976 Add next packet planning gate review after Packet 7
 
 ## Current Phase
 
@@ -2159,6 +2159,42 @@ Package metadata remains protected.
 Next recommended task:
 
 - create a docs-only Packet 8 Pad 4 lane behavior plan.
+
+## Latest Packet 8 Pad 4 Lane Behavior Plan
+
+The latest V1.34 behavior parity Packet 8 Pad 4 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8_PAD4_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `fa7d976 Add next packet planning gate review after Packet 7`
+
+The plan documents Packet 8 Pad 4 lane behavior planning with this full future
+planning surface:
+
+- `P4A`
+- `P4R`
+- `P4X`
+
+Recommended first future implementation subset:
+
+- Packet 8A: `P4A` only
+
+The plan keeps `P4M` in Packet 1 menu/status ownership and keeps `P4R` and
+`P4X` deferred/safe until separately planned.
+
+The plan also confirms that group profile `"4"` / My BD Acoustic remains
+parked in the mock message mapper; this Packet 8 plan concerns existing
+`PAD4_COMMANDS` command metadata only.
+
+No implementation, tests, CLI wiring, dispatch, command execution, runtime
+Pad 4 state, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior is added by the plan.
+
+Next recommended task:
+
+- create a docs-only Packet 8 Pad 4 lane behavior plan review.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 

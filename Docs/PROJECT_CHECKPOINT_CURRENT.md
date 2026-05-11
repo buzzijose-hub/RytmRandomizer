@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- fa7d976 Add next packet planning gate review after Packet 7
 - 48c2efc Add next packet planning gate after Packet 7
 - f25e550 Add behavior parity progress report review after Packet 7
 - 930294a Add behavior parity progress report after Packet 7
@@ -11970,6 +11971,40 @@ metadata changes, hardware behavior, Analog Four support, Pads 5-12 support,
 SysEx, or GUI/capture.
 
 Next recommended task is a docs-only Packet 8 Pad 4 lane behavior plan.
+
+## Latest Packet 8 Pad 4 Lane Behavior Plan
+
+The Packet 8 Pad 4 lane behavior plan has now been documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8_PAD4_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `fa7d976 Add next packet planning gate review after Packet 7`
+
+Packet 8 planning surface:
+
+- `P4A`
+- `P4R`
+- `P4X`
+
+Recommended first future implementation subset:
+
+- Packet 8A: `P4A` only
+
+`P4M` remains Packet 1 menu/status behavior.
+
+`P4R` and `P4X` remain deferred/safe until separately planned.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper; this plan only concerns existing `PAD4_COMMANDS` command metadata.
+
+This plan is documentation-only. It adds no implementation, tests, CLI wiring,
+dispatch, command execution, runtime Pad 4 state, MIDI dependency, ports,
+MIDI sending, active CLI command, package metadata changes, hardware behavior,
+Analog Four support, Pads 5-12 support, SysEx, or GUI/capture.
+
+Next recommended task is a docs-only Packet 8 Pad 4 lane behavior plan review.
 
 ## V1.34 Behavior Parity Progress Report Review After Packet 7G
 
