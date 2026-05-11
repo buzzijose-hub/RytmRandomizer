@@ -207,3 +207,19 @@ safe-failure test slice, if explicitly approved.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The test-only `PZ` runtime-adjacent safe-failure slice following this review
+is documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT.md`
+
+That checkpoint records:
+
+- implementation milestone:
+  - `11cf66e Add runtime adjacent mock-only PZ tests`
+- new closeout coverage:
+  - `Runtime-Adjacent Mock-Only PZ`
+
+`PZ` remains read-only, inert, non-executable, and non-hardware-facing.

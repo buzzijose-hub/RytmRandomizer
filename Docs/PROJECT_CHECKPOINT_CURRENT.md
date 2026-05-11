@@ -21,7 +21,56 @@ modularize-v1.34
 
 Current HEAD:
 
-6766c51 Add first runtime adjacent mock-only test plan
+11cf66e Add runtime adjacent mock-only PZ tests
+
+## V1.34 Behavior Parity Runtime-Adjacent Mock-Only PZ Tests Checkpoint
+
+The tiny test-only `PZ` runtime-adjacent safe-failure test slice is complete
+and documented for review.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `11cf66e Add runtime adjacent mock-only PZ tests`
+
+Files changed by the milestone:
+
+- `tests/test_runtime_adjacent_mock_only_pz.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout coverage added:
+
+- `Runtime-Adjacent Mock-Only PZ`
+
+Checkpoint summary:
+
+- `PZ` has test-only safe-failure coverage for runtime-adjacent readiness
+- missing, unsupported, stale, and invalid contexts fail safely
+- `MockMidiSender` remains empty for failed readiness
+- passive CLI `preview-command PZ` remains read-only
+- no real MIDI libraries are imported
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity First Runtime-Adjacent Mock-Only Test Plan Review
 

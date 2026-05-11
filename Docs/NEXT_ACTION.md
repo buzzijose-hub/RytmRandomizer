@@ -6,7 +6,47 @@ modularize-v1.34
 
 ## Current HEAD
 
-6766c51 Add first runtime adjacent mock-only test plan
+11cf66e Add runtime adjacent mock-only PZ tests
+
+## Latest Runtime-Adjacent Mock-Only PZ Tests Checkpoint
+
+The latest runtime-adjacent mock-only `PZ` tests checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PZ_TESTS_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone:
+  - `11cf66e Add runtime adjacent mock-only PZ tests`
+- files changed by the milestone:
+  - `tests/test_runtime_adjacent_mock_only_pz.py`
+  - `Scripts/closeout_check.ps1`
+- closeout coverage added:
+  - `Runtime-Adjacent Mock-Only PZ`
+- `PZ` now has test-only safe-failure coverage for runtime-adjacent readiness
+- `PZ` remains read-only, inert, non-executable, and non-hardware-facing
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+Likely branch after review:
+
+- broader runtime-adjacent mock-only progress report, or pause before choosing
+  another candidate
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest First Runtime-Adjacent Mock-Only Test Plan Review
 
