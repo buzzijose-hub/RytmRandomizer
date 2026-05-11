@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-b180b4c
+f16def1
+
+## Latest Behavior-Parity Progress Report After Packet 9C
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C.md`
+summarizes the current behavior-parity implementation baseline after the
+accepted Packet 9C checkpoint review.
+
+Accepted Packet 9 progress:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+
+Deferred/safe Packet 9 scope:
+
+- `U`: undo previous script-generated state
+
+The report confirms Packet 9 is not complete and that runtime anchor restore,
+anchor commit execution, waveform exploration execution, waveform selection,
+waveform randomization, undo execution, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior remain absent.
 
 ## Latest Packet 9C Undo Commit State Behavior Checkpoint
 
