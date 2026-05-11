@@ -291,6 +291,10 @@ Safe next options:
 - broader user-facing progress/timeline update
 - pause at this clean checkpoint
 
+The follow-up review/acceptance gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_ANCHOR_PROFILE_WIDENING_AUDIT_AFTER_PZ_DECISION_REVIEW.md`
+
 ## 12. Recommendation
 
 Review and accept this audit next.

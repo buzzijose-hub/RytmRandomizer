@@ -6,7 +6,34 @@ modularize-v1.34
 
 ## Current HEAD
 
-dc5fc0d Add PZ decision note review after Packet 11A
+e1561dc Add remaining anchor profile widening audit after PZ decision
+
+## Latest Remaining Anchor/Profile Widening Audit Review After PZ Decision
+
+The latest V1.34 behavior parity remaining anchor/profile widening audit
+review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_ANCHOR_PROFILE_WIDENING_AUDIT_AFTER_PZ_DECISION_REVIEW.md`
+
+It records:
+
+- accepted audit:
+  - `Docs/V134_BEHAVIOR_PARITY_REMAINING_ANCHOR_PROFILE_WIDENING_AUDIT_AFTER_PZ_DECISION.md`
+- accepted audit milestone:
+  - `e1561dc Add remaining anchor profile widening audit after PZ decision`
+- accepted finding:
+  - anchor/profile-like behavior is already spread across several read-only
+    helpers
+  - the next useful task is visibility/planning, not immediate behavior
+    expansion
+- parked/safe scope:
+  - `PZ`
+  - group profile `4` mock mapper support
+- no selected isolated pad runtime state, selected-pad switching execution,
+  selected-pad anchor return execution, mutation execution, dispatch, MIDI,
+  ports, package metadata, active behavior, or hardware behavior is authorized
+
+The next recommended task is a docs-only anchor/profile widening plan.
 
 ## Latest Remaining Anchor/Profile Widening Audit After PZ Decision
 
