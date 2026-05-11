@@ -179,3 +179,12 @@ report.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 12. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_USER_FACING_PROGRESS_REPORT_AFTER_ANCHOR_PROFILE_CLI_VISIBILITY.md`
+
+That report summarizes the current behavior-parity state for orientation and
+recommends review/acceptance before any further branch.
