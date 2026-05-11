@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-8ca44ad
+a58115f
+
+## Latest Runtime-Adjacent Mock-Only Progress Report After PZ Tests
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_PZ_TESTS.md`
+summarizes current runtime-adjacent mock-only progress after the accepted `PZ`
+test checkpoint review.
+
+Current accepted state:
+
+- runtime/execution boundary is accepted
+- first runtime-adjacent mock-only test plan is accepted
+- `PZ` is the first accepted runtime-adjacent mock-only safe-failure candidate
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- `PZ` remains read-only and non-executable
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
+
+No dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this report.
 
 ## Latest Runtime-Adjacent Mock-Only PZ Tests Checkpoint Review
 

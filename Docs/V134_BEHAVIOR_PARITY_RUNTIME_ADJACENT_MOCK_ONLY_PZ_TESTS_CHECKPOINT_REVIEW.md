@@ -193,3 +193,14 @@ report.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Follow-Up Status
+
+The broader runtime-adjacent mock-only progress report after this accepted
+checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_PZ_TESTS.md`
+
+That report summarizes the accepted runtime/execution boundary, accepted first
+mock-only test plan, accepted `PZ` safe-failure tests, current closeout
+coverage, remaining absent behavior, and safe next branch options.

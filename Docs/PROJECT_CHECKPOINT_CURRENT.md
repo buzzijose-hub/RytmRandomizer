@@ -21,7 +21,47 @@ modularize-v1.34
 
 Current HEAD:
 
-8ca44ad Add runtime adjacent mock-only PZ tests checkpoint
+a58115f Add runtime adjacent mock-only PZ tests checkpoint review
+
+## V1.34 Behavior Parity Runtime-Adjacent Mock-Only Progress Report After PZ Tests
+
+The broader runtime-adjacent mock-only progress report after the accepted
+`PZ` tests checkpoint review has now been documented.
+
+Report document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_PZ_TESTS.md`
+
+Current baseline:
+
+- `a58115f Add runtime adjacent mock-only PZ tests checkpoint review`
+
+Report summary:
+
+- runtime/execution boundary is accepted
+- first runtime-adjacent mock-only test plan is accepted
+- `PZ` is the first accepted runtime-adjacent mock-only safe-failure candidate
+- `PZ` test-only safe-failure coverage is accepted
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- execution, real MIDI, ports, package metadata changes, active behavior, and
+  hardware validation remain absent
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this progress report
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime-Adjacent Mock-Only PZ Tests Checkpoint Review
 
