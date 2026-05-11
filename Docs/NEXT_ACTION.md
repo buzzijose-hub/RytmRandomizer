@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-f25e550 Add behavior parity progress report review after Packet 7
+48c2efc Add next packet planning gate after Packet 7
 
 ## Current Phase
 
@@ -2121,6 +2121,44 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Next Packet Planning Gate After Packet 7 Review
+
+The latest next-packet planning gate review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_PLANNING_GATE_AFTER_PACKET_7_REVIEW.md`
+
+It accepts the planning gate created at:
+
+- `48c2efc Add next packet planning gate after Packet 7`
+
+Accepted next behavior-parity branch:
+
+- Packet 8 Pad 4 Lane Behavior planning
+
+Accepted future planning vocabulary:
+
+- `P4A`: return Pad 4 to BD Acoustic body/accent anchor / home
+- `P4R`: rotate Pad 4 through BD Acoustic behavior modes
+- `P4X`: safely mutate the currently loaded Pad 4 mode
+
+Preserved prior Packet 1 coverage:
+
+- `P4M`: show Pad 4 BD Acoustic body / accent menu
+
+The review confirms this is a planning acceptance gate only. It adds no
+implementation, tests, CLI wiring, dispatch, command execution, scene
+execution, lane behavior execution, runtime Pad 4 state, MIDI dependency,
+ports, MIDI sending, active CLI command, package metadata changes, hardware
+behavior, Analog Four support, Pads 5-12 support, SysEx, or GUI/capture.
+
+`rytm_hybrid_randomizer_v134.py` remains protected.
+
+Package metadata remains protected.
+
+Next recommended task:
+
+- create a docs-only Packet 8 Pad 4 lane behavior plan.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
