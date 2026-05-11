@@ -21,6 +21,8 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 05e0cf0 Add Packet 8A Pad 4 lane behavior
+- 7122681 Add Packet 8 Pad 4 lane behavior plan review
 - 9b59a44 Add Packet 8 Pad 4 lane behavior plan
 - fa7d976 Add next packet planning gate review after Packet 7
 - 48c2efc Add next packet planning gate after Packet 7
@@ -12040,6 +12042,45 @@ mapper.
 
 Next recommended task is a tiny TDD Packet 8A implementation for read-only
 `P4A` anchor/home intent only.
+
+## Latest Packet 8A Pad 4 Lane Behavior Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_8A_PAD4_LANE_BEHAVIOR_CHECKPOINT.md`
+records the completed tiny Packet 8A implementation.
+
+Implementation milestone:
+
+- `05e0cf0 Add Packet 8A Pad 4 lane behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_pad4_lane.py`
+- `tests/test_behavior_pad4_lane.py`
+- `Scripts/closeout_check.ps1`
+
+Implemented read-only scope:
+
+- `P4A`: return Pad 4 to BD Acoustic body/accent anchor / home
+
+Deferred/safe Packet 8 scope:
+
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper.
+
+Closeout now includes:
+
+- `=== Test: Behavior Pad 4 Lane ===`
+
+The checkpoint records TDD red/green evidence and confirms no CLI execution
+wiring, dispatch, command execution, MIDI, ports, package metadata changes,
+active behavior, runtime execution, or hardware behavior was added.
+
+Next recommended task is a docs-only Packet 8A checkpoint review.
 
 ## V1.34 Behavior Parity Progress Report Review After Packet 7G
 

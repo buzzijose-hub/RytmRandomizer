@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-9b59a44 Add Packet 8 Pad 4 lane behavior plan
+05e0cf0 Add Packet 8A Pad 4 lane behavior
 
 ## Current Phase
 
@@ -2236,6 +2236,51 @@ Next recommended task:
 Do not widen beyond `P4A`, and do not add runtime Pad 4 state, anchor loading,
 rotation execution, mutation execution, dispatch, MIDI, ports, package
 metadata changes, active behavior, or hardware behavior.
+
+## Latest Packet 8A Pad 4 Lane Behavior Checkpoint
+
+The latest Packet 8A Pad 4 lane behavior implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8A_PAD4_LANE_BEHAVIOR_CHECKPOINT.md`
+
+It records implementation milestone:
+
+- `05e0cf0 Add Packet 8A Pad 4 lane behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_pad4_lane.py`
+- `tests/test_behavior_pad4_lane.py`
+- `Scripts/closeout_check.ps1`
+
+Implemented read-only Packet 8A behavior:
+
+- `P4A`: return Pad 4 to BD Acoustic body/accent anchor / home
+
+Preserved/deferred Packet 8 scope:
+
+- `P4R` remains unsupported/safe
+- `P4X` remains unsupported/safe
+- `P4M` remains Packet 1 menu/status behavior
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper
+
+Closeout now includes:
+
+- `=== Test: Behavior Pad 4 Lane ===`
+
+TDD evidence:
+
+- focused Pad 4 test failed before the helper existed
+- focused Pad 4 test passed after the minimal helper was added
+- full closeout passed
+
+No CLI wiring, dispatch, command execution, runtime Pad 4 state, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior was added.
+
+Next recommended task:
+
+- docs-only Packet 8A checkpoint review.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 

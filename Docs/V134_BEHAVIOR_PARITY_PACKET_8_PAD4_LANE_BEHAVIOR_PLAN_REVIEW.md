@@ -189,3 +189,24 @@ The next implementation scope is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Implementation Status
+
+Packet 8A has now been implemented and checkpointed by:
+
+- `05e0cf0 Add Packet 8A Pad 4 lane behavior`
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8A_PAD4_LANE_BEHAVIOR_CHECKPOINT.md`
+
+Implemented scope:
+
+- `P4A` only
+
+Deferred/safe scope remains:
+
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper.
