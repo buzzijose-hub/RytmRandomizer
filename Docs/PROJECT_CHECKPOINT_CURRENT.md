@@ -19,6 +19,36 @@ Current branch:
 
 modularize-v1.34
 
+## V1.34 Behavior Parity Packet 10B Selected Profile Workflow Plan
+
+Packet 10B selected-profile workflow behavior has now been planned.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+
+Current baseline before the plan:
+
+- `35cbd72 Add Packet 10 progress checkpoint review`
+
+Packet 10B planning scope:
+
+- `M`: load selected profile anchor
+
+Recommended future implementation target:
+
+- Packet 10B `M` only
+
+Future behavior:
+
+- read-only selected-profile anchor-load intent
+
+The plan confirms no selected-profile runtime state, profile switching
+execution, machine changes, anchor loading execution, dispatch, MIDI, ports,
+package metadata, active behavior, or hardware behavior is authorized.
+
+The next recommended task is a docs-only Packet 10B plan review.
+
 ## V1.34 Behavior Parity Packet 10 Progress Checkpoint Review
 
 Packet 10 selected-profile workflow progress has now been reviewed and

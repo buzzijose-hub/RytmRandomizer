@@ -6,7 +6,31 @@ modularize-v1.34
 
 ## Current HEAD
 
-a97aca1 Add Packet 10 progress checkpoint
+35cbd72 Add Packet 10 progress checkpoint review
+
+## Latest Packet 10B Selected Profile Workflow Plan
+
+The latest V1.34 behavior parity Packet 10B selected-profile workflow plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+
+It records:
+
+- current baseline:
+  - `35cbd72 Add Packet 10 progress checkpoint review`
+- Packet 10B planning scope:
+  - `M`: load selected profile anchor
+- passive metadata source:
+  - `PROFILE_WORKFLOW_COMMANDS`
+- recommended future implementation target:
+  - Packet 10B `M` only
+- future behavior:
+  - read-only selected-profile anchor-load intent
+- no selected-profile runtime state, profile switching execution, machine
+  changes, anchor loading execution, dispatch, MIDI, ports, package metadata,
+  active behavior, or hardware behavior is authorized
+
+The next recommended task is a docs-only Packet 10B plan review.
 
 ## Latest Packet 10 Progress Checkpoint Review
 

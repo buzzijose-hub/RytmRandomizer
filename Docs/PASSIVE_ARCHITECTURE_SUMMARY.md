@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-a97aca1
+35cbd72
+
+## Latest Packet 10B Selected Profile Workflow Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+documents the next Packet 10 selected-profile workflow planning branch.
+
+Packet 10B planning scope:
+
+- `M`: load selected profile anchor
+
+Recommended future implementation target:
+
+- Packet 10B `M` only
+
+Future behavior:
+
+- read-only selected-profile anchor-load intent
+
+The plan keeps selected-profile runtime state, profile switching execution,
+machine changes, anchor loading execution, dispatch, MIDI, ports, package
+metadata, active behavior, and hardware behavior out of scope. It recommends a
+docs-only review/acceptance gate next.
 
 ## Latest Packet 10 Progress Checkpoint Review
 
