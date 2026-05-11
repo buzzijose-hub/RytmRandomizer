@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ad5c7ee Add Packet 9B undo commit state behavior checkpoint
 - f3c7b97 Add Packet 9B undo commit state behavior
 - ca89548 Add Packet 9B undo commit state behavior plan
 - c024b5a Add behavior parity progress report review after Packet 9A
@@ -12442,6 +12443,44 @@ No runtime state mutation, anchor commit execution, dispatch, MIDI, ports,
 package metadata changes, active behavior, or hardware behavior was added.
 
 Next recommended task is a docs-only checkpoint review.
+
+## Latest Packet 9B Undo Commit State Behavior Checkpoint Review
+
+The Packet 9B undo/commit/state behavior checkpoint has now been reviewed and
+accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9B_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9B_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `f3c7b97 Add Packet 9B undo commit state behavior`
+- `ad5c7ee Add Packet 9B undo commit state behavior checkpoint`
+
+Accepted Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+
+Deferred/safe Packet 9 scope:
+
+- `W`: waveform exploration only
+- `U`: undo previous script-generated state
+
+Preserved Packet 1 ownership:
+
+- `H`: show current anchor
+- `R`: print current script state
+
+The review confirms runtime anchor restore, anchor commit execution, waveform
+exploration, undo-stack mutation, dispatch, MIDI, ports, package metadata
+changes, active behavior, and hardware behavior remain absent.
+
+Next recommended task is a broader behavior-parity progress report after
+Packet 9B.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
