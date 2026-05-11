@@ -21,7 +21,37 @@ modularize-v1.34
 
 Current HEAD:
 
-2dec917 Add anchor state implementation
+d02a48f Add anchor state implementation review
+
+## V1.34 Behavior Parity Selected Isolated Pad Runtime-State Implementation Readiness Checkpoint After Selected Target And Anchor State Implementations
+
+The selected isolated pad runtime-state implementation readiness checkpoint
+after selected target and anchor state implementations has now been
+documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_READINESS_CHECKPOINT_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_IMPLEMENTATIONS.md`
+
+Current baseline:
+
+- `d02a48f Add anchor state implementation review`
+
+Current decision:
+
+- selected target state is implemented and reviewed
+- anchor state is implemented and reviewed
+- selected isolated pad runtime state remains unimplemented
+- selected isolated pad runtime-state implementation is ready for a
+  separately approved test-first implementation slice
+- `PZ` remains parked
+- no implementation is added by this checkpoint
+
+The next recommended task is a docs-only review/acceptance gate for this
+readiness checkpoint. The checkpoint authorizes no selected isolated pad
+runtime-state implementation, `PZ` implementation, profile `4` mock mapper
+support, mutation execution, dispatch, MIDI, ports, package metadata changes,
+active behavior, runtime execution, or hardware behavior.
 
 ## V1.34 Behavior Parity Anchor State Implementation Review After Selected Target State Implementation Review
 

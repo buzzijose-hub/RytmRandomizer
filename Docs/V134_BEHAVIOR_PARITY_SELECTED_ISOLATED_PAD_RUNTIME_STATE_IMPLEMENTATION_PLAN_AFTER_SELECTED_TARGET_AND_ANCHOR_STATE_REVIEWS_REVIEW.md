@@ -467,3 +467,22 @@ Selected isolated pad runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 20. Follow-On Implementation Readiness Checkpoint
+
+After selected target state and anchor state were implemented and reviewed,
+the follow-on selected isolated pad runtime-state implementation readiness
+checkpoint was documented in:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_READINESS_CHECKPOINT_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_IMPLEMENTATIONS.md`
+
+Current state recorded by that checkpoint:
+
+- selected target state is implemented and reviewed
+- anchor state is implemented and reviewed
+- selected isolated pad runtime state remains unimplemented
+- `PZ` remains parked
+
+The checkpoint authorizes no implementation, tests, CLI commands, runtime
+execution, dispatch, MIDI, ports, package metadata changes, active behavior,
+or hardware behavior.
