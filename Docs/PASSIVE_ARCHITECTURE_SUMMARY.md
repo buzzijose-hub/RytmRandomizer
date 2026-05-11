@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-b8e0160
+570513d
+
+## Latest Selected Isolated Pad Runtime-State Implementation Plan After PZ Readiness Review
+
+`Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_PZ_READINESS_REVIEW.md`
+documents the future selected isolated pad runtime-state implementation
+surface after the accepted `PZ` implementation readiness review.
+
+Current baseline:
+
+- `570513d Add PZ implementation readiness review`
+
+Current decision:
+
+- selected isolated pad runtime-state implementation is planned only
+- selected isolated pad runtime state remains unimplemented
+- selected target state remains unimplemented
+- anchor state remains unimplemented
+- runtime state remains unimplemented
+- `PZ` remains parked
+
+The plan identifies the likely future implementation/test files while keeping
+the current slice documentation-only:
+
+- `rytm_randomizer/selected_isolated_pad_runtime_state.py`
+- `tests/test_selected_isolated_pad_runtime_state.py`
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation plan. No MIDI, ports, package metadata changes, active
+behavior, runtime execution, or hardware behavior is authorized.
 
 ## Latest PZ Implementation Readiness Decision Review After Runtime-State Planning Review
 

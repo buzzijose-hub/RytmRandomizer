@@ -247,20 +247,38 @@ Existing passive CLI commands remain read-only:
 They must not construct runtime state, dispatch behavior, open ports, or send
 MIDI.
 
-## 12. Safe Next Options
+## 12. Follow-On Implementation Plan
+
+The follow-on docs-only selected isolated pad runtime-state implementation
+plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_PZ_READINESS_REVIEW.md`
+
+It keeps `PZ` parked and documents a likely future non-hardware-facing
+implementation surface:
+
+- `rytm_randomizer/selected_isolated_pad_runtime_state.py`
+- `tests/test_selected_isolated_pad_runtime_state.py`
+
+The follow-on plan adds no implementation, tests, CLI commands, runtime state,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+## 13. Safe Next Options
 
 Safe next options:
 
-- docs-only selected isolated pad runtime-state implementation plan
+- docs-only review/acceptance gate for the selected isolated pad runtime-state
+  implementation plan
 - docs-only selected target state implementation plan
 - docs-only anchor state implementation plan
 - user-facing progress/timeline update
 - pause at this clean accepted checkpoint
 
-## 13. Recommendation
+## 14. Recommendation
 
-Proceed with a docs-only selected isolated pad runtime-state implementation
-plan.
+Proceed with a docs-only review/acceptance gate for the selected isolated pad
+runtime-state implementation plan.
 
 Do not implement selected isolated pad runtime state yet.
 
@@ -277,7 +295,7 @@ Do not add profile `4` mock mapper support.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 14. Decision Summary
+## 15. Decision Summary
 
 `Docs/V134_BEHAVIOR_PARITY_PZ_IMPLEMENTATION_READINESS_DECISION_NOTE_AFTER_RUNTIME_STATE_PLANNING_REVIEW.md`
 is accepted for planning.
