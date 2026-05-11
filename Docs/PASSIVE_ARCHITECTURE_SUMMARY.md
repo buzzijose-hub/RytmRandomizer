@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-091800e
+93664df
 
 ## Protected Reference
 
@@ -11627,6 +11627,47 @@ runtime behavior, or hardware behavior.
 
 The next recommended task is a docs-only review/acceptance gate for this
 progress report.
+
+## V1.34 Behavior Parity Implementation Progress Report After Packet 8C Review
+
+The broader behavior-parity implementation progress report after Packet 8C is
+now reviewed and accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_8C_REVIEW.md`
+
+Accepted progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_8C.md`
+
+Accepted milestone:
+
+- `93664df Add behavior parity progress report after Packet 8C`
+
+Accepted behavior-parity state:
+
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted Pad 1 lane behavior progress
+- Packet 6 Pad 2 command-helper coverage
+- Packet 7 complete
+- Packet 8 Pad 4 command-helper coverage
+
+Accepted Packet 8 command-helper scope:
+
+- `P4A`
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior.
+
+The review adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only next behavior-parity packet planning
+gate.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 
