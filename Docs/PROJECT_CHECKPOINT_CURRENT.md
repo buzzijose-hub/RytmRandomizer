@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 5e4cbdf Add Packet 9A undo commit state behavior
 - bb5f801 Add Packet 9 undo commit state behavior plan
 - 5f4dc64 Add next packet planning gate review after Packet 8C
 - 5dc1986 Add next packet planning gate after Packet 8C
@@ -12137,6 +12138,51 @@ behavior, or hardware behavior.
 
 Next recommended task is a tiny TDD Packet 9A implementation for read-only
 `B` intent only.
+
+## Latest Packet 9A Undo Commit State Behavior Checkpoint
+
+The Packet 9A undo/commit/state behavior implementation is complete and
+documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `5e4cbdf Add Packet 9A undo commit state behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_undo_commit_state.py`
+- `tests/test_behavior_undo_commit_state.py`
+- `Scripts/closeout_check.ps1`
+
+Implemented read-only scope:
+
+- `B`: back to current anchor
+
+Deferred/safe Packet 9 scope:
+
+- `E`
+- `W`
+- `U`
+
+Preserved Packet 1 ownership:
+
+- `H`
+- `R`
+
+Closeout coverage added:
+
+- `=== Test: Behavior Undo Commit State ===`
+
+The checkpoint records TDD red/green evidence, full closeout evidence, empty
+V1.34 reference diff, empty package metadata diff, and a clean git status.
+
+No CLI execution wiring, dispatch, command execution, MIDI, ports, package
+metadata changes, active behavior, runtime execution, or hardware behavior was
+added.
+
+Next recommended task is a docs-only Packet 9A checkpoint review.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 

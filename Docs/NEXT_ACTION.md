@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-bb5f801 Add Packet 9 undo commit state behavior plan
+5e4cbdf Add Packet 9A undo commit state behavior
 
 ## Current Phase
 
@@ -2541,6 +2541,40 @@ Next recommended task:
 Do not widen beyond `B`, and do not add runtime state mutation, anchor restore
 execution, dispatch, MIDI, ports, package metadata changes, active behavior,
 or hardware behavior.
+
+## Latest Packet 9A Undo Commit State Behavior Checkpoint
+
+The latest Packet 9A undo/commit/state behavior implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `5e4cbdf Add Packet 9A undo commit state behavior`
+
+Implemented read-only Packet 9A behavior:
+
+- `B`: back to current anchor
+
+Current Packet 9 boundary:
+
+- `B` accepted
+- `E` deferred/safe
+- `W` deferred/safe
+- `U` deferred/safe
+- `H` and `R` remain Packet 1 menu/status behavior
+
+Closeout coverage added:
+
+- `=== Test: Behavior Undo Commit State ===`
+
+The implementation adds no runtime state mutation, anchor restore execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+Next recommended task:
+
+- docs-only Packet 9A checkpoint review.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
