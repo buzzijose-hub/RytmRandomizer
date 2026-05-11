@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-916f550
+82a6611
+
+## Latest Packet 9D Undo Commit State Behavior Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_PLAN_REVIEW.md`
+accepts the Packet 9D undo/commit/state behavior plan.
+
+Accepted future Packet 9D scope:
+
+- `U`: undo previous script-generated state
+
+Accepted future behavior:
+
+- read-only state-history undo intent
+- existing `STATE_UTILITY_COMMANDS` metadata
+- source scope `script_generated_state`
+- target scope `script_generated_state_history`
+- behavior family `undo-commit-state/script-generated-state-undo`
+- state action `describe_previous_script_generated_state_undo_intent`
+- intent kind `state_history_undo`
+- no undo execution
+- no undo-stack mutation
+- no runtime mutation
+- no dispatch, MIDI, ports, active behavior, or hardware behavior
+
+The review recommends a tiny TDD Packet 9D implementation for read-only `U`
+intent only.
 
 ## Latest Packet 9D Undo Commit State Behavior Plan
 

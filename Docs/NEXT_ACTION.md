@@ -6,7 +6,36 @@ modularize-v1.34
 
 ## Current HEAD
 
-916f550 Add behavior parity progress report review after Packet 9C
+82a6611 Add Packet 9D undo commit state behavior plan
+
+## Latest Packet 9D Undo Commit State Behavior Plan Review
+
+The latest V1.34 behavior parity Packet 9D undo/commit/state behavior plan
+review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_PLAN_REVIEW.md`
+
+It records:
+
+- accepted plan:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+- accepted plan milestone:
+  - `82a6611 Add Packet 9D undo commit state behavior plan`
+- accepted future Packet 9D implementation scope:
+  - `U`: undo previous script-generated state
+- accepted future read-only vocabulary:
+  - source metadata `STATE_UTILITY_COMMANDS`
+  - source scope `script_generated_state`
+  - target scope `script_generated_state_history`
+  - behavior family `undo-commit-state/script-generated-state-undo`
+  - state action `describe_previous_script_generated_state_undo_intent`
+  - intent kind `state_history_undo`
+  - history concept `previous script-generated state`
+- no undo execution, undo-stack mutation, runtime mutation, dispatch, MIDI,
+  ports, package metadata, active behavior, or hardware behavior is authorized
+
+The review recommends a tiny TDD Packet 9D implementation for read-only `U`
+intent only.
 
 ## Latest Packet 9D Undo Commit State Behavior Plan
 
