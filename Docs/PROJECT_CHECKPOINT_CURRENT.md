@@ -21,7 +21,44 @@ modularize-v1.34
 
 Current HEAD:
 
-3f79697 Add Packet 11A selected isolated pad behavior
+73c68d2 Add Packet 11A selected isolated pad checkpoint
+
+## V1.34 Behavior Parity Packet 11A Selected Isolated Pad Behavior Checkpoint Review
+
+Packet 11A selected isolated pad utility behavior has now been reviewed and
+accepted for the current read-only behavior-parity phase.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11A_SELECTED_ISOLATED_PAD_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11A_SELECTED_ISOLATED_PAD_BEHAVIOR_CHECKPOINT.md`
+
+Accepted checkpoint milestone:
+
+- `73c68d2 Add Packet 11A selected isolated pad checkpoint`
+
+Accepted implementation milestone:
+
+- `3f79697 Add Packet 11A selected isolated pad behavior`
+
+Accepted Packet 11A scope:
+
+- `L`: read-only selected isolated pad target intent, default Pad 3
+
+Deferred/safe Packet 11 scope:
+
+- `PZ`: return selected isolated pad to anchor only
+
+The review confirms no selected isolated pad runtime state, selected-pad
+switching execution, selected-pad anchor return execution, mutation execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior is authorized.
+
+The next recommended task is a broader Packet 11 progress report before
+deciding whether to plan `PZ`.
 
 ## V1.34 Behavior Parity Packet 11A Selected Isolated Pad Behavior Checkpoint
 

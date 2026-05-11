@@ -153,6 +153,10 @@ Confirmed after the implementation milestone:
 
 ## 9. Safe Next Options
 
+This checkpoint was reviewed and accepted in:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11A_SELECTED_ISOLATED_PAD_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
 Safe next options:
 
 - docs-only Packet 11A checkpoint review
