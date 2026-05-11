@@ -360,15 +360,35 @@ Before any implementation:
 
 Safe next options:
 
-- docs-only review/acceptance gate for this sequencing note
+- docs-only review/acceptance gate for this sequencing note:
+  - `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_IMPLEMENTATION_SEQUENCING_NOTE_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_REVIEW_REVIEW.md`
 - docs-only selected target state implementation plan
 - docs-only anchor state implementation plan
 - user-facing progress/timeline update
 - pause at this clean sequencing checkpoint
 
-## 16. Recommendation
+## 16. Follow-On Review
 
-Proceed with a docs-only review/acceptance gate for this sequencing note.
+The follow-on docs-only review gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_IMPLEMENTATION_SEQUENCING_NOTE_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_REVIEW_REVIEW.md`
+
+It accepts this sequencing note as the current planning boundary.
+
+It keeps selected target state unimplemented.
+
+It keeps anchor state unimplemented.
+
+It keeps selected isolated pad runtime state unimplemented.
+
+It keeps `PZ` parked.
+
+It authorizes no implementation, tests, CLI commands, runtime state, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
+## 17. Recommendation
+
+Proceed with a docs-only selected target state implementation plan.
 
 Then plan selected target state implementation first.
 
@@ -383,7 +403,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 17. Decision Summary
+## 18. Decision Summary
 
 Runtime-state implementation sequencing is documented.
 
