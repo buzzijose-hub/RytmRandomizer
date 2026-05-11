@@ -220,3 +220,18 @@ candidate.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The docs-only `B` runtime-adjacent mock-only safe-failure test plan has now
+been documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_B_RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURE_TEST_PLAN.md`
+
+`B` remains planning-only.
+
+The next recommended task is a docs-only review/acceptance gate for the `B`
+test plan.
+
+No `B` tests, implementation, execution path, MIDI, ports, active behavior, or
+hardware behavior are authorized by this follow-up.

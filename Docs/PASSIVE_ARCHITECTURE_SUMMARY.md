@@ -8,7 +8,32 @@ modularize-v1.34
 
 Current HEAD:
 
-72fc828
+f7c133b
+
+## Latest B Runtime-Adjacent Mock-Only Safe-Failure Test Plan
+
+`Docs/V134_BEHAVIOR_PARITY_B_RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURE_TEST_PLAN.md`
+documents the future runtime-adjacent mock-only safe-failure test plan for
+`B`.
+
+Planned future candidate:
+
+- `B`: back to current anchor
+
+Current accepted state:
+
+- `B` is planning-only
+- `PZ` remains the only accepted runtime-adjacent mock-only safe-failure
+  candidate
+- no `B` tests or implementation are added
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for this `B`
+test plan.
+
+No dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this plan.
 
 ## Latest Runtime-Adjacent Next Branch Selection After PZ Tests Review
 

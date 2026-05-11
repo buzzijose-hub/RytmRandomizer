@@ -6,7 +6,50 @@ modularize-v1.34
 
 ## Current HEAD
 
-72fc828 Add runtime adjacent next branch selection after PZ tests
+f7c133b Add runtime adjacent next branch selection review
+
+## Latest B Runtime-Adjacent Mock-Only Safe-Failure Test Plan
+
+The latest docs-only runtime-adjacent mock-only safe-failure test plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_B_RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURE_TEST_PLAN.md`
+
+It records:
+
+- current baseline:
+  - `f7c133b Add runtime adjacent next branch selection review`
+- accepted upstream branch selection review:
+  - `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_PZ_TESTS_REVIEW.md`
+- planned future candidate:
+  - `B`: back to current anchor
+- `B` remains planning-only
+- `PZ` remains the only accepted runtime-adjacent mock-only safe-failure
+  candidate
+- no `B` tests, implementation, execution path, MIDI, ports, package metadata
+  changes, active behavior, or hardware behavior are added
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this `B` test plan
+
+Likely branch after review:
+
+- tiny test-only `B` runtime-adjacent safe-failure test slice, if explicitly
+  approved
+
+Confirmed boundaries:
+
+- no current anchor return execution
+- no selected pad switching execution
+- no selected pad anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Runtime-Adjacent Next Branch Selection After PZ Tests Review
 
