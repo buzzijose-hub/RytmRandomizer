@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-2ca46ab Add behavior parity progress report review after Packet 8A
+b95cd81 Add Packet 8B Pad 4 lane behavior plan
 
 ## Current Phase
 
@@ -2431,6 +2431,46 @@ lane`, behavior family `pad4-lane/bd-acoustic-mode-rotation`, lane action
 Next recommended task:
 
 - docs-only Packet 8B plan review.
+
+## Latest Packet 8B Pad 4 Lane Behavior Plan Review
+
+The latest V1.34 behavior parity Packet 8B Pad 4 lane behavior plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_PLAN_REVIEW.md`
+
+It accepts the plan created at:
+
+- `b95cd81 Add Packet 8B Pad 4 lane behavior plan`
+
+Accepted future implementation scope:
+
+- Packet 8B: `P4R` only
+
+Accepted future behavior vocabulary:
+
+- source metadata: `PAD4_COMMANDS`
+- target pad: `4`
+- lane: Pad 4 BD Acoustic lane
+- behavior family: `pad4-lane/bd-acoustic-mode-rotation`
+- lane action: `describe_pad4_bd_acoustic_mode_rotation_intent`
+- intent kind: `rotation`
+- rotation concept: Pad 4 BD Acoustic behavior mode rotation
+
+Preserved/deferred scope:
+
+- `P4A` remains unchanged.
+- `P4X` remains unsupported/safe until separately planned.
+- `P4M` remains Packet 1 menu/status behavior.
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper.
+
+Next recommended task:
+
+- tiny TDD Packet 8B implementation for read-only `P4R` rotation intent only.
+
+Do not widen beyond `P4R`, and do not add runtime Pad 4 state, rotation
+execution, mutation execution, dispatch, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
