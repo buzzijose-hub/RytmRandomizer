@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-ebf2d5d
+72fc828
+
+## Latest Runtime-Adjacent Next Branch Selection After PZ Tests Review
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_PZ_TESTS_REVIEW.md`
+accepts the runtime-adjacent next branch selection after `PZ` tests.
+
+Accepted branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_PZ_TESTS.md`
+
+Accepted milestone:
+
+- `72fc828 Add runtime adjacent next branch selection after PZ tests`
+
+Current accepted state:
+
+- the next selected planning branch is a docs-only `B` runtime-adjacent
+  mock-only safe-failure test plan
+- `B` remains planning-only
+- `PZ` remains the only accepted runtime-adjacent mock-only safe-failure
+  candidate
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is the docs-only `B` runtime-adjacent mock-only
+safe-failure test plan.
+
+No dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this review.
 
 ## Latest Runtime-Adjacent Next Branch Selection After PZ Tests
 
