@@ -150,3 +150,13 @@ note.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 10. Follow-Up Status
+
+The runtime/execution boundary decision note following this review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_EXECUTION_BOUNDARY_DECISION_NOTE_AFTER_PZ_TIMELINE_REVIEW.md`
+
+That note keeps execution outside the current project phase and recommends a
+docs-only review/acceptance gate before any runtime-adjacent mock-only test
+planning.

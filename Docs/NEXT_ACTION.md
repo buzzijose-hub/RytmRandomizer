@@ -6,7 +6,46 @@ modularize-v1.34
 
 ## Current HEAD
 
-7f8559e Add behavior parity progress timeline after PZ
+71857a2 Add behavior parity progress timeline review after PZ
+
+## Latest Runtime/Execution Boundary Decision Note After PZ Timeline Review
+
+The latest runtime/execution boundary decision note after the accepted
+post-`PZ` timeline review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_EXECUTION_BOUNDARY_DECISION_NOTE_AFTER_PZ_TIMELINE_REVIEW.md`
+
+It records:
+
+- current baseline:
+  - `71857a2 Add behavior parity progress timeline review after PZ`
+- runtime-readiness vocabulary may continue only as read-only safety language
+- execution remains outside the current project phase
+- future runtime-adjacent work must remain mock-only/test-planned until
+  separately approved
+- active execution, real MIDI, ports, and hardware validation remain absent
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this decision note
+
+Likely next branch after review:
+
+- first runtime-adjacent mock-only test plan
+
+Confirmed boundaries:
+
+- no implementation
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Progress Timeline After PZ Review
 

@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-7f8559e
+71857a2
+
+## Latest Runtime/Execution Boundary Decision Note After PZ Timeline Review
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_EXECUTION_BOUNDARY_DECISION_NOTE_AFTER_PZ_TIMELINE_REVIEW.md`
+documents the current runtime/execution boundary decision after the accepted
+post-`PZ` progress timeline review.
+
+Decision summary:
+
+- runtime-readiness vocabulary may continue only as read-only safety language
+- execution remains outside the current project phase
+- future runtime-adjacent work must remain mock-only/test-planned until
+  separately approved
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for the
+decision note.
+
+No implementation, dispatch, command execution, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized.
 
 ## Latest Behavior-Parity Progress Timeline After PZ Review
 
