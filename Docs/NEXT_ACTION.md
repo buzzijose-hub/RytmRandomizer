@@ -6,7 +6,33 @@ modularize-v1.34
 
 ## Current HEAD
 
-f16def1 Add Packet 9C undo commit state behavior checkpoint review
+b4d0bb8 Add behavior parity progress report after Packet 9C
+
+## Latest Behavior-Parity Progress Report After Packet 9C Review
+
+The latest broader V1.34 behavior parity implementation progress report review
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C_REVIEW.md`
+
+It records:
+
+- accepted progress report:
+  - `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C.md`
+- accepted progress report milestone:
+  - `b4d0bb8 Add behavior parity progress report after Packet 9C`
+- accepted Packet 9 progress:
+  - `B`: back to current anchor
+  - `E`: commit current state as new anchor
+  - `W`: waveform exploration only
+- remaining deferred/safe Packet 9 scope:
+  - `U`: undo previous script-generated state
+- Packet 9 is not complete
+- no runtime undo behavior, dispatch, MIDI, ports, package metadata, active
+  behavior, or hardware behavior
+
+The review recommends a docs-only Packet 9D plan for `U` only if continuing
+behavior-parity work, or a user-facing progress/timeline update, or a pause.
 
 ## Latest Behavior-Parity Progress Report After Packet 9C
 

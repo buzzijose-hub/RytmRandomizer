@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-f16def1
+b4d0bb8
+
+## Latest Behavior-Parity Progress Report After Packet 9C Review
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C_REVIEW.md`
+accepts the broader behavior-parity implementation progress report after
+Packet 9C.
+
+Accepted progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C.md`
+
+Accepted milestone:
+
+- `b4d0bb8 Add behavior parity progress report after Packet 9C`
+
+Accepted Packet 9 progress:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+
+Deferred/safe Packet 9 scope:
+
+- `U`: undo previous script-generated state
+
+The review recommends a docs-only Packet 9D plan for `U` only if continuing
+behavior-parity work.
 
 ## Latest Behavior-Parity Progress Report After Packet 9C
 

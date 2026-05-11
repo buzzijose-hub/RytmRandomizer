@@ -52,6 +52,40 @@ active behavior, and hardware behavior remain absent.
 The next recommended task is a docs-only review/acceptance gate for this
 progress report.
 
+## V1.34 Behavior Parity Progress Report Review After Packet 9C
+
+The broader behavior-parity implementation progress report after Packet 9C has
+now been reviewed and accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C_REVIEW.md`
+
+Accepted progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C.md`
+
+Accepted milestone:
+
+- `b4d0bb8 Add behavior parity progress report after Packet 9C`
+
+Accepted Packet 9 progress:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+
+Deferred/safe Packet 9 scope:
+
+- `U`: undo previous script-generated state
+
+The review confirms runtime undo behavior, runtime anchor restoration, anchor
+commit execution, waveform exploration execution, dispatch, MIDI, ports,
+package metadata, active behavior, and hardware behavior remain absent.
+
+The next recommended task is a docs-only Packet 9D plan for `U` only, a
+user-facing progress/timeline update, or a pause.
+
 ## V1.34 Behavior Parity Packet 9C Undo Commit State Behavior Checkpoint
 
 The tiny Packet 9C undo/commit/state behavior implementation is complete and
@@ -131,6 +165,7 @@ Packet 9C.
 
 Recent checkpoint history:
 
+- b4d0bb8 Add behavior parity progress report after Packet 9C
 - f16def1 Add Packet 9C undo commit state behavior checkpoint review
 - b180b4c Add Packet 9C undo commit state behavior checkpoint
 - 291cee5 Add Packet 9C undo commit state behavior

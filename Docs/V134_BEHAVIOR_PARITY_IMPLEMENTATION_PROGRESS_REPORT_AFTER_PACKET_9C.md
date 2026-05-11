@@ -304,3 +304,13 @@ deferred/safe.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Review Status
+
+This progress report has a matching review gate:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_9C_REVIEW.md`
+
+The review accepts this report as the current behavior-parity progress
+baseline after Packet 9C and recommends a docs-only Packet 9D plan for `U`
+only if continuing behavior-parity work.
