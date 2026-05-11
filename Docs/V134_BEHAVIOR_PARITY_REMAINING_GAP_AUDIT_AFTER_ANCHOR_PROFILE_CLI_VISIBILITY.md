@@ -290,3 +290,13 @@ The safest next branch is a docs-only review/acceptance gate for this audit.
 Hardware remains off.
 
 No implementation in this audit slice.
+
+## 13. Review Status
+
+This audit is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_ANCHOR_PROFILE_CLI_VISIBILITY_REVIEW.md`
+
+The review accepts this audit as the current remaining behavior-parity gap
+baseline and recommends a broader user-facing behavior-parity progress report
+next.
