@@ -171,6 +171,10 @@ Package metadata remains untouched.
 
 ## 7. Safe Next Options
 
+The remaining-gap audit after this review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_PACKET_11A.md`
+
 Safe next options:
 
 - behavior-parity remaining-gap audit

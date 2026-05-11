@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-f59f2a8
+113d0d0
+
+## Latest Behavior-Parity Remaining-Gap Audit After Packet 11A
+
+`Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_AUDIT_AFTER_PACKET_11A.md`
+identifies and ranks the remaining behavior-parity gaps after accepted
+Packet 11A selected isolated pad behavior.
+
+Accepted Packet 11A state:
+
+- `L`: read-only selected isolated pad target intent, default Pad 3
+
+Remaining/deferred Packet 11 scope:
+
+- `PZ`
+
+Audit finding:
+
+- do not implement `PZ` immediately
+- review the remaining-gap audit first
+- then use a docs-only `PZ` decision note before any `PZ` plan or
+  implementation
+
+The audit keeps selected isolated pad runtime state, selected-pad switching
+execution, selected-pad anchor return execution, mutation execution, dispatch,
+MIDI, ports, package metadata changes, active behavior, runtime execution,
+and hardware behavior out of scope.
 
 ## Latest Behavior-Parity Progress Report After Packet 11A Review
 
