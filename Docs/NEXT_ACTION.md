@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-66b228c Add behavior parity progress report after Packet 9B
+c3a3e14 Add behavior parity progress report review after Packet 9B
 
 ## Current Phase
 
@@ -2922,6 +2922,39 @@ Next recommended task:
 
 - docs-only Packet 9C plan for `W` only, user-facing progress/timeline update,
   or pause at this accepted progress baseline.
+
+## Latest Packet 9C Undo Commit State Behavior Plan
+
+The latest V1.34 behavior parity Packet 9C undo/commit/state behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `c3a3e14 Add behavior parity progress report review after Packet 9B`
+
+The plan records:
+
+- accepted Packet 9 scope:
+  - `B`: back to current anchor
+  - `E`: commit current state as new anchor
+- recommended future Packet 9C implementation scope:
+  - `W`: waveform exploration only
+- expected future implementation files:
+  - `rytm_randomizer/behavior_undo_commit_state.py`
+  - `tests/test_behavior_undo_commit_state.py`
+- no closeout script update expected because `Behavior Undo Commit State` is
+  already covered
+- `U` remains deferred/safe
+- `H` and `R` remain Packet 1 menu/status behavior
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata changes, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task:
+
+- docs-only Packet 9C plan review.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 

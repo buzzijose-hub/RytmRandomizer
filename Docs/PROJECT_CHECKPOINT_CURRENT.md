@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- c3a3e14 Add behavior parity progress report review after Packet 9B
 - 66b228c Add behavior parity progress report after Packet 9B
 - 96d8c10 Add Packet 9B undo commit state behavior checkpoint review
 - ad5c7ee Add Packet 9B undo commit state behavior checkpoint
@@ -12576,6 +12577,47 @@ behavior, and hardware behavior remain absent.
 Next recommended task is a docs-only Packet 9C plan for `W` only, a
 user-facing progress/timeline update, or a pause at this accepted progress
 baseline.
+
+## Latest Packet 9C Undo Commit State Behavior Plan
+
+The docs-only Packet 9C undo/commit/state behavior plan has now been
+documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `c3a3e14 Add behavior parity progress report review after Packet 9B`
+
+The plan keeps accepted Packet 9A `B` behavior and Packet 9B `E` behavior
+stable while recommending a future tiny Packet 9C implementation scope limited
+to read-only `W` intent only.
+
+Expected future behavior:
+
+- `W`: waveform exploration only
+- source metadata: `STATE_UTILITY_COMMANDS`
+- target scope: `waveform_exploration`
+- behavior family: `undo-commit-state/waveform-exploration`
+- state action: `describe_waveform_exploration_intent`
+- intent kind: `waveform_exploration`
+- exploration concept: waveform exploration only
+- lifecycle effect: described only
+
+Expected future files:
+
+- `rytm_randomizer/behavior_undo_commit_state.py`
+- `tests/test_behavior_undo_commit_state.py`
+
+No closeout script update is expected because `=== Test: Behavior Undo Commit
+State ===` already covers `tests/test_behavior_undo_commit_state.py`.
+
+The plan adds no implementation, tests, waveform exploration execution,
+runtime state mutation, dispatch, MIDI, ports, package metadata changes,
+active behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for the Packet 9C
+plan.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 

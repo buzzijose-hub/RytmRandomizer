@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-66b228c
+c3a3e14
 
 ## Protected Reference
 
@@ -12200,6 +12200,43 @@ runtime behavior, or hardware behavior.
 The next recommended task is a docs-only Packet 9C plan for `W` only, a
 user-facing progress/timeline update, or a pause at this accepted progress
 baseline.
+
+## V1.34 Behavior Parity Packet 9C Undo Commit State Behavior Plan
+
+The docs-only Packet 9C undo/commit/state behavior plan is now documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `c3a3e14 Add behavior parity progress report review after Packet 9B`
+
+The plan records:
+
+- accepted Packet 9A read-only `B` behavior
+- accepted Packet 9B read-only `E` behavior
+- recommended future Packet 9C read-only `W` behavior
+- `U` deferred/safe
+- `H` and `R` preserved as Packet 1 menu/status behavior
+- no closeout script update expected
+
+Accepted future Packet 9C planning vocabulary:
+
+- command key: `W`
+- source metadata: `STATE_UTILITY_COMMANDS`
+- target scope: `waveform_exploration`
+- behavior family: `undo-commit-state/waveform-exploration`
+- state action: `describe_waveform_exploration_intent`
+- intent kind: `waveform_exploration`
+- exploration concept: waveform exploration only
+- lifecycle effect: described only
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 9C plan.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 
