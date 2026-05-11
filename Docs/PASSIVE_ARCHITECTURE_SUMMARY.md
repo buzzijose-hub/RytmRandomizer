@@ -8,7 +8,41 @@ modularize-v1.34
 
 Current HEAD:
 
-2538190
+0e3de07
+
+## Latest Anchor/Profile Report CLI Preview Implementation Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
+documents the passive anchor/profile behavior report CLI preview implementation
+milestone.
+
+Implementation milestone:
+
+- `0e3de07 Add passive anchor profile report CLI preview`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli anchor-profile-report`
+
+New passive CLI help:
+
+- `python -m rytm_randomizer.cli anchor-profile-report --help`
+
+The command prints the existing formatted read-only anchor/profile behavior
+report only. The report now distinguishes passive CLI visibility from active
+CLI wiring:
+
+- `passive_cli_visibility: present`
+- `active_cli_wiring: absent`
+
+The implementation keeps `PZ`, profile `4` mock mapper support, selected
+isolated pad runtime state, selected-pad switching execution, selected-pad
+anchor return execution, mutation execution, dispatch, MIDI, ports, package
+metadata changes, active behavior, runtime execution, and hardware behavior
+out of scope.
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation checkpoint.
 
 ## Latest Anchor/Profile Report CLI Visibility Decision Note Review
 

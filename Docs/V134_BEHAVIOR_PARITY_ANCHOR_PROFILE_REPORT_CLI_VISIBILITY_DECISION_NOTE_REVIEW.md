@@ -186,6 +186,8 @@ Safe next options:
 
 - implement passive CLI visibility for the anchor/profile behavior report with
   focused tests
+- follow-up implementation checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
 - broader progress/timeline update
 - pause at this clean checkpoint
 

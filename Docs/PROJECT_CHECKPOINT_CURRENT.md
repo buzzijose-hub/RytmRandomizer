@@ -21,7 +21,48 @@ modularize-v1.34
 
 Current HEAD:
 
-2538190 Add anchor profile report CLI visibility decision
+0e3de07 Add passive anchor profile report CLI preview
+
+## V1.34 Behavior Parity Anchor/Profile Report CLI Preview Implementation Checkpoint
+
+The passive anchor/profile behavior report CLI preview implementation milestone
+has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `0e3de07 Add passive anchor profile report CLI preview`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli anchor-profile-report`
+
+New passive CLI help:
+
+- `python -m rytm_randomizer.cli anchor-profile-report --help`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/cli.py`
+- `rytm_randomizer/behavior_anchor_profile_report.py`
+- `tests/test_cli.py`
+- `tests/test_behavior_anchor_profile_report.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_anchor_profile_report_expected.txt`
+- `tests/fixtures/cli_anchor_profile_report_help_expected.txt`
+
+The CLI preview prints the existing formatted read-only anchor/profile behavior
+report only. It adds passive CLI visibility, while active CLI wiring remains
+absent. The review authorizes no selected isolated pad runtime state,
+selected-pad switching execution, selected-pad anchor return execution,
+mutation execution, dispatch, MIDI, ports, package metadata changes, active
+behavior, runtime execution, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation checkpoint.
 
 ## V1.34 Behavior Parity Anchor/Profile Report CLI Visibility Decision Note Review
 
