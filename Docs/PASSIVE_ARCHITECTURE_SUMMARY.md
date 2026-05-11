@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-57a8d45
+87b11b4
+
+## Latest Selected Target State Plan After PZ Review
+
+`Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_PLAN_AFTER_PZ_REVIEW.md`
+documents the future selected target state boundary after the accepted `PZ`
+behavior plan review.
+
+Current baseline:
+
+- `87b11b4 Add PZ behavior plan review`
+
+The plan keeps scope to selected isolated pad target only. It distinguishes
+unset, defaulted, explicit, unsupported, stale, and invalid future target
+states while keeping selected target state unimplemented.
+
+`PZ` remains parked, anchor state remains future planning scope, and no MIDI,
+ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior is authorized.
+
+The next recommended task is a docs-only review/acceptance gate for this
+selected target state plan.
 
 ## Latest PZ Behavior Plan Review After Runtime-State Vocabulary
 

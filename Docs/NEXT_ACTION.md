@@ -6,7 +6,37 @@ modularize-v1.34
 
 ## Current HEAD
 
-57a8d45 Add PZ behavior plan after runtime-state vocabulary
+87b11b4 Add PZ behavior plan review
+
+## Latest Selected Target State Plan After PZ Review
+
+The latest selected target state plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_PLAN_AFTER_PZ_REVIEW.md`
+
+It follows:
+
+- `PZ` behavior plan review:
+  - `Docs/V134_BEHAVIOR_PARITY_PZ_BEHAVIOR_PLAN_AFTER_RUNTIME_STATE_VOCABULARY_REVIEW.md`
+- review milestone:
+  - `87b11b4 Add PZ behavior plan review`
+
+It records:
+
+- selected target state is future in-memory session state
+- current scope is selected isolated pad target only
+- `L` remains read-only selected isolated pad target intent
+- `PZ` remains parked
+- selected target state remains unimplemented
+- runtime state remains unimplemented
+- anchor state remains future planning scope
+
+The next recommended task is a docs-only review/acceptance gate for this
+selected target state plan.
+
+No selected target state implementation, `PZ` implementation, profile `4` mock
+mapper support, mutation execution, dispatch, MIDI, ports, package metadata,
+active behavior, runtime execution, or hardware behavior is authorized.
 
 ## Latest PZ Behavior Plan Review After Runtime-State Vocabulary
 

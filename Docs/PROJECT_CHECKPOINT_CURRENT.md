@@ -21,7 +21,33 @@ modularize-v1.34
 
 Current HEAD:
 
-57a8d45 Add PZ behavior plan after runtime-state vocabulary
+87b11b4 Add PZ behavior plan review
+
+## V1.34 Behavior Parity Selected Target State Plan After PZ Review
+
+The selected target state boundary after the accepted `PZ` behavior plan
+review has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_PLAN_AFTER_PZ_REVIEW.md`
+
+Current baseline:
+
+- `87b11b4 Add PZ behavior plan review`
+
+Current decision:
+
+- define selected target state boundary only
+- keep selected target state unimplemented
+- keep runtime state unimplemented
+- keep `PZ` parked
+- keep anchor state as future planning scope
+- do not add CLI execution wiring, dispatch, MIDI, ports, package metadata
+  changes, active behavior, runtime execution, or hardware behavior
+
+The next recommended task is a docs-only review/acceptance gate for this
+selected target state plan.
 
 ## V1.34 Behavior Parity PZ Behavior Plan Review After Runtime-State Vocabulary
 

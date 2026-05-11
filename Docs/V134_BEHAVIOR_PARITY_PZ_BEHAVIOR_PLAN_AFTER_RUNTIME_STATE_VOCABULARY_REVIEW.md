@@ -266,3 +266,12 @@ Selected pad anchor return execution remains unimplemented.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 14. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_PLAN_AFTER_PZ_REVIEW.md`
+
+That plan describes the future selected target state boundary while keeping
+selected target state unimplemented and `PZ` parked.
