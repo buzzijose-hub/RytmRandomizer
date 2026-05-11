@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-cea0ff6
+07b63aa
 
 ## Protected Reference
 
@@ -11406,6 +11406,42 @@ active behavior, runtime execution, or hardware behavior has been added.
 
 Next recommended task is a docs-only review/acceptance gate for this progress
 report.
+
+## V1.34 Behavior Parity Implementation Progress Report After Packet 8B Review
+
+The broader behavior-parity implementation progress report after Packet 8B is
+now reviewed and accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_8B_REVIEW.md`
+
+Accepted progress report milestone:
+
+- `07b63aa Add behavior parity progress report after Packet 8B`
+
+Accepted current behavior-parity state:
+
+- Packet 1 complete
+- Packet 2 accepted progress
+- Packet 3 complete
+- Packet 4 complete
+- Packet 5 accepted progress
+- Packet 6 Pad 2 command-helper coverage
+- Packet 7 complete
+- Packet 8A Pad 4 `P4A` accepted
+- Packet 8B Pad 4 `P4R` accepted
+
+Current Packet 8 boundary:
+
+- `P4A` accepted
+- `P4R` accepted
+- `P4X` deferred/safe
+
+`P4M` remains Packet 1 menu/status behavior.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper.
+
+Next recommended task is a docs-only Packet 8C plan for `P4X`.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 
