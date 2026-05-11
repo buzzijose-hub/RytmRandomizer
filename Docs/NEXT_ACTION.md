@@ -6,7 +6,36 @@ modularize-v1.34
 
 ## Current HEAD
 
-c855ef7 Add Packet 10B selected profile behavior
+cdbc092 Add Packet 10B selected profile behavior checkpoint
+
+## Latest Packet 10B Selected Profile Workflow Checkpoint Review
+
+The latest V1.34 behavior parity Packet 10B selected-profile workflow
+checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_CHECKPOINT_REVIEW.md`
+
+It records:
+
+- accepted checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_CHECKPOINT.md`
+- accepted implementation milestone:
+  - `c855ef7 Add Packet 10B selected profile behavior`
+- accepted checkpoint milestone:
+  - `cdbc092 Add Packet 10B selected profile behavior checkpoint`
+- accepted read-only Packet 10B behavior:
+  - `M`: load selected profile anchor
+- accepted Packet 10 scope:
+  - `P`: select/switch profile and change Rytm machine
+  - `M`: load selected profile anchor
+- deferred Packet 10 scope:
+  - none
+- no selected-profile runtime state, anchor loading execution, machine
+  changes, dispatch, MIDI, ports, package metadata, active behavior, or
+  hardware behavior was added
+
+The next recommended task is a broader Packet 10 completion checkpoint or a
+broader behavior-parity progress report after Packet 10B.
 
 ## Latest Packet 10B Selected Profile Workflow Checkpoint
 
