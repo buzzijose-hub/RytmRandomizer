@@ -6,7 +6,34 @@ modularize-v1.34
 
 ## Current HEAD
 
-68a0c21 Add next packet planning gate review after Packet 9
+1ea99fb Add Packet 10 selected profile workflow plan
+
+## Latest Packet 10 Selected Profile Workflow Plan Review
+
+The latest V1.34 behavior parity Packet 10 selected-profile workflow plan
+review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10_SELECTED_PROFILE_WORKFLOW_PLAN_REVIEW.md`
+
+It records:
+
+- accepted plan:
+  - `Docs/V134_BEHAVIOR_PARITY_PACKET_10_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+- accepted plan milestone:
+  - `1ea99fb Add Packet 10 selected profile workflow plan`
+- accepted Packet 10 planning surface:
+  - `P`: select/switch profile and change Rytm machine
+  - `M`: load selected profile anchor
+- accepted future first implementation target:
+  - Packet 10A `P` only
+- deferred/safe Packet 10 scope:
+  - `M`
+- no selected-profile runtime state, profile switching execution, machine
+  changes, anchor loading execution, dispatch, MIDI, ports, package metadata,
+  active behavior, or hardware behavior is authorized
+
+The next recommended task is a tiny TDD Packet 10A implementation for
+read-only `P` intent only.
 
 ## Latest Packet 10 Selected Profile Workflow Plan
 
