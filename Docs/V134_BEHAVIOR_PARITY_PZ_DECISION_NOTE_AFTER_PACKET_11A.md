@@ -182,6 +182,10 @@ Package metadata remains untouched.
 
 ## 9. Safe Next Options
 
+This decision note was reviewed and accepted in:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_DECISION_NOTE_AFTER_PACKET_11A_REVIEW.md`
+
 Safe next options:
 
 - docs-only review/acceptance gate for this `PZ` decision note
