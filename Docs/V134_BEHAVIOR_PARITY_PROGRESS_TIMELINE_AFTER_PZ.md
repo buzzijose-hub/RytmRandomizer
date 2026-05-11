@@ -268,3 +268,15 @@ execution work.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Review Status
+
+This timeline is reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_REVIEW.md`
+
+The review accepts this document as the current user-facing progress/timeline
+baseline after `PZ`.
+
+The next recommended task is a future runtime/execution boundary decision
+note.

@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-f119281
+7f8559e
+
+## Latest Behavior-Parity Progress Timeline After PZ Review
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_REVIEW.md` accepts the
+post-`PZ` user-facing progress and timeline update.
+
+Accepted timeline:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ.md`
+
+Accepted milestone:
+
+- `7f8559e Add behavior parity progress timeline after PZ`
+
+Accepted state:
+
+- the timeline is the current user-facing progress/timeline baseline
+- `PZ` remains read-only selected isolated pad anchor-return readiness
+- the project remains safely pre-active
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a future runtime/execution boundary decision
+note.
+
+No implementation, dispatch, command execution, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized.
 
 ## Latest Behavior-Parity Progress Timeline After PZ
 
