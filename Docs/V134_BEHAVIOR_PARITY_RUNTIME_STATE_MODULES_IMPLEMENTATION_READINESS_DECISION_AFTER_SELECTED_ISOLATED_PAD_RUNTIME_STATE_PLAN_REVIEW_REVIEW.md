@@ -1,16 +1,18 @@
-# V1.34 Behavior Parity Runtime-State Modules Implementation Readiness Decision After Selected Isolated Pad Runtime-State Plan Review
+# V1.34 Behavior Parity Runtime-State Modules Implementation Readiness Decision After Selected Isolated Pad Runtime-State Plan Review Review
 
 ## 1. Purpose
 
-Decide whether the planned runtime-state modules are ready for a future
-test-first implementation sequence after the selected isolated pad
-runtime-state implementation plan has been reviewed and accepted.
+Review and accept the runtime-state modules implementation readiness decision
+after the accepted selected isolated pad runtime-state implementation plan
+review.
 
-This is a documentation-only readiness decision.
+This is a documentation-only review gate.
 
-It does not implement selected target state, anchor state, selected isolated
-pad runtime state, `PZ`, dispatch, MIDI, ports, active behavior, or hardware
-behavior.
+It accepts the readiness decision as the current planning boundary for future
+test-first implementation sequencing.
+
+It adds no implementation, tests, CLI commands, runtime state, dispatch, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
 
 ## 2. Current Clean Baseline
 
@@ -18,9 +20,9 @@ Current branch:
 
 - `modularize-v1.34`
 
-Current HEAD before this decision slice:
+Current HEAD before this review slice:
 
-- `69f3178 Add selected isolated pad runtime state plan review`
+- `c3d1c7b Add runtime state modules implementation readiness decision`
 
 Current phase:
 
@@ -32,7 +34,8 @@ Current phase:
 - selected target state implementation plan accepted
 - anchor state implementation plan accepted
 - selected isolated pad runtime-state implementation plan accepted
-- runtime-state module implementation readiness now being decided
+- runtime-state modules implementation readiness decision created
+- runtime-state modules implementation readiness decision now being reviewed
 
 Hardware status:
 
@@ -40,67 +43,62 @@ Hardware status:
 - Analog Four MKII off
 - hardware not required
 
-## 3. Accepted Planning Inputs
+## 3. Review Decision
 
-Accepted planning inputs:
+Accepted readiness decision:
 
-- selected target state implementation plan:
-  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_SEQUENCING_REVIEW.md`
-- selected target state implementation plan review:
-  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_TARGET_STATE_IMPLEMENTATION_PLAN_AFTER_RUNTIME_STATE_SEQUENCING_REVIEW_REVIEW.md`
-- anchor state implementation plan:
-  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_IMPLEMENTATION_REVIEW.md`
-- anchor state implementation plan review:
-  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_IMPLEMENTATION_REVIEW_REVIEW.md`
-- selected isolated pad runtime-state implementation plan update:
-  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_REVIEWS.md`
-- selected isolated pad runtime-state implementation plan update review:
-  - `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_REVIEWS_REVIEW.md`
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW.md`
 
-These documents establish planning boundaries only.
+Accepted readiness decision milestone:
 
-They do not implement runtime behavior.
-
-## 4. Readiness Decision
+- `c3d1c7b Add runtime state modules implementation readiness decision`
 
 Decision:
 
-- the runtime-state module implementation sequence is ready to be approached
-  in future separate test-first implementation slices
-- the first future implementation slice should be selected target state only
-- anchor state should remain second
-- selected isolated pad runtime state should remain third
-- `PZ` must remain parked until all three state modules are implemented,
-  reviewed, and accepted
+- accept runtime-state module implementation readiness for planning
+- accept future implementation order:
+  1. selected target state
+  2. anchor state
+  3. selected isolated pad runtime state
+  4. `PZ` reconsideration only after separate review
+- accept that the first future implementation-facing slice should be selected
+  target state only
+- keep selected target state unimplemented
+- keep anchor state unimplemented
+- keep selected isolated pad runtime state unimplemented
+- keep runtime state unimplemented
+- keep `PZ` parked
+- require a separate approved implementation slice before any code or tests
 
-This decision does not authorize implementation by itself.
+This review accepts planning only.
 
-It records readiness for a future implementation packet only.
+It does not authorize implementation by itself.
 
-## 5. Accepted Implementation Order
+## 4. Accepted Implementation Sequence
 
-Accepted future implementation order:
+The review accepts this future sequence:
 
 1. selected target state
 2. anchor state
 3. selected isolated pad runtime state
 4. `PZ` reconsideration only after separate review
 
-Reason:
+Rationale:
 
-- selected target state is the smallest layer
-- anchor state depends on target meaning
+- selected target state is the smallest future runtime-state module
+- anchor state depends on selected target meaning
 - selected isolated pad runtime state can validate target and anchor together
-- `PZ` should not be reconsidered until those validations exist
+- `PZ` must remain parked until those validation layers exist and are reviewed
 
-## 6. First Future Implementation Candidate
+## 5. Accepted First Future Implementation Candidate
 
-The first future implementation candidate should be:
+The review accepts selected target state as the first future
+implementation-facing candidate:
 
 - `rytm_randomizer/selected_target_state.py`
 - `tests/test_selected_target_state.py`
 
-The first candidate should stay limited to:
+The first candidate should remain limited to:
 
 - unset target state
 - defaulted Pad 3 selected isolated pad target state
@@ -111,7 +109,7 @@ The first candidate should stay limited to:
 - copied/immutable-ish result behavior
 - import side-effect safety
 
-The first candidate should not include:
+The first candidate must not include:
 
 - anchor state
 - selected isolated pad runtime state
@@ -125,9 +123,10 @@ The first candidate should not include:
 - ports
 - hardware behavior
 
-## 7. Second Future Implementation Candidate
+## 6. Accepted Second Future Implementation Candidate
 
-The second future implementation candidate should be:
+The review accepts anchor state as the second future implementation-facing
+candidate:
 
 - `rytm_randomizer/anchor_state.py`
 - `tests/test_anchor_state.py`
@@ -135,7 +134,7 @@ The second future implementation candidate should be:
 It should start only after selected target state implementation is complete,
 reviewed, and accepted.
 
-It should stay limited to:
+It should remain limited to:
 
 - unknown anchor state
 - unsupported anchor safe failures
@@ -145,10 +144,10 @@ It should stay limited to:
 - copied/immutable-ish result behavior
 - import side-effect safety
 
-Optional static/software-known anchor behavior should remain separately
-reviewable if there is uncertainty.
+Static/software-known anchor behavior remains separately reviewable if there
+is uncertainty.
 
-It should not include:
+The second candidate must not include:
 
 - selected target state ownership
 - selected isolated pad runtime state
@@ -160,9 +159,10 @@ It should not include:
 - ports
 - hardware behavior
 
-## 8. Third Future Implementation Candidate
+## 7. Accepted Third Future Implementation Candidate
 
-The third future implementation candidate should be:
+The review accepts selected isolated pad runtime state as the third future
+implementation-facing candidate:
 
 - `rytm_randomizer/selected_isolated_pad_runtime_state.py`
 - `tests/test_selected_isolated_pad_runtime_state.py`
@@ -170,7 +170,7 @@ The third future implementation candidate should be:
 It should start only after selected target state and anchor state
 implementations are complete, reviewed, and accepted.
 
-It should stay limited to:
+It should remain limited to:
 
 - uninitialized selected isolated pad runtime state
 - passive-default Pad 3 selected isolated pad runtime state
@@ -186,10 +186,10 @@ It should stay limited to:
 - copied/immutable-ish result behavior
 - import side-effect safety
 
-Optional target-anchor match or mismatch behavior should remain separately
-reviewable if there is uncertainty.
+Target-anchor match or mismatch behavior remains separately reviewable if
+there is uncertainty.
 
-It should not include:
+The third candidate must not include:
 
 - selected target state ownership
 - anchor state ownership
@@ -203,30 +203,11 @@ It should not include:
 - ports
 - hardware behavior
 
-## 9. PZ Position
-
-`PZ` remains parked.
-
-`PZ` must not be implemented during selected target state, anchor state, or
-selected isolated pad runtime-state implementation.
-
-Future `PZ` reconsideration requires:
-
-- selected target state implemented and reviewed
-- anchor state implemented and reviewed
-- selected isolated pad runtime state implemented and reviewed
-- closeout passing
-- V1.34 reference diff empty
-- package metadata diff empty
-- passive CLI still read-only
-- no MIDI, ports, active behavior, runtime execution, or hardware behavior
-  unless separately approved in a later slice
-
-## 10. Required Test-First Discipline
+## 8. Accepted Test-First Discipline
 
 Every future implementation slice must be test-first.
 
-Before writing implementation code, each slice should add focused tests that
+Before implementation code, each future slice should add focused tests that
 prove:
 
 - import side-effect safety
@@ -243,9 +224,31 @@ prove:
 - V1.34 reference remains untouched
 - package metadata remains untouched
 
-No tests are added by this document.
+No tests are added by this review.
 
-## 11. Closeout Expectations
+## 9. PZ Position
+
+`PZ` remains parked.
+
+This review does not authorize `PZ` implementation.
+
+This review does not authorize `PZ` tests.
+
+This review does not authorize anchor return behavior.
+
+Future `PZ` reconsideration requires:
+
+- selected target state implemented and reviewed
+- anchor state implemented and reviewed
+- selected isolated pad runtime state implemented and reviewed
+- closeout passing
+- V1.34 reference diff empty
+- package metadata diff empty
+- passive CLI still read-only
+- no MIDI, ports, active behavior, runtime execution, or hardware behavior
+  unless separately approved in a later slice
+
+## 10. Closeout Expectations
 
 For each future implementation slice:
 
@@ -256,11 +259,11 @@ For each future implementation slice:
 - update `Scripts/closeout_check.ps1` only if a new test file is added
 - keep any closeout update limited to a new test label
 
-No closeout script change is made by this document.
+No closeout script change is made by this review.
 
-## 12. Confirmed Absent Behavior
+## 11. Confirmed Absent Behavior
 
-This readiness decision confirms no:
+This review confirms no:
 
 - code changes
 - test changes
@@ -301,7 +304,7 @@ This readiness decision confirms no:
 
 Package metadata remains untouched.
 
-## 13. Preconditions Before First Implementation Slice
+## 12. Preconditions Before First Implementation Slice
 
 Before selected target state implementation begins:
 
@@ -309,8 +312,7 @@ Before selected target state implementation begins:
 - full closeout passing
 - V1.34 reference diff empty
 - package metadata diff empty
-- this readiness decision reviewed and accepted, or explicitly confirmed as
-  the current implementation gate
+- this readiness decision reviewed and accepted
 - selected target state implementation plan reviewed and accepted
 - passive CLI behavior remains read-only
 - no active CLI behavior is added
@@ -319,55 +321,34 @@ Before selected target state implementation begins:
 - no MIDI is sent
 - no hardware is required
 
-## 14. Safe Next Options
+## 13. Safe Next Options
 
 Safe next options:
 
-- docs-only review/acceptance gate for this readiness decision:
-  - `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW_REVIEW.md`
 - first test-first selected target state implementation slice
 - docs-only selected target state implementation packet plan
 - docs-only progress/timeline update
-- pause at this clean readiness checkpoint
+- pause at this clean accepted readiness checkpoint
 
-## 15. Follow-On Review
-
-The follow-on docs-only review gate is:
-
-- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW_REVIEW.md`
-
-It accepts this runtime-state modules implementation readiness decision as the
-current planning boundary.
-
-It keeps selected target state unimplemented.
-
-It keeps anchor state unimplemented.
-
-It keeps selected isolated pad runtime state unimplemented.
-
-It keeps `PZ` parked.
-
-It authorizes no implementation, tests, CLI commands, runtime state, dispatch,
-MIDI, ports, package metadata changes, active behavior, or hardware behavior.
-
-## 16. Recommendation
+## 14. Recommendation
 
 Proceed with a first test-first selected target state implementation slice, or
 create a docs-only selected target state implementation packet plan if one
 more planning gate is desired.
 
-Do not implement anchor state in this slice.
+Do not implement anchor state yet.
 
-Do not implement selected isolated pad runtime state in this slice.
+Do not implement selected isolated pad runtime state yet.
 
 Do not implement `PZ`.
 
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 17. Decision Summary
+## 15. Decision Summary
 
-Runtime-state module implementation readiness is documented.
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW.md`
+is accepted for planning.
 
 Future implementation order is accepted for planning:
 
@@ -386,4 +367,4 @@ Selected isolated pad runtime state remains unimplemented.
 
 Hardware remains off.
 
-No implementation in this decision slice.
+No implementation in this review slice.
