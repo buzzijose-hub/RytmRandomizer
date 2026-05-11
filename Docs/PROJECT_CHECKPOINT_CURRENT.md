@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- a67e2ed Add next Packet 7 command selection review after Packet 7F
 - 0b6b3be Add next Packet 7 command selection after Packet 7F
 - 0508582 Add behavior parity progress report review after Packet 7F
 - 730bb0e Add behavior parity progress report after Packet 7F
@@ -12050,6 +12051,63 @@ behavior, or hardware behavior was added.
 
 Next recommended task is a docs-only Packet 7G Pad 3 lane behavior plan for
 `P3R` only.
+
+## V1.34 Behavior Parity Packet 7G Pad 3 Lane Behavior Plan
+
+The docs-only Packet 7G Pad 3 lane behavior plan has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_7G_PAD3_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `a67e2ed Add next Packet 7 command selection review after Packet 7F`
+
+The plan records:
+
+- accepted upstream selection review:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7F_REVIEW.md`
+- recommended future Packet 7G implementation scope:
+  - `P3R` only
+- expected future implementation files:
+  - `rytm_randomizer/behavior_pad3_lane.py`
+  - `tests/test_behavior_pad3_lane.py`
+- no closeout script update expected because `Behavior Pad 3 Lane` is already
+  covered
+
+Proposed future read-only behavior:
+
+- Pad 3 SY Raw behavior mode rotation intent
+- existing `PAD3_COMMANDS` metadata
+- target pad `3`
+- lane `Pad 3 SY Raw lane`
+- behavior family `pad3-lane/sy-raw-mode-rotation`
+- lane action `describe_pad3_sy_raw_mode_rotation_intent`
+- intent kind `rotation`
+- rotation concept `Pad 3 SY Raw behavior mode rotation`
+
+Already accepted Packet 7 behavior remains:
+
+- `P3A`
+- `SA`
+- `SL`
+- `SB`
+- `SX`
+- `SW`
+
+`P3M` remains Packet 1 menu/status behavior.
+
+Deferred/safe Packet 7 scope remains:
+
+- `P3X`
+
+The plan adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata, active behavior, runtime
+behavior, or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for the Packet 7G
+plan.
 
 ## V1.34 Behavior Parity Packet 7F Pad 3 Lane Behavior Checkpoint
 

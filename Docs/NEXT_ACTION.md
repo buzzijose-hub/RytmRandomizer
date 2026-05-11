@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-0b6b3be Add next Packet 7 command selection after Packet 7F
+a67e2ed Add next Packet 7 command selection review after Packet 7F
 
 ## Current Phase
 
@@ -2152,6 +2152,47 @@ It records:
 
 The review recommends a docs-only Packet 7G Pad 3 lane behavior plan for
 `P3R` only.
+
+## Latest Packet 7G Pad 3 Lane Behavior Plan
+
+The latest Packet 7G Pad 3 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_7G_PAD3_LANE_BEHAVIOR_PLAN.md`
+
+It records:
+
+- current clean baseline:
+  - `a67e2ed Add next Packet 7 command selection review after Packet 7F`
+- accepted upstream selection review:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7F_REVIEW.md`
+- recommended future Packet 7G implementation scope:
+  - `P3R` only
+- proposed read-only behavior:
+  - Pad 3 SY Raw behavior mode rotation intent
+  - existing `PAD3_COMMANDS` metadata
+  - target pad `3`
+  - lane `Pad 3 SY Raw lane`
+  - behavior family `pad3-lane/sy-raw-mode-rotation`
+  - lane action `describe_pad3_sy_raw_mode_rotation_intent`
+  - intent kind `rotation`
+  - rotation concept `Pad 3 SY Raw behavior mode rotation`
+- already accepted Packet 7 behavior:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `SB`
+  - `SX`
+  - `SW`
+- `P3M` remains Packet 1 menu/status behavior
+- deferred/safe Packet 7 scope:
+  - `P3X`
+
+The plan adds no implementation, tests, CLI wiring, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, runtime behavior,
+or hardware behavior.
+
+Next recommended task is a docs-only review/acceptance gate for this Packet
+7G plan.
 
 ## Latest Packet 7F Pad 3 Lane Behavior Checkpoint Review
 
