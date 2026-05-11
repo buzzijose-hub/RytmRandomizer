@@ -242,6 +242,8 @@ Safe next options:
 
 - docs-only review/acceptance gate for this CLI preview implementation
   checkpoint
+- follow-up review gate:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
 - broader behavior-parity progress/timeline update
 - pause at this clean checkpoint
 
