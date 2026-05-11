@@ -213,3 +213,18 @@ No third runtime-adjacent mock-only candidate is selected yet.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The next runtime-adjacent branch has now been selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_PZ_AND_B_TIMELINE_REVIEW.md`
+
+The selected next branch is a docs-only `L` runtime-adjacent mock-only
+safe-failure test plan.
+
+`L` is selected for planning only.
+
+No `L` tests, implementation, selected pad switching execution, execution path,
+MIDI, ports, active behavior, or hardware behavior are authorized by this
+follow-up.
