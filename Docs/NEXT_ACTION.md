@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-0508582 Add behavior parity progress report review after Packet 7F
+0b6b3be Add next Packet 7 command selection after Packet 7F
 
 ## Current Phase
 
@@ -2121,6 +2121,37 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Next Packet 7 Command Selection After Packet 7F Review
+
+The latest docs-only next Packet 7 command selection checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7F_REVIEW.md`
+
+It records:
+
+- accepted selection checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7F.md`
+- accepted checkpoint milestone:
+  - `0b6b3be Add next Packet 7 command selection after Packet 7F`
+- accepted next planning branch:
+  - docs-only Packet 7G Pad 3 lane behavior plan for `P3R` only
+- accepted current Packet 7 progress:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `SB`
+  - `SX`
+  - `SW`
+- preserved Packet 1 ownership:
+  - `P3M`
+- deferred/safe Packet 7 scope:
+  - `P3X`
+- no implementation, tests, CLI execution wiring, dispatch, MIDI, ports,
+  package metadata, active behavior, runtime behavior, or hardware behavior
+
+The review recommends a docs-only Packet 7G Pad 3 lane behavior plan for
+`P3R` only.
 
 ## Latest Packet 7F Pad 3 Lane Behavior Checkpoint Review
 
