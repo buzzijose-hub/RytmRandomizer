@@ -6,7 +6,50 @@ modularize-v1.34
 
 ## Current HEAD
 
-ccaffe4 Add runtime adjacent next branch selection after B tests
+ee6c9de Add runtime adjacent next branch selection review after B tests
+
+## Latest Behavior-Parity Progress Timeline After PZ And B
+
+The latest user-facing behavior-parity progress timeline after accepted `PZ`
+and `B` runtime-adjacent mock-only safe-failure tests is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_AND_B.md`
+
+It records:
+
+- current baseline:
+  - `ee6c9de Add runtime adjacent next branch selection review after B tests`
+- `PZ` remains read-only selected isolated pad anchor-return readiness
+- `B` remains read-only current-anchor return intent readiness
+- both are accepted runtime-adjacent mock-only safe-failure surfaces
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- closeout includes `Runtime-Adjacent Mock-Only B`
+- no third runtime-adjacent mock-only candidate is selected yet
+- active execution remains unstarted
+- real MIDI and hardware validation remain unstarted
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this timeline update
+
+Likely branch after review:
+
+- next-branch selection note before choosing any third runtime-adjacent
+  mock-only candidate, or pause at this checkpoint
+
+Confirmed boundaries:
+
+- no current anchor return execution
+- no selected pad switching execution
+- no selected pad anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Runtime-Adjacent Next Branch Selection After B Tests Review
 

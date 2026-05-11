@@ -221,3 +221,17 @@ No third runtime-adjacent mock-only candidate is selected yet.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The user-facing behavior-parity progress/timeline update after `PZ` and `B`
+has now been documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_AND_B.md`
+
+The timeline keeps `PZ` and `B` as the only accepted runtime-adjacent
+mock-only safe-failure surfaces.
+
+No third runtime-adjacent mock-only candidate, tests, implementation,
+execution path, MIDI, ports, active behavior, or hardware behavior are
+authorized by this follow-up.
