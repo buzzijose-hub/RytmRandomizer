@@ -148,6 +148,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_selected_target_state.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_selected_target_state.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Anchor State ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_anchor_state.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_anchor_state.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== Test: Mock MIDI ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_mock_midi.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_midi.log" | Add-Content $summary
 

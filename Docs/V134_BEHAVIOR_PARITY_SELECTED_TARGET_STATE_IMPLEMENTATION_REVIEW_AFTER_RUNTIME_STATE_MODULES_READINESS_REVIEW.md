@@ -295,3 +295,49 @@ Selected isolated pad runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 16. Follow-On Anchor State Implementation Slice
+
+After this review checkpoint, the next conservative anchor state
+implementation slice adds:
+
+- `rytm_randomizer/anchor_state.py`
+- `tests/test_anchor_state.py`
+
+The closeout suite gains:
+
+- `Anchor State`
+
+Current baseline before that implementation slice:
+
+- `08efa9b Add selected target state implementation review`
+
+Implemented follow-on behavior:
+
+- unknown anchor state safe failure
+- unsupported anchor safe failure
+- stale anchor safe failure
+- invalid anchor safe failure
+- immutable-ish/copy-safe metadata
+- deterministic repeated evaluation
+- import side-effect safety
+
+Still absent after that follow-on slice:
+
+- static anchor support
+- software-known anchor support
+- soft-captured anchor support
+- anchor return execution
+- selected pad switching
+- selected isolated pad runtime state
+- `PZ`
+- CLI wiring
+- dispatch
+- MIDI
+- ports
+- package metadata changes
+- active behavior
+- hardware behavior
+
+The next recommended task after the follow-on implementation is a docs-only
+review/acceptance gate for the anchor state implementation.
