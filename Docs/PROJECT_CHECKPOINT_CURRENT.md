@@ -21,7 +21,61 @@ modularize-v1.34
 
 Current HEAD:
 
-1781b13 Add PZ implementation plan after runtime-state readiness
+b04aa8d Add PZ read-only runtime readiness behavior
+
+## V1.34 Behavior Parity PZ Read-Only Runtime Readiness Behavior Checkpoint
+
+The tiny `PZ` read-only runtime-readiness implementation slice is complete and
+documented for review.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_READ_ONLY_RUNTIME_READINESS_BEHAVIOR_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `b04aa8d Add PZ read-only runtime readiness behavior`
+
+Implementation files:
+
+- `rytm_randomizer/behavior_selected_isolated_pad.py`
+
+Test files:
+
+- `tests/test_behavior_selected_isolated_pad.py`
+- `tests/test_behavior_anchor_profile_report.py`
+
+Implemented behavior:
+
+- `PZ` now reports read-only selected isolated pad anchor-return readiness
+- default `PZ` context safely reports `anchor_unavailable_for_selected_target`
+- injected selected isolated pad runtime state can be inspected without
+  mutation
+- `PZ` remains non-executable and non-hardware-facing
+- `anchor_return_intent` is descriptive only
+- `anchor_return_executed` remains false
+- `selected_pad_switch_executed` remains false
+- `state_changed` remains false
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
+
+`rytm_hybrid_randomizer_v134.py` remains untouched.
+
+Package metadata remains untouched.
+
+The next recommended task is a docs-only review/acceptance gate for this `PZ`
+implementation checkpoint.
 
 ## V1.34 Behavior Parity PZ Implementation Plan Review After Runtime-State Modules Readiness Review
 

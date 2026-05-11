@@ -6,7 +6,53 @@ modularize-v1.34
 
 ## Current HEAD
 
-1781b13 Add PZ implementation plan after runtime-state readiness
+b04aa8d Add PZ read-only runtime readiness behavior
+
+## Latest PZ Read-Only Runtime Readiness Behavior Checkpoint
+
+The latest `PZ` read-only runtime-readiness implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_READ_ONLY_RUNTIME_READINESS_BEHAVIOR_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone:
+  - `b04aa8d Add PZ read-only runtime readiness behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_selected_isolated_pad.py`
+- test files:
+  - `tests/test_behavior_selected_isolated_pad.py`
+  - `tests/test_behavior_anchor_profile_report.py`
+- no closeout script update was needed because `Behavior Selected Isolated Pad`
+  was already covered
+
+Implemented read-only behavior:
+
+- `PZ` now reports selected isolated pad anchor-return readiness
+- default `PZ` context fails safely with
+  `anchor_unavailable_for_selected_target`
+- injected selected isolated pad runtime state can be inspected without
+  mutation
+- `anchor_return_intent` remains descriptive only
+- `anchor_return_executed` remains false
+- `selected_pad_switch_executed` remains false
+- `state_changed` remains false
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime state mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
+
+The next recommended task is a docs-only review/acceptance gate for this `PZ`
+implementation checkpoint, or a broader progress report after `PZ`.
 
 ## Latest PZ Implementation Plan Review After Runtime-State Modules Readiness Review
 
