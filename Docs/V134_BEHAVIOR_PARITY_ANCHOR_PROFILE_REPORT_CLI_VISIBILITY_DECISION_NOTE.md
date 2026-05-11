@@ -220,6 +220,8 @@ Safe next options:
 - implement passive CLI visibility for the anchor/profile behavior report with
   focused tests
 - create a review/acceptance gate for this decision note first
+- follow-up review gate:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_VISIBILITY_DECISION_NOTE_REVIEW.md`
 - broader progress/timeline update
 - pause at this clean checkpoint
 

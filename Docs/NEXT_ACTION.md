@@ -6,7 +6,45 @@ modularize-v1.34
 
 ## Current HEAD
 
-db90dfb Add anchor profile report checkpoint review
+2538190 Add anchor profile report CLI visibility decision
+
+## Latest Anchor/Profile Report CLI Visibility Decision Note Review
+
+The latest V1.34 behavior parity anchor/profile report CLI visibility decision
+note review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_VISIBILITY_DECISION_NOTE_REVIEW.md`
+
+It accepts:
+
+- decision note:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_REPORT_CLI_VISIBILITY_DECISION_NOTE.md`
+- decision note milestone:
+  - `2538190 Add anchor profile report CLI visibility decision`
+
+Accepted future command:
+
+- `python -m rytm_randomizer.cli anchor-profile-report`
+
+Accepted future help command:
+
+- `python -m rytm_randomizer.cli anchor-profile-report --help`
+
+Accepted future implementation boundary:
+
+- formatter-only
+- read-only
+- passive CLI visibility only
+- no direct behavior helper execution
+- no runtime state
+- no mock message mapping
+- no MIDI, ports, active behavior, package metadata changes, or hardware
+  behavior
+- `PZ` remains parked
+- group profile `4` mock mapper support remains parked
+
+The next recommended task is the tiny passive CLI visibility implementation
+with focused tests.
 
 ## Latest Anchor/Profile Report CLI Visibility Decision Note
 
