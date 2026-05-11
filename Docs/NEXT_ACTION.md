@@ -6,7 +6,34 @@ modularize-v1.34
 
 ## Current HEAD
 
-1ea99fb Add Packet 10 selected profile workflow plan
+c8763ce Add Packet 10A selected profile behavior
+
+## Latest Packet 10A Selected Profile Workflow Checkpoint
+
+The latest V1.34 behavior parity Packet 10A selected-profile workflow
+checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10A_SELECTED_PROFILE_WORKFLOW_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone:
+  - `c8763ce Add Packet 10A selected profile behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_selected_profile.py`
+  - `tests/test_behavior_selected_profile.py`
+  - `Scripts/closeout_check.ps1`
+- implemented read-only scope:
+  - `P`: select/switch profile and change Rytm machine
+- deferred/safe Packet 10 scope:
+  - `M`: load selected profile anchor
+- closeout coverage:
+  - `=== Test: Behavior Selected Profile ===`
+- no selected-profile runtime state, profile switching execution, machine
+  changes, anchor loading execution, dispatch, MIDI, ports, package metadata,
+  active behavior, or hardware behavior was added
+
+The next recommended task is a docs-only Packet 10A checkpoint review.
 
 ## Latest Packet 10 Selected Profile Workflow Plan Review
 

@@ -204,3 +204,25 @@ target.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 13. Follow-Up Status
+
+Follow-up checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10A_SELECTED_PROFILE_WORKFLOW_CHECKPOINT.md`
+
+Follow-up implementation milestone:
+
+- `c8763ce Add Packet 10A selected profile behavior`
+
+Implemented read-only scope:
+
+- Packet 10A `P`: select/switch profile and change Rytm machine
+
+Deferred/safe scope:
+
+- `M`
+
+The follow-up implementation adds no selected-profile runtime state, profile
+switching execution, machine changes, anchor loading execution, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
