@@ -21,7 +21,37 @@ modularize-v1.34
 
 Current HEAD:
 
-4cfb322 Add behavior parity user progress report after anchor profile CLI visibility
+b92c4ba Add behavior parity user progress report review after anchor profile CLI visibility
+
+## V1.34 Behavior Parity Runtime-State Vocabulary Decision Note
+
+The runtime-state vocabulary decision note has now been created.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_VOCABULARY_DECISION_NOTE.md`
+
+Current baseline:
+
+- `b92c4ba Add behavior parity user progress report review after anchor profile CLI visibility`
+
+Current decision:
+
+- define runtime-state vocabulary only
+- do not implement runtime state
+- keep `PZ` parked
+- keep group profile `4` mock mapper support parked
+
+The note defines shared vocabulary for passive metadata, read-only behavior
+intent, descriptor state, mock state, runtime state, hardware state, soft
+capture, true hardware capture, anchor state, selected target state, mutation
+result state, and armed state.
+
+The next recommended task is a docs-only review/acceptance gate for this
+decision note. The note authorizes no runtime state implementation, `PZ`
+implementation, profile `4` mock mapper support, mutation execution, dispatch,
+MIDI, ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior.
 
 ## V1.34 Behavior Parity User-Facing Progress Report Review After Anchor/Profile CLI Visibility
 

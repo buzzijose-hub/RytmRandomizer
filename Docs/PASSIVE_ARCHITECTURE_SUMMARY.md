@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-4cfb322
+b92c4ba
+
+## Latest Runtime-State Vocabulary Decision Note
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_VOCABULARY_DECISION_NOTE.md`
+defines shared vocabulary for future runtime-state discussion after the
+accepted user-facing behavior-parity progress report review.
+
+Current baseline:
+
+- `b92c4ba Add behavior parity user progress report review after anchor profile CLI visibility`
+
+The note defines vocabulary for passive metadata, read-only behavior intent,
+descriptor state, mock state, runtime state, hardware state, soft capture, true
+hardware capture, anchor state, selected target state, mutation result state,
+and armed state.
+
+Current decision:
+
+- define vocabulary only
+- do not implement runtime state
+- keep `PZ` parked
+- keep profile `4` mock mapper support parked
+
+The next recommended task is a docs-only review/acceptance gate for this
+decision note. No MIDI, ports, active behavior, runtime execution, package
+metadata changes, or hardware behavior is authorized.
 
 ## Latest User-Facing Behavior-Parity Progress Report Review After Anchor/Profile CLI Visibility
 

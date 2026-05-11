@@ -171,3 +171,12 @@ note.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 12. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_VOCABULARY_DECISION_NOTE.md`
+
+That decision note defines runtime-state vocabulary for future planning while
+keeping runtime state unimplemented.
