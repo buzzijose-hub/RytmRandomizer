@@ -6,7 +6,36 @@ modularize-v1.34
 
 ## Current HEAD
 
-010f517 Add PZ runtime readiness checkpoint review
+66f185a Add behavior parity progress report after PZ
+
+## Latest Behavior-Parity Progress Report After PZ Review
+
+The latest broader behavior-parity implementation progress report after `PZ`
+review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PZ_REVIEW.md`
+
+It accepts:
+
+- progress report:
+  - `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PZ.md`
+- progress report milestone:
+  - `66f185a Add behavior parity progress report after PZ`
+- preceding `PZ` implementation milestone:
+  - `b04aa8d Add PZ read-only runtime readiness behavior`
+
+Accepted decision:
+
+- post-`PZ` behavior-parity progress is accepted
+- `PZ` is covered only at read-only runtime-readiness altitude
+- `PZ` is no longer deferred, but remains inert
+- `PZ` does not execute anchor return
+- `PZ` does not switch selected pads
+- `PZ` does not mutate runtime state
+- no MIDI, ports, active behavior, or hardware behavior is authorized
+
+The next recommended task is a next behavior-parity branch selection
+checkpoint, a user-facing progress/timeline update, or a pause.
 
 ## Latest Behavior-Parity Progress Report After PZ
 

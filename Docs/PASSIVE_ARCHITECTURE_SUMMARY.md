@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-010f517
+66f185a
+
+## Latest Behavior-Parity Progress Report After PZ Review
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PZ_REVIEW.md`
+accepts the broader behavior-parity progress report after `PZ`.
+
+Accepted report:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PZ.md`
+
+Accepted milestone:
+
+- `66f185a Add behavior parity progress report after PZ`
+
+Accepted state:
+
+- Packet 11 selected isolated pad utility behavior is covered at read-only
+  altitude for `L` and `PZ`
+- `PZ` is read-only selected isolated pad anchor-return readiness
+- `PZ` is no longer deferred, but remains inert
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch or command execution
+- no MIDI or ports
+- no active behavior or hardware behavior
+
+The next recommended task is a next behavior-parity branch selection
+checkpoint, a user-facing progress/timeline update, or a pause.
 
 ## Latest Behavior-Parity Progress Report After PZ
 
