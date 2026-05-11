@@ -397,15 +397,36 @@ Before any future anchor state implementation:
 
 Safe next options:
 
-- docs-only review/acceptance gate for this implementation plan
+- docs-only review/acceptance gate for this implementation plan:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_IMPLEMENTATION_REVIEW_REVIEW.md`
 - docs-only anchor state implementation planning gate
 - docs-only progress/timeline update
 - pause at this clean planning checkpoint
 
-## 19. Recommendation
+## 19. Follow-On Review
 
-Proceed with a docs-only review/acceptance gate for this anchor state
-implementation plan.
+The follow-on docs-only review gate is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_IMPLEMENTATION_REVIEW_REVIEW.md`
+
+It accepts this anchor state implementation plan as the current planning
+boundary.
+
+It keeps anchor state unimplemented.
+
+It keeps selected target state unimplemented.
+
+It keeps selected isolated pad runtime state unimplemented.
+
+It keeps `PZ` parked.
+
+It authorizes no implementation, tests, CLI commands, runtime state, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
+## 20. Recommendation
+
+Proceed with a docs-only selected isolated pad runtime-state implementation
+plan update or planning gate.
 
 Do not implement anchor state yet.
 
@@ -418,7 +439,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 20. Decision Summary
+## 21. Decision Summary
 
 Anchor state implementation planning is documented.
 
