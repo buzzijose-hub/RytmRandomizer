@@ -325,16 +325,37 @@ Before selected target state implementation begins:
 
 Safe next options:
 
-- first test-first selected target state implementation slice
+- first test-first selected target state implementation slice:
+  - `rytm_randomizer/selected_target_state.py`
+  - `tests/test_selected_target_state.py`
 - docs-only selected target state implementation packet plan
 - docs-only progress/timeline update
 - pause at this clean accepted readiness checkpoint
 
-## 14. Recommendation
+## 14. Follow-On Implementation Slice
 
-Proceed with a first test-first selected target state implementation slice, or
-create a docs-only selected target state implementation packet plan if one
-more planning gate is desired.
+The follow-on test-first selected target state implementation slice adds:
+
+- `rytm_randomizer/selected_target_state.py`
+- `tests/test_selected_target_state.py`
+
+It keeps the implementation limited to:
+
+- unset selected target state
+- defaulted Pad 3 selected isolated pad target state
+- unsupported selected target safe failure
+- stale selected target safe failure
+- invalid selected target safe failure
+- deterministic inert state data
+
+It adds no anchor state, selected isolated pad runtime state, `PZ`, MIDI,
+ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior.
+
+## 15. Recommendation
+
+Proceed with a docs-only review/acceptance gate for the selected target state
+implementation.
 
 Do not implement anchor state yet.
 
@@ -345,7 +366,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 15. Decision Summary
+## 16. Decision Summary
 
 `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW.md`
 is accepted for planning.

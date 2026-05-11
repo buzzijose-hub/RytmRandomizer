@@ -8,7 +8,52 @@ modularize-v1.34
 
 Current HEAD:
 
-c3d1c7b
+fdbf825
+
+## Latest Selected Target State Implementation After Runtime-State Modules Readiness Review
+
+The first runtime-state module implementation slice adds:
+
+- `rytm_randomizer/selected_target_state.py`
+- `tests/test_selected_target_state.py`
+
+The closeout suite now includes:
+
+- `Selected Target State`
+
+Current baseline before this implementation slice:
+
+- `fdbf825 Add runtime state modules readiness review`
+
+Implemented behavior:
+
+- unset selected target state
+- defaulted Pad 3 selected isolated pad target state from passive `L` context
+- unsupported selected target safe failure
+- stale selected target safe failure
+- invalid selected target safe failure
+- immutable-ish/copy-safe metadata
+- deterministic repeated evaluation
+- import side-effect safety
+
+Confirmed boundaries:
+
+- no selected pad switching
+- no selected isolated pad runtime state
+- no anchor state
+- no `PZ`
+- no CLI wiring
+- no dispatch
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
+
+The next recommended task is a docs-only review/acceptance gate for the
+selected target state implementation. No MIDI, ports, package metadata
+changes, active behavior, runtime execution, or hardware behavior is
+authorized.
 
 ## Latest Runtime-State Modules Implementation Readiness Decision Review After Selected Isolated Pad Runtime-State Plan Review
 
