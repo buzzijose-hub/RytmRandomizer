@@ -101,6 +101,81 @@ def test_b_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_e_returns_read_only_current_state_anchor_commit_intent():
+    from rytm_randomizer.behavior_undo_commit_state import (
+        evaluate_undo_commit_state_behavior,
+    )
+
+    result = evaluate_undo_commit_state_behavior("E")
+
+    assert result.command_key == "E"
+    assert result.accepted is True
+    assert result.reason == "supported_current_state_anchor_commit_intent"
+    assert result.label == "commit current state as new anchor"
+    assert result.behavior_family == "undo-commit-state/current-state-anchor-commit"
+    assert result.target_scope == "current_anchor_state"
+    assert result.state_action == "describe_current_state_anchor_commit_intent"
+    assert result.intent_kind == "anchor_commit"
+    assert result.anchor_concept == "current state as new anchor"
+    assert result.lifecycle_effect == "described_only"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_runtime_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "E: commit current state as new anchor",
+        "Read-only current-state anchor commit intent.",
+        "Target scope: current_anchor_state",
+        "State action: describe_current_state_anchor_commit_intent",
+        "Anchor concept: current state as new anchor",
+        "Lifecycle effect: described_only",
+        "No prompt would run.",
+        "No state would change.",
+        "No anchor would be committed.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No runtime state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_e_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_undo_commit_state import (
+        evaluate_undo_commit_state_behavior,
+    )
+
+    result = evaluate_undo_commit_state_behavior("E")
+
+    assert result.metadata["source"] == "STATE_UTILITY_COMMANDS"
+    assert result.metadata["command_type"] == "anchor_state"
+    assert result.metadata["target_scope"] == "current_anchor_state"
+    assert (
+        result.metadata["behavior_family"]
+        == "undo-commit-state/current-state-anchor-commit"
+    )
+    assert (
+        result.metadata["state_action"]
+        == "describe_current_state_anchor_commit_intent"
+    )
+    assert result.metadata["intent_kind"] == "anchor_commit"
+    assert result.metadata["anchor_concept"] == "current state as new anchor"
+    assert result.metadata["lifecycle_effect"] == "described_only"
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_undo_commit_state_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_undo_commit_state import (
         evaluate_undo_commit_state_behavior,
@@ -120,10 +195,12 @@ def test_undo_commit_state_metadata_is_copied_and_immutable():
 def test_deferred_packet_9_undo_commit_state_keys_fail_safely():
     from rytm_randomizer.behavior_undo_commit_state import (
         DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS,
+        PACKET_9B_UNDO_COMMIT_STATE_KEYS,
         evaluate_undo_commit_state_behavior,
     )
 
-    assert DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS == ("E", "W", "U")
+    assert PACKET_9B_UNDO_COMMIT_STATE_KEYS == ("E",)
+    assert DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS == ("W", "U")
 
     for command_key in DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS:
         result = evaluate_undo_commit_state_behavior(command_key)
@@ -229,6 +306,8 @@ if __name__ == "__main__":
     test_importing_behavior_undo_commit_state_prints_nothing()
     test_b_returns_read_only_current_anchor_return_intent()
     test_b_metadata_contains_expected_passive_sources()
+    test_e_returns_read_only_current_state_anchor_commit_intent()
+    test_e_metadata_contains_expected_passive_sources()
     test_undo_commit_state_metadata_is_copied_and_immutable()
     test_deferred_packet_9_undo_commit_state_keys_fail_safely()
     test_unknown_keys_fail_safely()

@@ -12,7 +12,12 @@ from .commands import COMMANDS, STATE_UTILITY_COMMANDS
 
 
 PACKET_9A_UNDO_COMMIT_STATE_KEYS = ("B",)
-DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS = ("E", "W", "U")
+PACKET_9B_UNDO_COMMIT_STATE_KEYS = ("E",)
+SUPPORTED_UNDO_COMMIT_STATE_KEYS = (
+    *PACKET_9A_UNDO_COMMIT_STATE_KEYS,
+    *PACKET_9B_UNDO_COMMIT_STATE_KEYS,
+)
+DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS = ("W", "U")
 
 
 @dataclass(frozen=True)
@@ -28,6 +33,7 @@ class UndoCommitStateBehaviorResult:
     state_action: str = ""
     intent_kind: str = ""
     anchor_concept: str = ""
+    lifecycle_effect: str = ""
     display_lines: tuple[str, ...] = ()
     state_changed: bool = False
     prompt_required: bool = False
@@ -52,6 +58,9 @@ def evaluate_undo_commit_state_behavior(command_key):
 
     if key == "B":
         return _accepted_b_result()
+
+    if key == "E":
+        return _accepted_e_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -120,6 +129,67 @@ def _accepted_b_result():
     )
 
 
+def _accepted_e_result():
+    metadata = STATE_UTILITY_COMMANDS["E"]
+    label = metadata["label"]
+    behavior_family = "undo-commit-state/current-state-anchor-commit"
+    target_scope = "current_anchor_state"
+    state_action = "describe_current_state_anchor_commit_intent"
+    intent_kind = "anchor_commit"
+    anchor_concept = "current state as new anchor"
+    lifecycle_effect = "described_only"
+
+    result_metadata = {
+        "source": "STATE_UTILITY_COMMANDS",
+        "command_type": metadata["type"],
+        "source_scope": metadata["scope"],
+        "target_scope": target_scope,
+        "behavior_family": behavior_family,
+        "state_action": state_action,
+        "intent_kind": intent_kind,
+        "anchor_concept": anchor_concept,
+        "lifecycle_effect": lifecycle_effect,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return UndoCommitStateBehaviorResult(
+        command_key="E",
+        label=label,
+        behavior_family=behavior_family,
+        accepted=True,
+        reason="supported_current_state_anchor_commit_intent",
+        target_scope=target_scope,
+        state_action=state_action,
+        intent_kind=intent_kind,
+        anchor_concept=anchor_concept,
+        lifecycle_effect=lifecycle_effect,
+        display_lines=(
+            f"E: {label}",
+            "Read-only current-state anchor commit intent.",
+            f"Target scope: {target_scope}",
+            f"State action: {state_action}",
+            f"Anchor concept: {anchor_concept}",
+            f"Lifecycle effect: {lifecycle_effect}",
+            "No prompt would run.",
+            "No state would change.",
+            "No anchor would be committed.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No runtime state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
 def _unsupported_result(command_key):
     return UndoCommitStateBehaviorResult(
         command_key=command_key,
@@ -141,6 +211,8 @@ def _unsupported_result(command_key):
 __all__ = [
     "DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS",
     "PACKET_9A_UNDO_COMMIT_STATE_KEYS",
+    "PACKET_9B_UNDO_COMMIT_STATE_KEYS",
+    "SUPPORTED_UNDO_COMMIT_STATE_KEYS",
     "UndoCommitStateBehaviorResult",
     "evaluate_undo_commit_state_behavior",
 ]
