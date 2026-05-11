@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-33b075a Add behavior parity progress report after Packet 7G
+52888d1 Add behavior parity progress report review after Packet 7G
 
 ## Current Phase
 
@@ -2242,6 +2242,45 @@ It records:
 
 The review recommends a docs-only next Packet 7 command selection checkpoint
 for `P3X`.
+
+## Latest Next Packet 7 Command Selection After Packet 7G
+
+The latest docs-only next Packet 7 command selection checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7G.md`
+
+It records:
+
+- current baseline:
+  - `52888d1 Add behavior parity progress report review after Packet 7G`
+- accepted Packet 7 progress:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `SB`
+  - `SX`
+  - `SW`
+  - `P3R`
+- preserved Packet 1 ownership:
+  - `P3M`
+- remaining deferred/safe Packet 7 scope:
+  - `P3X`
+- recommended next planning branch:
+  - docs-only Packet 7H Pad 3 lane behavior plan for `P3X` only
+- reason:
+  - `P3X` is the only remaining deferred Packet 7 Pad 3 command
+  - it can be modeled as read-only safe mutation intent without runtime Pad 3
+    state
+  - it should still be planned and reviewed separately before implementation
+- proposed future behavior vocabulary:
+  - behavior family `pad3-lane/sy-raw-current-mode-safe-mutation`
+  - lane action `describe_pad3_sy_raw_current_mode_safe_mutation_intent`
+  - intent kind `mutation`
+  - mutation concept `Pad 3 SY Raw current mode safe mutation`
+- no implementation, tests, CLI execution wiring, dispatch, MIDI, ports,
+  package metadata, active behavior, runtime behavior, or hardware behavior
+
+The checkpoint recommends a docs-only review/acceptance gate next.
 
 ## Latest Next Packet 7 Command Selection After Packet 7F Review
 
