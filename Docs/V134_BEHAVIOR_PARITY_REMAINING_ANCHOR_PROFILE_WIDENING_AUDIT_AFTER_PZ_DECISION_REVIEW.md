@@ -176,6 +176,10 @@ Safe next options:
 - broader user-facing progress/timeline update
 - pause at this clean checkpoint
 
+The follow-up anchor/profile widening plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_WIDENING_PLAN_AFTER_PZ_DECISION.md`
+
 ## 10. Recommendation
 
 Prefer a docs-only anchor/profile widening plan next.
