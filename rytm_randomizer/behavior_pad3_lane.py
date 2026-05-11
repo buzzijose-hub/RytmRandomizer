@@ -17,9 +17,9 @@ PACKET_7C_PAD3_LANE_KEYS = ("SL",)
 PACKET_7D_PAD3_LANE_KEYS = ("SB",)
 PACKET_7E_PAD3_LANE_KEYS = ("SX",)
 PACKET_7F_PAD3_LANE_KEYS = ("SW",)
+PACKET_7G_PAD3_LANE_KEYS = ("P3R",)
 DEFERRED_PACKET_7_PAD3_LANE_KEYS = (
     "P3M",
-    "P3R",
     "P3X",
 )
 
@@ -73,6 +73,8 @@ def evaluate_pad3_lane_behavior(command_key):
         return _accepted_sx_result()
     if key == "SW":
         return _accepted_sw_result()
+    if key == "P3R":
+        return _accepted_p3r_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -418,6 +420,60 @@ def _accepted_sw_result():
     )
 
 
+def _accepted_p3r_result():
+    metadata = PAD3_COMMANDS["P3R"]
+    label = metadata["label"]
+    lane_action = "describe_pad3_sy_raw_mode_rotation_intent"
+    rotation_concept = "Pad 3 SY Raw behavior mode rotation"
+
+    result_metadata = {
+        "source": "PAD3_COMMANDS",
+        "command_type": metadata["type"],
+        "target_pad": metadata["pad"],
+        "lane": "pad_3_sy_raw_lane",
+        "behavior_family": "pad3-lane/sy-raw-mode-rotation",
+        "lane_action": lane_action,
+        "intent_kind": "rotation",
+        "rotation_concept": rotation_concept,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return Pad3LaneBehaviorResult(
+        command_key="P3R",
+        label=label,
+        behavior_family="pad3-lane/sy-raw-mode-rotation",
+        accepted=True,
+        reason="supported_pad3_sy_raw_mode_rotation_intent",
+        target_pad=3,
+        lane="Pad 3 SY Raw lane",
+        lane_action=lane_action,
+        intent_kind="rotation",
+        display_lines=(
+            f"P3R: {label}",
+            "Read-only Pad 3 SY Raw behavior mode rotation intent.",
+            "Target pad: 3",
+            "Lane: Pad 3 SY Raw lane",
+            f"Lane action: {lane_action}",
+            f"Rotation concept: {rotation_concept}",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
 def _unsupported_result(command_key):
     return Pad3LaneBehaviorResult(
         command_key=command_key,
@@ -442,6 +498,7 @@ __all__ = [
     "PACKET_7D_PAD3_LANE_KEYS",
     "PACKET_7E_PAD3_LANE_KEYS",
     "PACKET_7F_PAD3_LANE_KEYS",
+    "PACKET_7G_PAD3_LANE_KEYS",
     "Pad3LaneBehaviorResult",
     "evaluate_pad3_lane_behavior",
 ]
