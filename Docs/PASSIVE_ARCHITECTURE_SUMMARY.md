@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-2f2e763
+c855ef7
+
+## Latest Packet 10B Selected Profile Workflow Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_CHECKPOINT.md`
+records the completed Packet 10B read-only selected-profile workflow
+implementation.
+
+Implemented read-only scope:
+
+- `M`: load selected profile anchor
+
+Accepted Packet 10 scope:
+
+- `P`: select/switch profile and change Rytm machine
+- `M`: load selected profile anchor
+
+Deferred Packet 10 scope:
+
+- none
+
+Implementation surface:
+
+- `rytm_randomizer/behavior_selected_profile.py`
+- `tests/test_behavior_selected_profile.py`
+
+The checkpoint confirms no selected-profile runtime state, anchor loading
+execution, machine changes, dispatch, MIDI, ports, package metadata, active
+behavior, or hardware behavior was added.
 
 ## Latest Packet 10B Selected Profile Workflow Plan Review
 

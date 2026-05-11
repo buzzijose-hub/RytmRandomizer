@@ -203,3 +203,30 @@ target.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 13. Follow-Up Status
+
+Follow-up checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10B_SELECTED_PROFILE_WORKFLOW_CHECKPOINT.md`
+
+Follow-up implementation milestone:
+
+- `c855ef7 Add Packet 10B selected profile behavior`
+
+Implemented read-only scope:
+
+- Packet 10B `M`: load selected profile anchor
+
+Accepted Packet 10 scope:
+
+- `P`
+- `M`
+
+Deferred Packet 10 scope:
+
+- none
+
+The follow-up implementation adds no selected-profile runtime state, anchor
+loading execution, machine changes, dispatch, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior.
