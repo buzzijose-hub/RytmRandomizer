@@ -6,7 +6,34 @@ modularize-v1.34
 
 ## Current HEAD
 
-f917737 Add next packet planning gate after Packet 9
+68a0c21 Add next packet planning gate review after Packet 9
+
+## Latest Packet 10 Selected Profile Workflow Plan
+
+The latest V1.34 behavior parity Packet 10 selected-profile workflow plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+
+It records:
+
+- current baseline:
+  - `68a0c21 Add next packet planning gate review after Packet 9`
+- Packet 10 planning surface:
+  - `P`: select/switch profile and change Rytm machine
+  - `M`: load selected profile anchor
+- recommended future first implementation subset:
+  - Packet 10A `P` only
+- deferred/safe Packet 10 scope:
+  - `M`
+- expected future file ownership:
+  - `rytm_randomizer/behavior_selected_profile.py`
+  - `tests/test_behavior_selected_profile.py`
+- no selected-profile runtime state, profile switching, machine changes,
+  anchor loading execution, dispatch, MIDI, ports, package metadata, active
+  behavior, or hardware behavior is authorized
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 10 plan.
 
 ## Latest Behavior-Parity Next Packet Planning Gate After Packet 9 Review
 

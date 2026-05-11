@@ -172,3 +172,20 @@ behavior-parity planning branch.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 12. Follow-Up Status
+
+Follow-up plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10_SELECTED_PROFILE_WORKFLOW_PLAN.md`
+
+Follow-up decision:
+
+- Packet 10 selected-profile workflow behavior is now planned.
+- Future first implementation target should be Packet 10A `P` only,
+  read-only and intent-only.
+- `M` remains deferred/safe until separately planned and reviewed.
+
+This follow-up does not authorize selected-profile runtime state, profile
+switching execution, machine changes, anchor loading execution, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
