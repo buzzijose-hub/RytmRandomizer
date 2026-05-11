@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- 26586ae Add Packet 8C Pad 4 lane behavior plan
 - 6f8b60f Add behavior parity progress report review after Packet 8B
 - 07b63aa Add behavior parity progress report after Packet 8B
 - cea0ff6 Add Packet 8B Pad 4 lane behavior checkpoint review
@@ -12022,6 +12023,50 @@ dispatch, command execution, MIDI, ports, package metadata changes, active
 behavior, or hardware behavior.
 
 Next recommended task is a docs-only Packet 8C plan review.
+
+## Latest Packet 8C Pad 4 Lane Behavior Plan Review
+
+The Packet 8C Pad 4 lane behavior plan is now reviewed and accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8C_PAD4_LANE_BEHAVIOR_PLAN_REVIEW.md`
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8C_PAD4_LANE_BEHAVIOR_PLAN.md`
+
+Accepted milestone:
+
+- `26586ae Add Packet 8C Pad 4 lane behavior plan`
+
+Accepted future Packet 8C implementation scope:
+
+- `P4X` only
+
+Accepted future behavior:
+
+- read-only Pad 4 BD Acoustic current-mode safe mutation intent
+- existing `PAD4_COMMANDS` metadata
+- target pad `4`
+- lane `Pad 4 BD Acoustic lane`
+- behavior family `pad4-lane/bd-acoustic-current-mode-safe-mutation`
+- lane action `describe_pad4_bd_acoustic_current_mode_safe_mutation_intent`
+- intent kind `mutation`
+- no runtime Pad 4 state
+- no mutation execution
+- no dispatch, MIDI, ports, active behavior, or hardware behavior
+
+Preserved behavior:
+
+- `P4A`
+- `P4R`
+- `P4M` remains Packet 1 menu/status behavior
+
+The review adds no implementation, tests, CLI execution wiring, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior,
+runtime behavior, or hardware behavior.
+
+Next recommended task is a tiny TDD Packet 8C implementation for read-only
+`P4X` intent only.
 
 ## Latest Behavior Parity Progress Report After Packet 8A Review
 
