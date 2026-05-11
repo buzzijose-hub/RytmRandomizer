@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-73c68d2
+fb9ee45
+
+## Latest Behavior-Parity Progress Report After Packet 11A
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_11A.md`
+summarizes the current behavior-parity implementation state after accepted
+Packet 11A selected isolated pad behavior.
+
+Accepted Packet 11A state:
+
+- `L`: read-only selected isolated pad target intent, default Pad 3
+
+Deferred/safe Packet 11 scope:
+
+- `PZ`
+
+The report records that `rytm_randomizer/behavior_selected_isolated_pad.py`
+and `tests/test_behavior_selected_isolated_pad.py` are now part of the
+behavior helper surface and that closeout includes:
+
+- `=== Test: Behavior Selected Isolated Pad ===`
+
+It recommends a docs-only review/acceptance gate next, followed by a
+behavior-parity remaining-gap audit before deciding whether to plan `PZ`.
 
 ## Latest Packet 11A Selected Isolated Pad Behavior Checkpoint Review
 

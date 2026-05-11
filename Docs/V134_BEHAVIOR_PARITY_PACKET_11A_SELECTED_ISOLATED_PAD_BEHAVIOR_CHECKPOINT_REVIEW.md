@@ -147,6 +147,10 @@ The accepted Packet 11A checkpoint records:
 
 ## 9. Safe Next Options
 
+The broader progress report after this review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_11A.md`
+
 Safe next options:
 
 - broader Packet 11 progress report
