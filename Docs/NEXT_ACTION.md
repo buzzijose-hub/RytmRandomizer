@@ -6,7 +6,33 @@ modularize-v1.34
 
 ## Current HEAD
 
-b8b335f Add remaining anchor profile widening audit review after PZ decision
+3cbd925 Add anchor profile widening plan after PZ decision
+
+## Latest Anchor/Profile Widening Plan Review After PZ Decision
+
+The latest V1.34 behavior parity anchor/profile widening plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_WIDENING_PLAN_AFTER_PZ_DECISION_REVIEW.md`
+
+It records:
+
+- accepted plan:
+  - `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_WIDENING_PLAN_AFTER_PZ_DECISION.md`
+- accepted plan milestone:
+  - `3cbd925 Add anchor profile widening plan after PZ decision`
+- accepted decision:
+  - the next implementation target should be a read-only anchor/profile
+    behavior report
+  - do not widen behavior helpers directly yet
+  - do not implement `PZ`
+  - do not add profile `4` mock mapper support
+  - do not add CLI wiring in the first report implementation
+- no selected isolated pad runtime state, selected-pad switching execution,
+  selected-pad anchor return execution, mutation execution, dispatch, MIDI,
+  ports, package metadata, active behavior, or hardware behavior is authorized
+
+The next recommended task is the tiny read-only anchor/profile behavior report
+implementation with focused tests.
 
 ## Latest Anchor/Profile Widening Plan After PZ Decision
 

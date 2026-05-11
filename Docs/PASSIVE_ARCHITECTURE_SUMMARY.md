@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-b8b335f
+3cbd925
+
+## Latest Anchor/Profile Widening Plan Review After PZ Decision
+
+`Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_WIDENING_PLAN_AFTER_PZ_DECISION_REVIEW.md`
+accepts the anchor/profile widening plan after the accepted audit review.
+
+Accepted plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_PROFILE_WIDENING_PLAN_AFTER_PZ_DECISION.md`
+
+Accepted plan milestone:
+
+- `3cbd925 Add anchor profile widening plan after PZ decision`
+
+The review accepts the next implementation target as a read-only
+anchor/profile behavior report with focused tests.
+
+The review keeps direct behavior-helper widening, `PZ`, profile `4` mock
+mapper support, CLI wiring, selected isolated pad runtime state, selected-pad
+switching execution, selected-pad anchor return execution, mutation execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, runtime
+execution, and hardware behavior out of scope.
 
 ## Latest Anchor/Profile Widening Plan After PZ Decision
 
