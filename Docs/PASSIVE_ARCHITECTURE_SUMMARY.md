@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-f8f6f22
+291cee5
+
+## Latest Packet 9C Undo Commit State Behavior Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+records the completed tiny Packet 9C implementation.
+
+Implementation milestone:
+
+- `291cee5 Add Packet 9C undo commit state behavior`
+
+Implemented read-only scope:
+
+- `W`: waveform exploration only
+
+Preserved Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+
+Deferred/safe Packet 9 scope:
+
+- `U`: undo previous script-generated state
+
+The checkpoint confirms no waveform exploration execution, waveform
+selection, waveform randomization, runtime mutation, dispatch, command
+execution, MIDI, ports, package metadata, active behavior, or hardware
+behavior was added. `rytm_hybrid_randomizer_v134.py` remains untouched.
 
 ## Protected Reference
 

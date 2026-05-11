@@ -6,7 +6,37 @@ modularize-v1.34
 
 ## Current HEAD
 
-f8f6f22 Add Packet 9C undo commit state behavior plan
+291cee5 Add Packet 9C undo commit state behavior
+
+## Latest Packet 9C Undo Commit State Behavior Checkpoint
+
+The latest V1.34 behavior parity Packet 9C undo/commit/state behavior
+checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9C_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone:
+  - `291cee5 Add Packet 9C undo commit state behavior`
+- implementation files:
+  - `rytm_randomizer/behavior_undo_commit_state.py`
+  - `tests/test_behavior_undo_commit_state.py`
+- implemented read-only Packet 9C behavior:
+  - `W`: waveform exploration only
+- preserved read-only Packet 9 behavior:
+  - `B`: back to current anchor
+  - `E`: commit current state as new anchor
+- remaining deferred/safe Packet 9 scope:
+  - `U`: undo previous script-generated state
+- no closeout script update needed because
+  `tests/test_behavior_undo_commit_state.py` is already covered by
+  `=== Test: Behavior Undo Commit State ===`
+- no waveform exploration execution, waveform selection, waveform
+  randomization, runtime mutation, dispatch, command execution, MIDI, ports,
+  package metadata, active behavior, or hardware behavior was added
+
+The checkpoint recommends a docs-only Packet 9C checkpoint review next.
 
 ## Current Phase
 
