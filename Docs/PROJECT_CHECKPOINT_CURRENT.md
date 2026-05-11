@@ -21,6 +21,7 @@ modularize-v1.34
 
 Recent checkpoint history:
 
+- ea652d9 Add Packet 9A undo commit state behavior checkpoint
 - 5e4cbdf Add Packet 9A undo commit state behavior
 - bb5f801 Add Packet 9 undo commit state behavior plan
 - 5f4dc64 Add next packet planning gate review after Packet 8C
@@ -12183,6 +12184,41 @@ metadata changes, active behavior, runtime execution, or hardware behavior was
 added.
 
 Next recommended task is a docs-only Packet 9A checkpoint review.
+
+## Latest Packet 9A Undo Commit State Behavior Checkpoint Review
+
+The Packet 9A undo/commit/state behavior checkpoint has now been reviewed and
+accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `5e4cbdf Add Packet 9A undo commit state behavior`
+- `ea652d9 Add Packet 9A undo commit state behavior checkpoint`
+
+Accepted read-only scope:
+
+- `B`: back to current anchor
+
+Deferred/safe Packet 9 scope:
+
+- `E`
+- `W`
+- `U`
+
+`H` and `R` remain Packet 1 menu/status behavior.
+
+The review confirms no CLI execution wiring, dispatch, command execution,
+MIDI, ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior was added.
+
+Next recommended task is a broader behavior-parity progress report after
+Packet 9A.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 

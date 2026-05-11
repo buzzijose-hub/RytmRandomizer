@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-5e4cbdf
+ea652d9
 
 ## Protected Reference
 
@@ -11845,6 +11845,41 @@ wiring, dispatch, command execution, MIDI, ports, package metadata changes,
 active behavior, runtime execution, or hardware behavior was added.
 
 The next recommended task is a docs-only Packet 9A checkpoint review.
+
+## V1.34 Behavior Parity Packet 9A Undo Commit State Behavior Checkpoint Review
+
+The Packet 9A undo/commit/state behavior checkpoint is now reviewed and
+accepted:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `5e4cbdf Add Packet 9A undo commit state behavior`
+- `ea652d9 Add Packet 9A undo commit state behavior checkpoint`
+
+Accepted read-only scope:
+
+- `B`: back to current anchor
+
+Deferred/safe Packet 9 scope:
+
+- `E`
+- `W`
+- `U`
+
+`H` and `R` remain Packet 1 menu/status behavior.
+
+The review confirms no CLI execution wiring, dispatch, command execution,
+MIDI, ports, package metadata changes, active behavior, runtime execution, or
+hardware behavior was added.
+
+The next recommended task is a broader behavior-parity progress report after
+Packet 9A.
 
 ## V1.34 Behavior Parity Implementation Progress Report After Packet 8A Review
 

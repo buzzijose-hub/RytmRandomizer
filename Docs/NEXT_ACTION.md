@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-5e4cbdf Add Packet 9A undo commit state behavior
+ea652d9 Add Packet 9A undo commit state behavior checkpoint
 
 ## Current Phase
 
@@ -2575,6 +2575,40 @@ behavior.
 Next recommended task:
 
 - docs-only Packet 9A checkpoint review.
+
+## Latest Packet 9A Undo Commit State Behavior Checkpoint Review
+
+The latest Packet 9A undo/commit/state behavior checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9A_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted implementation milestone:
+
+- `5e4cbdf Add Packet 9A undo commit state behavior`
+
+Accepted checkpoint milestone:
+
+- `ea652d9 Add Packet 9A undo commit state behavior checkpoint`
+
+Accepted read-only Packet 9A behavior:
+
+- `B`: back to current anchor
+
+Current Packet 9 boundary:
+
+- `B` accepted
+- `E` deferred/safe
+- `W` deferred/safe
+- `U` deferred/safe
+- `H` and `R` remain Packet 1 menu/status behavior
+
+The review confirms no runtime state mutation, anchor restore execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior was added.
+
+Next recommended task:
+
+- broader behavior-parity progress report after Packet 9A.
 
 ## Latest Behavior Parity Progress Report After Packet 8B Review
 
