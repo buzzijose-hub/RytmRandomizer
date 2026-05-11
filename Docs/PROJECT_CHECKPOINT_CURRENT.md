@@ -59,6 +59,40 @@ or hardware behavior was added.
 
 The next recommended task is a docs-only checkpoint review.
 
+## V1.34 Behavior Parity Packet 9D Undo Commit State Behavior Checkpoint Review
+
+The Packet 9D undo/commit/state behavior checkpoint has now been reviewed and
+accepted.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `9fbb3e3 Add Packet 9D undo commit state behavior`
+- `72897df Add Packet 9D undo commit state behavior checkpoint`
+
+Accepted read-only Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+- `U`: undo previous script-generated state
+
+Deferred Packet 9 scope is empty.
+
+The review confirms no undo execution, undo-stack mutation, runtime mutation,
+dispatch, command execution, MIDI, ports, package metadata, active behavior,
+runtime execution, or hardware behavior was added.
+
+The next recommended task is a broader Packet 9 completion checkpoint or
+broader behavior-parity progress report after Packet 9D.
+
 ## V1.34 Behavior Parity Packet 9D Undo Commit State Behavior Plan
 
 The docs-only Packet 9D undo/commit/state behavior plan has now been
@@ -276,6 +310,7 @@ Packet 9C.
 
 Recent checkpoint history:
 
+- 72897df Add Packet 9D undo commit state behavior checkpoint
 - 9fbb3e3 Add Packet 9D undo commit state behavior
 - 82a6611 Add Packet 9D undo commit state behavior plan
 - 916f550 Add behavior parity progress report review after Packet 9C

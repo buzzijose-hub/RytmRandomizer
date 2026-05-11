@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-9fbb3e3
+72897df
+
+## Latest Packet 9D Undo Commit State Behavior Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT_REVIEW.md`
+accepts the completed Packet 9D implementation and checkpoint.
+
+Accepted milestones:
+
+- `9fbb3e3 Add Packet 9D undo commit state behavior`
+- `72897df Add Packet 9D undo commit state behavior checkpoint`
+
+Accepted Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+- `U`: undo previous script-generated state
+
+Deferred Packet 9 scope is empty.
+
+The review records Packet 9 as covered for the current read-only intent-only
+behavior phase and recommends a broader Packet 9 completion checkpoint or
+broader behavior-parity progress report after Packet 9D.
 
 ## Latest Packet 9D Undo Commit State Behavior Checkpoint
 
