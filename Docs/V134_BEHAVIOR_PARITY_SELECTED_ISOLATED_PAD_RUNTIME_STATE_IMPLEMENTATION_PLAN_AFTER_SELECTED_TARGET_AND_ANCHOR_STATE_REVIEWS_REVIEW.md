@@ -407,17 +407,38 @@ Before any future selected isolated pad runtime-state implementation:
 Safe next options:
 
 - docs-only implementation readiness decision for selected target, anchor, and
-  selected isolated pad runtime-state modules
+  selected isolated pad runtime-state modules:
+  - `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW.md`
 - docs-only selected target state implementation readiness gate
 - docs-only anchor state implementation readiness gate
 - docs-only selected isolated pad runtime-state implementation readiness gate
 - docs-only progress/timeline update
 - pause at this clean accepted checkpoint
 
-## 17. Recommendation
+## 17. Follow-On Readiness Decision
 
-Proceed with a docs-only implementation readiness decision for the selected
-target, anchor, and selected isolated pad runtime-state modules.
+The follow-on docs-only implementation readiness decision is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_MODULES_IMPLEMENTATION_READINESS_DECISION_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_PLAN_REVIEW.md`
+
+It records readiness to approach the runtime-state modules in future separate
+test-first implementation slices.
+
+It keeps selected target state unimplemented.
+
+It keeps anchor state unimplemented.
+
+It keeps selected isolated pad runtime state unimplemented.
+
+It keeps `PZ` parked.
+
+It authorizes no implementation, tests, CLI commands, runtime state, dispatch,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
+## 18. Recommendation
+
+Proceed with a docs-only review/acceptance gate for the runtime-state modules
+implementation readiness decision.
 
 Do not implement selected target state yet.
 
@@ -430,7 +451,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 18. Decision Summary
+## 19. Decision Summary
 
 `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_SELECTED_TARGET_AND_ANCHOR_STATE_REVIEWS.md`
 is accepted for planning.
