@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-82a6611
+9fbb3e3
+
+## Latest Packet 9D Undo Commit State Behavior Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_9D_UNDO_COMMIT_STATE_BEHAVIOR_CHECKPOINT.md`
+records the completed tiny Packet 9D implementation.
+
+Implementation milestone:
+
+- `9fbb3e3 Add Packet 9D undo commit state behavior`
+
+Implemented read-only scope:
+
+- `U`: undo previous script-generated state
+
+Preserved Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+
+Deferred Packet 9 scope is now empty.
+
+The checkpoint confirms no undo execution, undo-stack mutation, runtime
+mutation, dispatch, command execution, MIDI, ports, package metadata, active
+behavior, or hardware behavior was added. `rytm_hybrid_randomizer_v134.py`
+remains untouched.
 
 ## Latest Packet 9D Undo Commit State Behavior Plan Review
 
