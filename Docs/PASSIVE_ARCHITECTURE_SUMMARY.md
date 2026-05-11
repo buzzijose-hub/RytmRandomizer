@@ -8,7 +8,7 @@ modularize-v1.34
 
 Current HEAD:
 
-78e790a
+2ca46ab
 
 ## Protected Reference
 
@@ -11441,6 +11441,37 @@ Group profile `"4"` / My BD Acoustic remains parked in the mock message
 mapper.
 
 Next recommended task is a docs-only Packet 8B plan for `P4R`.
+
+## V1.34 Behavior Parity Packet 8B Pad 4 Lane Behavior Plan
+
+The Packet 8B Pad 4 lane behavior plan is now documented:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `2ca46ab Add behavior parity progress report review after Packet 8A`
+
+Future Packet 8B scope:
+
+- `P4R`: rotate Pad 4 through BD Acoustic behavior modes
+
+Current Packet 8 baseline:
+
+- `P4A` accepted
+- `P4R` planned next
+- `P4X` deferred/safe
+
+`P4M` remains Packet 1 menu/status behavior.
+
+Group profile `"4"` / My BD Acoustic remains parked in the mock message
+mapper.
+
+The plan confirms no implementation, tests, CLI wiring, dispatch, command
+execution, runtime Pad 4 state, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+Next recommended task is a docs-only Packet 8B plan review.
 
 ## Packet 7G Pad 3 Lane Behavior Checkpoint Review
 

@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-78e790a Add behavior parity progress report after Packet 8A
+2ca46ab Add behavior parity progress report review after Packet 8A
 
 ## Current Phase
 
@@ -2399,6 +2399,38 @@ Next recommended task:
 Do not implement `P4R`, `P4X`, dispatch, MIDI, ports, package metadata
 changes, active behavior, runtime execution, or hardware behavior without the
 separate Packet 8B plan and review.
+
+## Latest Packet 8B Pad 4 Lane Behavior Plan
+
+The latest V1.34 behavior parity Packet 8B Pad 4 lane behavior plan is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8B_PAD4_LANE_BEHAVIOR_PLAN.md`
+
+Current baseline before the plan:
+
+- `2ca46ab Add behavior parity progress report review after Packet 8A`
+
+The plan defines future Packet 8B scope:
+
+- `P4R`: rotate Pad 4 through BD Acoustic behavior modes
+
+Accepted current Packet 8 baseline entering the plan:
+
+- `P4A` accepted
+- `P4R` planned next
+- `P4X` deferred/safe
+- `P4M` remains Packet 1 menu/status behavior
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper
+
+The plan recommends a tiny future read-only `P4R` rotation intent helper using
+existing `PAD4_COMMANDS` metadata, target pad `4`, lane `Pad 4 BD Acoustic
+lane`, behavior family `pad4-lane/bd-acoustic-mode-rotation`, lane action
+`describe_pad4_bd_acoustic_mode_rotation_intent`, and intent kind `rotation`.
+
+Next recommended task:
+
+- docs-only Packet 8B plan review.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
