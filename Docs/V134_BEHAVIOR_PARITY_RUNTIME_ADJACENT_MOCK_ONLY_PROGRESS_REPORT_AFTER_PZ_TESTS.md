@@ -256,3 +256,12 @@ progress report.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+This progress report has now been reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_PZ_TESTS_REVIEW.md`
+
+The accepted next recommendation is a docs-only next-branch selection note
+before choosing another runtime-adjacent mock-only candidate.
