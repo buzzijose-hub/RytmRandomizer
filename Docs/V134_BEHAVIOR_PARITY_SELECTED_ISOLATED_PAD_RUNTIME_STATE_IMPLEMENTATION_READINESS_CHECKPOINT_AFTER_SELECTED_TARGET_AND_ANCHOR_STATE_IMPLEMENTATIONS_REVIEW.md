@@ -260,3 +260,42 @@ Selected isolated pad runtime state remains unimplemented.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 14. Follow-On Implementation Slice
+
+After this readiness review, the first conservative selected isolated pad
+runtime-state implementation slice adds:
+
+- `rytm_randomizer/selected_isolated_pad_runtime_state.py`
+- `tests/test_selected_isolated_pad_runtime_state.py`
+
+It implements only inert validation results:
+
+- uninitialized selected isolated pad runtime state
+- passive-default selected target context with safely unavailable anchor
+- missing selected target safe failure
+- missing anchor safe failure
+- unsupported selected target safe failure
+- unsupported anchor safe failure
+- stale target safe failure
+- stale anchor safe failure
+- invalid target safe failure
+- invalid anchor safe failure
+
+It keeps the following parked:
+
+- `PZ`
+- selected pad switching
+- anchor return execution
+- runtime mutation
+- CLI wiring
+- dispatch
+- MIDI
+- ports
+- package metadata changes
+- active behavior
+- hardware behavior
+
+The next recommended task after that implementation is a docs-only
+review/acceptance gate for `rytm_randomizer/selected_isolated_pad_runtime_state.py`
+and `tests/test_selected_isolated_pad_runtime_state.py`.
