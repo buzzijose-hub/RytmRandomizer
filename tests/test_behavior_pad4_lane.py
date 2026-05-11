@@ -175,6 +175,84 @@ def test_p4r_metadata_contains_expected_passive_sources():
     assert result.metadata["dispatches_command"] is False
 
 
+def test_p4x_returns_read_only_pad4_bd_acoustic_current_mode_safe_mutation_intent():
+    from rytm_randomizer.behavior_pad4_lane import evaluate_pad4_lane_behavior
+
+    result = evaluate_pad4_lane_behavior("P4X")
+
+    assert result.command_key == "P4X"
+    assert result.accepted is True
+    assert result.reason == "supported_pad4_bd_acoustic_current_mode_safe_mutation_intent"
+    assert result.label == "safely mutate the currently loaded Pad 4 mode"
+    assert (
+        result.behavior_family
+        == "pad4-lane/bd-acoustic-current-mode-safe-mutation"
+    )
+    assert result.target_pad == 4
+    assert result.lane == "Pad 4 BD Acoustic lane"
+    assert (
+        result.lane_action
+        == "describe_pad4_bd_acoustic_current_mode_safe_mutation_intent"
+    )
+    assert result.intent_kind == "mutation"
+    assert result.state_changed is False
+    assert result.prompt_required is False
+    assert result.dispatches_command is False
+    assert result.executes_command is False
+    assert result.mutates_lane_state is False
+    assert result.sends_real_midi is False
+    assert result.opens_ports is False
+    assert result.hardware_required is False
+    assert result.active_behavior is False
+    assert result.display_lines == (
+        "P4X: safely mutate the currently loaded Pad 4 mode",
+        "Read-only Pad 4 BD Acoustic current mode safe mutation intent.",
+        "Target pad: 4",
+        "Lane: Pad 4 BD Acoustic lane",
+        "Lane action: describe_pad4_bd_acoustic_current_mode_safe_mutation_intent",
+        "Mutation concept: Pad 4 BD Acoustic current mode safe mutation",
+        "No prompt would run.",
+        "No state would change.",
+        "No command would dispatch.",
+        "No command would execute.",
+        "No lane state would mutate.",
+        "No MIDI would be sent.",
+        "No ports would be opened.",
+        "No hardware would be required.",
+    )
+
+
+def test_p4x_metadata_contains_expected_passive_sources():
+    from rytm_randomizer.behavior_pad4_lane import evaluate_pad4_lane_behavior
+
+    result = evaluate_pad4_lane_behavior("P4X")
+
+    assert result.metadata["source"] == "PAD4_COMMANDS"
+    assert result.metadata["command_type"] == "mutation"
+    assert result.metadata["target_pad"] == 4
+    assert result.metadata["lane"] == "pad_4_bd_acoustic_lane"
+    assert (
+        result.metadata["behavior_family"]
+        == "pad4-lane/bd-acoustic-current-mode-safe-mutation"
+    )
+    assert (
+        result.metadata["lane_action"]
+        == "describe_pad4_bd_acoustic_current_mode_safe_mutation_intent"
+    )
+    assert result.metadata["intent_kind"] == "mutation"
+    assert (
+        result.metadata["mutation_concept"]
+        == "Pad 4 BD Acoustic current mode safe mutation"
+    )
+    assert result.metadata["mock_only"] is True
+    assert result.metadata["sends_real_midi"] is False
+    assert result.metadata["opens_ports"] is False
+    assert result.metadata["hardware_required"] is False
+    assert result.metadata["active_behavior"] is False
+    assert result.metadata["mutates_runtime_state"] is False
+    assert result.metadata["dispatches_command"] is False
+
+
 def test_pad4_lane_metadata_is_copied_and_immutable():
     from rytm_randomizer.behavior_pad4_lane import evaluate_pad4_lane_behavior
 
@@ -198,6 +276,16 @@ def test_pad4_lane_metadata_is_copied_and_immutable():
     fresh_p4r_result = evaluate_pad4_lane_behavior("P4R")
     assert fresh_p4r_result.metadata["source"] == "PAD4_COMMANDS"
 
+    p4x_result = evaluate_pad4_lane_behavior("P4X")
+
+    try:
+        p4x_result.metadata["source"] = "mutated"
+    except TypeError:
+        pass
+
+    fresh_p4x_result = evaluate_pad4_lane_behavior("P4X")
+    assert fresh_p4x_result.metadata["source"] == "PAD4_COMMANDS"
+
 
 def test_deferred_packet_8_pad4_lane_keys_fail_safely():
     from rytm_randomizer.behavior_pad4_lane import (
@@ -205,7 +293,7 @@ def test_deferred_packet_8_pad4_lane_keys_fail_safely():
         evaluate_pad4_lane_behavior,
     )
 
-    assert DEFERRED_PACKET_8_PAD4_LANE_KEYS == ("P4X", "P4M")
+    assert DEFERRED_PACKET_8_PAD4_LANE_KEYS == ("P4M",)
 
     for command_key in DEFERRED_PACKET_8_PAD4_LANE_KEYS:
         result = evaluate_pad4_lane_behavior(command_key)
@@ -302,6 +390,8 @@ if __name__ == "__main__":
     test_p4a_metadata_contains_expected_passive_sources()
     test_p4r_returns_read_only_pad4_bd_acoustic_mode_rotation_intent()
     test_p4r_metadata_contains_expected_passive_sources()
+    test_p4x_returns_read_only_pad4_bd_acoustic_current_mode_safe_mutation_intent()
+    test_p4x_metadata_contains_expected_passive_sources()
     test_pad4_lane_metadata_is_copied_and_immutable()
     test_deferred_packet_8_pad4_lane_keys_fail_safely()
     test_unknown_keys_fail_safely()

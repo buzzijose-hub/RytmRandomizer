@@ -13,7 +13,8 @@ from .commands import COMMANDS, PAD4_COMMANDS
 
 PACKET_8A_PAD4_LANE_KEYS = ("P4A",)
 PACKET_8B_PAD4_LANE_KEYS = ("P4R",)
-DEFERRED_PACKET_8_PAD4_LANE_KEYS = ("P4X", "P4M")
+PACKET_8C_PAD4_LANE_KEYS = ("P4X",)
+DEFERRED_PACKET_8_PAD4_LANE_KEYS = ("P4M",)
 
 
 @dataclass(frozen=True)
@@ -56,6 +57,8 @@ def evaluate_pad4_lane_behavior(command_key):
         return _accepted_p4a_result()
     if key == "P4R":
         return _accepted_p4r_result()
+    if key == "P4X":
+        return _accepted_p4x_result()
 
     if key in COMMANDS:
         return _unsupported_result(key)
@@ -168,6 +171,60 @@ def _accepted_p4r_result():
             "Lane: Pad 4 BD Acoustic lane",
             f"Lane action: {lane_action}",
             f"Rotation concept: {rotation_concept}",
+            "No prompt would run.",
+            "No state would change.",
+            "No command would dispatch.",
+            "No command would execute.",
+            "No lane state would mutate.",
+            "No MIDI would be sent.",
+            "No ports would be opened.",
+            "No hardware would be required.",
+        ),
+        metadata=result_metadata,
+    )
+
+
+def _accepted_p4x_result():
+    metadata = PAD4_COMMANDS["P4X"]
+    label = metadata["label"]
+    lane_action = "describe_pad4_bd_acoustic_current_mode_safe_mutation_intent"
+    mutation_concept = "Pad 4 BD Acoustic current mode safe mutation"
+
+    result_metadata = {
+        "source": "PAD4_COMMANDS",
+        "command_type": metadata["type"],
+        "target_pad": metadata["pad"],
+        "lane": "pad_4_bd_acoustic_lane",
+        "behavior_family": "pad4-lane/bd-acoustic-current-mode-safe-mutation",
+        "lane_action": lane_action,
+        "intent_kind": "mutation",
+        "mutation_concept": mutation_concept,
+        "mock_only": True,
+        "sends_real_midi": False,
+        "opens_ports": False,
+        "hardware_required": False,
+        "active_behavior": False,
+        "mutates_runtime_state": False,
+        "dispatches_command": False,
+    }
+
+    return Pad4LaneBehaviorResult(
+        command_key="P4X",
+        label=label,
+        behavior_family="pad4-lane/bd-acoustic-current-mode-safe-mutation",
+        accepted=True,
+        reason="supported_pad4_bd_acoustic_current_mode_safe_mutation_intent",
+        target_pad=4,
+        lane="Pad 4 BD Acoustic lane",
+        lane_action=lane_action,
+        intent_kind="mutation",
+        display_lines=(
+            f"P4X: {label}",
+            "Read-only Pad 4 BD Acoustic current mode safe mutation intent.",
+            "Target pad: 4",
+            "Lane: Pad 4 BD Acoustic lane",
+            f"Lane action: {lane_action}",
+            f"Mutation concept: {mutation_concept}",
             "No prompt would run.",
             "No state would change.",
             "No command would dispatch.",
