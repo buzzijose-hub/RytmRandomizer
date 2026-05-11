@@ -19,6 +19,43 @@ Current branch:
 
 modularize-v1.34
 
+## V1.34 Behavior Parity Packet 9 Completion Checkpoint
+
+The broader Packet 9 completion checkpoint has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_9_COMPLETION_CHECKPOINT.md`
+
+Current baseline before the checkpoint:
+
+- `3cb5f59 Add Packet 9D undo commit state behavior checkpoint review`
+
+Packet 9 identity:
+
+- Undo/Commit/State Behavior Parity
+
+Accepted read-only Packet 9 scope:
+
+- `B`: back to current anchor
+- `E`: commit current state as new anchor
+- `W`: waveform exploration only
+- `U`: undo previous script-generated state
+
+Deferred Packet 9 scope is empty.
+
+Current implementation surface:
+
+- `rytm_randomizer/behavior_undo_commit_state.py`
+- `tests/test_behavior_undo_commit_state.py`
+
+The checkpoint confirms Packet 9 has no runtime undo behavior, anchor
+commit/restore execution, waveform exploration execution, dispatch, MIDI,
+ports, package metadata, active behavior, or hardware behavior.
+
+The next recommended task is a docs-only Packet 9 completion checkpoint
+review.
+
 ## V1.34 Behavior Parity Packet 9D Undo Commit State Behavior Checkpoint
 
 The tiny Packet 9D undo/commit/state behavior implementation is complete and
@@ -310,6 +347,7 @@ Packet 9C.
 
 Recent checkpoint history:
 
+- 3cb5f59 Add Packet 9D undo commit state behavior checkpoint review
 - 72897df Add Packet 9D undo commit state behavior checkpoint
 - 9fbb3e3 Add Packet 9D undo commit state behavior
 - 82a6611 Add Packet 9D undo commit state behavior plan
