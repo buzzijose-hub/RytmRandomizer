@@ -278,14 +278,32 @@ Safe next options:
 
 - docs-only selected target state implementation plan
 - docs-only anchor state implementation plan
-- docs-only runtime-state implementation sequencing note
+- docs-only runtime-state implementation sequencing note:
+  - `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_IMPLEMENTATION_SEQUENCING_NOTE_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_REVIEW.md`
 - docs-only progress/timeline update
 - pause at this clean accepted checkpoint
 
-## 13. Recommendation
+## 13. Follow-On Sequencing Note
 
-Proceed with a docs-only runtime-state implementation sequencing note before
-any implementation.
+The follow-on docs-only runtime-state implementation sequencing note is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_IMPLEMENTATION_SEQUENCING_NOTE_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_REVIEW.md`
+
+It documents this future order:
+
+- selected target state should be planned first
+- anchor state should be planned second
+- selected isolated pad runtime state should be planned third
+- `PZ` remains later and parked
+
+The follow-on note adds no implementation, tests, CLI commands, runtime state,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+## 14. Recommendation
+
+Proceed with a docs-only review/acceptance gate for the runtime-state
+implementation sequencing note.
 
 Reason:
 
@@ -306,7 +324,7 @@ Do not implement `PZ`.
 Do not add MIDI, ports, active behavior, runtime execution, package metadata
 changes, or hardware behavior.
 
-## 14. Decision Summary
+## 15. Decision Summary
 
 `Docs/V134_BEHAVIOR_PARITY_SELECTED_ISOLATED_PAD_RUNTIME_STATE_IMPLEMENTATION_PLAN_AFTER_PZ_READINESS_REVIEW.md`
 is accepted for planning.

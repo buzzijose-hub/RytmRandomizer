@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-861b7d7
+eb76007
+
+## Latest Runtime-State Implementation Sequencing Note After Selected Isolated Pad Runtime-State Review
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_STATE_IMPLEMENTATION_SEQUENCING_NOTE_AFTER_SELECTED_ISOLATED_PAD_RUNTIME_STATE_REVIEW.md`
+documents the future runtime-state implementation order after the accepted
+selected isolated pad runtime-state implementation plan review.
+
+Current baseline:
+
+- `eb76007 Add selected isolated pad runtime-state implementation plan review`
+
+Current sequencing decision:
+
+- selected target state should be planned first
+- anchor state should be planned second
+- selected isolated pad runtime state should be planned third
+- `PZ` remains later and parked
+- runtime state remains unimplemented
+
+The next recommended task is a docs-only review/acceptance gate for this
+sequencing note. No MIDI, ports, package metadata changes, active behavior,
+runtime execution, or hardware behavior is authorized.
 
 ## Latest Selected Isolated Pad Runtime-State Implementation Plan Review After PZ Readiness Review
 
