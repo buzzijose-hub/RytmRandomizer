@@ -243,3 +243,12 @@ Profile `4` remains parked.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 15. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PZ_BEHAVIOR_PLAN_AFTER_RUNTIME_STATE_VOCABULARY.md`
+
+That plan describes future `PZ` behavior requirements while keeping `PZ`
+parked and runtime state unimplemented.

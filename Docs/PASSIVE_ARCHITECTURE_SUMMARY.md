@@ -8,7 +8,27 @@ modularize-v1.34
 
 Current HEAD:
 
-ff6df01
+36e4905
+
+## Latest PZ Behavior Plan After Runtime-State Vocabulary
+
+`Docs/V134_BEHAVIOR_PARITY_PZ_BEHAVIOR_PLAN_AFTER_RUNTIME_STATE_VOCABULARY.md`
+documents the future `PZ` behavior boundary after the accepted runtime-state
+vocabulary review.
+
+Current baseline:
+
+- `36e4905 Add runtime-state vocabulary review`
+
+The plan records that `PZ` depends on future selected target state and anchor
+state, while keeping `PZ` parked and runtime state unimplemented.
+
+No CLI execution wiring, dispatch, selected isolated pad runtime state,
+selected pad anchor return execution, MIDI, ports, package metadata changes,
+active behavior, runtime execution, or hardware behavior is authorized.
+
+The next recommended task is a docs-only review/acceptance gate for this `PZ`
+behavior plan.
 
 ## Latest Runtime-State Vocabulary Decision Note Review
 
