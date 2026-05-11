@@ -6,7 +6,43 @@ modularize-v1.34
 
 ## Current HEAD
 
-de911d0 Add PZ runtime readiness behavior checkpoint
+010f517 Add PZ runtime readiness checkpoint review
+
+## Latest Behavior-Parity Progress Report After PZ
+
+The latest broader behavior-parity implementation progress report after `PZ`
+is:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PZ.md`
+
+It records:
+
+- current baseline:
+  - `010f517 Add PZ runtime readiness checkpoint review`
+- `PZ` is implemented and reviewed as read-only runtime readiness
+- `PZ` is no longer deferred, but remains inert
+- `PZ` can inspect conservative selected isolated pad runtime-state data
+  without mutation
+- Packet 11 selected isolated pad utility behavior is covered at read-only
+  altitude for:
+  - `L`
+  - `PZ`
+
+Confirmed absent behavior:
+
+- no selected pad switching execution
+- no anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
+
+The next recommended task is a docs-only review/acceptance gate for this
+post-`PZ` progress report.
 
 ## Latest PZ Read-Only Runtime Readiness Behavior Checkpoint Review
 

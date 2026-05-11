@@ -207,6 +207,11 @@ Safe next options:
 - create a next-command selection checkpoint
 - pause at this clean accepted `PZ` checkpoint
 
+Follow-up status:
+
+- broader progress report created:
+  - `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PZ.md`
+
 ## 11. Recommendation
 
 Prefer a broader behavior-parity progress report after `PZ` before choosing
