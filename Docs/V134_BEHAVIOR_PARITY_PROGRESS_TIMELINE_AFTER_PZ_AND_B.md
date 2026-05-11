@@ -360,3 +360,15 @@ execution work.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 16. Review Status
+
+This timeline is reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_AND_B_REVIEW.md`
+
+The review accepts this document as the current user-facing progress/timeline
+baseline after accepted `PZ` and `B` runtime-adjacent mock-only safe-failure
+tests.
+
+No third runtime-adjacent mock-only candidate is selected by the review.

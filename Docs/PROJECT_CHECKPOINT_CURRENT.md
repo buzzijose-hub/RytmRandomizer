@@ -21,7 +21,54 @@ modularize-v1.34
 
 Current HEAD:
 
-ee6c9de Add runtime adjacent next branch selection review after B tests
+a1ccf06 Add behavior parity progress timeline after PZ and B
+
+## V1.34 Behavior Parity Progress Timeline After PZ And B Review
+
+The user-facing behavior-parity progress timeline after accepted `PZ` and `B`
+runtime-adjacent mock-only safe-failure tests has now been reviewed and
+accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_AND_B_REVIEW.md`
+
+Accepted timeline:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_AND_B.md`
+
+Accepted milestone:
+
+- `a1ccf06 Add behavior parity progress timeline after PZ and B`
+
+Accepted state:
+
+- `PZ` remains the first runtime-adjacent mock-only safe-failure surface
+- `B` remains the second runtime-adjacent mock-only safe-failure surface
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- closeout includes `Runtime-Adjacent Mock-Only B`
+- no third runtime-adjacent mock-only candidate is selected yet
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- next-branch selection note before choosing any third runtime-adjacent
+  mock-only candidate, or pause at this checkpoint
+
+Confirmed boundaries:
+
+- no current anchor return execution
+- no selected pad switching execution
+- no selected pad anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Progress Timeline After PZ And B
 
