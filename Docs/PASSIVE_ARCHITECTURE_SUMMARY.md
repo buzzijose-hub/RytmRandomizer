@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-2c4fe39
+8bda84b
+
+## Latest Anchor State Plan After Selected Target Review
+
+`Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_PLAN_AFTER_SELECTED_TARGET_REVIEW.md`
+documents the future anchor state boundary after the accepted selected target
+state plan review.
+
+Current baseline:
+
+- `8bda84b Add selected target state plan review`
+
+The plan keeps scope to selected isolated pad anchor only. It distinguishes
+unknown, static, software-known, soft-captured, unsupported, stale, and invalid
+future anchor planning values while keeping anchor state unimplemented.
+
+`PZ` remains parked, selected target state remains unimplemented, and no MIDI,
+ports, package metadata changes, active behavior, runtime execution, hardware
+capture, or hardware behavior is authorized.
+
+The next recommended task is a docs-only review/acceptance gate for this
+anchor state plan.
 
 ## Latest Selected Target State Plan Review After PZ Review
 

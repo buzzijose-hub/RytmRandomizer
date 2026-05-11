@@ -301,3 +301,12 @@ Anchor state remains future planning scope.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 16. Follow-Up Status
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_PLAN_AFTER_SELECTED_TARGET_REVIEW.md`
+
+That plan describes the future anchor state boundary while keeping anchor
+state unimplemented, selected target state unimplemented, and `PZ` parked.

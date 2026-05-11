@@ -21,7 +21,34 @@ modularize-v1.34
 
 Current HEAD:
 
-2c4fe39 Add selected target state plan after PZ review
+8bda84b Add selected target state plan review
+
+## V1.34 Behavior Parity Anchor State Plan After Selected Target Review
+
+The anchor state boundary after the accepted selected target state plan review
+has now been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ANCHOR_STATE_PLAN_AFTER_SELECTED_TARGET_REVIEW.md`
+
+Current baseline:
+
+- `8bda84b Add selected target state plan review`
+
+Current decision:
+
+- define anchor state boundary only
+- keep anchor state unimplemented
+- keep selected target state unimplemented
+- keep runtime state unimplemented
+- keep `PZ` parked
+- do not add CLI execution wiring, dispatch, MIDI, ports, package metadata
+  changes, active behavior, runtime execution, hardware capture, or hardware
+  behavior
+
+The next recommended task is a docs-only review/acceptance gate for this
+anchor state plan.
 
 ## V1.34 Behavior Parity Selected Target State Plan Review After PZ Review
 
