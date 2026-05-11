@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-fa7d976 Add next packet planning gate review after Packet 7
+9b59a44 Add Packet 8 Pad 4 lane behavior plan
 
 ## Current Phase
 
@@ -2195,6 +2195,47 @@ hardware behavior is added by the plan.
 Next recommended task:
 
 - create a docs-only Packet 8 Pad 4 lane behavior plan review.
+
+## Latest Packet 8 Pad 4 Lane Behavior Plan Review
+
+The latest V1.34 behavior parity Packet 8 Pad 4 lane behavior plan review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_8_PAD4_LANE_BEHAVIOR_PLAN_REVIEW.md`
+
+It accepts the plan created at:
+
+- `9b59a44 Add Packet 8 Pad 4 lane behavior plan`
+
+Accepted future implementation scope:
+
+- Packet 8A: `P4A` only
+
+Accepted future behavior vocabulary:
+
+- source metadata: `PAD4_COMMANDS`
+- target pad: `4`
+- lane: Pad 4 BD Acoustic lane
+- behavior family: `pad4-lane/bd-acoustic-body-accent-home-anchor`
+- lane action: `return_pad4_bd_acoustic_body_accent_home_anchor`
+- intent kind: `anchor_return`
+- anchor concept: Pad 4 BD Acoustic body/accent home anchor
+
+Preserved/deferred scope:
+
+- `P4M` remains Packet 1 menu/status behavior.
+- `P4R` remains unsupported/safe until separately planned.
+- `P4X` remains unsupported/safe until separately planned.
+- group profile `"4"` / My BD Acoustic remains parked in the mock message
+  mapper.
+
+Next recommended task:
+
+- tiny TDD Packet 8A implementation for read-only `P4A` anchor/home intent
+  only.
+
+Do not widen beyond `P4A`, and do not add runtime Pad 4 state, anchor loading,
+rotation execution, mutation execution, dispatch, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior.
 
 ## Latest Next Packet 7 Command Selection After Packet 7G Review
 
