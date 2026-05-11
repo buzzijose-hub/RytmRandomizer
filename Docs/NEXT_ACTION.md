@@ -6,7 +6,7 @@ modularize-v1.34
 
 ## Current HEAD
 
-52888d1 Add behavior parity progress report review after Packet 7G
+f869788 Add next Packet 7 command selection after Packet 7G
 
 ## Current Phase
 
@@ -2121,6 +2121,41 @@ behavior, profile `"4"` implementation, machine/profile expansion, or hardware
 validation was added.
 
 The checkpoint recommends a docs-only review/acceptance gate next.
+
+## Latest Next Packet 7 Command Selection After Packet 7G Review
+
+The latest docs-only next Packet 7 command selection checkpoint review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7G_REVIEW.md`
+
+It records:
+
+- accepted selection checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_7_COMMAND_SELECTION_CHECKPOINT_AFTER_PACKET_7G.md`
+- accepted checkpoint milestone:
+  - `f869788 Add next Packet 7 command selection after Packet 7G`
+- accepted next planning branch:
+  - docs-only Packet 7H Pad 3 lane behavior plan for `P3X` only
+- accepted current Packet 7 progress:
+  - `P3A`
+  - `SA`
+  - `SL`
+  - `SB`
+  - `SX`
+  - `SW`
+  - `P3R`
+- preserved Packet 1 ownership:
+  - `P3M`
+- accepted future behavior vocabulary:
+  - behavior family `pad3-lane/sy-raw-current-mode-safe-mutation`
+  - lane action `describe_pad3_sy_raw_current_mode_safe_mutation_intent`
+  - intent kind `mutation`
+  - mutation concept `Pad 3 SY Raw current mode safe mutation`
+- no implementation, tests, CLI execution wiring, dispatch, MIDI, ports,
+  package metadata, active behavior, runtime behavior, or hardware behavior
+
+The review recommends a docs-only Packet 7H Pad 3 lane behavior plan for
+`P3X` only.
 
 ## Latest Packet 7G Pad 3 Lane Behavior Checkpoint Review
 
