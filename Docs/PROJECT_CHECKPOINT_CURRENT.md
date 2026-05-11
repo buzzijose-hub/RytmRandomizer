@@ -21,7 +21,57 @@ modularize-v1.34
 
 Current HEAD:
 
-3e23e3c Add B runtime adjacent mock-only test plan
+e622212 Add runtime adjacent mock-only B tests
+
+## V1.34 Behavior Parity Runtime-Adjacent Mock-Only B Tests Checkpoint
+
+The tiny test-only `B` runtime-adjacent safe-failure test slice is complete
+and documented for review.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_B_TESTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `e622212 Add runtime adjacent mock-only B tests`
+
+Files changed by the milestone:
+
+- `tests/test_runtime_adjacent_mock_only_b.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout coverage added:
+
+- `Runtime-Adjacent Mock-Only B`
+
+Checkpoint summary:
+
+- `B` has test-only safe-failure coverage for runtime-adjacent readiness
+- unknown, unsupported, stale, and invalid anchor contexts fail safely
+- `MockMidiSender` remains empty for failed readiness
+- passive CLI `preview-command B` remains read-only
+- no real MIDI libraries are imported
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+Confirmed boundaries:
+
+- no current anchor return execution
+- no selected pad switching execution
+- no selected pad anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity B Runtime-Adjacent Mock-Only Safe-Failure Test Plan Review
 
