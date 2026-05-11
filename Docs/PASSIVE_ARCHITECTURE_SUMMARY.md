@@ -8,7 +8,39 @@ modularize-v1.34
 
 Current HEAD:
 
-09b4f2e
+52e63b4
+
+## Latest Packet 10 Progress Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_10_PROGRESS_CHECKPOINT.md` consolidates
+current Packet 10 selected-profile workflow progress after the accepted Packet
+10A review.
+
+Packet 10 identity:
+
+- Selected Profile Workflow Behavior Parity
+
+Accepted Packet 10A behavior:
+
+- `P`: select/switch profile and change Rytm machine
+
+Deferred/safe Packet 10 scope:
+
+- `M`
+
+Implementation surface:
+
+- `rytm_randomizer/behavior_selected_profile.py`
+- `tests/test_behavior_selected_profile.py`
+
+Closeout coverage:
+
+- `=== Test: Behavior Selected Profile ===`
+
+Packet 10 is not complete while `M` remains deferred. The checkpoint confirms
+no selected-profile runtime state, profile switching execution, machine
+changes, anchor loading execution, dispatch, MIDI, ports, package metadata,
+active behavior, or hardware behavior exists.
 
 ## Latest Packet 10A Selected Profile Workflow Checkpoint Review
 

@@ -193,3 +193,20 @@ Packet 10A read-only selected-profile workflow behavior for `P` is accepted.
 Hardware remains off.
 
 No implementation in this review slice.
+
+## 11. Follow-Up Status
+
+Follow-up checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_10_PROGRESS_CHECKPOINT.md`
+
+Follow-up decision:
+
+- Packet 10 progress is now documented after accepted Packet 10A.
+- `P` is accepted for the current read-only intent-only phase.
+- `M` remains deferred/safe.
+- Packet 10 is not complete while `M` remains deferred.
+
+This follow-up does not add selected-profile runtime state, profile switching
+execution, machine changes, anchor loading execution, dispatch, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
