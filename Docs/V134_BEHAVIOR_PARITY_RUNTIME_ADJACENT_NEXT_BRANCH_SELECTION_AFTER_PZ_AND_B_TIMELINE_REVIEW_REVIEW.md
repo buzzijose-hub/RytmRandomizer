@@ -239,3 +239,16 @@ Accepted runtime-adjacent mock-only safe-failure surfaces remain:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The selected next planning branch has now been documented in:
+
+- `Docs/V134_BEHAVIOR_PARITY_L_RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURE_TEST_PLAN.md`
+
+That plan keeps `L` planning-only and adds no tests, implementation, selected
+pad switching execution, execution path, MIDI, ports, package metadata changes,
+active behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for the `L`
+runtime-adjacent mock-only safe-failure test plan.

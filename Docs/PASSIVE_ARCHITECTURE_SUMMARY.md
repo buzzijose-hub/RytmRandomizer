@@ -8,7 +8,32 @@ modularize-v1.34
 
 Current HEAD:
 
-895ad11
+1bc7469
+
+## Latest L Runtime-Adjacent Mock-Only Safe-Failure Test Plan
+
+`Docs/V134_BEHAVIOR_PARITY_L_RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURE_TEST_PLAN.md`
+documents the next docs-only runtime-adjacent mock-only safe-failure test
+plan.
+
+Planned future candidate:
+
+- `L`: select isolated single-pad mutation target, default Pad 3
+
+Current accepted state:
+
+- `L` remains planning-only
+- `PZ` remains the first runtime-adjacent mock-only safe-failure surface
+- `B` remains the second runtime-adjacent mock-only safe-failure surface
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for the `L`
+test plan.
+
+No selected pad switching execution, selected pad target state mutation,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this plan.
 
 ## Latest Runtime-Adjacent Next Branch Selection After PZ And B Timeline Review Review
 

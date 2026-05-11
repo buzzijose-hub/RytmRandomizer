@@ -21,7 +21,55 @@ modularize-v1.34
 
 Current HEAD:
 
-895ad11 Add runtime adjacent next branch selection after PZ and B timeline
+1bc7469 Add runtime adjacent next branch selection review after PZ and B timeline
+
+## V1.34 Behavior Parity L Runtime-Adjacent Mock-Only Safe-Failure Test Plan
+
+The docs-only `L` runtime-adjacent mock-only safe-failure test plan has now
+been documented.
+
+Document:
+
+- `Docs/V134_BEHAVIOR_PARITY_L_RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURE_TEST_PLAN.md`
+
+Current baseline:
+
+- `1bc7469 Add runtime adjacent next branch selection review after PZ and B timeline`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_NEXT_BRANCH_SELECTION_AFTER_PZ_AND_B_TIMELINE_REVIEW_REVIEW.md`
+
+Plan summary:
+
+- future candidate:
+  - `L`: select isolated single-pad mutation target, default Pad 3
+- `L` remains planning-only
+- future tests should prove safe-failure behavior before any implementation
+- `PZ` and `B` remain the accepted runtime-adjacent mock-only safe-failure
+  surfaces
+- no `L` tests, implementation, selected pad switching execution, execution
+  path, MIDI, ports, package metadata changes, active behavior, or hardware
+  behavior are added
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this `L` test plan
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime-Adjacent Next Branch Selection After PZ And B Timeline Review Review
 
