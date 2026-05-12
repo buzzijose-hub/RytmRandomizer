@@ -28,7 +28,6 @@ RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES = ("PZ", "B", "L")
 PARKED_SCOPE = (
     "fourth runtime-adjacent candidate",
     "profile 4 mock mapper support",
-    "Packet 12 CLI visibility",
 )
 
 ABSENT_BEHAVIOR = (
@@ -83,7 +82,7 @@ PROTECTED_FILE_STATE = {
 REPORT_BOUNDARY = {
     "read_only": True,
     "in_memory_only": True,
-    "cli_visibility": "absent",
+    "cli_visibility": "present",
     "dispatch": "absent",
     "command_execution": "absent",
     "scene_execution": "absent",

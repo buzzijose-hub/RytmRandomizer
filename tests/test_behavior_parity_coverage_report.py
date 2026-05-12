@@ -75,7 +75,6 @@ def test_report_records_parked_scope_and_absent_behavior():
     assert report["parked_scope"] == (
         "fourth runtime-adjacent candidate",
         "profile 4 mock mapper support",
-        "Packet 12 CLI visibility",
     )
     assert report["absent_behavior"] == (
         "dispatch",
@@ -143,7 +142,7 @@ def test_report_records_read_only_safety_boundaries():
 
     assert report["read_only"] is True
     assert report["in_memory_only"] is True
-    assert report["cli_visibility"] == "absent"
+    assert report["cli_visibility"] == "present"
     assert report["dispatch"] == "absent"
     assert report["command_execution"] == "absent"
     assert report["scene_execution"] == "absent"
@@ -163,10 +162,10 @@ def test_report_summary_is_deterministic():
         "title": "V1.34 Behavior Parity Coverage Report",
         "accepted_packet_count": 11,
         "runtime_adjacent_safe_failure_count": 3,
-        "parked_scope_count": 3,
+        "parked_scope_count": 2,
         "closeout_coverage_count": 18,
         "read_only": True,
-        "cli_visibility": "absent",
+        "cli_visibility": "present",
         "active_behavior": "absent",
         "hardware_required": False,
     }
@@ -202,7 +201,6 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "Parked Scope:",
         "- fourth runtime-adjacent candidate",
         "- profile 4 mock mapper support",
-        "- Packet 12 CLI visibility",
         "Absent Behavior:",
         "- dispatch",
         "- command execution",
@@ -230,7 +228,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "Report Boundary:",
         "- read_only: True",
         "- in_memory_only: True",
-        "- cli_visibility: absent",
+        "- cli_visibility: present",
         "- active_behavior: absent",
         "- hardware_required: False",
     ]

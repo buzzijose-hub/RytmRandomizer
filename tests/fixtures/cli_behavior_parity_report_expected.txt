@@ -18,7 +18,6 @@ Runtime-Adjacent Mock-Only Safe Failures:
 Parked Scope:
 - fourth runtime-adjacent candidate
 - profile 4 mock mapper support
-- Packet 12 CLI visibility
 Absent Behavior:
 - dispatch
 - command execution
@@ -46,6 +45,6 @@ Protected File State:
 Report Boundary:
 - read_only: True
 - in_memory_only: True
-- cli_visibility: absent
+- cli_visibility: present
 - active_behavior: absent
 - hardware_required: False

@@ -1100,7 +1100,7 @@ def test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion(
     assert "Parked Scope:" in output
     assert "- fourth runtime-adjacent candidate" in output
     assert "- profile 4 mock mapper support" in output
-    assert "- Packet 12 CLI visibility" in output
+    assert "- Packet 12 CLI visibility" not in output
     assert "Absent Behavior:" in output
     assert "- dispatch" in output
     assert "- command execution" in output
@@ -1119,6 +1119,7 @@ def test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion(
     assert "- runtime_execution_logic: absent" in output
     assert "- read_only: True" in output
     assert "- in_memory_only: True" in output
+    assert "- cli_visibility: present" in output
     assert "- active_behavior: absent" in output
     assert "- hardware_required: False" in output
     assert "execute-command" not in output
