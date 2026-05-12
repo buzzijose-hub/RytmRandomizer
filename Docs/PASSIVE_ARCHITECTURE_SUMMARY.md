@@ -8,7 +8,38 @@ modularize-v1.34
 
 Current HEAD:
 
-8677a6a
+c8e1b8d
+
+## Latest Behavior-Parity Packet 12 Report Data Alignment Plan After CLI Visibility
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_REPORT_DATA_ALIGNMENT_PLAN_AFTER_CLI_VISIBILITY.md`
+plans a tiny future passive report-data alignment update after accepted Packet
+12 CLI visibility.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_CLI_VISIBILITY_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `c8e1b8d Add behavior parity next branch selection review after Packet 12 CLI visibility`
+
+Planned future alignment:
+
+- change report boundary data from `cli_visibility: absent` to
+  `cli_visibility: present`
+- remove `Packet 12 CLI visibility` from parked scope
+- keep fourth runtime-adjacent candidate parked
+- keep profile `4` mock mapper support parked
+- keep absent execution/MIDI/hardware behavior explicit
+
+The next recommended task is a docs-only review/acceptance gate for this
+report data alignment plan.
+
+No report data implementation, test changes, fixture changes, CLI changes,
+CLI execution wiring, selected pad switching execution, selected pad target
+state mutation, dispatch, command execution, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this plan.
 
 ## Latest Behavior-Parity Next Branch Selection After Packet 12 CLI Visibility Review
 

@@ -170,3 +170,14 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Plan Status
+
+The selected next branch is now planned by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_REPORT_DATA_ALIGNMENT_PLAN_AFTER_CLI_VISIBILITY.md`
+
+The plan remains documentation-only and does not add report data
+implementation, tests, fixtures, CLI changes, CLI execution wiring, dispatch,
+command execution, runtime execution, MIDI, ports, package metadata changes,
+active behavior, or hardware behavior.

@@ -21,7 +21,57 @@ modularize-v1.34
 
 Current HEAD:
 
-8677a6a Add behavior parity next branch selection after Packet 12 CLI visibility
+c8e1b8d Add behavior parity next branch selection review after Packet 12 CLI visibility
+
+## V1.34 Behavior Parity Packet 12 Report Data Alignment Plan After CLI Visibility
+
+The Packet 12 report data alignment after CLI visibility is now planned.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_REPORT_DATA_ALIGNMENT_PLAN_AFTER_CLI_VISIBILITY.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_CLI_VISIBILITY_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `c8e1b8d Add behavior parity next branch selection review after Packet 12 CLI visibility`
+
+Planned future alignment:
+
+- change report boundary data from `cli_visibility: absent` to
+  `cli_visibility: present`
+- remove `Packet 12 CLI visibility` from parked scope
+- keep fourth runtime-adjacent candidate parked
+- keep profile `4` mock mapper support parked
+- keep absent execution/MIDI/hardware behavior explicit
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this report data alignment plan
+
+Confirmed boundaries:
+
+- no report data implementation in this plan
+- no test changes
+- no fixture changes
+- no CLI changes
+- no CLI execution wiring
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Next Branch Selection After Packet 12 CLI Visibility Review
 
