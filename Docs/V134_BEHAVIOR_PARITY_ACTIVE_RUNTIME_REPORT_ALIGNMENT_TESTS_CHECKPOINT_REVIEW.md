@@ -1,20 +1,19 @@
-# V1.34 Behavior Parity Active/Runtime Report Alignment Tests Checkpoint
+# V1.34 Behavior Parity Active/Runtime Report Alignment Tests Checkpoint Review
 
 ## 1. Purpose
 
-Record the completed tiny test-only implementation of active/runtime report
-alignment tests.
+Review and accept
+`Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT.md`.
 
-This checkpoint documents the new safety coverage that proves the read-only
-runtime plan report and read-only active-boundary report stay aligned where
-they should align, and intentionally different where their scopes differ.
+Accept the completed test-only active/runtime report alignment coverage as the
+current safety baseline for the read-only runtime plan report and
+active-boundary report.
 
-This checkpoint is documentation-only.
+This is a documentation-only review gate.
 
-It adds no implementation beyond the already completed test-only milestone.
-
-It adds no MIDI, ports, CLI execution wiring, runtime execution, dispatch,
-command execution, active behavior, or hardware behavior.
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
 
 ## 2. Current Clean Baseline
 
@@ -22,18 +21,17 @@ Current branch:
 
 - `modularize-v1.34`
 
-Current HEAD before this checkpoint slice:
+Current HEAD before this review slice:
 
-- `3016166 Add active runtime report alignment tests`
+- `67df7cf Add active runtime report alignment tests checkpoint`
 
 Current phase:
 
 - Passive/Mock Foundation Phase
 - behavior-parity implementation phase
-- first mock-only active candidate design alignment accepted
-- active/runtime report alignment safety test plan accepted
 - active/runtime report alignment tests implemented
-- active/runtime report alignment tests now being checkpointed
+- active/runtime report alignment tests checkpointed
+- active/runtime report alignment tests checkpoint now being reviewed
 
 Hardware status:
 
@@ -41,32 +39,34 @@ Hardware status:
 - Analog Four MKII off
 - hardware not required
 
-## 3. Implementation Milestone
+## 3. Review Decision
 
-Implementation milestone:
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT.md`
+
+Accepted checkpoint milestone:
+
+- `67df7cf Add active runtime report alignment tests checkpoint`
+
+Accepted implementation milestone:
 
 - `3016166 Add active runtime report alignment tests`
 
-Implementation files:
+Accepted implementation files:
 
 - `tests/test_active_runtime_report_alignment.py`
 - `Scripts/closeout_check.ps1`
 
-New closeout label:
+Accepted closeout label:
 
 - `=== Test: Active/Runtime Report Alignment ===`
 
-Accepted upstream review:
+This review accepts the test-only alignment coverage as the current baseline.
 
-- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_SAFETY_TEST_PLAN_REVIEW.md`
+## 4. Accepted Test Coverage
 
-Accepted upstream plan:
-
-- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_SAFETY_TEST_PLAN.md`
-
-## 4. Implemented Test Coverage
-
-The new test file verifies:
+The accepted test coverage proves:
 
 - importing runtime plan report and active-boundary report prints nothing
 - profile `2` is supported by runtime plan report and accepted by
@@ -85,7 +85,7 @@ The new test file verifies:
 
 ## 5. Accepted Alignment Semantics
 
-The current accepted alignment is:
+Accepted current alignment:
 
 - profile `2` / My BD Hard:
   - runtime plan report supported planning input
@@ -99,13 +99,13 @@ The current accepted alignment is:
 
 The profile `3` difference is intentional and now closeout-covered.
 
-## 6. Closeout Coverage
+## 6. Accepted Closeout State
 
 Closeout now includes:
 
 - `=== Test: Active/Runtime Report Alignment ===`
 
-The implementation keeps existing coverage:
+Existing related coverage remains:
 
 - `=== Test: Runtime Plan Report ===`
 - `=== Test: Active Boundary Report ===`
@@ -115,7 +115,7 @@ The implementation keeps existing coverage:
 
 ## 7. Confirmed Boundaries
 
-The implementation added no:
+This review confirms no:
 
 - production module
 - runtime report behavior change
@@ -154,29 +154,42 @@ Package metadata remains untouched.
 
 Hardware remains off.
 
-## 8. Verification
+## 8. Preconditions Before Future Branch Selection
 
-Verification for the implementation milestone:
+Before selecting a next branch:
 
-- direct test run passed:
-  - `python .\tests\test_active_runtime_report_alignment.py`
-- full closeout passed
-- V1.34 reference diff was empty
-- package metadata diff was empty
-- git status was clean
+- closeout must pass
+- git status must be clean
+- V1.34 reference diff must be empty
+- package metadata diff must be empty
+- active/runtime alignment checkpoint review must be accepted
+- passive CLI must remain read-only
+- runtime plan report must remain read-only
+- active-boundary report must remain read-only
+- active-boundary evaluation must remain mock-only
+- no real MIDI libraries may be imported
+- no ports may open
+- no hardware may be required
 
 ## 9. Safe Next Options
 
 Safe next options:
 
-- docs-only review/acceptance gate for this checkpoint
+- docs-only next-branch selection after this accepted checkpoint review
 - broader behavior-parity progress report
-- docs-only next-branch selection after this alignment checkpoint
+- docs-only runtime plan report CLI preview selection
 - pause at this clean checkpoint
 
 ## 10. Recommendation
 
-Create a docs-only review/acceptance gate for this checkpoint.
+Create a docs-only next-branch selection after this review.
+
+The selection should decide whether the next move is:
+
+- broader behavior-parity progress reporting
+- runtime plan report CLI preview planning
+- another small mock-only safety gap
+- pause at this clean checkpoint
 
 Do not add CLI execution wiring.
 
@@ -188,21 +201,11 @@ Do not turn on hardware.
 
 ## 11. Decision
 
-The active/runtime report alignment test-only implementation is complete and
-checkpointed.
+The active/runtime report alignment tests checkpoint is accepted.
 
-The next recommended task is a docs-only checkpoint review.
+The next recommended task is a docs-only next-branch selection after this
+accepted checkpoint review.
 
 Hardware remains off.
 
-## 12. Follow-Up Status
-
-This checkpoint is now reviewed and accepted by:
-
-- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT_REVIEW.md`
-
-The next recommended task is a docs-only next-branch selection after the
-accepted checkpoint review.
-
-The review does not authorize real MIDI, port opening, CLI execution wiring,
-active behavior, or hardware behavior.
+No implementation in this slice.

@@ -8,7 +8,43 @@ modularize-v1.34
 
 Current HEAD:
 
-3016166
+67df7cf
+
+## Latest Behavior-Parity Active/Runtime Report Alignment Tests Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT_REVIEW.md`
+accepts the active/runtime report alignment tests checkpoint.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT.md`
+
+Accepted checkpoint milestone:
+
+- `67df7cf Add active runtime report alignment tests checkpoint`
+
+Accepted implementation milestone:
+
+- `3016166 Add active runtime report alignment tests`
+
+Accepted closeout label:
+
+- `=== Test: Active/Runtime Report Alignment ===`
+
+Accepted coverage:
+
+- profile `2` alignment
+- profile `3` intentional runtime-plan supported / active-boundary unsupported
+  difference
+- profile `4` parked/unsupported status
+- shared mock-only, no-MIDI, no-port, no-hardware boundaries
+
+The next recommended task is a docs-only next-branch selection after this
+accepted checkpoint review.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this review.
 
 ## Latest Behavior-Parity Active/Runtime Report Alignment Tests Checkpoint
 
