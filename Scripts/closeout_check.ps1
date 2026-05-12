@@ -164,6 +164,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_runtime_adjacent_mock_only_b.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_runtime_adjacent_mock_only_b.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Runtime-Adjacent Mock-Only L ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_runtime_adjacent_mock_only_l.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_runtime_adjacent_mock_only_l.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== Test: Mock MIDI ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_mock_midi.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_midi.log" | Add-Content $summary
 
