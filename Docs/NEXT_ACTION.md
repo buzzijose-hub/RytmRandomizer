@@ -6,7 +6,59 @@ modularize-v1.34
 
 ## Current HEAD
 
-9652e9d Add runtime plan scaffold checkpoint
+27cf313 Add runtime plan scaffold checkpoint review
+
+## Latest Behavior-Parity Next Branch Selection After Runtime Plan Scaffold Review
+
+The next branch after the accepted runtime plan scaffold review is now
+selected.
+
+Selection checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_SCAFFOLD_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `27cf313 Add runtime plan scaffold checkpoint review`
+
+Selected next branch:
+
+- docs-only first runtime plan expansion design
+
+Recommended next task:
+
+- create the docs-only first runtime plan expansion design
+
+Current accepted runtime plan baseline:
+
+- mock-only
+- inert
+- group profiles `2` and `3` return blocked previews only
+- unknown keys fail safely
+- unsupported source kinds fail safely
+- profile `4` remains parked
+- no preview executes
+
+Confirmed boundaries:
+
+- no implementation in this selection checkpoint
+- no new tests
+- no runtime plan expansion code
+- no fake-provider expansion code
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Runtime Plan Scaffold Checkpoint Review
 

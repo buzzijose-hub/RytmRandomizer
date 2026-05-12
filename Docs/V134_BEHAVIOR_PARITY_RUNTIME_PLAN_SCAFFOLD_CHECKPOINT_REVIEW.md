@@ -202,3 +202,16 @@ The current runtime plan baseline is mock-only and inert.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Selection
+
+The next branch after this accepted review is selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_SCAFFOLD_REVIEW.md`
+
+Selected next branch:
+
+- docs-only first runtime plan expansion design
+
+The selected branch remains planning-only and does not authorize implementation
+by itself.

@@ -8,7 +8,32 @@ modularize-v1.34
 
 Current HEAD:
 
-9652e9d
+27cf313
+
+## Latest Behavior-Parity Next Branch Selection After Runtime Plan Scaffold Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_SCAFFOLD_REVIEW.md`
+selects the next branch after the accepted runtime plan scaffold review.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `27cf313 Add runtime plan scaffold checkpoint review`
+
+Selected next branch:
+
+- docs-only first runtime plan expansion design
+
+The selected branch is planning-only. It may clarify how the runtime plan can
+expand later, but it must not add implementation, tests, CLI execution wiring,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+The current runtime plan baseline remains mock-only, inert, and
+closeout-covered by `=== Test: Runtime Plan ===`.
 
 ## Latest Behavior-Parity Runtime Plan Scaffold Checkpoint Review
 
