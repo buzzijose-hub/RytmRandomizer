@@ -21,7 +21,40 @@ modularize-v1.34
 
 Current HEAD:
 
-e1474b4 Add active runtime report alignment tests review
+1d864ec Add next branch selection after active runtime alignment review
+
+## V1.34 Behavior Parity Progress Report After Active/Runtime Report Alignment Tests
+
+The broader behavior-parity progress after the active/runtime report alignment
+tests is now consolidated.
+
+Progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS.md`
+
+Current baseline before the report:
+
+- `1d864ec Add next branch selection after active runtime alignment review`
+
+The report consolidates the accepted first mock-only active candidate design
+alignment, read-only runtime plan report, read-only active-boundary report,
+active/runtime report alignment tests, current closeout coverage, accepted
+profile semantics, and no-MIDI/no-port/no-hardware boundaries.
+
+Current accepted profile semantics:
+
+- profile `2` is aligned as the accepted mock-only active candidate
+- profile `3` remains runtime-plan supported but active-boundary unsupported
+- profile `4` remains parked/unsupported
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this progress report
+
+No implementation, tests, closeout script changes, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this
+report.
 
 ## V1.34 Behavior Parity Next Branch Selection After Active/Runtime Report Alignment Tests Review
 

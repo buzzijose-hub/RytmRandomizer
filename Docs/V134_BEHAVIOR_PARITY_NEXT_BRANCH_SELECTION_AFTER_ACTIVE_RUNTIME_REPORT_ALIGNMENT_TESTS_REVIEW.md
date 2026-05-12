@@ -214,3 +214,36 @@ report.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The selected next branch has been carried out as a documentation-only progress
+report.
+
+Progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS.md`
+
+Follow-up report baseline:
+
+- `1d864ec Add next branch selection after active runtime alignment review`
+
+Next recommended task:
+
+- docs-only review/acceptance gate for the progress report
+
+The follow-up report keeps the same boundaries:
+
+- no implementation
+- no tests
+- no closeout script changes
+- no CLI changes
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
