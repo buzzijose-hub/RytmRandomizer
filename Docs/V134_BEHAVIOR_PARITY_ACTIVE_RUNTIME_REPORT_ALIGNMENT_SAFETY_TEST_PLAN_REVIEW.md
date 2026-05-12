@@ -246,3 +246,17 @@ report alignment tests.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 14. Follow-Up Status
+
+The tiny test-only active/runtime report alignment implementation is now
+completed and checkpointed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `3016166 Add active runtime report alignment tests`
+
+The next recommended task is a docs-only review/acceptance gate for that
+checkpoint.

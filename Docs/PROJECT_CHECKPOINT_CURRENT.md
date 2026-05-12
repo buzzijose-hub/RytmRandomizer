@@ -21,7 +21,42 @@ modularize-v1.34
 
 Current HEAD:
 
-76523e4 Add active runtime report alignment safety test plan
+3016166 Add active runtime report alignment tests
+
+## V1.34 Behavior Parity Active/Runtime Report Alignment Tests Checkpoint
+
+The tiny test-only active/runtime report alignment implementation is now
+checkpointed.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `3016166 Add active runtime report alignment tests`
+
+Implementation files:
+
+- `tests/test_active_runtime_report_alignment.py`
+- `Scripts/closeout_check.ps1`
+
+New closeout label:
+
+- `=== Test: Active/Runtime Report Alignment ===`
+
+The checkpoint records tests proving profile `2` alignment, profile `3`
+intentional runtime-plan/active-boundary difference, profile `4`
+parked/unsupported status, and shared mock-only/no-MIDI/no-port/no-hardware
+boundaries.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+No production module, CLI changes, CLI execution wiring, dispatch, command
+execution, runtime mutation, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is added by this checkpoint.
 
 ## V1.34 Behavior Parity Active/Runtime Report Alignment Safety Test Plan Review
 
