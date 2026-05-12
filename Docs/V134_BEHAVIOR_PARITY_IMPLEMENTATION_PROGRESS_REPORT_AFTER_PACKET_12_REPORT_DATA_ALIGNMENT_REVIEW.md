@@ -225,3 +225,18 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 10. Next Branch Selection Status
+
+The next branch after this review is selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+
+Selected next planning target:
+
+- docs-only fourth runtime-adjacent candidate decision note
+
+The selection checkpoint does not add a fourth runtime-adjacent candidate,
+profile `4` mock mapper support, implementation, tests, fixtures, CLI changes,
+CLI execution wiring, dispatch, command execution, runtime execution, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
