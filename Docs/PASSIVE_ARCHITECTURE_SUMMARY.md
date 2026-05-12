@@ -8,7 +8,46 @@ modularize-v1.34
 
 Current HEAD:
 
-3f04373
+237fbe3
+
+## Latest Session Closeout 2026-05-12 Runtime Plan Handoff
+
+`Docs/SESSION_CLOSEOUT_2026_05_12_RUNTIME_PLAN_HANDOFF.md`
+saves the late-session runtime planning progress and the exact next safe
+starting point.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NARROW_MOCK_ONLY_FAKE_PROVIDER_IMPLEMENTATION_PLAN_REVIEW_AFTER_FIRST_RUNTIME_ACTIVE_FACING_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `237fbe3 Add narrow mock-only fake-provider implementation plan review`
+
+Saved current state:
+
+- first runtime/active-facing design plan accepted
+- narrow mock-only/fake-provider implementation plan accepted
+- `PZ`, `B`, and `L` remain the accepted runtime-adjacent safe-failure trio
+- fourth runtime-adjacent candidate remains parked
+- profile `4` mock mapper support remains parked
+
+Next selected branch:
+
+- implement the narrow mock-only runtime plan scaffold
+
+Allowed future implementation scope:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- one closeout label:
+  - `=== Test: Runtime Plan ===`
+
+No implementation, runtime module, tests, fixtures, closeout script changes,
+CLI changes, CLI execution wiring, selected pad switching execution, selected
+pad target state mutation, dispatch, command execution, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this
+closeout.
 
 ## Latest Behavior-Parity Narrow Mock-Only/Fake-Provider Implementation Plan Review
 
