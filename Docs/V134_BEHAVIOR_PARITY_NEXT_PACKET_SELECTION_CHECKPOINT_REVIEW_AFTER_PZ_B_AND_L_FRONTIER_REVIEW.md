@@ -208,3 +208,18 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Plan
+
+This review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN.md`
+
+The follow-up plan defines Packet 12 as:
+
+- read-only behavior-parity coverage report
+
+The follow-up plan keeps the next task as a docs-only review/acceptance gate
+before any Packet 12 implementation.
+
+No Packet 12 CLI visibility is authorized by the follow-up plan.

@@ -6,7 +6,55 @@ modularize-v1.34
 
 ## Current HEAD
 
-b5208cd Add behavior parity next packet selection after PZ B and L frontier review
+2948d70 Add behavior parity next packet selection review after PZ B and L frontier review
+
+## Latest Behavior-Parity Packet 12 Coverage Report Plan
+
+Packet 12 is now planned at documentation level.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_SELECTION_CHECKPOINT_REVIEW_AFTER_PZ_B_AND_L_FRONTIER_REVIEW.md`
+
+Current baseline:
+
+- `2948d70 Add behavior parity next packet selection review after PZ B and L frontier review`
+
+Planned Packet 12 scope:
+
+- read-only behavior-parity coverage report
+- deterministic in-memory report data
+- formatted read-only report output
+- summary of accepted packet coverage
+- summary of `PZ`, `B`, and `L` runtime-adjacent safe-failure coverage
+- summary of parked scope and absent behavior
+- summary of protected-file state
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this Packet 12 plan
+
+Confirmed boundaries:
+
+- no Packet 12 implementation yet
+- no Packet 12 CLI visibility yet
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Packet Selection Review After PZ, B, And L Frontier Review
 
