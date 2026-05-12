@@ -209,3 +209,18 @@ accepted checkpoint review.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The next branch selection after this accepted checkpoint review is now
+documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_REVIEW.md`
+
+Selected next branch:
+
+- broader behavior-parity progress report after active/runtime report
+  alignment tests
+
+The selected branch remains documentation-only and does not authorize
+implementation by itself.
