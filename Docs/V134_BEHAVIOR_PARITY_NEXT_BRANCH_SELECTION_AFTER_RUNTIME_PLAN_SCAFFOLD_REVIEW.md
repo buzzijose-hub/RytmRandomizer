@@ -175,3 +175,16 @@ The next branch is selected:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Follow-Up Status
+
+The selected branch is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN.md`
+
+The design remains planning-only and recommends metadata-only blocked-preview
+visibility as the next possible runtime plan expansion.
+
+The next recommended task is:
+
+- docs-only review/acceptance gate for the first runtime plan expansion design

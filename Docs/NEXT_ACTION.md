@@ -6,7 +6,60 @@ modularize-v1.34
 
 ## Current HEAD
 
-27cf313 Add runtime plan scaffold checkpoint review
+9d86db2 Add next branch selection after runtime plan scaffold review
+
+## Latest Behavior-Parity First Runtime Plan Expansion Design
+
+The first runtime plan expansion design is now documented.
+
+Design document:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_SCAFFOLD_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `9d86db2 Add next branch selection after runtime plan scaffold review`
+
+Design direction:
+
+- metadata-only blocked-preview visibility
+- clearer safe-failure reason categories
+- clearer fake-provider trace vocabulary
+- no execution
+- no MIDI
+- no ports
+- no CLI execution wiring
+- no hardware behavior
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this runtime plan expansion design
+
+Potential future implementation scope, only after review and a separate
+implementation plan:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+Confirmed boundaries:
+
+- no implementation in this design
+- no new tests
+- no closeout script changes
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After Runtime Plan Scaffold Review
 
