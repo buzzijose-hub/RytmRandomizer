@@ -153,7 +153,8 @@ The accepted Packet 12 checkpoint records:
 
 Safe next options:
 
-- broader behavior-parity progress report after Packet 12
+- broader behavior-parity progress report after Packet 12:
+  - `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_12.md`
 - docs-only Packet 12 CLI visibility plan
 - broader next-phase selection checkpoint
 - pause at this clean accepted Packet 12 checkpoint
