@@ -168,6 +168,10 @@ git log --oneline --decorate -12 2>&1 | Tee-Object -FilePath "$logDir\latest_git
 & $pythonExe @pythonArgs .\tests\test_runtime_adjacent_mock_only_l.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_runtime_adjacent_mock_only_l.log" | Add-Content $summary
 
 "" | Add-Content $summary
+"=== Test: Behavior Parity Coverage Report ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_behavior_parity_coverage_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_parity_coverage_report.log" | Add-Content $summary
+
+"" | Add-Content $summary
 "=== Test: Mock MIDI ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_mock_midi.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_midi.log" | Add-Content $summary
 
