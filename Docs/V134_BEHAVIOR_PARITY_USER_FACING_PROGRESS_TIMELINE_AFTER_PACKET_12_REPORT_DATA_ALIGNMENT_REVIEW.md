@@ -207,3 +207,29 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Next Phase Selection Status
+
+The next behavior-parity planning branch after this accepted review is
+selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT_AND_FROZEN_FRONTIER.md`
+
+Selected next planning target:
+
+- docs-only first runtime/active-facing design plan
+
+The selection checkpoint keeps the current runtime-adjacent safe-failure trio
+frozen:
+
+- `PZ`
+- `B`
+- `L`
+
+The fourth runtime-adjacent candidate remains parked.
+
+Profile `4` mock mapper support remains parked.
+
+The selection checkpoint adds no implementation, tests, fixture changes, CLI
+changes, CLI execution wiring, dispatch, command execution, runtime execution,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
