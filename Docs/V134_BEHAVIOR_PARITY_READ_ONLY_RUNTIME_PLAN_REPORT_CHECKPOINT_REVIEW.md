@@ -206,3 +206,13 @@ checkpoint review.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The next branch selection is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_REVIEW.md`
+
+The selected next branch is:
+
+- docs-only first mock-only active candidate design
