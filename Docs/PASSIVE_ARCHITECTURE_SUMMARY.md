@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-84a682a
+6728254
+
+## Latest Behavior-Parity Fourth Runtime-Adjacent Candidate Decision Note Review After Packet 12 Report Data Alignment
+
+`Docs/V134_BEHAVIOR_PARITY_FOURTH_RUNTIME_ADJACENT_CANDIDATE_DECISION_NOTE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT_REVIEW.md`
+accepts
+`Docs/V134_BEHAVIOR_PARITY_FOURTH_RUNTIME_ADJACENT_CANDIDATE_DECISION_NOTE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+as the current frozen runtime-adjacent frontier decision.
+
+Accepted decision note milestone:
+
+- `6728254 Add fourth runtime-adjacent candidate decision note`
+
+Accepted decision:
+
+- keep the accepted `PZ`, `B`, and `L` runtime-adjacent safe-failure trio
+  frozen for now
+- keep the fourth runtime-adjacent candidate parked
+- keep profile `4` mock mapper support parked
+
+The next recommended task is a user-facing progress/timeline update after
+Packet 12 report data alignment and frozen runtime-adjacent frontier.
+
+No fourth runtime-adjacent candidate, profile `4` mock mapper support, new
+implementation, CLI execution wiring, selected pad switching execution,
+selected pad target state mutation, dispatch, command execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is authorized
+by this review.
 
 ## Latest Behavior-Parity Fourth Runtime-Adjacent Candidate Decision Note After Packet 12 Report Data Alignment
 
