@@ -326,3 +326,22 @@ The read-only runtime plan report design is documented.
 The design does not authorize implementation by itself.
 
 Hardware remains off.
+
+## 18. Review Status
+
+This design is reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_DESIGN_REVIEW.md`
+
+The accepted future implementation scope remains limited to a report layer
+only, and only after a separate accepted implementation plan:
+
+- `rytm_randomizer/runtime_plan_report.py`
+- `tests/test_runtime_plan_report.py`
+
+The next recommended task is a docs-only implementation plan for the read-only
+runtime plan report.
+
+No implementation, tests, CLI changes, CLI execution wiring, dispatch, command
+execution, runtime mutation, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this design review.
