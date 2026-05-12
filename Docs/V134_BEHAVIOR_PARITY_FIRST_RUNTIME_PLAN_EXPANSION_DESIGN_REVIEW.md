@@ -213,3 +213,19 @@ blocked-preview visibility.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The recommended implementation plan is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_EXPANSION_IMPLEMENTATION_PLAN.md`
+
+The plan remains documentation-only and limits any future implementation to:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+The next recommended task is:
+
+- docs-only review/acceptance gate for the metadata-only runtime plan expansion
+  implementation plan

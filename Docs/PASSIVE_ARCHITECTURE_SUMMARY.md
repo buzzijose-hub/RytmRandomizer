@@ -8,7 +8,43 @@ modularize-v1.34
 
 Current HEAD:
 
-44a3b02
+56bfe39
+
+## Latest Behavior-Parity Metadata-Only Runtime Plan Expansion Implementation Plan
+
+`Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_EXPANSION_IMPLEMENTATION_PLAN.md`
+documents the future implementation plan for metadata-only runtime plan
+expansion.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `56bfe39 Add first runtime plan expansion design review`
+
+Planned future files:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+Planned future behavior:
+
+- immutable blocked-preview metadata
+- stable reason codes
+- supported-profile metadata
+- parked-profile metadata for profile `4`
+- unknown/unsupported metadata
+- previews still blocked with `would_execute: False`
+
+The plan is documentation-only. It adds no implementation, tests, closeout
+script changes, CLI execution wiring, dispatch, command execution, runtime
+mutation, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation plan.
 
 ## Latest Behavior-Parity First Runtime Plan Expansion Design Review
 

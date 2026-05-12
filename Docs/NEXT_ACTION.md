@@ -6,7 +6,65 @@ modularize-v1.34
 
 ## Current HEAD
 
-44a3b02 Add first runtime plan expansion design
+56bfe39 Add first runtime plan expansion design review
+
+## Latest Behavior-Parity Metadata-Only Runtime Plan Expansion Implementation Plan
+
+The metadata-only runtime plan expansion implementation plan is now
+documented.
+
+Implementation plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_EXPANSION_IMPLEMENTATION_PLAN.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `56bfe39 Add first runtime plan expansion design review`
+
+Planned future implementation scope:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+No closeout script update is expected because `tests/test_runtime_plan.py` is
+already covered by:
+
+- `=== Test: Runtime Plan ===`
+
+Planned future behavior:
+
+- metadata-only blocked-preview visibility
+- stable safe-failure reason codes
+- immutable runtime preview metadata
+- supported profile metadata for profiles `2` and `3`
+- parked metadata for profile `4`
+- unknown/unsupported metadata
+- every preview still records `would_execute: False`
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this implementation plan
+
+Confirmed boundaries:
+
+- no implementation in this plan
+- no new tests in this plan
+- no code changes in this plan
+- no closeout script changes
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity First Runtime Plan Expansion Design Review
 
