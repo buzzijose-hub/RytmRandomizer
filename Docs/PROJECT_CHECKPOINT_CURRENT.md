@@ -21,7 +21,57 @@ modularize-v1.34
 
 Current HEAD:
 
-e28755a Add runtime adjacent mock-only L tests checkpoint
+a8cc34c Add runtime adjacent mock-only L tests checkpoint review
+
+## V1.34 Behavior Parity Runtime-Adjacent Mock-Only Progress Report After L Tests
+
+The broader runtime-adjacent mock-only progress report after accepted `PZ`,
+`B`, and `L` safe-failure tests has now been documented.
+
+Progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_PROGRESS_REPORT_AFTER_L_TESTS.md`
+
+Current baseline:
+
+- `a8cc34c Add runtime adjacent mock-only L tests checkpoint review`
+
+Accepted runtime-adjacent mock-only surfaces:
+
+- `PZ`: return selected isolated pad to anchor only
+- `B`: back to current anchor
+- `L`: select isolated single-pad mutation target, default Pad 3
+
+Accepted state:
+
+- `PZ` remains read-only selected isolated pad anchor-return readiness
+- `B` remains read-only current-anchor return intent readiness
+- `L` remains read-only selected isolated pad target intent
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- closeout includes `Runtime-Adjacent Mock-Only B`
+- closeout includes `Runtime-Adjacent Mock-Only L`
+- all three surfaces remain safe-failure coverage only
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this progress report
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Runtime-Adjacent Mock-Only L Tests Checkpoint Review
 
