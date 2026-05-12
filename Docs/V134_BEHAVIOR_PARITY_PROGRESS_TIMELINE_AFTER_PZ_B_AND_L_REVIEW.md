@@ -239,3 +239,20 @@ No fourth runtime-adjacent mock-only candidate is selected yet.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The next branch has now been selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PZ_B_AND_L_TIMELINE_REVIEW.md`
+
+The selected next branch is:
+
+- return to broader behavior-parity packet work
+
+No fourth runtime-adjacent mock-only candidate is selected by this follow-up.
+
+No specific next behavior-parity packet is selected by this follow-up.
+
+No tests, implementation, execution path, MIDI, ports, active behavior, or
+hardware behavior are authorized by this follow-up.
