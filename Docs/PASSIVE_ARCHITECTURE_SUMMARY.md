@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-bd3d526
+cc9b03c
+
+## Latest Behavior-Parity Packet 12 CLI Visibility Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_CHECKPOINT_REVIEW.md`
+accepts `Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_CHECKPOINT.md` as
+the current checkpoint for passive Packet 12 CLI visibility.
+
+Accepted checkpoint milestone:
+
+- `cc9b03c Add Packet 12 CLI visibility checkpoint`
+
+Accepted implementation milestone:
+
+- `bd3d526 Add passive behavior parity report CLI`
+
+Accepted passive CLI command:
+
+- `behavior-parity-report`
+
+The command calls only `format_behavior_parity_coverage_report()` and prints
+deterministic read-only report output.
+
+The next recommended task is a broader behavior-parity progress report after
+Packet 12 CLI visibility.
+
+No CLI execution wiring, selected pad switching execution, selected pad target
+state mutation, dispatch, command execution, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this review.
 
 ## Latest Behavior-Parity Packet 12 CLI Visibility Checkpoint
 
