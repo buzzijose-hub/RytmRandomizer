@@ -6,12 +6,16 @@ modularize-v1.34
 
 ## Current HEAD
 
-9289336 Add behavior parity progress report review after Packet 12
+367dfcc Add behavior parity next phase selection after Packet 12
 
-## Latest Behavior-Parity Next Phase Selection Checkpoint After Packet 12
+## Latest Behavior-Parity Next Phase Selection Checkpoint After Packet 12 Review
 
-The next behavior-parity phase after accepted Packet 12 progress has now been
-selected at documentation level.
+The next-phase selection checkpoint after Packet 12 is now reviewed and
+accepted.
+
+Selection review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12_REVIEW.md`
 
 Selection checkpoint:
 
@@ -61,7 +65,7 @@ Accepted upstream review:
 
 Current baseline:
 
-- `9289336 Add behavior parity progress report review after Packet 12`
+- `367dfcc Add behavior parity next phase selection after Packet 12`
 
 Current accepted Packet 12 scope:
 
@@ -74,10 +78,6 @@ Current accepted Packet 12 scope:
 - summary of protected-file state
 
 Recommended next task:
-
-- docs-only review/acceptance gate for this next-phase selection checkpoint
-
-Likely branch after review:
 
 - docs-only Packet 12 CLI visibility plan
 

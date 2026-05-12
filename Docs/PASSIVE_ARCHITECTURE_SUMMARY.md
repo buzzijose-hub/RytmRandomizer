@@ -8,13 +8,13 @@ modularize-v1.34
 
 Current HEAD:
 
-9289336
+367dfcc
 
-## Latest Behavior-Parity Next Phase Selection Checkpoint After Packet 12
+## Latest Behavior-Parity Next Phase Selection Checkpoint After Packet 12 Review
 
-`Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12.md`
-selects the next behavior-parity planning branch after the accepted Packet 12
-progress report review.
+`Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12_REVIEW.md`
+accepts `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12.md`
+as the current next-phase selection checkpoint after Packet 12.
 
 Selected next planning target:
 
@@ -22,7 +22,11 @@ Selected next planning target:
 
 Next selected branch:
 
-- docs-only review/acceptance gate for this selection checkpoint
+- docs-only Packet 12 CLI visibility plan
+
+Accepted selection checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12.md`
 
 Accepted progress report:
 
@@ -64,7 +68,7 @@ Accepted upstream review:
 
 Current baseline:
 
-- `9289336 Add behavior parity progress report review after Packet 12`
+- `367dfcc Add behavior parity next phase selection after Packet 12`
 
 Current accepted Packet 12 scope:
 
@@ -75,13 +79,12 @@ Current accepted Packet 12 scope:
 - absent behavior summary
 - protected-file state summary
 
-The next recommended task is a docs-only review/acceptance gate for this
-selection checkpoint.
+The next recommended task is a docs-only Packet 12 CLI visibility plan.
 
 No Packet 12 CLI visibility, selected pad switching execution, selected pad
 target state mutation, dispatch, command execution, MIDI, ports, package
 metadata changes, active behavior, or hardware behavior is authorized by this
-selection checkpoint.
+review.
 
 ## Latest Behavior-Parity Next Packet Selection Review After PZ, B, And L Frontier Review
 
