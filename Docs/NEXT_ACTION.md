@@ -6,7 +6,60 @@ modularize-v1.34
 
 ## Current HEAD
 
-061f29b Add read-only runtime plan report implementation plan
+6e80cee Add read-only runtime plan report
+
+## Latest Behavior-Parity Read-Only Runtime Plan Report Checkpoint
+
+The read-only runtime plan report implementation milestone is now recorded.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `6e80cee Add read-only runtime plan report`
+
+Implementation files:
+
+- `rytm_randomizer/runtime_plan_report.py`
+- `tests/test_runtime_plan_report.py`
+- `Scripts/closeout_check.ps1`
+
+New closeout label:
+
+- `=== Test: Runtime Plan Report ===`
+
+Implemented passive report helpers:
+
+- `build_runtime_plan_report()`
+- `summarize_runtime_plan_report()`
+- `format_runtime_plan_report()`
+
+Current report scope:
+
+- supported group profile `2`
+- supported group profile `3`
+- parked group profile `4`
+- unknown group profile key safe failure
+- unsupported source kind `scene:S1A` safe failure
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this implementation checkpoint
+
+Confirmed boundaries:
+
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Read-Only Runtime Plan Report Implementation Plan Review
 

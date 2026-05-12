@@ -215,3 +215,16 @@ using TDD.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The accepted implementation is now complete:
+
+- `6e80cee Add read-only runtime plan report`
+
+Implementation checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_CHECKPOINT.md`
+
+The next recommended task is a docs-only review/acceptance gate for the
+implementation checkpoint.
