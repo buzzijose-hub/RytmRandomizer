@@ -6,7 +6,67 @@ modularize-v1.34
 
 ## Current HEAD
 
-24127df Add metadata-only runtime plan expansion implementation plan
+0e902a8 Add metadata-only runtime plan preview metadata
+
+## Latest Behavior-Parity Metadata-Only Runtime Plan Preview Metadata Checkpoint
+
+The metadata-only runtime plan preview metadata implementation is now complete
+and documented for review.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_PREVIEW_METADATA_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `0e902a8 Add metadata-only runtime plan preview metadata`
+
+Implementation files:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+Implemented metadata-only behavior:
+
+- immutable blocked-preview metadata
+- stable safe-failure reason codes
+- supported-profile metadata for profiles `2` and `3`
+- parked-profile metadata for profile `4`
+- unknown-key metadata
+- unsupported-source-kind metadata
+- visible arming state metadata
+- every preview still records `would_execute: False`
+- every preview remains blocked
+
+Closeout coverage:
+
+- `=== Test: Runtime Plan ===`
+
+Verification:
+
+- runtime plan tests passed with `18 passed`
+- full closeout passed
+- V1.34 reference diff was empty
+- package metadata diff was empty
+- git status was clean
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+Confirmed boundaries:
+
+- no closeout script changes
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Metadata-Only Runtime Plan Expansion Implementation Plan Review
 

@@ -218,3 +218,26 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The accepted implementation has now been completed by:
+
+- `0e902a8 Add metadata-only runtime plan preview metadata`
+
+Implementation checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_PREVIEW_METADATA_CHECKPOINT.md`
+
+The implementation stayed within the accepted scope:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+It added immutable blocked-preview metadata, stable reason codes, supported
+profile metadata, parked profile metadata, unknown-key metadata, unsupported
+source-kind metadata, and `would_execute: False` safety metadata.
+
+It added no closeout script changes, CLI changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior.
