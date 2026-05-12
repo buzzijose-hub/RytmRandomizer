@@ -7,10 +7,11 @@ FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "mock-mapper-report | active-boundary-report | anchor-profile-report | "
-    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
-    "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
-    "preview-scene <key> | preview-group-profile <key>"
+    "behavior-parity-report | inspect-command <key> | inspect-scene <key> | "
+    "inspect-group-profile <key> | list-commands | list-scenes | "
+    "list-group-profiles | search-commands <query> | search-scenes <query> | "
+    "search-group-profiles <query> | preview-command <key> | preview-scene <key> | "
+    "preview-group-profile <key>"
 )
 
 
@@ -94,6 +95,16 @@ def test_anchor_profile_report_help_exits_zero_and_matches_fixture():
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_anchor_profile_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_behavior_parity_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("behavior-parity-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_behavior_parity_report_help_expected.txt"
     )
     assert result.stderr == ""
 
@@ -256,6 +267,16 @@ def test_anchor_profile_report_command_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_behavior_parity_report_command_exits_zero_and_matches_fixture():
+    result = run_cli("behavior-parity-report")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_behavior_parity_report_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_report_command_is_deterministic():
     first = run_cli("report")
     second = run_cli("report")
@@ -292,6 +313,17 @@ def test_active_boundary_report_command_is_deterministic():
 def test_anchor_profile_report_command_is_deterministic():
     first = run_cli("anchor-profile-report")
     second = run_cli("anchor-profile-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_behavior_parity_report_command_is_deterministic():
+    first = run_cli("behavior-parity-report")
+    second = run_cli("behavior-parity-report")
 
     assert first.returncode == 0
     assert second.returncode == 0
@@ -396,6 +428,34 @@ def test_anchor_profile_report_command_imports_no_real_midi_libraries():
                 "from rytm_randomizer.cli import main\n"
                 "with redirect_stdout(StringIO()):\n"
                 "    code = main(['anchor-profile-report'])\n"
+                "assert code == 0\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_behavior_parity_report_command_imports_no_real_midi_libraries():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "from contextlib import redirect_stdout\n"
+                "from io import StringIO\n"
+                "from rytm_randomizer.cli import main\n"
+                "with redirect_stdout(StringIO()):\n"
+                "    code = main(['behavior-parity-report'])\n"
                 "assert code == 0\n"
                 "assert 'mido' not in sys.modules\n"
                 "assert 'rtmidi' not in sys.modules\n"
@@ -804,6 +864,14 @@ def test_unknown_anchor_profile_report_arguments_fail_safely():
     assert normalize_newlines(result.stderr) == USAGE
 
 
+def test_unknown_behavior_parity_report_arguments_fail_safely():
+    result = run_cli("behavior-parity-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
 def test_unknown_list_arguments_fail_safely():
     result = run_cli("list-commands", "--mutate")
 
@@ -1018,6 +1086,52 @@ def test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion()
     assert "Pad 11" not in output
     assert "Pad 12" not in output
     assert "Analog Four support" not in output
+
+
+def test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("behavior-parity-report")
+    output = normalize_newlines(result.stdout)
+
+    assert "- Packet 11A L selected isolated pad target intent" in output
+    assert "Runtime-Adjacent Mock-Only Safe Failures:" in output
+    assert "- PZ" in output
+    assert "- B" in output
+    assert "- L" in output
+    assert "Parked Scope:" in output
+    assert "- fourth runtime-adjacent candidate" in output
+    assert "- profile 4 mock mapper support" in output
+    assert "- Packet 12 CLI visibility" in output
+    assert "Absent Behavior:" in output
+    assert "- dispatch" in output
+    assert "- command execution" in output
+    assert "- scene execution" in output
+    assert "- runtime mutation" in output
+    assert "- active CLI commands" in output
+    assert "- real MIDI dependencies" in output
+    assert "- port opening" in output
+    assert "- MIDI sending" in output
+    assert "- hardware behavior" in output
+    assert "- Analog Four support" in output
+    assert "- Pads 5-12 support" in output
+    assert "Protected File State:" in output
+    assert "- v134_reference: untouched" in output
+    assert "- package_metadata: untouched" in output
+    assert "- runtime_execution_logic: absent" in output
+    assert "- read_only: True" in output
+    assert "- in_memory_only: True" in output
+    assert "- active_behavior: absent" in output
+    assert "- hardware_required: False" in output
+    assert "execute-command" not in output
+    assert "send-command" not in output
+    assert "hardware-test" not in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
 
 
 def test_inspect_command_exposes_no_active_behavior_or_support_expansion():
@@ -1280,6 +1394,7 @@ if __name__ == "__main__":
     test_mock_mapper_report_help_exits_zero_and_matches_fixture()
     test_active_boundary_report_help_exits_zero_and_matches_fixture()
     test_anchor_profile_report_help_exits_zero_and_matches_fixture()
+    test_behavior_parity_report_help_exits_zero_and_matches_fixture()
     test_inspect_command_help_exits_zero_and_matches_fixture()
     test_inspect_scene_help_exits_zero_and_matches_fixture()
     test_inspect_group_profile_help_exits_zero_and_matches_fixture()
@@ -1296,15 +1411,18 @@ if __name__ == "__main__":
     test_mock_mapper_report_command_exits_zero_and_matches_fixture()
     test_active_boundary_report_command_exits_zero_and_matches_fixture()
     test_anchor_profile_report_command_exits_zero_and_matches_fixture()
+    test_behavior_parity_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_mock_mapper_report_command_is_deterministic()
     test_active_boundary_report_command_is_deterministic()
     test_anchor_profile_report_command_is_deterministic()
+    test_behavior_parity_report_command_is_deterministic()
     test_top_level_help_exposes_no_active_execution_commands()
     test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
     test_mock_mapper_report_command_imports_no_real_midi_libraries()
     test_active_boundary_report_command_imports_no_real_midi_libraries()
     test_anchor_profile_report_command_imports_no_real_midi_libraries()
+    test_behavior_parity_report_command_imports_no_real_midi_libraries()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
     test_inspect_command_known_key_is_deterministic()
     test_inspect_scene_known_key_exits_zero_and_matches_fixture()
@@ -1344,6 +1462,7 @@ if __name__ == "__main__":
     test_unknown_mock_mapper_report_arguments_fail_safely()
     test_unknown_active_boundary_report_arguments_fail_safely()
     test_unknown_anchor_profile_report_arguments_fail_safely()
+    test_unknown_behavior_parity_report_arguments_fail_safely()
     test_unknown_list_arguments_fail_safely()
     test_missing_search_query_fails_safely()
     test_unknown_search_arguments_fail_safely()
@@ -1359,6 +1478,7 @@ if __name__ == "__main__":
     test_active_boundary_report_output_keeps_boundary_profiles_explicit()
     test_active_boundary_report_output_keeps_passive_safety_explicit()
     test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion()
+    test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion()
     test_inspect_command_exposes_no_active_behavior_or_support_expansion()
     test_inspect_scene_exposes_no_active_behavior_or_support_expansion()
     test_inspect_group_profile_exposes_no_active_behavior_or_support_expansion()

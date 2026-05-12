@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: behavior-parity-report
+
+Usage:
+  python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli behavior-parity-report --help
+
+Behavior:
+  Prints the deterministic read-only behavior-parity coverage report to stdout.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

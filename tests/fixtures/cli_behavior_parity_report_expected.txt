@@ -1,0 +1,51 @@
+V1.34 Behavior Parity Coverage Report
+Accepted Packet Coverage:
+- Packet 1 menu/status and utility intent
+- Packet 2 meaningful anchor/profile progress
+- Packet 3 selected isolated pad mutation intent
+- Packet 4 scene/group intent
+- Packet 5 meaningful Pad 1 lane behavior progress
+- Packet 6 Pad 2 lane behavior for the current read-only phase
+- Packet 7 Pad 3 lane behavior for the current read-only phase
+- Packet 8 Pad 4 command-helper scope for the current read-only phase
+- Packet 9 undo/commit/state intent
+- Packet 10 selected-profile workflow intent
+- Packet 11A L selected isolated pad target intent
+Runtime-Adjacent Mock-Only Safe Failures:
+- PZ
+- B
+- L
+Parked Scope:
+- fourth runtime-adjacent candidate
+- profile 4 mock mapper support
+- Packet 12 CLI visibility
+Absent Behavior:
+- dispatch
+- command execution
+- scene execution
+- runtime mutation
+- selected pad switching execution
+- selected pad target state mutation
+- selected pad anchor return execution
+- current anchor return execution
+- isolated pad mutation execution
+- active CLI commands
+- real MIDI dependencies
+- port discovery
+- port opening
+- MIDI sending
+- hardware behavior
+- Analog Four support
+- Pads 5-12 support
+- SysEx
+- GUI/capture
+Protected File State:
+- v134_reference: untouched
+- package_metadata: untouched
+- runtime_execution_logic: absent
+Report Boundary:
+- read_only: True
+- in_memory_only: True
+- cli_visibility: absent
+- active_behavior: absent
+- hardware_required: False

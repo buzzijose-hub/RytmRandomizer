@@ -4,6 +4,7 @@ import sys
 
 from .active_boundary_report import format_active_boundary_report
 from .behavior_anchor_profile_report import format_anchor_profile_report
+from .behavior_parity_coverage_report import format_behavior_parity_coverage_report
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
 from .mock_mapper_report import format_mock_mapper_report
@@ -13,10 +14,11 @@ from .registry_report import format_registry_report
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "mock-mapper-report | active-boundary-report | anchor-profile-report | "
-    "inspect-command <key> | inspect-scene <key> | inspect-group-profile <key> | "
-    "list-commands | list-scenes | list-group-profiles | search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
-    "preview-scene <key> | preview-group-profile <key>"
+    "behavior-parity-report | inspect-command <key> | inspect-scene <key> | "
+    "inspect-group-profile <key> | list-commands | list-scenes | "
+    "list-group-profiles | search-commands <query> | search-scenes <query> | "
+    "search-group-profiles <query> | preview-command <key> | preview-scene <key> | "
+    "preview-group-profile <key>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
@@ -25,6 +27,7 @@ Usage:
   python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli active-boundary-report
   python -m rytm_randomizer.cli anchor-profile-report
+  python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -47,6 +50,8 @@ Commands:
                      Print the read-only active boundary report.
   anchor-profile-report
                      Print the read-only anchor/profile behavior report.
+  behavior-parity-report
+                     Print the read-only behavior-parity coverage report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -657,6 +662,22 @@ Safety:
   no runtime state
   no hardware mutation
   no hardware required"""
+BEHAVIOR_PARITY_REPORT_HELP = """RytmRandomizer passive CLI: behavior-parity-report
+
+Usage:
+  python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli behavior-parity-report --help
+
+Behavior:
+  Prints the deterministic read-only behavior-parity coverage report to stdout.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
 
 
 def main(argv=None):
@@ -681,6 +702,10 @@ def main(argv=None):
 
     if args == ["anchor-profile-report", "--help"]:
         sys.stdout.write(f"{ANCHOR_PROFILE_REPORT_HELP}\n")
+        return 0
+
+    if args == ["behavior-parity-report", "--help"]:
+        sys.stdout.write(f"{BEHAVIOR_PARITY_REPORT_HELP}\n")
         return 0
 
     if args == ["list-commands", "--help"]:
@@ -748,6 +773,11 @@ def main(argv=None):
 
     if args == ["anchor-profile-report"]:
         sys.stdout.write("\n".join(format_anchor_profile_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["behavior-parity-report"]:
+        sys.stdout.write("\n".join(format_behavior_parity_coverage_report()))
         sys.stdout.write("\n")
         return 0
 
