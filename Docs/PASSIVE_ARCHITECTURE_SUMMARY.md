@@ -8,7 +8,45 @@ modularize-v1.34
 
 Current HEAD:
 
-0e902a8
+df3633e
+
+## Latest Behavior-Parity Metadata-Only Runtime Plan Preview Metadata Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_PREVIEW_METADATA_CHECKPOINT_REVIEW.md`
+accepts the metadata-only runtime plan preview metadata checkpoint.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_PREVIEW_METADATA_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `0e902a8 Add metadata-only runtime plan preview metadata`
+
+Accepted checkpoint milestone:
+
+- `df3633e Add runtime plan preview metadata checkpoint`
+
+Accepted runtime plan baseline:
+
+- mock-only
+- metadata-only
+- blocked by default
+- copied immutable preview metadata
+- stable reason codes
+- no runtime execution
+- no CLI execution wiring
+- no MIDI
+- no ports
+- no hardware requirement
+
+The next recommended task is a docs-only next-branch selection after runtime
+preview metadata acceptance, likely toward a small read-only runtime plan report
+design.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this review.
 
 ## Latest Behavior-Parity Metadata-Only Runtime Plan Preview Metadata Checkpoint
 
