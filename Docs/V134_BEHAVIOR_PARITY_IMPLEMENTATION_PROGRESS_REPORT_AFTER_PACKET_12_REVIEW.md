@@ -191,7 +191,8 @@ Package metadata remains untouched.
 
 Safe next options:
 
-- broader next-phase selection checkpoint
+- broader next-phase selection checkpoint:
+  - `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12.md`
 - docs-only Packet 12 CLI visibility plan, only if approved
 - user-facing progress/timeline update after Packet 12
 - pause at this clean accepted Packet 12 progress checkpoint
