@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-6728254
+84904a0
+
+## Latest Behavior-Parity User-Facing Progress Timeline After Packet 12 Report Data Alignment
+
+`Docs/V134_BEHAVIOR_PARITY_USER_FACING_PROGRESS_TIMELINE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+documents the user-facing progress/timeline update after Packet 12 report data
+alignment and the frozen runtime-adjacent frontier.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_FOURTH_RUNTIME_ADJACENT_CANDIDATE_DECISION_NOTE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT_REVIEW.md`
+
+Current state:
+
+- Packet 12 behavior-parity report data is aligned
+- passive `behavior-parity-report` CLI visibility exists
+- `cli_visibility: present`
+- `PZ`, `B`, and `L` remain the accepted runtime-adjacent safe-failure trio
+- fourth runtime-adjacent candidate remains parked
+- profile `4` mock mapper support remains parked
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress/timeline update.
+
+No fourth runtime-adjacent candidate, profile `4` mock mapper support, new
+implementation, CLI execution wiring, selected pad switching execution,
+selected pad target state mutation, dispatch, command execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is added by
+this timeline update.
 
 ## Latest Behavior-Parity Fourth Runtime-Adjacent Candidate Decision Note Review After Packet 12 Report Data Alignment
 

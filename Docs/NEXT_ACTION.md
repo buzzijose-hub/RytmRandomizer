@@ -6,7 +6,58 @@ modularize-v1.34
 
 ## Current HEAD
 
-6728254 Add fourth runtime-adjacent candidate decision note
+84904a0 Add fourth runtime-adjacent candidate decision review
+
+## Latest Behavior-Parity User-Facing Progress Timeline After Packet 12 Report Data Alignment
+
+The user-facing progress/timeline update after Packet 12 report data alignment
+and the frozen runtime-adjacent frontier is now documented.
+
+Timeline document:
+
+- `Docs/V134_BEHAVIOR_PARITY_USER_FACING_PROGRESS_TIMELINE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_FOURTH_RUNTIME_ADJACENT_CANDIDATE_DECISION_NOTE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `84904a0 Add fourth runtime-adjacent candidate decision review`
+
+Current state:
+
+- Packet 12 behavior-parity report data is aligned
+- passive `behavior-parity-report` CLI visibility exists
+- `cli_visibility: present`
+- `PZ`, `B`, and `L` remain the accepted runtime-adjacent safe-failure trio
+- fourth runtime-adjacent candidate remains parked
+- profile `4` mock mapper support remains parked
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this progress/timeline update
+
+Confirmed boundaries:
+
+- no fourth runtime-adjacent candidate selected
+- no fourth runtime-adjacent candidate added
+- no profile `4` mock mapper support
+- no new implementation
+- no CLI execution wiring
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Fourth Runtime-Adjacent Candidate Decision Note Review After Packet 12 Report Data Alignment
 

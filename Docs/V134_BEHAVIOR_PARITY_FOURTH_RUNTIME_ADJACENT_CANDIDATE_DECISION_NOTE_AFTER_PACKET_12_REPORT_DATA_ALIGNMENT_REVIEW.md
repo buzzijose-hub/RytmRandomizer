@@ -202,3 +202,25 @@ The next recommended branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Progress Timeline Status
+
+The user-facing progress/timeline update after this accepted frozen frontier
+decision is documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_USER_FACING_PROGRESS_TIMELINE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+
+The timeline summarizes:
+
+- Packet 12 report data alignment
+- passive `behavior-parity-report` CLI visibility
+- accepted `PZ`, `B`, and `L` runtime-adjacent safe-failure trio
+- frozen fourth runtime-adjacent candidate
+- parked profile `4` mock mapper support
+- current safety boundaries
+- rough next-phase expectations
+
+The timeline adds no fourth runtime-adjacent candidate, profile `4` mock
+mapper support, implementation, tests, fixtures, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime execution, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior.
