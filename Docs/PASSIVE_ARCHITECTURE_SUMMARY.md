@@ -8,7 +8,39 @@ modularize-v1.34
 
 Current HEAD:
 
-a2c6866
+64be89f
+
+## Latest Behavior-Parity First Mock-Only Active Candidate Design
+
+`Docs/V134_BEHAVIOR_PARITY_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN.md`
+aligns the first mock-only active candidate with the current runtime
+plan/report layer.
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `64be89f Add next branch selection after runtime plan report review`
+
+Aligned candidate:
+
+- group profile `2` / My BD Hard
+- Pad 1 only
+- mock-only
+- runtime plan blocked by default
+- visible in Runtime Plan Report
+- no real MIDI
+- no ports
+- no hardware
+
+The next recommended task is a docs-only review/acceptance gate for this
+alignment design.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this design.
 
 ## Latest Behavior-Parity Next Branch Selection After Runtime Plan Report Review
 

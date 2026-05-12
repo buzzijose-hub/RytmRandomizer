@@ -215,3 +215,12 @@ The next recommended task is to create that design document.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The selected design is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN.md`
+
+The next recommended task is a docs-only review/acceptance gate for that
+alignment design.

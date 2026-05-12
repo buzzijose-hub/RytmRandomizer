@@ -21,7 +21,44 @@ modularize-v1.34
 
 Current HEAD:
 
-a2c6866 Add read-only runtime plan report checkpoint review
+64be89f Add next branch selection after runtime plan report review
+
+## V1.34 Behavior Parity First Mock-Only Active Candidate Design
+
+The first mock-only active candidate design is now aligned with the current
+runtime plan/report layer.
+
+Design document:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `64be89f Add next branch selection after runtime plan report review`
+
+Aligned candidate:
+
+- group profile `2` / My BD Hard
+- Pad 1 only
+- mock-only
+- runtime plan blocked by default
+- visible in Runtime Plan Report
+- no real MIDI
+- no ports
+- no hardware
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this alignment design
+
+No implementation, tests, closeout script changes, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this
+design.
 
 ## V1.34 Behavior Parity Next Branch Selection After Runtime Plan Report Review
 
