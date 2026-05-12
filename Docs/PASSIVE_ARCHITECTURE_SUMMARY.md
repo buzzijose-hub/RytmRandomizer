@@ -8,7 +8,38 @@ modularize-v1.34
 
 Current HEAD:
 
-419fd34
+8063b60
+
+## Latest Behavior-Parity Read-Only Runtime Plan Report Implementation Plan
+
+`Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_IMPLEMENTATION_PLAN.md`
+documents the future implementation plan for the read-only runtime plan report.
+
+Accepted upstream design review:
+
+- `Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `8063b60 Add read-only runtime plan report design review`
+
+Planned future implementation scope:
+
+- `rytm_randomizer/runtime_plan_report.py`
+- `tests/test_runtime_plan_report.py`
+- `Scripts/closeout_check.ps1`
+
+Planned future closeout label:
+
+- `=== Test: Runtime Plan Report ===`
+
+The plan remains documentation-only. It adds no implementation, tests,
+closeout script changes, CLI execution wiring, dispatch, command execution,
+runtime mutation, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation plan.
 
 ## Latest Behavior-Parity Read-Only Runtime Plan Report Design Review
 
