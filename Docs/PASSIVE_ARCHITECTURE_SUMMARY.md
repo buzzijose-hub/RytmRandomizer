@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-9d86db2
+44a3b02
+
+## Latest Behavior-Parity First Runtime Plan Expansion Design Review
+
+`Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN_REVIEW.md`
+accepts the first runtime plan expansion design.
+
+Accepted design:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN.md`
+
+Accepted design milestone:
+
+- `44a3b02 Add first runtime plan expansion design`
+
+Accepted future direction:
+
+- metadata-only blocked-preview visibility
+- safe-failure reason categories
+- source summary metadata
+- safety flags
+- fake-provider trace vocabulary
+
+The next recommended task is a docs-only implementation plan for
+metadata-only runtime plan expansion.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this review.
 
 ## Latest Behavior-Parity First Runtime Plan Expansion Design
 

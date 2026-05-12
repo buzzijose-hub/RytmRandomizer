@@ -262,3 +262,16 @@ The recommended future direction is metadata-only blocked-preview visibility.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 15. Review Status
+
+This design is reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN_REVIEW.md`
+
+The review accepts metadata-only blocked-preview visibility as the current
+planning direction.
+
+The next recommended task is:
+
+- docs-only implementation plan for metadata-only runtime plan expansion

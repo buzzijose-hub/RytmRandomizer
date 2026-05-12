@@ -21,7 +21,40 @@ modularize-v1.34
 
 Current HEAD:
 
-9d86db2 Add next branch selection after runtime plan scaffold review
+44a3b02 Add first runtime plan expansion design
+
+## V1.34 Behavior Parity First Runtime Plan Expansion Design Review
+
+The first runtime plan expansion design is now reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN_REVIEW.md`
+
+Accepted design:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_PLAN_EXPANSION_DESIGN.md`
+
+Accepted design milestone:
+
+- `44a3b02 Add first runtime plan expansion design`
+
+Accepted future direction:
+
+- metadata-only blocked-preview visibility
+- clearer safe-failure reason categories
+- clearer fake-provider trace vocabulary
+- richer source summary metadata
+- explicit safety flags
+
+Next recommended task:
+
+- docs-only implementation plan for metadata-only runtime plan expansion
+
+No implementation, tests, closeout script changes, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this
+review.
 
 ## V1.34 Behavior Parity First Runtime Plan Expansion Design
 
