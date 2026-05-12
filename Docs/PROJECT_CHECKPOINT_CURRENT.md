@@ -21,12 +21,16 @@ modularize-v1.34
 
 Current HEAD:
 
-95bf4c6 Add behavior parity coverage report
+680aa82 Add Packet 12 behavior parity coverage report checkpoint
 
-## V1.34 Behavior Parity Packet 12 Coverage Report Checkpoint
+## V1.34 Behavior Parity Packet 12 Coverage Report Checkpoint Review
 
-Packet 12 is now implemented and checkpointed as a read-only behavior-parity
-coverage report.
+The Packet 12 behavior-parity coverage report checkpoint is now reviewed and
+accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_CHECKPOINT_REVIEW.md`
 
 Checkpoint document:
 
@@ -60,9 +64,9 @@ Accepted upstream review:
 
 Current baseline:
 
-- `95bf4c6 Add behavior parity coverage report`
+- `680aa82 Add Packet 12 behavior parity coverage report checkpoint`
 
-Implemented Packet 12 scope:
+Accepted Packet 12 scope:
 
 - read-only behavior-parity coverage report
 - deterministic in-memory report data
@@ -74,7 +78,7 @@ Implemented Packet 12 scope:
 
 Next recommended task:
 
-- docs-only Packet 12 checkpoint review
+- broader behavior-parity progress report after Packet 12
 
 Confirmed boundaries:
 
