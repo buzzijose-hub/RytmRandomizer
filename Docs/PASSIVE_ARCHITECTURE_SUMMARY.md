@@ -8,7 +8,44 @@ modularize-v1.34
 
 Current HEAD:
 
-ca147d6
+6b4f674
+
+## Latest Behavior-Parity Packet 12 Report Data Alignment Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_REPORT_DATA_ALIGNMENT_CHECKPOINT.md`
+records the tiny TDD implementation milestone for Packet 12 report data
+alignment after CLI visibility.
+
+Implementation milestone:
+
+- `6b4f674 Align Packet 12 behavior parity report data`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_REPORT_DATA_ALIGNMENT_PLAN_AFTER_CLI_VISIBILITY_REVIEW.md`
+
+Files changed by the implementation milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+- `tests/test_cli.py`
+
+Accepted behavior:
+
+- report boundary data now says `cli_visibility: present`
+- `Packet 12 CLI visibility` is removed from parked scope
+- fourth runtime-adjacent candidate remains parked
+- profile `4` mock mapper support remains parked
+- absent execution/MIDI/hardware behavior remains explicit
+
+The next recommended task is a docs-only checkpoint review for this Packet 12
+report data alignment milestone.
+
+No new CLI command, CLI execution wiring, selected pad switching execution,
+selected pad target state mutation, dispatch, command execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is added by
+this checkpoint.
 
 ## Latest Behavior-Parity Packet 12 Report Data Alignment Plan Review
 
