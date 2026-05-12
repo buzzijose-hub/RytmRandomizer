@@ -11,6 +11,27 @@ It adds no implementation, tests, fixtures, closeout script changes, CLI
 changes, CLI execution wiring, runtime execution, dispatch, command execution,
 MIDI, ports, package metadata changes, active behavior, or hardware behavior.
 
+## 1A. Follow-Up Status
+
+The next safe move captured by this handoff has now been completed:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Follow-up checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+
+The follow-up implementation stayed within the allowed scope:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- one `Scripts/closeout_check.ps1` closeout entry:
+  - `=== Test: Runtime Plan ===`
+
+It added no real MIDI, ports, CLI execution wiring, dispatch, command
+execution, runtime mutation, package metadata changes, active behavior, or
+hardware behavior.
+
 ## 2. Current Clean Baseline
 
 Current branch:

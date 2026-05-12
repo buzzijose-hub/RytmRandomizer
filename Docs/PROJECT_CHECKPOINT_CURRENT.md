@@ -21,7 +21,52 @@ modularize-v1.34
 
 Current HEAD:
 
-237fbe3 Add narrow mock-only fake-provider implementation plan review
+f14e329 Add mock-only runtime plan scaffold
+
+## V1.34 Behavior Parity Runtime Plan Scaffold Checkpoint
+
+The narrow mock-only runtime plan scaffold is now implemented and covered by
+closeout.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Implementation files:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- `Scripts/closeout_check.ps1`
+
+Implemented inert concepts:
+
+- `RuntimeIntent`
+- `RuntimeSafetyEnvelope`
+- `RuntimePlanPreview`
+- `MockRuntimeProvider`
+- `create_blocked_runtime_preview`
+- `validate_runtime_intent_scope`
+
+Closeout coverage added:
+
+- `=== Test: Runtime Plan ===`
+
+The runtime plan scaffold remains mock-only and inert. Supported planning
+inputs currently return blocked previews only. Unknown keys, unsupported source
+kinds, and parked profile `4` fail safely.
+
+No real MIDI, `mido`, `rtmidi`, port opening, MIDI sending, CLI execution
+wiring, dispatch, command execution, runtime mutation, profile `4` mock mapper
+support, fourth runtime-adjacent candidate, package metadata changes, active
+behavior, or hardware behavior was added.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this runtime plan scaffold checkpoint
 
 ## Session Closeout 2026-05-12 Runtime Plan Handoff
 

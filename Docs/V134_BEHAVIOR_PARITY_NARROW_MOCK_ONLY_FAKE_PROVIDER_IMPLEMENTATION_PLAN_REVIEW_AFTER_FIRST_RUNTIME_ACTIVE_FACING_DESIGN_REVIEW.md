@@ -15,6 +15,30 @@ CLI changes, CLI execution wiring, runtime execution, dispatch, command
 execution, MIDI, ports, package metadata changes, active behavior, or hardware
 behavior.
 
+## 1A. Implementation Status
+
+The accepted implementation plan has now been implemented by:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Implementation checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+
+Implemented files:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout coverage now includes:
+
+- `=== Test: Runtime Plan ===`
+
+The implementation remains mock-only and inert. It adds no real MIDI, ports,
+CLI execution wiring, dispatch, command execution, runtime mutation, package
+metadata changes, active behavior, or hardware behavior.
+
 ## 2. Current Clean Baseline
 
 Current branch:

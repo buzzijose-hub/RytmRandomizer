@@ -8,7 +8,50 @@ modularize-v1.34
 
 Current HEAD:
 
-237fbe3
+f14e329
+
+## Latest Behavior-Parity Runtime Plan Scaffold Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+records the completed narrow mock-only runtime plan scaffold.
+
+Implementation milestone:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Implementation files:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- `Scripts/closeout_check.ps1`
+
+Implemented inert concepts:
+
+- `RuntimeIntent`
+- `RuntimeSafetyEnvelope`
+- `RuntimePlanPreview`
+- `MockRuntimeProvider`
+- `create_blocked_runtime_preview`
+- `validate_runtime_intent_scope`
+
+Closeout coverage now includes:
+
+- `=== Test: Runtime Plan ===`
+
+The runtime plan scaffold is mock-only and inert. It can represent future
+runtime intent, safety, blocked previews, and fake-provider records without
+execution.
+
+Group profiles `2` and `3` produce blocked previews only, unknown keys fail
+safely, unsupported source kinds fail safely, and profile `4` remains parked.
+
+No real MIDI, MIDI libraries, port opening, MIDI sending, CLI execution
+wiring, dispatch, command execution, runtime mutation, profile `4` mock mapper
+support, fourth runtime-adjacent candidate, package metadata changes, active
+behavior, or hardware behavior was added.
+
+The next recommended task is a docs-only review/acceptance gate for this
+runtime plan scaffold checkpoint.
 
 ## Latest Session Closeout 2026-05-12 Runtime Plan Handoff
 

@@ -6,7 +6,68 @@ modularize-v1.34
 
 ## Current HEAD
 
-237fbe3 Add narrow mock-only fake-provider implementation plan review
+f14e329 Add mock-only runtime plan scaffold
+
+## Latest Behavior-Parity Runtime Plan Scaffold Checkpoint
+
+The narrow mock-only runtime plan scaffold is now implemented and covered by
+closeout.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Implementation files:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- `Scripts/closeout_check.ps1`
+
+Implemented inert concepts:
+
+- `RuntimeIntent`
+- `RuntimeSafetyEnvelope`
+- `RuntimePlanPreview`
+- `MockRuntimeProvider`
+- `create_blocked_runtime_preview`
+- `validate_runtime_intent_scope`
+
+Closeout coverage now includes:
+
+- `=== Test: Runtime Plan ===`
+
+Current runtime plan behavior:
+
+- group profiles `2` and `3` produce blocked previews only
+- unknown keys fail safely
+- unsupported source kinds fail safely
+- profile `4` remains parked
+- `would_execute` remains `False`
+
+Recommended next task:
+
+- docs-only review/acceptance gate for the runtime plan scaffold checkpoint
+
+Confirmed boundaries:
+
+- no real MIDI
+- no `mido`
+- no `rtmidi`
+- no ports
+- no MIDI sending
+- no active CLI execution
+- no dispatch
+- no command execution
+- no runtime mutation
+- no profile `4` mock mapper support
+- no fourth runtime-adjacent candidate
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Session Closeout 2026-05-12 Runtime Plan Handoff
 
