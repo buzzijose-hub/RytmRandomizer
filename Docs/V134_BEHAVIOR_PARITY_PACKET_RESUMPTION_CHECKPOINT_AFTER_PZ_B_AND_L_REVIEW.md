@@ -218,3 +218,16 @@ The next branch remains:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Audit
+
+This review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_REMAINING_GAP_FRONTIER_AUDIT_AFTER_PZ_B_AND_L.md`
+
+The follow-up audit documents the current behavior-parity remaining-gap
+frontier after accepted `PZ`, `B`, and `L` runtime-adjacent mock-only
+safe-failure work.
+
+It keeps the next task as a docs-only review/acceptance gate before any
+next-packet selection or implementation.
