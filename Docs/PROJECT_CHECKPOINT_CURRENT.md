@@ -21,7 +21,71 @@ modularize-v1.34
 
 Current HEAD:
 
-476e8c9 Add Packet 12 CLI visibility plan
+bd3d526 Add passive behavior parity report CLI
+
+## V1.34 Behavior Parity Packet 12 CLI Visibility Checkpoint
+
+The passive Packet 12 behavior-parity report CLI visibility implementation is
+now checkpointed.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `bd3d526 Add passive behavior parity report CLI`
+
+Accepted upstream plan review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_PLAN_REVIEW.md`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli behavior-parity-report`
+
+New passive CLI help command:
+
+- `python -m rytm_randomizer.cli behavior-parity-report --help`
+
+Files changed by the implementation milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_behavior_parity_report_help_expected.txt`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+Verification recorded:
+
+- RED: `22 failed, 81 passed`
+- GREEN: `103 passed`
+- full closeout passed
+- V1.34 reference diff empty
+- package metadata diff empty
+- git status clean
+- manual CLI checks passed
+
+Next recommended task:
+
+- docs-only checkpoint review for this Packet 12 CLI visibility milestone
+
+Confirmed boundaries:
+
+- no CLI execution wiring
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Packet 12 CLI Visibility Plan Review
 

@@ -8,7 +8,49 @@ modularize-v1.34
 
 Current HEAD:
 
-476e8c9
+bd3d526
+
+## Latest Behavior-Parity Packet 12 CLI Visibility Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_CHECKPOINT.md` records the
+passive CLI visibility milestone for the Packet 12 behavior-parity coverage
+report.
+
+Implementation milestone:
+
+- `bd3d526 Add passive behavior parity report CLI`
+
+New passive CLI command:
+
+- `behavior-parity-report`
+
+The command prints only the existing
+`format_behavior_parity_coverage_report()` output.
+
+Files changed by the implementation milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_behavior_parity_report_help_expected.txt`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+Verification recorded:
+
+- RED: `22 failed, 81 passed`
+- GREEN: `103 passed`
+- full closeout passed
+- V1.34 reference diff empty
+- package metadata diff empty
+- git status clean
+- manual CLI checks passed
+
+The next recommended task is a docs-only checkpoint review for this Packet 12
+CLI visibility milestone.
+
+No CLI execution wiring, selected pad switching execution, selected pad target
+state mutation, dispatch, command execution, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is added by this checkpoint.
 
 ## Latest Behavior-Parity Packet 12 CLI Visibility Plan Review
 

@@ -252,3 +252,25 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Implementation Status
+
+The accepted plan review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `bd3d526 Add passive behavior parity report CLI`
+
+Implemented passive CLI command:
+
+- `behavior-parity-report`
+
+The implementation calls only `format_behavior_parity_coverage_report()`.
+
+The implementation remains passive, read-only, deterministic, fixture-backed,
+and hardware-free.
+
+No execution, dispatch, MIDI, ports, package metadata changes, active behavior,
+or hardware behavior is added by the implementation milestone.
