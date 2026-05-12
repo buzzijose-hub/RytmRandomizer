@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-aa4e7b7
+12536ef
+
+## Latest Behavior-Parity Next Branch Selection After Packet 12 CLI Visibility
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_CLI_VISIBILITY.md`
+selects the next behavior-parity planning branch after accepted Packet 12 CLI
+visibility.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_12_CLI_VISIBILITY_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `12536ef Add behavior parity progress report review after Packet 12 CLI visibility`
+
+Selected next planning target:
+
+- docs-only Packet 12 report data alignment plan after CLI visibility
+
+The selected branch should decide whether the behavior-parity coverage report
+data should reflect that passive CLI visibility now exists before more
+behavior-parity expansion.
+
+The next recommended task is a docs-only review/acceptance gate for this
+selection checkpoint.
+
+No report data implementation, test changes, fixture changes, CLI execution
+wiring, selected pad switching execution, selected pad target state mutation,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this selection.
 
 ## Latest Behavior-Parity Progress Report After Packet 12 CLI Visibility Review
 

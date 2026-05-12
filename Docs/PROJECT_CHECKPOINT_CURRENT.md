@@ -21,7 +21,59 @@ modularize-v1.34
 
 Current HEAD:
 
-aa4e7b7 Add behavior parity progress report after Packet 12 CLI visibility
+12536ef Add behavior parity progress report review after Packet 12 CLI visibility
+
+## V1.34 Behavior Parity Next Branch Selection After Packet 12 CLI Visibility
+
+The next behavior-parity branch after accepted Packet 12 CLI visibility has
+now been selected.
+
+Selection checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_CLI_VISIBILITY.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_12_CLI_VISIBILITY_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `12536ef Add behavior parity progress report review after Packet 12 CLI visibility`
+
+Selected next planning target:
+
+- docs-only Packet 12 report data alignment plan after CLI visibility
+
+Reason:
+
+- Packet 12 CLI visibility now exists and is accepted
+- the behavior-parity coverage report is now user-visible from the passive CLI
+- the next safe planning question is whether report data should reflect that
+  CLI visibility state before more behavior-parity expansion
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this selection checkpoint
+
+Confirmed boundaries:
+
+- no report data implementation in this selection
+- no test changes
+- no fixture changes
+- no CLI execution wiring
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Progress Report After Packet 12 CLI Visibility Review
 

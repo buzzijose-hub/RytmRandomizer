@@ -206,3 +206,17 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 10. Next Branch Selection Status
+
+The next branch after this review is selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_CLI_VISIBILITY.md`
+
+Selected next planning target:
+
+- docs-only Packet 12 report data alignment plan after CLI visibility
+
+The selection checkpoint does not add implementation, tests, fixtures, CLI
+execution wiring, dispatch, command execution, runtime execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
