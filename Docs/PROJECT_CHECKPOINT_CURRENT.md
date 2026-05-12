@@ -21,7 +21,56 @@ modularize-v1.34
 
 Current HEAD:
 
-129eab9 Add behavior parity next branch selection after Packet 12 report data alignment
+84a682a Add behavior parity next branch selection review after Packet 12 report data alignment
+
+## V1.34 Behavior Parity Fourth Runtime-Adjacent Candidate Decision Note After Packet 12 Report Data Alignment
+
+The fourth runtime-adjacent candidate decision is now documented.
+
+Decision note:
+
+- `Docs/V134_BEHAVIOR_PARITY_FOURTH_RUNTIME_ADJACENT_CANDIDATE_DECISION_NOTE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `84a682a Add behavior parity next branch selection review after Packet 12 report data alignment`
+
+Current decision:
+
+- keep the accepted `PZ`, `B`, and `L` runtime-adjacent safe-failure trio
+  frozen for now
+- do not select a fourth runtime-adjacent candidate yet
+- do not implement a fourth runtime-adjacent candidate
+- keep profile `4` mock mapper support parked
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this decision note
+
+Confirmed boundaries:
+
+- no fourth runtime-adjacent candidate selected
+- no fourth runtime-adjacent candidate added
+- no profile `4` mock mapper support
+- no new implementation
+- no CLI execution wiring
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Next Branch Selection After Packet 12 Report Data Alignment Review
 

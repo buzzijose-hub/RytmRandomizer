@@ -178,3 +178,20 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Decision Note Status
+
+The selected next branch is documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FOURTH_RUNTIME_ADJACENT_CANDIDATE_DECISION_NOTE_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+
+The decision note keeps the current `PZ`, `B`, and `L` runtime-adjacent
+safe-failure trio frozen for now.
+
+The decision note does not select or implement a fourth runtime-adjacent
+candidate.
+
+The decision note adds no profile `4` mock mapper support, implementation,
+tests, fixtures, CLI changes, CLI execution wiring, dispatch, command
+execution, runtime execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
