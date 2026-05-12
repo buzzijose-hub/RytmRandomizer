@@ -295,3 +295,12 @@ This design aligns that candidate with the current runtime plan/report layer.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 15. Follow-Up Status
+
+This design alignment is now reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+The next recommended task is a docs-only gap/next-branch selection after this
+design review.
