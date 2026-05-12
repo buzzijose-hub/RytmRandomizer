@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-75b0a6e
+078d81f
+
+## Latest Behavior-Parity Progress Timeline After PZ, B, And L
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_B_AND_L.md` summarizes
+the current user-facing progress and timeline state after accepted `PZ`, `B`,
+and `L` runtime-adjacent mock-only safe-failure tests.
+
+Accepted runtime-adjacent mock-only safe-failure surfaces:
+
+- `PZ`
+- `B`
+- `L`
+
+Current accepted state:
+
+- `PZ` remains selected isolated pad anchor-return readiness
+- `B` remains current-anchor return intent readiness
+- `L` remains selected isolated pad target intent readiness
+- all three remain read-only, inert, non-executable, and non-hardware-facing
+- closeout covers all three runtime-adjacent mock-only surfaces
+- no fourth runtime-adjacent candidate is selected yet
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress/timeline update.
+
+No selected pad switching execution, selected pad target state mutation,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this timeline.
 
 ## Latest Runtime-Adjacent Next Branch Selection After L Tests Review
 

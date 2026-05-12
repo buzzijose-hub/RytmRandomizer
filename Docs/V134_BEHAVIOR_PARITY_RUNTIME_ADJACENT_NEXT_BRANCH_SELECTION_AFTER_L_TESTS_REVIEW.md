@@ -236,3 +236,17 @@ No fourth runtime-adjacent mock-only candidate is selected yet.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The selected progress/timeline branch has now been created by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_B_AND_L.md`
+
+The timeline summarizes the accepted `PZ`, `B`, and `L` runtime-adjacent
+mock-only safe-failure trio.
+
+It does not select a fourth candidate.
+
+It does not authorize tests, implementation, execution, MIDI, ports, active
+behavior, or hardware behavior.

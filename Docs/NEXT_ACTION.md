@@ -6,7 +6,57 @@ modularize-v1.34
 
 ## Current HEAD
 
-75b0a6e Add runtime adjacent next branch selection after L tests
+078d81f Add runtime adjacent next branch selection review after L tests
+
+## Latest Behavior-Parity Progress Timeline After PZ, B, And L
+
+The latest user-facing behavior-parity progress/timeline update after accepted
+`PZ`, `B`, and `L` runtime-adjacent mock-only safe-failure tests is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_B_AND_L.md`
+
+It records:
+
+- current baseline:
+  - `078d81f Add runtime adjacent next branch selection review after L tests`
+- accepted runtime-adjacent mock-only safe-failure surfaces:
+  - `PZ`
+  - `B`
+  - `L`
+- closeout coverage for:
+  - `Runtime-Adjacent Mock-Only PZ`
+  - `Runtime-Adjacent Mock-Only B`
+  - `Runtime-Adjacent Mock-Only L`
+- `PZ`, `B`, and `L` now form a meaningful runtime-adjacent safe-failure trio
+- no fourth runtime-adjacent mock-only candidate is selected yet
+- no tests, implementation, execution path, MIDI, ports, package metadata
+  changes, active behavior, or hardware behavior are added
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this progress/timeline update
+
+Likely branch after review:
+
+- pause at the `PZ`/`B`/`L` checkpoint, choose a fourth runtime-adjacent
+  candidate via a separate branch-selection note, or return to broader
+  behavior-parity packet work
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Runtime-Adjacent Next Branch Selection After L Tests Review
 
