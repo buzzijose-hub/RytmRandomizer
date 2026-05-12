@@ -21,11 +21,16 @@ modularize-v1.34
 
 Current HEAD:
 
-2948d70 Add behavior parity next packet selection review after PZ B and L frontier review
+c67181a Add Packet 12 behavior parity coverage report plan
 
-## V1.34 Behavior Parity Packet 12 Coverage Report Plan
+## V1.34 Behavior Parity Packet 12 Coverage Report Plan Review
 
-Packet 12 is now planned at documentation level.
+The Packet 12 behavior-parity coverage report plan is now reviewed and
+accepted at documentation level.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN_REVIEW.md`
 
 Plan document:
 
@@ -37,9 +42,9 @@ Accepted upstream review:
 
 Current baseline:
 
-- `2948d70 Add behavior parity next packet selection review after PZ B and L frontier review`
+- `c67181a Add Packet 12 behavior parity coverage report plan`
 
-Planned Packet 12 scope:
+Accepted Packet 12 scope:
 
 - read-only behavior-parity coverage report
 - deterministic in-memory report data
@@ -51,7 +56,8 @@ Planned Packet 12 scope:
 
 Next recommended task:
 
-- docs-only review/acceptance gate for this Packet 12 plan
+- tiny TDD implementation of the read-only Packet 12 behavior-parity coverage
+  report
 
 Confirmed boundaries:
 
