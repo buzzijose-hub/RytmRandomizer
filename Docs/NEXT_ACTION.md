@@ -6,7 +6,58 @@ modularize-v1.34
 
 ## Current HEAD
 
-4c2fea7 Add first mock-only active candidate design review
+629bce6 Add next branch selection after first mock-only candidate review
+
+## Latest Behavior-Parity Active/Runtime Report Alignment Safety Test Plan
+
+The active-boundary/runtime-plan report alignment safety test plan is now
+documented.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_SAFETY_TEST_PLAN.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `629bce6 Add next branch selection after first mock-only candidate review`
+
+Planned future test-only scope:
+
+- create `tests/test_active_runtime_report_alignment.py`
+- update `Scripts/closeout_check.ps1`
+- add closeout label `=== Test: Active/Runtime Report Alignment ===`
+
+Planned future alignment assertions:
+
+- profile `2` remains the accepted first mock-only active candidate
+- profile `3` remains runtime-plan supported but active-boundary unsupported
+- profile `4` remains parked/unsupported until separately approved
+- runtime plan report and active-boundary report preserve mock-only,
+  no-MIDI, no-port, no-hardware boundaries
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this alignment safety test plan
+
+Confirmed boundaries:
+
+- no implementation in this plan
+- no tests in this plan
+- no closeout script changes in this plan
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After First Mock-Only Active Candidate Design Review
 

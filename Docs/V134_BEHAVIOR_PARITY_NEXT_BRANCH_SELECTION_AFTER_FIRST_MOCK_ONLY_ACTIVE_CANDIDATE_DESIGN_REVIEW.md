@@ -247,3 +247,13 @@ The next recommended task is to create that docs-only safety test plan.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The selected docs-only alignment safety test plan is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_SAFETY_TEST_PLAN.md`
+
+The next recommended task is a docs-only review/acceptance gate for that plan.
+
+The plan does not authorize implementation by itself.

@@ -21,7 +21,42 @@ modularize-v1.34
 
 Current HEAD:
 
-4c2fea7 Add first mock-only active candidate design review
+629bce6 Add next branch selection after first mock-only candidate review
+
+## V1.34 Behavior Parity Active/Runtime Report Alignment Safety Test Plan
+
+The active-boundary/runtime-plan report alignment safety test plan is now
+documented.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ACTIVE_RUNTIME_REPORT_ALIGNMENT_SAFETY_TEST_PLAN.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `629bce6 Add next branch selection after first mock-only candidate review`
+
+Planned future test-only scope:
+
+- `tests/test_active_runtime_report_alignment.py`
+- `Scripts/closeout_check.ps1`
+- closeout label `=== Test: Active/Runtime Report Alignment ===`
+
+The plan preserves profile `2` as the accepted first mock-only active
+candidate, profile `3` as runtime-plan supported but active-boundary
+unsupported, and profile `4` as parked/unsupported.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this alignment safety test plan
+
+No implementation, tests, closeout script changes, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this plan.
 
 ## V1.34 Behavior Parity Next Branch Selection After First Mock-Only Active Candidate Design Review
 
