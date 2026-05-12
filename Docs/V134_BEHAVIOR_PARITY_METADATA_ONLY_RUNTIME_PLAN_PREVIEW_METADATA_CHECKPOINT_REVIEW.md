@@ -262,3 +262,17 @@ and inert.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 14. Follow-Up Status
+
+The next branch after this accepted checkpoint review is now selected by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_PREVIEW_METADATA_REVIEW.md`
+
+Selected next branch:
+
+- docs-only read-only runtime plan report design
+
+The selection checkpoint adds no implementation, tests, CLI changes, CLI
+execution wiring, dispatch, command execution, runtime mutation, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.

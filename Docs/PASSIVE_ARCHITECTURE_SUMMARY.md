@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-df3633e
+d6d9d16
+
+## Latest Behavior-Parity Next Branch Selection After Runtime Plan Preview Metadata Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_PREVIEW_METADATA_REVIEW.md`
+selects the next branch after accepting the metadata-only runtime plan preview
+metadata checkpoint.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_METADATA_ONLY_RUNTIME_PLAN_PREVIEW_METADATA_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `d6d9d16 Add runtime plan preview metadata checkpoint review`
+
+Selected next branch:
+
+- docs-only read-only runtime plan report design
+
+The selected branch is planning-only. It may define how a future read-only
+report summarizes runtime plan metadata, supported/parked inputs, reason codes,
+and safety flags.
+
+It does not authorize implementation by itself.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is added by this selection
+checkpoint.
 
 ## Latest Behavior-Parity Metadata-Only Runtime Plan Preview Metadata Checkpoint Review
 
