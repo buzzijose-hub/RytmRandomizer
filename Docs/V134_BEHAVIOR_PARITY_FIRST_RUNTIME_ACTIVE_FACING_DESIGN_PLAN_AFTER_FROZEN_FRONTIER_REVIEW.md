@@ -205,3 +205,21 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Implementation Plan Status
+
+The next selected branch is documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NARROW_MOCK_ONLY_FAKE_PROVIDER_IMPLEMENTATION_PLAN_AFTER_FIRST_RUNTIME_ACTIVE_FACING_DESIGN_REVIEW.md`
+
+The implementation plan defines the smallest possible future code packet for
+the accepted runtime/active-facing bridge:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+- closeout label `=== Test: Runtime Plan ===`
+
+The plan itself adds no implementation, tests, fixture changes, closeout script
+changes, CLI changes, CLI execution wiring, dispatch, command execution,
+runtime execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.
