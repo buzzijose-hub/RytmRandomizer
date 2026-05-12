@@ -6,7 +6,54 @@ modularize-v1.34
 
 ## Current HEAD
 
-4faa394 Add L runtime adjacent mock-only test plan
+aa93c9f Add runtime adjacent mock-only L tests
+
+## Latest Runtime-Adjacent Mock-Only L Tests Checkpoint
+
+The latest runtime-adjacent mock-only `L` tests checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_L_TESTS_CHECKPOINT.md`
+
+It records:
+
+- implementation milestone:
+  - `aa93c9f Add runtime adjacent mock-only L tests`
+- files changed by the milestone:
+  - `tests/test_runtime_adjacent_mock_only_l.py`
+  - `Scripts/closeout_check.ps1`
+- closeout coverage added:
+  - `Runtime-Adjacent Mock-Only L`
+- `L` now has test-only safe-failure coverage for runtime-adjacent selected
+  target readiness
+- `L` remains read-only, inert, non-executable, and non-hardware-facing
+- `PZ` remains covered by `Runtime-Adjacent Mock-Only PZ`
+- `B` remains covered by `Runtime-Adjacent Mock-Only B`
+- execution, real MIDI, ports, package metadata changes, active behavior, and
+  hardware validation remain absent
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+Likely branch after review:
+
+- broader runtime-adjacent mock-only progress report after `L`, or pause
+  before choosing another candidate
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest L Runtime-Adjacent Mock-Only Safe-Failure Test Plan Review
 

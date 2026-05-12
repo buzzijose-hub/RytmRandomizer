@@ -8,7 +8,39 @@ modularize-v1.34
 
 Current HEAD:
 
-4faa394
+aa93c9f
+
+## Latest Runtime-Adjacent Mock-Only L Tests Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_L_TESTS_CHECKPOINT.md`
+documents the completed tiny test-only `L` runtime-adjacent safe-failure test
+slice.
+
+Implementation milestone:
+
+- `aa93c9f Add runtime adjacent mock-only L tests`
+
+Closeout coverage added:
+
+- `Runtime-Adjacent Mock-Only L`
+
+Current accepted state:
+
+- `L` now has test-only safe-failure coverage
+- `L` remains read-only, inert, non-executable, and non-hardware-facing
+- `PZ` remains the first closeout-backed runtime-adjacent mock-only
+  safe-failure surface
+- `B` remains the second closeout-backed runtime-adjacent mock-only
+  safe-failure surface
+- active execution is not started
+- real MIDI and hardware validation are not started
+
+The next recommended task is a docs-only review/acceptance gate for the `L`
+tests checkpoint.
+
+No selected pad switching execution, selected pad target state mutation,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this checkpoint.
 
 ## Latest L Runtime-Adjacent Mock-Only Safe-Failure Test Plan Review
 

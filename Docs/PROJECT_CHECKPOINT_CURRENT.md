@@ -21,7 +21,61 @@ modularize-v1.34
 
 Current HEAD:
 
-4faa394 Add L runtime adjacent mock-only test plan
+aa93c9f Add runtime adjacent mock-only L tests
+
+## V1.34 Behavior Parity Runtime-Adjacent Mock-Only L Tests Checkpoint
+
+The tiny test-only `L` runtime-adjacent safe-failure test slice is complete
+and documented for review.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_ADJACENT_MOCK_ONLY_L_TESTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `aa93c9f Add runtime adjacent mock-only L tests`
+
+Files changed by the milestone:
+
+- `tests/test_runtime_adjacent_mock_only_l.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout coverage added:
+
+- `Runtime-Adjacent Mock-Only L`
+
+Checkpoint summary:
+
+- `L` has test-only safe-failure coverage for runtime-adjacent selected target
+  readiness
+- unset, unsupported, stale, and invalid selected target contexts fail safely
+- `MockMidiSender` remains empty for failed readiness
+- passive CLI `preview-command L` remains read-only
+- no real MIDI libraries are imported
+- `PZ` remains covered by `Runtime-Adjacent Mock-Only PZ`
+- `B` remains covered by `Runtime-Adjacent Mock-Only B`
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this checkpoint
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity L Runtime-Adjacent Mock-Only Safe-Failure Test Plan Review
 
