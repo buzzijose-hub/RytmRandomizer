@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-48bb249
+476e8c9
+
+## Latest Behavior-Parity Packet 12 CLI Visibility Plan Review
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_PLAN_REVIEW.md` accepts
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_PLAN.md` as the current
+planning gate for future passive CLI visibility of the Packet 12
+behavior-parity coverage report.
+
+Accepted plan milestone:
+
+- `476e8c9 Add Packet 12 CLI visibility plan`
+
+Accepted future passive CLI command name:
+
+- `behavior-parity-report`
+
+Accepted future command behavior:
+
+- print only the existing `format_behavior_parity_coverage_report()` output
+- remain passive and read-only
+- use deterministic fixture-backed output
+- avoid dispatch, execution, MIDI, ports, active behavior, and hardware
+
+The next recommended task is the tiny TDD implementation of passive
+`behavior-parity-report` CLI visibility.
+
+No Packet 12 CLI command, CLI implementation, tests, fixtures, closeout script
+changes, selected pad switching execution, selected pad target state mutation,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is added by this review.
 
 ## Latest Behavior-Parity Packet 12 CLI Visibility Plan
 
