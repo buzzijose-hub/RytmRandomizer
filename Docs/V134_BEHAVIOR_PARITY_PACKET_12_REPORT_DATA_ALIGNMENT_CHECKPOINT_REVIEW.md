@@ -201,3 +201,16 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Progress Report Status
+
+The broader progress report after this accepted checkpoint is documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+
+The progress report summarizes Packet 12 with report data, passive CLI
+visibility, and aligned `cli_visibility: present` report metadata.
+
+The progress report adds no implementation, tests, fixtures, CLI changes, CLI
+execution wiring, dispatch, command execution, runtime execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.

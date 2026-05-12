@@ -8,7 +8,43 @@ modularize-v1.34
 
 Current HEAD:
 
-d576e85
+1caec67
+
+## Latest Behavior-Parity Progress Report After Packet 12 Report Data Alignment
+
+`Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT.md`
+summarizes the behavior-parity baseline after accepted Packet 12 report data
+alignment.
+
+Accepted upstream checkpoint review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_REPORT_DATA_ALIGNMENT_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint milestone:
+
+- `d576e85 Add Packet 12 report data alignment checkpoint`
+
+Accepted implementation milestone:
+
+- `6b4f674 Align Packet 12 behavior parity report data`
+
+Current Packet 12 accepted state:
+
+- behavior-parity coverage report
+- passive `behavior-parity-report` CLI visibility
+- report data aligned with accepted CLI visibility
+- `cli_visibility: present`
+- `Packet 12 CLI visibility` removed from parked scope
+- `PZ`, `B`, and `L` runtime-adjacent safe-failure visibility
+- parked scope remains explicit
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
+
+No new implementation, CLI execution wiring, selected pad switching execution,
+selected pad target state mutation, dispatch, command execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is authorized
+by this report.
 
 ## Latest Behavior-Parity Packet 12 Report Data Alignment Checkpoint Review
 
