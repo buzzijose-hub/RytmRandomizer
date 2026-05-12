@@ -184,3 +184,23 @@ is accepted as the current consolidated behavior-parity progress report.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Status
+
+The next branch after this accepted progress report review has been selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_ACTIVE_RUNTIME_ALIGNMENT_PROGRESS_REPORT_REVIEW.md`
+
+Selected next branch:
+
+- docs-only runtime plan report CLI preview design
+
+Next recommended task:
+
+- create the documentation-only runtime plan report CLI preview design
+
+The selection authorizes no implementation, tests, CLI changes, CLI execution
+wiring, runtime execution, dispatch, MIDI, ports, active behavior, or hardware
+behavior.

@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-f6e4f06
+2a950db
+
+## Latest Behavior-Parity Next Branch Selection After Active/Runtime Alignment Progress Report Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_ACTIVE_RUNTIME_ALIGNMENT_PROGRESS_REPORT_REVIEW.md`
+selects the next branch after accepting the behavior-parity progress report
+review.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_ACTIVE_RUNTIME_REPORT_ALIGNMENT_TESTS_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `2a950db Add progress report review after active runtime alignment tests`
+
+Selected next branch:
+
+- docs-only runtime plan report CLI preview design
+
+The selected branch should design future passive CLI visibility for the
+existing read-only runtime plan report without implementing the CLI command
+yet.
+
+The next recommended task is to create that documentation-only design.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this
+selection.
 
 ## Latest Behavior-Parity Progress Report After Active/Runtime Report Alignment Tests Review
 
