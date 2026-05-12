@@ -21,7 +21,64 @@ modularize-v1.34
 
 Current HEAD:
 
-078d81f Add runtime adjacent next branch selection review after L tests
+e51ada7 Add behavior parity progress timeline after PZ B and L
+
+## V1.34 Behavior Parity Progress Timeline After PZ, B, And L Review
+
+The user-facing behavior-parity progress/timeline update after accepted `PZ`,
+`B`, and `L` runtime-adjacent mock-only safe-failure tests has now been
+reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_B_AND_L_REVIEW.md`
+
+Accepted timeline:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_TIMELINE_AFTER_PZ_B_AND_L.md`
+
+Accepted milestone:
+
+- `e51ada7 Add behavior parity progress timeline after PZ B and L`
+
+Accepted runtime-adjacent mock-only safe-failure surfaces:
+
+- `PZ`: return selected isolated pad to anchor only
+- `B`: back to current anchor
+- `L`: select isolated single-pad mutation target, default Pad 3
+
+Accepted state:
+
+- closeout includes `Runtime-Adjacent Mock-Only PZ`
+- closeout includes `Runtime-Adjacent Mock-Only B`
+- closeout includes `Runtime-Adjacent Mock-Only L`
+- all three surfaces remain read-only, inert, non-executable, and
+  non-hardware-facing
+- no fourth runtime-adjacent mock-only candidate is selected yet
+- active execution, real MIDI, ports, package metadata changes, and hardware
+  validation remain absent
+
+Next recommended task:
+
+- pause at this checkpoint, create a next-branch selection note for a fourth
+  runtime-adjacent mock-only candidate, or return to broader behavior-parity
+  packet work
+
+Confirmed boundaries:
+
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Progress Timeline After PZ, B, And L
 
