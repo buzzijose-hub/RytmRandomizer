@@ -6,7 +6,58 @@ modularize-v1.34
 
 ## Current HEAD
 
-53d593a Add first mock-only active candidate design alignment
+4c2fea7 Add first mock-only active candidate design review
+
+## Latest Behavior-Parity Next Branch Selection After First Mock-Only Active Candidate Design Review
+
+The next branch after accepting the first mock-only active candidate design
+review is now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `4c2fea7 Add first mock-only active candidate design review`
+
+Selected next branch:
+
+- docs-only active-boundary/runtime-plan report alignment safety test plan
+
+Reason:
+
+- the runtime plan report and active-boundary report now describe adjacent
+  active-facing mock-only safety surfaces
+- profile `2` should stay aligned as the accepted candidate
+- profile `3` should remain intentionally different: runtime-plan supported,
+  active-boundary unsupported
+- profile `4` should remain parked/unsupported until separately approved
+
+Recommended next task:
+
+- create the docs-only active-boundary/runtime-plan report alignment safety
+  test plan
+
+Confirmed boundaries:
+
+- no implementation in this selection
+- no tests in this selection
+- no closeout script changes in this selection
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity First Mock-Only Active Candidate Design Review
 

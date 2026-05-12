@@ -21,7 +21,42 @@ modularize-v1.34
 
 Current HEAD:
 
-53d593a Add first mock-only active candidate design alignment
+4c2fea7 Add first mock-only active candidate design review
+
+## V1.34 Behavior Parity Next Branch Selection After First Mock-Only Active Candidate Design Review
+
+The next branch after accepting the first mock-only active candidate design
+review is now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `4c2fea7 Add first mock-only active candidate design review`
+
+Selected next branch:
+
+- docs-only active-boundary/runtime-plan report alignment safety test plan
+
+The selected branch will plan how to prove the read-only runtime plan report
+and active-boundary report stay aligned around profile `2`, intentionally
+different around profile `3`, and parked/safe around profile `4`.
+
+Next recommended task:
+
+- create the docs-only active-boundary/runtime-plan report alignment safety
+  test plan
+
+No implementation, tests, closeout script changes, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this
+selection.
 
 ## V1.34 Behavior Parity First Mock-Only Active Candidate Design Review
 

@@ -250,3 +250,16 @@ design review.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 14. Follow-Up Status
+
+The next branch selection after this design review is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_FIRST_MOCK_ONLY_ACTIVE_CANDIDATE_DESIGN_REVIEW.md`
+
+Selected next branch:
+
+- docs-only active-boundary/runtime-plan report alignment safety test plan
+
+The selected branch remains documentation-only and does not authorize
+implementation by itself.
