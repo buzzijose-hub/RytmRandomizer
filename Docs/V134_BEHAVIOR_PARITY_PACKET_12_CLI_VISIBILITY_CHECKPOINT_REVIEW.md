@@ -227,3 +227,19 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Progress Report
+
+This accepted checkpoint review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_IMPLEMENTATION_PROGRESS_REPORT_AFTER_PACKET_12_CLI_VISIBILITY.md`
+
+The follow-up progress report summarizes the behavior-parity baseline after
+Packet 12 CLI visibility.
+
+The follow-up report keeps the next selected branch as a docs-only
+review/acceptance gate before any new implementation.
+
+No implementation, tests, execution, dispatch, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is authorized by this review or
+its follow-up report.
