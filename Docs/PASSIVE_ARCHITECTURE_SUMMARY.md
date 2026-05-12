@@ -8,7 +8,44 @@ modularize-v1.34
 
 Current HEAD:
 
-f14e329
+9652e9d
+
+## Latest Behavior-Parity Runtime Plan Scaffold Checkpoint Review
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT_REVIEW.md`
+accepts the runtime plan scaffold checkpoint as the current mock-only runtime
+planning baseline.
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Accepted checkpoint milestone:
+
+- `9652e9d Add runtime plan scaffold checkpoint`
+
+Accepted runtime plan baseline:
+
+- mock-only
+- inert
+- closeout-covered by `=== Test: Runtime Plan ===`
+- group profiles `2` and `3` return blocked previews only
+- unknown keys fail safely
+- unsupported source kinds fail safely
+- profile `4` remains parked
+- no preview executes
+
+No real MIDI, MIDI libraries, ports, MIDI sending, CLI execution wiring,
+dispatch, command execution, runtime mutation, profile `4` mock mapper support,
+fourth runtime-adjacent candidate, package metadata changes, active behavior,
+or hardware behavior is authorized by this review.
+
+The next recommended task is a docs-only next-branch selection checkpoint after
+runtime plan scaffold acceptance.
 
 ## Latest Behavior-Parity Runtime Plan Scaffold Checkpoint
 

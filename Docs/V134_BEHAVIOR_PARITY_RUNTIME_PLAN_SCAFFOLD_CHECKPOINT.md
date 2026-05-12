@@ -191,3 +191,17 @@ Hardware remains off.
 Next recommended task:
 
 - docs-only review/acceptance gate for this runtime plan scaffold checkpoint
+
+## 11. Review Status
+
+This checkpoint is reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT_REVIEW.md`
+
+The review accepts the runtime plan scaffold as the current mock-only,
+inert runtime-planning baseline.
+
+The next recommended task after acceptance is:
+
+- docs-only next-branch selection checkpoint after runtime plan scaffold
+  acceptance

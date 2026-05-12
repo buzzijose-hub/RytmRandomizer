@@ -21,7 +21,51 @@ modularize-v1.34
 
 Current HEAD:
 
-f14e329 Add mock-only runtime plan scaffold
+9652e9d Add runtime plan scaffold checkpoint
+
+## V1.34 Behavior Parity Runtime Plan Scaffold Checkpoint Review
+
+The runtime plan scaffold checkpoint is now reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_SCAFFOLD_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `f14e329 Add mock-only runtime plan scaffold`
+
+Accepted checkpoint milestone:
+
+- `9652e9d Add runtime plan scaffold checkpoint`
+
+Accepted runtime plan baseline:
+
+- mock-only and inert
+- `RuntimeIntent`
+- `RuntimeSafetyEnvelope`
+- `RuntimePlanPreview`
+- `MockRuntimeProvider`
+- `create_blocked_runtime_preview`
+- `validate_runtime_intent_scope`
+- `=== Test: Runtime Plan ===`
+
+The accepted baseline returns blocked previews only for supported planning
+inputs. Unknown keys, unsupported source kinds, and profile `4` fail safely.
+
+No real MIDI, `mido`, `rtmidi`, port opening, MIDI sending, CLI execution
+wiring, dispatch, command execution, runtime mutation, profile `4` mock mapper
+support, fourth runtime-adjacent candidate, package metadata changes, active
+behavior, or hardware behavior is authorized by this review.
+
+Next recommended task:
+
+- docs-only next-branch selection checkpoint after runtime plan scaffold
+  acceptance
 
 ## V1.34 Behavior Parity Runtime Plan Scaffold Checkpoint
 
