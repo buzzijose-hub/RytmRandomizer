@@ -21,7 +21,51 @@ modularize-v1.34
 
 Current HEAD:
 
-d6d9d16 Add runtime plan preview metadata checkpoint review
+573ddf3 Add next branch selection after runtime preview metadata
+
+## V1.34 Behavior Parity Read-Only Runtime Plan Report Design
+
+The read-only runtime plan report design is now documented.
+
+Design document:
+
+- `Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_DESIGN.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_PREVIEW_METADATA_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `573ddf3 Add next branch selection after runtime preview metadata`
+
+Design scope:
+
+- future read-only report over existing runtime plan metadata
+- supported planning inputs summary
+- parked planning inputs summary
+- unknown/unsupported safe-failure summary
+- stable reason-code summary
+- mock-only safety summary
+- no-execution status
+- no-MIDI status
+- no-port status
+- no-hardware status
+
+Possible future implementation files, only after review and a separate accepted
+implementation plan:
+
+- `rytm_randomizer/runtime_plan_report.py`
+- `tests/test_runtime_plan_report.py`
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this runtime plan report design
+
+No implementation, tests, closeout script changes, CLI changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is added by this
+design.
 
 ## V1.34 Behavior Parity Next Branch Selection After Runtime Plan Preview Metadata Review
 

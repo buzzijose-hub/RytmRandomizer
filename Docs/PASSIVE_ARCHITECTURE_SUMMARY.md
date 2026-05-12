@@ -8,7 +8,39 @@ modularize-v1.34
 
 Current HEAD:
 
-d6d9d16
+573ddf3
+
+## Latest Behavior-Parity Read-Only Runtime Plan Report Design
+
+`Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_DESIGN.md`
+documents a future read-only runtime plan report design.
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_PREVIEW_METADATA_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `573ddf3 Add next branch selection after runtime preview metadata`
+
+The design describes how a future report may summarize existing runtime plan
+metadata, supported and parked planning inputs, unknown/unsupported safe
+failures, stable reason codes, and mock-only safety flags.
+
+The design does not authorize implementation by itself.
+
+Possible future implementation files, only after review and a separate
+implementation plan:
+
+- `rytm_randomizer/runtime_plan_report.py`
+- `tests/test_runtime_plan_report.py`
+
+The next recommended task is a docs-only review/acceptance gate for this
+design.
+
+No implementation, tests, closeout script changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior is added by this design.
 
 ## Latest Behavior-Parity Next Branch Selection After Runtime Plan Preview Metadata Review
 

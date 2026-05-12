@@ -245,3 +245,15 @@ The next branch after accepted runtime preview metadata is selected:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 14. Follow-Up Status
+
+The selected next branch is now documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_READ_ONLY_RUNTIME_PLAN_REPORT_DESIGN.md`
+
+The design remains documentation-only.
+
+It does not add implementation, tests, CLI changes, CLI execution wiring,
+dispatch, command execution, runtime mutation, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior.
