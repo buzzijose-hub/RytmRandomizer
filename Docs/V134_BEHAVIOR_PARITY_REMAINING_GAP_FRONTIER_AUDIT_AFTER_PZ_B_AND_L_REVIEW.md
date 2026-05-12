@@ -209,3 +209,16 @@ review.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Selection Checkpoint
+
+This review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PACKET_SELECTION_CHECKPOINT_AFTER_PZ_B_AND_L_FRONTIER_REVIEW.md`
+
+The follow-up checkpoint selects:
+
+- Packet 12: read-only behavior-parity coverage report
+
+The follow-up checkpoint keeps the next task as a docs-only review/acceptance
+gate before any Packet 12 plan or implementation.
