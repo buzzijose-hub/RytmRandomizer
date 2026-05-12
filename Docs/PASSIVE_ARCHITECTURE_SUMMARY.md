@@ -8,7 +8,43 @@ modularize-v1.34
 
 Current HEAD:
 
-367dfcc
+48bb249
+
+## Latest Behavior-Parity Packet 12 CLI Visibility Plan
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_PLAN.md` documents the
+future passive CLI visibility plan for the accepted Packet 12 behavior-parity
+coverage report.
+
+Current baseline:
+
+- `48bb249 Add behavior parity next phase selection review after Packet 12`
+
+Accepted upstream selection review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12_REVIEW.md`
+
+Accepted Packet 12 coverage report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_CHECKPOINT.md`
+
+Planned future passive CLI command:
+
+- `behavior-parity-report`
+
+The planned command would print only the existing
+`format_behavior_parity_coverage_report()` output.
+
+The plan keeps the future command passive, read-only, deterministic,
+formatter-backed, and fixture-tested if later implemented.
+
+The next recommended task is a docs-only review/acceptance gate for this
+Packet 12 CLI visibility plan.
+
+No Packet 12 CLI command, CLI implementation, tests, fixtures, closeout script
+changes, selected pad switching execution, selected pad target state mutation,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior is authorized by this plan.
 
 ## Latest Behavior-Parity Next Phase Selection Checkpoint After Packet 12 Review
 

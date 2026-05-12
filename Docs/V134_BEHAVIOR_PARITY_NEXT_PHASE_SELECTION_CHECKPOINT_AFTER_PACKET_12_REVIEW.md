@@ -208,3 +208,19 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Plan
+
+This accepted review is now followed by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_PLAN.md`
+
+The follow-up plan documents a future passive CLI visibility path for the
+existing Packet 12 behavior-parity coverage report.
+
+The follow-up plan keeps Packet 12 CLI visibility documentation-only until it
+is separately reviewed and accepted.
+
+No Packet 12 CLI command, implementation, tests, execution, dispatch, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior is
+authorized by this review or its follow-up plan.

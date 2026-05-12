@@ -21,7 +21,66 @@ modularize-v1.34
 
 Current HEAD:
 
-367dfcc Add behavior parity next phase selection after Packet 12
+48bb249 Add behavior parity next phase selection review after Packet 12
+
+## V1.34 Behavior Parity Packet 12 CLI Visibility Plan
+
+The Packet 12 CLI visibility plan has now been documented.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_CLI_VISIBILITY_PLAN.md`
+
+Accepted upstream selection review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12_REVIEW.md`
+
+Accepted upstream selection checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12.md`
+
+Accepted Packet 12 coverage report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_CHECKPOINT.md`
+
+Current baseline:
+
+- `48bb249 Add behavior parity next phase selection review after Packet 12`
+
+Planned future passive CLI command:
+
+- `python -m rytm_randomizer.cli behavior-parity-report`
+
+Planned future command behavior:
+
+- print only the existing `format_behavior_parity_coverage_report()` output
+- remain passive and read-only
+- use deterministic fixture-backed output if later implemented
+- avoid dispatch, execution, MIDI, ports, active behavior, and hardware
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this Packet 12 CLI visibility plan
+
+Confirmed boundaries:
+
+- no Packet 12 CLI command yet
+- no CLI implementation
+- no tests or fixtures added
+- no closeout script change
+- no selected pad switching execution
+- no selected pad target state mutation
+- no selected pad anchor return execution
+- no current anchor return execution
+- no isolated pad mutation execution
+- no runtime mutation
+- no dispatch
+- no command execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## V1.34 Behavior Parity Next Phase Selection Checkpoint After Packet 12 Review
 
