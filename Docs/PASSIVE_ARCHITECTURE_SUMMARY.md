@@ -8,7 +8,40 @@ modularize-v1.34
 
 Current HEAD:
 
-2bcbdc6
+bf2a44a
+
+## Latest Behavior-Parity First Runtime/Active-Facing Design Plan After Frozen Frontier
+
+`Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_ACTIVE_FACING_DESIGN_PLAN_AFTER_FROZEN_FRONTIER.md`
+documents the first runtime/active-facing design plan after Packet 12 report
+data alignment and the frozen runtime-adjacent frontier.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_PHASE_SELECTION_CHECKPOINT_AFTER_PACKET_12_REPORT_DATA_ALIGNMENT_AND_FROZEN_FRONTIER_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `bf2a44a Add behavior parity next phase selection review after frozen frontier`
+
+Design scope:
+
+- conceptual runtime/active-facing responsibilities
+- passive preview to future runtime intent boundary
+- mock-only or fake-provider-only preconditions
+- safe-failure requirements
+- no-port and no-real-MIDI guardrails
+- preconditions before any later implementation plan
+
+The next recommended task is a docs-only review/acceptance gate for this design
+plan.
+
+No runtime/active-facing design implementation, runtime module, active boundary
+module, fake provider module, fourth runtime-adjacent candidate, profile `4`
+mock mapper support, tests, fixtures, CLI changes, CLI execution wiring,
+selected pad switching execution, selected pad target state mutation, dispatch,
+command execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior is added by this design plan.
 
 ## Latest Behavior-Parity Next Phase Selection Checkpoint Review After Packet 12 Report Data Alignment And Frozen Frontier
 

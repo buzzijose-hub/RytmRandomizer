@@ -187,3 +187,26 @@ The next selected branch is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## 11. Design Plan Status
+
+The selected next branch is documented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_RUNTIME_ACTIVE_FACING_DESIGN_PLAN_AFTER_FROZEN_FRONTIER.md`
+
+The design plan describes the first runtime/active-facing planning bridge after
+Packet 12 report data alignment and the frozen runtime-adjacent frontier.
+
+The design plan keeps the current runtime-adjacent safe-failure trio frozen:
+
+- `PZ`
+- `B`
+- `L`
+
+The design plan keeps the fourth runtime-adjacent candidate parked.
+
+The design plan keeps profile `4` mock mapper support parked.
+
+The design plan adds no implementation, tests, fixture changes, CLI changes,
+CLI execution wiring, dispatch, command execution, runtime execution, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
