@@ -225,3 +225,23 @@ CLI preview.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The implementation plan for this accepted design is now documented.
+
+Implementation plan:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_PLAN.md`
+
+Planned future command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+
+Next recommended task:
+
+- docs-only review/acceptance gate for the implementation plan
+
+The implementation plan authorizes no implementation, tests, fixtures, CLI
+changes, CLI execution wiring, runtime execution, dispatch, MIDI, ports,
+active behavior, or hardware behavior.

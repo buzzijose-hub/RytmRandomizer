@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-a6972fc
+e193470
+
+## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Plan
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_PLAN.md`
+documents the future implementation plan for the passive runtime plan report
+CLI preview.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `e193470 Add runtime plan report CLI preview design review`
+
+Planned future command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+
+The plan keeps the future implementation limited to printing existing
+`format_runtime_plan_report()` output and remaining passive/read-only.
+
+The next recommended task is a docs-only review/acceptance gate for this
+implementation plan.
+
+No implementation, tests, fixtures, closeout script changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is authorized by this
+plan.
 
 ## Latest Behavior-Parity Runtime Plan Report CLI Preview Design Review
 
