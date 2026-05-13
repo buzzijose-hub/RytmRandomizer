@@ -21,7 +21,43 @@ modularize-v1.34
 
 Current HEAD:
 
-889e2ee Update checkpoint after mock runtime active bridge
+670b0dd Add mock runtime active bridge review
+
+## V1.34 Behavior Parity Next Branch Selection After Mock Runtime Active Bridge Review
+
+The next branch after accepting the mock runtime/active bridge review is now
+selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `670b0dd Add mock runtime active bridge review`
+
+Selected next branch:
+
+- docs-only read-only mock runtime/active bridge report design/spec
+
+The selected branch should design a future read-only report for accepted,
+rejected, and parked bridge behavior.
+
+The selected branch should not implement that report.
+
+Next recommended task:
+
+- create the documentation-only read-only mock runtime/active bridge report
+  design/spec
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, runtime execution, dispatch, command execution, mutation
+execution, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior is added by this selection.
 
 ## V1.34 Behavior Parity Mock Runtime Active Bridge Review
 

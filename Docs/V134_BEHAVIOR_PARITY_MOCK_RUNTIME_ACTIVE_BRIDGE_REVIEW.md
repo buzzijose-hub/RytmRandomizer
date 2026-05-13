@@ -254,3 +254,17 @@ The mock runtime/active bridge implementation is accepted.
 Hardware remains off.
 
 No implementation in this slice.
+
+## Follow-Up Branch Selection
+
+The next branch after this accepted review is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+That selection chooses a docs-only read-only mock runtime/active bridge report
+design/spec as the next branch.
+
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+mutation execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.

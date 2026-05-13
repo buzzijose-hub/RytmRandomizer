@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-889e2ee
+670b0dd
+
+## Latest Behavior-Parity Next Branch Selection After Mock Runtime Active Bridge Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+selects the next branch after the accepted mock runtime/active bridge review.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `670b0dd Add mock runtime active bridge review`
+
+Selected next branch:
+
+- docs-only read-only mock runtime/active bridge report design/spec
+
+The selected branch should design a future read-only bridge report without
+implementing it and without adding CLI execution wiring, runtime execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+The next recommended task is to create that documentation-only design/spec.
 
 ## Latest Behavior-Parity Mock Runtime Active Bridge Review
 
