@@ -213,3 +213,20 @@ No implementation in this slice.
 
 Hardware remains off.
 
+## 12. Follow-Up Audit
+
+The selected follow-up audit is:
+
+- `Docs/V134_BEHAVIOR_PARITY_BRIDGE_SAFETY_COVERAGE_GAP_AUDIT.md`
+
+Audit decision:
+
+- current bridge safety coverage is sufficient for the current passive/mock
+  visibility phase
+- no urgent implementation or test gap was found
+- optional future subprocess import refinements may be considered only after a
+  separate review
+
+Next recommended task:
+
+- docs-only review/acceptance gate for the audit
