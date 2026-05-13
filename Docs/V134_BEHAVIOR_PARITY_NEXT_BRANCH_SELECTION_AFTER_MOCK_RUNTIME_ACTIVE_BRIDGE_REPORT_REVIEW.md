@@ -264,3 +264,38 @@ The next recommended task is to create that documentation-only design/spec.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Design Spec
+
+The selected next branch is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_DESIGN_SPEC.md`
+
+That design/spec defines a future passive CLI preview command:
+
+- `python -m rytm_randomizer.cli mock-runtime-active-bridge-report`
+
+The design/spec requires the future command to print existing
+`format_mock_runtime_active_bridge_report()` output only.
+
+The design/spec preserves these boundaries:
+
+- no bridge invocation from CLI preview code
+- no `MockMidiSender` construction from CLI preview code
+- no message emission from CLI preview code
+- no active flags
+- no CLI execution wiring
+- no runtime execution
+- no real MIDI
+- no ports
+- no hardware behavior
+
+Recommended follow-up:
+
+- create a documentation-only review/acceptance gate for the CLI preview
+  design/spec
+
+This follow-up adds no implementation, tests, fixtures, closeout script changes,
+CLI changes, CLI execution wiring, runtime execution, dispatch, command
+execution, mutation execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.

@@ -6,7 +6,57 @@ modularize-v1.34
 
 ## Current HEAD
 
-7bd532c Add mock runtime active bridge report review
+901808c Add next branch selection after bridge report review
+
+## Latest Behavior-Parity Mock Runtime Active Bridge Report CLI Preview Design Spec
+
+The passive mock runtime/active bridge report CLI preview is now designed.
+
+Design/spec document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_DESIGN_SPEC.md`
+
+Accepted upstream branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `901808c Add next branch selection after bridge report review`
+
+Design scope:
+
+- future passive CLI command:
+  - `python -m rytm_randomizer.cli mock-runtime-active-bridge-report`
+- future help output:
+  - `python -m rytm_randomizer.cli mock-runtime-active-bridge-report --help`
+- print `format_mock_runtime_active_bridge_report()` output only
+- no bridge invocation
+- no `MockMidiSender` construction
+- no message emission
+- no active flags
+
+Recommended next task:
+
+- create a documentation-only review/acceptance gate for this design/spec
+
+Confirmed boundaries:
+
+- no implementation in this design/spec
+- no tests in this design/spec
+- no fixtures in this design/spec
+- no closeout script changes in this design/spec
+- no CLI changes in this design/spec
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After Mock Runtime Active Bridge Report Review
 
