@@ -21,7 +21,43 @@ modularize-v1.34
 
 Current HEAD:
 
-29bbcbd Add runtime plan report CLI preview implementation plan
+01a8735 Add runtime plan report CLI preview
+
+## V1.34 Behavior Parity Runtime Plan Report CLI Preview Implementation Checkpoint
+
+The runtime plan report CLI preview is now implemented and checkpointed.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `01a8735 Add runtime plan report CLI preview`
+
+Implemented passive CLI command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+- `python -m rytm_randomizer.cli runtime-plan-report --help`
+
+Implementation files:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_runtime_plan_report_help_expected.txt`
+- `tests/fixtures/cli_runtime_plan_report_expected.txt`
+
+The command prints only the existing formatted runtime plan report. It remains
+passive/read-only and adds no CLI execution wiring, dispatch, command
+execution, runtime mutation, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+Manual checks and full closeout passed for the implementation milestone.
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this implementation checkpoint
 
 ## V1.34 Behavior Parity Runtime Plan Report CLI Preview Implementation Plan Review
 

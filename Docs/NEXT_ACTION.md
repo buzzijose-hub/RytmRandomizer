@@ -6,7 +6,64 @@ modularize-v1.34
 
 ## Current HEAD
 
-29bbcbd Add runtime plan report CLI preview implementation plan
+01a8735 Add runtime plan report CLI preview
+
+## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Checkpoint
+
+The runtime plan report CLI preview is now implemented and checkpointed.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `01a8735 Add runtime plan report CLI preview`
+
+Implemented passive CLI command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+- `python -m rytm_randomizer.cli runtime-plan-report --help`
+
+Implementation files:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/fixtures/cli_runtime_plan_report_help_expected.txt`
+- `tests/fixtures/cli_runtime_plan_report_expected.txt`
+
+Verified behavior:
+
+- top-level help lists `runtime-plan-report`
+- command help describes passive/read-only behavior
+- command output prints the deterministic runtime plan report
+- supported planning inputs include group profiles `2` and `3`
+- profile `4` remains parked
+- unsupported planning inputs remain reported as unsupported
+- no MIDI, ports, execution, dispatch, runtime mutation, active behavior, or
+  hardware behavior is added
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this implementation checkpoint
+
+Confirmed boundaries for this checkpoint:
+
+- no implementation in this documentation checkpoint
+- no tests in this documentation checkpoint
+- no fixtures in this documentation checkpoint
+- no closeout script changes in this documentation checkpoint
+- no CLI changes in this documentation checkpoint
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Plan Review
 
