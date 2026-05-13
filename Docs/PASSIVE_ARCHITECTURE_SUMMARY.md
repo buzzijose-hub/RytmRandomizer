@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-61d20cb
+b4e5919
+
+## Latest Behavior-Parity First Narrow Runtime/Active-Facing Implementation Plan
+
+`Docs/V134_BEHAVIOR_PARITY_FIRST_NARROW_RUNTIME_ACTIVE_IMPLEMENTATION_PLAN.md`
+plans the first narrow packet that could bridge runtime intent to the
+mock-only active boundary for profile `2`.
+
+Accepted upstream branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `b4e5919 Add next branch selection after passive runtime visibility review`
+
+Planned future files:
+
+- `rytm_randomizer/mock_runtime_active_bridge.py`
+- `tests/test_mock_runtime_active_bridge.py`
+
+Planned future closeout update:
+
+- `=== Test: Mock Runtime Active Bridge ===`
+
+The plan keeps the future packet mock-only, test-only, internal to the package,
+and disconnected from CLI execution wiring, runtime execution, dispatch, MIDI,
+ports, package metadata changes, active behavior, and hardware behavior.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this plan.
 
 ## Latest Behavior-Parity Next Branch Selection After Passive/Runtime Visibility Phase Review
 

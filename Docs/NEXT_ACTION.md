@@ -6,7 +6,62 @@ modularize-v1.34
 
 ## Current HEAD
 
-61d20cb Add passive runtime visibility phase review
+b4e5919 Add next branch selection after passive runtime visibility review
+
+## Latest Behavior-Parity First Narrow Runtime/Active-Facing Implementation Plan
+
+The first narrow runtime/active-facing implementation packet is now planned.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_NARROW_RUNTIME_ACTIVE_IMPLEMENTATION_PLAN.md`
+
+Accepted upstream branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `b4e5919 Add next branch selection after passive runtime visibility review`
+
+Planned future packet:
+
+- create `rytm_randomizer/mock_runtime_active_bridge.py`
+- create `tests/test_mock_runtime_active_bridge.py`
+- update `Scripts/closeout_check.ps1`
+
+Planned first candidate:
+
+- profile `2` / My BD Hard
+- mock-only
+- active-boundary accepted
+- blocked unless armed and dry-run confirmed
+- `MockMidiSender` only
+- no real MIDI
+- no ports
+- no hardware
+
+Required before implementation:
+
+- create a documentation-only review/acceptance gate for the plan
+
+Confirmed boundaries:
+
+- no implementation in this planning slice
+- no tests in this planning slice
+- no fixtures in this planning slice
+- no closeout script changes in this planning slice
+- no CLI changes
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After Passive/Runtime Visibility Phase Review
 

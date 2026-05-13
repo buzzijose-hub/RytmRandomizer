@@ -240,3 +240,19 @@ The next recommended task is to create that documentation-only plan.
 Hardware remains off.
 
 No implementation in this slice.
+
+## Follow-Up Implementation Plan
+
+The selected next branch is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_NARROW_RUNTIME_ACTIVE_IMPLEMENTATION_PLAN.md`
+
+That plan defines a future mock-only runtime/active bridge packet for profile
+`2` / My BD Hard.
+
+It requires a documentation-only review/acceptance gate before implementation.
+
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+mutation execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.

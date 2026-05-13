@@ -21,7 +21,55 @@ modularize-v1.34
 
 Current HEAD:
 
-61d20cb Add passive runtime visibility phase review
+b4e5919 Add next branch selection after passive runtime visibility review
+
+## V1.34 Behavior Parity First Narrow Runtime/Active-Facing Implementation Plan
+
+The first narrow runtime/active-facing implementation packet is now planned.
+
+Plan document:
+
+- `Docs/V134_BEHAVIOR_PARITY_FIRST_NARROW_RUNTIME_ACTIVE_IMPLEMENTATION_PLAN.md`
+
+Accepted upstream branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `b4e5919 Add next branch selection after passive runtime visibility review`
+
+Planned future packet:
+
+- create a mock-only runtime/active bridge module
+- add bridge tests for profile `2` success and safe failures
+- add closeout coverage for the bridge tests
+
+Planned candidate:
+
+- profile `2` / My BD Hard
+- mock-only
+- `MockMidiSender` only
+- armed and dry-run confirmed in tests only
+- no real MIDI
+- no ports
+- no hardware
+
+The plan preserves:
+
+- profile `3` / My BD Classic as runtime-plan supported but active-boundary
+  rejected
+- profile `4` / My BD Acoustic as parked
+- unknown and unsupported inputs as safe failures
+
+Next recommended task:
+
+- create a documentation-only review/acceptance gate for this plan
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, runtime execution, dispatch, command execution, mutation
+execution, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior is added by this plan.
 
 ## V1.34 Behavior Parity Next Branch Selection After Passive/Runtime Visibility Phase Review
 
