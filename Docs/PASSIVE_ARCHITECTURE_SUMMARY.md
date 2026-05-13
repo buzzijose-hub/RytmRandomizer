@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-f309f77
+3b30b03
+
+## Latest Behavior-Parity Progress Report After Runtime Plan Report CLI Preview
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+consolidates the current behavior-parity progress after the passive runtime
+plan report CLI preview.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `3b30b03 Add runtime plan report CLI preview checkpoint review`
+
+The report summarizes:
+
+- passive runtime plan report CLI visibility
+- supported runtime planning inputs for group profiles `2` and `3`
+- parked group profile `4`
+- unsupported planning input visibility
+- current closeout coverage
+- remaining absent runtime execution, dispatch, command execution, MIDI, ports,
+  package metadata changes, active behavior, and hardware behavior
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
 
 ## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Checkpoint Review
 

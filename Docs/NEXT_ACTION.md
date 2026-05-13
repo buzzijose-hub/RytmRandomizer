@@ -6,7 +6,69 @@ modularize-v1.34
 
 ## Current HEAD
 
-f309f77 Add runtime plan report CLI preview checkpoint
+3b30b03 Add runtime plan report CLI preview checkpoint review
+
+## Latest Behavior-Parity Progress Report After Runtime Plan Report CLI Preview
+
+The broader behavior-parity progress after the runtime plan report CLI preview
+is now consolidated.
+
+Progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `3b30b03 Add runtime plan report CLI preview checkpoint review`
+
+The report summarizes:
+
+- passive runtime plan report CLI visibility
+- current runtime plan report CLI command:
+  - `python -m rytm_randomizer.cli runtime-plan-report`
+  - `python -m rytm_randomizer.cli runtime-plan-report --help`
+- supported runtime planning inputs:
+  - group profile `2` / My BD Hard
+  - group profile `3` / My BD Classic
+- parked runtime planning input:
+  - group profile `4` / My BD Acoustic
+- unsupported planning input visibility
+- current closeout coverage
+- remaining absent behavior:
+  - CLI execution wiring
+  - runtime execution
+  - dispatch
+  - command execution
+  - MIDI
+  - ports
+  - package metadata changes
+  - active behavior
+  - hardware behavior
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this progress report
+
+Confirmed boundaries:
+
+- no implementation in this report
+- no tests in this report
+- no fixtures in this report
+- no closeout script changes in this report
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Checkpoint Review
 

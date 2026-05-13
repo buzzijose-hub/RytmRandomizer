@@ -21,7 +21,39 @@ modularize-v1.34
 
 Current HEAD:
 
-f309f77 Add runtime plan report CLI preview checkpoint
+3b30b03 Add runtime plan report CLI preview checkpoint review
+
+## V1.34 Behavior Parity Progress Report After Runtime Plan Report CLI Preview
+
+The broader behavior-parity progress after the runtime plan report CLI preview
+is now consolidated.
+
+Progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `3b30b03 Add runtime plan report CLI preview checkpoint review`
+
+The report records that:
+
+- `python -m rytm_randomizer.cli runtime-plan-report` is implemented
+- runtime plan report CLI visibility remains passive/read-only
+- group profiles `2` and `3` remain supported planning inputs
+- group profile `4` remains parked
+- unsupported planning inputs remain unsupported
+- no CLI execution wiring, dispatch, command execution, runtime mutation,
+  MIDI, ports, package metadata changes, active behavior, or hardware behavior
+  has been added
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this progress report
 
 ## V1.34 Behavior Parity Runtime Plan Report CLI Preview Implementation Checkpoint Review
 
