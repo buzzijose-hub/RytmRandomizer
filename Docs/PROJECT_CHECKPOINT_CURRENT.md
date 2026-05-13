@@ -21,7 +21,53 @@ modularize-v1.34
 
 Current HEAD:
 
-599e460 Add mock runtime active bridge report CLI preview
+0c5f88d Add mock runtime active bridge report CLI preview checkpoint
+
+## V1.34 Behavior Parity Mock Runtime Active Bridge Report CLI Preview Implementation Checkpoint Review
+
+The passive mock runtime/active bridge report CLI preview implementation
+checkpoint is now reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `599e460 Add mock runtime active bridge report CLI preview`
+
+Accepted checkpoint milestone:
+
+- `0c5f88d Add mock runtime active bridge report CLI preview checkpoint`
+
+The accepted CLI preview commands remain:
+
+- `python -m rytm_randomizer.cli mock-runtime-active-bridge-report`
+- `python -m rytm_randomizer.cli mock-runtime-active-bridge-report --help`
+
+The checkpoint is accepted as the current saved state for this read-only CLI
+visibility surface.
+
+The command remains formatter-only, passive/read-only, and mock-only.
+
+The command does not invoke the bridge, construct a sender, emit messages, add
+active flags, open ports, import real MIDI libraries, wire CLI execution, or
+widen bridge scope.
+
+Next recommended task:
+
+- create a broader behavior-parity progress report after the mock
+  runtime/active bridge report CLI preview
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, bridge invocation, sender construction, message emission,
+runtime execution, dispatch, command execution, mutation execution, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior is
+added by this review.
 
 ## V1.34 Behavior Parity Mock Runtime Active Bridge Report CLI Preview Implementation Checkpoint
 
