@@ -21,7 +21,44 @@ modularize-v1.34
 
 Current HEAD:
 
-3a7a70a Add progress report review after runtime plan CLI preview
+3f2a624 Add next branch selection after runtime plan CLI progress review
+
+## V1.34 Behavior Parity Roadmap/Timeline Update After Runtime Plan Report CLI Preview
+
+The broader behavior-parity roadmap/timeline after the runtime plan report CLI
+preview is now documented.
+
+Roadmap/timeline document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_PROGRESS_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `3f2a624 Add next branch selection after runtime plan CLI progress review`
+
+The roadmap/timeline records:
+
+- current phase as Behavior-Parity Passive/Mock Visibility Phase
+- runtime plan report CLI visibility
+- passive CLI visibility commands
+- current runtime planning visibility
+- profiles `2` and `3` as supported runtime planning inputs
+- profile `4` as parked
+- remaining parked and intentionally absent active/runtime/hardware scope
+- rough progress and timeline expectations
+
+Next recommended task:
+
+- docs-only review/acceptance gate for this roadmap/timeline update
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, dispatch, command execution, runtime mutation, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is added by
+this roadmap/timeline update.
 
 ## V1.34 Behavior Parity Next Branch Selection After Runtime Plan Report CLI Preview Progress Report Review
 

@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-3a7a70a
+3f2a624
+
+## Latest Behavior-Parity Roadmap/Timeline Update After Runtime Plan Report CLI Preview
+
+`Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+documents the broader behavior-parity roadmap/timeline after the passive
+runtime plan report CLI preview.
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_PROGRESS_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `3f2a624 Add next branch selection after runtime plan CLI progress review`
+
+The roadmap/timeline summarizes:
+
+- current Behavior-Parity Passive/Mock Visibility Phase
+- passive CLI visibility commands
+- runtime plan report CLI visibility
+- supported runtime planning inputs for profiles `2` and `3`
+- parked profile `4`
+- current closeout coverage
+- remaining absent CLI execution wiring, runtime execution, dispatch, command
+  execution, MIDI, ports, package metadata changes, active behavior, and
+  hardware behavior
+- rough planning estimates before later active-facing phases
+
+The next recommended task is a docs-only review/acceptance gate for this
+roadmap/timeline update.
 
 ## Latest Behavior-Parity Next Branch Selection After Runtime Plan Report CLI Preview Progress Report Review
 

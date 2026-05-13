@@ -254,3 +254,16 @@ update.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The selected roadmap/timeline update is now documented.
+
+Roadmap/timeline document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+
+The roadmap/timeline update remains documentation-only and adds no
+implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, runtime execution, dispatch, command execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
