@@ -241,6 +241,20 @@ Package metadata remains untouched.
 
 Hardware remains off.
 
+## Follow-Up Phase Review
+
+The selected next branch is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+That phase review accepts the current passive/runtime visibility phase as a
+coherent behavior-parity checkpoint and recommends a docs-only next-branch
+selection after the accepted phase review.
+
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
 ## 12. Decision
 
 The next branch is selected:

@@ -6,7 +6,65 @@ modularize-v1.34
 
 ## Current HEAD
 
-37626ec Add roadmap timeline review after runtime plan CLI preview
+d5a4acd Add next branch selection after runtime plan CLI roadmap review
+
+## Latest Behavior-Parity Passive/Runtime Visibility Phase Review
+
+The passive/runtime visibility phase is now reviewed and accepted as a
+coherent behavior-parity checkpoint.
+
+Phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_CLI_ROADMAP_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `d5a4acd Add next branch selection after runtime plan CLI roadmap review`
+
+Accepted phase:
+
+- Behavior-Parity Passive/Mock Visibility Phase
+
+Accepted visibility surfaces:
+
+- passive CLI report/list/search/inspect/preview
+- `mock-mapper-report`
+- `runtime-plan-report`
+- `active-boundary-report`
+- `anchor-profile-report`
+- `behavior-parity-report`
+
+Accepted profile semantics:
+
+- profile `2` / My BD Hard remains supported and active-boundary accepted
+- profile `3` / My BD Classic remains runtime-plan supported and
+  active-boundary unsupported
+- profile `4` / My BD Acoustic remains parked
+
+Recommended next task:
+
+- create a docs-only next-branch selection after this phase review
+
+Confirmed boundaries:
+
+- no implementation in this phase review
+- no tests in this phase review
+- no fixtures in this phase review
+- no closeout script changes in this phase review
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After Runtime Plan CLI Roadmap Review
 
