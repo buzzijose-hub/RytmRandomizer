@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-3b30b03
+49406e8
+
+## Latest Behavior-Parity Progress Report After Runtime Plan Report CLI Preview Review
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_REVIEW.md`
+accepts the behavior-parity progress report after the passive runtime plan
+report CLI preview.
+
+Accepted progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+
+Accepted progress report milestone:
+
+- `49406e8 Add progress report after runtime plan CLI preview`
+
+Accepted state:
+
+- runtime plan report CLI visibility is implemented and accepted
+- group profiles `2` and `3` remain supported planning inputs
+- group profile `4` remains parked
+- unsupported planning inputs remain unsupported
+- passive CLI remains read-only
+- no runtime execution, dispatch, command execution, runtime mutation, MIDI,
+  ports, package metadata changes, active behavior, or hardware behavior is
+  added
+
+The next recommended task is a docs-only next-branch selection after this
+accepted progress report.
 
 ## Latest Behavior-Parity Progress Report After Runtime Plan Report CLI Preview
 
