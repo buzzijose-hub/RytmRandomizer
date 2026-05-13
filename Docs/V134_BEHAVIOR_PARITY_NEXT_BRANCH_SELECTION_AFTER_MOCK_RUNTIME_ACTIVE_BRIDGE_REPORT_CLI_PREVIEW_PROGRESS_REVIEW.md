@@ -211,3 +211,13 @@ No implementation in this slice.
 
 Hardware remains off.
 
+## 12. Follow-Up Phase Review
+
+The selected phase review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+
+Review decision:
+
+- passive/mock bridge visibility phase accepted
+

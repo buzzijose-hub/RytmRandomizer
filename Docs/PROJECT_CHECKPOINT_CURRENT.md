@@ -21,7 +21,45 @@ modularize-v1.34
 
 Current HEAD:
 
-150b45f Add architecture diagrams review
+9f65c02 Add next branch selection after bridge CLI progress review
+
+## Behavior-Parity Passive/Mock Bridge Visibility Phase Review
+
+The passive/mock bridge visibility phase is now reviewed and accepted.
+
+Phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_PROGRESS_REVIEW.md`
+
+Accepted architecture reference:
+
+- `Docs/ARCHITECTURE_DIAGRAMS_REVIEW.md`
+- `Docs/ARCHITECTURE_DIAGRAMS.md`
+
+Accepted phase state:
+
+- passive mock runtime/active bridge report CLI preview is accepted
+- profile `2` / My BD Hard remains the accepted bridge candidate
+- profile `3` / My BD Classic remains bridge rejected
+- profile `4` / My BD Acoustic remains parked
+- accepted architecture diagrams map the current bridge and boundary layers
+- private GitHub-backed checkpoint state remains current
+
+The phase review adds no implementation, tests, fixtures, closeout script
+changes, CLI changes, CLI execution wiring, bridge invocation, sender
+construction, message emission, runtime execution, dispatch, command execution,
+mutation execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.
+
+Next recommended task:
+
+- pause at this clean phase checkpoint, create a broader roadmap/timeline
+  update, or create a docs-only next-branch selection for the next
+  behavior-parity direction
 
 ## Behavior-Parity Next Branch Selection After Bridge Report CLI Preview Progress Review
 
