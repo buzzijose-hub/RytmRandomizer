@@ -219,3 +219,21 @@ the runtime plan report CLI preview.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Selection
+
+The next branch after this accepted progress report review is now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_PROGRESS_REPORT_REVIEW.md`
+
+Selected next branch:
+
+- broader behavior-parity roadmap/timeline update after the runtime plan
+  report CLI preview
+
+The selection remains documentation-only and authorizes no implementation,
+tests, fixtures, closeout script changes, CLI changes, CLI execution wiring,
+runtime execution, dispatch, command execution, MIDI, ports, package metadata
+changes, active behavior, or hardware behavior.

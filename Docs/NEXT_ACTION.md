@@ -6,7 +6,60 @@ modularize-v1.34
 
 ## Current HEAD
 
-49406e8 Add progress report after runtime plan CLI preview
+3a7a70a Add progress report review after runtime plan CLI preview
+
+## Latest Behavior-Parity Next Branch Selection After Runtime Plan Report CLI Preview Progress Report Review
+
+The next branch after accepting the runtime plan report CLI preview progress
+report review is now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_PROGRESS_REPORT_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `3a7a70a Add progress report review after runtime plan CLI preview`
+
+Selected next branch:
+
+- broader behavior-parity roadmap/timeline update after the runtime plan
+  report CLI preview
+
+Reason:
+
+- the runtime plan report is now visible from the passive CLI
+- the project has several accepted safety/reporting surfaces to summarize
+- a roadmap/timeline update helps set expectations before another
+  implementation slice
+- this keeps the project moving without widening active or hardware-facing
+  scope
+
+Recommended next task:
+
+- create the documentation-only broader behavior-parity roadmap/timeline update
+  after the runtime plan report CLI preview
+
+Confirmed boundaries:
+
+- no implementation in this selection
+- no tests in this selection
+- no fixtures in this selection
+- no closeout script changes in this selection
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Progress Report After Runtime Plan Report CLI Preview Review
 
