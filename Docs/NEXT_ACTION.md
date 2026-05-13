@@ -6,7 +6,61 @@ modularize-v1.34
 
 ## Current HEAD
 
-bf67e5a Add mock runtime active bridge report design spec
+75f731c Add mock runtime active bridge report
+
+## Latest Behavior-Parity Mock Runtime Active Bridge Report Checkpoint
+
+The read-only mock runtime/active bridge report implementation is now
+checkpointed.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `75f731c Add mock runtime active bridge report`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/mock_runtime_active_bridge_report.py`
+- `tests/test_mock_runtime_active_bridge_report.py`
+- `Scripts/closeout_check.ps1`
+
+Closeout now includes:
+
+- `Mock Runtime Active Bridge Report`
+
+Implemented scope:
+
+- read-only bridge report data
+- deterministic summary and formatter
+- profile `2` accepted bridge candidate visibility
+- profile `3` bridge rejected visibility
+- profile `4` parked visibility
+- no bridge invocation
+- no `MockMidiSender` construction
+- no message emission
+- no CLI command
+
+Recommended next task:
+
+- create a documentation-only review/acceptance gate for this report
+  implementation
+
+Confirmed boundaries:
+
+- no CLI changes
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Mock Runtime Active Bridge Report Design Spec Review
 

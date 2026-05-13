@@ -372,3 +372,24 @@ Recommended follow-up:
 
 The follow-up implementation packet must remain report-only and must not widen
 the accepted bridge scope.
+
+## 18. Follow-Up Implementation Checkpoint
+
+The read-only mock runtime/active bridge report was implemented by:
+
+- `75f731c Add mock runtime active bridge report`
+
+Implementation checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CHECKPOINT.md`
+
+The implementation follows this design/spec by remaining read-only,
+mock-only, metadata-only, deterministic, and in-memory.
+
+It adds no CLI command, bridge invocation, `MockMidiSender` construction,
+message emission, real MIDI, ports, runtime execution, active behavior, or
+hardware behavior.
+
+Recommended follow-up:
+
+- create a documentation-only review/acceptance gate for the implementation

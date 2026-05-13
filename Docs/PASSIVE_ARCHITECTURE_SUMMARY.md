@@ -8,7 +8,39 @@ modularize-v1.34
 
 Current HEAD:
 
-bf67e5a
+75f731c
+
+## Latest Behavior-Parity Mock Runtime Active Bridge Report Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CHECKPOINT.md`
+documents the read-only mock runtime/active bridge report implementation
+milestone.
+
+Implementation milestone:
+
+- `75f731c Add mock runtime active bridge report`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/mock_runtime_active_bridge_report.py`
+- `tests/test_mock_runtime_active_bridge_report.py`
+- `Scripts/closeout_check.ps1`
+
+The report module provides deterministic read-only, mock-only, metadata-only
+visibility into the accepted bridge contract. It reports profile `2` / My BD
+Hard as the accepted bridge candidate, profile `3` / My BD Classic as bridge
+rejected, and profile `4` / My BD Acoustic as parked.
+
+The report does not invoke the bridge, construct `MockMidiSender`, emit
+messages, open ports, import real MIDI libraries, wire CLI execution, or widen
+bridge scope.
+
+Closeout now includes:
+
+- `Mock Runtime Active Bridge Report`
+
+The next recommended task is a documentation-only review/acceptance gate for
+this report implementation.
 
 ## Latest Behavior-Parity Mock Runtime Active Bridge Report Design Spec Review
 
