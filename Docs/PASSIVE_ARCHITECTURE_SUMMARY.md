@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-4dbb285
+0d113f3
+
+## Architecture Diagrams Review
+
+`Docs/ARCHITECTURE_DIAGRAMS_REVIEW.md` accepts
+`Docs/ARCHITECTURE_DIAGRAMS.md` as the current repository architecture map.
+
+The accepted diagrams remain documentation-only and are grounded in the real
+repository structure:
+
+- package modules under `rytm_randomizer/`
+- test files and fixtures under `tests/`
+- `Scripts/closeout_check.ps1`
+- current project handoff and progress docs
+
+The review confirms that the diagrams add no implementation, tests, closeout
+script changes, CLI changes, MIDI, ports, package metadata changes, active
+behavior, runtime execution, dispatch, command execution, or hardware behavior.
+
+The next recommended task is to return to the next-branch selection after the
+accepted bridge report CLI preview progress review, using the accepted
+architecture diagrams as the current map.
 
 ## GitHub Publish Checkpoint
 

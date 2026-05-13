@@ -21,7 +21,34 @@ modularize-v1.34
 
 Current HEAD:
 
-4dbb285 Add architecture diagrams
+0d113f3 Add GitHub publish checkpoint
+
+## Architecture Diagrams Review
+
+The architecture diagrams are now reviewed and accepted as the current
+repository architecture map.
+
+Review document:
+
+- `Docs/ARCHITECTURE_DIAGRAMS_REVIEW.md`
+
+Accepted diagram document:
+
+- `Docs/ARCHITECTURE_DIAGRAMS.md`
+
+Current baseline before the review:
+
+- `0d113f3 Add GitHub publish checkpoint`
+
+The review accepts the diagrams as current-state documentation derived from the
+real repository structure. It does not authorize implementation, tests, closeout
+script changes, CLI changes, MIDI, ports, package metadata changes, active
+behavior, runtime execution, dispatch, command execution, or hardware behavior.
+
+Next recommended task:
+
+- return to the next-branch selection after the accepted bridge report CLI
+  preview progress review
 
 ## GitHub Publish Checkpoint
 
