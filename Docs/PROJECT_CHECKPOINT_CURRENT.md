@@ -21,7 +21,41 @@ modularize-v1.34
 
 Current HEAD:
 
-ecb7331 Add roadmap timeline after runtime plan CLI preview
+37626ec Add roadmap timeline review after runtime plan CLI preview
+
+## V1.34 Behavior Parity Next Branch Selection After Runtime Plan CLI Roadmap Review
+
+The next branch after accepting the runtime plan CLI roadmap/timeline review is
+now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_RUNTIME_PLAN_CLI_ROADMAP_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `37626ec Add roadmap timeline review after runtime plan CLI preview`
+
+Selected next branch:
+
+- docs-only passive/runtime visibility phase review
+
+The selected branch remains documentation-only and should accept the current
+passive/runtime visibility phase before any new implementation slice is
+chosen.
+
+Next recommended task:
+
+- create the documentation-only passive/runtime visibility phase review
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, dispatch, command execution, runtime mutation, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is added by
+this selection.
 
 ## V1.34 Behavior Parity Roadmap/Timeline Update After Runtime Plan Report CLI Preview Review
 
