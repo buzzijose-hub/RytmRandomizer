@@ -3,6 +3,7 @@ RytmRandomizer passive CLI
 Usage:
   python -m rytm_randomizer.cli report
   python -m rytm_randomizer.cli mock-mapper-report
+  python -m rytm_randomizer.cli runtime-plan-report
   python -m rytm_randomizer.cli active-boundary-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
@@ -24,6 +25,8 @@ Commands:
   report             Print the passive registry report.
   mock-mapper-report
                      Print the passive mock mapper report.
+  runtime-plan-report
+                     Print the read-only runtime plan report.
   active-boundary-report
                      Print the read-only active boundary report.
   anchor-profile-report

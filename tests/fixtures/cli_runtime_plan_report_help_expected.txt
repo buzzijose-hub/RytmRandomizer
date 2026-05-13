@@ -1,0 +1,19 @@
+RytmRandomizer passive CLI: runtime-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli runtime-plan-report
+  python -m rytm_randomizer.cli runtime-plan-report --help
+
+Behavior:
+  Prints the deterministic read-only runtime plan report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only
+  no MIDI sending
+  no port opening
+  no runtime execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required

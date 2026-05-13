@@ -9,22 +9,24 @@ from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
 from .mock_mapper_report import format_mock_mapper_report
 from .registry_report import format_registry_report
+from .runtime_plan_report import format_runtime_plan_report
 
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "mock-mapper-report | active-boundary-report | anchor-profile-report | "
-    "behavior-parity-report | inspect-command <key> | inspect-scene <key> | "
-    "inspect-group-profile <key> | list-commands | list-scenes | "
-    "list-group-profiles | search-commands <query> | search-scenes <query> | "
-    "search-group-profiles <query> | preview-command <key> | preview-scene <key> | "
-    "preview-group-profile <key>"
+    "mock-mapper-report | runtime-plan-report | active-boundary-report | "
+    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
+    "list-scenes | list-group-profiles | search-commands <query> | "
+    "search-scenes <query> | search-group-profiles <query> | "
+    "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
 )
 TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
 Usage:
   python -m rytm_randomizer.cli report
   python -m rytm_randomizer.cli mock-mapper-report
+  python -m rytm_randomizer.cli runtime-plan-report
   python -m rytm_randomizer.cli active-boundary-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
@@ -46,6 +48,8 @@ Commands:
   report             Print the passive registry report.
   mock-mapper-report
                      Print the passive mock mapper report.
+  runtime-plan-report
+                     Print the read-only runtime plan report.
   active-boundary-report
                      Print the read-only active boundary report.
   anchor-profile-report
@@ -627,6 +631,25 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+RUNTIME_PLAN_REPORT_HELP = """RytmRandomizer passive CLI: runtime-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli runtime-plan-report
+  python -m rytm_randomizer.cli runtime-plan-report --help
+
+Behavior:
+  Prints the deterministic read-only runtime plan report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only
+  no MIDI sending
+  no port opening
+  no runtime execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required"""
 ACTIVE_BOUNDARY_REPORT_HELP = """RytmRandomizer passive CLI: active-boundary-report
 
 Usage:
@@ -696,6 +719,10 @@ def main(argv=None):
         sys.stdout.write(f"{MOCK_MAPPER_REPORT_HELP}\n")
         return 0
 
+    if args == ["runtime-plan-report", "--help"]:
+        sys.stdout.write(f"{RUNTIME_PLAN_REPORT_HELP}\n")
+        return 0
+
     if args == ["active-boundary-report", "--help"]:
         sys.stdout.write(f"{ACTIVE_BOUNDARY_REPORT_HELP}\n")
         return 0
@@ -763,6 +790,11 @@ def main(argv=None):
 
     if args == ["mock-mapper-report"]:
         sys.stdout.write("\n".join(format_mock_mapper_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["runtime-plan-report"]:
+        sys.stdout.write("\n".join(format_runtime_plan_report()))
         sys.stdout.write("\n")
         return 0
 
