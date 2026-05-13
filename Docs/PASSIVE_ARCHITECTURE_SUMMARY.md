@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-55300be
+4dbb285
+
+## GitHub Publish Checkpoint
+
+The current project branch has been pushed to a private GitHub repository.
+
+Publish checkpoint:
+
+- `Docs/GITHUB_PUBLISH_CHECKPOINT.md`
+
+Private GitHub repository:
+
+- `https://github.com/buzzijose-hub/RytmRandomizer`
+
+Pushed branch:
+
+- `modularize-v1.34`
+
+Latest pushed commit:
+
+- `4dbb285 Add architecture diagrams`
+
+The publish checkpoint records that closeout passed before push, the V1.34
+reference diff was empty, `git status --short` was clean, and the branch now
+tracks `origin/modularize-v1.34`.
+
+The GitHub publish checkpoint adds no implementation, tests, closeout script
+changes, CLI changes, MIDI, ports, package metadata changes, active behavior,
+or hardware behavior.
 
 ## Latest Architecture Diagrams
 

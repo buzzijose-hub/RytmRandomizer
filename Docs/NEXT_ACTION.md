@@ -6,7 +6,50 @@ modularize-v1.34
 
 ## Current HEAD
 
-55300be Add bridge report CLI preview progress review
+4dbb285 Add architecture diagrams
+
+## Latest GitHub Publish Checkpoint
+
+The project has been published to a private GitHub repository.
+
+Publish checkpoint:
+
+- `Docs/GITHUB_PUBLISH_CHECKPOINT.md`
+
+Private GitHub repository:
+
+- `https://github.com/buzzijose-hub/RytmRandomizer`
+
+Pushed branch:
+
+- `modularize-v1.34`
+
+Latest pushed commit:
+
+- `4dbb285 Add architecture diagrams`
+
+Publish verification:
+
+- closeout passed before push
+- V1.34 reference diff was empty
+- `git status --short` was clean
+- branch tracks `origin/modularize-v1.34`
+
+Confirmed boundaries:
+
+- no code changes in the publish checkpoint
+- no tests changed in the publish checkpoint
+- no CLI changes in the publish checkpoint
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
+
+Recommended next task:
+
+- create a docs-only review/acceptance gate for the architecture diagrams, or
+  return to the next-branch selection after the accepted bridge report CLI
+  preview progress review
 
 ## Latest Architecture Diagrams
 
