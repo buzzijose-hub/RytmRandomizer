@@ -6,7 +6,58 @@ modularize-v1.34
 
 ## Current HEAD
 
-901808c Add next branch selection after bridge report review
+03f3178 Add mock runtime active bridge report CLI preview design spec
+
+## Latest Behavior-Parity Mock Runtime Active Bridge Report CLI Preview Design Spec Review
+
+The passive mock runtime/active bridge report CLI preview design/spec is now
+reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_DESIGN_SPEC_REVIEW.md`
+
+Accepted design/spec:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_DESIGN_SPEC.md`
+
+Accepted design/spec milestone:
+
+- `03f3178 Add mock runtime active bridge report CLI preview design spec`
+
+Review decision:
+
+- the future passive CLI preview may be implemented after this review
+- the future command should be `mock-runtime-active-bridge-report`
+- the command must print `format_mock_runtime_active_bridge_report()` output
+  only
+- the command must not invoke the bridge
+- the command must not construct `MockMidiSender`
+- the command must emit no messages
+- the command must add no active flags
+
+Recommended next task:
+
+- create the passive mock runtime/active bridge report CLI preview
+  implementation packet
+
+Confirmed boundaries:
+
+- no implementation in this review
+- no tests in this review
+- no fixtures in this review
+- no closeout script changes in this review
+- no CLI changes in this review
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Mock Runtime Active Bridge Report CLI Preview Design Spec
 

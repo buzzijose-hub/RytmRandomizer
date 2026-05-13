@@ -309,3 +309,30 @@ documented.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 15. Follow-Up Review
+
+The design/spec is now reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_DESIGN_SPEC_REVIEW.md`
+
+That review accepts this document as the current planning gate for a future
+passive CLI preview implementation packet.
+
+The review preserves these boundaries:
+
+- print `format_mock_runtime_active_bridge_report()` output only
+- no bridge invocation
+- no `MockMidiSender` construction
+- no message emission
+- no active flags
+- no real MIDI
+- no ports
+- no runtime execution
+- no active behavior
+- no hardware behavior
+
+Recommended follow-up:
+
+- create the passive mock runtime/active bridge report CLI preview
+  implementation packet
