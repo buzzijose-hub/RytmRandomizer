@@ -21,7 +21,38 @@ modularize-v1.34
 
 Current HEAD:
 
-0d113f3 Add GitHub publish checkpoint
+150b45f Add architecture diagrams review
+
+## Behavior-Parity Next Branch Selection After Bridge Report CLI Preview Progress Review
+
+The next branch after the accepted mock runtime/active bridge report CLI
+preview progress review is now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_PROGRESS_REVIEW.md`
+
+Accepted upstream progress review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_REVIEW.md`
+
+Accepted architecture reference:
+
+- `Docs/ARCHITECTURE_DIAGRAMS_REVIEW.md`
+- `Docs/ARCHITECTURE_DIAGRAMS.md`
+
+Selected next branch:
+
+- docs-only passive/mock bridge visibility phase review
+
+The selection adds no implementation, tests, fixtures, closeout script
+changes, CLI changes, CLI execution wiring, runtime execution, dispatch,
+command execution, mutation execution, MIDI, ports, package metadata changes,
+active behavior, or hardware behavior.
+
+Next recommended task:
+
+- create the docs-only passive/mock bridge visibility phase review
 
 ## Architecture Diagrams Review
 

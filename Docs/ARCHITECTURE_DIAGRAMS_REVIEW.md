@@ -153,3 +153,13 @@ No implementation in this slice.
 
 Hardware remains off.
 
+## Follow-Up Selection
+
+The follow-up next-branch selection after this accepted architecture review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_PROGRESS_REVIEW.md`
+
+Selected follow-up branch:
+
+- docs-only passive/mock bridge visibility phase review
+

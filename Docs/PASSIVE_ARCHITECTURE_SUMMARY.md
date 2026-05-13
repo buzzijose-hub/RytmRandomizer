@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-0d113f3
+150b45f
+
+## Behavior-Parity Next Branch Selection After Bridge Report CLI Preview Progress Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_PROGRESS_REVIEW.md`
+selects the next branch after the accepted mock runtime/active bridge report
+CLI preview progress review.
+
+Accepted upstream references:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_REVIEW.md`
+- `Docs/ARCHITECTURE_DIAGRAMS_REVIEW.md`
+- `Docs/ARCHITECTURE_DIAGRAMS.md`
+
+Selected next branch:
+
+- docs-only passive/mock bridge visibility phase review
+
+The selected branch should consolidate the current passive/mock bridge
+visibility state before any further implementation or planning branch.
+
+The selection adds no implementation, tests, closeout script changes, CLI
+changes, runtime execution, dispatch, command execution, mutation execution,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Architecture Diagrams Review
 

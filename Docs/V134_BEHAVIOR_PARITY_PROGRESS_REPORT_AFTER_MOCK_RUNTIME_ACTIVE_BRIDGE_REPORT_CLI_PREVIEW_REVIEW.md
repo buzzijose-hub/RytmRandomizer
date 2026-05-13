@@ -209,6 +209,14 @@ Recommended next task:
 
 - create a docs-only next-branch selection after this accepted progress report
 
+Follow-up selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_PROGRESS_REVIEW.md`
+
+Selected next branch:
+
+- docs-only passive/mock bridge visibility phase review
+
 Likely branches to consider:
 
 - broader roadmap/timeline update
