@@ -21,7 +21,50 @@ modularize-v1.34
 
 Current HEAD:
 
-b35cf9e Add mock runtime active bridge
+889e2ee Update checkpoint after mock runtime active bridge
+
+## V1.34 Behavior Parity Mock Runtime Active Bridge Review
+
+The mock runtime/active bridge implementation is now reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `b35cf9e Add mock runtime active bridge`
+
+Accepted checkpoint milestone:
+
+- `889e2ee Update checkpoint after mock runtime active bridge`
+
+The accepted bridge:
+
+- connects runtime intent to the mock-only active boundary
+- supports profile `2` / My BD Hard only
+- requires armed and dry-run confirmed
+- records through `MockMidiSender` only
+- keeps profile `3` rejected at the bridge
+- keeps profile `4` parked
+- emits no messages on failure
+
+Next recommended task:
+
+- create a docs-only next-branch selection after this bridge review
+
+Likely useful next branch:
+
+- read-only mock runtime/active bridge report design/spec
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, runtime execution, dispatch, command execution, mutation
+execution, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior is added by this review.
 
 ## V1.34 Behavior Parity Mock Runtime Active Bridge Checkpoint
 

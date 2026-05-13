@@ -220,3 +220,18 @@ The mock runtime/active bridge milestone is documented.
 Hardware remains off.
 
 No implementation in this slice.
+
+## Follow-Up Review
+
+This checkpoint is now reviewed and accepted by:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+That review accepts the mock runtime/active bridge implementation and
+recommends a docs-only next-branch selection before any bridge report or scope
+expansion.
+
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+mutation execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.
