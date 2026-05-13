@@ -252,3 +252,13 @@ No implementation in this slice.
 
 Hardware remains off.
 
+## 14. Review
+
+The review/acceptance gate for this roadmap/timeline update is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW_REVIEW.md`
+
+Review decision:
+
+- roadmap/timeline update accepted as the current planning reference
+
