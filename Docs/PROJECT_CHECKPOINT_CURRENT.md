@@ -21,7 +21,37 @@ modularize-v1.34
 
 Current HEAD:
 
-162dc25 Add roadmap timeline after bridge visibility phase
+5860445 Add roadmap timeline review after bridge visibility phase
+
+## Behavior-Parity Next Branch Selection After Bridge Visibility Roadmap Review
+
+The next behavior-parity direction after the accepted bridge visibility
+roadmap/timeline review is now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_BRIDGE_VISIBILITY_ROADMAP_REVIEW.md`
+
+Accepted upstream roadmap review:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW_REVIEW.md`
+
+Selected next branch:
+
+- docs-only bridge safety coverage gap audit
+
+The selection records that existing tests already cover many bridge visibility
+safety claims and chooses an audit before any new implementation or tests.
+
+The selection adds no implementation, tests, fixtures, closeout script changes,
+CLI changes, CLI execution wiring, bridge invocation, sender construction,
+message emission, runtime execution, dispatch, command execution, mutation
+execution, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+Next recommended task:
+
+- create the docs-only bridge safety coverage gap audit
 
 ## Behavior-Parity Roadmap/Timeline Review After Passive/Mock Bridge Visibility Phase Review
 

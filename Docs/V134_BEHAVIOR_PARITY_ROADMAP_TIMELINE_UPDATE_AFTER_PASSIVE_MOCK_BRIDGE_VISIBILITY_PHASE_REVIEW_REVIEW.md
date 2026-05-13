@@ -184,3 +184,13 @@ No implementation in this slice.
 
 Hardware remains off.
 
+## 12. Follow-Up Selection
+
+The follow-up next-branch selection is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_BRIDGE_VISIBILITY_ROADMAP_REVIEW.md`
+
+Selected next branch:
+
+- docs-only bridge safety coverage gap audit
+

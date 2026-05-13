@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-162dc25
+5860445
+
+## Behavior-Parity Next Branch Selection After Bridge Visibility Roadmap Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_BRIDGE_VISIBILITY_ROADMAP_REVIEW.md`
+selects the next behavior-parity direction after the accepted bridge
+visibility roadmap/timeline review.
+
+Accepted upstream roadmap review:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW_REVIEW.md`
+
+Selected next branch:
+
+- docs-only bridge safety coverage gap audit
+
+The selection notes that current tests already cover many bridge visibility
+safety claims and recommends an audit before adding any new tests or code.
+
+The selection adds no implementation, tests, closeout script changes, CLI
+changes, runtime execution, dispatch, command execution, mutation execution,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Roadmap/Timeline Review After Passive/Mock Bridge Visibility Phase Review
 
