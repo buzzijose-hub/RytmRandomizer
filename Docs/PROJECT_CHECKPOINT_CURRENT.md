@@ -21,7 +21,41 @@ modularize-v1.34
 
 Current HEAD:
 
-5d55627 Add progress report after bridge report CLI preview
+55300be Add bridge report CLI preview progress review
+
+## Architecture Diagrams
+
+The current application architecture is now mapped in a dedicated diagram
+document.
+
+Architecture document:
+
+- `Docs/ARCHITECTURE_DIAGRAMS.md`
+
+Current baseline used for the diagram slice:
+
+- `55300be Add bridge report CLI preview progress review`
+
+The document maps the current real code structure across:
+
+- passive CLI command flow
+- metadata, lookup, registry, inspection, preview, and audit layers
+- behavior parity evaluators
+- runtime-adjacent state helpers
+- runtime planning and active boundary flow
+- mock MIDI, mock mapper, mock runtime bridge, and real MIDI adapter boundary
+- read-only report surfaces
+- closeout and test coverage
+- current forbidden/absent behavior
+
+The diagrams add no code, tests, fixtures, closeout script changes, CLI
+changes, MIDI, ports, active behavior, or hardware behavior.
+
+Next recommended task:
+
+- create a docs-only review/acceptance gate for the architecture diagrams, or
+  return to the next-branch selection after the accepted bridge report CLI
+  preview progress review
 
 ## V1.34 Behavior Parity Progress Report After Mock Runtime Active Bridge Report CLI Preview Review
 

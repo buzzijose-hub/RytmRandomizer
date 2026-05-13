@@ -6,7 +6,58 @@ modularize-v1.34
 
 ## Current HEAD
 
-5d55627 Add progress report after bridge report CLI preview
+55300be Add bridge report CLI preview progress review
+
+## Latest Architecture Diagrams
+
+The current application architecture is now mapped in a dedicated diagram
+document.
+
+Architecture document:
+
+- `Docs/ARCHITECTURE_DIAGRAMS.md`
+
+Current baseline used for the diagram slice:
+
+- `55300be Add bridge report CLI preview progress review`
+
+The diagrams are derived from the real repository structure:
+
+- `rytm_randomizer/` package modules
+- `tests/test_*.py` and CLI fixtures
+- `Scripts/closeout_check.ps1`
+- current handoff and progress docs
+
+Covered architecture areas:
+
+- repository-level system map
+- package layer map
+- passive CLI command flow
+- passive metadata and registry graph
+- behavior parity evaluator map
+- runtime planning and active boundary flow
+- MIDI boundary map
+- report surface map
+- closeout/test coverage map
+- current safety boundary diagram
+- current command/capability surface
+
+Recommended next task:
+
+- create a docs-only review/acceptance gate for the architecture diagrams, or
+  return to the next-branch selection after the accepted bridge report CLI
+  preview progress review
+
+Confirmed boundaries:
+
+- no code changes
+- no tests changed
+- no closeout script changes
+- no CLI changes
+- no MIDI
+- no ports
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Progress Report After Mock Runtime Active Bridge Report CLI Preview Review
 

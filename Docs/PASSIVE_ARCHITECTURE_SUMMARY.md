@@ -8,7 +8,38 @@ modularize-v1.34
 
 Current HEAD:
 
-5d55627
+55300be
+
+## Latest Architecture Diagrams
+
+`Docs/ARCHITECTURE_DIAGRAMS.md` maps the current application architecture from
+the real repository structure.
+
+Current baseline used for the diagram slice:
+
+- `55300be Add bridge report CLI preview progress review`
+
+The architecture diagrams cover:
+
+- repository-level system map
+- package layer map
+- passive CLI command flow
+- passive metadata and registry graph
+- behavior parity evaluator map
+- runtime planning and active boundary flow
+- MIDI boundary map
+- report surface map
+- closeout/test coverage map
+- current safety boundary diagram
+- current command/capability surface
+
+The diagram document is documentation-only. It adds no code, tests, closeout
+script changes, CLI changes, MIDI, ports, active behavior, or hardware
+behavior.
+
+The next recommended task is either a docs-only review/acceptance gate for the
+architecture diagrams or returning to the next-branch selection after the
+accepted bridge report CLI preview progress review.
 
 ## Latest Behavior-Parity Progress Report After Mock Runtime Active Bridge Report CLI Preview Review
 
