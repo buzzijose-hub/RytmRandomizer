@@ -6,7 +6,58 @@ modularize-v1.34
 
 ## Current HEAD
 
-4f04b74 Update checkpoint after mock runtime active bridge report
+7bd532c Add mock runtime active bridge report review
+
+## Latest Behavior-Parity Next Branch Selection After Mock Runtime Active Bridge Report Review
+
+The next branch after accepting the mock runtime/active bridge report review is
+now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_REVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `7bd532c Add mock runtime active bridge report review`
+
+Selected next branch:
+
+- docs-only mock runtime/active bridge report CLI preview design/spec
+
+Reason:
+
+- the report implementation is now accepted
+- the next useful step is passive CLI visibility, not broader execution
+- the CLI preview design/spec can define a future command that prints report
+  output only without invoking bridge behavior
+
+Recommended next task:
+
+- create the documentation-only mock runtime/active bridge report CLI preview
+  design/spec
+
+Confirmed boundaries:
+
+- no implementation in this selection
+- no tests in this selection
+- no fixtures in this selection
+- no closeout script changes in this selection
+- no CLI changes in this selection
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Mock Runtime Active Bridge Report Review
 
