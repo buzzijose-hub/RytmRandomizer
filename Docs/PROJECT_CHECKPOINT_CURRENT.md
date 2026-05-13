@@ -21,7 +21,40 @@ modularize-v1.34
 
 Current HEAD:
 
-ebcedca Add next branch selection after progress report review
+a6972fc Add runtime plan report CLI preview design
+
+## V1.34 Behavior Parity Runtime Plan Report CLI Preview Design Review
+
+The runtime plan report CLI preview design is now reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_DESIGN_REVIEW.md`
+
+Accepted design:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_DESIGN.md`
+
+Accepted design milestone:
+
+- `a6972fc Add runtime plan report CLI preview design`
+
+The review accepts a future passive CLI command shape:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+- `python -m rytm_randomizer.cli runtime-plan-report --help`
+
+The future command remains limited to printing the existing formatted runtime
+plan report.
+
+Next recommended task:
+
+- docs-only implementation plan for the runtime plan report CLI preview
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, dispatch, command execution, runtime mutation, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior is added by
+this review.
 
 ## V1.34 Behavior Parity Runtime Plan Report CLI Preview Design
 
