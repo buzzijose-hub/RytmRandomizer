@@ -339,3 +339,17 @@ behavior-parity checkpoint.
 Hardware remains off.
 
 No implementation in this slice.
+
+## Follow-Up Branch Selection
+
+The next branch after this accepted phase review is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+That selection chooses a docs-only first narrow runtime/active-facing
+implementation plan as the next branch.
+
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+mutation execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.

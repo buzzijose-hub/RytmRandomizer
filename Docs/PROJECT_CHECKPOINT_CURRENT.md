@@ -21,7 +21,44 @@ modularize-v1.34
 
 Current HEAD:
 
-d5a4acd Add next branch selection after runtime plan CLI roadmap review
+61d20cb Add passive runtime visibility phase review
+
+## V1.34 Behavior Parity Next Branch Selection After Passive/Runtime Visibility Phase Review
+
+The next branch after accepting the passive/runtime visibility phase review is
+now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `61d20cb Add passive runtime visibility phase review`
+
+Selected next branch:
+
+- docs-only first narrow runtime/active-facing implementation plan
+
+The selected branch should create a plan for the first narrow packet that can
+move beyond reporting while staying mock-only, passive-safe, and
+hardware-off.
+
+The selected branch should not implement that packet.
+
+Next recommended task:
+
+- create the documentation-only first narrow runtime/active-facing
+  implementation plan
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, runtime execution, dispatch, command execution, mutation
+execution, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior is added by this selection.
 
 ## V1.34 Behavior Parity Passive/Runtime Visibility Phase Review
 

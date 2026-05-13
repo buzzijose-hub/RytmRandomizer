@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-d5a4acd
+61d20cb
+
+## Latest Behavior-Parity Next Branch Selection After Passive/Runtime Visibility Phase Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+selects the next branch after the accepted passive/runtime visibility phase
+review.
+
+Accepted upstream phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `61d20cb Add passive runtime visibility phase review`
+
+Selected next branch:
+
+- docs-only first narrow runtime/active-facing implementation plan
+
+The selected branch should create a plan for a first narrow packet beyond
+reporting while remaining mock-only, passive-safe, and hardware-off.
+
+The selection does not authorize runtime execution, dispatch, command
+execution, mutation execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+The next recommended task is to create that documentation-only plan.
 
 ## Latest Behavior-Parity Passive/Runtime Visibility Phase Review
 

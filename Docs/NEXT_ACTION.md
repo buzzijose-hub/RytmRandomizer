@@ -6,7 +6,61 @@ modularize-v1.34
 
 ## Current HEAD
 
-d5a4acd Add next branch selection after runtime plan CLI roadmap review
+61d20cb Add passive runtime visibility phase review
+
+## Latest Behavior-Parity Next Branch Selection After Passive/Runtime Visibility Phase Review
+
+The next branch after accepting the passive/runtime visibility phase review is
+now selected.
+
+Selection document:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_RUNTIME_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `61d20cb Add passive runtime visibility phase review`
+
+Selected next branch:
+
+- docs-only first narrow runtime/active-facing implementation plan
+
+Reason:
+
+- the passive/runtime visibility phase is accepted
+- the project has enough read-only reporting and runtime-plan visibility to
+  plan the next narrow packet responsibly
+- a plan moves the project closer to active-facing work without implementing
+  active behavior
+- profile `2` is the safest accepted active-boundary candidate
+- profiles `3` and `4` remain useful unsupported/parked safety cases
+
+Recommended next task:
+
+- create the documentation-only first narrow runtime/active-facing
+  implementation plan
+
+Confirmed boundaries:
+
+- no implementation in this selection
+- no tests in this selection
+- no fixtures in this selection
+- no closeout script changes in this selection
+- no CLI changes
+- no CLI execution wiring
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Passive/Runtime Visibility Phase Review
 
