@@ -220,3 +220,25 @@ Next branch selected:
 No implementation in this slice.
 
 Hardware remains off.
+
+## 12. Follow-Up Implementation Checkpoint
+
+The selected follow-up implementation checkpoint is:
+
+- `Docs/V134_BEHAVIOR_PARITY_CLI_BRIDGE_REPORT_IMPORT_ISOLATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `d2444fe Add CLI bridge report import isolation`
+
+Implemented refinement:
+
+- `main(["mock-runtime-active-bridge-report"])` is tested to avoid loading
+  `rytm_randomizer.mock_runtime_active_bridge`
+- `main(["mock-runtime-active-bridge-report"])` is tested to avoid loading
+  `rytm_randomizer.mock_midi`
+- unrelated report formatters are lazy-loaded only by their own commands
+
+Next recommended task:
+
+- docs-only review/acceptance gate for the checkpoint

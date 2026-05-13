@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-1e124ab
+d2444fe
+
+## Behavior-Parity CLI Bridge Report Import Isolation Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_CLI_BRIDGE_REPORT_IMPORT_ISOLATION_CHECKPOINT.md`
+records the selected tiny CLI bridge report import-isolation refinement.
+
+Implementation milestone:
+
+- `d2444fe Add CLI bridge report import isolation`
+
+Files changed:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+The new CLI test proves that `main(["mock-runtime-active-bridge-report"])`
+does not load the bridge module, mock MIDI module, `mido`, or `rtmidi`.
+
+The implementation lazy-loads unrelated report formatters only inside their own
+commands so the bridge report command remains isolated.
+
+This adds no CLI output change, fixtures, closeout script changes, runtime
+execution, dispatch, command execution, mutation execution, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+checkpoint.
 
 ## Behavior-Parity Next Branch Selection After Bridge Safety Coverage Audit Review
 

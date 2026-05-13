@@ -21,7 +21,48 @@ modularize-v1.34
 
 Current HEAD:
 
-1e124ab Add bridge safety coverage gap audit review
+d2444fe Add CLI bridge report import isolation
+
+## Behavior-Parity CLI Bridge Report Import Isolation Checkpoint
+
+The selected tiny CLI bridge report import-isolation refinement is now
+implemented and checkpointed.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_CLI_BRIDGE_REPORT_IMPORT_ISOLATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `d2444fe Add CLI bridge report import isolation`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+The new subprocess-level CLI test proves that calling
+`main(["mock-runtime-active-bridge-report"])` does not load:
+
+- `rytm_randomizer.mock_runtime_active_bridge`
+- `rytm_randomizer.mock_midi`
+- `mido`
+- `rtmidi`
+
+The implementation lazy-loads unrelated report formatters only inside their own
+commands:
+
+- `mock-mapper-report`
+- `active-boundary-report`
+
+The checkpoint adds no CLI output change, fixtures, closeout script changes,
+bridge invocation from CLI, sender construction from CLI, message emission,
+runtime execution, dispatch, command execution, mutation execution, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
+
+Next recommended task:
+
+- create a docs-only review/acceptance gate for this checkpoint
 
 ## Behavior-Parity Next Branch Selection After Bridge Safety Coverage Audit Review
 
