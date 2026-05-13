@@ -258,3 +258,33 @@ The next recommended task is to create that documentation-only design/spec.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 12. Follow-Up Design Spec
+
+The selected next branch is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_DESIGN_SPEC.md`
+
+That design/spec defines a future read-only mock runtime/active bridge report.
+
+The design/spec preserves the accepted bridge boundary:
+
+- profile `2` / My BD Hard is the only accepted bridge candidate
+- profile `3` / My BD Classic remains bridge rejected
+- profile `4` / My BD Acoustic remains parked
+- arming and dry-run confirmation remain required
+- `MockMidiSender` remains the mock-only sender boundary
+
+The design/spec requires the future report to remain static, read-only, and
+metadata-only. It must not invoke the bridge, construct a `MockMidiSender`,
+emit messages, open ports, import real MIDI libraries, wire CLI execution, or
+widen bridge scope.
+
+Recommended follow-up:
+
+- create a documentation-only review/acceptance gate for the report design/spec
+
+This follow-up adds no implementation, tests, fixtures, closeout script changes,
+CLI changes, CLI execution wiring, runtime execution, dispatch, command
+execution, mutation execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.

@@ -8,7 +8,38 @@ modularize-v1.34
 
 Current HEAD:
 
-670b0dd
+e291852
+
+## Latest Behavior-Parity Mock Runtime Active Bridge Report Design Spec
+
+`Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_DESIGN_SPEC.md`
+designs a future read-only report for the accepted mock runtime/active bridge.
+
+Accepted upstream branch selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `e291852 Add next branch selection after bridge review`
+
+The future report should summarize:
+
+- profile `2` / My BD Hard as the only accepted bridge candidate
+- profile `3` / My BD Classic as bridge rejected
+- profile `4` / My BD Acoustic as parked
+- arming and dry-run confirmation requirements
+- `MockMidiSender` as the mock-only sender boundary
+- absent real MIDI, ports, CLI execution wiring, runtime execution, active
+  behavior, and hardware behavior
+
+The design/spec explicitly keeps the future report read-only and metadata-only.
+It does not authorize invoking the bridge, constructing a `MockMidiSender`,
+emitting messages, opening ports, importing real MIDI libraries, wiring CLI
+execution, or widening bridge scope.
+
+The next recommended task is a documentation-only review/acceptance gate for
+this design/spec.
 
 ## Latest Behavior-Parity Next Branch Selection After Mock Runtime Active Bridge Review
 
