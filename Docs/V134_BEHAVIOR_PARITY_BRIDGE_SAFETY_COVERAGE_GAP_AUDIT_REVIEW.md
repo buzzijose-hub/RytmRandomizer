@@ -203,3 +203,23 @@ Next recommended task:
 - docs-only next-branch selection after this audit review
 
 Hardware remains off.
+
+## 12. Follow-Up Selection
+
+The follow-up next-branch selection is:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_BRIDGE_SAFETY_COVERAGE_AUDIT_REVIEW.md`
+
+Selected next branch:
+
+- tiny test-only CLI bridge report import-isolation refinement
+
+Decision:
+
+- the optional subprocess import refinement is selected as the next tiny
+  test-only branch
+- the future branch should prove that
+  `main(["mock-runtime-active-bridge-report"])` does not load
+  `rytm_randomizer.mock_runtime_active_bridge` or `rytm_randomizer.mock_midi`
+- no implementation, CLI behavior change, MIDI, ports, active behavior, or
+  hardware behavior is authorized by this selection

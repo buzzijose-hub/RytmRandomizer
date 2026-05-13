@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-ddd298a
+1e124ab
+
+## Behavior-Parity Next Branch Selection After Bridge Safety Coverage Audit Review
+
+`Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_BRIDGE_SAFETY_COVERAGE_AUDIT_REVIEW.md`
+selects the next behavior-parity direction after the accepted bridge safety
+coverage audit review.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_BRIDGE_SAFETY_COVERAGE_GAP_AUDIT_REVIEW.md`
+
+Selected next branch:
+
+- tiny test-only CLI bridge report import-isolation refinement
+
+The selection chooses the optional subprocess import refinement from the audit:
+prove that `main(["mock-runtime-active-bridge-report"])` does not load
+`rytm_randomizer.mock_runtime_active_bridge` or `rytm_randomizer.mock_midi`.
+
+The future branch should be test-only, likely limited to `tests/test_cli.py`,
+and should not require closeout script changes because passive CLI tests are
+already covered.
+
+The selection adds no implementation, tests, closeout script changes, CLI
+changes, runtime execution, dispatch, command execution, mutation execution,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Bridge Safety Coverage Gap Audit Review
 
