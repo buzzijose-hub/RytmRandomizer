@@ -6,7 +6,66 @@ modularize-v1.34
 
 ## Current HEAD
 
-3f2a624 Add next branch selection after runtime plan CLI progress review
+ecb7331 Add roadmap timeline after runtime plan CLI preview
+
+## Latest Behavior-Parity Roadmap/Timeline Update After Runtime Plan Report CLI Preview Review
+
+The broader behavior-parity roadmap/timeline after the runtime plan report CLI
+preview is now reviewed and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW_REVIEW.md`
+
+Accepted roadmap/timeline update:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_RUNTIME_PLAN_REPORT_CLI_PREVIEW.md`
+
+Accepted roadmap/timeline milestone:
+
+- `ecb7331 Add roadmap timeline after runtime plan CLI preview`
+
+Accepted current phase:
+
+- Behavior-Parity Passive/Mock Visibility Phase
+
+Accepted state:
+
+- runtime plan report CLI preview is implemented and accepted
+- passive CLI visibility remains read-only
+- profiles `2` and `3` remain supported runtime planning inputs
+- profile `4` remains parked
+- real MIDI / hardware validation remains `0%`
+- no CLI execution wiring, runtime execution, dispatch, command execution,
+  MIDI, ports, package metadata changes, active behavior, or hardware behavior
+  is added
+
+Recommended next task:
+
+- docs-only next-branch selection after this accepted roadmap/timeline update
+
+Likely branches to consider:
+
+- passive/runtime visibility phase review
+- another tiny mock-only safety gap
+- user-facing progress/timeline summary for session handoff
+
+Confirmed boundaries:
+
+- no implementation in this review
+- no tests in this review
+- no fixtures in this review
+- no closeout script changes in this review
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Roadmap/Timeline Update After Runtime Plan Report CLI Preview
 
