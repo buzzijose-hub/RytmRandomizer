@@ -5,6 +5,7 @@ Usage:
   python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli runtime-plan-report
   python -m rytm_randomizer.cli active-boundary-report
+  python -m rytm_randomizer.cli mock-runtime-active-bridge-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli inspect-command <key>
@@ -29,6 +30,8 @@ Commands:
                      Print the read-only runtime plan report.
   active-boundary-report
                      Print the read-only active boundary report.
+  mock-runtime-active-bridge-report
+                     Print the read-only mock runtime/active bridge report.
   anchor-profile-report
                      Print the read-only anchor/profile behavior report.
   behavior-parity-report

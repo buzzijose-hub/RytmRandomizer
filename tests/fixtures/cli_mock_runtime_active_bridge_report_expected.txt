@@ -1,0 +1,34 @@
+RytmRandomizer Mock Runtime Active Bridge Report
+Bridge Mode:
+- read_only: True
+- mock_only: True
+- metadata_only: True
+- invokes_bridge: False
+- constructs_sender: False
+- emits_messages: False
+Accepted Candidate:
+- group_profile:2 / My BD Hard -> Pad 1 / BD Hard
+- requires_armed: True
+- requires_dry_run_confirmed: True
+- sender: MockMidiSender
+Rejected Cases:
+- missing_arming: missing arming fails safely
+- missing_dry_run_confirmation: missing dry-run confirmation fails safely
+- group_profile:3 / My BD Classic: bridge rejected
+- unknown_key: unknown group profile keys fail safely
+- unsupported_source_kind: unsupported source kinds fail safely
+- invalid_request: invalid request fails before message emission
+- invalid_sender: invalid sender fails before message emission
+Parked Cases:
+- group_profile:4 / My BD Acoustic: parked until separately approved
+Safety:
+- real_midi: absent
+- port_opening: absent
+- hardware_required: False
+- cli_execution_wiring: absent
+- runtime_execution: absent
+- dispatch: absent
+- active_behavior: absent
+- hardware_behavior: absent
+Source: rytm_randomizer.mock_runtime_active_bridge
+In-memory only: True
