@@ -21,7 +21,38 @@ modularize-v1.34
 
 Current HEAD:
 
-9f65c02 Add next branch selection after bridge CLI progress review
+cb5d770 Add passive mock bridge visibility phase review
+
+## Behavior-Parity Roadmap/Timeline Update After Passive/Mock Bridge Visibility Phase Review
+
+The roadmap/timeline after the accepted passive/mock bridge visibility phase is
+now updated.
+
+Roadmap/timeline document:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+
+Accepted upstream phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+
+Current state:
+
+- passive/mock bridge visibility phase accepted
+- accepted architecture diagrams are available as the current map
+- private GitHub checkpoint is established
+- profile `2` / My BD Hard remains the accepted bridge candidate
+- profile `3` / My BD Classic remains bridge rejected
+- profile `4` / My BD Acoustic remains parked
+
+The roadmap/timeline update confirms that real MIDI, ports, CLI execution
+wiring, bridge invocation from CLI, sender construction from CLI, message
+emission, runtime execution, dispatch, command execution, package metadata
+changes, active behavior, and hardware behavior remain absent.
+
+Next recommended task:
+
+- create a docs-only review/acceptance gate for this roadmap/timeline update
 
 ## Behavior-Parity Passive/Mock Bridge Visibility Phase Review
 

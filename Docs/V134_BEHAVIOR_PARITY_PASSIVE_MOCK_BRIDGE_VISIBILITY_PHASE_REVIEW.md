@@ -276,3 +276,12 @@ No implementation in this slice.
 
 Hardware remains off.
 
+## 14. Follow-Up Roadmap/Timeline Update
+
+The follow-up roadmap/timeline update after this accepted phase review is:
+
+- `Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+
+Recommended follow-up:
+
+- create a docs-only review/acceptance gate for the roadmap/timeline update

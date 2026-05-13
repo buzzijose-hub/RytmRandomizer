@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-9f65c02
+cb5d770
+
+## Behavior-Parity Roadmap/Timeline Update After Passive/Mock Bridge Visibility Phase Review
+
+`Docs/V134_BEHAVIOR_PARITY_ROADMAP_TIMELINE_UPDATE_AFTER_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+updates the roadmap/timeline after the accepted passive/mock bridge visibility
+phase review.
+
+Accepted upstream phase review:
+
+- `Docs/V134_BEHAVIOR_PARITY_PASSIVE_MOCK_BRIDGE_VISIBILITY_PHASE_REVIEW.md`
+
+The roadmap/timeline records that the current software foundation includes
+passive metadata and CLI visibility, behavior-parity helper coverage,
+runtime-adjacent mock-only safety coverage, active-boundary and real-MIDI
+boundary safety scaffolds, mock runtime/active bridge visibility, accepted
+architecture diagrams, closeout protection, and private GitHub backup.
+
+The roadmap/timeline recommends a docs-only review/acceptance gate next before
+selecting the next behavior-parity direction.
+
+It adds no implementation, tests, closeout script changes, CLI changes, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Passive/Mock Bridge Visibility Phase Review
 
