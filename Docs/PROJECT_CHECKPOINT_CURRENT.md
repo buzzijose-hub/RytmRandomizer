@@ -21,7 +21,49 @@ modularize-v1.34
 
 Current HEAD:
 
-0c5f88d Add mock runtime active bridge report CLI preview checkpoint
+313a89e Add mock runtime active bridge report CLI preview checkpoint review
+
+## V1.34 Behavior Parity Progress Report After Mock Runtime Active Bridge Report CLI Preview
+
+The behavior-parity progress after the passive mock runtime/active bridge
+report CLI preview is now consolidated.
+
+Progress report:
+
+- `Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW.md`
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `313a89e Add mock runtime active bridge report CLI preview checkpoint review`
+
+The report records that the passive CLI now exposes:
+
+- `python -m rytm_randomizer.cli mock-runtime-active-bridge-report`
+- `python -m rytm_randomizer.cli mock-runtime-active-bridge-report --help`
+
+The report consolidates the current bridge visibility state:
+
+- profile `2` / My BD Hard is the accepted bridge candidate
+- profile `3` / My BD Classic remains bridge rejected
+- profile `4` / My BD Acoustic remains parked
+- bridge mode remains read-only, mock-only, and metadata-only
+- no bridge invocation from CLI exists
+- no sender construction from CLI exists
+- no message emission from CLI exists
+
+Next recommended task:
+
+- create a docs-only review/acceptance gate for this progress report
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, bridge invocation, sender construction, message emission,
+runtime execution, dispatch, command execution, mutation execution, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior is
+added by this progress report.
 
 ## V1.34 Behavior Parity Mock Runtime Active Bridge Report CLI Preview Implementation Checkpoint Review
 

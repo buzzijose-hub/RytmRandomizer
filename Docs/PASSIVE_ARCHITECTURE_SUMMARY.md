@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-0c5f88d
+313a89e
+
+## Latest Behavior-Parity Progress Report After Mock Runtime Active Bridge Report CLI Preview
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_REPORT_AFTER_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW.md`
+consolidates the current behavior-parity progress after the passive mock
+runtime/active bridge report CLI preview.
+
+Accepted upstream review:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `313a89e Add mock runtime active bridge report CLI preview checkpoint review`
+
+The report records that `mock-runtime-active-bridge-report` is implemented,
+accepted, and passive/read-only. It shows profile `2` / My BD Hard as the
+accepted bridge candidate, profile `3` / My BD Classic as bridge rejected, and
+profile `4` / My BD Acoustic as parked.
+
+The report confirms that CLI bridge visibility still adds no bridge
+invocation, sender construction, message emission, runtime execution,
+dispatch, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
+
+The next recommended task is a docs-only review/acceptance gate for this
+progress report.
 
 ## Latest Behavior-Parity Mock Runtime Active Bridge Report CLI Preview Implementation Checkpoint Review
 
