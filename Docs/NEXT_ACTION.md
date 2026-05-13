@@ -6,7 +6,66 @@ modularize-v1.34
 
 ## Current HEAD
 
-01a8735 Add runtime plan report CLI preview
+f309f77 Add runtime plan report CLI preview checkpoint
+
+## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Checkpoint Review
+
+The runtime plan report CLI preview implementation checkpoint is now reviewed
+and accepted.
+
+Review document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_IMPLEMENTATION_CHECKPOINT.md`
+
+Accepted implementation milestone:
+
+- `01a8735 Add runtime plan report CLI preview`
+
+Accepted checkpoint milestone:
+
+- `f309f77 Add runtime plan report CLI preview checkpoint`
+
+Accepted passive CLI command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+- `python -m rytm_randomizer.cli runtime-plan-report --help`
+
+Accepted state:
+
+- command prints the existing formatted runtime plan report
+- command remains deterministic and fixture-backed
+- top-level help lists `runtime-plan-report`
+- supported planning inputs include group profiles `2` and `3`
+- profile `4` remains parked
+- unsupported planning inputs remain unsupported
+- no runtime execution, dispatch, command execution, runtime mutation, MIDI,
+  ports, active behavior, or hardware behavior is added
+
+Recommended next task:
+
+- broader behavior-parity progress report after the runtime plan report CLI
+  preview
+
+Confirmed boundaries for this review:
+
+- no implementation in this review
+- no tests in this review
+- no fixtures in this review
+- no closeout script changes in this review
+- no CLI changes in this review
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Runtime Plan Report CLI Preview Implementation Checkpoint
 
