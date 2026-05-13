@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-2a950db
+ebcedca
+
+## Latest Behavior-Parity Runtime Plan Report CLI Preview Design
+
+`Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_DESIGN.md`
+documents the future passive CLI preview design for the existing read-only
+runtime plan report.
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_ACTIVE_RUNTIME_ALIGNMENT_PROGRESS_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `ebcedca Add next branch selection after progress report review`
+
+Designed future command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+
+The design requires the future command to print only
+`format_runtime_plan_report()` output and remain passive/read-only.
+
+The next recommended task is a docs-only review/acceptance gate for this
+design.
+
+No implementation, tests, fixtures, closeout script changes, CLI execution
+wiring, dispatch, command execution, runtime mutation, MIDI, ports, package
+metadata changes, active behavior, or hardware behavior is authorized by this
+design.
 
 ## Latest Behavior-Parity Next Branch Selection After Active/Runtime Alignment Progress Report Review
 

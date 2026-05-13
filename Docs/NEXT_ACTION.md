@@ -6,7 +6,60 @@ modularize-v1.34
 
 ## Current HEAD
 
-2a950db Add progress report review after active runtime alignment tests
+ebcedca Add next branch selection after progress report review
+
+## Latest Behavior-Parity Runtime Plan Report CLI Preview Design
+
+The runtime plan report CLI preview design is now documented.
+
+Design document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_DESIGN.md`
+
+Accepted upstream selection:
+
+- `Docs/V134_BEHAVIOR_PARITY_NEXT_BRANCH_SELECTION_AFTER_ACTIVE_RUNTIME_ALIGNMENT_PROGRESS_REPORT_REVIEW.md`
+
+Accepted upstream milestone:
+
+- `ebcedca Add next branch selection after progress report review`
+
+Designed future command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+- `python -m rytm_randomizer.cli runtime-plan-report --help`
+
+Designed future behavior:
+
+- print the existing `format_runtime_plan_report()` output only
+- remain passive/read-only
+- require no hardware
+- open no ports
+- send no MIDI
+- dispatch no commands
+- execute no commands
+- mutate no runtime or hardware state
+
+Recommended next task:
+
+- docs-only review/acceptance gate for this design
+
+Confirmed boundaries:
+
+- no implementation in this design
+- no tests in this design
+- no fixtures in this design
+- no closeout script changes in this design
+- no CLI changes
+- no CLI execution wiring
+- no dispatch
+- no command execution
+- no runtime mutation
+- no MIDI
+- no ports
+- no package metadata changes
+- no active behavior
+- no hardware behavior
 
 ## Latest Behavior-Parity Next Branch Selection After Active/Runtime Alignment Progress Report Review
 

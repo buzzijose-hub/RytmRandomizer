@@ -228,3 +228,23 @@ The next recommended task is to create that design document.
 Hardware remains off.
 
 No implementation in this slice.
+
+## 13. Follow-Up Status
+
+The selected next branch has been carried out as a documentation-only design.
+
+Design document:
+
+- `Docs/V134_BEHAVIOR_PARITY_RUNTIME_PLAN_REPORT_CLI_PREVIEW_DESIGN.md`
+
+Designed future command:
+
+- `python -m rytm_randomizer.cli runtime-plan-report`
+
+Next recommended task:
+
+- docs-only review/acceptance gate for the design
+
+The follow-up design authorizes no implementation, tests, fixtures, CLI
+changes, CLI execution wiring, runtime execution, dispatch, MIDI, ports,
+active behavior, or hardware behavior.
