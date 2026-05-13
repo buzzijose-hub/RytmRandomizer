@@ -2,13 +2,11 @@
 
 import sys
 
-from .active_boundary_report import format_active_boundary_report
 from .behavior_anchor_profile_report import format_anchor_profile_report
 from .behavior_parity_coverage_report import format_behavior_parity_coverage_report
 from .mock_runtime_active_bridge_report import format_mock_runtime_active_bridge_report
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
-from .mock_mapper_report import format_mock_mapper_report
 from .registry_report import format_registry_report
 from .runtime_plan_report import format_runtime_plan_report
 
@@ -820,6 +818,8 @@ def main(argv=None):
         return 0
 
     if args == ["mock-mapper-report"]:
+        from .mock_mapper_report import format_mock_mapper_report
+
         sys.stdout.write("\n".join(format_mock_mapper_report()))
         sys.stdout.write("\n")
         return 0
@@ -830,6 +830,8 @@ def main(argv=None):
         return 0
 
     if args == ["active-boundary-report"]:
+        from .active_boundary_report import format_active_boundary_report
+
         sys.stdout.write("\n".join(format_active_boundary_report()))
         sys.stdout.write("\n")
         return 0

@@ -536,6 +536,38 @@ def test_mock_runtime_active_bridge_report_command_imports_no_real_midi_librarie
     assert result.stderr == ""
 
 
+def test_mock_runtime_active_bridge_report_command_does_not_load_bridge_or_mock_midi():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "from contextlib import redirect_stdout\n"
+                "from io import StringIO\n"
+                "sys.modules.pop('rytm_randomizer.mock_runtime_active_bridge', None)\n"
+                "sys.modules.pop('rytm_randomizer.mock_midi', None)\n"
+                "from rytm_randomizer.cli import main\n"
+                "with redirect_stdout(StringIO()):\n"
+                "    code = main(['mock-runtime-active-bridge-report'])\n"
+                "assert code == 0\n"
+                "assert 'rytm_randomizer.mock_runtime_active_bridge' not in sys.modules\n"
+                "assert 'rytm_randomizer.mock_midi' not in sys.modules\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
 def test_anchor_profile_report_command_imports_no_real_midi_libraries():
     result = subprocess.run(
         [
@@ -1627,6 +1659,7 @@ if __name__ == "__main__":
     test_runtime_plan_report_command_imports_no_real_midi_libraries()
     test_active_boundary_report_command_imports_no_real_midi_libraries()
     test_mock_runtime_active_bridge_report_command_imports_no_real_midi_libraries()
+    test_mock_runtime_active_bridge_report_command_does_not_load_bridge_or_mock_midi()
     test_anchor_profile_report_command_imports_no_real_midi_libraries()
     test_behavior_parity_report_command_imports_no_real_midi_libraries()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
