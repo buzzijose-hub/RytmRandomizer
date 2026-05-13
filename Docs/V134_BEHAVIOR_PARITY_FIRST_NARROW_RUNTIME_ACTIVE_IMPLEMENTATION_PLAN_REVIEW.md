@@ -276,3 +276,22 @@ The next approved implementation packet is:
 Hardware remains off.
 
 No implementation in this slice.
+
+## Follow-Up Implementation Checkpoint
+
+The accepted implementation packet is now represented by:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_CHECKPOINT.md`
+
+The implemented milestone is:
+
+- `b35cf9e Add mock runtime active bridge`
+
+That checkpoint records the mock runtime/active bridge for profile `2` only
+and recommends a documentation-only review/acceptance gate before any further
+bridge visibility or scope expansion.
+
+It adds no implementation, tests, fixtures, closeout script changes, CLI
+changes, CLI execution wiring, runtime execution, dispatch, command execution,
+mutation execution, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.

@@ -21,7 +21,50 @@ modularize-v1.34
 
 Current HEAD:
 
-29d1cc0 Add first narrow runtime active implementation plan
+b35cf9e Add mock runtime active bridge
+
+## V1.34 Behavior Parity Mock Runtime Active Bridge Checkpoint
+
+The first mock runtime/active bridge implementation milestone is now
+documented.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_MOCK_RUNTIME_ACTIVE_BRIDGE_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `b35cf9e Add mock runtime active bridge`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/mock_runtime_active_bridge.py`
+- `tests/test_mock_runtime_active_bridge.py`
+- `Scripts/closeout_check.ps1`
+
+The bridge:
+
+- connects runtime intent to the mock-only active boundary
+- supports profile `2` / My BD Hard only
+- requires armed and dry-run confirmed
+- records through `MockMidiSender` only
+- keeps profile `3` rejected at the bridge
+- keeps profile `4` parked
+- emits no messages on failure
+
+Closeout now includes:
+
+- `Mock Runtime Active Bridge`
+
+Next recommended task:
+
+- create a documentation-only review/acceptance gate for the mock
+  runtime/active bridge implementation
+
+No implementation, tests, fixtures, closeout script changes, CLI changes, CLI
+execution wiring, runtime execution, dispatch, command execution, mutation
+execution, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior is added by this checkpoint.
 
 ## V1.34 Behavior Parity First Narrow Runtime/Active-Facing Implementation Plan Review
 
