@@ -2,6 +2,36 @@
 
 Date: May 4, 2026
 
+## Collaborator Implementation Intake Status Visibility
+
+`rytm_randomizer/project_status_report.py` now exposes a passive
+`collaborator_implementation_branch_intake` section.
+
+The section records the current Eddie implementation-branch waiting state:
+
+- `status: waiting_for_branch`
+- `implementation_branch_observed: False`
+- `implementation_pr_observed: False`
+- `merge_policy: intake_before_merge`
+- `direct_merge_allowed: False`
+
+It also links the current request and intake documents:
+
+- `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md`
+- `Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md`
+
+This visibility appears through:
+
+- `python -m rytm_randomizer.cli project-status-report`
+- `python -m rytm_randomizer.cli project-status-report --summary`
+- `python -m rytm_randomizer.cli project-status-report --check`
+- `python -m rytm_randomizer.cli project-status-report --json`
+
+This is passive visibility only. It does not merge Eddie's branch, run
+external implementation code, open ports, send MIDI, dispatch commands, add
+active behavior, run hardware, publish packages, apply branch protection, or
+change the V1.34 reference.
+
 ## Eddie Implementation Review Request Packet
 
 `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md` provides a short

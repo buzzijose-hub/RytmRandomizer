@@ -172,6 +172,37 @@ def test_project_status_report_records_collaborator_review_triage_template():
     }
 
 
+def test_project_status_report_records_collaborator_implementation_branch_intake():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["collaborator_implementation_branch_intake"] == {
+        "status": "waiting_for_branch",
+        "collaborator": "Eddie",
+        "request_packet_path": "Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md",
+        "intake_protocol_path": (
+            "Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md"
+        ),
+        "implementation_branch_observed": False,
+        "implementation_pr_observed": False,
+        "required_info": (
+            "branch_name",
+            "commit_hash",
+            "base_branch",
+            "test_result",
+            "v134_status",
+            "midi_ports_active_hardware_status",
+        ),
+        "merge_policy": "intake_before_merge",
+        "direct_merge_allowed": False,
+        "real_midi": "absent",
+        "port_opening": "absent",
+        "active_behavior": "absent",
+        "hardware_behavior": "absent",
+    }
+
+
 def test_project_status_summary_is_deterministic():
     from rytm_randomizer.project_status_report import summarize_project_status_report
 
@@ -190,6 +221,9 @@ def test_project_status_summary_is_deterministic():
         "collaborator_review_intake": "checkpointed",
         "external_review_findings_received": False,
         "collaborator_review_triage_template": "accepted",
+        "collaborator_implementation_branch_intake": "waiting_for_branch",
+        "external_implementation_branch_observed": False,
+        "external_implementation_pr_observed": False,
         "real_midi": "absent",
         "port_opening": "absent",
         "active_execution": "absent",
@@ -220,6 +254,9 @@ def test_project_status_summary_lines_are_deterministic():
         "- collaborator_review_intake: checkpointed",
         "- external_review_findings_received: False",
         "- collaborator_review_triage_template: accepted",
+        "- collaborator_implementation_branch_intake: waiting_for_branch",
+        "- external_implementation_branch_observed: False",
+        "- external_implementation_pr_observed: False",
         "- real_midi: absent",
         "- port_opening: absent",
         "- active_execution: absent",
@@ -274,6 +311,25 @@ def test_project_status_check_passes_for_current_report():
             "collaborator_review_triage_template.port_opening": "absent",
             "collaborator_review_triage_template.active_behavior": "absent",
             "collaborator_review_triage_template.hardware_behavior": "absent",
+            "collaborator_implementation_branch_intake.status": (
+                "waiting_for_branch"
+            ),
+            (
+                "collaborator_implementation_branch_intake."
+                "implementation_branch_observed"
+            ): False,
+            (
+                "collaborator_implementation_branch_intake."
+                "implementation_pr_observed"
+            ): False,
+            "collaborator_implementation_branch_intake.merge_policy": (
+                "intake_before_merge"
+            ),
+            "collaborator_implementation_branch_intake.direct_merge_allowed": False,
+            "collaborator_implementation_branch_intake.real_midi": "absent",
+            "collaborator_implementation_branch_intake.port_opening": "absent",
+            "collaborator_implementation_branch_intake.active_behavior": "absent",
+            "collaborator_implementation_branch_intake.hardware_behavior": "absent",
             "source.in_memory_only": True,
             "source.writes_files": False,
             "closeout.failure_propagation": "guarded",
@@ -351,6 +407,24 @@ def test_project_status_check_lines_are_deterministic():
         "- collaborator_review_triage_template.port_opening: absent",
         "- collaborator_review_triage_template.active_behavior: absent",
         "- collaborator_review_triage_template.hardware_behavior: absent",
+        "- collaborator_implementation_branch_intake.status: waiting_for_branch",
+        (
+            "- collaborator_implementation_branch_intake."
+            "implementation_branch_observed: False"
+        ),
+        (
+            "- collaborator_implementation_branch_intake."
+            "implementation_pr_observed: False"
+        ),
+        (
+            "- collaborator_implementation_branch_intake.merge_policy: "
+            "intake_before_merge"
+        ),
+        "- collaborator_implementation_branch_intake.direct_merge_allowed: False",
+        "- collaborator_implementation_branch_intake.real_midi: absent",
+        "- collaborator_implementation_branch_intake.port_opening: absent",
+        "- collaborator_implementation_branch_intake.active_behavior: absent",
+        "- collaborator_implementation_branch_intake.hardware_behavior: absent",
         "- source.in_memory_only: True",
         "- source.writes_files: False",
         "- closeout.failure_propagation: guarded",
@@ -456,6 +530,26 @@ def test_formatted_project_status_report_is_deterministic():
         "- active_behavior: absent",
         "- hardware_behavior: absent",
         "- package_metadata_changes: requires_explicit_approval",
+        "Collaborator Implementation Branch Intake:",
+        "- status: waiting_for_branch",
+        "- collaborator: Eddie",
+        "- request_packet_path: Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md",
+        (
+            "- intake_protocol_path: "
+            "Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md"
+        ),
+        "- implementation_branch_observed: False",
+        "- implementation_pr_observed: False",
+        (
+            "- required_info: branch_name, commit_hash, base_branch, "
+            "test_result, v134_status, midi_ports_active_hardware_status"
+        ),
+        "- merge_policy: intake_before_merge",
+        "- direct_merge_allowed: False",
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_behavior: absent",
+        "- hardware_behavior: absent",
         "Closeout:",
         "- closeout_contract: present",
         "- failure_propagation: guarded",
@@ -500,6 +594,16 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert parsed["collaborator_review_intake"]["findings_received"] is False
     assert parsed["collaborator_review_triage_template"]["status"] == "accepted"
     assert parsed["collaborator_review_triage_template"]["findings_recorded"] is False
+    assert (
+        parsed["collaborator_implementation_branch_intake"]["status"]
+        == "waiting_for_branch"
+    )
+    assert (
+        parsed["collaborator_implementation_branch_intake"][
+            "implementation_branch_observed"
+        ]
+        is False
+    )
     assert parsed["safety"]["real_midi"] == "absent"
     assert parsed["safety"]["hardware_required"] is False
     assert parsed["source"]["in_memory_only"] is True
@@ -516,6 +620,7 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     report["public_api_hardening"]["status"] = "MUTATED"
     report["collaborator_review_intake"]["status"] = "MUTATED"
     report["collaborator_review_triage_template"]["status"] = "MUTATED"
+    report["collaborator_implementation_branch_intake"]["status"] = "MUTATED"
 
     fresh_report = build_project_status_report()
 
@@ -525,6 +630,10 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     assert fresh_report["public_api_hardening"]["status"] == "checkpointed"
     assert fresh_report["collaborator_review_intake"]["status"] == "checkpointed"
     assert fresh_report["collaborator_review_triage_template"]["status"] == "accepted"
+    assert (
+        fresh_report["collaborator_implementation_branch_intake"]["status"]
+        == "waiting_for_branch"
+    )
 
 
 def test_project_status_report_imports_no_real_midi_libraries():
@@ -556,6 +665,7 @@ if __name__ == "__main__":
     test_project_status_report_records_public_api_hardening_checkpoint()
     test_project_status_report_records_collaborator_review_intake_checkpoint()
     test_project_status_report_records_collaborator_review_triage_template()
+    test_project_status_report_records_collaborator_implementation_branch_intake()
     test_project_status_summary_is_deterministic()
     test_project_status_summary_lines_are_deterministic()
     test_project_status_check_passes_for_current_report()

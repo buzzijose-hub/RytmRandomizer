@@ -1,5 +1,47 @@
 # Next Action
 
+## Latest Collaborator Implementation Intake Status Visibility Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_INTAKE_STATUS_VISIBILITY_CHECKPOINT.md`
+
+Purpose:
+
+- expose Eddie's future implementation branch intake state through the passive
+  project-status report
+- show that the larger implementation branch has not been observed yet
+- keep the merge policy visible as intake-before-merge, not direct merge
+
+Status now visible through:
+
+- `python -m rytm_randomizer.cli project-status-report`
+- `python -m rytm_randomizer.cli project-status-report --summary`
+- `python -m rytm_randomizer.cli project-status-report --check`
+- `python -m rytm_randomizer.cli project-status-report --json`
+
+Decision:
+
+- collaborator implementation branch status is `waiting_for_branch`
+- implementation branch observed is `False`
+- implementation PR observed is `False`
+- direct merge is not allowed
+- no collaborator implementation branch has been merged
+
+Recommended next task:
+
+- wait for Eddie's implementation branch or PR
+- then run the collaborator implementation branch intake protocol before any
+  merge, cherry-pick, or implementation decision
+
 ## Latest Eddie Implementation Review Request Packet
 
 Current review branch:

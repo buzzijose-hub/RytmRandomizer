@@ -79,6 +79,20 @@ Collaborator Review Triage Template:
 - active_behavior: absent
 - hardware_behavior: absent
 - package_metadata_changes: requires_explicit_approval
+Collaborator Implementation Branch Intake:
+- status: waiting_for_branch
+- collaborator: Eddie
+- request_packet_path: Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md
+- intake_protocol_path: Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md
+- implementation_branch_observed: False
+- implementation_pr_observed: False
+- required_info: branch_name, commit_hash, base_branch, test_result, v134_status, midi_ports_active_hardware_status
+- merge_policy: intake_before_merge
+- direct_merge_allowed: False
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
 Closeout:
 - closeout_contract: present
 - failure_propagation: guarded

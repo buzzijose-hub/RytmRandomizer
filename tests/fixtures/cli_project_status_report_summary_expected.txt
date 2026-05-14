@@ -12,6 +12,9 @@ RytmRandomizer Project Status Summary
 - collaborator_review_intake: checkpointed
 - external_review_findings_received: False
 - collaborator_review_triage_template: accepted
+- collaborator_implementation_branch_intake: waiting_for_branch
+- external_implementation_branch_observed: False
+- external_implementation_pr_observed: False
 - real_midi: absent
 - port_opening: absent
 - active_execution: absent

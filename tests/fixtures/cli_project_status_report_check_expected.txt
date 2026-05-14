@@ -32,6 +32,15 @@ RytmRandomizer Project Status Check
 - collaborator_review_triage_template.port_opening: absent
 - collaborator_review_triage_template.active_behavior: absent
 - collaborator_review_triage_template.hardware_behavior: absent
+- collaborator_implementation_branch_intake.status: waiting_for_branch
+- collaborator_implementation_branch_intake.implementation_branch_observed: False
+- collaborator_implementation_branch_intake.implementation_pr_observed: False
+- collaborator_implementation_branch_intake.merge_policy: intake_before_merge
+- collaborator_implementation_branch_intake.direct_merge_allowed: False
+- collaborator_implementation_branch_intake.real_midi: absent
+- collaborator_implementation_branch_intake.port_opening: absent
+- collaborator_implementation_branch_intake.active_behavior: absent
+- collaborator_implementation_branch_intake.hardware_behavior: absent
 - source.in_memory_only: True
 - source.writes_files: False
 - closeout.failure_propagation: guarded

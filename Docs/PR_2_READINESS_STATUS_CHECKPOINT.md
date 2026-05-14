@@ -52,6 +52,7 @@ This is a foundation PR, not a hardware PR.
 
 The PR adds the safe foundation subset of Eddie's review plan:
 
+- collaborator implementation branch intake status visibility
 - package metadata
 - editable install path
 - passive console entry point
@@ -188,6 +189,17 @@ are reviewed.
 The owner-facing request packet for Eddie is:
 
 - `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md`
+
+The current passive status visibility for that future intake is:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_INTAKE_STATUS_VISIBILITY_CHECKPOINT.md`
+
+It records:
+
+- `collaborator_implementation_branch_intake.status: waiting_for_branch`
+- `implementation_branch_observed: False`
+- `implementation_pr_observed: False`
+- `direct_merge_allowed: False`
 
 ## Known Follow-Ups
 

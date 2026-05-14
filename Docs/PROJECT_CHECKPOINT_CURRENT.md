@@ -3,6 +3,54 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Implementation Intake Status Visibility Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_INTAKE_STATUS_VISIBILITY_CHECKPOINT.md`
+
+The passive project-status report now exposes a
+`collaborator_implementation_branch_intake` section.
+
+It records:
+
+- status:
+  - `waiting_for_branch`
+- collaborator:
+  - `Eddie`
+- request packet:
+  - `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md`
+- intake protocol:
+  - `Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md`
+- implementation branch observed:
+  - `False`
+- implementation PR observed:
+  - `False`
+- merge policy:
+  - `intake_before_merge`
+- direct merge allowed:
+  - `False`
+
+Decision:
+
+- Eddie's larger implementation branch has not been observed on the remote yet
+- no collaborator implementation branch was merged
+- PR #2 remains the current stable foundation PR while waiting
+- future collaborator implementation work must be intaken before any merge or
+  cherry-pick
+
+This checkpoint adds passive report visibility only. It adds no real MIDI,
+ports, dispatch, active behavior, hardware behavior, package publication,
+branch protection change, collaborator branch merge, or V1.34 reference edit.
+
 ## Eddie Implementation Review Request Packet
 
 Current review branch:

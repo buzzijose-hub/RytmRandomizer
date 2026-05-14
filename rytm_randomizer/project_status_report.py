@@ -102,6 +102,31 @@ COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
     "package_metadata_changes": "requires_explicit_approval",
 }
 
+COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_STATUS = {
+    "status": "waiting_for_branch",
+    "collaborator": "Eddie",
+    "request_packet_path": "Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md",
+    "intake_protocol_path": (
+        "Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md"
+    ),
+    "implementation_branch_observed": False,
+    "implementation_pr_observed": False,
+    "required_info": (
+        "branch_name",
+        "commit_hash",
+        "base_branch",
+        "test_result",
+        "v134_status",
+        "midi_ports_active_hardware_status",
+    ),
+    "merge_policy": "intake_before_merge",
+    "direct_merge_allowed": False,
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+    "hardware_behavior": "absent",
+}
+
 PROJECT_STATUS_SAFETY = {
     "real_midi": "absent",
     "port_opening": "absent",
@@ -151,6 +176,24 @@ PROJECT_STATUS_CHECKS = (
     ("collaborator_review_triage_template.port_opening", "absent"),
     ("collaborator_review_triage_template.active_behavior", "absent"),
     ("collaborator_review_triage_template.hardware_behavior", "absent"),
+    ("collaborator_implementation_branch_intake.status", "waiting_for_branch"),
+    (
+        "collaborator_implementation_branch_intake.implementation_branch_observed",
+        False,
+    ),
+    (
+        "collaborator_implementation_branch_intake.implementation_pr_observed",
+        False,
+    ),
+    (
+        "collaborator_implementation_branch_intake.merge_policy",
+        "intake_before_merge",
+    ),
+    ("collaborator_implementation_branch_intake.direct_merge_allowed", False),
+    ("collaborator_implementation_branch_intake.real_midi", "absent"),
+    ("collaborator_implementation_branch_intake.port_opening", "absent"),
+    ("collaborator_implementation_branch_intake.active_behavior", "absent"),
+    ("collaborator_implementation_branch_intake.hardware_behavior", "absent"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -188,6 +231,9 @@ def build_project_status_report():
         "collaborator_review_intake": COLLABORATOR_REVIEW_INTAKE_STATUS,
         "collaborator_review_triage_template": (
             COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS
+        ),
+        "collaborator_implementation_branch_intake": (
+            COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_STATUS
         ),
         "closeout": CLOSEOUT_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
@@ -259,6 +305,15 @@ def summarize_project_status_report(report=None):
         "collaborator_review_triage_template": source_report[
             "collaborator_review_triage_template"
         ]["status"],
+        "collaborator_implementation_branch_intake": source_report[
+            "collaborator_implementation_branch_intake"
+        ]["status"],
+        "external_implementation_branch_observed": source_report[
+            "collaborator_implementation_branch_intake"
+        ]["implementation_branch_observed"],
+        "external_implementation_pr_observed": source_report[
+            "collaborator_implementation_branch_intake"
+        ]["implementation_pr_observed"],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
@@ -291,6 +346,18 @@ def format_project_status_summary(report=None):
         (
             "- collaborator_review_triage_template: "
             f"{summary['collaborator_review_triage_template']}"
+        ),
+        (
+            "- collaborator_implementation_branch_intake: "
+            f"{summary['collaborator_implementation_branch_intake']}"
+        ),
+        (
+            "- external_implementation_branch_observed: "
+            f"{summary['external_implementation_branch_observed']}"
+        ),
+        (
+            "- external_implementation_pr_observed: "
+            f"{summary['external_implementation_pr_observed']}"
         ),
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
@@ -337,6 +404,7 @@ def format_project_status_report(report=None):
     api = source_report["public_api_hardening"]
     collaborator = source_report["collaborator_review_intake"]
     triage_template = source_report["collaborator_review_triage_template"]
+    implementation_intake = source_report["collaborator_implementation_branch_intake"]
 
     lines = [
         source_report["title"],
@@ -426,6 +494,26 @@ def format_project_status_report(report=None):
                 "- package_metadata_changes: "
                 f"{triage_template['package_metadata_changes']}"
             ),
+            "Collaborator Implementation Branch Intake:",
+            f"- status: {implementation_intake['status']}",
+            f"- collaborator: {implementation_intake['collaborator']}",
+            f"- request_packet_path: {implementation_intake['request_packet_path']}",
+            f"- intake_protocol_path: {implementation_intake['intake_protocol_path']}",
+            (
+                "- implementation_branch_observed: "
+                f"{implementation_intake['implementation_branch_observed']}"
+            ),
+            (
+                "- implementation_pr_observed: "
+                f"{implementation_intake['implementation_pr_observed']}"
+            ),
+            "- required_info: " + ", ".join(implementation_intake["required_info"]),
+            f"- merge_policy: {implementation_intake['merge_policy']}",
+            f"- direct_merge_allowed: {implementation_intake['direct_merge_allowed']}",
+            f"- real_midi: {implementation_intake['real_midi']}",
+            f"- port_opening: {implementation_intake['port_opening']}",
+            f"- active_behavior: {implementation_intake['active_behavior']}",
+            f"- hardware_behavior: {implementation_intake['hardware_behavior']}",
             "Closeout:",
         ]
     )
