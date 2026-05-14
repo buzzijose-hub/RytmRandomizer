@@ -12,6 +12,11 @@ RytmRandomizer Project Status Check
 - runtime_plan.runtime_execution: absent
 - active_boundary.active_cli_behavior: absent
 - mock_runtime_active_bridge.emits_messages: False
+- public_api_hardening.status: checkpointed
+- public_api_hardening.exports_documented: True
+- public_api_hardening.real_midi: absent
+- public_api_hardening.port_opening: absent
+- public_api_hardening.active_behavior: absent
 - source.in_memory_only: True
 - source.writes_files: False
 - closeout.failure_propagation: guarded

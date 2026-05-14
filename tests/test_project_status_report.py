@@ -100,6 +100,28 @@ def test_project_status_report_records_absent_runtime_and_hardware_boundaries():
     }
 
 
+def test_project_status_report_records_public_api_hardening_checkpoint():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["public_api_hardening"] == {
+        "status": "checkpointed",
+        "module_count": 5,
+        "exports_documented": True,
+        "modules": (
+            "rytm_randomizer.active_boundary",
+            "rytm_randomizer.active_boundary_report",
+            "rytm_randomizer.runtime_plan",
+            "rytm_randomizer.runtime_plan_report",
+            "rytm_randomizer.mock_runtime_active_bridge_report",
+        ),
+        "real_midi": "absent",
+        "port_opening": "absent",
+        "active_behavior": "absent",
+    }
+
+
 def test_project_status_summary_is_deterministic():
     from rytm_randomizer.project_status_report import summarize_project_status_report
 
@@ -113,6 +135,8 @@ def test_project_status_summary_is_deterministic():
         "runtime_supported_count": 2,
         "active_boundary_candidate": "group_profile:2",
         "mock_bridge_candidate": "2",
+        "public_api_hardening": "checkpointed",
+        "public_api_module_count": 5,
         "real_midi": "absent",
         "port_opening": "absent",
         "active_execution": "absent",
@@ -138,6 +162,8 @@ def test_project_status_summary_lines_are_deterministic():
         "- runtime_supported_count: 2",
         "- active_boundary_candidate: group_profile:2",
         "- mock_bridge_candidate: 2",
+        "- public_api_hardening: checkpointed",
+        "- public_api_module_count: 5",
         "- real_midi: absent",
         "- port_opening: absent",
         "- active_execution: absent",
@@ -168,6 +194,11 @@ def test_project_status_check_passes_for_current_report():
             "runtime_plan.runtime_execution": "absent",
             "active_boundary.active_cli_behavior": "absent",
             "mock_runtime_active_bridge.emits_messages": False,
+            "public_api_hardening.status": "checkpointed",
+            "public_api_hardening.exports_documented": True,
+            "public_api_hardening.real_midi": "absent",
+            "public_api_hardening.port_opening": "absent",
+            "public_api_hardening.active_behavior": "absent",
             "source.in_memory_only": True,
             "source.writes_files": False,
             "closeout.failure_propagation": "guarded",
@@ -225,6 +256,11 @@ def test_project_status_check_lines_are_deterministic():
         "- runtime_plan.runtime_execution: absent",
         "- active_boundary.active_cli_behavior: absent",
         "- mock_runtime_active_bridge.emits_messages: False",
+        "- public_api_hardening.status: checkpointed",
+        "- public_api_hardening.exports_documented: True",
+        "- public_api_hardening.real_midi: absent",
+        "- public_api_hardening.port_opening: absent",
+        "- public_api_hardening.active_behavior: absent",
         "- source.in_memory_only: True",
         "- source.writes_files: False",
         "- closeout.failure_propagation: guarded",
@@ -286,6 +322,20 @@ def test_formatted_project_status_report_is_deterministic():
         "- rejected_count: 7",
         "- parked_count: 1",
         "- emits_messages: False",
+        "Public API Hardening:",
+        "- status: checkpointed",
+        "- module_count: 5",
+        "- exports_documented: True",
+        (
+            "- modules: rytm_randomizer.active_boundary, "
+            "rytm_randomizer.active_boundary_report, "
+            "rytm_randomizer.runtime_plan, "
+            "rytm_randomizer.runtime_plan_report, "
+            "rytm_randomizer.mock_runtime_active_bridge_report"
+        ),
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_behavior: absent",
         "Closeout:",
         "- closeout_contract: present",
         "- failure_propagation: guarded",
@@ -323,6 +373,9 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert parsed["runtime_plan"]["runtime_execution"] == "absent"
     assert parsed["active_boundary"]["active_cli_behavior"] == "absent"
     assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
+    assert parsed["public_api_hardening"]["status"] == "checkpointed"
+    assert parsed["public_api_hardening"]["module_count"] == 5
+    assert parsed["public_api_hardening"]["exports_documented"] is True
     assert parsed["safety"]["real_midi"] == "absent"
     assert parsed["safety"]["hardware_required"] is False
     assert parsed["source"]["in_memory_only"] is True
@@ -336,12 +389,14 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     report["phase"]["name"] = "MUTATED"
     report["behavior_parity"]["accepted_packet_count"] = 0
     report["passive_cli_commands"] = ()
+    report["public_api_hardening"]["status"] = "MUTATED"
 
     fresh_report = build_project_status_report()
 
     assert fresh_report["phase"]["name"] == "Passive/Mock Runtime Visibility Phase"
     assert fresh_report["behavior_parity"]["accepted_packet_count"] == 12
     assert "project-status-report" in fresh_report["passive_cli_commands"]
+    assert fresh_report["public_api_hardening"]["status"] == "checkpointed"
 
 
 def test_project_status_report_imports_no_real_midi_libraries():
@@ -370,6 +425,7 @@ if __name__ == "__main__":
     test_project_status_report_summarizes_current_project_state()
     test_project_status_report_records_passive_cli_visibility()
     test_project_status_report_records_absent_runtime_and_hardware_boundaries()
+    test_project_status_report_records_public_api_hardening_checkpoint()
     test_project_status_summary_is_deterministic()
     test_project_status_summary_lines_are_deterministic()
     test_project_status_check_passes_for_current_report()

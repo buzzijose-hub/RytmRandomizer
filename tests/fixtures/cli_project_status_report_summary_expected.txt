@@ -7,6 +7,8 @@ RytmRandomizer Project Status Summary
 - runtime_supported_count: 2
 - active_boundary_candidate: group_profile:2
 - mock_bridge_candidate: 2
+- public_api_hardening: checkpointed
+- public_api_module_count: 5
 - real_midi: absent
 - port_opening: absent
 - active_execution: absent

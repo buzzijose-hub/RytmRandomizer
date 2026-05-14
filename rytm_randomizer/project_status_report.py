@@ -48,6 +48,22 @@ CLOSEOUT_STATUS = {
     "closeout_script": "Scripts/closeout_check.ps1",
 }
 
+PUBLIC_API_HARDENING_STATUS = {
+    "status": "checkpointed",
+    "module_count": 5,
+    "exports_documented": True,
+    "modules": (
+        "rytm_randomizer.active_boundary",
+        "rytm_randomizer.active_boundary_report",
+        "rytm_randomizer.runtime_plan",
+        "rytm_randomizer.runtime_plan_report",
+        "rytm_randomizer.mock_runtime_active_bridge_report",
+    ),
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+}
+
 PROJECT_STATUS_SAFETY = {
     "real_midi": "absent",
     "port_opening": "absent",
@@ -74,6 +90,11 @@ PROJECT_STATUS_CHECKS = (
     ("runtime_plan.runtime_execution", "absent"),
     ("active_boundary.active_cli_behavior", "absent"),
     ("mock_runtime_active_bridge.emits_messages", False),
+    ("public_api_hardening.status", "checkpointed"),
+    ("public_api_hardening.exports_documented", True),
+    ("public_api_hardening.real_midi", "absent"),
+    ("public_api_hardening.port_opening", "absent"),
+    ("public_api_hardening.active_behavior", "absent"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -107,6 +128,7 @@ def build_project_status_report():
         "runtime_plan": summarize_runtime_plan_report(),
         "active_boundary": summarize_active_boundary_report(),
         "mock_runtime_active_bridge": summarize_mock_runtime_active_bridge_report(),
+        "public_api_hardening": PUBLIC_API_HARDENING_STATUS,
         "closeout": CLOSEOUT_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
@@ -164,6 +186,10 @@ def summarize_project_status_report(report=None):
         "mock_bridge_candidate": source_report["mock_runtime_active_bridge"][
             "accepted_source_key"
         ],
+        "public_api_hardening": source_report["public_api_hardening"]["status"],
+        "public_api_module_count": source_report["public_api_hardening"][
+            "module_count"
+        ],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
@@ -186,6 +212,8 @@ def format_project_status_summary(report=None):
         f"- runtime_supported_count: {summary['runtime_supported_count']}",
         f"- active_boundary_candidate: {summary['active_boundary_candidate']}",
         f"- mock_bridge_candidate: {summary['mock_bridge_candidate']}",
+        f"- public_api_hardening: {summary['public_api_hardening']}",
+        f"- public_api_module_count: {summary['public_api_module_count']}",
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
         f"- active_execution: {summary['active_execution']}",
@@ -228,6 +256,7 @@ def format_project_status_report(report=None):
     runtime = source_report["runtime_plan"]
     active = source_report["active_boundary"]
     bridge = source_report["mock_runtime_active_bridge"]
+    api = source_report["public_api_hardening"]
 
     lines = [
         source_report["title"],
@@ -270,6 +299,14 @@ def format_project_status_report(report=None):
             f"- rejected_count: {bridge['rejected_count']}",
             f"- parked_count: {bridge['parked_count']}",
             f"- emits_messages: {bridge['emits_messages']}",
+            "Public API Hardening:",
+            f"- status: {api['status']}",
+            f"- module_count: {api['module_count']}",
+            f"- exports_documented: {api['exports_documented']}",
+            "- modules: " + ", ".join(api["modules"]),
+            f"- real_midi: {api['real_midi']}",
+            f"- port_opening: {api['port_opening']}",
+            f"- active_behavior: {api['active_behavior']}",
             "Closeout:",
         ]
     )
