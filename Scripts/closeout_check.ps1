@@ -106,6 +106,11 @@ Register-CloseoutStepExit "Command Lookup"
 Register-CloseoutStepExit "Registry"
 
 "" | Add-Content $summary
+"=== Test: Shared Data Registry ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_data_registry.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_data_registry.log" | Add-Content $summary
+Register-CloseoutStepExit "Shared Data Registry"
+
+"" | Add-Content $summary
 "=== Test: Registry Report ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_registry_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_registry_report.log" | Add-Content $summary
 Register-CloseoutStepExit "Registry Report"

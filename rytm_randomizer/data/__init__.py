@@ -1,6 +1,6 @@
-"""Compatibility exports for shared passive constants."""
+"""Shared passive data namespace for RytmRandomizer."""
 
-from .data.constants import (
+from .constants import (
     DEFAULT_MIDI_CHANNEL,
     DEFAULT_TARGET_PAD,
     GUARDED_MAIN_PROMPT_DEPTH_COMMANDS,
@@ -12,16 +12,30 @@ from .data.constants import (
     PAD_TO_MIDI_CHANNEL,
     SUPPORTED_PADS,
 )
+from .profiles import (
+    GROUP_LAYOUT,
+    GROUP_PROFILE_METADATA,
+    PAD_1_DEFAULT_PROFILE,
+    PAD_3_SY_RAW_CC_MAP,
+    PAD_PROFILES,
+)
+from .scenes import SCENE_COMMANDS
 
 __all__ = [
     "DEFAULT_MIDI_CHANNEL",
     "DEFAULT_TARGET_PAD",
+    "GROUP_LAYOUT",
+    "GROUP_PROFILE_METADATA",
     "GUARDED_MAIN_PROMPT_DEPTH_COMMANDS",
     "MACHINE_CC",
     "OUT_OF_SCOPE_PAD_GUARDRAIL",
     "OUT_OF_SCOPE_PADS",
     "PAD1_DEFAULT_HOME",
+    "PAD_1_DEFAULT_PROFILE",
+    "PAD_3_SY_RAW_CC_MAP",
+    "PAD_PROFILES",
     "PAD_SELECTION_LABELS",
     "PAD_TO_MIDI_CHANNEL",
+    "SCENE_COMMANDS",
     "SUPPORTED_PADS",
 ]
