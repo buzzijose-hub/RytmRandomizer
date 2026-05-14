@@ -360,9 +360,12 @@ def test_behavior_anchor_profile_report_exposes_no_active_behavior_names():
     assert "MidiPortProvider" not in exposed_names
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
-        assert not (PROJECT_ROOT / filename).exists()
+def test_packaging_uses_pyproject_not_legacy_setup():
+    # WS-A introduced PEP 621 packaging. The project ships pyproject.toml as the
+    # single source of packaging truth; legacy setup.py / setup.cfg must not be used.
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for legacy in ("setup.py", "setup.cfg"):
+        assert not (PROJECT_ROOT / legacy).exists()
 
 
 if __name__ == "__main__":
@@ -379,4 +382,4 @@ if __name__ == "__main__":
     test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_unchanged()
     test_pz_readiness_and_profile_4_behavior_remain_safe()
     test_behavior_anchor_profile_report_exposes_no_active_behavior_names()
-    test_no_package_metadata_files_are_introduced()
+    test_packaging_uses_pyproject_not_legacy_setup()

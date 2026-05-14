@@ -355,9 +355,12 @@ def test_no_real_midi_library_is_imported():
     assert "rtmidi" not in sys.modules
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
-        assert not (PROJECT_ROOT / filename).exists()
+def test_packaging_uses_pyproject_not_legacy_setup():
+    # WS-A introduced PEP 621 packaging. The project ships pyproject.toml as the
+    # single source of packaging truth; legacy setup.py / setup.cfg must not be used.
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for legacy in ("setup.py", "setup.cfg"):
+        assert not (PROJECT_ROOT / legacy).exists()
 
 
 def test_behavior_pad4_lane_exposes_no_active_behavior_names():
@@ -411,7 +414,7 @@ if __name__ == "__main__":
     test_packet_1_p4m_menu_behavior_remains_unchanged()
     test_passive_cli_behavior_remains_unchanged()
     test_no_real_midi_library_is_imported()
-    test_no_package_metadata_files_are_introduced()
+    test_packaging_uses_pyproject_not_legacy_setup()
     test_behavior_pad4_lane_exposes_no_active_behavior_names()
     test_behavior_pad4_lane_exposes_explicit_public_api()
     test_no_out_of_scope_support_is_exposed()
