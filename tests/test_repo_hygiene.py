@@ -58,3 +58,13 @@ def test_codeql_workflow_is_manual_until_code_scanning_is_enabled():
     assert "pull_request:" not in workflow
     assert "push:" not in workflow
     assert "schedule:" not in workflow
+
+
+def test_test_workflow_installs_linux_midi_build_dependency():
+    workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Install Ubuntu MIDI build dependencies" in workflow
+    assert "runner.os == 'Linux'" in workflow
+    assert "libasound2-dev" in workflow
