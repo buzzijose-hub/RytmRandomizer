@@ -54,7 +54,8 @@ python -m rytm_randomizer.cli runtime-plan-report
 Installed console entry point:
 
 ```powershell
-rytm-randomizer
+rytm-randomizer --help
+rytm-randomizer project-status-report --summary
 ```
 
 Current hardware-validated reference script:

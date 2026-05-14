@@ -41,9 +41,71 @@ def run_cli(*args):
     )
 
 
+def run_app_entrypoint(*args):
+    script = "\n".join(
+        [
+            "from rytm_randomizer.app import main",
+            f"raise SystemExit(main({list(args)!r}))",
+        ]
+    )
+    return subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
 def test_importing_cli_prints_nothing():
     result = subprocess.run(
         [sys.executable, "-c", "import rytm_randomizer.cli"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_app_entrypoint_delegates_to_passive_cli_help():
+    result = run_app_entrypoint("--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text("cli_help_expected.txt")
+    assert result.stderr == ""
+
+
+def test_app_entrypoint_delegates_to_passive_cli_report():
+    result = run_app_entrypoint("project-status-report", "--summary")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_project_status_report_summary_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_app_entrypoint_imports_no_real_midi_libraries():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "from contextlib import redirect_stdout\n"
+                "from io import StringIO\n"
+                "from rytm_randomizer.app import main\n"
+                "with redirect_stdout(StringIO()):\n"
+                "    code = main(['project-status-report', '--summary'])\n"
+                "assert code == 0\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
