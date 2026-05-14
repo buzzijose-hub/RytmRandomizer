@@ -31,7 +31,7 @@ def test_project_status_report_summarizes_current_project_state():
 
     assert report["title"] == "RytmRandomizer Project Status Report"
     assert report["phase"] == {
-        "name": "Passive/Mock Runtime Visibility Phase",
+        "name": "Convergence Phase (armed behind --arm flag)",
         "technical_name": "RytmRandomizer",
         "creative_identity_candidate": "KitForge",
         "repository_name": "RytmRandomizer",
@@ -80,23 +80,43 @@ def test_project_status_report_records_passive_cli_visibility():
     )
 
 
-def test_project_status_report_records_absent_runtime_and_hardware_boundaries():
+def test_project_status_report_tracks_convergence_behind_arm_flag():
     from rytm_randomizer.project_status_report import build_project_status_report
 
     report = build_project_status_report()
 
+    # Active execution now EXISTS in the package -- but only behind --arm.
+    # The default landing mode stays passive, and the validated monolith is
+    # still untouched. This report tracks that progress instead of forbidding
+    # it.
     assert report["safety"] == {
-        "real_midi": "absent",
-        "port_opening": "absent",
-        "active_execution": "absent",
-        "dispatch": "absent",
-        "command_execution": "absent",
+        "real_midi": "present_behind_arm_flag",
+        "port_opening": "present_behind_arm_flag",
+        "active_execution": "present_behind_arm_flag",
+        "dispatch": "present_behind_arm_flag",
+        "command_execution": "present_behind_arm_flag",
+        "default_mode": "passive",
         "hardware_required": False,
-        "hardware_behavior": "absent",
+        "hardware_behavior": "opt_in_behind_arm_flag",
         "analog_four_support": "absent",
         "pads_5_12_support": "absent",
         "v134_reference": "untouched",
         "package_metadata": "untouched",
+    }
+
+    assert report["convergence"] == {
+        "active_execution": "present",
+        "active_execution_gate": "--arm flag",
+        "entry_point": "rytm_randomizer.app",
+        "default_mode": "passive",
+        "modes": ("default", "arm", "dry-run"),
+        "active_modes_present": 2,
+        "total_modes": 3,
+        "real_midi_provider": (
+            "rytm_randomizer.mido_provider.MidoMidiPortProvider"
+        ),
+        "interactive_logic_owner": "rytm_hybrid_randomizer_v134",
+        "interactive_logic_converged": False,
     }
 
 
@@ -105,7 +125,7 @@ def test_project_status_summary_is_deterministic():
 
     assert summarize_project_status_report() == {
         "title": "RytmRandomizer Project Status Report",
-        "phase_name": "Passive/Mock Runtime Visibility Phase",
+        "phase_name": "Convergence Phase (armed behind --arm flag)",
         "creative_identity_candidate": "KitForge",
         "passive_cli_command_count": 20,
         "accepted_packet_count": 12,
@@ -113,11 +133,15 @@ def test_project_status_summary_is_deterministic():
         "runtime_supported_count": 2,
         "active_boundary_candidate": "group_profile:2",
         "mock_bridge_candidate": "2",
-        "real_midi": "absent",
-        "port_opening": "absent",
-        "active_execution": "absent",
+        "real_midi": "present_behind_arm_flag",
+        "port_opening": "present_behind_arm_flag",
+        "active_execution": "present_behind_arm_flag",
+        "default_mode": "passive",
         "hardware_required": False,
         "v134_reference": "untouched",
+        "active_execution_gate": "--arm flag",
+        "active_modes_present": 2,
+        "total_modes": 3,
     }
 
 
@@ -130,7 +154,7 @@ def test_project_status_summary_lines_are_deterministic():
     assert first == second
     assert first == [
         "RytmRandomizer Project Status Summary",
-        "- phase_name: Passive/Mock Runtime Visibility Phase",
+        "- phase_name: Convergence Phase (armed behind --arm flag)",
         "- creative_identity_candidate: KitForge",
         "- passive_cli_command_count: 20",
         "- accepted_packet_count: 12",
@@ -138,9 +162,13 @@ def test_project_status_summary_lines_are_deterministic():
         "- runtime_supported_count: 2",
         "- active_boundary_candidate: group_profile:2",
         "- mock_bridge_candidate: 2",
-        "- real_midi: absent",
-        "- port_opening: absent",
-        "- active_execution: absent",
+        "- real_midi: present_behind_arm_flag",
+        "- port_opening: present_behind_arm_flag",
+        "- active_execution: present_behind_arm_flag",
+        "- active_execution_gate: --arm flag",
+        "- default_mode: passive",
+        "- active_modes_present: 2",
+        "- total_modes: 3",
         "- hardware_required: False",
         "- v134_reference: untouched",
     ]
@@ -157,17 +185,18 @@ def test_project_status_check_passes_for_current_report():
         "failure_count": 0,
         "failures": [],
         "checked": {
-            "safety.real_midi": "absent",
-            "safety.port_opening": "absent",
-            "safety.active_execution": "absent",
-            "safety.command_execution": "absent",
-            "safety.dispatch": "absent",
+            "safety.real_midi": "present_behind_arm_flag",
+            "safety.port_opening": "present_behind_arm_flag",
+            "safety.active_execution": "present_behind_arm_flag",
+            "safety.command_execution": "present_behind_arm_flag",
+            "safety.dispatch": "present_behind_arm_flag",
+            "safety.default_mode": "passive",
             "safety.hardware_required": False,
             "safety.v134_reference": "untouched",
             "safety.package_metadata": "untouched",
-            "runtime_plan.runtime_execution": "absent",
-            "active_boundary.active_cli_behavior": "absent",
-            "mock_runtime_active_bridge.emits_messages": False,
+            "convergence.active_execution": "present",
+            "convergence.active_execution_gate": "--arm flag",
+            "convergence.default_mode": "passive",
             "source.in_memory_only": True,
             "source.writes_files": False,
             "closeout.failure_propagation": "guarded",
@@ -182,7 +211,9 @@ def test_project_status_check_fails_for_mutated_unsafe_report():
     )
 
     report = build_project_status_report()
-    report["safety"]["real_midi"] = "present"
+    # Convergence invariants the check still guards: the default landing mode
+    # must stay passive, and the report must not write files.
+    report["safety"]["default_mode"] = "armed"
     report["source"]["writes_files"] = True
 
     check = check_project_status_report(report)
@@ -191,9 +222,9 @@ def test_project_status_check_fails_for_mutated_unsafe_report():
     assert check["failure_count"] == 2
     assert check["failures"] == [
         {
-            "path": "safety.real_midi",
-            "expected": "absent",
-            "actual": "present",
+            "path": "safety.default_mode",
+            "expected": "passive",
+            "actual": "armed",
         },
         {
             "path": "source.writes_files",
@@ -214,17 +245,18 @@ def test_project_status_check_lines_are_deterministic():
         "RytmRandomizer Project Status Check",
         "- ok: True",
         "- failure_count: 0",
-        "- safety.real_midi: absent",
-        "- safety.port_opening: absent",
-        "- safety.active_execution: absent",
-        "- safety.command_execution: absent",
-        "- safety.dispatch: absent",
+        "- safety.real_midi: present_behind_arm_flag",
+        "- safety.port_opening: present_behind_arm_flag",
+        "- safety.active_execution: present_behind_arm_flag",
+        "- safety.command_execution: present_behind_arm_flag",
+        "- safety.dispatch: present_behind_arm_flag",
+        "- safety.default_mode: passive",
         "- safety.hardware_required: False",
         "- safety.v134_reference: untouched",
         "- safety.package_metadata: untouched",
-        "- runtime_plan.runtime_execution: absent",
-        "- active_boundary.active_cli_behavior: absent",
-        "- mock_runtime_active_bridge.emits_messages: False",
+        "- convergence.active_execution: present",
+        "- convergence.active_execution_gate: --arm flag",
+        "- convergence.default_mode: passive",
         "- source.in_memory_only: True",
         "- source.writes_files: False",
         "- closeout.failure_propagation: guarded",
@@ -241,7 +273,7 @@ def test_formatted_project_status_report_is_deterministic():
     assert first == [
         "RytmRandomizer Project Status Report",
         "Phase:",
-        "- name: Passive/Mock Runtime Visibility Phase",
+        "- name: Convergence Phase (armed behind --arm flag)",
         "- technical_name: RytmRandomizer",
         "- creative_identity_candidate: KitForge",
         "Passive CLI Visibility:",
@@ -290,14 +322,27 @@ def test_formatted_project_status_report_is_deterministic():
         "- closeout_contract: present",
         "- failure_propagation: guarded",
         "- closeout_script: Scripts/closeout_check.ps1",
+        "Convergence:",
+        "- active_execution: present",
+        "- active_execution_gate: --arm flag",
+        "- entry_point: rytm_randomizer.app",
+        "- default_mode: passive",
+        "- modes: default, arm, dry-run",
+        "- active_modes_present: 2",
+        "- total_modes: 3",
+        "- real_midi_provider: "
+        "rytm_randomizer.mido_provider.MidoMidiPortProvider",
+        "- interactive_logic_owner: rytm_hybrid_randomizer_v134",
+        "- interactive_logic_converged: False",
         "Safety:",
-        "- real_midi: absent",
-        "- port_opening: absent",
-        "- active_execution: absent",
-        "- dispatch: absent",
-        "- command_execution: absent",
+        "- real_midi: present_behind_arm_flag",
+        "- port_opening: present_behind_arm_flag",
+        "- active_execution: present_behind_arm_flag",
+        "- dispatch: present_behind_arm_flag",
+        "- command_execution: present_behind_arm_flag",
+        "- default_mode: passive",
         "- hardware_required: False",
-        "- hardware_behavior: absent",
+        "- hardware_behavior: opt_in_behind_arm_flag",
         "- analog_four_support: absent",
         "- pads_5_12_support: absent",
         "- v134_reference: untouched",
@@ -317,14 +362,18 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert first == second
     parsed = json.loads(first)
     assert parsed["title"] == "RytmRandomizer Project Status Report"
-    assert parsed["phase"]["name"] == "Passive/Mock Runtime Visibility Phase"
+    assert parsed["phase"]["name"] == "Convergence Phase (armed behind --arm flag)"
     assert parsed["phase"]["creative_identity_candidate"] == "KitForge"
     assert parsed["behavior_parity"]["accepted_packet_count"] == 12
     assert parsed["runtime_plan"]["runtime_execution"] == "absent"
     assert parsed["active_boundary"]["active_cli_behavior"] == "absent"
     assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
-    assert parsed["safety"]["real_midi"] == "absent"
+    assert parsed["safety"]["real_midi"] == "present_behind_arm_flag"
+    assert parsed["safety"]["default_mode"] == "passive"
     assert parsed["safety"]["hardware_required"] is False
+    assert parsed["convergence"]["active_execution"] == "present"
+    assert parsed["convergence"]["active_execution_gate"] == "--arm flag"
+    assert parsed["convergence"]["default_mode"] == "passive"
     assert parsed["source"]["in_memory_only"] is True
     assert parsed["source"]["writes_files"] is False
 
@@ -339,7 +388,10 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
 
     fresh_report = build_project_status_report()
 
-    assert fresh_report["phase"]["name"] == "Passive/Mock Runtime Visibility Phase"
+    assert (
+        fresh_report["phase"]["name"]
+        == "Convergence Phase (armed behind --arm flag)"
+    )
     assert fresh_report["behavior_parity"]["accepted_packet_count"] == 12
     assert "project-status-report" in fresh_report["passive_cli_commands"]
 
@@ -369,7 +421,7 @@ if __name__ == "__main__":
     test_importing_project_status_report_prints_nothing()
     test_project_status_report_summarizes_current_project_state()
     test_project_status_report_records_passive_cli_visibility()
-    test_project_status_report_records_absent_runtime_and_hardware_boundaries()
+    test_project_status_report_tracks_convergence_behind_arm_flag()
     test_project_status_summary_is_deterministic()
     test_project_status_summary_lines_are_deterministic()
     test_project_status_check_passes_for_current_report()

@@ -1,8 +1,16 @@
 """Read-only project status report summary.
 
-This module is passive and in-memory only. It reports current project status
-without opening ports, sending MIDI, wiring active execution, dispatching
-commands, mutating runtime state, writing files, or touching hardware.
+This module is passive and in-memory only: it reports project status without
+opening ports, sending MIDI, dispatching commands, mutating runtime state,
+writing files, or touching hardware.
+
+As of the WS-H convergence wave the *package* is no longer passive forever:
+``rytm_randomizer.app`` exposes a real MIDI provider and an interactive sender
+behind an explicit ``--arm`` flag (with ``--dry-run`` against the mock). This
+report's job is therefore to **track convergence progress** -- it measures how
+far the package has come toward owning the active runtime, instead of asserting
+the package stays inert. The report module itself remains passive; only what it
+*describes* has advanced.
 """
 
 from __future__ import annotations
@@ -35,7 +43,7 @@ PASSIVE_CLI_COMMANDS = (
 )
 
 PROJECT_PHASE = {
-    "name": "Passive/Mock Runtime Visibility Phase",
+    "name": "Convergence Phase (armed behind --arm flag)",
     "technical_name": "RytmRandomizer",
     "creative_identity_candidate": "KitForge",
     "repository_name": "RytmRandomizer",
@@ -48,32 +56,54 @@ CLOSEOUT_STATUS = {
     "closeout_script": "Scripts/closeout_check.ps1",
 }
 
+# Convergence status values intentionally describe the *package* as it stands
+# after the WS-H wave: real MIDI and active execution now exist, but only
+# behind the explicit ``--arm`` flag. ``default_mode`` stays passive so the
+# safe landing state is unchanged. The validated monolith is still untouched.
 PROJECT_STATUS_SAFETY = {
-    "real_midi": "absent",
-    "port_opening": "absent",
-    "active_execution": "absent",
-    "dispatch": "absent",
-    "command_execution": "absent",
+    "real_midi": "present_behind_arm_flag",
+    "port_opening": "present_behind_arm_flag",
+    "active_execution": "present_behind_arm_flag",
+    "dispatch": "present_behind_arm_flag",
+    "command_execution": "present_behind_arm_flag",
+    "default_mode": "passive",
     "hardware_required": False,
-    "hardware_behavior": "absent",
+    "hardware_behavior": "opt_in_behind_arm_flag",
     "analog_four_support": "absent",
     "pads_5_12_support": "absent",
     "v134_reference": "untouched",
     "package_metadata": "untouched",
 }
 
+# Convergence tracking: the package entry point now has three explicit modes.
+# ``armed`` and ``dry_run`` carry active execution; ``default`` stays passive.
+# ``active_modes_present`` / ``total_modes`` give a simple progress ratio.
+CONVERGENCE_STATUS = {
+    "active_execution": "present",
+    "active_execution_gate": "--arm flag",
+    "entry_point": "rytm_randomizer.app",
+    "default_mode": "passive",
+    "modes": ("default", "arm", "dry-run"),
+    "active_modes_present": 2,
+    "total_modes": 3,
+    "real_midi_provider": "rytm_randomizer.mido_provider.MidoMidiPortProvider",
+    "interactive_logic_owner": "rytm_hybrid_randomizer_v134",
+    "interactive_logic_converged": False,
+}
+
 PROJECT_STATUS_CHECKS = (
-    ("safety.real_midi", "absent"),
-    ("safety.port_opening", "absent"),
-    ("safety.active_execution", "absent"),
-    ("safety.command_execution", "absent"),
-    ("safety.dispatch", "absent"),
+    ("safety.real_midi", "present_behind_arm_flag"),
+    ("safety.port_opening", "present_behind_arm_flag"),
+    ("safety.active_execution", "present_behind_arm_flag"),
+    ("safety.command_execution", "present_behind_arm_flag"),
+    ("safety.dispatch", "present_behind_arm_flag"),
+    ("safety.default_mode", "passive"),
     ("safety.hardware_required", False),
     ("safety.v134_reference", "untouched"),
     ("safety.package_metadata", "untouched"),
-    ("runtime_plan.runtime_execution", "absent"),
-    ("active_boundary.active_cli_behavior", "absent"),
-    ("mock_runtime_active_bridge.emits_messages", False),
+    ("convergence.active_execution", "present"),
+    ("convergence.active_execution_gate", "--arm flag"),
+    ("convergence.default_mode", "passive"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -108,6 +138,7 @@ def build_project_status_report():
         "active_boundary": summarize_active_boundary_report(),
         "mock_runtime_active_bridge": summarize_mock_runtime_active_bridge_report(),
         "closeout": CLOSEOUT_STATUS,
+        "convergence": CONVERGENCE_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
             "in_memory_only": True,
@@ -167,8 +198,16 @@ def summarize_project_status_report(report=None):
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
+        "default_mode": source_report["safety"]["default_mode"],
         "hardware_required": source_report["safety"]["hardware_required"],
         "v134_reference": source_report["safety"]["v134_reference"],
+        "active_execution_gate": source_report["convergence"][
+            "active_execution_gate"
+        ],
+        "active_modes_present": source_report["convergence"][
+            "active_modes_present"
+        ],
+        "total_modes": source_report["convergence"]["total_modes"],
     }
 
 
@@ -189,6 +228,10 @@ def format_project_status_summary(report=None):
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
         f"- active_execution: {summary['active_execution']}",
+        f"- active_execution_gate: {summary['active_execution_gate']}",
+        f"- default_mode: {summary['default_mode']}",
+        f"- active_modes_present: {summary['active_modes_present']}",
+        f"- total_modes: {summary['total_modes']}",
         f"- hardware_required: {summary['hardware_required']}",
         f"- v134_reference: {summary['v134_reference']}",
     ]
@@ -275,6 +318,12 @@ def format_project_status_report(report=None):
     )
 
     for key, value in source_report["closeout"].items():
+        lines.append(f"- {key}: {value}")
+
+    lines.append("Convergence:")
+    for key, value in source_report["convergence"].items():
+        if isinstance(value, tuple):
+            value = ", ".join(str(item) for item in value)
         lines.append(f"- {key}: {value}")
 
     lines.append("Safety:")

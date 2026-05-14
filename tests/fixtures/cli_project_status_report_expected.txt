@@ -1,6 +1,6 @@
 RytmRandomizer Project Status Report
 Phase:
-- name: Passive/Mock Runtime Visibility Phase
+- name: Convergence Phase (armed behind --arm flag)
 - technical_name: RytmRandomizer
 - creative_identity_candidate: KitForge
 Passive CLI Visibility:
@@ -49,14 +49,26 @@ Closeout:
 - closeout_contract: present
 - failure_propagation: guarded
 - closeout_script: Scripts/closeout_check.ps1
+Convergence:
+- active_execution: present
+- active_execution_gate: --arm flag
+- entry_point: rytm_randomizer.app
+- default_mode: passive
+- modes: default, arm, dry-run
+- active_modes_present: 2
+- total_modes: 3
+- real_midi_provider: rytm_randomizer.mido_provider.MidoMidiPortProvider
+- interactive_logic_owner: rytm_hybrid_randomizer_v134
+- interactive_logic_converged: False
 Safety:
-- real_midi: absent
-- port_opening: absent
-- active_execution: absent
-- dispatch: absent
-- command_execution: absent
+- real_midi: present_behind_arm_flag
+- port_opening: present_behind_arm_flag
+- active_execution: present_behind_arm_flag
+- dispatch: present_behind_arm_flag
+- command_execution: present_behind_arm_flag
+- default_mode: passive
 - hardware_required: False
-- hardware_behavior: absent
+- hardware_behavior: opt_in_behind_arm_flag
 - analog_four_support: absent
 - pads_5_12_support: absent
 - v134_reference: untouched
