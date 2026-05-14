@@ -2,11 +2,9 @@
 
 import sys
 
-from .mock_runtime_active_bridge_report import format_mock_runtime_active_bridge_report
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
 from .registry_report import format_registry_report
-from .runtime_plan_report import format_runtime_plan_report
 
 
 USAGE = (
@@ -823,6 +821,8 @@ def main(argv=None):
         return 0
 
     if args == ["runtime-plan-report"]:
+        from .runtime_plan_report import format_runtime_plan_report
+
         sys.stdout.write("\n".join(format_runtime_plan_report()))
         sys.stdout.write("\n")
         return 0
@@ -835,6 +835,10 @@ def main(argv=None):
         return 0
 
     if args == ["mock-runtime-active-bridge-report"]:
+        from .mock_runtime_active_bridge_report import (
+            format_mock_runtime_active_bridge_report,
+        )
+
         sys.stdout.write("\n".join(format_mock_runtime_active_bridge_report()))
         sys.stdout.write("\n")
         return 0
