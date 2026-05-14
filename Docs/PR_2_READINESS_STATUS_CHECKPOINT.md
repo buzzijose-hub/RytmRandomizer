@@ -174,6 +174,17 @@ require separate approval.
 
 Use that checklist before marking PR #2 ready for review or merge.
 
+## Collaborator Implementation Branch Intake Follow-Up
+
+Large collaborator implementation branch intake is now documented in:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md`
+
+Use this protocol if Eddie pushes a separate implementation branch or PR. The
+protocol keeps external implementation work quarantined until branch metadata,
+test results, V1.34 status, MIDI/hardware safety status, and closeout evidence
+are reviewed.
+
 ## Known Follow-Ups
 
 Safe follow-up options:

@@ -1,5 +1,37 @@
 # Next Action
 
+## Latest Collaborator Implementation Branch Intake Protocol
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New intake protocol:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md`
+
+Purpose:
+
+- prepare a safe intake path for Eddie's larger implementation branch
+- require branch name, commit hash, test results, V1.34 status, and MIDI/
+  hardware safety status before integration
+- keep large autonomous implementation work separate from direct merge
+
+Decision:
+
+- Eddie's larger branch has not been observed on the remote yet
+- do not merge large implementation branches directly
+- intake, verify, classify, and split useful work into reviewed packets
+
+Recommended next task:
+
+- wait for Eddie to push the branch or PR
+- then run the intake protocol before merging or cherry-picking anything
+
 ## Latest Collaborator PR Review Checklist
 
 Current review branch:

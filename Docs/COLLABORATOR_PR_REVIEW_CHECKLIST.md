@@ -195,4 +195,11 @@ After review, choose one narrow next slice:
 - plan package publication separately
 - park PR #2 until hardware-facing work is intentionally scheduled
 
+If Eddie provides a separate large implementation branch, intake it through:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md`
+
+Do not merge or cherry-pick from a large implementation branch until that
+intake protocol has been completed.
+
 Hardware remains off.

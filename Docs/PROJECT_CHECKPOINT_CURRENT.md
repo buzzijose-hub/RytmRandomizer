@@ -3,6 +3,44 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Implementation Branch Intake Protocol
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New intake protocol:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md`
+
+The protocol documents how to safely intake Eddie's larger implementation
+branch before review, merge, or cherry-pick decisions.
+
+It records:
+
+- required branch/commit/test information from Eddie
+- safe fetch and diff commands
+- quarantine branch/worktree options
+- verification gate
+- high-risk stop conditions
+- classification buckets for changes
+- integration rule favoring narrow reviewed packets
+
+Decision:
+
+- no collaborator implementation branch was merged
+- Eddie's larger branch has not been observed on the remote yet
+- PR #2 remains the current stable foundation PR
+- future collaborator implementation work must be reviewed through intake
+
+This checkpoint adds no code, tests, MIDI, ports, dispatch, active behavior,
+hardware behavior, package publication, release tag, GitHub admin action, or
+V1.34 reference edit.
+
 ## Collaborator PR Review Checklist
 
 Current review branch:

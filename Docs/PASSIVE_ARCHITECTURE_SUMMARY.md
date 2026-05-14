@@ -2,6 +2,26 @@
 
 Date: May 4, 2026
 
+## Collaborator Implementation Branch Intake Protocol
+
+`Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md` documents how to
+safely intake a large collaborator implementation branch.
+
+The protocol covers:
+
+- required information from Eddie before review
+- fetch and diff commands
+- quarantine branch/worktree review
+- verification gate
+- high-risk stop conditions
+- change classification buckets
+- narrow-packet integration preference
+
+The protocol is documentation-only. It does not merge a collaborator branch,
+change runtime behavior, dispatch commands, add active behavior, send MIDI,
+open MIDI ports, run hardware, publish packages, apply branch protection, or
+change the V1.34 reference.
+
 ## Collaborator PR Review Checklist
 
 `Docs/COLLABORATOR_PR_REVIEW_CHECKLIST.md` gives collaborators a safe PR #2
