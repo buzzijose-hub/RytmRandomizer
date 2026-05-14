@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-aa198d8
+a0ffe67
+
+## Registry Report CLI Import Isolation Checkpoint
+
+`Docs/V134_REGISTRY_REPORT_CLI_IMPORT_ISOLATION_CHECKPOINT.md` records the
+passive CLI import-isolation hardening for the registry report formatter.
+
+Implementation milestone:
+
+- `a0ffe67 Lazy-load registry report CLI formatter`
+
+Files changed:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+Plain `import rytm_randomizer.cli` no longer loads:
+
+- `rytm_randomizer.registry_report`
+
+The existing passive `report` command still works and matches its fixture.
+Together with the previous behavior/runtime report import isolation slices,
+current report-only CLI formatters are now command-local imports.
+
+This adds no CLI output change, fixture change, runtime execution, dispatch,
+command execution, mutation execution, active CLI command, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
 
 ## Runtime Report CLI Import Isolation Checkpoint
 

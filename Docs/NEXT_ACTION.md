@@ -6,7 +6,52 @@ modularize-v1.34
 
 ## Current HEAD
 
-aa198d8 Lazy-load runtime report CLI formatters
+a0ffe67 Lazy-load registry report CLI formatter
+
+## Latest Registry Report CLI Import Isolation Checkpoint
+
+The passive CLI now lazy-loads the registry report formatter only when the
+`report` command is invoked.
+
+Checkpoint document:
+
+- `Docs/V134_REGISTRY_REPORT_CLI_IMPORT_ISOLATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `a0ffe67 Lazy-load registry report CLI formatter`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+Confirmed behavior:
+
+- importing `rytm_randomizer.cli` does not load
+  `rytm_randomizer.registry_report`
+- `python -m rytm_randomizer.cli report` still matches its existing fixture
+- all current report-only CLI formatters are now command-local imports
+
+Recommended next task:
+
+- pause the import-isolation thread unless a new concrete drift appears
+- choose either a short import-boundary progress summary or a different
+  test-backed behavior-parity alignment slice
+
+Confirmed boundaries:
+
+- no CLI output change
+- no fixture change
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Runtime Report CLI Import Isolation Checkpoint
 
