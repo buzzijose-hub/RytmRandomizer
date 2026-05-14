@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-36d7b86
+4bb5430
+
+## Pad 4 Lane Public API Exports Checkpoint
+
+`Docs/PAD4_LANE_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the tiny Pad 4 lane
+helper API alignment slice.
+
+Implementation milestone:
+
+- `4bb5430 Add Pad 4 lane public API exports`
+
+The passive Pad 4 lane helper now exposes an explicit `__all__` list:
+
+- `DEFERRED_PACKET_8_PAD4_LANE_KEYS`
+- `PACKET_8A_PAD4_LANE_KEYS`
+- `PACKET_8B_PAD4_LANE_KEYS`
+- `PACKET_8C_PAD4_LANE_KEYS`
+- `Pad4LaneBehaviorResult`
+- `evaluate_pad4_lane_behavior`
+
+This aligns the helper with the existing Pad 2 and Pad 3 lane public API
+pattern. It changes no read-only behavior and adds no runtime execution,
+dispatch, command execution, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Session Agenda Handoff Refresh - 2026-05-14
 

@@ -21,7 +21,38 @@ modularize-v1.34
 
 Current HEAD:
 
-36d7b86 Add quick status context output
+4bb5430 Add Pad 4 lane public API exports
+
+## Pad 4 Lane Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/PAD4_LANE_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `4bb5430 Add Pad 4 lane public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_pad4_lane.py`
+- `tests/test_behavior_pad4_lane.py`
+
+The Pad 4 lane helper now exposes an explicit `__all__` public API list,
+matching the existing Pad 2 and Pad 3 lane helper pattern.
+
+Existing read-only Pad 4 behavior remains unchanged:
+
+- `P4A`
+- `P4R`
+- `P4X`
+
+`P4M` remains Packet 1 menu/status behavior and unsupported by the Pad 4 lane
+helper.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Session Agenda Handoff Refresh - 2026-05-14
 
