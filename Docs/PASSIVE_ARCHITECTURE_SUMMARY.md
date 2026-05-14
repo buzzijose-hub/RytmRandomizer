@@ -8,7 +8,24 @@ modularize-v1.34
 
 Current HEAD:
 
-0c6a98b
+83ccef2
+
+## Collaborator Review Triage Template Review
+
+`Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md` accepts
+`Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md` as the current safe intake
+template for Eddie's future review findings.
+
+The accepted template requires review findings to arrive as text or Markdown,
+then be verified, classified, and checked against project safety boundaries
+before implementation.
+
+Screenshot-only findings remain insufficient for implementation.
+
+This review is documentation-only. It adds no code, tests, package metadata,
+runtime execution, dispatch, command execution, active CLI command, real MIDI
+dependency, MIDI port opening, MIDI sending, hardware behavior, or V1.34
+reference change.
 
 ## Collaborator Review Triage Template
 

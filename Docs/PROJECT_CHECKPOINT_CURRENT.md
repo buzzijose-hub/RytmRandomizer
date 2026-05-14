@@ -21,7 +21,36 @@ modularize-v1.34
 
 Current HEAD:
 
-0c6a98b Add collaborator review status visibility review
+83ccef2 Add collaborator review triage template
+
+## Collaborator Review Triage Template Review
+
+The latest documentation review gate is:
+
+- `Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md`
+
+Accepted template:
+
+- `Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md`
+
+Accepted milestone:
+
+- `83ccef2 Add collaborator review triage template`
+
+The review accepts the collaborator review triage template as the current safe
+landing zone for Eddie's future review findings.
+
+Accepted state:
+
+- findings should arrive as text or Markdown
+- screenshot-only findings remain insufficient for implementation
+- findings must be verified against the current branch
+- findings must be classified before implementation
+- review-driven code changes still require targeted tests and full closeout
+
+The review adds no code, tests, package metadata, runtime execution, dispatch,
+command execution, active CLI command, real MIDI dependency, port opening,
+MIDI sending, hardware behavior, or V1.34 reference change.
 
 ## Collaborator Review Triage Template
 

@@ -6,7 +6,37 @@ modularize-v1.34
 
 ## Current HEAD
 
-0c6a98b Add collaborator review status visibility review
+83ccef2 Add collaborator review triage template
+
+## Latest Collaborator Review Triage Template Review
+
+The latest documentation review gate is:
+
+- `Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md`
+
+Accepted template:
+
+- `Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md`
+
+Accepted milestone:
+
+- `83ccef2 Add collaborator review triage template`
+
+Decision:
+
+- the collaborator review triage template is accepted
+- Eddie's review findings should be entered as text or Markdown before
+  implementation
+- screenshot-only findings remain insufficient for implementation
+- findings must be verified, classified, and checked against project safety
+  boundaries before work begins
+
+Recommended next task:
+
+- if Eddie sends review text, create a filled collaborator review triage
+  document from the accepted template
+- if review text is still pending, continue with safe passive/mock-only
+  behavior parity, visibility, or documentation work
 
 ## Latest Collaborator Review Triage Template
 
