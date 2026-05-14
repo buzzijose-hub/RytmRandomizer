@@ -152,6 +152,9 @@ def summarize_behavior_parity_coverage_report(report=None):
     return {
         "title": source_report["title"],
         "accepted_packet_count": len(source_report["accepted_packet_coverage"]),
+        "selected_isolated_pad_packet_count": len(
+            source_report["selected_isolated_pad_packet_coverage"]
+        ),
         "runtime_adjacent_safe_failure_count": len(
             source_report["runtime_adjacent_mock_only_safe_failures"]
         ),

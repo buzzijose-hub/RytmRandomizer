@@ -187,6 +187,7 @@ def test_report_summary_is_deterministic():
     assert summarize_behavior_parity_coverage_report() == {
         "title": "V1.34 Behavior Parity Coverage Report",
         "accepted_packet_count": 12,
+        "selected_isolated_pad_packet_count": 2,
         "runtime_adjacent_safe_failure_count": 3,
         "parked_scope_count": 2,
         "closeout_coverage_count": 18,
