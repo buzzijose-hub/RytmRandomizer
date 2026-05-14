@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from .behavior_selected_isolated_pad import (
+    PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
+    PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
+)
+
 ACCEPTED_PACKET_COVERAGE = (
     "Packet 1 menu/status and utility intent",
     "Packet 2 meaningful anchor/profile progress",
@@ -22,6 +27,19 @@ ACCEPTED_PACKET_COVERAGE = (
     "Packet 10 selected-profile workflow intent",
     "Packet 11A L selected isolated pad target intent",
     "Packet 11B PZ selected isolated pad anchor-return readiness",
+)
+
+SELECTED_ISOLATED_PAD_PACKET_COVERAGE = (
+    {
+        "packet": "11A",
+        "command_keys": PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
+        "coverage": "selected isolated pad target intent",
+    },
+    {
+        "packet": "11B",
+        "command_keys": PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
+        "coverage": "selected isolated pad anchor-return readiness",
+    },
 )
 
 RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES = ("PZ", "B", "L")
@@ -101,6 +119,9 @@ def build_behavior_parity_coverage_report():
     report = {
         "title": "V1.34 Behavior Parity Coverage Report",
         "accepted_packet_coverage": tuple(ACCEPTED_PACKET_COVERAGE),
+        "selected_isolated_pad_packet_coverage": deepcopy(
+            SELECTED_ISOLATED_PAD_PACKET_COVERAGE
+        ),
         "runtime_adjacent_mock_only_safe_failures": tuple(
             RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES
         ),
@@ -156,6 +177,11 @@ def format_behavior_parity_coverage_report(report=None):
 
     for item in source_report["accepted_packet_coverage"]:
         lines.append(f"- {item}")
+
+    lines.append("Selected Isolated Pad Packet Coverage:")
+    for item in source_report["selected_isolated_pad_packet_coverage"]:
+        command_keys = ", ".join(item["command_keys"])
+        lines.append(f"- Packet {item['packet']}: {command_keys} - {item['coverage']}")
 
     lines.append("Runtime-Adjacent Mock-Only Safe Failures:")
     for item in source_report["runtime_adjacent_mock_only_safe_failures"]:

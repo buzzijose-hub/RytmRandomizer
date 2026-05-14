@@ -66,6 +66,31 @@ def test_report_summarizes_packet_coverage_and_runtime_adjacent_surfaces():
     assert report["runtime_adjacent_mock_only_safe_failures"] == ("PZ", "B", "L")
 
 
+def test_report_records_structured_selected_isolated_pad_packet_coverage():
+    from rytm_randomizer.behavior_parity_coverage_report import (
+        build_behavior_parity_coverage_report,
+    )
+    from rytm_randomizer.behavior_selected_isolated_pad import (
+        PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
+        PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
+    )
+
+    report = build_behavior_parity_coverage_report()
+
+    assert report["selected_isolated_pad_packet_coverage"] == (
+        {
+            "packet": "11A",
+            "command_keys": PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
+            "coverage": "selected isolated pad target intent",
+        },
+        {
+            "packet": "11B",
+            "command_keys": PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
+            "coverage": "selected isolated pad anchor-return readiness",
+        },
+    )
+
+
 def test_report_records_parked_scope_and_absent_behavior():
     from rytm_randomizer.behavior_parity_coverage_report import (
         build_behavior_parity_coverage_report,
@@ -196,6 +221,9 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "- Packet 10 selected-profile workflow intent",
         "- Packet 11A L selected isolated pad target intent",
         "- Packet 11B PZ selected isolated pad anchor-return readiness",
+        "Selected Isolated Pad Packet Coverage:",
+        "- Packet 11A: L - selected isolated pad target intent",
+        "- Packet 11B: PZ - selected isolated pad anchor-return readiness",
         "Runtime-Adjacent Mock-Only Safe Failures:",
         "- PZ",
         "- B",
@@ -243,6 +271,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
 
     report = build_behavior_parity_coverage_report()
     report["accepted_packet_coverage"] = ("MUTATED",)
+    report["selected_isolated_pad_packet_coverage"][0]["packet"] = "MUTATED"
     report["protected_file_state"]["v134_reference"] = "MUTATED"
 
     fresh_report = build_behavior_parity_coverage_report()
@@ -250,6 +279,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
     assert fresh_report["accepted_packet_coverage"][0] == (
         "Packet 1 menu/status and utility intent"
     )
+    assert fresh_report["selected_isolated_pad_packet_coverage"][0]["packet"] == "11A"
     assert fresh_report["protected_file_state"]["v134_reference"] == "untouched"
 
 
@@ -297,6 +327,7 @@ def test_module_remains_decoupled_from_cli_and_runtime_execution():
 if __name__ == "__main__":
     test_importing_behavior_parity_coverage_report_prints_nothing()
     test_report_summarizes_packet_coverage_and_runtime_adjacent_surfaces()
+    test_report_records_structured_selected_isolated_pad_packet_coverage()
     test_report_records_parked_scope_and_absent_behavior()
     test_report_records_closeout_coverage_and_protected_file_state()
     test_report_records_read_only_safety_boundaries()

@@ -1323,6 +1323,9 @@ def test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion(
 
     assert "- Packet 11A L selected isolated pad target intent" in output
     assert "- Packet 11B PZ selected isolated pad anchor-return readiness" in output
+    assert "Selected Isolated Pad Packet Coverage:" in output
+    assert "- Packet 11A: L - selected isolated pad target intent" in output
+    assert "- Packet 11B: PZ - selected isolated pad anchor-return readiness" in output
     assert "Runtime-Adjacent Mock-Only Safe Failures:" in output
     assert "- PZ" in output
     assert "- B" in output
