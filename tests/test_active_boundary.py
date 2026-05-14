@@ -715,6 +715,21 @@ def test_no_active_cli_command_names_are_exposed():
     assert "MidiPortProvider" not in exposed_names
 
 
+def test_active_boundary_exposes_explicit_public_api():
+    import rytm_randomizer.active_boundary as boundary
+
+    assert boundary.__all__ == [
+        "ACTIVE_BOUNDARY_NAME",
+        "SUPPORTED_CANDIDATE",
+        "SUPPORTED_SOURCE_KEY",
+        "SUPPORTED_SOURCE_KIND",
+        "ActiveBoundaryError",
+        "ActiveBoundaryRequest",
+        "ActiveBoundaryResult",
+        "evaluate_mock_active_boundary",
+    ]
+
+
 if __name__ == "__main__":
     test_importing_active_boundary_prints_nothing()
     test_missing_arming_emits_no_messages()
@@ -744,3 +759,4 @@ if __name__ == "__main__":
     test_passive_cli_report_stays_read_only()
     test_no_real_midi_libraries_are_imported()
     test_no_active_cli_command_names_are_exposed()
+    test_active_boundary_exposes_explicit_public_api()

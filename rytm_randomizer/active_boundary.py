@@ -18,6 +18,17 @@ SUPPORTED_SOURCE_KEY = "2"
 ACTIVE_BOUNDARY_NAME = "mock_active_boundary"
 SUPPORTED_CANDIDATE = f"{SUPPORTED_SOURCE_KIND}:{SUPPORTED_SOURCE_KEY}"
 
+__all__ = [
+    "ACTIVE_BOUNDARY_NAME",
+    "SUPPORTED_CANDIDATE",
+    "SUPPORTED_SOURCE_KEY",
+    "SUPPORTED_SOURCE_KIND",
+    "ActiveBoundaryError",
+    "ActiveBoundaryRequest",
+    "ActiveBoundaryResult",
+    "evaluate_mock_active_boundary",
+]
+
 
 def _freeze_metadata(metadata: Mapping[str, object] | None) -> Mapping[str, object]:
     if metadata is None:
