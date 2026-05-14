@@ -131,6 +131,11 @@ Register-CloseoutStepExit "Closeout Contract"
 Register-CloseoutStepExit "Project Status Report"
 
 "" | Add-Content $summary
+"=== Test: Project Status Check ===" | Add-Content $summary
+& $pythonExe @pythonArgs -m rytm_randomizer.cli project-status-report --check 2>&1 | Tee-Object -FilePath "$logDir\latest_test_project_status_check.log" | Add-Content $summary
+Register-CloseoutStepExit "Project Status Check"
+
+"" | Add-Content $summary
 "=== Test: Behavior Menu Utility ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_behavior_menu_utility.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_menu_utility.log" | Add-Content $summary
 Register-CloseoutStepExit "Behavior Menu Utility"

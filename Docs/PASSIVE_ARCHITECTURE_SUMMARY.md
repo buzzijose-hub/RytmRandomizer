@@ -8,7 +8,22 @@ modularize-v1.34
 
 Current HEAD:
 
-b95ddca
+3e553ef
+
+## Project Status Check Closeout Checkpoint
+
+`Docs/PROJECT_STATUS_CHECK_CLOSEOUT_CHECKPOINT.md` records closeout
+integration for the passive project status safety check.
+
+Full closeout now includes:
+
+- `=== Test: Project Status Check ===`
+- `python -m rytm_randomizer.cli project-status-report --check`
+
+The step is registered with closeout failure propagation and adds no runtime
+execution, dispatch, command execution, mutation execution, active CLI
+command, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
 
 ## Project Status Report Checkpoint
 

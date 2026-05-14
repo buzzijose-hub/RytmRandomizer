@@ -43,7 +43,16 @@ def test_closeout_contract_test_is_included_in_closeout():
     assert ".\\tests\\test_closeout_contract.py" in script
 
 
+def test_project_status_check_is_included_in_closeout():
+    script = _script_text()
+
+    assert "=== Test: Project Status Check ===" in script
+    assert "-m rytm_randomizer.cli project-status-report --check" in script
+    assert 'Register-CloseoutStepExit "Project Status Check"' in script
+
+
 if __name__ == "__main__":
     test_closeout_tracks_failed_python_test_steps()
     test_every_python_test_step_registers_exit_status()
     test_closeout_contract_test_is_included_in_closeout()
+    test_project_status_check_is_included_in_closeout()
