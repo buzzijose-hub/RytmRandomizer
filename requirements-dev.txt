@@ -1,0 +1,3 @@
+# Convenience mirror of the dev install defined in pyproject.toml.
+# Run: pip install -r requirements-dev.txt
+-e .[dev]
