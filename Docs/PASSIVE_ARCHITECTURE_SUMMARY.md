@@ -8,7 +8,28 @@ modularize-v1.34
 
 Current HEAD:
 
-809f6c7
+eb40c00
+
+## Progress Checkpoint After Structured Lane Coverage
+
+`Docs/V134_BEHAVIOR_PARITY_PROGRESS_CHECKPOINT_AFTER_STRUCTURED_LANE_COVERAGE.md`
+summarizes the compact import-isolation and structured coverage hardening run.
+
+Included implementation/checkpoint milestones:
+
+- passive metadata CLI import isolation
+- structured Packet 6/7/8 pad-lane coverage
+- structured Packet 5 / Pad 1 lane coverage
+
+The passive `behavior-parity-report` now exposes machine-checkable structured
+lane coverage for Packet 5 through Packet 8 and reports:
+
+- `pad_lane_packet_count: 4`
+- `pad_lane_command_count: 38`
+
+This strengthens the read-only behavior map without adding runtime execution,
+dispatch, command execution, mutation execution, active CLI commands, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Structured Pad 1 Lane Coverage Checkpoint
 
