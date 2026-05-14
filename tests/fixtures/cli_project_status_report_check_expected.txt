@@ -17,6 +17,13 @@ RytmRandomizer Project Status Check
 - public_api_hardening.real_midi: absent
 - public_api_hardening.port_opening: absent
 - public_api_hardening.active_behavior: absent
+- collaborator_review_intake.status: checkpointed
+- collaborator_review_intake.findings_received: False
+- collaborator_review_intake.implementation_policy: verify_before_implementing
+- collaborator_review_intake.real_midi: absent
+- collaborator_review_intake.port_opening: absent
+- collaborator_review_intake.active_behavior: absent
+- collaborator_review_intake.hardware_behavior: absent
 - source.in_memory_only: True
 - source.writes_files: False
 - closeout.failure_propagation: guarded

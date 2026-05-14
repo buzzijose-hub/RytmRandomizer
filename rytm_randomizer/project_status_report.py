@@ -64,6 +64,29 @@ PUBLIC_API_HARDENING_STATUS = {
     "active_behavior": "absent",
 }
 
+COLLABORATOR_REVIEW_INTAKE_STATUS = {
+    "status": "checkpointed",
+    "collaborator": "Eddie",
+    "review_source": "external_ai_assisted_review",
+    "findings_received": False,
+    "required_format": "text_or_markdown",
+    "implementation_policy": "verify_before_implementing",
+    "triage_categories": (
+        "valid_and_urgent",
+        "valid_but_later",
+        "already_handled",
+        "needs_more_evidence",
+        "not_applicable",
+        "conflicts_with_safety_constraints",
+        "conflicts_with_project_direction",
+    ),
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+    "hardware_behavior": "absent",
+    "package_metadata_changes": "requires_explicit_approval",
+}
+
 PROJECT_STATUS_SAFETY = {
     "real_midi": "absent",
     "port_opening": "absent",
@@ -95,6 +118,13 @@ PROJECT_STATUS_CHECKS = (
     ("public_api_hardening.real_midi", "absent"),
     ("public_api_hardening.port_opening", "absent"),
     ("public_api_hardening.active_behavior", "absent"),
+    ("collaborator_review_intake.status", "checkpointed"),
+    ("collaborator_review_intake.findings_received", False),
+    ("collaborator_review_intake.implementation_policy", "verify_before_implementing"),
+    ("collaborator_review_intake.real_midi", "absent"),
+    ("collaborator_review_intake.port_opening", "absent"),
+    ("collaborator_review_intake.active_behavior", "absent"),
+    ("collaborator_review_intake.hardware_behavior", "absent"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -129,6 +159,7 @@ def build_project_status_report():
         "active_boundary": summarize_active_boundary_report(),
         "mock_runtime_active_bridge": summarize_mock_runtime_active_bridge_report(),
         "public_api_hardening": PUBLIC_API_HARDENING_STATUS,
+        "collaborator_review_intake": COLLABORATOR_REVIEW_INTAKE_STATUS,
         "closeout": CLOSEOUT_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
@@ -190,6 +221,12 @@ def summarize_project_status_report(report=None):
         "public_api_module_count": source_report["public_api_hardening"][
             "module_count"
         ],
+        "collaborator_review_intake": source_report["collaborator_review_intake"][
+            "status"
+        ],
+        "external_review_findings_received": source_report[
+            "collaborator_review_intake"
+        ]["findings_received"],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
@@ -214,6 +251,11 @@ def format_project_status_summary(report=None):
         f"- mock_bridge_candidate: {summary['mock_bridge_candidate']}",
         f"- public_api_hardening: {summary['public_api_hardening']}",
         f"- public_api_module_count: {summary['public_api_module_count']}",
+        f"- collaborator_review_intake: {summary['collaborator_review_intake']}",
+        (
+            "- external_review_findings_received: "
+            f"{summary['external_review_findings_received']}"
+        ),
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
         f"- active_execution: {summary['active_execution']}",
@@ -257,6 +299,7 @@ def format_project_status_report(report=None):
     active = source_report["active_boundary"]
     bridge = source_report["mock_runtime_active_bridge"]
     api = source_report["public_api_hardening"]
+    collaborator = source_report["collaborator_review_intake"]
 
     lines = [
         source_report["title"],
@@ -307,6 +350,23 @@ def format_project_status_report(report=None):
             f"- real_midi: {api['real_midi']}",
             f"- port_opening: {api['port_opening']}",
             f"- active_behavior: {api['active_behavior']}",
+            "Collaborator Review Intake:",
+            f"- status: {collaborator['status']}",
+            f"- collaborator: {collaborator['collaborator']}",
+            f"- review_source: {collaborator['review_source']}",
+            f"- findings_received: {collaborator['findings_received']}",
+            f"- required_format: {collaborator['required_format']}",
+            f"- implementation_policy: {collaborator['implementation_policy']}",
+            "- triage_categories: "
+            + ", ".join(collaborator["triage_categories"]),
+            f"- real_midi: {collaborator['real_midi']}",
+            f"- port_opening: {collaborator['port_opening']}",
+            f"- active_behavior: {collaborator['active_behavior']}",
+            f"- hardware_behavior: {collaborator['hardware_behavior']}",
+            (
+                "- package_metadata_changes: "
+                f"{collaborator['package_metadata_changes']}"
+            ),
             "Closeout:",
         ]
     )

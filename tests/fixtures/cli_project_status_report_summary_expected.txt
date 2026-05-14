@@ -9,6 +9,8 @@ RytmRandomizer Project Status Summary
 - mock_bridge_candidate: 2
 - public_api_hardening: checkpointed
 - public_api_module_count: 5
+- collaborator_review_intake: checkpointed
+- external_review_findings_received: False
 - real_midi: absent
 - port_opening: absent
 - active_execution: absent

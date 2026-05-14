@@ -53,6 +53,19 @@ Public API Hardening:
 - real_midi: absent
 - port_opening: absent
 - active_behavior: absent
+Collaborator Review Intake:
+- status: checkpointed
+- collaborator: Eddie
+- review_source: external_ai_assisted_review
+- findings_received: False
+- required_format: text_or_markdown
+- implementation_policy: verify_before_implementing
+- triage_categories: valid_and_urgent, valid_but_later, already_handled, needs_more_evidence, not_applicable, conflicts_with_safety_constraints, conflicts_with_project_direction
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
+- package_metadata_changes: requires_explicit_approval
 Closeout:
 - closeout_contract: present
 - failure_propagation: guarded
