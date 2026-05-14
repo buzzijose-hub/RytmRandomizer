@@ -6,7 +6,45 @@ modularize-v1.34
 
 ## Current HEAD
 
-1c68dc0 Add mock runtime bridge report API checkpoint
+77402b2 Add runtime plan public API exports
+
+## Latest Runtime Plan Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/RUNTIME_PLAN_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `77402b2 Add runtime plan public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+Behavior:
+
+- the existing mock-only runtime plan surface now exposes an explicit
+  `__all__` public API list
+- runtime previews remain blocked
+- supported planning inputs remain group profiles `2` and `3`
+- profile `4` remains parked
+- unsupported key/source-kind handling remains unchanged
+- no runtime execution, dispatch, real MIDI library, port opening, MIDI
+  sending, active CLI command, package metadata change, or hardware behavior
+  was added
+
+Decision:
+
+- this completes the current useful runtime/active API hardening mini-run
+- switch away from API-hardening repetition unless a concrete future module
+  boundary clearly needs a tested export contract
+
+Recommended next task:
+
+- return to behavior-parity visibility, project reporting, roadmap
+  documentation, or another small passive/mock-only software slice
 
 ## Latest Public API Hardening Progress Checkpoint
 

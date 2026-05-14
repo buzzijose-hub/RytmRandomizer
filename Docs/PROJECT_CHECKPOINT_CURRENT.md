@@ -21,7 +21,52 @@ modularize-v1.34
 
 Current HEAD:
 
-1c68dc0 Add mock runtime bridge report API checkpoint
+77402b2 Add runtime plan public API exports
+
+## Runtime Plan Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/RUNTIME_PLAN_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `77402b2 Add runtime plan public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/runtime_plan.py`
+- `tests/test_runtime_plan.py`
+
+The mock-only runtime plan surface now exposes an explicit `__all__` public API
+list:
+
+- `MockRuntimeProvider`
+- `REASON_EXECUTION_NOT_IMPLEMENTED`
+- `REASON_MISSING_ARMING`
+- `REASON_PROFILE_4_PARKED`
+- `REASON_UNSUPPORTED_KEY`
+- `REASON_UNSUPPORTED_SOURCE_KIND`
+- `RuntimeIntent`
+- `RuntimePlanPreview`
+- `RuntimeSafetyEnvelope`
+- `SUPPORTED_GROUP_PROFILE_KEYS`
+- `create_blocked_runtime_preview`
+- `validate_runtime_intent_scope`
+
+Existing runtime plan behavior remains unchanged. Runtime previews remain
+blocked; supported planning inputs remain group profiles `2` and `3`; profile
+`4` remains parked; unsupported key/source-kind handling remains unchanged.
+
+This adds no real MIDI dependency, `mido`, `rtmidi`, port discovery, port
+opening, MIDI sending, runtime execution, dispatch, command execution, active
+CLI command, package metadata change, or hardware behavior.
+
+API hardening decision:
+
+- this completes the current useful runtime/active API hardening mini-run
+- future API hardening should happen only when a concrete module boundary
+  clearly needs a tested export contract
 
 ## Public API Hardening Progress Checkpoint
 

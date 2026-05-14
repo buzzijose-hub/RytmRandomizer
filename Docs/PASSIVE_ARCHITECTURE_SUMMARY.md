@@ -8,7 +8,45 @@ modularize-v1.34
 
 Current HEAD:
 
-1c68dc0
+77402b2
+
+## Runtime Plan Public API Exports Checkpoint
+
+`Docs/RUNTIME_PLAN_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the final useful
+public API hardening slice for the mock-only runtime planning surface.
+
+Implementation milestone:
+
+- `77402b2 Add runtime plan public API exports`
+
+The mock-only runtime plan surface now exposes an explicit `__all__` list:
+
+- `MockRuntimeProvider`
+- `REASON_EXECUTION_NOT_IMPLEMENTED`
+- `REASON_MISSING_ARMING`
+- `REASON_PROFILE_4_PARKED`
+- `REASON_UNSUPPORTED_KEY`
+- `REASON_UNSUPPORTED_SOURCE_KIND`
+- `RuntimeIntent`
+- `RuntimePlanPreview`
+- `RuntimeSafetyEnvelope`
+- `SUPPORTED_GROUP_PROFILE_KEYS`
+- `create_blocked_runtime_preview`
+- `validate_runtime_intent_scope`
+
+This changes no runtime plan behavior. Runtime previews remain blocked,
+supported planning inputs remain group profiles `2` and `3`, profile `4`
+remains parked, and unsupported key/source-kind handling remains unchanged.
+
+This adds no real MIDI dependency, port opening, MIDI sending, dispatch,
+command execution, runtime execution, active CLI behavior, package metadata
+change, or hardware behavior.
+
+Decision:
+
+- this completes the current useful runtime/active API hardening mini-run
+- return to behavior-parity visibility, project reporting, roadmap
+  documentation, or another passive/mock-only software slice next
 
 ## Public API Hardening Progress Checkpoint
 
