@@ -11,6 +11,7 @@ RytmRandomizer Project Status Summary
 - public_api_module_count: 5
 - collaborator_review_intake: checkpointed
 - external_review_findings_received: False
+- collaborator_review_triage_template: accepted
 - real_midi: absent
 - port_opening: absent
 - active_execution: absent

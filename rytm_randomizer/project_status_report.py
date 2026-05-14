@@ -87,6 +87,21 @@ COLLABORATOR_REVIEW_INTAKE_STATUS = {
     "package_metadata_changes": "requires_explicit_approval",
 }
 
+COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
+    "status": "accepted",
+    "template_path": "Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+    "review_gate_path": "Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+    "findings_recorded": False,
+    "requires_text_or_markdown": True,
+    "screenshot_only_sufficient": False,
+    "implementation_policy": "triage_before_implementing",
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+    "hardware_behavior": "absent",
+    "package_metadata_changes": "requires_explicit_approval",
+}
+
 PROJECT_STATUS_SAFETY = {
     "real_midi": "absent",
     "port_opening": "absent",
@@ -125,6 +140,17 @@ PROJECT_STATUS_CHECKS = (
     ("collaborator_review_intake.port_opening", "absent"),
     ("collaborator_review_intake.active_behavior", "absent"),
     ("collaborator_review_intake.hardware_behavior", "absent"),
+    ("collaborator_review_triage_template.status", "accepted"),
+    ("collaborator_review_triage_template.findings_recorded", False),
+    ("collaborator_review_triage_template.screenshot_only_sufficient", False),
+    (
+        "collaborator_review_triage_template.implementation_policy",
+        "triage_before_implementing",
+    ),
+    ("collaborator_review_triage_template.real_midi", "absent"),
+    ("collaborator_review_triage_template.port_opening", "absent"),
+    ("collaborator_review_triage_template.active_behavior", "absent"),
+    ("collaborator_review_triage_template.hardware_behavior", "absent"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -160,6 +186,9 @@ def build_project_status_report():
         "mock_runtime_active_bridge": summarize_mock_runtime_active_bridge_report(),
         "public_api_hardening": PUBLIC_API_HARDENING_STATUS,
         "collaborator_review_intake": COLLABORATOR_REVIEW_INTAKE_STATUS,
+        "collaborator_review_triage_template": (
+            COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS
+        ),
         "closeout": CLOSEOUT_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
@@ -227,6 +256,9 @@ def summarize_project_status_report(report=None):
         "external_review_findings_received": source_report[
             "collaborator_review_intake"
         ]["findings_received"],
+        "collaborator_review_triage_template": source_report[
+            "collaborator_review_triage_template"
+        ]["status"],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
@@ -255,6 +287,10 @@ def format_project_status_summary(report=None):
         (
             "- external_review_findings_received: "
             f"{summary['external_review_findings_received']}"
+        ),
+        (
+            "- collaborator_review_triage_template: "
+            f"{summary['collaborator_review_triage_template']}"
         ),
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
@@ -300,6 +336,7 @@ def format_project_status_report(report=None):
     bridge = source_report["mock_runtime_active_bridge"]
     api = source_report["public_api_hardening"]
     collaborator = source_report["collaborator_review_intake"]
+    triage_template = source_report["collaborator_review_triage_template"]
 
     lines = [
         source_report["title"],
@@ -366,6 +403,28 @@ def format_project_status_report(report=None):
             (
                 "- package_metadata_changes: "
                 f"{collaborator['package_metadata_changes']}"
+            ),
+            "Collaborator Review Triage Template:",
+            f"- status: {triage_template['status']}",
+            f"- template_path: {triage_template['template_path']}",
+            f"- review_gate_path: {triage_template['review_gate_path']}",
+            f"- findings_recorded: {triage_template['findings_recorded']}",
+            (
+                "- requires_text_or_markdown: "
+                f"{triage_template['requires_text_or_markdown']}"
+            ),
+            (
+                "- screenshot_only_sufficient: "
+                f"{triage_template['screenshot_only_sufficient']}"
+            ),
+            f"- implementation_policy: {triage_template['implementation_policy']}",
+            f"- real_midi: {triage_template['real_midi']}",
+            f"- port_opening: {triage_template['port_opening']}",
+            f"- active_behavior: {triage_template['active_behavior']}",
+            f"- hardware_behavior: {triage_template['hardware_behavior']}",
+            (
+                "- package_metadata_changes: "
+                f"{triage_template['package_metadata_changes']}"
             ),
             "Closeout:",
         ]
