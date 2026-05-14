@@ -28,7 +28,10 @@ def test_quick_status_script_exists_and_stays_passive():
 
 
 def test_quick_status_script_runs_passive_status_checks():
-    powershell_executable = shutil.which("powershell") or shutil.which("pwsh")
+    if sys.platform != "win32":
+        pytest.skip("quick_status.ps1 execution coverage is Windows-only")
+
+    powershell_executable = shutil.which("powershell")
     if powershell_executable is None:
         pytest.skip("quick_status.ps1 requires PowerShell")
 
