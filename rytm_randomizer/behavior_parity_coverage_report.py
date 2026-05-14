@@ -9,6 +9,14 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from .behavior_pad1_lane import (
+    DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+    PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
+    PACKET_5B_PAD1_BD_FM_KEYS,
+    PACKET_5C_PAD1_BD_PLASTIC_KEYS,
+    PACKET_5D_PAD1_BD_SILKY_KEYS,
+    PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
+)
 from .behavior_pad2_lane import (
     DEFERRED_PACKET_6_PAD2_LANE_KEYS,
     PACKET_6A_PAD2_LANE_KEYS,
@@ -73,6 +81,19 @@ SELECTED_ISOLATED_PAD_PACKET_COVERAGE = (
 )
 
 PAD_LANE_PACKET_COVERAGE = (
+    {
+        "packet": "5",
+        "lane": "Pad 1 BD lane family",
+        "command_keys": (
+            PACKET_5A_PAD1_CURRENT_ENGINE_KEYS
+            + PACKET_5B_PAD1_BD_FM_KEYS
+            + PACKET_5C_PAD1_BD_PLASTIC_KEYS
+            + PACKET_5D_PAD1_BD_SILKY_KEYS
+            + PACKET_5E_PAD1_BD_ACOUSTIC_KEYS
+        ),
+        "deferred_keys": DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+        "coverage": "Pad 1 lane behavior for the current read-only phase",
+    },
     {
         "packet": "6",
         "lane": "Pad 2 secondary lane",
@@ -277,7 +298,7 @@ def format_behavior_parity_coverage_report(report=None):
             f"- Packet {item['packet']}: {item['lane']} - "
             f"{command_keys} - {item['coverage']}"
         )
-        deferred_keys = ", ".join(item["deferred_keys"])
+        deferred_keys = ", ".join(item["deferred_keys"]) or "none"
         lines.append(f"- Packet {item['packet']} deferred/safe: {deferred_keys}")
 
     lines.append("Runtime-Adjacent Mock-Only Safe Failures:")

@@ -92,6 +92,14 @@ def test_report_records_structured_selected_isolated_pad_packet_coverage():
 
 
 def test_report_records_structured_pad_lane_packet_coverage():
+    from rytm_randomizer.behavior_pad1_lane import (
+        DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+        PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
+        PACKET_5B_PAD1_BD_FM_KEYS,
+        PACKET_5C_PAD1_BD_PLASTIC_KEYS,
+        PACKET_5D_PAD1_BD_SILKY_KEYS,
+        PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
+    )
     from rytm_randomizer.behavior_pad2_lane import (
         DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         PACKET_6A_PAD2_LANE_KEYS,
@@ -129,6 +137,19 @@ def test_report_records_structured_pad_lane_packet_coverage():
     report = build_behavior_parity_coverage_report()
 
     assert report["pad_lane_packet_coverage"] == (
+        {
+            "packet": "5",
+            "lane": "Pad 1 BD lane family",
+            "command_keys": (
+                PACKET_5A_PAD1_CURRENT_ENGINE_KEYS
+                + PACKET_5B_PAD1_BD_FM_KEYS
+                + PACKET_5C_PAD1_BD_PLASTIC_KEYS
+                + PACKET_5D_PAD1_BD_SILKY_KEYS
+                + PACKET_5E_PAD1_BD_ACOUSTIC_KEYS
+            ),
+            "deferred_keys": DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+            "coverage": "Pad 1 lane behavior for the current read-only phase",
+        },
         {
             "packet": "6",
             "lane": "Pad 2 secondary lane",
@@ -274,8 +295,8 @@ def test_report_summary_is_deterministic():
         "title": "V1.34 Behavior Parity Coverage Report",
         "accepted_packet_count": 12,
         "selected_isolated_pad_packet_count": 2,
-        "pad_lane_packet_count": 3,
-        "pad_lane_command_count": 21,
+        "pad_lane_packet_count": 4,
+        "pad_lane_command_count": 38,
         "runtime_adjacent_safe_failure_count": 3,
         "parked_scope_count": 2,
         "closeout_coverage_count": 18,
@@ -314,6 +335,8 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "- Packet 11A: L - selected isolated pad target intent",
         "- Packet 11B: PZ - selected isolated pad anchor-return readiness",
         "Pad Lane Packet Coverage:",
+        "- Packet 5: Pad 1 BD lane family - BR, BM, FT, FK, FG, FZ, BP, PT, PK, PX, PBH, BI, ST, SK, SC, SBH, BA - Pad 1 lane behavior for the current read-only phase",
+        "- Packet 5 deferred/safe: none",
         "- Packet 6: Pad 2 secondary lane - P2B, P2H, P2C, P2F, P2T, P2P, P2G, P2R, P2X, P2Z - Pad 2 lane behavior for the current read-only phase",
         "- Packet 6 deferred/safe: P2M",
         "- Packet 7: Pad 3 SY Raw lane - P3A, SA, SL, SB, SX, SW, P3R, P3X - Pad 3 lane behavior for the current read-only phase",
@@ -377,7 +400,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
         "Packet 1 menu/status and utility intent"
     )
     assert fresh_report["selected_isolated_pad_packet_coverage"][0]["packet"] == "11A"
-    assert fresh_report["pad_lane_packet_coverage"][0]["packet"] == "6"
+    assert fresh_report["pad_lane_packet_coverage"][0]["packet"] == "5"
     assert fresh_report["protected_file_state"]["v134_reference"] == "untouched"
 
 
