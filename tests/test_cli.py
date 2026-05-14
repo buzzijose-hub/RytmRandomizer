@@ -310,10 +310,14 @@ def test_project_status_report_json_command_exits_zero_and_returns_json():
     assert parsed["runtime_plan"]["runtime_execution"] == "absent"
     assert parsed["active_boundary"]["active_cli_behavior"] == "absent"
     assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
-    assert parsed["safety"]["real_midi"] == "absent"
-    assert parsed["safety"]["port_opening"] == "absent"
-    assert parsed["safety"]["active_execution"] == "absent"
+    assert parsed["safety"]["real_midi"] == "present_behind_arm_flag"
+    assert parsed["safety"]["port_opening"] == "present_behind_arm_flag"
+    assert parsed["safety"]["active_execution"] == "present_behind_arm_flag"
+    assert parsed["safety"]["default_mode"] == "passive"
     assert parsed["safety"]["hardware_required"] is False
+    assert parsed["convergence"]["active_execution"] == "present"
+    assert parsed["convergence"]["active_execution_gate"] == "--arm flag"
+    assert parsed["convergence"]["default_mode"] == "passive"
     assert parsed["source"]["in_memory_only"] is True
     assert parsed["source"]["writes_files"] is False
     assert result.stderr == ""
@@ -1448,21 +1452,27 @@ def test_report_command_exposes_no_active_behavior_or_support_expansion():
     assert "- Analog Four" in output
 
 
-def test_project_status_report_exposes_no_active_behavior_or_support_expansion():
+def test_project_status_report_tracks_convergence_behind_arm_flag():
     result = run_cli("project-status-report")
     output = normalize_newlines(result.stdout)
 
-    assert "- real_midi: absent" in output
-    assert "- port_opening: absent" in output
-    assert "- active_execution: absent" in output
-    assert "- dispatch: absent" in output
-    assert "- command_execution: absent" in output
+    # Convergence wave: active execution is present, but only behind --arm.
+    # The default landing mode stays passive and the monolith stays untouched.
+    assert "- real_midi: present_behind_arm_flag" in output
+    assert "- port_opening: present_behind_arm_flag" in output
+    assert "- active_execution: present_behind_arm_flag" in output
+    assert "- dispatch: present_behind_arm_flag" in output
+    assert "- command_execution: present_behind_arm_flag" in output
+    assert "- default_mode: passive" in output
     assert "- hardware_required: False" in output
-    assert "- hardware_behavior: absent" in output
+    assert "- hardware_behavior: opt_in_behind_arm_flag" in output
     assert "- analog_four_support: absent" in output
     assert "- pads_5_12_support: absent" in output
     assert "- v134_reference: untouched" in output
     assert "- package_metadata: untouched" in output
+    assert "- active_execution_gate: --arm flag" in output
+    assert "- active_modes_present: 2" in output
+    assert "- total_modes: 3" in output
     assert "execute-command" not in output
     assert "send-command" not in output
     assert "hardware-test" not in output
@@ -2080,7 +2090,7 @@ if __name__ == "__main__":
     test_missing_preview_scene_key_fails_safely()
     test_missing_preview_group_profile_key_fails_safely()
     test_report_command_exposes_no_active_behavior_or_support_expansion()
-    test_project_status_report_exposes_no_active_behavior_or_support_expansion()
+    test_project_status_report_tracks_convergence_behind_arm_flag()
     test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion()
     test_runtime_plan_report_exposes_no_active_behavior_or_support_expansion()
     test_active_boundary_report_exposes_no_active_behavior_or_support_expansion()
