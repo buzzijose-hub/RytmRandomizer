@@ -6,7 +6,50 @@ modularize-v1.34
 
 ## Current HEAD
 
-de6d327 Add project identity rename plan
+8bda703 Add project identity name shortlist
+
+## Latest Closeout Failure Propagation Checkpoint
+
+The closeout suite now has a stronger failure contract: failed Python test
+steps are registered and cause the closeout script to exit nonzero.
+
+Checkpoint document:
+
+- `Docs/CLOSEOUT_FAILURE_PROPAGATION_CHECKPOINT.md`
+
+Files changed by the milestone:
+
+- `Scripts/closeout_check.ps1`
+- `tests/test_closeout_contract.py`
+
+Behavior:
+
+- every Python test step registers its exit status
+- failed test steps are counted with `$script:closeoutFailures`
+- closeout exits `1` when any registered test step fails
+- closeout includes `=== Test: Closeout Contract ===`
+
+Why this matters:
+
+- the project safety net now has stronger failure propagation
+- future larger work packets are less likely to miss a failed test step
+
+Recommended next task:
+
+- continue with another mock-only/passive software slice, or create a small
+  checkpoint update after this closeout hardening
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Project Identity Name Shortlist
 

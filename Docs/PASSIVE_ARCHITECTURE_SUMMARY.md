@@ -8,7 +8,25 @@ modularize-v1.34
 
 Current HEAD:
 
-de6d327
+8bda703
+
+## Closeout Failure Propagation Checkpoint
+
+`Docs/CLOSEOUT_FAILURE_PROPAGATION_CHECKPOINT.md` records the closeout failure
+propagation hardening.
+
+Files changed:
+
+- `Scripts/closeout_check.ps1`
+- `tests/test_closeout_contract.py`
+
+The closeout suite now includes `=== Test: Closeout Contract ===`, registers
+each Python test step exit status, and exits nonzero if any registered test
+step fails.
+
+This strengthens verification for larger work packets without adding runtime
+execution, dispatch, command execution, mutation execution, active CLI command,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Project Identity Name Shortlist
 
