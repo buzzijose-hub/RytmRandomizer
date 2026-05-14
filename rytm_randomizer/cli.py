@@ -2,9 +2,6 @@
 
 import sys
 
-from .preview import preview_command
-from .registry import get_registry_item, get_registry_section
-
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
@@ -285,6 +282,8 @@ def _metadata_search_text(key, metadata):
 
 def format_registry_list_report(section_name, title):
     """Return deterministic passive registry list lines."""
+    from .registry import get_registry_section
+
     report = get_registry_section(section_name)
     if not report["exists"]:
         return [
@@ -321,6 +320,8 @@ def format_registry_list_report(section_name, title):
 
 def format_registry_search_report(section_name, title, query):
     """Return deterministic passive registry search lines."""
+    from .registry import get_registry_section
+
     report = get_registry_section(section_name)
     normalized_query = str(query)
     search_query = normalized_query.lower()
@@ -370,6 +371,8 @@ def format_registry_search_report(section_name, title, query):
 
 def format_inspect_command_report(command_key):
     """Return deterministic passive command metadata lines."""
+    from .registry import get_registry_item
+
     report = get_registry_item("commands", command_key)
     key = report["key"]
 
@@ -405,6 +408,8 @@ def format_inspect_command_report(command_key):
 
 def format_inspect_scene_report(scene_key):
     """Return deterministic passive scene metadata lines."""
+    from .registry import get_registry_item
+
     report = get_registry_item("scenes", scene_key)
     key = report["key"]
 
@@ -440,6 +445,8 @@ def format_inspect_scene_report(scene_key):
 
 def format_inspect_group_profile_report(profile_key):
     """Return deterministic passive group profile metadata lines."""
+    from .registry import get_registry_item
+
     report = get_registry_item("group_profiles", profile_key)
     key = report["key"]
 
@@ -471,6 +478,9 @@ def format_inspect_group_profile_report(profile_key):
 
 def format_preview_command_report(command_key):
     """Return deterministic passive command preview lines."""
+    from .preview import preview_command
+    from .registry import get_registry_section
+
     command = str(command_key).upper()
     registry_report = get_registry_section("commands")
     registry = registry_report["items"] if registry_report["exists"] else {}
@@ -518,6 +528,8 @@ def format_preview_command_report(command_key):
 
 def format_preview_scene_report(scene_key):
     """Return deterministic passive scene preview lines."""
+    from .registry import get_registry_item
+
     report = get_registry_item("scenes", scene_key)
     key = report["key"]
 
@@ -561,6 +573,8 @@ def format_preview_scene_report(scene_key):
 
 def format_preview_group_profile_report(profile_key):
     """Return deterministic passive group profile preview lines."""
+    from .registry import get_registry_item
+
     report = get_registry_item("group_profiles", profile_key)
     key = report["key"]
 

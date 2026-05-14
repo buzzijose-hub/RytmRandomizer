@@ -648,6 +648,36 @@ def test_importing_cli_does_not_load_registry_report_module():
     assert result.stderr == ""
 
 
+def test_importing_cli_does_not_load_passive_metadata_modules():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "import rytm_randomizer.cli\n"
+                "assert 'rytm_randomizer.commands' not in sys.modules\n"
+                "assert 'rytm_randomizer.scenes' not in sys.modules\n"
+                "assert 'rytm_randomizer.profiles' not in sys.modules\n"
+                "assert 'rytm_randomizer.registry' not in sys.modules\n"
+                "assert 'rytm_randomizer.preview' not in sys.modules\n"
+                "assert 'rytm_randomizer.inspection' not in sys.modules\n"
+                "assert 'rytm_randomizer.validation' not in sys.modules\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
 def test_anchor_profile_report_command_imports_no_real_midi_libraries():
     result = subprocess.run(
         [
@@ -1747,6 +1777,7 @@ if __name__ == "__main__":
     test_importing_cli_does_not_load_behavior_report_modules()
     test_importing_cli_does_not_load_runtime_or_bridge_report_modules()
     test_importing_cli_does_not_load_registry_report_module()
+    test_importing_cli_does_not_load_passive_metadata_modules()
     test_anchor_profile_report_command_imports_no_real_midi_libraries()
     test_behavior_parity_report_command_imports_no_real_midi_libraries()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
