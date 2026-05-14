@@ -21,7 +21,38 @@ modularize-v1.34
 
 Current HEAD:
 
-f4d512e Add structured Packet 11 coverage to parity report
+df8c0e1 Add structured Packet 11 count to parity summary
+
+## Behavior-Parity Structured Packet 11 Summary Count Checkpoint
+
+The behavior-parity coverage summary now counts the structured Packet 11
+selected-isolated-pad coverage section.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PACKET_11_SUMMARY_COUNT_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `df8c0e1 Add structured Packet 11 count to parity summary`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+
+`summarize_behavior_parity_coverage_report()` now reports:
+
+- `selected_isolated_pad_packet_count: 2`
+
+The count covers Packet 11A / `L` and Packet 11B / `PZ`. This is in-memory
+summary hardening only. It adds no CLI output change, fixture change, runtime
+execution, dispatch, command execution, mutation execution, active CLI command,
+MIDI, ports, package metadata changes, active behavior, or hardware behavior.
+
+Next recommended task:
+
+- continue with concrete report/helper/fixture drift checks
 
 ## Behavior-Parity Structured Packet 11 Coverage Checkpoint
 

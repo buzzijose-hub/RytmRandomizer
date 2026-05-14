@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-f4d512e
+df8c0e1
+
+## Behavior-Parity Structured Packet 11 Summary Count Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PACKET_11_SUMMARY_COUNT_CHECKPOINT.md`
+records the compact summary hardening for structured Packet 11 coverage.
+
+Implementation milestone:
+
+- `df8c0e1 Add structured Packet 11 count to parity summary`
+
+Files changed:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+
+The compact behavior-parity summary now includes:
+
+- `selected_isolated_pad_packet_count: 2`
+
+The count covers:
+
+- Packet 11A / `L`
+- Packet 11B / `PZ`
+
+This adds no CLI output change, fixture change, runtime execution, dispatch,
+command execution, mutation execution, active CLI command, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Structured Packet 11 Coverage Checkpoint
 
