@@ -4,7 +4,6 @@ import sys
 
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
-from .registry_report import format_registry_report
 
 
 USAGE = (
@@ -809,6 +808,8 @@ def main(argv=None):
         return 0
 
     if args == ["report"]:
+        from .registry_report import format_registry_report
+
         sys.stdout.write("\n".join(format_registry_report()))
         sys.stdout.write("\n")
         return 0
