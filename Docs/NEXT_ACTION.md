@@ -1,5 +1,39 @@
 # Next Action
 
+## Latest Package Release No-Publish Checklist
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New release-readiness document:
+
+- `Docs/PACKAGE_RELEASE_NO_PUBLISH_CHECKLIST.md`
+
+Purpose:
+
+- document package release readiness without publishing anything
+- clarify that the current release workflow builds artifacts on `v*` tags
+- clarify that the current workflow does not publish to PyPI or TestPyPI
+- keep package publication as a separate future approval
+
+Decision:
+
+- do not create or push release tags in this slice
+- do not publish packages in this slice
+- review PR #2 before any release workflow is exercised
+
+Recommended next task:
+
+- review PR #2 with Eddie
+- then choose whether to keep it draft, mark it ready, update findings, create
+  a docs inventory plan, polish contributor onboarding, or plan package
+  publication separately later
+
 ## Latest Branch Protection Admin Instructions
 
 Current review branch:

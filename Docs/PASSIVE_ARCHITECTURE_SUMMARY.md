@@ -2,6 +2,28 @@
 
 Date: May 4, 2026
 
+## Package Release No-Publish Checklist
+
+`Docs/PACKAGE_RELEASE_NO_PUBLISH_CHECKLIST.md` documents package release
+readiness without publishing anything.
+
+It records that the current release workflow:
+
+- triggers only on pushed `v*` tags
+- builds the Python package
+- uploads `dist/*` as workflow artifacts
+- does not publish to PyPI or TestPyPI
+- does not create a GitHub Release
+- does not run hardware validation
+
+The checklist keeps package publication, public release policy, versioning,
+and pushed release tags as separate future approvals.
+
+This document is documentation-only. It adds no package metadata change,
+release tag, artifact publication, runtime behavior, dispatch, active
+behavior, MIDI sending, MIDI port opening, hardware behavior, or V1.34
+reference change.
+
 ## Branch Protection Admin Instructions
 
 `Docs/BRANCH_PROTECTION_ADMIN_INSTRUCTIONS.md` documents how the repository

@@ -3,6 +3,43 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Package Release No-Publish Checklist
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New release-readiness document:
+
+- `Docs/PACKAGE_RELEASE_NO_PUBLISH_CHECKLIST.md`
+
+The checklist documents release readiness without publishing anything.
+
+It records:
+
+- current package name and version
+- current release workflow behavior
+- local dry-run commands
+- no-publish release readiness checklist
+- tag safety rules
+- package publication boundary
+- safety boundaries before any future public/package release
+
+Decision:
+
+- no release tag was created
+- no package was published
+- no package metadata was changed
+- PyPI/TestPyPI publication remains a separate future approval
+
+This checkpoint adds no code, tests, MIDI, ports, dispatch, active behavior,
+hardware behavior, GitHub admin action, release tag, package publication, or
+V1.34 reference edit.
+
 ## Branch Protection Admin Instructions
 
 Current review branch:

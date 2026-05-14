@@ -200,6 +200,20 @@ Branch protection/admin instructions are now documented in:
 This follow-up is owner/admin guidance only. It does not apply branch
 protection or change repository settings.
 
+## Package Release Checklist Follow-Up
+
+Package release readiness is now documented in:
+
+- `Docs/PACKAGE_RELEASE_NO_PUBLISH_CHECKLIST.md`
+
+This follow-up is a no-publish checklist only. It documents the current
+release workflow behavior, local dry-run expectations, tag safety rules, and
+package publication boundary.
+
+The current release workflow builds `dist/*` artifacts on pushed `v*` tags,
+but it does not publish to PyPI or TestPyPI. Package publication remains a
+separate future approval.
+
 ## Current Decision
 
 PR #2 is green and reviewable as a draft foundation PR.
