@@ -21,7 +21,47 @@ modularize-v1.34
 
 Current HEAD:
 
-ab492ad Lazy-load behavior report CLI formatters
+aa198d8 Lazy-load runtime report CLI formatters
+
+## Runtime Report CLI Import Isolation Checkpoint
+
+The passive CLI now lazy-loads runtime/bridge report formatters only when
+their specific report commands are invoked.
+
+Checkpoint document:
+
+- `Docs/V134_RUNTIME_REPORT_CLI_IMPORT_ISOLATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `aa198d8 Lazy-load runtime report CLI formatters`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+Plain `import rytm_randomizer.cli` no longer loads:
+
+- `rytm_randomizer.runtime_plan_report`
+- `rytm_randomizer.runtime_plan`
+- `rytm_randomizer.mock_runtime_active_bridge_report`
+- `rytm_randomizer.mock_runtime_active_bridge`
+
+The existing passive report commands still load their formatters only when
+called:
+
+- `runtime-plan-report`
+- `mock-runtime-active-bridge-report`
+
+This adds no CLI output change, fixture change, runtime execution, bridge
+invocation from plain CLI import, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
+
+Next recommended task:
+
+- continue scanning for concrete passive import-boundary or report/helper drift
 
 ## Behavior Report CLI Import Isolation Checkpoint
 
