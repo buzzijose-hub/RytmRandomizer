@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-77402b2
+5d5e743
+
+## Project Status API Hardening Visibility Checkpoint
+
+`Docs/PROJECT_STATUS_API_HARDENING_VISIBILITY_CHECKPOINT.md` records the
+passive project-status visibility update after the public API hardening
+mini-run.
+
+Implementation milestone:
+
+- `5d5e743 Add project status API hardening visibility`
+
+The passive project-status report now exposes a `public_api_hardening` block
+for:
+
+- `rytm_randomizer.active_boundary`
+- `rytm_randomizer.active_boundary_report`
+- `rytm_randomizer.runtime_plan`
+- `rytm_randomizer.runtime_plan_report`
+- `rytm_randomizer.mock_runtime_active_bridge_report`
+
+The project-status summary now records `public_api_hardening: checkpointed`,
+and the project-status safety check now guards that the API hardening state
+remains passive with real MIDI, port opening, and active behavior absent.
+
+This closes the useful API-hardening visibility loop and adds no runtime
+execution, dispatch, command execution, active CLI behavior, real MIDI
+dependency, MIDI port opening, MIDI sending, package metadata change, or
+hardware behavior.
 
 ## Runtime Plan Public API Exports Checkpoint
 

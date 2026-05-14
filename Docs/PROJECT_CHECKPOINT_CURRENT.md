@@ -21,7 +21,41 @@ modularize-v1.34
 
 Current HEAD:
 
-77402b2 Add runtime plan public API exports
+5d5e743 Add project status API hardening visibility
+
+## Project Status API Hardening Visibility Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/PROJECT_STATUS_API_HARDENING_VISIBILITY_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `5d5e743 Add project status API hardening visibility`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/project_status_report.py`
+- `tests/test_project_status_report.py`
+- `tests/fixtures/cli_project_status_report_expected.txt`
+- `tests/fixtures/cli_project_status_report_summary_expected.txt`
+- `tests/fixtures/cli_project_status_report_check_expected.txt`
+
+The passive project-status report now records the public API hardening state:
+
+- status: `checkpointed`
+- module count: `5`
+- exports documented: `True`
+- real MIDI: `absent`
+- port opening: `absent`
+- active behavior: `absent`
+
+The compact summary now includes `public_api_hardening: checkpointed`, and the
+project-status safety check now verifies the public API hardening block.
+
+This closes the useful API-hardening visibility loop. It adds no CLI command,
+runtime execution, dispatch, real MIDI dependency, port opening, MIDI sending,
+active CLI command, package metadata change, or hardware behavior.
 
 ## Runtime Plan Public API Exports Checkpoint
 
