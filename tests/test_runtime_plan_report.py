@@ -234,6 +234,20 @@ def test_runtime_plan_report_exposes_no_active_behavior_names():
     assert "send_midi" not in exposed_names
 
 
+def test_runtime_plan_report_exposes_explicit_public_api():
+    import rytm_randomizer.runtime_plan_report as report
+
+    assert report.__all__ == [
+        "PARKED_REPORT_INPUTS",
+        "RUNTIME_PLAN_REPORT_BOUNDARY",
+        "SUPPORTED_REPORT_INPUTS",
+        "UNSUPPORTED_REPORT_INPUTS",
+        "build_runtime_plan_report",
+        "format_runtime_plan_report",
+        "summarize_runtime_plan_report",
+    ]
+
+
 if __name__ == "__main__":
     test_importing_runtime_plan_report_prints_nothing()
     test_report_summarizes_runtime_plan_inputs()
@@ -243,3 +257,4 @@ if __name__ == "__main__":
     test_returned_report_data_is_copied_and_mutation_safe()
     test_no_real_midi_library_is_imported()
     test_runtime_plan_report_exposes_no_active_behavior_names()
+    test_runtime_plan_report_exposes_explicit_public_api()

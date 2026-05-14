@@ -62,6 +62,16 @@ RUNTIME_PLAN_REPORT_BOUNDARY = {
     "hardware_required": False,
 }
 
+__all__ = [
+    "PARKED_REPORT_INPUTS",
+    "RUNTIME_PLAN_REPORT_BOUNDARY",
+    "SUPPORTED_REPORT_INPUTS",
+    "UNSUPPORTED_REPORT_INPUTS",
+    "build_runtime_plan_report",
+    "format_runtime_plan_report",
+    "summarize_runtime_plan_report",
+]
+
 
 def _preview_summary(report_input):
     intent = RuntimeIntent(
