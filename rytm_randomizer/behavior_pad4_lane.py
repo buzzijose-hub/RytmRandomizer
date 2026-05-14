@@ -254,3 +254,13 @@ def _unsupported_result(command_key):
             "dispatches_command": False,
         },
     )
+
+
+__all__ = [
+    "DEFERRED_PACKET_8_PAD4_LANE_KEYS",
+    "PACKET_8A_PAD4_LANE_KEYS",
+    "PACKET_8B_PAD4_LANE_KEYS",
+    "PACKET_8C_PAD4_LANE_KEYS",
+    "Pad4LaneBehaviorResult",
+    "evaluate_pad4_lane_behavior",
+]

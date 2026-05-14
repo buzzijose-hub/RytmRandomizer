@@ -370,6 +370,19 @@ def test_behavior_pad4_lane_exposes_no_active_behavior_names():
     assert "hardware_test" not in exposed_names
 
 
+def test_behavior_pad4_lane_exposes_explicit_public_api():
+    import rytm_randomizer.behavior_pad4_lane as behavior_pad4_lane
+
+    assert behavior_pad4_lane.__all__ == [
+        "DEFERRED_PACKET_8_PAD4_LANE_KEYS",
+        "PACKET_8A_PAD4_LANE_KEYS",
+        "PACKET_8B_PAD4_LANE_KEYS",
+        "PACKET_8C_PAD4_LANE_KEYS",
+        "Pad4LaneBehaviorResult",
+        "evaluate_pad4_lane_behavior",
+    ]
+
+
 def test_no_out_of_scope_support_is_exposed():
     import rytm_randomizer.behavior_pad4_lane as behavior_pad4_lane
 
@@ -400,4 +413,5 @@ if __name__ == "__main__":
     test_no_real_midi_library_is_imported()
     test_no_package_metadata_files_are_introduced()
     test_behavior_pad4_lane_exposes_no_active_behavior_names()
+    test_behavior_pad4_lane_exposes_explicit_public_api()
     test_no_out_of_scope_support_is_exposed()
