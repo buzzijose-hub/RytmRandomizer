@@ -21,7 +21,30 @@ modularize-v1.34
 
 Current HEAD:
 
-d6380ce Add collaborator review status visibility checkpoint
+0c6a98b Add collaborator review status visibility review
+
+## Collaborator Review Triage Template
+
+The latest collaborator-readiness document is:
+
+- `Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md`
+
+It provides a safe template for recording Eddie's future review findings as
+text or Markdown before implementation.
+
+The template records the required triage fields, accepted triage categories,
+safety boundaries, verification checklist, and implementation gate.
+
+Current state:
+
+- Eddie's review text is still pending
+- no findings have been received as text or Markdown yet
+- no review finding is implemented
+- screenshot-only findings remain insufficient for implementation
+
+The template adds no code, tests, package metadata, runtime execution,
+dispatch, command execution, active CLI command, real MIDI dependency, port
+opening, MIDI sending, hardware behavior, or V1.34 reference change.
 
 ## Collaborator Review Status Visibility Checkpoint Review
 

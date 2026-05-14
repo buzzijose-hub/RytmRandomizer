@@ -6,7 +6,35 @@ modularize-v1.34
 
 ## Current HEAD
 
-d6380ce Add collaborator review status visibility checkpoint
+0c6a98b Add collaborator review status visibility review
+
+## Latest Collaborator Review Triage Template
+
+The latest collaborator-readiness document is:
+
+- `Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md`
+
+Purpose:
+
+- provide a safe landing zone for Eddie's eventual review findings
+- define the fields needed before findings become work
+- preserve verify-before-implementing review intake
+- prevent screenshot-only or unverified review suggestions from becoming code
+  changes
+
+Current review state:
+
+- Eddie has collaborator access
+- external AI-assisted review is pending
+- findings have not been received as text or Markdown yet
+- no review finding is implemented by this template
+
+Recommended next task:
+
+- if Eddie sends review text, create a filled collaborator review triage
+  document before implementing findings
+- if review text is still pending, continue with safe passive/mock-only
+  behavior parity, visibility, or documentation work
 
 ## Latest Collaborator Review Status Visibility Checkpoint Review
 

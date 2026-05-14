@@ -8,7 +8,27 @@ modularize-v1.34
 
 Current HEAD:
 
-d6380ce
+0c6a98b
+
+## Collaborator Review Triage Template
+
+`Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md` provides a documentation-only
+template for triaging Eddie's future review findings.
+
+The template defines:
+
+- required finding fields
+- accepted triage categories
+- safety boundaries
+- per-finding verification checklist
+- implementation gate before any review-driven code change
+
+It keeps external review advisory until findings arrive as text or Markdown
+and are verified locally.
+
+This adds no code, tests, package metadata, runtime execution, dispatch,
+command execution, active CLI command, real MIDI dependency, MIDI port
+opening, MIDI sending, hardware behavior, or V1.34 reference change.
 
 ## Collaborator Review Status Visibility Checkpoint Review
 
