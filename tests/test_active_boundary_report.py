@@ -322,6 +322,23 @@ def test_active_boundary_report_exposes_no_active_behavior_names():
     assert "MidiPortProvider" not in exposed_names
 
 
+def test_active_boundary_report_exposes_explicit_public_api():
+    import rytm_randomizer.active_boundary_report as report
+
+    assert report.__all__ == [
+        "ACTIVE_BOUNDARY_SAFETY",
+        "CLOSEOUT_COVERAGE",
+        "REQUIRED_CONDITIONS",
+        "RESULT_METADATA_FIELDS",
+        "SAFE_FAILURE_SUMMARY",
+        "UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS",
+        "UNSUPPORTED_SOURCE_KINDS",
+        "build_active_boundary_report",
+        "format_active_boundary_report",
+        "summarize_active_boundary_report",
+    ]
+
+
 if __name__ == "__main__":
     test_importing_active_boundary_report_prints_nothing()
     test_report_summarizes_active_boundary_candidate_and_unsupported_profiles()
@@ -340,3 +357,4 @@ if __name__ == "__main__":
     test_passive_cli_report_behavior_remains_unchanged()
     test_no_profile_3_or_4_active_boundary_support_is_added()
     test_active_boundary_report_exposes_no_active_behavior_names()
+    test_active_boundary_report_exposes_explicit_public_api()

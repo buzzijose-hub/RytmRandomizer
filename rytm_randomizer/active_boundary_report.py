@@ -63,6 +63,19 @@ CLOSEOUT_COVERAGE = (
     "Active Boundary",
 )
 
+__all__ = [
+    "ACTIVE_BOUNDARY_SAFETY",
+    "CLOSEOUT_COVERAGE",
+    "REQUIRED_CONDITIONS",
+    "RESULT_METADATA_FIELDS",
+    "SAFE_FAILURE_SUMMARY",
+    "UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS",
+    "UNSUPPORTED_SOURCE_KINDS",
+    "build_active_boundary_report",
+    "format_active_boundary_report",
+    "summarize_active_boundary_report",
+]
+
 
 def _target_concept(profile):
     source_name = profile["name"]
