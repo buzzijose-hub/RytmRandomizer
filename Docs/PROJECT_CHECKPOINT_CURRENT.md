@@ -21,7 +21,41 @@ modularize-v1.34
 
 Current HEAD:
 
-d2444fe Add CLI bridge report import isolation
+76b248d Align behavior parity coverage report with Packet 11B
+
+## Behavior-Parity Packet 11B Coverage Alignment Checkpoint
+
+The behavior-parity coverage report now reflects the existing Packet 11B/PZ
+selected-isolated-pad anchor-return readiness behavior.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11B_COVERAGE_ALIGNMENT_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `76b248d Align behavior parity coverage report with Packet 11B`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+The alignment keeps Packet 11A/L accepted coverage and adds Packet 11B/PZ to
+accepted packet coverage. The read-only behavior-parity summary count is now
+12, and the passive `behavior-parity-report` CLI fixture includes the Packet
+11B/PZ line.
+
+This is a report/test/fixture alignment only. It adds no runtime execution,
+dispatch, command execution, mutation execution, active CLI command, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
+
+Next recommended task:
+
+- continue with one concrete behavior-parity alignment or safety slice based
+  on actual drift, rather than another automatic review gate
 
 ## Behavior-Parity CLI Bridge Report Import Isolation Checkpoint
 

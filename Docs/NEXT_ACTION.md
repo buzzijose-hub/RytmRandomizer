@@ -6,7 +6,53 @@ modularize-v1.34
 
 ## Current HEAD
 
-d2444fe Add CLI bridge report import isolation
+76b248d Align behavior parity coverage report with Packet 11B
+
+## Latest Behavior-Parity Packet 11B Coverage Alignment Checkpoint
+
+The behavior-parity coverage report now reflects the existing Packet 11B/PZ
+selected-isolated-pad anchor-return readiness behavior.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_PACKET_11B_COVERAGE_ALIGNMENT_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `76b248d Align behavior parity coverage report with Packet 11B`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+Confirmed behavior:
+
+- accepted packet coverage now includes Packet 11B/PZ
+- behavior-parity coverage summary count is now 12
+- passive `behavior-parity-report` CLI fixture includes Packet 11B/PZ
+- existing runtime-adjacent safe-failure trio remains `PZ`, `B`, and `L`
+
+Recommended next task:
+
+- continue with one concrete behavior-parity alignment or safety slice, based
+  on actual report/test/code drift
+- avoid automatic review-gate loops unless the next step truly needs a
+  decision checkpoint
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Behavior-Parity CLI Bridge Report Import Isolation Checkpoint
 

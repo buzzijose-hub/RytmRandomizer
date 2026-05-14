@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-d2444fe
+76b248d
+
+## Behavior-Parity Packet 11B Coverage Alignment Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_PACKET_11B_COVERAGE_ALIGNMENT_CHECKPOINT.md`
+records the read-only coverage report alignment for Packet 11B/PZ.
+
+Implementation milestone:
+
+- `76b248d Align behavior parity coverage report with Packet 11B`
+
+Files changed:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+The behavior-parity coverage report now includes:
+
+- Packet 11A `L` selected isolated pad target intent
+- Packet 11B `PZ` selected isolated pad anchor-return readiness
+
+The passive `behavior-parity-report` CLI fixture reflects the same read-only
+coverage state. Runtime-adjacent safe-failure coverage still lists `PZ`, `B`,
+and `L`.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Behavior-Parity CLI Bridge Report Import Isolation Checkpoint
 
