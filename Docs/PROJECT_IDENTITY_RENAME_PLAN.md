@@ -117,6 +117,24 @@ A good dream-project name should:
 - be easy to remember
 - not force a technical package rename
 
+## Current Name Shortlist
+
+`Docs/PROJECT_IDENTITY_NAME_SHORTLIST.md` records the current docs-only
+creative name shortlist.
+
+Current leading working candidate:
+
+- `KitForge`
+
+Strong alternates:
+
+- `MorphDeck`
+- `AnchorEngine`
+
+No final creative name has been adopted yet. The shortlist does not rename the
+repository, package, imports, CLI paths, tests, fixtures, package metadata, or
+GitHub settings.
+
 ## Safe Future Rename Path
 
 Recommended future sequence:
@@ -167,4 +185,5 @@ technical project remains `RytmRandomizer` for now.
 
 Next recommended task:
 
-- create a short creative name shortlist and selection note
+- review and accept a creative identity candidate, or request one more
+  shortlist pass with a different tone

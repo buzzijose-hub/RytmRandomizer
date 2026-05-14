@@ -8,7 +8,33 @@ modularize-v1.34
 
 Current HEAD:
 
-d02d494
+de6d327
+
+## Project Identity Name Shortlist
+
+`Docs/PROJECT_IDENTITY_NAME_SHORTLIST.md` records a docs-only creative name
+shortlist for the broader dream-project identity.
+
+Current leading working candidate:
+
+- `KitForge`
+
+Strong alternates:
+
+- `MorphDeck`
+- `AnchorEngine`
+
+No final creative name has been adopted yet. Technical names remain unchanged:
+
+- repository name: `RytmRandomizer`
+- package/import name: `rytm_randomizer`
+- CLI path: `python -m rytm_randomizer.cli`
+- tests, fixtures, package metadata, and historical checkpoint names
+
+The shortlist adds no repository rename, package rename, import rename, CLI
+path rename, runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Project Identity Rename Plan
 
@@ -25,7 +51,9 @@ Accepted approach:
 - tests, fixtures, package metadata, and historical checkpoint names remain
   unchanged
 
-No final new creative name has been selected yet.
+`Docs/PROJECT_IDENTITY_NAME_SHORTLIST.md` now records `KitForge` as the
+leading working candidate, with `MorphDeck` and `AnchorEngine` as strong
+alternates. No final new creative name has been adopted yet.
 
 This adds no repository rename, package rename, import rename, CLI path rename,
 runtime execution, dispatch, command execution, mutation execution, active CLI

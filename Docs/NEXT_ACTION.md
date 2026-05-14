@@ -6,7 +6,56 @@ modularize-v1.34
 
 ## Current HEAD
 
-d02d494 Add progress checkpoint after structured lane coverage
+de6d327 Add project identity rename plan
+
+## Latest Project Identity Name Shortlist
+
+The project now has a docs-only creative name shortlist for the broader dream
+project identity.
+
+Shortlist document:
+
+- `Docs/PROJECT_IDENTITY_NAME_SHORTLIST.md`
+
+Current leading working candidate:
+
+- `KitForge`
+
+Strong alternates:
+
+- `MorphDeck`
+- `AnchorEngine`
+
+Current naming status:
+
+- no final creative name has been adopted yet
+- technical repository name remains `RytmRandomizer`
+- Python package/import name remains `rytm_randomizer`
+- CLI path remains `python -m rytm_randomizer.cli`
+- tests, fixtures, package metadata, and historical checkpoint names remain
+  unchanged
+
+Recommended next task:
+
+- review and accept a creative identity candidate, or request one more
+  shortlist pass with a different tone
+
+Confirmed boundaries:
+
+- no repository rename
+- no package rename
+- no import rename
+- no CLI path rename
+- no test/fixture rename
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Project Identity Rename Plan
 
@@ -27,13 +76,17 @@ Accepted approach:
 
 Current naming status:
 
-- no final new creative name has been selected yet
+- `Docs/PROJECT_IDENTITY_NAME_SHORTLIST.md` now records `KitForge` as the
+  leading working candidate, with `MorphDeck` and `AnchorEngine` as strong
+  alternates
+- no final new creative name has been adopted yet
 - technical name remains `RytmRandomizer`
 - all commands and imports remain unchanged
 
 Recommended next task:
 
-- create a short creative name shortlist and selection note
+- review and accept a creative identity candidate, or request one more
+  shortlist pass with a different tone
 
 Confirmed boundaries:
 
