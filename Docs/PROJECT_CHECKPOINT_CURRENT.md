@@ -21,7 +21,46 @@ modularize-v1.34
 
 Current HEAD:
 
-df8c0e1 Add structured Packet 11 count to parity summary
+ab492ad Lazy-load behavior report CLI formatters
+
+## Behavior Report CLI Import Isolation Checkpoint
+
+The passive CLI now lazy-loads behavior report formatters only when their
+specific report commands are invoked.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_REPORT_CLI_IMPORT_ISOLATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `ab492ad Lazy-load behavior report CLI formatters`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+Plain `import rytm_randomizer.cli` no longer loads:
+
+- `rytm_randomizer.behavior_anchor_profile_report`
+- `rytm_randomizer.behavior_parity_coverage_report`
+- `rytm_randomizer.behavior_selected_isolated_pad`
+- `rytm_randomizer.selected_isolated_pad_runtime_state`
+
+The existing passive report commands still load their formatters only when
+called:
+
+- `anchor-profile-report`
+- `behavior-parity-report`
+
+This adds no CLI output change, fixture change, runtime execution, dispatch,
+command execution, mutation execution, active CLI command, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
+
+Next recommended task:
+
+- continue scanning for concrete passive import-boundary or report/helper drift
 
 ## Behavior-Parity Structured Packet 11 Summary Count Checkpoint
 

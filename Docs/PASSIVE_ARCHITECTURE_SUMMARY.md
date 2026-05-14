@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-df8c0e1
+ab492ad
+
+## Behavior Report CLI Import Isolation Checkpoint
+
+`Docs/V134_BEHAVIOR_REPORT_CLI_IMPORT_ISOLATION_CHECKPOINT.md` records the
+passive CLI import-isolation hardening for behavior report formatters.
+
+Implementation milestone:
+
+- `ab492ad Lazy-load behavior report CLI formatters`
+
+Files changed:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+The passive CLI now avoids loading these modules during plain CLI import:
+
+- `rytm_randomizer.behavior_anchor_profile_report`
+- `rytm_randomizer.behavior_parity_coverage_report`
+- `rytm_randomizer.behavior_selected_isolated_pad`
+- `rytm_randomizer.selected_isolated_pad_runtime_state`
+
+The existing passive report commands still work:
+
+- `anchor-profile-report`
+- `behavior-parity-report`
+
+This adds no CLI output change, fixture change, runtime execution, dispatch,
+command execution, mutation execution, active CLI command, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Structured Packet 11 Summary Count Checkpoint
 
