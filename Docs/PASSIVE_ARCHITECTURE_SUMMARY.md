@@ -8,7 +8,38 @@ modularize-v1.34
 
 Current HEAD:
 
-a38bcdd
+474c209
+
+## Behavior-Parity Structured Pad Lane Coverage Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PAD_LANE_COVERAGE_CHECKPOINT.md`
+records structured Pad 2, Pad 3, and Pad 4 lane coverage in the read-only
+behavior-parity coverage report.
+
+Implementation milestone:
+
+- `474c209 Add structured pad lane coverage to parity report`
+
+Files changed:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+The report now exposes machine-checkable accepted and deferred key coverage
+for:
+
+- Packet 6 / Pad 2 secondary lane
+- Packet 7 / Pad 3 SY Raw lane
+- Packet 8 / Pad 4 BD Acoustic lane
+
+The compact report summary now includes pad-lane packet and command counts,
+and the passive `behavior-parity-report` CLI fixture includes the same
+structured coverage section.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Passive Metadata CLI Import Isolation Checkpoint
 

@@ -6,7 +6,53 @@ modularize-v1.34
 
 ## Current HEAD
 
-a38bcdd Lazy-load passive metadata CLI helpers
+474c209 Add structured pad lane coverage to parity report
+
+## Latest Behavior-Parity Structured Pad Lane Coverage Checkpoint
+
+The behavior-parity coverage report now includes structured Pad 2, Pad 3, and
+Pad 4 lane coverage in addition to broad packet coverage text.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PAD_LANE_COVERAGE_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `474c209 Add structured pad lane coverage to parity report`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+Confirmed behavior:
+
+- `pad_lane_packet_coverage` records Packet 6 / Pad 2 accepted and deferred keys
+- `pad_lane_packet_coverage` records Packet 7 / Pad 3 accepted and deferred keys
+- `pad_lane_packet_coverage` records Packet 8 / Pad 4 accepted and deferred keys
+- summary data includes `pad_lane_packet_count: 3`
+- summary data includes `pad_lane_command_count: 21`
+- passive `behavior-parity-report` CLI output includes the structured section
+
+Recommended next task:
+
+- continue with a concrete report/helper drift check if one appears
+- otherwise create a short progress checkpoint before selecting the next
+  behavior-parity slice
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Passive Metadata CLI Import Isolation Checkpoint
 
