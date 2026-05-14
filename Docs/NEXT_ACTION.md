@@ -6,7 +6,38 @@ modularize-v1.34
 
 ## Current HEAD
 
-5d5e743 Add project status API hardening visibility
+3b207bd Add project status API visibility checkpoint
+
+## Latest Collaborator Review Intake Checkpoint
+
+The latest documentation checkpoint is:
+
+- `Docs/COLLABORATOR_REVIEW_INTAKE_CHECKPOINT.md`
+
+Context:
+
+- Eddie has accepted the private repository collaboration invite
+- an external AI-assisted review is pending
+- review findings should be sent as text or Markdown before implementation
+
+Decision:
+
+- external review feedback is advisory and must be verified locally before any
+  code changes
+- findings should be classified as valid/urgent, valid/later, already handled,
+  needs more evidence, not applicable, conflicts with safety constraints, or
+  conflicts with current project direction
+- no external review finding may introduce real MIDI, ports, active CLI
+  behavior, runtime execution, dispatch, package metadata changes, hardware
+  behavior, or changes to `rytm_hybrid_randomizer_v134.py` without separate
+  explicit approval
+
+Recommended next task:
+
+- continue with a safe passive/mock-only slice while waiting for the full
+  review text
+- once review text arrives, create a collaborator review triage document before
+  implementing any findings
 
 ## Latest Project Status API Hardening Visibility Checkpoint
 

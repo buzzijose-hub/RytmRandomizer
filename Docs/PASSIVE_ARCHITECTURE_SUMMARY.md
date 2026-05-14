@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-5d5e743
+3b207bd
+
+## Collaborator Review Intake Checkpoint
+
+`Docs/COLLABORATOR_REVIEW_INTAKE_CHECKPOINT.md` records the intake process for
+Eddie's external AI-assisted review now that he can collaborate on the private
+repository.
+
+The checkpoint requires review findings to be supplied as text or Markdown,
+then verified locally before implementation.
+
+Findings should be classified before action:
+
+- valid and urgent
+- valid but later
+- already handled
+- needs more evidence
+- not applicable
+- conflicts with safety constraints
+- conflicts with current project direction
+
+The review process preserves the current passive/mock-only boundaries: no real
+MIDI, no ports, no active CLI behavior, no runtime execution, no dispatch, no
+package metadata changes, no hardware behavior, and no changes to
+`rytm_hybrid_randomizer_v134.py` without separate explicit approval.
 
 ## Project Status API Hardening Visibility Checkpoint
 
