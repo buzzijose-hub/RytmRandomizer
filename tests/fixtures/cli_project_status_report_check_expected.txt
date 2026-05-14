@@ -1,0 +1,17 @@
+RytmRandomizer Project Status Check
+- ok: True
+- failure_count: 0
+- safety.real_midi: absent
+- safety.port_opening: absent
+- safety.active_execution: absent
+- safety.command_execution: absent
+- safety.dispatch: absent
+- safety.hardware_required: False
+- safety.v134_reference: untouched
+- safety.package_metadata: untouched
+- runtime_plan.runtime_execution: absent
+- active_boundary.active_cli_behavior: absent
+- mock_runtime_active_bridge.emits_messages: False
+- source.in_memory_only: True
+- source.writes_files: False
+- closeout.failure_propagation: guarded

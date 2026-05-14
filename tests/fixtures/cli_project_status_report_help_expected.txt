@@ -4,12 +4,14 @@ Usage:
   python -m rytm_randomizer.cli project-status-report
   python -m rytm_randomizer.cli project-status-report --summary
   python -m rytm_randomizer.cli project-status-report --json
+  python -m rytm_randomizer.cli project-status-report --check
   python -m rytm_randomizer.cli project-status-report --help
 
 Behavior:
   Prints the deterministic read-only project status report to stdout.
   With --summary, prints a compact one-screen status summary.
   With --json, prints the same passive report as deterministic JSON.
+  With --check, validates passive safety invariants and exits nonzero on failure.
 
 Safety:
   passive/read-only

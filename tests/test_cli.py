@@ -7,7 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "project-status-report [--summary|--json] | mock-mapper-report | runtime-plan-report | "
+    "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -289,6 +289,16 @@ def test_project_status_report_summary_command_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_project_status_report_check_command_exits_zero_and_matches_fixture():
+    result = run_cli("project-status-report", "--check")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_project_status_report_check_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_project_status_report_json_command_exits_zero_and_returns_json():
     result = run_cli("project-status-report", "--json")
 
@@ -394,6 +404,17 @@ def test_project_status_report_command_is_deterministic():
 def test_project_status_report_summary_command_is_deterministic():
     first = run_cli("project-status-report", "--summary")
     second = run_cli("project-status-report", "--summary")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_project_status_report_check_command_is_deterministic():
+    first = run_cli("project-status-report", "--check")
+    second = run_cli("project-status-report", "--check")
 
     assert first.returncode == 0
     assert second.returncode == 0
@@ -554,6 +575,30 @@ def test_project_status_report_summary_command_imports_no_real_midi_libraries():
 
     assert result.returncode == 0
     assert "RytmRandomizer Project Status Summary" in result.stdout
+    assert result.stderr == ""
+
+
+def test_project_status_report_check_command_imports_no_real_midi_libraries():
+    script = "\n".join(
+        [
+            "import runpy",
+            "import sys",
+            "sys.argv = ['rytm_randomizer.cli', 'project-status-report', '--check']",
+            "runpy.run_module('rytm_randomizer.cli', run_name='__main__')",
+            "assert 'mido' not in sys.modules",
+            "assert 'rtmidi' not in sys.modules",
+        ]
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer Project Status Check" in result.stdout
     assert result.stderr == ""
 
 
@@ -1946,6 +1991,7 @@ if __name__ == "__main__":
     test_report_command_exits_zero_and_matches_fixture()
     test_project_status_report_command_exits_zero_and_matches_fixture()
     test_project_status_report_summary_command_exits_zero_and_matches_fixture()
+    test_project_status_report_check_command_exits_zero_and_matches_fixture()
     test_project_status_report_json_command_exits_zero_and_returns_json()
     test_mock_mapper_report_command_exits_zero_and_matches_fixture()
     test_runtime_plan_report_command_exits_zero_and_matches_fixture()
@@ -1956,6 +2002,7 @@ if __name__ == "__main__":
     test_report_command_is_deterministic()
     test_project_status_report_command_is_deterministic()
     test_project_status_report_summary_command_is_deterministic()
+    test_project_status_report_check_command_is_deterministic()
     test_project_status_report_json_command_is_deterministic()
     test_mock_mapper_report_command_is_deterministic()
     test_runtime_plan_report_command_is_deterministic()
@@ -1967,6 +2014,7 @@ if __name__ == "__main__":
     test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
     test_project_status_report_command_imports_no_real_midi_libraries()
     test_project_status_report_summary_command_imports_no_real_midi_libraries()
+    test_project_status_report_check_command_imports_no_real_midi_libraries()
     test_project_status_report_json_command_imports_no_real_midi_libraries()
     test_mock_mapper_report_command_imports_no_real_midi_libraries()
     test_runtime_plan_report_command_imports_no_real_midi_libraries()

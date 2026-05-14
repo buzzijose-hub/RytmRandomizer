@@ -146,6 +146,91 @@ def test_project_status_summary_lines_are_deterministic():
     ]
 
 
+def test_project_status_check_passes_for_current_report():
+    from rytm_randomizer.project_status_report import check_project_status_report
+
+    check = check_project_status_report()
+
+    assert check == {
+        "title": "RytmRandomizer Project Status Check",
+        "ok": True,
+        "failure_count": 0,
+        "failures": [],
+        "checked": {
+            "safety.real_midi": "absent",
+            "safety.port_opening": "absent",
+            "safety.active_execution": "absent",
+            "safety.command_execution": "absent",
+            "safety.dispatch": "absent",
+            "safety.hardware_required": False,
+            "safety.v134_reference": "untouched",
+            "safety.package_metadata": "untouched",
+            "runtime_plan.runtime_execution": "absent",
+            "active_boundary.active_cli_behavior": "absent",
+            "mock_runtime_active_bridge.emits_messages": False,
+            "source.in_memory_only": True,
+            "source.writes_files": False,
+            "closeout.failure_propagation": "guarded",
+        },
+    }
+
+
+def test_project_status_check_fails_for_mutated_unsafe_report():
+    from rytm_randomizer.project_status_report import (
+        build_project_status_report,
+        check_project_status_report,
+    )
+
+    report = build_project_status_report()
+    report["safety"]["real_midi"] = "present"
+    report["source"]["writes_files"] = True
+
+    check = check_project_status_report(report)
+
+    assert check["ok"] is False
+    assert check["failure_count"] == 2
+    assert check["failures"] == [
+        {
+            "path": "safety.real_midi",
+            "expected": "absent",
+            "actual": "present",
+        },
+        {
+            "path": "source.writes_files",
+            "expected": False,
+            "actual": True,
+        },
+    ]
+
+
+def test_project_status_check_lines_are_deterministic():
+    from rytm_randomizer.project_status_report import format_project_status_check
+
+    first = format_project_status_check()
+    second = format_project_status_check()
+
+    assert first == second
+    assert first == [
+        "RytmRandomizer Project Status Check",
+        "- ok: True",
+        "- failure_count: 0",
+        "- safety.real_midi: absent",
+        "- safety.port_opening: absent",
+        "- safety.active_execution: absent",
+        "- safety.command_execution: absent",
+        "- safety.dispatch: absent",
+        "- safety.hardware_required: False",
+        "- safety.v134_reference: untouched",
+        "- safety.package_metadata: untouched",
+        "- runtime_plan.runtime_execution: absent",
+        "- active_boundary.active_cli_behavior: absent",
+        "- mock_runtime_active_bridge.emits_messages: False",
+        "- source.in_memory_only: True",
+        "- source.writes_files: False",
+        "- closeout.failure_propagation: guarded",
+    ]
+
+
 def test_formatted_project_status_report_is_deterministic():
     from rytm_randomizer.project_status_report import format_project_status_report
 
@@ -287,6 +372,9 @@ if __name__ == "__main__":
     test_project_status_report_records_absent_runtime_and_hardware_boundaries()
     test_project_status_summary_is_deterministic()
     test_project_status_summary_lines_are_deterministic()
+    test_project_status_check_passes_for_current_report()
+    test_project_status_check_fails_for_mutated_unsafe_report()
+    test_project_status_check_lines_are_deterministic()
     test_formatted_project_status_report_is_deterministic()
     test_project_status_report_json_is_deterministic_and_parseable()
     test_returned_project_status_report_is_copied_and_mutation_safe()

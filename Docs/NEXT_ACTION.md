@@ -6,7 +6,45 @@ modularize-v1.34
 
 ## Current HEAD
 
-99f69e0 Add project status report JSON output
+b95ddca Add project status report summary output
+
+## Latest Project Status Report Checkpoint
+
+The passive project status report now has a safety invariant check output.
+
+Checkpoint document:
+
+- `Docs/PROJECT_STATUS_REPORT_CHECKPOINT.md`
+
+New passive CLI form:
+
+- `python -m rytm_randomizer.cli project-status-report --check`
+
+Behavior:
+
+- validates passive safety invariants from the existing in-memory project
+  status report
+- exits `0` when all current invariants hold
+- would exit nonzero if a future unsafe status report drift is detected
+- preserves the existing full text, summary, and JSON project status outputs
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
+
+Recommended next task:
+
+- continue with another passive/mock-only software slice, or use
+  `project-status-report --check` as a quick guard before future planning and
+  implementation packets
 
 ## Latest Project Status Report Summary Checkpoint
 

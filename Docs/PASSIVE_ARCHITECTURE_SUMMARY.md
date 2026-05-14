@@ -8,7 +8,21 @@ modularize-v1.34
 
 Current HEAD:
 
-99f69e0
+b95ddca
+
+## Project Status Report Checkpoint
+
+`Docs/PROJECT_STATUS_REPORT_CHECKPOINT.md` records passive safety invariant
+checking for the project status report.
+
+New passive CLI form:
+
+- `python -m rytm_randomizer.cli project-status-report --check`
+
+The check validates the existing in-memory project status report without
+adding runtime execution, dispatch, command execution, mutation execution,
+active CLI command, MIDI, ports, package metadata changes, active behavior, or
+hardware behavior.
 
 ## Project Status Report Summary Checkpoint
 

@@ -5,7 +5,7 @@ import sys
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "project-status-report [--summary|--json] | mock-mapper-report | runtime-plan-report | "
+    "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -20,6 +20,7 @@ Usage:
   python -m rytm_randomizer.cli project-status-report
   python -m rytm_randomizer.cli project-status-report --summary
   python -m rytm_randomizer.cli project-status-report --json
+  python -m rytm_randomizer.cli project-status-report --check
   python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli runtime-plan-report
   python -m rytm_randomizer.cli active-boundary-report
@@ -637,12 +638,14 @@ Usage:
   python -m rytm_randomizer.cli project-status-report
   python -m rytm_randomizer.cli project-status-report --summary
   python -m rytm_randomizer.cli project-status-report --json
+  python -m rytm_randomizer.cli project-status-report --check
   python -m rytm_randomizer.cli project-status-report --help
 
 Behavior:
   Prints the deterministic read-only project status report to stdout.
   With --summary, prints a compact one-screen status summary.
   With --json, prints the same passive report as deterministic JSON.
+  With --check, validates passive safety invariants and exits nonzero on failure.
 
 Safety:
   passive/read-only
@@ -873,6 +876,17 @@ def main(argv=None):
         sys.stdout.write("\n".join(format_project_status_summary()))
         sys.stdout.write("\n")
         return 0
+
+    if args == ["project-status-report", "--check"]:
+        from .project_status_report import (
+            check_project_status_report,
+            format_project_status_check,
+        )
+
+        check = check_project_status_report()
+        sys.stdout.write("\n".join(format_project_status_check()))
+        sys.stdout.write("\n")
+        return 0 if check["ok"] else 1
 
     if args == ["project-status-report", "--json"]:
         from .project_status_report import format_project_status_report_json

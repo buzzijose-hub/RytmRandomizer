@@ -62,6 +62,30 @@ PROJECT_STATUS_SAFETY = {
     "package_metadata": "untouched",
 }
 
+PROJECT_STATUS_CHECKS = (
+    ("safety.real_midi", "absent"),
+    ("safety.port_opening", "absent"),
+    ("safety.active_execution", "absent"),
+    ("safety.command_execution", "absent"),
+    ("safety.dispatch", "absent"),
+    ("safety.hardware_required", False),
+    ("safety.v134_reference", "untouched"),
+    ("safety.package_metadata", "untouched"),
+    ("runtime_plan.runtime_execution", "absent"),
+    ("active_boundary.active_cli_behavior", "absent"),
+    ("mock_runtime_active_bridge.emits_messages", False),
+    ("source.in_memory_only", True),
+    ("source.writes_files", False),
+    ("closeout.failure_propagation", "guarded"),
+)
+
+
+def _get_nested_value(data, path):
+    current = data
+    for part in path.split("."):
+        current = current[part]
+    return current
+
 
 def build_project_status_report():
     """Return copied, in-memory data about the current project status."""
@@ -92,6 +116,28 @@ def build_project_status_report():
         },
     }
     return deepcopy(report)
+
+
+def check_project_status_report(report=None):
+    """Return deterministic safety check results for project status data."""
+
+    source_report = build_project_status_report() if report is None else report
+    checked = {}
+    failures = []
+
+    for path, expected in PROJECT_STATUS_CHECKS:
+        actual = _get_nested_value(source_report, path)
+        checked[path] = actual
+        if actual != expected:
+            failures.append({"path": path, "expected": expected, "actual": actual})
+
+    return {
+        "title": "RytmRandomizer Project Status Check",
+        "ok": not failures,
+        "failure_count": len(failures),
+        "failures": failures,
+        "checked": checked,
+    }
 
 
 def summarize_project_status_report(report=None):
@@ -146,6 +192,31 @@ def format_project_status_summary(report=None):
         f"- hardware_required: {summary['hardware_required']}",
         f"- v134_reference: {summary['v134_reference']}",
     ]
+
+
+def format_project_status_check(report=None):
+    """Return deterministic project status safety check lines."""
+
+    check = check_project_status_report(report)
+    lines = [
+        check["title"],
+        f"- ok: {check['ok']}",
+        f"- failure_count: {check['failure_count']}",
+    ]
+
+    for path, _expected in PROJECT_STATUS_CHECKS:
+        lines.append(f"- {path}: {check['checked'][path]}")
+
+    if check["failures"]:
+        lines.append("Failures:")
+        for failure in check["failures"]:
+            lines.append(
+                "- "
+                f"{failure['path']}: expected {failure['expected']}, "
+                f"actual {failure['actual']}"
+            )
+
+    return lines
 
 
 def format_project_status_report(report=None):
