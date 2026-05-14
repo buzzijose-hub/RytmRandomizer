@@ -2,8 +2,6 @@
 
 import sys
 
-from .behavior_anchor_profile_report import format_anchor_profile_report
-from .behavior_parity_coverage_report import format_behavior_parity_coverage_report
 from .mock_runtime_active_bridge_report import format_mock_runtime_active_bridge_report
 from .preview import preview_command
 from .registry import get_registry_item, get_registry_section
@@ -842,11 +840,15 @@ def main(argv=None):
         return 0
 
     if args == ["anchor-profile-report"]:
+        from .behavior_anchor_profile_report import format_anchor_profile_report
+
         sys.stdout.write("\n".join(format_anchor_profile_report()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["behavior-parity-report"]:
+        from .behavior_parity_coverage_report import format_behavior_parity_coverage_report
+
         sys.stdout.write("\n".join(format_behavior_parity_coverage_report()))
         sys.stdout.write("\n")
         return 0
