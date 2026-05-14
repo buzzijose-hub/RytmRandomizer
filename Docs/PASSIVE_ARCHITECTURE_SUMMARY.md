@@ -2,6 +2,39 @@
 
 Date: May 4, 2026
 
+## Review Branch Package Entry Point Update
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Latest review-branch milestone:
+
+- `63b6335 Add package module entry point`
+
+Checkpoint:
+
+- `Docs/PACKAGE_MODULE_ENTRYPOINT_CHECKPOINT.md`
+
+The passive package can now be launched through:
+
+```powershell
+python -m rytm_randomizer --help
+python -m rytm_randomizer project-status-report --summary
+```
+
+This complements the existing passive CLI module and installed console entry
+point:
+
+```powershell
+python -m rytm_randomizer.cli --help
+rytm-randomizer --help
+```
+
+The new launch path delegates to the existing passive app/CLI route. It does
+not add active behavior, real MIDI, port opening, dispatch, command execution,
+or hardware behavior.
+
 Current branch:
 
 modularize-v1.34

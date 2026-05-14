@@ -81,12 +81,19 @@ planning boundaries, active boundary reports, and protected-file state.
 These commands are read-only:
 
 ```powershell
+python -m rytm_randomizer project-status-report --summary
 python -m rytm_randomizer.cli project-status-report --summary
 python -m rytm_randomizer.cli project-status-report --check
 python -m rytm_randomizer.cli behavior-parity-report
 python -m rytm_randomizer.cli active-boundary-report
 python -m rytm_randomizer.cli runtime-plan-report
 python -m rytm_randomizer.cli mock-runtime-active-bridge-report
+```
+
+The installed console entry point is also passive:
+
+```powershell
+rytm-randomizer project-status-report --summary
 ```
 
 Do not add or run active execution commands. None are authorized in the current

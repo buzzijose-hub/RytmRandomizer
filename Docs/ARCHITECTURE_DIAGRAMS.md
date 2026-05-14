@@ -27,7 +27,7 @@ The diagrams below were derived from these current source groups:
 
 | Area | Files |
 | --- | --- |
-| Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/__init__.py` |
+| Package entry points | `rytm_randomizer/__main__.py`, `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
 | Lookup, registry, inspection, preview | `rytm_randomizer/command_lookup.py`, `rytm_randomizer/scene_lookup.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/registry.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/preview.py`, `rytm_randomizer/audit.py` |
 | Report surfaces | `rytm_randomizer/registry_report.py`, `rytm_randomizer/mock_mapper_report.py`, `rytm_randomizer/runtime_plan_report.py`, `rytm_randomizer/active_boundary_report.py`, `rytm_randomizer/behavior_anchor_profile_report.py`, `rytm_randomizer/behavior_parity_coverage_report.py`, `rytm_randomizer/mock_runtime_active_bridge_report.py` |
@@ -72,6 +72,7 @@ Current nuance:
 
 ```mermaid
 flowchart TB
+    Main["__main__.py\npython -m rytm_randomizer"]
     CLI["cli.py\npassive report/list/search/inspect/preview CLI"]
     App["app.py\nminimal scaffold entry point"]
     Init["__init__.py\nexports constants only"]
@@ -127,6 +128,8 @@ flowchart TB
         RealAdapter["real_midi_adapter.py\nimport-safe adapter boundary"]
     end
 
+    Main --> App
+    App --> CLI
     CLI --> Registry
     CLI --> Preview
     CLI --> RegistryReport
@@ -175,6 +178,8 @@ flowchart TB
 Current nuance:
 
 - `cli.py` exposes passive visibility and formatter output only.
+- `__main__.py` and `app.py` provide package-level entry routing to the same
+  passive CLI behavior.
 - `active_boundary.py` and `mock_runtime_active_bridge.py` are test/mock
   boundaries, not hardware execution paths.
 - `real_midi_adapter.py` exists as an import-safe adapter boundary using
@@ -185,7 +190,9 @@ Current nuance:
 
 ```mermaid
 flowchart LR
-    Operator["python -m rytm_randomizer.cli ..."]
+    Operator["python -m rytm_randomizer...\npython -m rytm_randomizer.cli..."]
+    ModuleMain["__main__.py"]
+    AppEntry["app.py"]
     CLI["cli.py main(argv=None)"]
 
     subgraph DirectReportCommands["Direct read-only report commands"]
@@ -205,6 +212,9 @@ flowchart LR
         Preview["preview-command\npreview-scene\npreview-group-profile"]
     end
 
+    Operator --> ModuleMain
+    ModuleMain --> AppEntry
+    AppEntry --> CLI
     Operator --> CLI
     CLI --> DirectReportCommands
     CLI --> RegistryCommands
@@ -230,6 +240,8 @@ Current nuance:
 
 - The CLI imports report formatter modules and passive registry/preview
   helpers.
+- `__main__.py` lets the package run as `python -m rytm_randomizer` and
+  delegates through `app.py` to the same passive CLI path.
 - Tests assert the passive CLI does not introduce real MIDI imports, ports,
   active commands, bridge invocation, or sender construction.
 - `mock-runtime-active-bridge-report` prints report data only; it does not call

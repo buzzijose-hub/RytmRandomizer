@@ -1,5 +1,60 @@
 # Next Action
 
+## Latest Review Branch Package Entry Point Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Latest review-branch milestone:
+
+- `63b6335 Add package module entry point`
+
+New checkpoint:
+
+- `Docs/PACKAGE_MODULE_ENTRYPOINT_CHECKPOINT.md`
+
+Draft PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+What changed:
+
+- `python -m rytm_randomizer --help` is now a passive package launch path.
+- `python -m rytm_randomizer project-status-report --summary` is now covered
+  by the installed-wheel smoke test.
+- The existing `python -m rytm_randomizer.cli ...` and `rytm-randomizer ...`
+  launch paths remain available.
+
+Verification:
+
+- local pytest passed
+- coverage gate passed
+- Windows closeout passed
+- cross-platform closeout passed
+- package build passed
+- wheel install smoke passed
+- GitHub Actions passed on Windows, macOS, and Ubuntu for Python 3.11, 3.12,
+  and 3.13
+- V1.34 reference diff was empty
+- git status was clean
+
+Safety status:
+
+- no real MIDI
+- no MIDI port opening
+- no active execution
+- no dispatch
+- no hardware behavior
+- no active CLI command
+- `rytm_hybrid_randomizer_v134.py` untouched
+
+Recommended next task:
+
+- continue with another narrow packaging/collaborator-readiness slice, or
+  wait for Eddie's full review findings as text or Markdown and triage them
+  before implementation
+
 ## Current Branch
 
 modularize-v1.34

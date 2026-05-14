@@ -3,6 +3,41 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Review Branch Package Entry Point Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Latest review-branch milestone:
+
+- `63b6335 Add package module entry point`
+
+Checkpoint document:
+
+- `Docs/PACKAGE_MODULE_ENTRYPOINT_CHECKPOINT.md`
+
+Draft PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+The review branch now supports the passive package module launch path:
+
+```powershell
+python -m rytm_randomizer --help
+python -m rytm_randomizer project-status-report --summary
+```
+
+The installed-wheel smoke test verifies the module launch path alongside the
+console entry point.
+
+Local closeout and GitHub Actions passed after the milestone. The V1.34
+reference diff was empty and git status was clean.
+
+This milestone adds no real MIDI, port opening, active execution, dispatch,
+active CLI command, hardware behavior, Analog Four support, Pads 5-12 support,
+SysEx, GUI/capture, or V1.34 reference change.
+
 ## Current Stable Reference
 
 The protected stable reference is V1.34 expanded scene layer.
