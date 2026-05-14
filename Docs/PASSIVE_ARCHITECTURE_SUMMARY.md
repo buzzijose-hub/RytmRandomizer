@@ -2,6 +2,26 @@
 
 Date: May 4, 2026
 
+## Branch Protection Admin Instructions
+
+`Docs/BRANCH_PROTECTION_ADMIN_INSTRUCTIONS.md` documents how the repository
+owner can later apply branch protection to `modularize-v1.34`.
+
+The document covers:
+
+- recommended initial branch protection policy
+- required status checks from the current CI matrix
+- safer GitHub UI setup path
+- scripted path through `Scripts/apply_branch_protection.ps1`
+- conditions that should be true before protection is applied
+
+The instruction document does not apply branch protection. It adds no GitHub
+admin action, runtime behavior, dispatch, active behavior, MIDI sending, MIDI
+port opening, hardware behavior, or V1.34 reference change.
+
+Branch protection remains an owner-controlled governance step after PR #2 has
+been reviewed.
+
 ## PR 2 Readiness Status Checkpoint
 
 `Docs/PR_2_READINESS_STATUS_CHECKPOINT.md` records the current review

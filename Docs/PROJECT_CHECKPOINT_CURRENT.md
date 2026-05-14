@@ -3,6 +3,41 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Branch Protection Admin Instructions
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New admin instruction document:
+
+- `Docs/BRANCH_PROTECTION_ADMIN_INSTRUCTIONS.md`
+
+The instruction document records how the owner can later protect
+`modularize-v1.34` through GitHub branch protection.
+
+It documents:
+
+- when protection should be applied
+- recommended initial branch protection settings
+- required status checks from the current matrix
+- safer GitHub UI path
+- scripted path using `Scripts/apply_branch_protection.ps1`
+- what branch protection does not authorize
+
+Decision:
+
+- branch protection was not applied in this slice
+- GitHub admin settings remain owner-controlled
+- PR #2 should be reviewed before repository governance changes are made
+
+This checkpoint adds no code, tests, MIDI, ports, dispatch, active behavior,
+hardware behavior, GitHub admin action, or V1.34 reference edit.
+
 ## PR 2 Readiness Status Checkpoint
 
 Current review branch:

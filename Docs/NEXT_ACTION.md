@@ -1,5 +1,39 @@
 # Next Action
 
+## Latest Branch Protection Admin Instructions
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New admin instruction document:
+
+- `Docs/BRANCH_PROTECTION_ADMIN_INSTRUCTIONS.md`
+
+Purpose:
+
+- document the future owner/admin path for protecting `modularize-v1.34`
+- explain the safer GitHub UI path
+- document the existing script path without running it
+- keep PR #2 reviewable without applying repository settings
+
+Decision:
+
+- do not apply branch protection in this slice
+- keep branch protection as owner/admin action
+- review PR #2 before changing repository governance
+
+Recommended next task:
+
+- review PR #2 with Eddie
+- then decide whether to keep it draft, update PR docs, create a docs
+  inventory plan, create a package release checklist, polish contributor
+  onboarding, or apply branch protection only when merge readiness is clear
+
 ## Latest PR 2 Readiness Status Checkpoint
 
 Current review branch:

@@ -191,6 +191,15 @@ Blocked follow-ups:
 - hardware validation
 - monolith retirement
 
+## Branch Protection Follow-Up
+
+Branch protection/admin instructions are now documented in:
+
+- `Docs/BRANCH_PROTECTION_ADMIN_INSTRUCTIONS.md`
+
+This follow-up is owner/admin guidance only. It does not apply branch
+protection or change repository settings.
+
 ## Current Decision
 
 PR #2 is green and reviewable as a draft foundation PR.
