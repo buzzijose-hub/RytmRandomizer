@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-8bda703
+8dbc894
+
+## Project Status Report CLI Checkpoint
+
+`Docs/PROJECT_STATUS_REPORT_CLI_CHECKPOINT.md` records the passive project
+status report and CLI preview milestone.
+
+New passive module:
+
+- `rytm_randomizer/project_status_report.py`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli project-status-report`
+
+The report provides one deterministic dashboard for the current phase,
+passive CLI visibility, behavior-parity summary, runtime plan summary, active
+boundary summary, mock runtime/active bridge summary, closeout contract
+status, and absent MIDI/port/active/hardware behavior.
+
+Closeout now includes `=== Test: Project Status Report ===`.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Closeout Failure Propagation Checkpoint
 

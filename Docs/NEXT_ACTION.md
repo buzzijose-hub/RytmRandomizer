@@ -6,7 +6,57 @@ modularize-v1.34
 
 ## Current HEAD
 
-8bda703 Add project identity name shortlist
+8dbc894 Harden closeout failure propagation
+
+## Latest Project Status Report CLI Checkpoint
+
+The project now has a passive, read-only project status report and CLI preview.
+
+Checkpoint document:
+
+- `Docs/PROJECT_STATUS_REPORT_CLI_CHECKPOINT.md`
+
+New passive module:
+
+- `rytm_randomizer/project_status_report.py`
+
+New CLI command:
+
+- `python -m rytm_randomizer.cli project-status-report`
+
+The report summarizes:
+
+- current phase: `Passive/Mock Runtime Visibility Phase`
+- technical project name: `RytmRandomizer`
+- leading creative identity candidate: `KitForge`
+- passive CLI visibility
+- behavior-parity summary
+- runtime plan summary
+- active boundary summary
+- mock runtime/active bridge summary
+- closeout contract status
+- absent MIDI, ports, active execution, and hardware behavior
+
+Closeout now includes:
+
+- `=== Test: Project Status Report ===`
+
+Recommended next task:
+
+- continue with another passive/mock-only software slice, likely focused on
+  making one of the existing visibility reports more useful from the CLI
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Closeout Failure Propagation Checkpoint
 

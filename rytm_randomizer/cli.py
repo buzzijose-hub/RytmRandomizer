@@ -5,11 +5,11 @@ import sys
 
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "mock-mapper-report | runtime-plan-report | active-boundary-report | "
-    "mock-runtime-active-bridge-report | anchor-profile-report | "
-    "behavior-parity-report | inspect-command <key> | inspect-scene <key> | "
-    "inspect-group-profile <key> | list-commands | list-scenes | "
-    "list-group-profiles | search-commands <query> | "
+    "project-status-report | mock-mapper-report | runtime-plan-report | "
+    "active-boundary-report | mock-runtime-active-bridge-report | "
+    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
+    "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
 )
@@ -17,6 +17,7 @@ TOP_LEVEL_HELP = """RytmRandomizer passive CLI
 
 Usage:
   python -m rytm_randomizer.cli report
+  python -m rytm_randomizer.cli project-status-report
   python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli runtime-plan-report
   python -m rytm_randomizer.cli active-boundary-report
@@ -39,6 +40,8 @@ Usage:
 
 Commands:
   report             Print the passive registry report.
+  project-status-report
+                     Print the read-only project status report.
   mock-mapper-report
                      Print the passive mock mapper report.
   runtime-plan-report
@@ -626,6 +629,25 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+PROJECT_STATUS_REPORT_HELP = """RytmRandomizer passive CLI: project-status-report
+
+Usage:
+  python -m rytm_randomizer.cli project-status-report
+  python -m rytm_randomizer.cli project-status-report --help
+
+Behavior:
+  Prints the deterministic read-only project status report to stdout.
+
+Safety:
+  passive/read-only
+  mock-only visibility
+  no MIDI sending
+  no port opening
+  no runtime execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required"""
 MOCK_MAPPER_REPORT_HELP = """RytmRandomizer passive CLI: mock-mapper-report
 
 Usage:
@@ -749,6 +771,10 @@ def main(argv=None):
         sys.stdout.write(f"{REPORT_HELP}\n")
         return 0
 
+    if args == ["project-status-report", "--help"]:
+        sys.stdout.write(f"{PROJECT_STATUS_REPORT_HELP}\n")
+        return 0
+
     if args == ["mock-mapper-report", "--help"]:
         sys.stdout.write(f"{MOCK_MAPPER_REPORT_HELP}\n")
         return 0
@@ -825,6 +851,13 @@ def main(argv=None):
         from .registry_report import format_registry_report
 
         sys.stdout.write("\n".join(format_registry_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["project-status-report"]:
+        from .project_status_report import format_project_status_report
+
+        sys.stdout.write("\n".join(format_project_status_report()))
         sys.stdout.write("\n")
         return 0
 

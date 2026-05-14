@@ -21,7 +21,40 @@ modularize-v1.34
 
 Current HEAD:
 
-8bda703 Add project identity name shortlist
+8dbc894 Harden closeout failure propagation
+
+## Project Status Report CLI Checkpoint
+
+The project now has a passive, read-only project status report and CLI preview.
+
+Checkpoint document:
+
+- `Docs/PROJECT_STATUS_REPORT_CLI_CHECKPOINT.md`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/project_status_report.py`
+- `tests/test_project_status_report.py`
+- `tests/fixtures/cli_project_status_report_expected.txt`
+- `tests/fixtures/cli_project_status_report_help_expected.txt`
+- `tests/fixtures/cli_help_expected.txt`
+- `tests/test_cli.py`
+- `Scripts/closeout_check.ps1`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli project-status-report`
+
+The report summarizes the current phase, passive CLI visibility,
+behavior-parity status, runtime plan status, active boundary status, mock
+runtime/active bridge status, closeout contract status, and absent MIDI,
+ports, active execution, and hardware behavior.
+
+Closeout now includes `=== Test: Project Status Report ===`.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Closeout Failure Propagation Checkpoint
 

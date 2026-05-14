@@ -126,6 +126,11 @@ Register-CloseoutStepExit "Passive CLI"
 Register-CloseoutStepExit "Closeout Contract"
 
 "" | Add-Content $summary
+"=== Test: Project Status Report ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_project_status_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_project_status_report.log" | Add-Content $summary
+Register-CloseoutStepExit "Project Status Report"
+
+"" | Add-Content $summary
 "=== Test: Behavior Menu Utility ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_behavior_menu_utility.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_behavior_menu_utility.log" | Add-Content $summary
 Register-CloseoutStepExit "Behavior Menu Utility"

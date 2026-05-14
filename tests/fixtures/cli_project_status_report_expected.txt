@@ -1,0 +1,66 @@
+RytmRandomizer Project Status Report
+Phase:
+- name: Passive/Mock Runtime Visibility Phase
+- technical_name: RytmRandomizer
+- creative_identity_candidate: KitForge
+Passive CLI Visibility:
+- report
+- project-status-report
+- mock-mapper-report
+- runtime-plan-report
+- active-boundary-report
+- mock-runtime-active-bridge-report
+- anchor-profile-report
+- behavior-parity-report
+- list-commands
+- list-scenes
+- list-group-profiles
+- search-commands
+- search-scenes
+- search-group-profiles
+- inspect-command
+- inspect-scene
+- inspect-group-profile
+- preview-command
+- preview-scene
+- preview-group-profile
+Behavior Parity:
+- accepted_packet_count: 12
+- selected_isolated_pad_packet_count: 2
+- pad_lane_packet_count: 4
+- pad_lane_command_count: 38
+- runtime_adjacent_safe_failure_count: 3
+- parked_scope_count: 2
+Runtime Plan:
+- supported_count: 2
+- parked_count: 1
+- unsupported_count: 2
+- runtime_execution: absent
+Active Boundary:
+- supported_candidate: group_profile:2
+- unsupported_keys: 3, 4
+- active_cli_behavior: absent
+Mock Runtime Active Bridge:
+- accepted_source_key: 2
+- rejected_count: 7
+- parked_count: 1
+- emits_messages: False
+Closeout:
+- closeout_contract: present
+- failure_propagation: guarded
+- closeout_script: Scripts/closeout_check.ps1
+Safety:
+- real_midi: absent
+- port_opening: absent
+- active_execution: absent
+- dispatch: absent
+- command_execution: absent
+- hardware_required: False
+- hardware_behavior: absent
+- analog_four_support: absent
+- pads_5_12_support: absent
+- v134_reference: untouched
+- package_metadata: untouched
+Source:
+- in_memory_only: True
+- writes_files: False

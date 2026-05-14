@@ -6,13 +6,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "mock-mapper-report | runtime-plan-report | active-boundary-report | "
-    "mock-runtime-active-bridge-report | anchor-profile-report | "
-    "behavior-parity-report | inspect-command <key> | inspect-scene <key> | "
-    "inspect-group-profile <key> | list-commands | list-scenes | "
-    "list-group-profiles | search-commands <query> | search-scenes <query> | "
-    "search-group-profiles <query> | preview-command <key> | "
-    "preview-scene <key> | preview-group-profile <key>"
+    "project-status-report | mock-mapper-report | runtime-plan-report | "
+    "active-boundary-report | mock-runtime-active-bridge-report | "
+    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
+    "list-scenes | list-group-profiles | search-commands <query> | "
+    "search-scenes <query> | search-group-profiles <query> | "
+    "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
 )
 
 
@@ -67,6 +67,16 @@ def test_report_help_exits_zero_and_matches_fixture():
 
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text("cli_report_help_expected.txt")
+    assert result.stderr == ""
+
+
+def test_project_status_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("project-status-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_project_status_report_help_expected.txt"
+    )
     assert result.stderr == ""
 
 
@@ -258,6 +268,16 @@ def test_report_command_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_project_status_report_command_exits_zero_and_matches_fixture():
+    result = run_cli("project-status-report")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_project_status_report_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_mock_mapper_report_command_exits_zero_and_matches_fixture():
     result = run_cli("mock-mapper-report")
 
@@ -321,6 +341,17 @@ def test_behavior_parity_report_command_exits_zero_and_matches_fixture():
 def test_report_command_is_deterministic():
     first = run_cli("report")
     second = run_cli("report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_project_status_report_command_is_deterministic():
+    first = run_cli("project-status-report")
+    second = run_cli("project-status-report")
 
     assert first.returncode == 0
     assert second.returncode == 0
@@ -422,6 +453,30 @@ def test_cli_source_does_not_evaluate_active_boundary_or_construct_sender():
     assert "MockMidiSender" not in source
     assert "evaluate_anchor_profile_behavior" not in source
     assert "evaluate_pad1_lane_behavior" not in source
+
+
+def test_project_status_report_command_imports_no_real_midi_libraries():
+    script = "\n".join(
+        [
+            "import runpy",
+            "import sys",
+            "sys.argv = ['rytm_randomizer.cli', 'project-status-report']",
+            "runpy.run_module('rytm_randomizer.cli', run_name='__main__')",
+            "assert 'mido' not in sys.modules",
+            "assert 'rtmidi' not in sys.modules",
+        ]
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer Project Status Report" in result.stdout
+    assert result.stderr == ""
 
 
 def test_mock_mapper_report_command_imports_no_real_midi_libraries():
@@ -1102,6 +1157,14 @@ def test_unknown_report_arguments_fail_safely():
     assert normalize_newlines(result.stderr) == USAGE
 
 
+def test_unknown_project_status_report_arguments_fail_safely():
+    result = run_cli("project-status-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
 def test_unknown_mock_mapper_report_arguments_fail_safely():
     result = run_cli("mock-mapper-report", "--mutate")
 
@@ -1236,6 +1299,30 @@ def test_report_command_exposes_no_active_behavior_or_support_expansion():
     assert "- no Analog Four support" in output
     assert "- Pads 5-12" in output
     assert "- Analog Four" in output
+
+
+def test_project_status_report_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("project-status-report")
+    output = normalize_newlines(result.stdout)
+
+    assert "- real_midi: absent" in output
+    assert "- port_opening: absent" in output
+    assert "- active_execution: absent" in output
+    assert "- dispatch: absent" in output
+    assert "- command_execution: absent" in output
+    assert "- hardware_required: False" in output
+    assert "- hardware_behavior: absent" in output
+    assert "- analog_four_support: absent" in output
+    assert "- pads_5_12_support: absent" in output
+    assert "- v134_reference: untouched" in output
+    assert "- package_metadata: untouched" in output
+    assert "execute-command" not in output
+    assert "send-command" not in output
+    assert "hardware-test" not in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
 
 
 def test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion():
@@ -1735,6 +1822,7 @@ if __name__ == "__main__":
     test_importing_cli_prints_nothing()
     test_top_level_help_exits_zero_and_matches_fixture()
     test_report_help_exits_zero_and_matches_fixture()
+    test_project_status_report_help_exits_zero_and_matches_fixture()
     test_mock_mapper_report_help_exits_zero_and_matches_fixture()
     test_runtime_plan_report_help_exits_zero_and_matches_fixture()
     test_active_boundary_report_help_exits_zero_and_matches_fixture()
@@ -1754,6 +1842,7 @@ if __name__ == "__main__":
     test_preview_scene_help_exits_zero_and_matches_fixture()
     test_preview_group_profile_help_exits_zero_and_matches_fixture()
     test_report_command_exits_zero_and_matches_fixture()
+    test_project_status_report_command_exits_zero_and_matches_fixture()
     test_mock_mapper_report_command_exits_zero_and_matches_fixture()
     test_runtime_plan_report_command_exits_zero_and_matches_fixture()
     test_active_boundary_report_command_exits_zero_and_matches_fixture()
@@ -1761,6 +1850,7 @@ if __name__ == "__main__":
     test_anchor_profile_report_command_exits_zero_and_matches_fixture()
     test_behavior_parity_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
+    test_project_status_report_command_is_deterministic()
     test_mock_mapper_report_command_is_deterministic()
     test_runtime_plan_report_command_is_deterministic()
     test_active_boundary_report_command_is_deterministic()
@@ -1769,6 +1859,7 @@ if __name__ == "__main__":
     test_behavior_parity_report_command_is_deterministic()
     test_top_level_help_exposes_no_active_execution_commands()
     test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
+    test_project_status_report_command_imports_no_real_midi_libraries()
     test_mock_mapper_report_command_imports_no_real_midi_libraries()
     test_runtime_plan_report_command_imports_no_real_midi_libraries()
     test_active_boundary_report_command_imports_no_real_midi_libraries()
@@ -1816,6 +1907,7 @@ if __name__ == "__main__":
     test_missing_arguments_fail_safely()
     test_unknown_arguments_fail_safely()
     test_unknown_report_arguments_fail_safely()
+    test_unknown_project_status_report_arguments_fail_safely()
     test_unknown_mock_mapper_report_arguments_fail_safely()
     test_unknown_runtime_plan_report_arguments_fail_safely()
     test_unknown_active_boundary_report_arguments_fail_safely()
@@ -1832,6 +1924,7 @@ if __name__ == "__main__":
     test_missing_preview_scene_key_fails_safely()
     test_missing_preview_group_profile_key_fails_safely()
     test_report_command_exposes_no_active_behavior_or_support_expansion()
+    test_project_status_report_exposes_no_active_behavior_or_support_expansion()
     test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion()
     test_runtime_plan_report_exposes_no_active_behavior_or_support_expansion()
     test_active_boundary_report_exposes_no_active_behavior_or_support_expansion()
