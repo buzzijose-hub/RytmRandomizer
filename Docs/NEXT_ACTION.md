@@ -6,7 +6,43 @@ modularize-v1.34
 
 ## Current HEAD
 
-3b207bd Add project status API visibility checkpoint
+78ef58a Add collaborator review status visibility
+
+## Latest Collaborator Review Status Visibility Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/COLLABORATOR_REVIEW_STATUS_VISIBILITY_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `78ef58a Add collaborator review status visibility`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/project_status_report.py`
+- `tests/test_project_status_report.py`
+- `tests/fixtures/cli_project_status_report_expected.txt`
+- `tests/fixtures/cli_project_status_report_summary_expected.txt`
+- `tests/fixtures/cli_project_status_report_check_expected.txt`
+
+Behavior:
+
+- the passive project-status report now surfaces collaborator review intake
+  status
+- the summary records `collaborator_review_intake: checkpointed`
+- the summary records `external_review_findings_received: False`
+- the safety check verifies the review process remains advisory and passive
+- no external review finding, package metadata change, runtime execution,
+  dispatch, real MIDI library, port opening, MIDI sending, active CLI command,
+  or hardware behavior was added
+
+Recommended next task:
+
+- continue with a safe passive/mock-only slice while waiting for Eddie's full
+  review text
+- once review text arrives, create a collaborator review triage document before
+  implementing any findings
 
 ## Latest Collaborator Review Intake Checkpoint
 

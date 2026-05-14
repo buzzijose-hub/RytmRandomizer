@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-3b207bd
+78ef58a
+
+## Collaborator Review Status Visibility Checkpoint
+
+`Docs/COLLABORATOR_REVIEW_STATUS_VISIBILITY_CHECKPOINT.md` records passive
+project-status dashboard visibility for collaborator review intake.
+
+Implementation milestone:
+
+- `78ef58a Add collaborator review status visibility`
+
+The project-status report now exposes a `collaborator_review_intake` block
+showing that Eddie's external AI-assisted review is pending as text or
+Markdown, no findings have been received yet, and any implementation must be
+verified before action.
+
+The compact summary now records:
+
+- `collaborator_review_intake: checkpointed`
+- `external_review_findings_received: False`
+
+The project-status safety check now guards that the review intake remains
+advisory and passive with real MIDI, port opening, active behavior, and
+hardware behavior absent.
+
+This adds no external review implementation, package metadata change, runtime
+execution, dispatch, command execution, active CLI behavior, real MIDI
+dependency, MIDI port opening, MIDI sending, or hardware behavior.
 
 ## Collaborator Review Intake Checkpoint
 

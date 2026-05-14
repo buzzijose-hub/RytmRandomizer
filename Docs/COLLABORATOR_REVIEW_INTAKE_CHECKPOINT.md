@@ -176,3 +176,15 @@ After Eddie sends the review text:
 - create a collaborator review triage document
 - classify findings before implementation
 - implement only verified, narrow, safe items
+
+## Follow-Up: Project Status Visibility
+
+The collaborator review intake process is now visible in the passive
+project-status dashboard:
+
+- `78ef58a Add collaborator review status visibility`
+- `Docs/COLLABORATOR_REVIEW_STATUS_VISIBILITY_CHECKPOINT.md`
+
+The dashboard records that collaborator review intake is checkpointed, findings
+have not been received yet, findings should arrive as text or Markdown, and
+implementation remains verify-before-implementing.

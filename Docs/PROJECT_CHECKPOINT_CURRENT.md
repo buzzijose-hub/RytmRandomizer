@@ -21,7 +21,34 @@ modularize-v1.34
 
 Current HEAD:
 
-3b207bd Add project status API visibility checkpoint
+78ef58a Add collaborator review status visibility
+
+## Collaborator Review Status Visibility Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/COLLABORATOR_REVIEW_STATUS_VISIBILITY_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `78ef58a Add collaborator review status visibility`
+
+The passive project-status dashboard now records collaborator review intake:
+
+- status: `checkpointed`
+- collaborator: `Eddie`
+- review source: `external_ai_assisted_review`
+- findings received: `False`
+- required format: `text_or_markdown`
+- implementation policy: `verify_before_implementing`
+
+The summary now includes `collaborator_review_intake: checkpointed`, and the
+project-status safety check verifies that external review remains advisory,
+passive, and hardware-safe.
+
+This adds no external review implementation, package metadata change, runtime
+execution, dispatch, real MIDI dependency, port opening, MIDI sending, active
+CLI command, or hardware behavior.
 
 ## Collaborator Review Intake Checkpoint
 
