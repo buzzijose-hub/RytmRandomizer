@@ -8,7 +8,40 @@ modularize-v1.34
 
 Current HEAD:
 
-a0ffe67
+a38bcdd
+
+## Passive Metadata CLI Import Isolation Checkpoint
+
+`Docs/V134_PASSIVE_METADATA_CLI_IMPORT_ISOLATION_CHECKPOINT.md` records the
+passive CLI import-isolation hardening for passive metadata and preview
+helpers.
+
+Implementation milestone:
+
+- `a38bcdd Lazy-load passive metadata CLI helpers`
+
+Files changed:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+Plain `import rytm_randomizer.cli` no longer loads:
+
+- `rytm_randomizer.commands`
+- `rytm_randomizer.scenes`
+- `rytm_randomizer.profiles`
+- `rytm_randomizer.registry`
+- `rytm_randomizer.preview`
+- `rytm_randomizer.inspection`
+- `rytm_randomizer.validation`
+
+Existing list/search/inspect/preview command behavior remains unchanged. The
+passive metadata stack is now command-local for those command paths, matching
+the existing report formatter import-isolation direction.
+
+This adds no CLI output change, fixture change, runtime execution, dispatch,
+command execution, mutation execution, active CLI command, MIDI, ports,
+package metadata changes, active behavior, or hardware behavior.
 
 ## Registry Report CLI Import Isolation Checkpoint
 

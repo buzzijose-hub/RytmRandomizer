@@ -6,7 +6,57 @@ modularize-v1.34
 
 ## Current HEAD
 
-a0ffe67 Lazy-load registry report CLI formatter
+a38bcdd Lazy-load passive metadata CLI helpers
+
+## Latest Passive Metadata CLI Import Isolation Checkpoint
+
+The passive CLI now lazy-loads passive metadata and preview helpers only when
+their list/search/inspect/preview command paths need them.
+
+Checkpoint document:
+
+- `Docs/V134_PASSIVE_METADATA_CLI_IMPORT_ISOLATION_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `a38bcdd Lazy-load passive metadata CLI helpers`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/cli.py`
+- `tests/test_cli.py`
+
+Confirmed behavior:
+
+- importing `rytm_randomizer.cli` does not load
+  `rytm_randomizer.commands`
+- importing `rytm_randomizer.cli` does not load `rytm_randomizer.scenes`
+- importing `rytm_randomizer.cli` does not load `rytm_randomizer.profiles`
+- importing `rytm_randomizer.cli` does not load `rytm_randomizer.registry`
+- importing `rytm_randomizer.cli` does not load `rytm_randomizer.preview`
+- importing `rytm_randomizer.cli` does not load `rytm_randomizer.inspection`
+- importing `rytm_randomizer.cli` does not load `rytm_randomizer.validation`
+- list/search/inspect/preview command behavior remains unchanged
+
+Recommended next task:
+
+- pause the import-isolation thread unless a new concrete drift appears
+- choose a different test-backed behavior-parity alignment slice or a short
+  progress checkpoint
+
+Confirmed boundaries:
+
+- no CLI output change
+- no fixture change
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Registry Report CLI Import Isolation Checkpoint
 
