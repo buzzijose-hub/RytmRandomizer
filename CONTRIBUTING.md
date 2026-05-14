@@ -36,6 +36,18 @@ Before committing, run:
 powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
 ```
 
+For non-Windows collaborators, run the cross-platform closeout:
+
+```powershell
+python .\Scripts\closeout_check.py
+```
+
+On macOS/Linux, use:
+
+```bash
+python Scripts/closeout_check.py
+```
+
 The GitHub Actions matrix also runs the package coverage gate:
 
 ```powershell

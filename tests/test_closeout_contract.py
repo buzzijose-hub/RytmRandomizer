@@ -3,6 +3,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
+CROSS_PLATFORM_CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.py"
 
 
 def _script_text():
@@ -51,8 +52,31 @@ def test_project_status_check_is_included_in_closeout():
     assert 'Register-CloseoutStepExit "Project Status Check"' in script
 
 
+def test_cross_platform_closeout_script_exists_and_runs_core_gates():
+    script = CROSS_PLATFORM_CLOSEOUT_SCRIPT.read_text(encoding="utf-8")
+
+    assert "RytmRandomizer Cross-Platform Closeout Summary" in script
+    assert "python -m pytest" in script
+    assert "--cov=rytm_randomizer" in script
+    assert "--cov-fail-under=84" in script
+    assert "project-status-report" in script
+    assert "rytm_hybrid_randomizer_v134.py" in script
+    assert "git status --short" in script
+    assert "latest_cross_platform_closeout_summary.txt" in script
+
+
+def test_docs_mention_cross_platform_closeout_script():
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    contributing = (PROJECT_ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+
+    assert "python .\\Scripts\\closeout_check.py" in readme
+    assert "python .\\Scripts\\closeout_check.py" in contributing
+
+
 if __name__ == "__main__":
     test_closeout_tracks_failed_python_test_steps()
     test_every_python_test_step_registers_exit_status()
     test_closeout_contract_test_is_included_in_closeout()
     test_project_status_check_is_included_in_closeout()
+    test_cross_platform_closeout_script_exists_and_runs_core_gates()
+    test_docs_mention_cross_platform_closeout_script()

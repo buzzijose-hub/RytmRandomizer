@@ -74,6 +74,18 @@ Run the current full closeout suite:
 powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
 ```
 
+Cross-platform closeout for Windows, macOS, and Linux:
+
+```powershell
+python .\Scripts\closeout_check.py
+```
+
+On macOS/Linux, use the same command with forward slashes:
+
+```bash
+python Scripts/closeout_check.py
+```
+
 Run all pytest tests directly:
 
 ```powershell
