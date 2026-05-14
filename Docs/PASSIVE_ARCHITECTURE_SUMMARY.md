@@ -8,7 +8,26 @@ modularize-v1.34
 
 Current HEAD:
 
-187d524
+05085e1
+
+## Collaborator Quickstart
+
+`Docs/COLLABORATOR_QUICKSTART.md` gives external collaborators a safe,
+read-only orientation path for the current repository state.
+
+It documents:
+
+- how to pull `modularize-v1.34`
+- how to run quick status
+- how to run full closeout
+- which passive CLI report commands are useful
+- how to send findings as text or Markdown
+- which safety boundaries remain protected
+
+The quickstart is documentation-only. It adds no code, tests, package
+metadata, runtime execution, dispatch, command execution, active CLI command,
+real MIDI dependency, MIDI port opening, MIDI sending, hardware behavior, or
+V1.34 reference change.
 
 ## Collaborator Triage Template Status Visibility Checkpoint
 

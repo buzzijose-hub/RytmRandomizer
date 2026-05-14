@@ -21,7 +21,33 @@ modularize-v1.34
 
 Current HEAD:
 
-187d524 Add collaborator triage template status visibility
+05085e1 Add collaborator triage template visibility checkpoint
+
+## Collaborator Quickstart
+
+The latest collaborator-readiness document is:
+
+- `Docs/COLLABORATOR_QUICKSTART.md`
+
+It gives collaborators a safe first path through the repository:
+
+- pull `modularize-v1.34`
+- run `Scripts/quick_status.ps1`
+- run `Scripts/closeout_check.ps1`
+- use passive CLI report commands
+- send review findings as text or Markdown
+- respect protected safety boundaries
+
+Current collaborator state:
+
+- Eddie has collaborator access
+- the accepted triage template is ready
+- review findings have not been received as text or Markdown yet
+- no review finding is implemented
+
+The quickstart adds no code, tests, package metadata, runtime execution,
+dispatch, command execution, active CLI command, real MIDI dependency, port
+opening, MIDI sending, hardware behavior, or V1.34 reference change.
 
 ## Collaborator Triage Template Status Visibility Checkpoint
 
