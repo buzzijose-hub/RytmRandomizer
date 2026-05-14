@@ -2,6 +2,44 @@
 
 Date: May 4, 2026
 
+## Collaborator Execution Plan Workstream Map
+
+`Docs/COLLABORATOR_EXECUTION_PLAN_WORKSTREAM_MAP.md` converts Eddie's
+`EXECUTION_PLAN.md` into a safe execution map for the current review branch.
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current review-branch baseline before the map:
+
+- `ecdae14 Add package module entry point checkpoint`
+
+Draft PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+Decision:
+
+- Eddie's plan is strategic input, not an unattended execution order.
+- The current PR has already executed a safe foundation subset.
+- Future workstreams must remain narrow, verified, and reviewable.
+- Real MIDI, port opening, active CLI execution, and hardware validation
+  remain blocked by later explicit gates.
+
+Safe foundation represented on the review branch includes packaging metadata,
+passive entry points, CI, cross-platform closeout, repo hygiene, collaborator
+onboarding, and passive shared data.
+
+Parked or blocked scope includes broad docs deletion, further V1.34 edits
+without explicit approval, branch-protection application, 100% coverage
+ratchet, active execution, real MIDI, hardware validation, and monolith
+retirement.
+
+This map is documentation-only. It adds no code, tests, package behavior,
+runtime execution, dispatch, active behavior, MIDI sending, MIDI port opening,
+hardware behavior, or GitHub admin action.
+
 ## Review Branch Package Entry Point Update
 
 Current review branch:

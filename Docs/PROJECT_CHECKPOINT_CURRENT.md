@@ -3,6 +3,52 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Execution Plan Workstream Map
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Latest review-branch baseline:
+
+- `ecdae14 Add package module entry point checkpoint`
+
+New workstream map:
+
+- `Docs/COLLABORATOR_EXECUTION_PLAN_WORKSTREAM_MAP.md`
+
+Draft PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+The workstream map converts Eddie's `EXECUTION_PLAN.md` into a safe local
+execution map. It records which workstreams have already been partially
+executed on the PR, which are parked for separate approval, and which remain
+blocked by the hardware safety boundary.
+
+Current decision:
+
+- use Eddie's plan as strategic input
+- do not execute the entire plan unattended
+- keep remaining work narrow, verified, and reviewable
+- keep hardware-facing and active behavior blocked
+
+Safe foundation already represented on the PR includes packaging, passive
+entry points, CI, quality gates, cross-platform closeout, repo hygiene,
+collaborator onboarding, and passive shared data.
+
+Blocked or parked work includes broad docs deletion, further V1.34 edits
+without explicit approval, branch-protection application, 100% coverage
+ratchet, active CLI execution, real MIDI, port opening, hardware validation,
+and monolith retirement.
+
+This checkpoint adds no code, tests, MIDI, ports, dispatch, active behavior,
+hardware behavior, GitHub admin action, or V1.34 reference edit.
+
+Recommended next task:
+
+- create a PR readiness/status checkpoint for `codex/execute-eddie-plan`
+
 ## Review Branch Package Entry Point Checkpoint
 
 Current review branch:

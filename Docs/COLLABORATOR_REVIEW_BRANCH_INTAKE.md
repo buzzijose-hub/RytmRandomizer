@@ -130,6 +130,25 @@ Accepted intake posture:
 - Keep V1.34 protection and hardware-safety boundaries in force.
 - Preserve current collaborator docs and status visibility.
 
+## Execution Plan Workstream Map
+
+Follow-up workstream map:
+
+- `Docs/COLLABORATOR_EXECUTION_PLAN_WORKSTREAM_MAP.md`
+
+The workstream map applies the Superpowers execution posture to Eddie's
+`EXECUTION_PLAN.md`:
+
+- treat the plan as a workstream menu
+- record which safe foundation work has already been executed on
+  `codex/execute-eddie-plan`
+- keep broad or risky work parked until separately approved
+- keep real MIDI, active CLI execution, port opening, and hardware validation
+  blocked by later gates
+
+This preserves the intake decision: do not merge the review branch as-is and
+do not execute the plan unattended.
+
 ## Initial Triage Table
 
 | ID | Source Theme | Local Assessment | Triage Category | Recommended Action | Status |

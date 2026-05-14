@@ -1,5 +1,59 @@
 # Next Action
 
+## Latest Collaborator Execution Plan Workstream Map
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Latest review-branch baseline:
+
+- `ecdae14 Add package module entry point checkpoint`
+
+New workstream map:
+
+- `Docs/COLLABORATOR_EXECUTION_PLAN_WORKSTREAM_MAP.md`
+
+Draft PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+Decision:
+
+- Eddie's `EXECUTION_PLAN.md` is accepted as strategic input, not as an
+  unattended execution order.
+- The current PR has already executed a safe foundation subset of the plan.
+- Remaining workstreams must continue as narrow, verified slices.
+- Hardware-facing and active work remains blocked until later explicit gates.
+
+Safe completed/partial workstreams on the PR:
+
+- packaging foundation
+- passive package entry points
+- CI and quality gates
+- cross-platform closeout
+- repo hygiene and collaborator onboarding
+- passive shared data layer
+
+Parked or blocked workstreams:
+
+- broad docs deletion
+- more V1.34 edits without explicit approval
+- branch protection/admin application
+- 100% coverage ratchet
+- active CLI execution
+- real MIDI
+- port opening
+- hardware validation
+- monolith retirement
+
+Recommended next task:
+
+- create a PR readiness/status checkpoint for `codex/execute-eddie-plan`
+- then choose a narrow follow-up such as branch-protection instructions,
+  contributor onboarding polish, docs inventory planning, package release
+  checklist, or passive CLI version/status visibility
+
 ## Latest Review Branch Package Entry Point Checkpoint
 
 Current review branch:
