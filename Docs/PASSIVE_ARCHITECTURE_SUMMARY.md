@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-76b248d
+f4d512e
+
+## Behavior-Parity Structured Packet 11 Coverage Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PACKET_11_COVERAGE_CHECKPOINT.md`
+records the structured Packet 11 coverage hardening for the read-only
+behavior-parity coverage report.
+
+Implementation milestone:
+
+- `f4d512e Add structured Packet 11 coverage to parity report`
+
+Files changed:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+The report now includes a structured selected-isolated-pad Packet 11 section:
+
+- Packet 11A: `L` selected isolated pad target intent
+- Packet 11B: `PZ` selected isolated pad anchor-return readiness
+
+The passive `behavior-parity-report` CLI fixture exposes the same section.
+
+This remains read-only report data only. It adds no runtime execution,
+dispatch, command execution, mutation execution, active CLI command, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Behavior-Parity Packet 11B Coverage Alignment Checkpoint
 

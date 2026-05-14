@@ -6,7 +6,54 @@ modularize-v1.34
 
 ## Current HEAD
 
-76b248d Align behavior parity coverage report with Packet 11B
+f4d512e Add structured Packet 11 coverage to parity report
+
+## Latest Behavior-Parity Structured Packet 11 Coverage Checkpoint
+
+The behavior-parity coverage report now includes structured Packet 11
+selected-isolated-pad coverage data in addition to the accepted packet coverage
+text.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PACKET_11_COVERAGE_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `f4d512e Add structured Packet 11 coverage to parity report`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/test_cli.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+Confirmed behavior:
+
+- structured selected-isolated-pad coverage includes Packet 11A / `L`
+- structured selected-isolated-pad coverage includes Packet 11B / `PZ`
+- the passive `behavior-parity-report` CLI fixture includes the structured
+  Packet 11 section
+- report data is still copied/mutation-safe
+
+Recommended next task:
+
+- continue scanning for concrete report/helper/fixture drift
+- prefer another small, test-backed alignment slice over automatic review
+  gates
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Behavior-Parity Packet 11B Coverage Alignment Checkpoint
 
