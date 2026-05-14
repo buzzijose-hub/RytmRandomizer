@@ -2,9 +2,30 @@
 
 This module intentionally contains only stable V1.34 identifiers and MIDI CC
 metadata that non-hardware tests can validate.
+
+Every value here is now *derived* from the shared data layer
+(:mod:`rytm_randomizer.data`) instead of being hand-re-typed:
+
+* ``GROUP_LAYOUT`` is the canonical four-pad layout, re-exported verbatim.
+* ``GROUP_PROFILE_METADATA`` is built from the canonical ``PROFILES`` registry
+  (name + machine value) plus the canonical ``GROUP_LAYOUT`` (pad placement).
+* ``PAD_3_SY_RAW_CC_MAP`` is sliced from the canonical ``SY_RAW_PARAMS`` CC map.
+
+Because there is exactly one copy of every underlying value, this module can
+never drift from the monolith. ``tests/test_data_layer.py`` guards this.
 """
 
+from __future__ import annotations
+
 from .constants import PAD1_DEFAULT_HOME
+from .data import GROUP_LAYOUT, PROFILES, SY_RAW_PARAMS
+
+# Group-profile keys that are in scope for the modular scaffold. These are the
+# subset of the canonical PROFILES registry that the four-pad layout uses.
+_GROUP_PROFILE_KEYS = ("2", "3", "4", "5")
+
+# SY Raw SRC parameter names exposed in the Pad 3 scaffold CC map.
+_PAD_3_SY_RAW_CC_NAMES = ("SRC Noise Level", "SRC Balance")
 
 PAD_1_DEFAULT_PROFILE = {
     "pad": 1,
@@ -12,9 +33,10 @@ PAD_1_DEFAULT_PROFILE = {
     "role": "default/home",
 }
 
+# Sliced from the canonical SY_RAW_PARAMS CC map so the CC numbers can never
+# drift from the monolith's SY Raw param definitions.
 PAD_3_SY_RAW_CC_MAP = {
-    "SRC Noise Level": 19,
-    "SRC Balance": 23,
+    name: SY_RAW_PARAMS[name] for name in _PAD_3_SY_RAW_CC_NAMES
 }
 
 PAD_PROFILES = {
@@ -26,52 +48,38 @@ PAD_PROFILES = {
     },
 }
 
-GROUP_PROFILE_METADATA = {
-    "2": {
-        "name": "My BD Hard",
-        "machine_value": 0,
-        "group_pad": 1,
-    },
-    "3": {
-        "name": "My BD Classic",
-        "machine_value": 1,
-        "group_pad": 2,
-    },
-    "4": {
-        "name": "My BD Acoustic",
-        "machine_value": 30,
-        "group_pad": 4,
-    },
-    "5": {
-        "name": "Pad 3 SY Raw Mid Bass",
-        "machine_value": 32,
-        "group_pad": 3,
-    },
-}
 
-GROUP_LAYOUT = {
-    1: {
-        "role": "Main kick / BD Hard default",
-        "profile": "2",
-        "zone": "full",
-        "depth": "micro",
-    },
-    2: {
-        "role": "Secondary kick / rolling low percussion",
-        "profile": "3",
-        "zone": "body",
-        "depth": "groove",
-    },
-    3: {
-        "role": "SY Raw midrange bass / synth-percussion",
-        "profile": "5",
-        "zone": "lfo",
-        "depth": "groove",
-    },
-    4: {
-        "role": "Body hit / accent layer",
-        "profile": "4",
-        "zone": "body",
-        "depth": "micro",
-    },
-}
+def _build_group_profile_metadata() -> dict[str, dict[str, object]]:
+    """Derive GROUP_PROFILE_METADATA from the shared PROFILES + GROUP_LAYOUT.
+
+    ``name`` and ``machine_value`` come straight from the canonical profile
+    registry. ``group_pad`` is the pad in ``GROUP_LAYOUT`` whose ``profile``
+    points at this key (the inverse of the layout mapping).
+    """
+
+    profile_to_pad = {
+        layout["profile"]: pad for pad, layout in GROUP_LAYOUT.items()
+    }
+    metadata: dict[str, dict[str, object]] = {}
+    for key in _GROUP_PROFILE_KEYS:
+        profile = PROFILES[key]
+        metadata[key] = {
+            "name": profile["name"],
+            "machine_value": profile["machine_value"],
+            "group_pad": profile_to_pad[key],
+        }
+    return metadata
+
+
+GROUP_PROFILE_METADATA = _build_group_profile_metadata()
+
+# GROUP_LAYOUT is re-exported verbatim from the shared data layer
+# (single source of truth) via the import above.
+
+__all__ = [
+    "PAD_1_DEFAULT_PROFILE",
+    "PAD_3_SY_RAW_CC_MAP",
+    "PAD_PROFILES",
+    "GROUP_PROFILE_METADATA",
+    "GROUP_LAYOUT",
+]

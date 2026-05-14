@@ -1,0 +1,163 @@
+"""Canonical 4-pad / machine profile registry (V1.34).
+
+``PROFILES`` is the single source of truth for the discovery profiles used by
+both the monolith and the package. The param-map / order / anchor / safe /
+deltas / zones objects are imported from :mod:`rytm_randomizer.data.param_maps`
+so there is exactly one copy of every value.
+"""
+
+from __future__ import annotations
+
+from .param_maps import (
+    BD_ACOUSTIC_DELTAS, BD_ACOUSTIC_ORDER, BD_ACOUSTIC_PARAMS, BD_ACOUSTIC_SAFE, BD_ACOUSTIC_ZONES,
+    BD_CLASSIC_DELTAS, BD_CLASSIC_ORDER, BD_CLASSIC_PARAMS, BD_CLASSIC_SAFE, BD_CLASSIC_ZONES,
+    BD_FM_DELTAS, BD_FM_ORDER, BD_FM_PARAMS, BD_FM_SAFE, BD_FM_ZONES,
+    BD_HARD_DELTAS, BD_HARD_ORDER, BD_HARD_PARAMS, BD_HARD_SAFE, BD_HARD_ZONES,
+    BD_PLASTIC_DELTAS, BD_PLASTIC_ORDER, BD_PLASTIC_PARAMS, BD_PLASTIC_SAFE, BD_PLASTIC_ZONES,
+    BD_SHARP_DELTAS, BD_SHARP_ORDER, BD_SHARP_PARAMS, BD_SHARP_SAFE, BD_SHARP_ZONES,
+    BD_SILKY_DELTAS, BD_SILKY_ORDER, BD_SILKY_PARAMS, BD_SILKY_SAFE, BD_SILKY_ZONES,
+    PAD2_SD_CLASSIC_ANCHOR, PAD2_SD_FM_ANCHOR, PAD2_SD_HARD_ANCHOR,
+    PAD_3_SY_RAW_ANCHOR,
+    MY_BD_ACOUSTIC_ANCHOR, MY_BD_CLASSIC_ANCHOR, MY_BD_FM_ANCHOR, MY_BD_HARD_ANCHOR,
+    MY_BD_PLASTIC_ANCHOR, MY_BD_SHARP_ANCHOR, MY_BD_SILKY_ANCHOR,
+    SD_CLASSIC_DELTAS, SD_CLASSIC_ORDER, SD_CLASSIC_PARAMS, SD_CLASSIC_SAFE, SD_CLASSIC_ZONES,
+    SD_FM_DELTAS, SD_FM_ORDER, SD_FM_PARAMS, SD_FM_SAFE, SD_FM_ZONES,
+    SD_HARD_DELTAS, SD_HARD_ORDER, SD_HARD_PARAMS, SD_HARD_SAFE, SD_HARD_ZONES,
+    SY_RAW_DELTAS, SY_RAW_ORDER, SY_RAW_PARAMS, SY_RAW_SAFE_LIMITS, SY_RAW_ZONES,
+)
+
+# ============================================================
+# PROFILE REGISTRY
+# ============================================================
+PROFILES = {
+    "1": {
+        "name": "My BD Sharp",
+        "machine_value": 26,
+        "params": BD_SHARP_PARAMS,
+        "order": BD_SHARP_ORDER,
+        "anchor": MY_BD_SHARP_ANCHOR,
+        "safe": BD_SHARP_SAFE,
+        "deltas": BD_SHARP_DELTAS,
+        "zones": BD_SHARP_ZONES,
+        "filter_mode": "sharp",
+        "waveform_range": (0, 3),
+    },
+    "2": {
+        "name": "My BD Hard",
+        "machine_value": 0,
+        "params": BD_HARD_PARAMS,
+        "order": BD_HARD_ORDER,
+        "anchor": MY_BD_HARD_ANCHOR,
+        "safe": BD_HARD_SAFE,
+        "deltas": BD_HARD_DELTAS,
+        "zones": BD_HARD_ZONES,
+        "filter_mode": "hard",
+        "waveform_range": (0, 2),
+    },
+    "3": {
+        "name": "My BD Classic",
+        "machine_value": 1,
+        "params": BD_CLASSIC_PARAMS,
+        "order": BD_CLASSIC_ORDER,
+        "anchor": MY_BD_CLASSIC_ANCHOR,
+        "safe": BD_CLASSIC_SAFE,
+        "deltas": BD_CLASSIC_DELTAS,
+        "zones": BD_CLASSIC_ZONES,
+        "filter_mode": "classic",
+        "waveform_range": (0, 3),
+    },
+    "4": {
+        "name": "My BD Acoustic",
+        "machine_value": 30,
+        "params": BD_ACOUSTIC_PARAMS,
+        "order": BD_ACOUSTIC_ORDER,
+        "anchor": MY_BD_ACOUSTIC_ANCHOR,
+        "safe": BD_ACOUSTIC_SAFE,
+        "deltas": BD_ACOUSTIC_DELTAS,
+        "zones": BD_ACOUSTIC_ZONES,
+        "filter_mode": "acoustic",
+        "waveform_range": (0, 3),
+    },
+    "6": {
+        "name": "BD FM Metallic Kick",
+        "machine_value": 13,
+        "params": BD_FM_PARAMS,
+        "order": BD_FM_ORDER,
+        "anchor": MY_BD_FM_ANCHOR,
+        "safe": BD_FM_SAFE,
+        "deltas": BD_FM_DELTAS,
+        "zones": BD_FM_ZONES,
+        "filter_mode": "fm",
+    },
+    "7": {
+        "name": "BD Plastic Rubber Kick",
+        "machine_value": 21,
+        "params": BD_PLASTIC_PARAMS,
+        "order": BD_PLASTIC_ORDER,
+        "anchor": MY_BD_PLASTIC_ANCHOR,
+        "safe": BD_PLASTIC_SAFE,
+        "deltas": BD_PLASTIC_DELTAS,
+        "zones": BD_PLASTIC_ZONES,
+        "filter_mode": "plastic",
+    },
+    "8": {
+        "name": "BD Silky Deep Kick",
+        "machine_value": 22,
+        "params": BD_SILKY_PARAMS,
+        "order": BD_SILKY_ORDER,
+        "anchor": MY_BD_SILKY_ANCHOR,
+        "safe": BD_SILKY_SAFE,
+        "deltas": BD_SILKY_DELTAS,
+        "zones": BD_SILKY_ZONES,
+        "filter_mode": "silky",
+    },
+    "9": {
+        "name": "Pad 2 SD Hard Pressure Snare",
+        "machine_value": 2,
+        "params": SD_HARD_PARAMS,
+        "order": SD_HARD_ORDER,
+        "anchor": PAD2_SD_HARD_ANCHOR,
+        "safe": SD_HARD_SAFE,
+        "deltas": SD_HARD_DELTAS,
+        "zones": SD_HARD_ZONES,
+        "filter_mode": "classic",
+    },
+    "10": {
+        "name": "Pad 2 SD Classic Rolling Snare",
+        "machine_value": 3,
+        "params": SD_CLASSIC_PARAMS,
+        "order": SD_CLASSIC_ORDER,
+        "anchor": PAD2_SD_CLASSIC_ANCHOR,
+        "safe": SD_CLASSIC_SAFE,
+        "deltas": SD_CLASSIC_DELTAS,
+        "zones": SD_CLASSIC_ZONES,
+        "filter_mode": "classic",
+    },
+    "11": {
+        "name": "Pad 2 SD FM Metallic Snare",
+        "machine_value": 14,
+        "params": SD_FM_PARAMS,
+        "order": SD_FM_ORDER,
+        "anchor": PAD2_SD_FM_ANCHOR,
+        "safe": SD_FM_SAFE,
+        "deltas": SD_FM_DELTAS,
+        "zones": SD_FM_ZONES,
+        "filter_mode": "classic",
+    },
+}
+
+PROFILES["5"] = {
+    "name": "Pad 3 SY Raw Mid Bass",
+    "machine_value": 32,
+    "params": SY_RAW_PARAMS,
+    "cc_map": SY_RAW_PARAMS,
+    "order": SY_RAW_ORDER,
+    "anchor": PAD_3_SY_RAW_ANCHOR,
+    "safe_limits": SY_RAW_SAFE_LIMITS,
+    "safe": SY_RAW_SAFE_LIMITS,
+    "deltas": SY_RAW_DELTAS,
+    "zones": SY_RAW_ZONES,
+    "filter_style": "sy_raw_mid_bass",
+}
+
+__all__ = ["PROFILES"]

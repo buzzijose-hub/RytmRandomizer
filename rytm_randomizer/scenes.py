@@ -1,134 +1,52 @@
-"""Scene command metadata for the initial modular scaffold.
+"""Scene command metadata for the modular scaffold.
 
-This registry mirrors V1.34 scene command names and labels as data only. It
-does not execute scenes or send MIDI.
+This registry mirrors the V1.34 scene command names, descriptions, and actions
+as data only. It does not execute scenes or send MIDI.
+
+The name / description / action of every scene is derived from the shared data
+layer (:data:`rytm_randomizer.data.SCENE_PRESETS`) so there is exactly one copy
+of those values and the package can never drift from the monolith. The
+scaffold-only metadata fields (``scope``, ``executable``,
+``v134_reference_command``, ``scaffold_only``) are added here because they are
+package-scaffold concerns that do not exist in the monolith.
 """
 
-SCENE_COMMANDS = {
-    "S0": {
-        "name": "Home / Clean",
-        "description": "Load or return all four pads to the validated anchors.",
-        "action": "home",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S1": {
-        "name": "Rolling",
-        "description": "Balanced four-lane movement. Kick stays protected; Pads 2-4 move musically.",
-        "action": "balanced",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S1A": {
-        "name": "Rolling Light",
-        "description": "Lower-risk rolling movement for subtle live variation.",
-        "action": "rolling_light",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S1B": {
-        "name": "Rolling Push",
-        "description": "A stronger rolling push while keeping the kick foundation protected.",
-        "action": "rolling_push",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S2": {
-        "name": "Deeper",
-        "description": "More pressure on Pads 2-4 while keeping Pad 1 bounded.",
-        "action": "deeper",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S2A": {
-        "name": "Deeper Groove",
-        "description": "Deeper body movement with groove-first pressure.",
-        "action": "deeper_groove",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S2B": {
-        "name": "Deeper Pressure",
-        "description": "More filter/grit pressure on the secondary lanes while Pad 1 stays bounded.",
-        "action": "deeper_pressure",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S3": {
-        "name": "Intense",
-        "description": "Controlled chaos with Pad 3 carrying most of the motion.",
-        "action": "intense",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S3A": {
-        "name": "Intense Motion",
-        "description": "Motion-heavy intensity with Pad 3 as the main moving lane.",
-        "action": "intense_motion",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S3B": {
-        "name": "Intense Grit",
-        "description": "Grit-forward intensity while keeping the main kick controlled.",
-        "action": "intense_grit",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S4": {
-        "name": "Wild",
-        "description": "The most aggressive discovery scene while keeping the kick foundation bounded.",
-        "action": "harder",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S4A": {
-        "name": "Wild Controlled",
-        "description": "A wider discovery scene with the harshest guardrails still active.",
-        "action": "wild_controlled",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S4B": {
-        "name": "Wild Maximum",
-        "description": "The maximum V1.34 discovery scene, using the existing wild guardrails.",
-        "action": "wild_maximum",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
-    "S5": {
-        "name": "Back to Clean",
-        "description": "Return all four pads to anchors after scene movement.",
-        "action": "clean",
-        "scope": "four_pad_group",
-        "executable": False,
-        "v134_reference_command": True,
-        "scaffold_only": True,
-    },
+from __future__ import annotations
+
+from types import MappingProxyType
+
+from .data import SCENE_PRESETS
+
+# Scaffold-only metadata attached to every scene command. These flags describe
+# the modular scaffold's relationship to the V1.34 monolith; they are not part
+# of the canonical scene data.
+_SCAFFOLD_METADATA = {
+    "scope": "four_pad_group",
+    "executable": False,
+    "v134_reference_command": True,
+    "scaffold_only": True,
 }
+
+
+def _build_scene_commands() -> dict[str, dict[str, object]]:
+    """Derive SCENE_COMMANDS from the shared SCENE_PRESETS data.
+
+    Monolith preset keys are lower-case (``s0``); the scaffold registry uses
+    upper-case command keys (``S0``). Order is preserved.
+    """
+
+    commands: dict[str, dict[str, object]] = {}
+    for preset_key, preset in SCENE_PRESETS.items():
+        command_key = preset_key.upper()
+        commands[command_key] = {
+            "name": preset["name"],
+            "description": preset["description"],
+            "action": preset["action"],
+            **_SCAFFOLD_METADATA,
+        }
+    return commands
+
+
+SCENE_COMMANDS = _build_scene_commands()
+
+__all__ = ["SCENE_COMMANDS"]
