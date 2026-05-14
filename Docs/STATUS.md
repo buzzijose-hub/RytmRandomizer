@@ -19,7 +19,7 @@
 - CONTRIBUTING: present
 - LICENSE: Apache-2.0
 - CI: GitHub Actions test matrix added
-- CodeQL: configured
+- CodeQL: configured as manual until code scanning is enabled for the repo
 - Dependabot: configured
 - release build workflow: configured for `v*` tags
 

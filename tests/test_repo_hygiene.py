@@ -47,3 +47,14 @@ def test_pull_request_template_requires_safety_evidence():
     assert "V1.34" in template
     assert "MIDI" in template
     assert "hardware" in template
+
+
+def test_codeql_workflow_is_manual_until_code_scanning_is_enabled():
+    workflow = (PROJECT_ROOT / ".github/workflows/codeql.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "workflow_dispatch:" in workflow
+    assert "pull_request:" not in workflow
+    assert "push:" not in workflow
+    assert "schedule:" not in workflow
