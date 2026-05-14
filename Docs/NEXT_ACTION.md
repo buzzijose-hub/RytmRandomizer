@@ -6,7 +6,45 @@ modularize-v1.34
 
 ## Current HEAD
 
-13b7d88 Add mock runtime bridge report public API exports
+1c68dc0 Add mock runtime bridge report API checkpoint
+
+## Latest Public API Hardening Progress Checkpoint
+
+The latest progress checkpoint is:
+
+- `Docs/PUBLIC_API_HARDENING_PROGRESS_CHECKPOINT.md`
+
+It summarizes the recent explicit public API export run across:
+
+- `rytm_randomizer.active_boundary`
+- `rytm_randomizer.active_boundary_report`
+- `rytm_randomizer.runtime_plan_report`
+- `rytm_randomizer.mock_runtime_active_bridge_report`
+
+Included milestones:
+
+- `d7cd39f Add active boundary public API exports`
+- `acb6103 Add active boundary API checkpoint`
+- `d4d0928 Add active boundary report public API exports`
+- `8cd8113 Add active boundary report API checkpoint`
+- `313375c Add runtime plan report public API exports`
+- `607e917 Add runtime plan report API checkpoint`
+- `13b7d88 Add mock runtime bridge report public API exports`
+- `1c68dc0 Add mock runtime bridge report API checkpoint`
+
+Decision:
+
+- do not continue adding `__all__` exports blindly
+- future API hardening should happen only when a concrete module boundary is
+  worth locking down with a test
+- otherwise return to behavior-parity visibility, project reporting, roadmap
+  documentation, or another small passive/mock-only software slice
+
+Recommended next task:
+
+- run one quick scan for remaining concrete API surface gaps, then continue
+  only if a useful gap is obvious; otherwise switch branches away from API
+  hardening
 
 ## Latest Mock Runtime Bridge Report Public API Exports Checkpoint
 
