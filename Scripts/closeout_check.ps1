@@ -326,6 +326,11 @@ Register-CloseoutStepExit "Mock Runtime Active Bridge Report"
 Register-CloseoutStepExit "Package Build"
 
 "" | Add-Content $summary
+"=== Test: Wheel Install Smoke ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\Scripts\smoke_test_wheel_install.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_wheel_install_smoke.log" | Add-Content $summary
+Register-CloseoutStepExit "Wheel Install Smoke"
+
+"" | Add-Content $summary
 "=== V1.34 Reference Diff ===" | Add-Content $summary
 git diff -- rytm_hybrid_randomizer_v134.py 2>&1 | Tee-Object -FilePath "$logDir\latest_v134_reference_diff.log" | Add-Content $summary
 

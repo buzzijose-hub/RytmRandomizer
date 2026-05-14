@@ -63,6 +63,17 @@ def test_package_build_is_included_in_closeout():
     assert "python -m build" in cross_platform_script
 
 
+def test_wheel_install_smoke_is_included_in_closeout():
+    script = _script_text()
+    cross_platform_script = CROSS_PLATFORM_CLOSEOUT_SCRIPT.read_text(encoding="utf-8")
+
+    assert "=== Test: Wheel Install Smoke ===" in script
+    assert ".\\Scripts\\smoke_test_wheel_install.py" in script
+    assert 'Register-CloseoutStepExit "Wheel Install Smoke"' in script
+    assert "Wheel Install Smoke" in cross_platform_script
+    assert "Scripts/smoke_test_wheel_install.py" in cross_platform_script
+
+
 def test_cross_platform_closeout_script_exists_and_runs_core_gates():
     script = CROSS_PLATFORM_CLOSEOUT_SCRIPT.read_text(encoding="utf-8")
 
@@ -90,5 +101,6 @@ if __name__ == "__main__":
     test_closeout_contract_test_is_included_in_closeout()
     test_project_status_check_is_included_in_closeout()
     test_package_build_is_included_in_closeout()
+    test_wheel_install_smoke_is_included_in_closeout()
     test_cross_platform_closeout_script_exists_and_runs_core_gates()
     test_docs_mention_cross_platform_closeout_script()

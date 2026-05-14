@@ -40,3 +40,6 @@ jobs:
 
       - name: Build package artifacts
         run: python -m build
+
+      - name: Smoke test built wheel install
+        run: python Scripts/smoke_test_wheel_install.py

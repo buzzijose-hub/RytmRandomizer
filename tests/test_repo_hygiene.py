@@ -16,6 +16,7 @@ def test_repo_hygiene_files_exist():
         "CHANGELOG.md",
         "pyproject.toml",
         ".python-version",
+        "Scripts/smoke_test_wheel_install.py",
         ".github/CODEOWNERS",
         ".github/pull_request_template.md",
         ".github/workflows/test.yml",
@@ -118,3 +119,22 @@ def test_package_build_gate_is_declared_for_distribution_safety():
     assert "Build package artifacts" in workflow
     assert "python -m build" in workflow
     assert "python -m build" in readme
+
+
+def test_wheel_install_smoke_gate_is_declared_for_distribution_safety():
+    workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
+        encoding="utf-8"
+    )
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    script = (PROJECT_ROOT / "Scripts" / "smoke_test_wheel_install.py").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Smoke test built wheel install" in workflow
+    assert "python Scripts/smoke_test_wheel_install.py" in workflow
+    assert "python Scripts/smoke_test_wheel_install.py" in readme
+    assert "--no-deps" in script
+    assert "rytm-randomizer" in script
+    assert "project-status-report" in script
+    assert "mido" in script
+    assert "rtmidi" in script

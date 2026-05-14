@@ -99,6 +99,12 @@ Build package artifacts:
 python -m build
 ```
 
+Smoke-test the built wheel in a temporary environment:
+
+```powershell
+python Scripts/smoke_test_wheel_install.py
+```
+
 ## Current Passive CLI Capabilities
 
 ```powershell

@@ -77,6 +77,11 @@ def main() -> int:
         ),
         ("Package Build", [sys.executable, "-m", "build"], "python -m build"),
         (
+            "Wheel Install Smoke",
+            [sys.executable, "Scripts/smoke_test_wheel_install.py"],
+            "python Scripts/smoke_test_wheel_install.py",
+        ),
+        (
             "V1.34 Reference Diff",
             ["git", "diff", "--", "rytm_hybrid_randomizer_v134.py"],
             "git diff -- rytm_hybrid_randomizer_v134.py",
