@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-d4d0928
+313375c
+
+## Runtime Plan Report Public API Exports Checkpoint
+
+`Docs/RUNTIME_PLAN_REPORT_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the tiny
+runtime plan report API alignment slice.
+
+Implementation milestone:
+
+- `313375c Add runtime plan report public API exports`
+
+The read-only runtime plan report now exposes an explicit `__all__` list:
+
+- `PARKED_REPORT_INPUTS`
+- `RUNTIME_PLAN_REPORT_BOUNDARY`
+- `SUPPORTED_REPORT_INPUTS`
+- `UNSUPPORTED_REPORT_INPUTS`
+- `build_runtime_plan_report`
+- `format_runtime_plan_report`
+- `summarize_runtime_plan_report`
+
+This changes no report behavior. The report remains deterministic and
+in-memory only. Supported planning inputs remain group profiles `2` and `3`,
+profile `4` remains parked, and unsupported key/source-kind handling remains
+unchanged.
+
+This adds no real MIDI dependency, port opening, MIDI sending, dispatch,
+command execution, runtime execution, active CLI behavior, package metadata
+change, or hardware behavior.
 
 ## Active Boundary Report Public API Exports Checkpoint
 

@@ -21,7 +21,42 @@ modularize-v1.34
 
 Current HEAD:
 
-d4d0928 Add active boundary report public API exports
+313375c Add runtime plan report public API exports
+
+## Runtime Plan Report Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/RUNTIME_PLAN_REPORT_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `313375c Add runtime plan report public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/runtime_plan_report.py`
+- `tests/test_runtime_plan_report.py`
+
+The read-only runtime plan report now exposes an explicit `__all__` public API
+list:
+
+- `PARKED_REPORT_INPUTS`
+- `RUNTIME_PLAN_REPORT_BOUNDARY`
+- `SUPPORTED_REPORT_INPUTS`
+- `UNSUPPORTED_REPORT_INPUTS`
+- `build_runtime_plan_report`
+- `format_runtime_plan_report`
+- `summarize_runtime_plan_report`
+
+Existing runtime plan report behavior remains unchanged. The report remains
+deterministic and in-memory only. Supported planning inputs remain group
+profiles `2` and `3`; profile `4` remains parked; unsupported key/source-kind
+handling remains unchanged.
+
+This adds no real MIDI dependency, `mido`, `rtmidi`, port discovery, port
+opening, MIDI sending, runtime execution, dispatch, command execution, active
+CLI command, package metadata change, or hardware behavior.
 
 ## Active Boundary Report Public API Exports Checkpoint
 
