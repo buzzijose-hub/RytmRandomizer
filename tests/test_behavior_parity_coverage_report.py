@@ -61,6 +61,7 @@ def test_report_summarizes_packet_coverage_and_runtime_adjacent_surfaces():
         "Packet 9 undo/commit/state intent",
         "Packet 10 selected-profile workflow intent",
         "Packet 11A L selected isolated pad target intent",
+        "Packet 11B PZ selected isolated pad anchor-return readiness",
     )
     assert report["runtime_adjacent_mock_only_safe_failures"] == ("PZ", "B", "L")
 
@@ -160,7 +161,7 @@ def test_report_summary_is_deterministic():
 
     assert summarize_behavior_parity_coverage_report() == {
         "title": "V1.34 Behavior Parity Coverage Report",
-        "accepted_packet_count": 11,
+        "accepted_packet_count": 12,
         "runtime_adjacent_safe_failure_count": 3,
         "parked_scope_count": 2,
         "closeout_coverage_count": 18,
@@ -194,6 +195,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "- Packet 9 undo/commit/state intent",
         "- Packet 10 selected-profile workflow intent",
         "- Packet 11A L selected isolated pad target intent",
+        "- Packet 11B PZ selected isolated pad anchor-return readiness",
         "Runtime-Adjacent Mock-Only Safe Failures:",
         "- PZ",
         "- B",

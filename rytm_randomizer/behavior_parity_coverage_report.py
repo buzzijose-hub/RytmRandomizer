@@ -21,6 +21,7 @@ ACCEPTED_PACKET_COVERAGE = (
     "Packet 9 undo/commit/state intent",
     "Packet 10 selected-profile workflow intent",
     "Packet 11A L selected isolated pad target intent",
+    "Packet 11B PZ selected isolated pad anchor-return readiness",
 )
 
 RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES = ("PZ", "B", "L")
