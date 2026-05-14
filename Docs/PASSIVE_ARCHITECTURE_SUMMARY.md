@@ -8,7 +8,30 @@ modularize-v1.34
 
 Current HEAD:
 
-e8cf521
+207f5f8
+
+## Collaborator Review Branch Intake Review
+
+`Docs/COLLABORATOR_REVIEW_BRANCH_INTAKE_REVIEW.md` accepts
+`Docs/COLLABORATOR_REVIEW_BRANCH_INTAKE.md` as the current safe intake record
+for Eddie's pushed review branch.
+
+Accepted decision:
+
+- do not merge `origin/docs/review-and-execution-plan` as-is
+- do not execute the proposed plan unattended
+- preserve current collaborator docs and project-status visibility
+- treat external review themes as future triage candidates
+- keep implementation behind separate narrow approved slices
+
+Recommended next task:
+
+- documentation-only CI/branch-protection planning
+
+This review is documentation-only. It adds no code, tests, package metadata,
+runtime execution, dispatch, command execution, active CLI command, real MIDI
+dependency, MIDI port opening, MIDI sending, hardware behavior, license change,
+public repository change, or V1.34 reference change.
 
 ## Collaborator Review Branch Intake
 

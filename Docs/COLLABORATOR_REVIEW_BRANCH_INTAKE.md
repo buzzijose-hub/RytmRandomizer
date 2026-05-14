@@ -198,3 +198,15 @@ After that, choose one narrow follow-up:
 Do not merge Eddie's branch as-is.
 
 Hardware remains off.
+
+## Review Status
+
+Review gate:
+
+- `Docs/COLLABORATOR_REVIEW_BRANCH_INTAKE_REVIEW.md`
+
+Decision:
+
+- intake accepted
+- branch remains unmerged
+- findings remain advisory until separately selected and verified

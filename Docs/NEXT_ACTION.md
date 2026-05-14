@@ -6,7 +6,40 @@ modularize-v1.34
 
 ## Current HEAD
 
-e8cf521 Add collaborator quickstart
+207f5f8 Add collaborator review branch intake
+
+## Latest Collaborator Review Branch Intake Review
+
+The latest collaborator review gate is:
+
+- `Docs/COLLABORATOR_REVIEW_BRANCH_INTAKE_REVIEW.md`
+
+Accepted intake:
+
+- `Docs/COLLABORATOR_REVIEW_BRANCH_INTAKE.md`
+
+Decision:
+
+- collaborator review branch intake accepted
+- Eddie's branch is useful external review input
+- do not merge `origin/docs/review-and-execution-plan` as-is
+- do not execute the proposed plan unattended
+- preserve current collaborator docs and project-status visibility
+- implement review findings only through separate narrow approved slices
+
+Recommended next task:
+
+- create a documentation-only CI/branch-protection planning slice
+
+Parked until separately approved:
+
+- package metadata changes
+- license/public release changes
+- V1.34 monolith edits
+- active behavior
+- real MIDI
+- port opening
+- hardware validation
 
 ## Latest Collaborator Review Branch Intake
 
