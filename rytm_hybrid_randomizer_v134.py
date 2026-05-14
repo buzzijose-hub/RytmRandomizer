@@ -3,6 +3,18 @@ import random
 import time
 
 # ------------------------------------------------------------
+# EXTRACTED DOMAIN MODULES (Wave 4 decomposition)
+# ------------------------------------------------------------
+# The leaf-level MIDI I/O primitives and the randomization core now live in
+# small typed modules under rytm_randomizer/. They are imported here and the
+# monolith's same-named functions below are thin shims that forward the
+# monolith's module globals (out/channel/active_profile and the mutable
+# anchor_state / current_state / previous_state) into the pure package
+# functions. Behavior is byte-identical to pre-extraction V1.34.
+from rytm_randomizer import midi_io as _midi_io
+from rytm_randomizer import randomization as _randomization
+
+# ------------------------------------------------------------
 # SHARED DATA LAYER (single source of truth)
 # ------------------------------------------------------------
 # All canonical V1.34 domain data (param maps, anchors, safe limits, deltas,
@@ -286,27 +298,18 @@ pad4_current_mode_key = "anchor"  # default Pad 4 BD Acoustic body/accent mode /
 # FUNCTIONS
 # ------------------------------------------------------------
 
+# clamp / send_cc / send_machine are now thin shims over
+# rytm_randomizer.midi_io. They forward the monolith's `channel` global so
+# behavior stays byte-identical.
+
 def clamp(value, low, high):
-    return max(low, min(high, value))
+    return _midi_io.clamp(value, low, high)
 
 def send_cc(out, cc, value):
-    msg = mido.Message(
-        "control_change",
-        channel=channel,
-        control=cc,
-        value=value
-    )
-    out.send(msg)
-    time.sleep(0.02)
+    _midi_io.send_cc(out, cc, value, channel=channel)
 
 def send_machine(out):
-    value = active_profile["machine_value"]
-    name = active_profile["name"]
-
-    print(f"\nSwitching Rytm machine to {name}:")
-    send_cc(out, MACHINE_CC, value)
-    print(f"  Machine CC15 -> {value}")
-    time.sleep(0.40)
+    _midi_io.send_machine(out, active_profile, channel=channel)
 
 def select_profile(out):
     global active_profile, anchor_state, current_state, previous_state
@@ -366,232 +369,103 @@ def require_profile():
         return False
     return True
 
+# send_param / apply_state / get_depth and the randomization core are now thin
+# shims over rytm_randomizer.midi_io and rytm_randomizer.randomization. The
+# shims forward the monolith's `channel` global and the mutable
+# anchor_state / current_state / previous_state globals, then write back any
+# new state the package functions return. Behavior is byte-identical.
+
 def send_param(out, name, value):
-    cc = active_profile["params"][name]
-    send_cc(out, cc, value)
-    print(f"  {name}: CC{cc} -> {value}")
+    _midi_io.send_param(out, active_profile, name, value, channel=channel)
 
 def apply_state(out, state, label, set_anchor=False, switch_machine_first=False):
     global anchor_state, current_state, previous_state
 
-    if not require_profile():
+    result = _midi_io.apply_state(
+        out,
+        active_profile if active_profile else None,
+        state,
+        label,
+        anchor_state=anchor_state,
+        current_state=current_state,
+        previous_state=previous_state,
+        set_anchor=set_anchor,
+        switch_machine_first=switch_machine_first,
+        channel=channel,
+    )
+
+    if not result.applied:
         return
 
-    if switch_machine_first:
-        send_machine(out)
-
-    print(f"\n{label}:")
-
-    if current_state:
-        previous_state = current_state.copy()
-
-    for name in active_profile["order"]:
-        if name in state:
-            send_param(out, name, state[name])
-
-    current_state = state.copy()
-
-    if set_anchor:
-        anchor_state = state.copy()
-        active_profile["anchor"] = state.copy()
-        print("  Anchor updated.")
+    anchor_state = dict(result.anchor_state)
+    current_state = dict(result.current_state)
+    previous_state = (
+        dict(result.previous_state) if result.previous_state is not None else None
+    )
 
 def get_depth():
-    depth = input("Depth 1=micro, 2=groove, 3=strong: ").strip()
-
-    if depth == "1":
-        return "micro"
-    elif depth == "2":
-        return "groove"
-    elif depth == "3":
-        return "strong"
-    else:
-        print("Invalid depth. Using groove.")
-        return "groove"
+    return _randomization.get_depth()
 
 def random_value_around_anchor(name, depth_name):
-    safe = active_profile["safe"]
-    deltas = active_profile["deltas"]
-
-    anchor_value = anchor_state[name]
-    delta = deltas[depth_name][name]
-    low_limit, high_limit = safe[name]
-
-    # For maxed transient/tick-like values, pull downward only.
-    if name in ["SRC Tick Level", "SRC Impact"] and anchor_value >= 110:
-        low = clamp(anchor_value - delta, low_limit, high_limit)
-        high = anchor_value
-
-    # For zero amp hold kicks, only open hold upward.
-    elif name == "AMP Hold" and anchor_value <= 2:
-        low = anchor_value
-        high = clamp(anchor_value + delta, low_limit, high_limit)
-
-    else:
-        low = clamp(anchor_value - delta, low_limit, high_limit)
-        high = clamp(anchor_value + delta, low_limit, high_limit)
-
-    if low > high:
-        low, high = high, low
-
-    return random.randint(low, high)
+    return _randomization.random_value_around_anchor(
+        name,
+        depth_name,
+        profile=active_profile,
+        anchor_state=anchor_state,
+        rng=random,
+    )
 
 def random_hp2_filter_pair(depth_name):
-    safe = active_profile["safe"]
-    deltas = active_profile["deltas"]
-
-    freq_anchor = anchor_state["FLT Frequency"]
-    res_anchor = anchor_state["FLT Resonance"]
-
-    freq_delta = deltas[depth_name]["FLT Frequency"]
-    res_delta = deltas[depth_name]["FLT Resonance"]
-
-    freq_low_limit, freq_high_limit = safe["FLT Frequency"]
-    res_low_limit, res_high_limit = safe["FLT Resonance"]
-
-    freq_low = clamp(freq_anchor - freq_delta, freq_low_limit, freq_high_limit)
-    freq_high = clamp(freq_anchor + freq_delta, freq_low_limit, freq_high_limit)
-
-    if freq_low > freq_high:
-        freq_low, freq_high = freq_high, freq_low
-
-    freq = random.randint(freq_low, freq_high)
-
-    mode = active_profile["filter_mode"]
-
-    if mode == "sharp":
-        if freq <= 25:
-            pair_res_low = 72
-            pair_res_high = 85
-        elif freq <= 30:
-            pair_res_low = 68
-            pair_res_high = 85
-        else:
-            pair_res_low = 64
-            pair_res_high = 82
-
-    elif mode == "hard":
-        if freq <= 26:
-            pair_res_low = 45
-            pair_res_high = 62
-        elif freq <= 31:
-            pair_res_low = 42
-            pair_res_high = 68
-        else:
-            pair_res_low = 40
-            pair_res_high = 64
-
-    elif mode == "classic":
-        if freq <= 25:
-            pair_res_low = 22
-            pair_res_high = 36
-        elif freq <= 30:
-            pair_res_low = 20
-            pair_res_high = 42
-        else:
-            pair_res_low = 18
-            pair_res_high = 38
-
-    elif mode == "fm":
-        # BD FM can handle more resonance than Classic/Acoustic because its metallic
-        # character benefits from the sharper HP2 contour. Still keep it bounded.
-        if freq <= 26:
-            pair_res_low = 52
-            pair_res_high = 74
-        elif freq <= 32:
-            pair_res_low = 48
-            pair_res_high = 76
-        else:
-            pair_res_low = 44
-            pair_res_high = 72
-
-    else:
-        # Acoustic: keep HP2 resonance restrained so long body does not bloom too much.
-        if freq <= 25:
-            pair_res_low = 22
-            pair_res_high = 36
-        elif freq <= 30:
-            pair_res_low = 18
-            pair_res_high = 40
-        else:
-            pair_res_low = 18
-            pair_res_high = 38
-
-    res_low = clamp(res_anchor - res_delta, res_low_limit, res_high_limit)
-    res_high = clamp(res_anchor + res_delta, res_low_limit, res_high_limit)
-
-    final_res_low = max(res_low, pair_res_low, res_low_limit)
-    final_res_high = min(res_high, pair_res_high, res_high_limit)
-
-    if final_res_low > final_res_high:
-        final_res_low = res_low_limit
-        final_res_high = res_high_limit
-
-    resonance = random.randint(final_res_low, final_res_high)
-
-    return freq, resonance
+    return _randomization.random_hp2_filter_pair(
+        depth_name,
+        profile=active_profile,
+        anchor_state=anchor_state,
+        rng=random,
+    )
 
 def mutate_zone(out, zone_name, depth_name):
     global current_state, previous_state
 
-    if not require_profile():
+    result = _randomization.mutate_zone(
+        out,
+        zone_name,
+        depth_name,
+        profile=active_profile if active_profile else None,
+        anchor_state=anchor_state,
+        current_state=current_state,
+        previous_state=previous_state,
+        channel=channel,
+        rng=random,
+    )
+
+    if not result.applied:
         return
 
-    if not current_state:
-        current_state.update(anchor_state.copy())
-
-    previous_state = current_state.copy()
-    new_state = current_state.copy()
-
-    print(f"\n{active_profile['name']} / {zone_name.upper()} mutation / {depth_name.upper()} depth:")
-    print("  Mutating around current anchor.")
-
-    zone_params = active_profile["zones"][zone_name]
-    handled_filter_pair = False
-
-    for name in zone_params:
-        if name not in active_profile["deltas"][depth_name]:
-            continue
-
-        if name == "FLT Frequency" and "FLT Resonance" in zone_params:
-            freq, resonance = random_hp2_filter_pair(depth_name)
-
-            new_state["FLT Frequency"] = freq
-            new_state["FLT Resonance"] = resonance
-
-            send_param(out, "FLT Frequency", freq)
-            send_param(out, "FLT Resonance", resonance)
-
-            handled_filter_pair = True
-            continue
-
-        if name == "FLT Resonance" and handled_filter_pair:
-            continue
-
-        value = random_value_around_anchor(name, depth_name)
-        new_state[name] = value
-        send_param(out, name, value)
-
-    current_state = new_state.copy()
+    current_state = dict(result.current_state)
+    previous_state = (
+        dict(result.previous_state) if result.previous_state is not None else None
+    )
 
 def random_waveform(out):
     global current_state, previous_state
 
-    if not require_profile():
+    result = _randomization.random_waveform(
+        out,
+        profile=active_profile if active_profile else None,
+        anchor_state=anchor_state,
+        current_state=current_state,
+        previous_state=previous_state,
+        channel=channel,
+        rng=random,
+    )
+
+    if not result.applied:
         return
 
-    if not current_state:
-        current_state.update(anchor_state.copy())
-
-    previous_state = current_state.copy()
-
-    low, high = active_profile["waveform_range"]
-    value = random.randint(low, high)
-
-    print(f"\n{active_profile['name']} waveform exploration:")
-    send_param(out, "SRC Waveform", value)
-
-    current_state["SRC Waveform"] = value
+    current_state = dict(result.current_state)
+    previous_state = (
+        dict(result.previous_state) if result.previous_state is not None else None
+    )
 
 def undo(out):
     global current_state, previous_state
