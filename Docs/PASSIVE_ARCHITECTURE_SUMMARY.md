@@ -2,6 +2,40 @@
 
 Date: May 4, 2026
 
+## GitHub Actions Cost Control
+
+The default GitHub Actions workflow has been tuned to reduce Actions-minute
+usage on the private repository.
+
+Default workflow:
+
+- `.github/workflows/test.yml`
+
+Current default behavior:
+
+- runs on pull requests
+- can be triggered manually
+- does not duplicate runs on direct pushes
+- cancels superseded runs
+- uses a routine 3-job matrix:
+  - Ubuntu / Python 3.13
+  - Windows / Python 3.13
+  - macOS / Python 3.13
+
+Manual full-matrix workflow:
+
+- `.github/workflows/test-full-matrix.yml`
+
+The full matrix is still available on demand:
+
+- Windows / Python 3.11, 3.12, 3.13
+- macOS / Python 3.11, 3.12, 3.13
+- Ubuntu / Python 3.11, 3.12, 3.13
+
+This is CI governance only. It does not change runtime behavior, dispatch,
+active behavior, MIDI sending, MIDI port opening, hardware behavior, package
+publication, branch protection settings, or the V1.34 reference.
+
 ## Collaborator Implementation Intake Status Visibility
 
 `rytm_randomizer/project_status_report.py` now exposes a passive

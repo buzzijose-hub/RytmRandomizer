@@ -48,7 +48,9 @@ On macOS/Linux, use:
 python Scripts/closeout_check.py
 ```
 
-The GitHub Actions matrix also runs the package coverage gate:
+The routine GitHub Actions pull request workflow runs a lean
+Windows/macOS/Ubuntu Python 3.13 matrix to conserve included Actions minutes.
+It also runs the package coverage gate:
 
 ```powershell
 python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84
@@ -56,6 +58,10 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84
 
 The current ratchet floor is 84% branch coverage for `rytm_randomizer/`. Raise
 the floor when coverage improves; do not lower it.
+
+Before final PR readiness or a major merge decision, run the manual
+`tests-full-matrix` workflow on GitHub to exercise Windows/macOS/Ubuntu across
+Python 3.11, 3.12, and 3.13.
 
 For quick orientation, run:
 

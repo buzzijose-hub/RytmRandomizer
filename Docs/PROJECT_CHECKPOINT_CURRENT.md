@@ -3,6 +3,50 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## GitHub Actions Cost Control Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_COST_CONTROL_CHECKPOINT.md`
+
+The repository now has a lower-cost default CI posture after GitHub reported
+that the account had used about 90% of included Actions minutes.
+
+Default workflow:
+
+- `.github/workflows/test.yml`
+
+Default CI now:
+
+- runs on `pull_request`
+- can be triggered manually with `workflow_dispatch`
+- does not run separately on direct `push`
+- cancels older superseded runs
+- uses a lean routine matrix:
+  - Ubuntu / Python 3.13
+  - Windows / Python 3.13
+  - macOS / Python 3.13
+
+Manual final-readiness workflow:
+
+- `.github/workflows/test-full-matrix.yml`
+
+It preserves the full Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix,
+but only runs when explicitly triggered.
+
+This checkpoint changes CI workflow configuration and repo-hygiene tests only.
+It adds no real MIDI, ports, dispatch, active behavior, hardware behavior,
+package publication, branch protection setting change, collaborator branch
+merge, or V1.34 reference edit.
+
 ## Collaborator Implementation Intake Status Visibility Checkpoint
 
 Current review branch:

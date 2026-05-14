@@ -1,5 +1,42 @@
 # Next Action
 
+## Latest GitHub Actions Cost Control Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_COST_CONTROL_CHECKPOINT.md`
+
+Purpose:
+
+- reduce routine GitHub Actions minute usage after the 90% included-minutes
+  warning
+- avoid duplicate `push` and `pull_request` runs for the same branch update
+- keep a manual full matrix available for final PR readiness
+
+Workflow changes:
+
+- `.github/workflows/test.yml` now runs on `pull_request` and
+  `workflow_dispatch`, not direct `push`
+- routine PR matrix is reduced to Windows/macOS/Ubuntu on Python 3.13
+- concurrency cancels superseded runs
+- `.github/workflows/test-full-matrix.yml` preserves the full
+  Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix as a manual workflow
+
+Recommended next task:
+
+- continue with local closeout as the main fast feedback loop
+- run the manual full matrix only before final PR readiness or major merge
+  decisions
+- keep waiting for Eddie's implementation branch or PR before intake
+
 ## Latest Collaborator Implementation Intake Status Visibility Checkpoint
 
 Current review branch:

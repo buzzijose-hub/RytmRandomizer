@@ -64,17 +64,16 @@ Recommended first policy for `modularize-v1.34`:
 - allow force pushes: disabled
 - allow deletions: disabled
 
-Recommended required status checks:
+Recommended required status checks after the cost-control update:
 
-- `windows-latest / Python 3.11`
-- `windows-latest / Python 3.12`
 - `windows-latest / Python 3.13`
-- `macos-latest / Python 3.11`
-- `macos-latest / Python 3.12`
 - `macos-latest / Python 3.13`
-- `ubuntu-latest / Python 3.11`
-- `ubuntu-latest / Python 3.12`
 - `ubuntu-latest / Python 3.13`
+
+The full Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix remains
+available as the manual `tests-full-matrix` workflow for final PR readiness.
+Do not require manual-only checks in branch protection unless the owner wants
+to manually run them before every merge.
 
 Optional later checks:
 
@@ -95,7 +94,7 @@ Safer manual path:
 6. Enable pull request requirement.
 7. Require at least one approval.
 8. Require status checks.
-9. Select the matrix checks listed above.
+9. Select the required checks listed above.
 10. Disable force pushes.
 11. Disable branch deletion.
 12. Save the rule.

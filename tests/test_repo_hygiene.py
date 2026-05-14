@@ -21,6 +21,7 @@ def test_repo_hygiene_files_exist():
         ".github/CODEOWNERS",
         ".github/pull_request_template.md",
         ".github/workflows/test.yml",
+        ".github/workflows/test-full-matrix.yml",
         ".github/workflows/codeql.yml",
         ".github/workflows/release.yml",
         ".github/dependabot.yml",
@@ -95,6 +96,47 @@ def test_test_workflow_runs_package_coverage_gate():
 
     assert "Run package coverage gate" in workflow
     assert "python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84" in workflow
+
+
+def test_test_workflow_limits_actions_minutes_by_avoiding_duplicate_push_runs():
+    workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "pull_request:" in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "push:" not in workflow
+    assert "concurrency:" in workflow
+    assert "cancel-in-progress: true" in workflow
+
+
+def test_test_workflow_uses_lean_pr_matrix_for_actions_minutes():
+    workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "ubuntu-latest" in workflow
+    assert "windows-latest" in workflow
+    assert "macos-latest" in workflow
+    assert 'python-version: "3.13"' in workflow
+    assert 'python-version: "3.11"' not in workflow
+    assert 'python-version: "3.12"' not in workflow
+
+
+def test_full_matrix_workflow_is_manual_for_final_pr_readiness():
+    workflow = (PROJECT_ROOT / ".github/workflows/test-full-matrix.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "workflow_dispatch:" in workflow
+    assert "pull_request:" not in workflow
+    assert "push:" not in workflow
+    assert "concurrency:" in workflow
+    assert "cancel-in-progress: true" in workflow
+    assert "os: [windows-latest, macos-latest, ubuntu-latest]" in workflow
+    assert 'python-version: ["3.11", "3.12", "3.13"]' in workflow
+    assert "Run package coverage gate" in workflow
+    assert "Smoke test built wheel install" in workflow
 
 
 def test_pre_commit_configuration_declares_house_style_tools():

@@ -53,6 +53,7 @@ This is a foundation PR, not a hardware PR.
 The PR adds the safe foundation subset of Eddie's review plan:
 
 - collaborator implementation branch intake status visibility
+- GitHub Actions cost-control workflow update
 - package metadata
 - editable install path
 - passive console entry point
@@ -125,7 +126,8 @@ Observed local results:
 - project status check passed
 - current worktree V1.34 diff was empty
 
-GitHub Actions checks were green on the current pushed head across:
+GitHub Actions checks were green on the current pushed head across the
+then-current full matrix:
 
 - Windows / Python 3.11
 - Windows / Python 3.12
@@ -137,6 +139,14 @@ GitHub Actions checks were green on the current pushed head across:
 - Ubuntu / Python 3.12
 - Ubuntu / Python 3.13
 
+CI cost control has since been added:
+
+- routine PR checks now run Windows/macOS/Ubuntu on Python 3.13 only
+- older superseded runs are canceled
+- direct push-triggered duplicates are avoided
+- the full Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix remains
+  available manually through `.github/workflows/test-full-matrix.yml`
+
 ## Recommended Review Checklist
 
 Before this PR is marked ready or merged, review:
@@ -145,6 +155,7 @@ Before this PR is marked ready or merged, review:
 - `README.md`
 - `CONTRIBUTING.md`
 - `.github/workflows/test.yml`
+- `.github/workflows/test-full-matrix.yml`
 - `.github/workflows/release.yml`
 - `Scripts/closeout_check.py`
 - `Scripts/smoke_test_wheel_install.py`
@@ -159,6 +170,7 @@ Confirm:
 - wheel smoke does not import real MIDI libraries
 - V1.34 import safety does not alter intended interactive behavior
 - CI behavior matches local closeout expectations
+- full matrix is run manually before final readiness if needed
 - release workflow scaffold does not publish without an intentional tag/release
 - branch protection script is documentation/admin tooling only until run by
   the repository owner
