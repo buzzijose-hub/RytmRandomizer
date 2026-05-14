@@ -36,10 +36,27 @@ Before committing, run:
 powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
 ```
 
+The GitHub Actions matrix also runs the package coverage gate:
+
+```powershell
+python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84
+```
+
+The current ratchet floor is 84% branch coverage for `rytm_randomizer/`. Raise
+the floor when coverage improves; do not lower it.
+
 For quick orientation, run:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\Scripts\quick_status.ps1
+```
+
+Optional local hygiene tools are configured with `pre-commit`. Install them
+when you want the same formatting/lint checks available before pushing:
+
+```powershell
+python -m pip install pre-commit
+pre-commit install
 ```
 
 ## Safety Rules

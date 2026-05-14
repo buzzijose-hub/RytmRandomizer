@@ -34,3 +34,6 @@ jobs:
 
       - name: Run tests
         run: python -m pytest
+
+      - name: Run package coverage gate
+        run: python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import tomllib
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -68,3 +69,38 @@ def test_test_workflow_installs_linux_midi_build_dependency():
     assert "Install Ubuntu MIDI build dependencies" in workflow
     assert "runner.os == 'Linux'" in workflow
     assert "libasound2-dev" in workflow
+
+
+def test_quality_gate_dependencies_and_coverage_config_are_declared():
+    pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
+
+    dev_dependencies = pyproject["project"]["optional-dependencies"]["dev"]
+    assert "pytest-cov>=5,<8" in dev_dependencies
+
+    coverage_run = pyproject["tool"]["coverage"]["run"]
+    assert coverage_run["branch"] is True
+    assert coverage_run["source"] == ["rytm_randomizer"]
+
+    coverage_report = pyproject["tool"]["coverage"]["report"]
+    assert coverage_report["fail_under"] == 84
+    assert coverage_report["show_missing"] is True
+
+
+def test_test_workflow_runs_package_coverage_gate():
+    workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Run package coverage gate" in workflow
+    assert "python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84" in workflow
+
+
+def test_pre_commit_configuration_declares_house_style_tools():
+    config = (PROJECT_ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
+
+    assert "pre-commit-hooks" in config
+    assert "black" in config
+    assert "ruff-pre-commit" in config
+    assert "mirrors-isort" in config
+    assert "trailing-whitespace" in config
+    assert "end-of-file-fixer" in config
