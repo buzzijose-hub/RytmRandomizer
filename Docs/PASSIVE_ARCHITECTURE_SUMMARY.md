@@ -2,6 +2,30 @@
 
 Date: May 4, 2026
 
+## GitHub Actions Node 24 Readiness
+
+GitHub Actions workflow action versions have been updated after PR #2 showed
+Node.js 20 deprecation warnings.
+
+Current workflow action versions:
+
+- `actions/checkout@v5`
+- `actions/setup-python@v6`
+- `actions/upload-artifact@v5`
+- `github/codeql-action/init@v4`
+- `github/codeql-action/analyze@v4`
+
+This applies to:
+
+- `.github/workflows/test.yml`
+- `.github/workflows/test-full-matrix.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/codeql.yml`
+
+This is CI maintenance only. It does not change runtime behavior, dispatch,
+active behavior, MIDI sending, MIDI port opening, hardware behavior, package
+publication, collaborator branch intake, or the V1.34 reference.
+
 ## GitHub Actions Cost Control
 
 The default GitHub Actions workflow has been tuned to reduce Actions-minute

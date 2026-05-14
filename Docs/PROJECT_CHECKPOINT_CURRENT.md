@@ -3,6 +3,42 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## GitHub Actions Node 24 Readiness Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_NODE24_READINESS_CHECKPOINT.md`
+
+After the cost-control update, PR #2 showed GitHub Actions deprecation
+warnings for Node.js 20-based actions. The workflow action versions were
+updated to current major versions:
+
+- `actions/checkout@v5`
+- `actions/setup-python@v6`
+- `actions/upload-artifact@v5`
+- `github/codeql-action/init@v4`
+- `github/codeql-action/analyze@v4`
+
+Updated workflows:
+
+- `.github/workflows/test.yml`
+- `.github/workflows/test-full-matrix.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/codeql.yml`
+
+This checkpoint changes CI configuration, repo-hygiene tests, and
+documentation only. It adds no real MIDI, ports, dispatch, active behavior,
+hardware behavior, package publication, collaborator branch merge, or V1.34
+reference edit.
+
 ## GitHub Actions Cost Control Checkpoint
 
 Current review branch:

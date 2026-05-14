@@ -119,3 +119,9 @@ Use the regular PR workflow for pushed review updates.
 
 Run `tests-full-matrix` manually before marking PR #2 ready or before any
 major merge decision.
+
+Follow-up:
+
+- `Docs/GITHUB_ACTIONS_NODE24_READINESS_CHECKPOINT.md` records the later
+  workflow action-version update made after PR #2 showed Node.js 20
+  deprecation warnings.

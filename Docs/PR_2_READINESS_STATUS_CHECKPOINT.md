@@ -147,6 +147,15 @@ CI cost control has since been added:
 - the full Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix remains
   available manually through `.github/workflows/test-full-matrix.yml`
 
+CI Node 24 readiness has also been added:
+
+- workflow action versions were updated to current major versions
+- `actions/checkout@v5`
+- `actions/setup-python@v6`
+- `actions/upload-artifact@v5`
+- `github/codeql-action/init@v4`
+- `github/codeql-action/analyze@v4`
+
 ## Recommended Review Checklist
 
 Before this PR is marked ready or merged, review:

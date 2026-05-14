@@ -50,6 +50,8 @@ python Scripts/closeout_check.py
 
 The routine GitHub Actions pull request workflow runs a lean
 Windows/macOS/Ubuntu Python 3.13 matrix to conserve included Actions minutes.
+Workflow actions use current major versions prepared for GitHub's Node 24
+runner transition.
 It also runs the package coverage gate:
 
 ```powershell

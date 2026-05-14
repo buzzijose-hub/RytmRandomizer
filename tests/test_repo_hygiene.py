@@ -139,6 +139,31 @@ def test_full_matrix_workflow_is_manual_for_final_pr_readiness():
     assert "Smoke test built wheel install" in workflow
 
 
+def test_github_actions_use_node_24_ready_action_versions():
+    workflows = {
+        workflow_path.name: workflow_path.read_text(encoding="utf-8")
+        for workflow_path in sorted((PROJECT_ROOT / ".github/workflows").glob("*.yml"))
+    }
+    combined_workflows = "\n".join(workflows.values())
+
+    assert "actions/checkout@v4" not in combined_workflows
+    assert "actions/setup-python@v5" not in combined_workflows
+    assert "github/codeql-action/init@v3" not in combined_workflows
+    assert "github/codeql-action/analyze@v3" not in combined_workflows
+    assert "actions/upload-artifact@v4" not in combined_workflows
+
+    assert "actions/checkout@v5" in workflows["test.yml"]
+    assert "actions/setup-python@v6" in workflows["test.yml"]
+    assert "actions/checkout@v5" in workflows["test-full-matrix.yml"]
+    assert "actions/setup-python@v6" in workflows["test-full-matrix.yml"]
+    assert "actions/checkout@v5" in workflows["release.yml"]
+    assert "actions/setup-python@v6" in workflows["release.yml"]
+    assert "actions/upload-artifact@v5" in workflows["release.yml"]
+    assert "actions/checkout@v5" in workflows["codeql.yml"]
+    assert "github/codeql-action/init@v4" in workflows["codeql.yml"]
+    assert "github/codeql-action/analyze@v4" in workflows["codeql.yml"]
+
+
 def test_pre_commit_configuration_declares_house_style_tools():
     config = (PROJECT_ROOT / ".pre-commit-config.yaml").read_text(encoding="utf-8")
 

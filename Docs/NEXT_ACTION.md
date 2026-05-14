@@ -1,5 +1,40 @@
 # Next Action
 
+## Latest GitHub Actions Node 24 Readiness Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_NODE24_READINESS_CHECKPOINT.md`
+
+Purpose:
+
+- clear the Node.js 20 deprecation warning observed in PR #2 GitHub Actions
+- keep the cost-controlled workflow ready for GitHub's Node 24 runner
+  transition
+- preserve the current CI shape without adding runtime behavior
+
+Workflow action version changes:
+
+- `actions/checkout@v5`
+- `actions/setup-python@v6`
+- `actions/upload-artifact@v5`
+- `github/codeql-action/init@v4`
+- `github/codeql-action/analyze@v4`
+
+Recommended next task:
+
+- keep waiting for Eddie's implementation branch or PR before intake
+- continue using local closeout for frequent feedback
+- keep the manual full matrix for final PR readiness or major merge decisions
+
 ## Latest GitHub Actions Cost Control Checkpoint
 
 Current review branch:
