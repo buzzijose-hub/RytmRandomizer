@@ -8,7 +8,21 @@ modularize-v1.34
 
 Current HEAD:
 
-7fea7d7
+99f69e0
+
+## Project Status Report Summary Checkpoint
+
+`Docs/PROJECT_STATUS_REPORT_SUMMARY_CHECKPOINT.md` records compact summary
+output for the passive project status report.
+
+New passive CLI form:
+
+- `python -m rytm_randomizer.cli project-status-report --summary`
+
+The summary output is a one-screen read-only project dashboard. It preserves
+the full text report and JSON report, while adding no runtime execution,
+dispatch, command execution, mutation execution, active CLI command, MIDI,
+ports, package metadata changes, active behavior, or hardware behavior.
 
 ## Project Status Report JSON Checkpoint
 

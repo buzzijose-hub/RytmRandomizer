@@ -21,7 +21,28 @@ modularize-v1.34
 
 Current HEAD:
 
-7fea7d7 Add passive project status report
+99f69e0 Add project status report JSON output
+
+## Project Status Report Summary Checkpoint
+
+The passive project status report now has compact one-screen summary output.
+
+Checkpoint document:
+
+- `Docs/PROJECT_STATUS_REPORT_SUMMARY_CHECKPOINT.md`
+
+Updated passive CLI command:
+
+- `python -m rytm_randomizer.cli project-status-report --summary`
+
+The summary output exposes a compact read-only dashboard for current phase,
+creative identity candidate, behavior-parity progress, runtime/active boundary
+status, real MIDI absence, port absence, active execution absence, hardware
+requirement status, and V1.34 reference status.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Project Status Report JSON Checkpoint
 

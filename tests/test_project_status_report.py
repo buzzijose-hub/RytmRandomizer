@@ -114,8 +114,36 @@ def test_project_status_summary_is_deterministic():
         "active_boundary_candidate": "group_profile:2",
         "mock_bridge_candidate": "2",
         "real_midi": "absent",
+        "port_opening": "absent",
+        "active_execution": "absent",
         "hardware_required": False,
+        "v134_reference": "untouched",
     }
+
+
+def test_project_status_summary_lines_are_deterministic():
+    from rytm_randomizer.project_status_report import format_project_status_summary
+
+    first = format_project_status_summary()
+    second = format_project_status_summary()
+
+    assert first == second
+    assert first == [
+        "RytmRandomizer Project Status Summary",
+        "- phase_name: Passive/Mock Runtime Visibility Phase",
+        "- creative_identity_candidate: KitForge",
+        "- passive_cli_command_count: 20",
+        "- accepted_packet_count: 12",
+        "- pad_lane_command_count: 38",
+        "- runtime_supported_count: 2",
+        "- active_boundary_candidate: group_profile:2",
+        "- mock_bridge_candidate: 2",
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_execution: absent",
+        "- hardware_required: False",
+        "- v134_reference: untouched",
+    ]
 
 
 def test_formatted_project_status_report_is_deterministic():
@@ -258,6 +286,7 @@ if __name__ == "__main__":
     test_project_status_report_records_passive_cli_visibility()
     test_project_status_report_records_absent_runtime_and_hardware_boundaries()
     test_project_status_summary_is_deterministic()
+    test_project_status_summary_lines_are_deterministic()
     test_formatted_project_status_report_is_deterministic()
     test_project_status_report_json_is_deterministic_and_parseable()
     test_returned_project_status_report_is_copied_and_mutation_safe()

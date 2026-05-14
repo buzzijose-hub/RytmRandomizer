@@ -119,8 +119,33 @@ def summarize_project_status_report(report=None):
             "accepted_source_key"
         ],
         "real_midi": source_report["safety"]["real_midi"],
+        "port_opening": source_report["safety"]["port_opening"],
+        "active_execution": source_report["safety"]["active_execution"],
         "hardware_required": source_report["safety"]["hardware_required"],
+        "v134_reference": source_report["safety"]["v134_reference"],
     }
+
+
+def format_project_status_summary(report=None):
+    """Return deterministic compact project status summary lines."""
+
+    summary = summarize_project_status_report(report)
+    return [
+        "RytmRandomizer Project Status Summary",
+        f"- phase_name: {summary['phase_name']}",
+        f"- creative_identity_candidate: {summary['creative_identity_candidate']}",
+        f"- passive_cli_command_count: {summary['passive_cli_command_count']}",
+        f"- accepted_packet_count: {summary['accepted_packet_count']}",
+        f"- pad_lane_command_count: {summary['pad_lane_command_count']}",
+        f"- runtime_supported_count: {summary['runtime_supported_count']}",
+        f"- active_boundary_candidate: {summary['active_boundary_candidate']}",
+        f"- mock_bridge_candidate: {summary['mock_bridge_candidate']}",
+        f"- real_midi: {summary['real_midi']}",
+        f"- port_opening: {summary['port_opening']}",
+        f"- active_execution: {summary['active_execution']}",
+        f"- hardware_required: {summary['hardware_required']}",
+        f"- v134_reference: {summary['v134_reference']}",
+    ]
 
 
 def format_project_status_report(report=None):
