@@ -1,5 +1,44 @@
 # Next Action
 
+## Latest PR 2 Readiness Status Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/PR_2_READINESS_STATUS_CHECKPOINT.md`
+
+Current PR state:
+
+- open draft PR
+- current head before this checkpoint:
+  - `2758f16 Add collaborator execution plan workstream map`
+- GitHub Actions green on the current head
+- 14 commits after `modularize-v1.34`
+- 65 changed files
+
+What the checkpoint does:
+
+- summarizes the safe foundation subset already executed
+- lists what the PR intentionally does not add
+- records local and GitHub verification evidence
+- highlights review areas, including V1.34 import-safety changes,
+  package metadata, workflows, release/admin scaffolding, and passive entry
+  points
+
+Recommended next task:
+
+- keep PR #2 as draft and review it with Eddie
+- optionally create branch-protection/admin instructions, contributor
+  onboarding polish, docs inventory planning, package release checklist, or
+  passive CLI version/status visibility as the next narrow slice
+
 ## Latest Collaborator Execution Plan Workstream Map
 
 Current review branch:

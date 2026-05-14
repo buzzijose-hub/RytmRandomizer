@@ -3,6 +3,54 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## PR 2 Readiness Status Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/PR_2_READINESS_STATUS_CHECKPOINT.md`
+
+Current PR state before this checkpoint:
+
+- open draft PR
+- current head:
+  - `2758f16 Add collaborator execution plan workstream map`
+- GitHub Actions green on the current head
+- 14 commits after `modularize-v1.34`
+- 65 changed files
+
+The checkpoint summarizes the current review state for PR #2. It records the
+safe foundation subset included in the PR, the active/hardware behavior that
+remains intentionally absent, the verification evidence, and the files that
+deserve careful review before the PR is marked ready.
+
+Important review areas:
+
+- package metadata
+- passive package entry points
+- GitHub Actions workflows
+- cross-platform closeout
+- wheel install smoke
+- passive shared data package
+- V1.34 import-safety changes
+- collaborator execution workstream map
+
+Decision:
+
+- PR #2 is green and reviewable as a draft foundation PR.
+- Keep it draft until owner/collaborator review is complete.
+- Do not treat green CI as approval to merge without reviewing the diff.
+
+This checkpoint adds no code, tests, MIDI, ports, dispatch, active behavior,
+hardware behavior, GitHub admin action, or V1.34 reference edit.
+
 ## Collaborator Execution Plan Workstream Map
 
 Current review branch:

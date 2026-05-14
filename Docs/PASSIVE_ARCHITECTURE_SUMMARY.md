@@ -2,6 +2,46 @@
 
 Date: May 4, 2026
 
+## PR 2 Readiness Status Checkpoint
+
+`Docs/PR_2_READINESS_STATUS_CHECKPOINT.md` records the current review
+readiness state for draft PR #2.
+
+Draft PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+Review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR head before the checkpoint:
+
+- `2758f16 Add collaborator execution plan workstream map`
+
+The checkpoint records that the PR is green and reviewable as a draft
+foundation PR. It summarizes the safe packaging, CI, cross-platform closeout,
+repo hygiene, collaborator onboarding, passive shared data, and package entry
+point work now present on the branch.
+
+It also records the intended absences:
+
+- no active CLI execution
+- no command dispatch
+- no runtime hardware mutation
+- no real MIDI sending
+- no real MIDI port opening
+- no hardware validation
+- no monolith retirement
+
+Reviewers should inspect package metadata, workflows, closeout scripts, wheel
+smoke behavior, the passive shared data package, the collaborator execution
+map, and the V1.34 import-safety changes before the draft PR is marked ready.
+
+This checkpoint is documentation-only and adds no code, tests, runtime
+behavior, dispatch, active behavior, MIDI sending, MIDI port opening, hardware
+behavior, or GitHub admin action.
+
 ## Collaborator Execution Plan Workstream Map
 
 `Docs/COLLABORATOR_EXECUTION_PLAN_WORKSTREAM_MAP.md` converts Eddie's

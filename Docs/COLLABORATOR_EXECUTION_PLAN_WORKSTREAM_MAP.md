@@ -200,10 +200,29 @@ The current PR has already executed the safe foundation subset. Remaining work
 should continue through narrow, verified slices with the hardware boundary
 intact.
 
+## PR Readiness Follow-Up
+
+The follow-up PR readiness checkpoint is:
+
+- `Docs/PR_2_READINESS_STATUS_CHECKPOINT.md`
+
+It records that draft PR #2 is green and reviewable, while keeping it draft
+until the owner and collaborator inspect the diff.
+
+Key review areas:
+
+- package metadata
+- workflows
+- closeout scripts
+- wheel install smoke
+- passive shared data
+- V1.34 import-safety changes
+- this workstream map
+
 ## Recommended Next Task
 
-Create a PR readiness/status checkpoint for `codex/execute-eddie-plan`, then
-decide whether the next work should be:
+Review PR #2 with the owner and collaborator, then decide whether the next
+work should be:
 
 - branch protection/admin instructions
 - contributor onboarding polish
