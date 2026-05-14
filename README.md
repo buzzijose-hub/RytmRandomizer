@@ -45,6 +45,7 @@ wheel is unavailable.
 Passive modular CLI:
 
 ```powershell
+python -m rytm_randomizer --help
 python -m rytm_randomizer.cli --help
 python -m rytm_randomizer.cli project-status-report --summary
 python -m rytm_randomizer.cli mock-mapper-report

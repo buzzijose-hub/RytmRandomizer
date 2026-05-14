@@ -91,6 +91,16 @@ def main() -> int:
             print("Passive console summary did not include expected title.", file=sys.stderr)
             return 1
 
+        module_summary_result = _run(
+            "Run passive module summary",
+            [str(python_exe), "-m", "rytm_randomizer", "project-status-report", "--summary"],
+        )
+        if module_summary_result.returncode != 0:
+            return module_summary_result.returncode
+        if EXPECTED_SUMMARY_TITLE not in module_summary_result.stdout:
+            print("Passive module summary did not include expected title.", file=sys.stderr)
+            return 1
+
         import_safety = "\n".join(
             [
                 "import sys",

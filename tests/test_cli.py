@@ -41,6 +41,16 @@ def run_cli(*args):
     )
 
 
+def run_package_module(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "rytm_randomizer", *args],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
 def run_app_entrypoint(*args):
     script = "\n".join(
         [
@@ -114,6 +124,52 @@ def test_app_entrypoint_imports_no_real_midi_libraries():
 
     assert result.returncode == 0
     assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_package_module_delegates_to_passive_cli_help():
+    result = run_package_module("--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text("cli_help_expected.txt")
+    assert result.stderr == ""
+
+
+def test_package_module_delegates_to_passive_cli_report():
+    result = run_package_module("project-status-report", "--summary")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_project_status_report_summary_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_package_module_imports_no_real_midi_libraries():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import runpy\n"
+                "import sys\n"
+                "sys.argv = ['rytm_randomizer', 'project-status-report', '--summary']\n"
+                "try:\n"
+                "    runpy.run_module('rytm_randomizer', run_name='__main__')\n"
+                "except SystemExit as exc:\n"
+                "    assert exc.code == 0\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer Project Status Summary" in result.stdout
     assert result.stderr == ""
 
 

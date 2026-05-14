@@ -16,6 +16,7 @@ def test_repo_hygiene_files_exist():
         "CHANGELOG.md",
         "pyproject.toml",
         ".python-version",
+        "rytm_randomizer/__main__.py",
         "Scripts/smoke_test_wheel_install.py",
         ".github/CODEOWNERS",
         ".github/pull_request_template.md",
@@ -133,8 +134,11 @@ def test_wheel_install_smoke_gate_is_declared_for_distribution_safety():
     assert "Smoke test built wheel install" in workflow
     assert "python Scripts/smoke_test_wheel_install.py" in workflow
     assert "python Scripts/smoke_test_wheel_install.py" in readme
+    assert "python -m rytm_randomizer" in readme
     assert "--no-deps" in script
     assert "rytm-randomizer" in script
+    assert "-m" in script
+    assert "rytm_randomizer" in script
     assert "project-status-report" in script
     assert "mido" in script
     assert "rtmidi" in script
