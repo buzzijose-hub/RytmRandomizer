@@ -8,7 +8,24 @@ modularize-v1.34
 
 Current HEAD:
 
-3e553ef
+f7bc55a
+
+## Quick Status Script Checkpoint
+
+`Docs/QUICK_STATUS_SCRIPT_CHECKPOINT.md` records a fast passive status helper
+for everyday check-ins.
+
+New helper:
+
+- `Scripts/quick_status.ps1`
+
+The helper prints the project status summary, runs the passive project status
+safety check, and prints `git status --short`. Full closeout now includes
+`=== Test: Quick Status Script ===`.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Project Status Check Closeout Checkpoint
 

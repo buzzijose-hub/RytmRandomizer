@@ -6,7 +6,51 @@ modularize-v1.34
 
 ## Current HEAD
 
-3e553ef Add project status report safety check
+f7bc55a Add project status check to closeout
+
+## Latest Quick Status Script Checkpoint
+
+The project now has a fast passive status helper for everyday check-ins.
+
+Checkpoint document:
+
+- `Docs/QUICK_STATUS_SCRIPT_CHECKPOINT.md`
+
+New helper:
+
+- `Scripts/quick_status.ps1`
+
+Run it with:
+
+- `powershell -ExecutionPolicy Bypass -File .\Scripts\quick_status.ps1`
+
+Behavior:
+
+- prints the compact project status summary
+- runs the passive project status safety check
+- prints `git status --short`
+- exits nonzero if one of its command steps fails
+
+Closeout now includes:
+
+- `=== Test: Quick Status Script ===`
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
+
+Recommended next task:
+
+- use `Scripts/quick_status.ps1` for quick check-ins during larger work
+  packets, and continue with another passive/mock-only software slice
 
 ## Latest Project Status Check Closeout Checkpoint
 
