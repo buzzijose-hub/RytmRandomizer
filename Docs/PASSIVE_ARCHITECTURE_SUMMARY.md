@@ -8,7 +8,37 @@ modularize-v1.34
 
 Current HEAD:
 
-313375c
+13b7d88
+
+## Mock Runtime Bridge Report Public API Exports Checkpoint
+
+`Docs/MOCK_RUNTIME_BRIDGE_REPORT_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the
+tiny mock runtime/active bridge report API alignment slice.
+
+Implementation milestone:
+
+- `13b7d88 Add mock runtime bridge report public API exports`
+
+The read-only mock runtime/active bridge report now exposes an explicit
+`__all__` list:
+
+- `ACCEPTED_CANDIDATE`
+- `BRIDGE_SUMMARY`
+- `PARKED_CASES`
+- `REJECTED_CASES`
+- `REPORT_MODE`
+- `SAFETY_BOUNDARY`
+- `build_mock_runtime_active_bridge_report`
+- `format_mock_runtime_active_bridge_report`
+- `summarize_mock_runtime_active_bridge_report`
+
+This changes no report behavior. The report remains deterministic and
+in-memory only. It does not invoke the bridge, construct `MockMidiSender`, emit
+messages, open ports, send MIDI, dispatch commands, or touch hardware.
+
+This adds no real MIDI dependency, port opening, MIDI sending, dispatch,
+command execution, runtime execution, active CLI behavior, package metadata
+change, or hardware behavior.
 
 ## Runtime Plan Report Public API Exports Checkpoint
 
