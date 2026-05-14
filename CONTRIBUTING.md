@@ -44,3 +44,30 @@ Anything that is "a table of facts" — commands, parameters, scenes, pad profil
 ## Definition of done includes docs
 
 Any structural change must update the docs it affects. A change is not done until the `README.md`, this file, and any relevant `Docs/` entries reflect the new reality.
+
+## Releasing
+
+RytmRandomizer follows [Semantic Versioning](https://semver.org/). The release
+process is defined and repeatable — there is **no version-in-filename** (the
+old `v131` / `v132` / `v134` naming is historical only).
+
+**Single source of version truth:** the `[project] version` field in
+`pyproject.toml`. Nothing else declares the version.
+
+To cut a release `vX.Y.Z`:
+
+1. **Bump the version** — update `[project] version` in `pyproject.toml` to
+   `X.Y.Z`.
+2. **Update the changelog** — in `CHANGELOG.md`, move the entries under
+   `## [Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section, leave fresh
+   empty `Added` / `Changed` / `Fixed` subsections under `[Unreleased]`, and
+   update the link references at the bottom of the file.
+3. **Commit** the `pyproject.toml` and `CHANGELOG.md` changes (e.g.
+   `Release vX.Y.Z`).
+4. **Tag** the commit: `git tag vX.Y.Z`.
+5. **Push the tag**: `git push origin vX.Y.Z`.
+
+Pushing a `v*` tag triggers `.github/workflows/release.yml`, which builds the
+wheel + sdist from `pyproject.toml`, runs the `pytest` gate (a release cannot
+ship if tests fail), and publishes a GitHub Release with the `dist/*` artifacts
+attached.
