@@ -8,7 +8,29 @@ modularize-v1.34
 
 Current HEAD:
 
-eb40c00
+d02d494
+
+## Project Identity Rename Plan
+
+`Docs/PROJECT_IDENTITY_RENAME_PLAN.md` records the docs-only plan for changing
+the creative dream-project identity while preserving the technical project
+name.
+
+Accepted approach:
+
+- creative identity may be renamed later
+- repository name remains `RytmRandomizer`
+- package/import name remains `rytm_randomizer`
+- CLI path remains `python -m rytm_randomizer.cli`
+- tests, fixtures, package metadata, and historical checkpoint names remain
+  unchanged
+
+No final new creative name has been selected yet.
+
+This adds no repository rename, package rename, import rename, CLI path rename,
+runtime execution, dispatch, command execution, mutation execution, active CLI
+command, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
 
 ## Progress Checkpoint After Structured Lane Coverage
 

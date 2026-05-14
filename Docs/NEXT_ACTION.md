@@ -6,7 +6,51 @@ modularize-v1.34
 
 ## Current HEAD
 
-eb40c00 Update checkpoint after structured Pad 1 coverage
+d02d494 Add progress checkpoint after structured lane coverage
+
+## Latest Project Identity Rename Plan
+
+The project now has a docs-only plan for renaming the creative dream-project
+identity while keeping technical names stable.
+
+Plan document:
+
+- `Docs/PROJECT_IDENTITY_RENAME_PLAN.md`
+
+Accepted approach:
+
+- rename the creative/project identity first
+- keep the repository name `RytmRandomizer` unchanged for now
+- keep the Python package name `rytm_randomizer` unchanged for now
+- keep CLI paths, imports, tests, fixtures, and historical checkpoint names
+  unchanged for now
+
+Current naming status:
+
+- no final new creative name has been selected yet
+- technical name remains `RytmRandomizer`
+- all commands and imports remain unchanged
+
+Recommended next task:
+
+- create a short creative name shortlist and selection note
+
+Confirmed boundaries:
+
+- no repository rename
+- no package rename
+- no import rename
+- no CLI path rename
+- no test/fixture rename
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Progress Checkpoint After Structured Lane Coverage
 
