@@ -104,3 +104,17 @@ def test_pre_commit_configuration_declares_house_style_tools():
     assert "mirrors-isort" in config
     assert "trailing-whitespace" in config
     assert "end-of-file-fixer" in config
+
+
+def test_package_build_gate_is_declared_for_distribution_safety():
+    pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text())
+    workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
+        encoding="utf-8"
+    )
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    dev_dependencies = pyproject["project"]["optional-dependencies"]["dev"]
+    assert "build>=1,<2" in dev_dependencies
+    assert "Build package artifacts" in workflow
+    assert "python -m build" in workflow
+    assert "python -m build" in readme

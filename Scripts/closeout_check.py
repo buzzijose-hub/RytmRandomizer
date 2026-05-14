@@ -75,6 +75,7 @@ def main() -> int:
             ],
             "python -m rytm_randomizer.cli project-status-report --check",
         ),
+        ("Package Build", [sys.executable, "-m", "build"], "python -m build"),
         (
             "V1.34 Reference Diff",
             ["git", "diff", "--", "rytm_hybrid_randomizer_v134.py"],

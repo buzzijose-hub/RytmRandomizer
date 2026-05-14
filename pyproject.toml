@@ -21,6 +21,7 @@ dependencies = [
 dev = [
   "pytest>=8,<10",
   "pytest-cov>=5,<8",
+  "build>=1,<2",
 ]
 
 [project.scripts]

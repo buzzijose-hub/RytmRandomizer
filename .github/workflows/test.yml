@@ -37,3 +37,6 @@ jobs:
 
       - name: Run package coverage gate
         run: python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84
+
+      - name: Build package artifacts
+        run: python -m build

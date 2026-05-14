@@ -321,6 +321,11 @@ Register-CloseoutStepExit "Mock Runtime Active Bridge"
 Register-CloseoutStepExit "Mock Runtime Active Bridge Report"
 
 "" | Add-Content $summary
+"=== Test: Package Build ===" | Add-Content $summary
+& $pythonExe @pythonArgs -m build 2>&1 | Tee-Object -FilePath "$logDir\latest_test_package_build.log" | Add-Content $summary
+Register-CloseoutStepExit "Package Build"
+
+"" | Add-Content $summary
 "=== V1.34 Reference Diff ===" | Add-Content $summary
 git diff -- rytm_hybrid_randomizer_v134.py 2>&1 | Tee-Object -FilePath "$logDir\latest_v134_reference_diff.log" | Add-Content $summary
 

@@ -93,6 +93,12 @@ Run all pytest tests directly:
 python -m pytest
 ```
 
+Build package artifacts:
+
+```powershell
+python -m build
+```
+
 ## Current Passive CLI Capabilities
 
 ```powershell
