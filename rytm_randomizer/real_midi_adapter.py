@@ -134,3 +134,15 @@ def build_real_midi_sender(
     if provider is None:
         raise RealMidiDependencyError("real_midi_provider_required")
     return RealMidiSender(provider=provider, port_name=port_name)
+
+
+__all__ = [
+    "RealMidiDependencyError",
+    "RealMidiOutputPort",
+    "RealMidiPortError",
+    "RealMidiPortProvider",
+    "RealMidiSendError",
+    "RealMidiSendResult",
+    "RealMidiSender",
+    "build_real_midi_sender",
+]

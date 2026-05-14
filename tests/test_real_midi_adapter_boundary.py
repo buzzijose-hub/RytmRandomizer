@@ -208,6 +208,21 @@ def test_real_midi_sender_rejects_unsupported_message_type():
     assert fake_port.sent == []
 
 
+def test_real_midi_adapter_exposes_explicit_public_api():
+    import rytm_randomizer.real_midi_adapter as adapter
+
+    assert adapter.__all__ == [
+        "RealMidiDependencyError",
+        "RealMidiOutputPort",
+        "RealMidiPortError",
+        "RealMidiPortProvider",
+        "RealMidiSendError",
+        "RealMidiSendResult",
+        "RealMidiSender",
+        "build_real_midi_sender",
+    ]
+
+
 def test_passive_imports_do_not_load_adapter_or_real_midi_modules():
     imports = "\n".join(f"import {module}" for module in PASSIVE_MODULES)
     checks = "\n".join(
@@ -322,6 +337,7 @@ if __name__ == "__main__":
     test_real_midi_port_provider_rejects_configured_port_without_send()
     test_real_midi_sender_records_to_fake_port_only()
     test_real_midi_sender_rejects_unsupported_message_type()
+    test_real_midi_adapter_exposes_explicit_public_api()
     test_passive_imports_do_not_load_adapter_or_real_midi_modules()
     test_passive_cli_commands_do_not_load_adapter_or_real_midi_modules()
     test_passive_sources_do_not_reference_adapter_or_port_affordances()
