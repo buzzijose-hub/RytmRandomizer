@@ -3,6 +3,40 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator PR Review Checklist
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New collaborator checklist:
+
+- `Docs/COLLABORATOR_PR_REVIEW_CHECKLIST.md`
+
+The checklist gives collaborators a safe PR #2 review path. It records:
+
+- first-time setup
+- local verification commands
+- recommended review order
+- safety boundaries to confirm
+- actions not to take during review
+- finding format for text or Markdown review feedback
+- topics requiring separate approval
+
+Decision:
+
+- keep PR #2 draft until owner/collaborator review is complete
+- use written findings as review input
+- triage review findings before implementation
+
+This checkpoint adds no code, tests, MIDI, ports, dispatch, active behavior,
+hardware behavior, package publication, release tag, GitHub admin action, or
+V1.34 reference edit.
+
 ## Package Release No-Publish Checklist
 
 Current review branch:

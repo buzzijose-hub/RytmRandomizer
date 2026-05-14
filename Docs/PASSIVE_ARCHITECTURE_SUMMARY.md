@@ -2,6 +2,25 @@
 
 Date: May 4, 2026
 
+## Collaborator PR Review Checklist
+
+`Docs/COLLABORATOR_PR_REVIEW_CHECKLIST.md` gives collaborators a safe PR #2
+review path.
+
+The checklist covers:
+
+- clone and checkout steps
+- local setup and closeout commands
+- recommended review order
+- package, workflow, V1.34, and safety areas to inspect
+- finding format for review feedback
+- review actions that require separate approval
+
+The checklist is review/onboarding-only. It adds no runtime behavior,
+dispatch, active behavior, MIDI sending, MIDI port opening, hardware behavior,
+package publication, release tag, branch protection change, or V1.34
+reference change.
+
 ## Package Release No-Publish Checklist
 
 `Docs/PACKAGE_RELEASE_NO_PUBLISH_CHECKLIST.md` documents package release

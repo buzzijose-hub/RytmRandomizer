@@ -1,5 +1,37 @@
 # Next Action
 
+## Latest Collaborator PR Review Checklist
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New collaborator checklist:
+
+- `Docs/COLLABORATOR_PR_REVIEW_CHECKLIST.md`
+
+Purpose:
+
+- give Eddie and future collaborators one safe PR #2 review path
+- document setup, verification, review order, and finding format
+- keep review separate from implementation, package release, branch
+  protection, active execution, real MIDI, and hardware validation
+
+Decision:
+
+- use the checklist to review PR #2 before merge readiness
+- keep PR #2 draft until owner/collaborator review is complete
+- implement any findings only through narrow verified slices
+
+Recommended next task:
+
+- send Eddie the checklist and ask for findings as text or Markdown
+- then triage findings against the current branch before changing code
+
 ## Latest Package Release No-Publish Checklist
 
 Current review branch:

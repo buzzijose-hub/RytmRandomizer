@@ -162,6 +162,18 @@ Confirm:
 - branch protection script is documentation/admin tooling only until run by
   the repository owner
 
+## Collaborator Review Checklist Follow-Up
+
+Collaborator PR review guidance is now documented in:
+
+- `Docs/COLLABORATOR_PR_REVIEW_CHECKLIST.md`
+
+The checklist gives Eddie and future collaborators a safe review order, setup
+path, verification commands, finding format, and list of review actions that
+require separate approval.
+
+Use that checklist before marking PR #2 ready for review or merge.
+
 ## Known Follow-Ups
 
 Safe follow-up options:

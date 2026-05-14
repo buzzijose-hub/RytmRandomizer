@@ -91,3 +91,10 @@ and land through review.
 External review findings are advisory until verified locally. Record broad
 review packets in `Docs/`, choose one narrow finding or group, then implement
 with targeted tests and full closeout.
+
+For PR #2 review, start with:
+
+- `Docs/COLLABORATOR_PR_REVIEW_CHECKLIST.md`
+
+That checklist records the safe review order, local verification commands,
+finding format, and boundaries that remain blocked until separate approval.
