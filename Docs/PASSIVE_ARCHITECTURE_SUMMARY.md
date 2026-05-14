@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-83ccef2
+187d524
+
+## Collaborator Triage Template Status Visibility Checkpoint
+
+`Docs/COLLABORATOR_TRIAGE_TEMPLATE_STATUS_VISIBILITY_CHECKPOINT.md` records
+passive project-status dashboard visibility for the accepted collaborator
+review triage template.
+
+Implementation milestone:
+
+- `187d524 Add collaborator triage template status visibility`
+
+The project-status report now exposes a
+`collaborator_review_triage_template` block showing that the template is
+accepted, no findings have been recorded yet, text or Markdown is required,
+screenshot-only findings are insufficient, and implementation remains
+triage-before-implementing.
+
+The compact summary now records:
+
+- `collaborator_review_triage_template: accepted`
+
+The project-status safety check now guards that the triage template remains
+advisory and passive with real MIDI, port opening, active behavior, and
+hardware behavior absent.
+
+This adds no external review implementation, package metadata change, runtime
+execution, dispatch, command execution, active CLI behavior, real MIDI
+dependency, MIDI port opening, MIDI sending, or hardware behavior.
 
 ## Collaborator Review Triage Template Review
 
