@@ -8,6 +8,7 @@ commands, mutating runtime state, writing files, or touching hardware.
 from __future__ import annotations
 
 from copy import deepcopy
+import json
 
 
 PASSIVE_CLI_COMMANDS = (
@@ -192,3 +193,10 @@ def format_project_status_report(report=None):
         ]
     )
     return lines
+
+
+def format_project_status_report_json(report=None):
+    """Return deterministic JSON for the copied project status report."""
+
+    source_report = build_project_status_report() if report is None else report
+    return json.dumps(deepcopy(source_report), indent=2, sort_keys=True)

@@ -8,7 +8,22 @@ modularize-v1.34
 
 Current HEAD:
 
-8dbc894
+7fea7d7
+
+## Project Status Report JSON Checkpoint
+
+`Docs/PROJECT_STATUS_REPORT_JSON_CHECKPOINT.md` records deterministic JSON
+output for the passive project status report.
+
+New passive CLI form:
+
+- `python -m rytm_randomizer.cli project-status-report --json`
+
+The JSON output is a machine-readable view of the same read-only in-memory
+project status dashboard. It preserves the human-readable report and adds no
+runtime execution, dispatch, command execution, mutation execution, active CLI
+command, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
 
 ## Project Status Report CLI Checkpoint
 

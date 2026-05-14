@@ -3,6 +3,7 @@ RytmRandomizer passive CLI
 Usage:
   python -m rytm_randomizer.cli report
   python -m rytm_randomizer.cli project-status-report
+  python -m rytm_randomizer.cli project-status-report --json
   python -m rytm_randomizer.cli mock-mapper-report
   python -m rytm_randomizer.cli runtime-plan-report
   python -m rytm_randomizer.cli active-boundary-report

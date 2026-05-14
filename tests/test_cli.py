@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 import subprocess
 import sys
 
@@ -6,7 +7,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
-    "project-status-report | mock-mapper-report | runtime-plan-report | "
+    "project-status-report [--json] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -278,6 +279,26 @@ def test_project_status_report_command_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_project_status_report_json_command_exits_zero_and_returns_json():
+    result = run_cli("project-status-report", "--json")
+
+    assert result.returncode == 0
+    parsed = json.loads(result.stdout)
+    assert parsed["title"] == "RytmRandomizer Project Status Report"
+    assert parsed["phase"]["creative_identity_candidate"] == "KitForge"
+    assert parsed["behavior_parity"]["accepted_packet_count"] == 12
+    assert parsed["runtime_plan"]["runtime_execution"] == "absent"
+    assert parsed["active_boundary"]["active_cli_behavior"] == "absent"
+    assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
+    assert parsed["safety"]["real_midi"] == "absent"
+    assert parsed["safety"]["port_opening"] == "absent"
+    assert parsed["safety"]["active_execution"] == "absent"
+    assert parsed["safety"]["hardware_required"] is False
+    assert parsed["source"]["in_memory_only"] is True
+    assert parsed["source"]["writes_files"] is False
+    assert result.stderr == ""
+
+
 def test_mock_mapper_report_command_exits_zero_and_matches_fixture():
     result = run_cli("mock-mapper-report")
 
@@ -356,6 +377,18 @@ def test_project_status_report_command_is_deterministic():
     assert first.returncode == 0
     assert second.returncode == 0
     assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_project_status_report_json_command_is_deterministic():
+    first = run_cli("project-status-report", "--json")
+    second = run_cli("project-status-report", "--json")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert json.loads(first.stdout) == json.loads(second.stdout)
+    assert first.stdout == second.stdout
     assert first.stderr == ""
     assert second.stderr == ""
 
@@ -476,6 +509,30 @@ def test_project_status_report_command_imports_no_real_midi_libraries():
 
     assert result.returncode == 0
     assert "RytmRandomizer Project Status Report" in result.stdout
+    assert result.stderr == ""
+
+
+def test_project_status_report_json_command_imports_no_real_midi_libraries():
+    script = "\n".join(
+        [
+            "import runpy",
+            "import sys",
+            "sys.argv = ['rytm_randomizer.cli', 'project-status-report', '--json']",
+            "runpy.run_module('rytm_randomizer.cli', run_name='__main__')",
+            "assert 'mido' not in sys.modules",
+            "assert 'rtmidi' not in sys.modules",
+        ]
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert '"title": "RytmRandomizer Project Status Report"' in result.stdout
     assert result.stderr == ""
 
 
@@ -1843,6 +1900,7 @@ if __name__ == "__main__":
     test_preview_group_profile_help_exits_zero_and_matches_fixture()
     test_report_command_exits_zero_and_matches_fixture()
     test_project_status_report_command_exits_zero_and_matches_fixture()
+    test_project_status_report_json_command_exits_zero_and_returns_json()
     test_mock_mapper_report_command_exits_zero_and_matches_fixture()
     test_runtime_plan_report_command_exits_zero_and_matches_fixture()
     test_active_boundary_report_command_exits_zero_and_matches_fixture()
@@ -1851,6 +1909,7 @@ if __name__ == "__main__":
     test_behavior_parity_report_command_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_project_status_report_command_is_deterministic()
+    test_project_status_report_json_command_is_deterministic()
     test_mock_mapper_report_command_is_deterministic()
     test_runtime_plan_report_command_is_deterministic()
     test_active_boundary_report_command_is_deterministic()
@@ -1860,6 +1919,7 @@ if __name__ == "__main__":
     test_top_level_help_exposes_no_active_execution_commands()
     test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
     test_project_status_report_command_imports_no_real_midi_libraries()
+    test_project_status_report_json_command_imports_no_real_midi_libraries()
     test_mock_mapper_report_command_imports_no_real_midi_libraries()
     test_runtime_plan_report_command_imports_no_real_midi_libraries()
     test_active_boundary_report_command_imports_no_real_midi_libraries()

@@ -21,7 +21,27 @@ modularize-v1.34
 
 Current HEAD:
 
-8dbc894 Harden closeout failure propagation
+7fea7d7 Add passive project status report
+
+## Project Status Report JSON Checkpoint
+
+The passive project status report now has deterministic JSON output.
+
+Checkpoint document:
+
+- `Docs/PROJECT_STATUS_REPORT_JSON_CHECKPOINT.md`
+
+Updated passive CLI command:
+
+- `python -m rytm_randomizer.cli project-status-report --json`
+
+The JSON output exposes the same read-only in-memory dashboard data used by
+the human-readable project status report. It supports safer future planning
+and agent handoff without adding execution behavior.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Project Status Report CLI Checkpoint
 

@@ -1,5 +1,6 @@
 from pathlib import Path
 import importlib
+import json
 import subprocess
 import sys
 
@@ -194,6 +195,27 @@ def test_formatted_project_status_report_is_deterministic():
     ]
 
 
+def test_project_status_report_json_is_deterministic_and_parseable():
+    from rytm_randomizer.project_status_report import format_project_status_report_json
+
+    first = format_project_status_report_json()
+    second = format_project_status_report_json()
+
+    assert first == second
+    parsed = json.loads(first)
+    assert parsed["title"] == "RytmRandomizer Project Status Report"
+    assert parsed["phase"]["name"] == "Passive/Mock Runtime Visibility Phase"
+    assert parsed["phase"]["creative_identity_candidate"] == "KitForge"
+    assert parsed["behavior_parity"]["accepted_packet_count"] == 12
+    assert parsed["runtime_plan"]["runtime_execution"] == "absent"
+    assert parsed["active_boundary"]["active_cli_behavior"] == "absent"
+    assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
+    assert parsed["safety"]["real_midi"] == "absent"
+    assert parsed["safety"]["hardware_required"] is False
+    assert parsed["source"]["in_memory_only"] is True
+    assert parsed["source"]["writes_files"] is False
+
+
 def test_returned_project_status_report_is_copied_and_mutation_safe():
     from rytm_randomizer.project_status_report import build_project_status_report
 
@@ -237,6 +259,7 @@ if __name__ == "__main__":
     test_project_status_report_records_absent_runtime_and_hardware_boundaries()
     test_project_status_summary_is_deterministic()
     test_formatted_project_status_report_is_deterministic()
+    test_project_status_report_json_is_deterministic_and_parseable()
     test_returned_project_status_report_is_copied_and_mutation_safe()
     test_project_status_report_imports_no_real_midi_libraries()
     test_project_status_report_exposes_no_active_cli_command_names()
