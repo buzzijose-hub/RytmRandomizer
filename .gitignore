@@ -23,3 +23,14 @@ Thumbs.db
 .idea/
 Docs/Session_Logs/*.log
 Docs/Session_Logs/latest_closeout_summary.txt
+
+# Local agent/tool scratch
+.claude/
+docs-scratch/
+
+# Python packaging / coverage
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/

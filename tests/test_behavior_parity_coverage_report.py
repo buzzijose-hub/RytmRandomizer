@@ -260,8 +260,8 @@ def test_report_records_closeout_coverage_and_protected_file_state():
         "Runtime-Adjacent Mock-Only L",
     )
     assert report["protected_file_state"] == {
-        "v134_reference": "untouched",
-        "package_metadata": "untouched",
+        "v134_reference": "import_safe_wrapped",
+        "package_metadata": "declared",
         "runtime_execution_logic": "absent",
     }
 
@@ -371,8 +371,8 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "- SysEx",
         "- GUI/capture",
         "Protected File State:",
-        "- v134_reference: untouched",
-        "- package_metadata: untouched",
+        "- v134_reference: import_safe_wrapped",
+        "- package_metadata: declared",
         "- runtime_execution_logic: absent",
         "Report Boundary:",
         "- read_only: True",
@@ -401,7 +401,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
     )
     assert fresh_report["selected_isolated_pad_packet_coverage"][0]["packet"] == "11A"
     assert fresh_report["pad_lane_packet_coverage"][0]["packet"] == "5"
-    assert fresh_report["protected_file_state"]["v134_reference"] == "untouched"
+    assert fresh_report["protected_file_state"]["v134_reference"] == "import_safe_wrapped"
 
 
 def test_no_real_midi_library_is_imported():

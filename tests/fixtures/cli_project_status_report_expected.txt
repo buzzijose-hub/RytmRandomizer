@@ -93,8 +93,8 @@ Safety:
 - hardware_behavior: absent
 - analog_four_support: absent
 - pads_5_12_support: absent
-- v134_reference: untouched
-- package_metadata: untouched
+- v134_reference: import_safe_wrapped
+- package_metadata: declared
 Source:
 - in_memory_only: True
 - writes_files: False

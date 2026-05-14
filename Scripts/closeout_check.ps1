@@ -126,6 +126,11 @@ Register-CloseoutStepExit "Passive CLI"
 Register-CloseoutStepExit "Closeout Contract"
 
 "" | Add-Content $summary
+"=== Test: V1.34 Import Boundary ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_v134_import_boundary.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_v134_import_boundary.log" | Add-Content $summary
+Register-CloseoutStepExit "V1.34 Import Boundary"
+
+"" | Add-Content $summary
 "=== Test: Project Status Report ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_project_status_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_project_status_report.log" | Add-Content $summary
 Register-CloseoutStepExit "Project Status Report"

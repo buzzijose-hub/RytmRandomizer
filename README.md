@@ -1,22 +1,115 @@
-# RytmRandomizer — V1.34
+# RytmRandomizer
 
-## Current validated baseline
+RytmRandomizer is a Python project for controlled, musical randomization of an
+Elektron Analog Rytm MKII. The validated V1.34 script already proves the
+musical command surface; the package in this repository is the staged,
+testable path toward a safer modular application.
 
-V1.33 is the fully validated expanded scene-depth layer. The combined V1.33 logs validated the Rolling, Deeper, Intense, and Wild A/B scene variants, clean anchor return, the main-prompt `1/2/3` guardrail, and clean script exit.
+The current modular package remains cautious by design. Passive CLI commands
+can report, search, inspect, preview, and summarize mock/runtime plans without
+opening MIDI ports or sending MIDI. Hardware-facing behavior stays behind
+explicit future gates.
 
-V1.34 is a documentation checkpoint. It does not introduce new musical behavior.
+## Repository Map
 
-## Active script
+- `rytm_hybrid_randomizer_v134.py` is the hardware-validated V1.34 reference.
+  It imports safely and is still the behavior baseline.
+- `rytm_randomizer/` is the modular package under active development.
+- `tests/` contains the local safety and regression net.
+- `Scripts/closeout_check.ps1` runs the current full local verification suite.
+- `Docs/` records the current planning, checkpoints, and safety decisions.
+- `CaptureTools/`, `Patches/`, and `Skills/` are auxiliary tooling areas.
 
-```text
-rytm_hybrid_randomizer_v134.py
+## Install
+
+Use Python 3.11 or newer.
+
+```powershell
+python -m pip install -e ".[dev]"
 ```
 
-## V1.34 focus
+The package metadata declares the MIDI dependencies used by the legacy
+hardware script:
 
-Documentation checkpoint / expanded scene layer complete.
+- `mido`
+- `python-rtmidi`
 
-This checkpoint locks in the validated scene system:
+Declaring those dependencies does not mean passive package commands open ports
+or send MIDI. The passive tests still guard those boundaries.
+
+On Linux, `python-rtmidi` may require ALSA development headers if a matching
+wheel is unavailable.
+
+## Run
+
+Passive modular CLI:
+
+```powershell
+python -m rytm_randomizer.cli --help
+python -m rytm_randomizer.cli project-status-report --summary
+python -m rytm_randomizer.cli mock-mapper-report
+python -m rytm_randomizer.cli runtime-plan-report
+```
+
+Installed console entry point:
+
+```powershell
+rytm-randomizer
+```
+
+Current hardware-validated reference script:
+
+```powershell
+python .\rytm_hybrid_randomizer_v134.py
+```
+
+Only run the hardware script when the Analog Rytm is intentionally connected
+and you are ready for its interactive MIDI behavior.
+
+## Test
+
+Run the current full closeout suite:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
+```
+
+Run all pytest tests directly:
+
+```powershell
+python -m pytest
+```
+
+## Current Passive CLI Capabilities
+
+```powershell
+python -m rytm_randomizer.cli report
+python -m rytm_randomizer.cli project-status-report
+python -m rytm_randomizer.cli mock-mapper-report
+python -m rytm_randomizer.cli runtime-plan-report
+python -m rytm_randomizer.cli active-boundary-report
+python -m rytm_randomizer.cli mock-runtime-active-bridge-report
+python -m rytm_randomizer.cli anchor-profile-report
+python -m rytm_randomizer.cli behavior-parity-report
+python -m rytm_randomizer.cli list-commands
+python -m rytm_randomizer.cli list-scenes
+python -m rytm_randomizer.cli list-group-profiles
+python -m rytm_randomizer.cli search-commands BD
+python -m rytm_randomizer.cli inspect-command J
+python -m rytm_randomizer.cli preview-group-profile 2
+```
+
+Passive commands remain read-only:
+
+- no MIDI sending
+- no MIDI port opening
+- no command execution
+- no hardware mutation
+- no hardware required
+
+## V1.34 Scene Surface
+
+V1.34 locks in the expanded scene layer:
 
 ```text
 S0  = Home / Clean anchors
@@ -35,16 +128,7 @@ S4B = Wild Maximum
 S5  = Back to Clean anchors
 ```
 
-## Safety rules
-
-- No new machine profiles were added.
-- No new MIDI CC mappings were added.
-- No new parameter ranges were added.
-- No Pads 5–12 expansion yet.
-- Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
-- Four-pad scene/global commands auto-load anchors if needed.
-
-## Current four-lane layout
+Current four-lane layout:
 
 ```text
 Pad 1 = BD Hard / protected kick foundation
@@ -53,7 +137,7 @@ Pad 3 = SY Raw / bass + synth-percussion motion lane
 Pad 4 = BD Acoustic / body + accent pressure lane
 ```
 
-## Recommended quick validation flow
+Recommended hardware validation flow for the legacy script:
 
 ```text
 SCN
@@ -68,4 +152,4 @@ Z
 Q
 ```
 
-Keep volume moderate for S3B and S4B.
+Keep monitoring volume moderate for `S3B` and `S4B`.

@@ -360,8 +360,9 @@ def test_behavior_anchor_profile_report_exposes_no_active_behavior_names():
     assert "MidiPortProvider" not in exposed_names
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
+def test_package_metadata_is_declared_without_legacy_setup_files():
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for filename in ("requirements.txt", "setup.py", "setup.cfg"):
         assert not (PROJECT_ROOT / filename).exists()
 
 
@@ -379,4 +380,4 @@ if __name__ == "__main__":
     test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_unchanged()
     test_pz_readiness_and_profile_4_behavior_remain_safe()
     test_behavior_anchor_profile_report_exposes_no_active_behavior_names()
-    test_no_package_metadata_files_are_introduced()
+    test_package_metadata_is_declared_without_legacy_setup_files()

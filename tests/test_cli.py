@@ -1461,8 +1461,8 @@ def test_project_status_report_exposes_no_active_behavior_or_support_expansion()
     assert "- hardware_behavior: absent" in output
     assert "- analog_four_support: absent" in output
     assert "- pads_5_12_support: absent" in output
-    assert "- v134_reference: untouched" in output
-    assert "- package_metadata: untouched" in output
+    assert "- v134_reference: import_safe_wrapped" in output
+    assert "- package_metadata: declared" in output
     assert "execute-command" not in output
     assert "send-command" not in output
     assert "hardware-test" not in output
@@ -1691,8 +1691,8 @@ def test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion(
     assert "- Analog Four support" in output
     assert "- Pads 5-12 support" in output
     assert "Protected File State:" in output
-    assert "- v134_reference: untouched" in output
-    assert "- package_metadata: untouched" in output
+    assert "- v134_reference: import_safe_wrapped" in output
+    assert "- package_metadata: declared" in output
     assert "- runtime_execution_logic: absent" in output
     assert "- read_only: True" in output
     assert "- in_memory_only: True" in output

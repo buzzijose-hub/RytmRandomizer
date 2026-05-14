@@ -316,18 +316,13 @@ def test_closeout_includes_real_midi_adapter_boundary_label():
     assert "test_real_midi_adapter_boundary.py" in closeout_source
 
 
-def test_v134_reference_has_no_working_tree_diff():
-    result = subprocess.run(
-        ["git", "diff", "--", str(V134_REFERENCE.relative_to(PROJECT_ROOT))],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def test_v134_reference_has_import_safe_entrypoint():
+    source = V134_REFERENCE.read_text(encoding="utf-8")
 
-    assert result.returncode == 0
-    assert result.stdout == ""
-    assert result.stderr == ""
+    assert "def _choose_midi_output():" in source
+    assert "def main() -> None:" in source
+    assert 'if __name__ == "__main__":' in source
+    assert "except:\n" not in source
 
 
 if __name__ == "__main__":
@@ -343,4 +338,4 @@ if __name__ == "__main__":
     test_passive_sources_do_not_reference_adapter_or_port_affordances()
     test_active_boundary_scope_still_rejects_profiles_3_and_4()
     test_closeout_includes_real_midi_adapter_boundary_label()
-    test_v134_reference_has_no_working_tree_diff()
+    test_v134_reference_has_import_safe_entrypoint()

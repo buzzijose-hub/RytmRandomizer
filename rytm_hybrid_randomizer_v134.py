@@ -2,32 +2,35 @@ import mido
 import random
 import time
 
-print("\nRYTM HYBRID RANDOMIZER V1.34 - DOCUMENTATION CHECKPOINT / EXPANDED SCENE LAYER COMPLETE\n")
-
-outputs = mido.get_output_names()
-
-if not outputs:
-    print("No MIDI outputs found.")
-    raise SystemExit
-
-print("Available MIDI outputs:\n")
-for i, name in enumerate(outputs):
-    print(f"{i}: {name}")
-
-choice = input("\nChoose the Analog Rytm MIDI output number: ").strip()
-
-try:
-    port_name = outputs[int(choice)]
-except:
-    print("Invalid choice.")
-    raise SystemExit
-
 # Target pad/channel setup.
 # Pad 1 = MIDI Channel 1, Pad 2 = MIDI Channel 2, etc.
 target_pad = 1
 channel = 0
 
 MACHINE_CC = 15
+
+
+def _choose_midi_output():
+    print("\nRYTM HYBRID RANDOMIZER V1.34 - DOCUMENTATION CHECKPOINT / EXPANDED SCENE LAYER COMPLETE\n")
+
+    outputs = mido.get_output_names()
+
+    if not outputs:
+        print("No MIDI outputs found.")
+        raise SystemExit
+
+    print("Available MIDI outputs:\n")
+    for i, name in enumerate(outputs):
+        print(f"{i}: {name}")
+
+    choice = input("\nChoose the Analog Rytm MIDI output number: ").strip()
+
+    try:
+        return outputs[int(choice)]
+    except (ValueError, IndexError):
+        print("Invalid choice.")
+        raise SystemExit
+
 
 # ------------------------------------------------------------
 # PARAM MAPS
@@ -4847,316 +4850,325 @@ def print_commands():
 # MAIN
 # ------------------------------------------------------------
 
-print(f"\nOpening MIDI output: {port_name}")
+def main() -> None:
+    global channel
 
-with mido.open_output(port_name) as out:
-    choose_target_pad()
-    select_profile(out)
-    print_commands()
+    port_name = _choose_midi_output()
+    print(f"\nOpening MIDI output: {port_name}")
 
-    while True:
-        cmd = input("Command: ").strip().lower()
+    with mido.open_output(port_name) as out:
+        choose_target_pad()
+        select_profile(out)
+        print_commands()
 
-        if cmd == "q":
-            print("Exiting.")
-            break
+        while True:
+            cmd = input("Command: ").strip().lower()
 
-        elif cmd == "t":
-            choose_target_pad()
+            if cmd == "q":
+                print("Exiting.")
+                break
 
-        elif cmd == "p":
-            select_profile(out)
+            elif cmd == "t":
+                choose_target_pad()
 
-        elif cmd == "bd":
-            show_bd_engine_tools()
+            elif cmd == "p":
+                select_profile(out)
 
-        elif cmd == "br":
-            rotate_pad1_bd_engine(out)
+            elif cmd == "bd":
+                show_bd_engine_tools()
 
-        elif cmd == "bm":
-            mutate_current_pad1_bd_engine(out)
+            elif cmd == "br":
+                rotate_pad1_bd_engine(out)
 
-        elif cmd == "bh":
-            load_pad1_bd_profile(out, "2")
+            elif cmd == "bm":
+                mutate_current_pad1_bd_engine(out)
 
-        elif cmd == "bs":
-            load_pad1_bd_profile(out, "1")
+            elif cmd == "bh":
+                load_pad1_bd_profile(out, "2")
 
-        elif cmd == "bc":
-            load_pad1_bd_profile(out, "3")
+            elif cmd == "bs":
+                load_pad1_bd_profile(out, "1")
 
-        elif cmd == "ba":
-            load_pad1_bd_profile(out, "4")
+            elif cmd == "bc":
+                load_pad1_bd_profile(out, "3")
 
-        elif cmd == "bf":
-            load_pad1_bd_profile(out, "6")
+            elif cmd == "ba":
+                load_pad1_bd_profile(out, "4")
 
-        elif cmd == "fm":
-            show_bd_fm_tools()
+            elif cmd == "bf":
+                load_pad1_bd_profile(out, "6")
 
-        elif cmd == "ft":
-            bd_fm_tone_discovery(out)
+            elif cmd == "fm":
+                show_bd_fm_tools()
 
-        elif cmd == "fk":
-            bd_fm_kick_body_discovery(out)
+            elif cmd == "ft":
+                bd_fm_tone_discovery(out)
 
-        elif cmd == "fg":
-            bd_fm_grit_discovery(out)
+            elif cmd == "fk":
+                bd_fm_kick_body_discovery(out)
 
-        elif cmd == "fz":
-            return_pad1_bd_fm_to_anchor(out)
+            elif cmd == "fg":
+                bd_fm_grit_discovery(out)
 
-        elif cmd == "bp":
-            load_pad1_bd_profile(out, "7")
+            elif cmd == "fz":
+                return_pad1_bd_fm_to_anchor(out)
 
-        elif cmd == "pd":
-            show_bd_plastic_tools()
+            elif cmd == "bp":
+                load_pad1_bd_profile(out, "7")
 
-        elif cmd == "pt":
-            bd_plastic_tone_discovery(out)
+            elif cmd == "pd":
+                show_bd_plastic_tools()
 
-        elif cmd == "pk":
-            bd_plastic_kick_body_discovery(out)
+            elif cmd == "pt":
+                bd_plastic_tone_discovery(out)
 
-        elif cmd == "px":
-            bd_plastic_rubber_discovery(out)
+            elif cmd == "pk":
+                bd_plastic_kick_body_discovery(out)
 
-        elif cmd == "pbh":
-            return_pad1_bd_plastic_to_anchor(out)
+            elif cmd == "px":
+                bd_plastic_rubber_discovery(out)
 
-        elif cmd == "bi":
-            load_pad1_bd_profile(out, "8")
+            elif cmd == "pbh":
+                return_pad1_bd_plastic_to_anchor(out)
 
-        elif cmd == "sm":
-            show_bd_silky_tools()
+            elif cmd == "bi":
+                load_pad1_bd_profile(out, "8")
 
-        elif cmd == "st":
-            bd_silky_smooth_tone_discovery(out)
+            elif cmd == "sm":
+                show_bd_silky_tools()
 
-        elif cmd == "sk":
-            bd_silky_kick_body_discovery(out)
+            elif cmd == "st":
+                bd_silky_smooth_tone_discovery(out)
 
-        elif cmd == "sc":
-            bd_silky_click_dust_discovery(out)
+            elif cmd == "sk":
+                bd_silky_kick_body_discovery(out)
 
-        elif cmd == "sbh":
-            return_pad1_bd_silky_to_anchor(out)
+            elif cmd == "sc":
+                bd_silky_click_dust_discovery(out)
 
-        elif cmd == "p2m":
-            show_pad2_tools()
+            elif cmd == "sbh":
+                return_pad1_bd_silky_to_anchor(out)
 
-        elif cmd == "p2b":
-            load_pad2_profile(out, "3")
+            elif cmd == "p2m":
+                show_pad2_tools()
 
-        elif cmd == "p2h":
-            load_pad2_profile(out, "9")
+            elif cmd == "p2b":
+                load_pad2_profile(out, "3")
 
-        elif cmd == "p2c":
-            load_pad2_profile(out, "10")
+            elif cmd == "p2h":
+                load_pad2_profile(out, "9")
 
-        elif cmd == "p2f":
-            load_pad2_profile(out, "11")
+            elif cmd == "p2c":
+                load_pad2_profile(out, "10")
 
-        elif cmd == "p2t":
-            pad2_tone_discovery(out)
+            elif cmd == "p2f":
+                load_pad2_profile(out, "11")
 
-        elif cmd == "p2p":
-            pad2_pressure_body_discovery(out)
+            elif cmd == "p2t":
+                pad2_tone_discovery(out)
 
-        elif cmd == "p2g":
-            pad2_grit_noise_discovery(out)
+            elif cmd == "p2p":
+                pad2_pressure_body_discovery(out)
 
-        elif cmd == "p2z":
-            return_pad2_to_current_anchor(out)
+            elif cmd == "p2g":
+                pad2_grit_noise_discovery(out)
 
-        elif cmd == "p2r":
-            rotate_pad2_profile(out)
+            elif cmd == "p2z":
+                return_pad2_to_current_anchor(out)
 
-        elif cmd == "p2x":
-            mutate_current_pad2_rotation_profile(out)
+            elif cmd == "p2r":
+                rotate_pad2_profile(out)
 
-        elif cmd == "j":
-            show_group_layout()
+            elif cmd == "p2x":
+                mutate_current_pad2_rotation_profile(out)
 
-        elif cmd == "o":
-            load_group_anchors(out)
+            elif cmd == "j":
+                show_group_layout()
 
-        elif cmd == "gm":
-            show_global_mutation_tools()
+            elif cmd == "o":
+                load_group_anchors(out)
 
-        elif cmd == "scn":
-            show_scene_tools()
+            elif cmd == "gm":
+                show_global_mutation_tools()
 
-        elif cmd in SCENE_PRESETS:
-            run_scene(out, cmd)
+            elif cmd == "scn":
+                show_scene_tools()
 
-        elif cmd == "x":
-            mutate_group_intensity(out, "balanced")
+            elif cmd in SCENE_PRESETS:
+                run_scene(out, cmd)
 
-        elif cmd == "d":
-            mutate_group_intensity(out, "deeper")
+            elif cmd == "x":
+                mutate_group_intensity(out, "balanced")
 
-        elif cmd == "i":
-            mutate_group_intensity(out, "intense")
+            elif cmd == "d":
+                mutate_group_intensity(out, "deeper")
 
-        elif cmd == "4":
-            mutate_group_intensity(out, "harder")
+            elif cmd == "i":
+                mutate_group_intensity(out, "intense")
 
-        elif cmd == "y":
-            mutate_global_page_plan(out, "src")
+            elif cmd == "4":
+                mutate_group_intensity(out, "harder")
 
-        elif cmd == "v":
-            mutate_global_page_plan(out, "filter")
+            elif cmd == "y":
+                mutate_global_page_plan(out, "src")
 
-        elif cmd == "n":
-            mutate_global_page_plan(out, "grit")
+            elif cmd == "v":
+                mutate_global_page_plan(out, "filter")
 
-        elif cmd == "z":
-            return_group_to_anchors(out)
+            elif cmd == "n":
+                mutate_global_page_plan(out, "grit")
 
-        elif cmd == "l":
-            choose_isolated_pad()
+            elif cmd == "z":
+                return_group_to_anchors(out)
 
-        elif cmd == "pm":
-            mutate_isolated_pad(out)
+            elif cmd == "l":
+                choose_isolated_pad()
 
-        elif cmd == "ps":
-            mutate_isolated_pad_with_depth(out, "src")
+            elif cmd == "pm":
+                mutate_isolated_pad(out)
 
-        elif cmd == "pf":
-            mutate_isolated_pad_with_depth(out, "filter")
+            elif cmd == "ps":
+                mutate_isolated_pad_with_depth(out, "src")
 
-        elif cmd == "pa":
-            mutate_isolated_pad_with_depth(out, "amp")
+            elif cmd == "pf":
+                mutate_isolated_pad_with_depth(out, "filter")
 
-        elif cmd == "pl":
-            mutate_isolated_pad_with_depth(out, "lfo")
+            elif cmd == "pa":
+                mutate_isolated_pad_with_depth(out, "amp")
 
-        elif cmd == "po":
-            mutate_isolated_pad_with_depth(out, "morph")
+            elif cmd == "pl":
+                mutate_isolated_pad_with_depth(out, "lfo")
 
-        elif cmd == "pb":
-            mutate_isolated_pad_with_depth(out, "body")
+            elif cmd == "po":
+                mutate_isolated_pad_with_depth(out, "morph")
 
-        elif cmd == "pg":
-            mutate_isolated_pad_with_depth(out, "grit")
+            elif cmd == "pb":
+                mutate_isolated_pad_with_depth(out, "body")
 
-        elif cmd == "pz":
-            return_isolated_pad_to_anchor(out)
+            elif cmd == "pg":
+                mutate_isolated_pad_with_depth(out, "grit")
 
-        elif cmd == "pr":
-            show_isolated_pad()
+            elif cmd == "pz":
+                return_isolated_pad_to_anchor(out)
 
-        elif cmd == "sr":
-            show_sy_raw_discovery_menu()
+            elif cmd == "pr":
+                show_isolated_pad()
 
-        elif cmd == "sw":
-            sy_raw_wave_balance_discovery(out)
+            elif cmd == "sr":
+                show_sy_raw_discovery_menu()
 
-        elif cmd == "sl":
-            sy_raw_lp1_bassline_mode(out)
+            elif cmd == "sw":
+                sy_raw_wave_balance_discovery(out)
 
-        elif cmd == "sb":
-            sy_raw_bandpass_mid_bass_mode(out)
+            elif cmd == "sl":
+                sy_raw_lp1_bassline_mode(out)
 
-        elif cmd == "sx":
-            sy_raw_scifi_motion_accent(out)
+            elif cmd == "sb":
+                sy_raw_bandpass_mid_bass_mode(out)
 
-        elif cmd == "sa":
-            return_pad3_sy_raw_to_anchor(out)
+            elif cmd == "sx":
+                sy_raw_scifi_motion_accent(out)
 
-        elif cmd == "p3m":
-            show_pad3_tools()
+            elif cmd == "sa":
+                return_pad3_sy_raw_to_anchor(out)
 
-        elif cmd == "p3r":
-            rotate_pad3_mode(out)
+            elif cmd == "p3m":
+                show_pad3_tools()
 
-        elif cmd == "p3x":
-            mutate_current_pad3_mode(out)
+            elif cmd == "p3r":
+                rotate_pad3_mode(out)
 
-        elif cmd == "p3a":
-            return_pad3_to_anchor(out)
+            elif cmd == "p3x":
+                mutate_current_pad3_mode(out)
 
-        elif cmd == "p4m":
-            show_pad4_tools()
+            elif cmd == "p3a":
+                return_pad3_to_anchor(out)
 
-        elif cmd == "p4r":
-            rotate_pad4_mode(out)
+            elif cmd == "p4m":
+                show_pad4_tools()
 
-        elif cmd == "p4x":
-            mutate_current_pad4_mode(out)
+            elif cmd == "p4r":
+                rotate_pad4_mode(out)
 
-        elif cmd == "p4a":
-            return_pad4_to_anchor(out)
+            elif cmd == "p4x":
+                mutate_current_pad4_mode(out)
 
-        elif cmd == "c":
-            new_channel = input("Enter MIDI channel 1-16: ").strip()
-            try:
-                new_channel = int(new_channel)
-                if 1 <= new_channel <= 16:
-                    channel = new_channel - 1
-                    print(f"Now sending on MIDI Channel {new_channel}")
-                else:
-                    print("Use a number from 1 to 16.")
-            except:
-                print("Invalid channel.")
+            elif cmd == "p4a":
+                return_pad4_to_anchor(out)
 
-        elif cmd == "m":
-            apply_state(
-                out,
-                anchor_state,
-                f"{active_profile['name']} anchor",
-                set_anchor=True,
-                switch_machine_first=True
-            )
+            elif cmd == "c":
+                new_channel = input("Enter MIDI channel 1-16: ").strip()
+                try:
+                    new_channel = int(new_channel)
+                    if 1 <= new_channel <= 16:
+                        channel = new_channel - 1
+                        print(f"Now sending on MIDI Channel {new_channel}")
+                    else:
+                        print("Use a number from 1 to 16.")
+                except ValueError:
+                    print("Invalid channel.")
 
-        elif cmd == "b":
-            apply_state(out, anchor_state, "Back to current anchor", set_anchor=False)
+            elif cmd == "m":
+                apply_state(
+                    out,
+                    anchor_state,
+                    f"{active_profile['name']} anchor",
+                    set_anchor=True,
+                    switch_machine_first=True
+                )
 
-        elif cmd == "e":
-            commit_current_as_anchor()
+            elif cmd == "b":
+                apply_state(out, anchor_state, "Back to current anchor", set_anchor=False)
 
-        elif cmd == "h":
-            show_anchor()
+            elif cmd == "e":
+                commit_current_as_anchor()
 
-        elif cmd == "r":
-            show_current()
+            elif cmd == "h":
+                show_anchor()
 
-        elif cmd == "m1":
-            mutate_zone(out, "full", "micro")
+            elif cmd == "r":
+                show_current()
 
-        elif cmd == "m2":
-            mutate_zone(out, "full", "groove")
+            elif cmd == "m1":
+                mutate_zone(out, "full", "micro")
 
-        elif cmd == "m3":
-            mutate_zone(out, "full", "strong")
+            elif cmd == "m2":
+                mutate_zone(out, "full", "groove")
 
-        elif cmd in ["1", "2", "3"]:
-            print("\nDepth number entered at the main Command prompt. No MIDI was sent.")
-            print("Use Y, V, N, S, F, A, G, or K first, then answer the depth prompt with 1, 2, or 3.")
-            print("For legacy single-profile full mutation, use M1, M2, or M3.")
+            elif cmd == "m3":
+                mutate_zone(out, "full", "strong")
 
-        elif cmd == "s":
-            mutate_zone(out, "src", get_depth())
+            elif cmd in ["1", "2", "3"]:
+                print("\nDepth number entered at the main Command prompt. No MIDI was sent.")
+                print("Use Y, V, N, S, F, A, G, or K first, then answer the depth prompt with 1, 2, or 3.")
+                print("For legacy single-profile full mutation, use M1, M2, or M3.")
 
-        elif cmd == "f":
-            mutate_zone(out, "filter", get_depth())
+            elif cmd == "s":
+                mutate_zone(out, "src", get_depth())
 
-        elif cmd == "a":
-            mutate_zone(out, "amp", get_depth())
+            elif cmd == "f":
+                mutate_zone(out, "filter", get_depth())
 
-        elif cmd == "g":
-            mutate_zone(out, "grit", get_depth())
+            elif cmd == "a":
+                mutate_zone(out, "amp", get_depth())
 
-        elif cmd == "k":
-            mutate_zone(out, "body", get_depth())
+            elif cmd == "g":
+                mutate_zone(out, "grit", get_depth())
 
-        elif cmd == "w":
-            random_waveform(out)
+            elif cmd == "k":
+                mutate_zone(out, "body", get_depth())
 
-        elif cmd == "u":
-            undo(out)
+            elif cmd == "w":
+                random_waveform(out)
 
-        else:
-            print("Unknown command.")
-            print_commands()
+            elif cmd == "u":
+                undo(out)
+
+            else:
+                print("Unknown command.")
+                print_commands()
+
+
+
+if __name__ == "__main__":
+    main()

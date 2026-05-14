@@ -95,8 +95,8 @@ def test_project_status_report_records_absent_runtime_and_hardware_boundaries():
         "hardware_behavior": "absent",
         "analog_four_support": "absent",
         "pads_5_12_support": "absent",
-        "v134_reference": "untouched",
-        "package_metadata": "untouched",
+        "v134_reference": "import_safe_wrapped",
+        "package_metadata": "declared",
     }
 
 
@@ -194,7 +194,7 @@ def test_project_status_summary_is_deterministic():
         "port_opening": "absent",
         "active_execution": "absent",
         "hardware_required": False,
-        "v134_reference": "untouched",
+        "v134_reference": "import_safe_wrapped",
     }
 
 
@@ -224,7 +224,7 @@ def test_project_status_summary_lines_are_deterministic():
         "- port_opening: absent",
         "- active_execution: absent",
         "- hardware_required: False",
-        "- v134_reference: untouched",
+        "- v134_reference: import_safe_wrapped",
     ]
 
 
@@ -245,8 +245,8 @@ def test_project_status_check_passes_for_current_report():
             "safety.command_execution": "absent",
             "safety.dispatch": "absent",
             "safety.hardware_required": False,
-            "safety.v134_reference": "untouched",
-            "safety.package_metadata": "untouched",
+            "safety.v134_reference": "import_safe_wrapped",
+            "safety.package_metadata": "declared",
             "runtime_plan.runtime_execution": "absent",
             "active_boundary.active_cli_behavior": "absent",
             "mock_runtime_active_bridge.emits_messages": False,
@@ -326,8 +326,8 @@ def test_project_status_check_lines_are_deterministic():
         "- safety.command_execution: absent",
         "- safety.dispatch: absent",
         "- safety.hardware_required: False",
-        "- safety.v134_reference: untouched",
-        "- safety.package_metadata: untouched",
+        "- safety.v134_reference: import_safe_wrapped",
+        "- safety.package_metadata: declared",
         "- runtime_plan.runtime_execution: absent",
         "- active_boundary.active_cli_behavior: absent",
         "- mock_runtime_active_bridge.emits_messages: False",
@@ -470,8 +470,8 @@ def test_formatted_project_status_report_is_deterministic():
         "- hardware_behavior: absent",
         "- analog_four_support: absent",
         "- pads_5_12_support: absent",
-        "- v134_reference: untouched",
-        "- package_metadata: untouched",
+        "- v134_reference: import_safe_wrapped",
+        "- package_metadata: declared",
         "Source:",
         "- in_memory_only: True",
         "- writes_files: False",

@@ -141,18 +141,13 @@ def test_active_boundary_scope_remains_profile_2_only():
     assert unsupported_4_sender.sent_messages == ()
 
 
-def test_v134_reference_has_no_working_tree_diff():
-    result = subprocess.run(
-        ["git", "diff", "--", str(V134_REFERENCE.relative_to(PROJECT_ROOT))],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+def test_v134_reference_has_import_safe_entrypoint():
+    source = V134_REFERENCE.read_text(encoding="utf-8")
 
-    assert result.returncode == 0
-    assert result.stdout == ""
-    assert result.stderr == ""
+    assert "def _choose_midi_output():" in source
+    assert "def main() -> None:" in source
+    assert 'if __name__ == "__main__":' in source
+    assert "except:\n" not in source
 
 
 if __name__ == "__main__":
@@ -160,4 +155,4 @@ if __name__ == "__main__":
     test_passive_and_mock_imports_do_not_import_real_midi_libraries()
     test_passive_and_mock_sources_expose_no_real_midi_affordances()
     test_active_boundary_scope_remains_profile_2_only()
-    test_v134_reference_has_no_working_tree_diff()
+    test_v134_reference_has_import_safe_entrypoint()

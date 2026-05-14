@@ -355,8 +355,9 @@ def test_no_real_midi_library_is_imported():
     assert "rtmidi" not in sys.modules
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
+def test_package_metadata_is_declared_without_legacy_setup_files():
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for filename in ("requirements.txt", "setup.py", "setup.cfg"):
         assert not (PROJECT_ROOT / filename).exists()
 
 
@@ -411,7 +412,7 @@ if __name__ == "__main__":
     test_packet_1_p4m_menu_behavior_remains_unchanged()
     test_passive_cli_behavior_remains_unchanged()
     test_no_real_midi_library_is_imported()
-    test_no_package_metadata_files_are_introduced()
+    test_package_metadata_is_declared_without_legacy_setup_files()
     test_behavior_pad4_lane_exposes_no_active_behavior_names()
     test_behavior_pad4_lane_exposes_explicit_public_api()
     test_no_out_of_scope_support_is_exposed()

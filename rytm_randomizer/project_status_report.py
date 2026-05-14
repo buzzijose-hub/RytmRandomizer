@@ -112,8 +112,8 @@ PROJECT_STATUS_SAFETY = {
     "hardware_behavior": "absent",
     "analog_four_support": "absent",
     "pads_5_12_support": "absent",
-    "v134_reference": "untouched",
-    "package_metadata": "untouched",
+    "v134_reference": "import_safe_wrapped",
+    "package_metadata": "declared",
 }
 
 PROJECT_STATUS_CHECKS = (
@@ -123,8 +123,8 @@ PROJECT_STATUS_CHECKS = (
     ("safety.command_execution", "absent"),
     ("safety.dispatch", "absent"),
     ("safety.hardware_required", False),
-    ("safety.v134_reference", "untouched"),
-    ("safety.package_metadata", "untouched"),
+    ("safety.v134_reference", "import_safe_wrapped"),
+    ("safety.package_metadata", "declared"),
     ("runtime_plan.runtime_execution", "absent"),
     ("active_boundary.active_cli_behavior", "absent"),
     ("mock_runtime_active_bridge.emits_messages", False),

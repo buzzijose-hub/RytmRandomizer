@@ -192,8 +192,8 @@ CLOSEOUT_COVERAGE = (
 )
 
 PROTECTED_FILE_STATE = {
-    "v134_reference": "untouched",
-    "package_metadata": "untouched",
+    "v134_reference": "import_safe_wrapped",
+    "package_metadata": "declared",
     "runtime_execution_logic": "absent",
 }
 
