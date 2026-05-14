@@ -8,7 +8,35 @@ modularize-v1.34
 
 Current HEAD:
 
-474c209
+809f6c7
+
+## Behavior-Parity Structured Pad 1 Lane Coverage Checkpoint
+
+`Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PAD1_LANE_COVERAGE_CHECKPOINT.md`
+records Packet 5 / Pad 1 structured lane coverage in the read-only
+behavior-parity coverage report.
+
+Implementation milestone:
+
+- `809f6c7 Add structured Pad 1 coverage to parity report`
+
+Files changed:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+The structured pad-lane report now covers Packet 5 through Packet 8. Packet 5
+records accepted Pad 1 keys `BR`, `BM`, `FT`, `FK`, `FG`, `FZ`, `BP`, `PT`,
+`PK`, `PX`, `PBH`, `BI`, `ST`, `SK`, `SC`, `SBH`, and `BA`, with no
+deferred/safe Packet 5 keys.
+
+The compact report summary now includes four pad-lane packets and 38 pad-lane
+commands.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Behavior-Parity Structured Pad Lane Coverage Checkpoint
 

@@ -6,7 +6,55 @@ modularize-v1.34
 
 ## Current HEAD
 
-474c209 Add structured pad lane coverage to parity report
+809f6c7 Add structured Pad 1 coverage to parity report
+
+## Latest Behavior-Parity Structured Pad 1 Lane Coverage Checkpoint
+
+The behavior-parity coverage report now includes Packet 5 / Pad 1 in the
+structured pad-lane coverage section.
+
+Checkpoint document:
+
+- `Docs/V134_BEHAVIOR_PARITY_STRUCTURED_PAD1_LANE_COVERAGE_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `809f6c7 Add structured Pad 1 coverage to parity report`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/behavior_parity_coverage_report.py`
+- `tests/test_behavior_parity_coverage_report.py`
+- `tests/fixtures/cli_behavior_parity_report_expected.txt`
+
+Confirmed behavior:
+
+- `pad_lane_packet_coverage` records Packet 5 / Pad 1 accepted keys
+- Packet 5 accepted keys are `BR`, `BM`, `FT`, `FK`, `FG`, `FZ`, `BP`, `PT`,
+  `PK`, `PX`, `PBH`, `BI`, `ST`, `SK`, `SC`, `SBH`, and `BA`
+- Packet 5 deferred/safe keys are recorded as none
+- summary data now includes `pad_lane_packet_count: 4`
+- summary data now includes `pad_lane_command_count: 38`
+- passive `behavior-parity-report` CLI output includes Packet 5 in the
+  structured pad-lane section
+
+Recommended next task:
+
+- continue with a concrete report/helper drift check if one appears
+- otherwise create a short progress checkpoint before selecting the next
+  behavior-parity slice
+
+Confirmed boundaries:
+
+- no runtime execution
+- no dispatch
+- no command execution
+- no mutation execution
+- no active CLI command
+- no MIDI
+- no ports
+- no package metadata changes
+- no hardware behavior
 
 ## Latest Behavior-Parity Structured Pad Lane Coverage Checkpoint
 
