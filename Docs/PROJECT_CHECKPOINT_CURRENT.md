@@ -21,7 +21,29 @@ modularize-v1.34
 
 Current HEAD:
 
-4bb5430 Add Pad 4 lane public API exports
+e32defc Add real MIDI adapter public API exports
+
+## Real MIDI Adapter Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/REAL_MIDI_ADAPTER_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `e32defc Add real MIDI adapter public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/real_midi_adapter.py`
+- `tests/test_real_midi_adapter_boundary.py`
+
+The import-safe adapter boundary now exposes an explicit `__all__` public API
+list. Existing fake-provider-only behavior remains unchanged.
+
+This adds no real MIDI dependency, `mido`, `rtmidi`, port discovery, port
+opening, MIDI sending, runtime execution, dispatch, command execution, active
+CLI command, package metadata change, or hardware behavior.
 
 ## Pad 4 Lane Public API Exports Checkpoint
 

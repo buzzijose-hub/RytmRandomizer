@@ -8,7 +8,31 @@ modularize-v1.34
 
 Current HEAD:
 
-4bb5430
+e32defc
+
+## Real MIDI Adapter Public API Exports Checkpoint
+
+`Docs/REAL_MIDI_ADAPTER_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the tiny
+adapter boundary API alignment slice.
+
+Implementation milestone:
+
+- `e32defc Add real MIDI adapter public API exports`
+
+The import-safe adapter boundary now exposes an explicit `__all__` list:
+
+- `RealMidiDependencyError`
+- `RealMidiOutputPort`
+- `RealMidiPortError`
+- `RealMidiPortProvider`
+- `RealMidiSendError`
+- `RealMidiSendResult`
+- `RealMidiSender`
+- `build_real_midi_sender`
+
+The adapter remains fake-provider-only in tests and import-safe. This adds no
+real MIDI dependency, port opening, MIDI sending, dispatch, command execution,
+active CLI behavior, package metadata change, or hardware behavior.
 
 ## Pad 4 Lane Public API Exports Checkpoint
 
