@@ -21,7 +21,27 @@ modularize-v1.34
 
 Current HEAD:
 
-f7bc55a Add project status check to closeout
+255adeb Add passive quick status script
+
+## Quick Status Context Checkpoint
+
+The passive quick status helper now includes branch, latest commit, and V1.34
+reference diff context.
+
+Checkpoint document:
+
+- `Docs/QUICK_STATUS_CONTEXT_CHECKPOINT.md`
+
+Updated helper:
+
+- `Scripts/quick_status.ps1`
+
+The helper now prints git branch, latest commit, project status summary,
+project status safety check, V1.34 reference diff, and git status.
+
+This adds no runtime execution, dispatch, command execution, mutation
+execution, active CLI command, MIDI, ports, package metadata changes, active
+behavior, or hardware behavior.
 
 ## Quick Status Script Checkpoint
 

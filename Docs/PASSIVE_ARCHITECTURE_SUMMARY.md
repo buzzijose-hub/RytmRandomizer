@@ -8,7 +8,22 @@ modularize-v1.34
 
 Current HEAD:
 
-f7bc55a
+255adeb
+
+## Quick Status Context Checkpoint
+
+`Docs/QUICK_STATUS_CONTEXT_CHECKPOINT.md` records branch, latest commit, and
+V1.34 reference diff context in the passive quick status helper.
+
+Updated helper:
+
+- `Scripts/quick_status.ps1`
+
+The helper now prints git branch, latest commit, project status summary,
+project status safety check, V1.34 reference diff, and git status. It adds no
+runtime execution, dispatch, command execution, mutation execution, active CLI
+command, MIDI, ports, package metadata changes, active behavior, or hardware
+behavior.
 
 ## Quick Status Script Checkpoint
 

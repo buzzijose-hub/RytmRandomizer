@@ -13,6 +13,9 @@ def test_quick_status_script_exists_and_stays_passive():
 
     assert "project-status-report --summary" in text
     assert "project-status-report --check" in text
+    assert "git branch --show-current" in text
+    assert "git log --oneline -1" in text
+    assert "git diff -- rytm_hybrid_randomizer_v134.py" in text
     assert "git status --short" in text
     assert "mido" not in text.lower()
     assert "open-port" not in text.lower()
@@ -22,6 +25,21 @@ def test_quick_status_script_exists_and_stays_passive():
 
 
 def test_quick_status_script_runs_passive_status_checks():
+    branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.strip()
+    latest_commit = subprocess.run(
+        ["git", "log", "--oneline", "-1"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    ).stdout.strip()
+
     result = subprocess.run(
         [
             "powershell",
@@ -37,11 +55,16 @@ def test_quick_status_script_runs_passive_status_checks():
     )
 
     assert result.returncode == 0
+    assert "=== Git Branch ===" in result.stdout
+    assert branch in result.stdout
+    assert "=== Git Latest Commit ===" in result.stdout
+    assert latest_commit in result.stdout
     assert "=== Project Status Summary ===" in result.stdout
     assert "RytmRandomizer Project Status Summary" in result.stdout
     assert "=== Project Status Check ===" in result.stdout
     assert "RytmRandomizer Project Status Check" in result.stdout
     assert "- ok: True" in result.stdout
+    assert "=== V1.34 Reference Diff ===" in result.stdout
     assert "=== Git Status ===" in result.stdout
     assert result.stderr == ""
 

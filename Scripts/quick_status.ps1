@@ -35,6 +35,16 @@ if (-not $pythonExe) {
     exit 1
 }
 
+Write-Output "=== Git Branch ==="
+git branch --show-current
+Register-QuickStatusStepExit "Git Branch"
+
+Write-Output ""
+Write-Output "=== Git Latest Commit ==="
+git log --oneline -1
+Register-QuickStatusStepExit "Git Latest Commit"
+
+Write-Output ""
 Write-Output "=== Project Status Summary ==="
 & $pythonExe @pythonArgs -m rytm_randomizer.cli project-status-report --summary
 Register-QuickStatusStepExit "Project Status Summary"
@@ -43,6 +53,11 @@ Write-Output ""
 Write-Output "=== Project Status Check ==="
 & $pythonExe @pythonArgs -m rytm_randomizer.cli project-status-report --check
 Register-QuickStatusStepExit "Project Status Check"
+
+Write-Output ""
+Write-Output "=== V1.34 Reference Diff ==="
+git diff -- rytm_hybrid_randomizer_v134.py
+Register-QuickStatusStepExit "V1.34 Reference Diff"
 
 Write-Output ""
 Write-Output "=== Git Status ==="
