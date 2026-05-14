@@ -6,7 +6,39 @@ modularize-v1.34
 
 ## Current HEAD
 
-d7cd39f Add active boundary public API exports
+d4d0928 Add active boundary report public API exports
+
+## Latest Active Boundary Report Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `d4d0928 Add active boundary report public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary_report.py`
+- `tests/test_active_boundary_report.py`
+
+Behavior:
+
+- the existing read-only active boundary report now exposes an explicit
+  `__all__` public API list
+- accepted active boundary candidate remains `group_profile:2`
+- profiles `3` and `4` remain unsupported/safe in the active boundary
+- report output remains deterministic and read-only
+- the report still does not evaluate active boundary requests or construct
+  `MockMidiSender`
+- no real MIDI library, port opening, MIDI sending, active CLI command,
+  runtime execution, package metadata change, or hardware behavior was added
+
+Recommended next task:
+
+- continue with another concrete passive/mock-only alignment or visibility
+  slice, or pause at this clean checkpoint
 
 ## Latest Active Boundary Public API Exports Checkpoint
 

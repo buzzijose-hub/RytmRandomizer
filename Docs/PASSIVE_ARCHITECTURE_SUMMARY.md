@@ -8,7 +8,34 @@ modularize-v1.34
 
 Current HEAD:
 
-d7cd39f
+d4d0928
+
+## Active Boundary Report Public API Exports Checkpoint
+
+`Docs/ACTIVE_BOUNDARY_REPORT_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the tiny
+active boundary report API alignment slice.
+
+Implementation milestone:
+
+- `d4d0928 Add active boundary report public API exports`
+
+The read-only active boundary report now exposes an explicit `__all__` list:
+
+- `ACTIVE_BOUNDARY_SAFETY`
+- `CLOSEOUT_COVERAGE`
+- `REQUIRED_CONDITIONS`
+- `RESULT_METADATA_FIELDS`
+- `SAFE_FAILURE_SUMMARY`
+- `UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS`
+- `UNSUPPORTED_SOURCE_KINDS`
+- `build_active_boundary_report`
+- `format_active_boundary_report`
+- `summarize_active_boundary_report`
+
+This changes no report behavior. The report remains deterministic, read-only,
+and decoupled from active boundary evaluation. It adds no real MIDI dependency,
+port opening, MIDI sending, dispatch, command execution, runtime execution,
+active CLI behavior, package metadata change, or hardware behavior.
 
 ## Active Boundary Public API Exports Checkpoint
 

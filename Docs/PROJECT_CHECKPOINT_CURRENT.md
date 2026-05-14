@@ -21,7 +21,45 @@ modularize-v1.34
 
 Current HEAD:
 
-d7cd39f Add active boundary public API exports
+d4d0928 Add active boundary report public API exports
+
+## Active Boundary Report Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_REPORT_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `d4d0928 Add active boundary report public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary_report.py`
+- `tests/test_active_boundary_report.py`
+
+The read-only active boundary report now exposes an explicit `__all__` public
+API list:
+
+- `ACTIVE_BOUNDARY_SAFETY`
+- `CLOSEOUT_COVERAGE`
+- `REQUIRED_CONDITIONS`
+- `RESULT_METADATA_FIELDS`
+- `SAFE_FAILURE_SUMMARY`
+- `UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS`
+- `UNSUPPORTED_SOURCE_KINDS`
+- `build_active_boundary_report`
+- `format_active_boundary_report`
+- `summarize_active_boundary_report`
+
+Existing active boundary report behavior remains unchanged. The report remains
+read-only, deterministic, and decoupled from active boundary request
+evaluation. It does not construct `MockMidiSender`, import MIDI libraries, open
+ports, send MIDI, dispatch commands, or touch hardware.
+
+This adds no real MIDI dependency, `mido`, `rtmidi`, port discovery, port
+opening, MIDI sending, runtime execution, dispatch, command execution, active
+CLI command, package metadata change, or hardware behavior.
 
 ## Active Boundary Public API Exports Checkpoint
 
