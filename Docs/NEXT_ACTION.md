@@ -6,7 +6,38 @@ modularize-v1.34
 
 ## Current HEAD
 
-e32defc Add real MIDI adapter public API exports
+d7cd39f Add active boundary public API exports
+
+## Latest Active Boundary Public API Exports Checkpoint
+
+The latest implementation checkpoint is:
+
+- `Docs/ACTIVE_BOUNDARY_PUBLIC_API_EXPORTS_CHECKPOINT.md`
+
+Implementation milestone:
+
+- `d7cd39f Add active boundary public API exports`
+
+Files changed by the milestone:
+
+- `rytm_randomizer/active_boundary.py`
+- `tests/test_active_boundary.py`
+
+Behavior:
+
+- the existing mock-only active boundary now exposes an explicit `__all__`
+  public API list
+- accepted candidate remains `group_profile:2`
+- profile `3` and profile `4` remain unsupported/safe in the active boundary
+- missing arming, missing dry-run confirmation, unsupported source kinds, and
+  unknown/unsupported keys still fail safely
+- no real MIDI library, port opening, MIDI sending, active CLI command,
+  runtime execution, package metadata change, or hardware behavior was added
+
+Recommended next task:
+
+- continue with another concrete passive/mock-only alignment or visibility
+  slice, or pause at this clean checkpoint
 
 ## Latest Real MIDI Adapter Public API Exports Checkpoint
 

@@ -8,7 +8,36 @@ modularize-v1.34
 
 Current HEAD:
 
-e32defc
+d7cd39f
+
+## Active Boundary Public API Exports Checkpoint
+
+`Docs/ACTIVE_BOUNDARY_PUBLIC_API_EXPORTS_CHECKPOINT.md` records the tiny
+active boundary API alignment slice.
+
+Implementation milestone:
+
+- `d7cd39f Add active boundary public API exports`
+
+The mock-only active boundary now exposes an explicit `__all__` list:
+
+- `ACTIVE_BOUNDARY_NAME`
+- `SUPPORTED_CANDIDATE`
+- `SUPPORTED_SOURCE_KEY`
+- `SUPPORTED_SOURCE_KIND`
+- `ActiveBoundaryError`
+- `ActiveBoundaryRequest`
+- `ActiveBoundaryResult`
+- `evaluate_mock_active_boundary`
+
+This changes no active boundary behavior. The accepted candidate remains
+`group_profile:2`; profile `3` and profile `4` remain unsupported/safe in the
+active boundary. Missing arming, missing dry-run confirmation, unsupported
+source kinds, and unknown/unsupported keys still fail safely.
+
+This adds no real MIDI dependency, port opening, MIDI sending, dispatch,
+command execution, runtime execution, active CLI behavior, package metadata
+change, or hardware behavior.
 
 ## Real MIDI Adapter Public API Exports Checkpoint
 
