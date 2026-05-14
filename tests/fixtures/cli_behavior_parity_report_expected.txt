@@ -15,6 +15,13 @@ Accepted Packet Coverage:
 Selected Isolated Pad Packet Coverage:
 - Packet 11A: L - selected isolated pad target intent
 - Packet 11B: PZ - selected isolated pad anchor-return readiness
+Pad Lane Packet Coverage:
+- Packet 6: Pad 2 secondary lane - P2B, P2H, P2C, P2F, P2T, P2P, P2G, P2R, P2X, P2Z - Pad 2 lane behavior for the current read-only phase
+- Packet 6 deferred/safe: P2M
+- Packet 7: Pad 3 SY Raw lane - P3A, SA, SL, SB, SX, SW, P3R, P3X - Pad 3 lane behavior for the current read-only phase
+- Packet 7 deferred/safe: P3M
+- Packet 8: Pad 4 BD Acoustic lane - P4A, P4R, P4X - Pad 4 command-helper scope for the current read-only phase
+- Packet 8 deferred/safe: P4M
 Runtime-Adjacent Mock-Only Safe Failures:
 - PZ
 - B

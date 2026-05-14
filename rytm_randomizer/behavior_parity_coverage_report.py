@@ -9,6 +9,36 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from .behavior_pad2_lane import (
+    DEFERRED_PACKET_6_PAD2_LANE_KEYS,
+    PACKET_6A_PAD2_LANE_KEYS,
+    PACKET_6B_PAD2_LANE_KEYS,
+    PACKET_6C_PAD2_LANE_KEYS,
+    PACKET_6D_PAD2_LANE_KEYS,
+    PACKET_6E_PAD2_LANE_KEYS,
+    PACKET_6F_PAD2_LANE_KEYS,
+    PACKET_6G_PAD2_LANE_KEYS,
+    PACKET_6H_PAD2_LANE_KEYS,
+    PACKET_6I_PAD2_LANE_KEYS,
+    PACKET_6J_PAD2_LANE_KEYS,
+)
+from .behavior_pad3_lane import (
+    DEFERRED_PACKET_7_PAD3_LANE_KEYS,
+    PACKET_7A_PAD3_LANE_KEYS,
+    PACKET_7B_PAD3_LANE_KEYS,
+    PACKET_7C_PAD3_LANE_KEYS,
+    PACKET_7D_PAD3_LANE_KEYS,
+    PACKET_7E_PAD3_LANE_KEYS,
+    PACKET_7F_PAD3_LANE_KEYS,
+    PACKET_7G_PAD3_LANE_KEYS,
+    PACKET_7H_PAD3_LANE_KEYS,
+)
+from .behavior_pad4_lane import (
+    DEFERRED_PACKET_8_PAD4_LANE_KEYS,
+    PACKET_8A_PAD4_LANE_KEYS,
+    PACKET_8B_PAD4_LANE_KEYS,
+    PACKET_8C_PAD4_LANE_KEYS,
+)
 from .behavior_selected_isolated_pad import (
     PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
     PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
@@ -39,6 +69,54 @@ SELECTED_ISOLATED_PAD_PACKET_COVERAGE = (
         "packet": "11B",
         "command_keys": PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
         "coverage": "selected isolated pad anchor-return readiness",
+    },
+)
+
+PAD_LANE_PACKET_COVERAGE = (
+    {
+        "packet": "6",
+        "lane": "Pad 2 secondary lane",
+        "command_keys": (
+            PACKET_6A_PAD2_LANE_KEYS
+            + PACKET_6B_PAD2_LANE_KEYS
+            + PACKET_6C_PAD2_LANE_KEYS
+            + PACKET_6D_PAD2_LANE_KEYS
+            + PACKET_6E_PAD2_LANE_KEYS
+            + PACKET_6F_PAD2_LANE_KEYS
+            + PACKET_6G_PAD2_LANE_KEYS
+            + PACKET_6H_PAD2_LANE_KEYS
+            + PACKET_6I_PAD2_LANE_KEYS
+            + PACKET_6J_PAD2_LANE_KEYS
+        ),
+        "deferred_keys": DEFERRED_PACKET_6_PAD2_LANE_KEYS,
+        "coverage": "Pad 2 lane behavior for the current read-only phase",
+    },
+    {
+        "packet": "7",
+        "lane": "Pad 3 SY Raw lane",
+        "command_keys": (
+            PACKET_7A_PAD3_LANE_KEYS
+            + PACKET_7B_PAD3_LANE_KEYS
+            + PACKET_7C_PAD3_LANE_KEYS
+            + PACKET_7D_PAD3_LANE_KEYS
+            + PACKET_7E_PAD3_LANE_KEYS
+            + PACKET_7F_PAD3_LANE_KEYS
+            + PACKET_7G_PAD3_LANE_KEYS
+            + PACKET_7H_PAD3_LANE_KEYS
+        ),
+        "deferred_keys": DEFERRED_PACKET_7_PAD3_LANE_KEYS,
+        "coverage": "Pad 3 lane behavior for the current read-only phase",
+    },
+    {
+        "packet": "8",
+        "lane": "Pad 4 BD Acoustic lane",
+        "command_keys": (
+            PACKET_8A_PAD4_LANE_KEYS
+            + PACKET_8B_PAD4_LANE_KEYS
+            + PACKET_8C_PAD4_LANE_KEYS
+        ),
+        "deferred_keys": DEFERRED_PACKET_8_PAD4_LANE_KEYS,
+        "coverage": "Pad 4 command-helper scope for the current read-only phase",
     },
 )
 
@@ -122,6 +200,7 @@ def build_behavior_parity_coverage_report():
         "selected_isolated_pad_packet_coverage": deepcopy(
             SELECTED_ISOLATED_PAD_PACKET_COVERAGE
         ),
+        "pad_lane_packet_coverage": deepcopy(PAD_LANE_PACKET_COVERAGE),
         "runtime_adjacent_mock_only_safe_failures": tuple(
             RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES
         ),
@@ -155,6 +234,11 @@ def summarize_behavior_parity_coverage_report(report=None):
         "selected_isolated_pad_packet_count": len(
             source_report["selected_isolated_pad_packet_coverage"]
         ),
+        "pad_lane_packet_count": len(source_report["pad_lane_packet_coverage"]),
+        "pad_lane_command_count": sum(
+            len(item["command_keys"])
+            for item in source_report["pad_lane_packet_coverage"]
+        ),
         "runtime_adjacent_safe_failure_count": len(
             source_report["runtime_adjacent_mock_only_safe_failures"]
         ),
@@ -185,6 +269,16 @@ def format_behavior_parity_coverage_report(report=None):
     for item in source_report["selected_isolated_pad_packet_coverage"]:
         command_keys = ", ".join(item["command_keys"])
         lines.append(f"- Packet {item['packet']}: {command_keys} - {item['coverage']}")
+
+    lines.append("Pad Lane Packet Coverage:")
+    for item in source_report["pad_lane_packet_coverage"]:
+        command_keys = ", ".join(item["command_keys"])
+        lines.append(
+            f"- Packet {item['packet']}: {item['lane']} - "
+            f"{command_keys} - {item['coverage']}"
+        )
+        deferred_keys = ", ".join(item["deferred_keys"])
+        lines.append(f"- Packet {item['packet']} deferred/safe: {deferred_keys}")
 
     lines.append("Runtime-Adjacent Mock-Only Safe Failures:")
     for item in source_report["runtime_adjacent_mock_only_safe_failures"]:
