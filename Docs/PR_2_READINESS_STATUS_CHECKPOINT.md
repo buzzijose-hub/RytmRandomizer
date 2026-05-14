@@ -185,6 +185,10 @@ protocol keeps external implementation work quarantined until branch metadata,
 test results, V1.34 status, MIDI/hardware safety status, and closeout evidence
 are reviewed.
 
+The owner-facing request packet for Eddie is:
+
+- `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md`
+
 ## Known Follow-Ups
 
 Safe follow-up options:

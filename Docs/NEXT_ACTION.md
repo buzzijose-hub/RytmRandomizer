@@ -1,5 +1,38 @@
 # Next Action
 
+## Latest Eddie Implementation Review Request Packet
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New request packet:
+
+- `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md`
+
+Purpose:
+
+- give the owner a short message to send Eddie when his larger branch is ready
+- request branch name, commit hash, test output, V1.34 status, and MIDI/
+  hardware safety status
+- keep Eddie's implementation branch intake separate from direct merge
+
+Decision:
+
+- Eddie's larger implementation branch has not been observed on the remote yet
+- wait for branch/PR details before review
+- keep PR #2 as the stable foundation PR while waiting
+
+Recommended next task:
+
+- send Eddie the short WhatsApp version from the request packet
+- when he pushes the branch or PR, run the implementation branch intake
+  protocol
+
 ## Latest Collaborator Implementation Branch Intake Protocol
 
 Current review branch:

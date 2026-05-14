@@ -252,6 +252,10 @@ behavior was added. We'll run our closeout and classify the changes into safe
 integration packets before merging anything.
 ```
 
+For a shorter owner-facing packet, use:
+
+- `Docs/EDDIE_IMPLEMENTATION_REVIEW_REQUEST_PACKET.md`
+
 ## Decision
 
 No collaborator implementation branch is merged by this protocol.
