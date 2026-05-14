@@ -284,10 +284,12 @@ PAD1_LANE_KEYS = (
 # --------------------------------------------------------------------------
 # The single command registry.
 #
-# TODO(integration): source registry data from rytm_randomizer.data once
-# WS-F lands. Until then this registry is self-contained: the values are the
-# same static facts that the four historical behavior_padN_lane modules
-# expressed as parallel dicts / hand-written result functions.
+# This registry holds pad-lane *descriptor* facts (lane families, depth
+# dependencies, intent/dependency lines) — the same static facts the four
+# historical behavior_padN_lane modules expressed as parallel dicts /
+# hand-written result functions. This is a distinct data domain from
+# rytm_randomizer.data (param maps / scenes / profiles), so it is kept
+# self-contained here rather than sourced from that layer.
 # --------------------------------------------------------------------------
 def _pad1(
     command_key: str,
