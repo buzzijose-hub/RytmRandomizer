@@ -6,7 +6,40 @@ modularize-v1.34
 
 ## Current HEAD
 
-78ef58a Add collaborator review status visibility
+d6380ce Add collaborator review status visibility checkpoint
+
+## Latest Collaborator Review Status Visibility Checkpoint Review
+
+The latest documentation review gate is:
+
+- `Docs/COLLABORATOR_REVIEW_STATUS_VISIBILITY_CHECKPOINT_REVIEW.md`
+
+Accepted checkpoint:
+
+- `Docs/COLLABORATOR_REVIEW_STATUS_VISIBILITY_CHECKPOINT.md`
+
+Accepted milestones:
+
+- `78ef58a Add collaborator review status visibility`
+- `d6380ce Add collaborator review status visibility checkpoint`
+
+Decision:
+
+- collaborator review status visibility is accepted as the current passive
+  dashboard state
+- Eddie's external AI-assisted review remains pending until findings arrive as
+  text or Markdown
+- findings remain advisory until verified locally and classified
+- no review finding, package metadata change, runtime execution, dispatch,
+  real MIDI library, port opening, MIDI sending, active CLI command, hardware
+  behavior, or V1.34 reference change is authorized by this review
+
+Recommended next task:
+
+- continue with a safe passive/mock-only slice while waiting for Eddie's full
+  review text
+- if review text arrives next, create a collaborator review triage document
+  before implementing any findings
 
 ## Latest Collaborator Review Status Visibility Checkpoint
 
