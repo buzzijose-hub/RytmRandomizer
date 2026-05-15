@@ -15,7 +15,14 @@ function Register-QuickStatusStepExit {
 }
 
 $venvPython = ".\.venv\Scripts\python.exe"
-$codexPython = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+$homePath = $HOME
+if (-not $homePath) {
+    $homePath = $env:USERPROFILE
+}
+$codexPython = $null
+if ($homePath) {
+    $codexPython = Join-Path $homePath ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+}
 $pythonExe = $null
 $pythonArgs = @()
 
@@ -26,7 +33,7 @@ if (Test-Path $venvPython) {
 } elseif (Get-Command py -ErrorAction SilentlyContinue) {
     $pythonExe = "py"
     $pythonArgs = @("-3")
-} elseif (Test-Path $codexPython) {
+} elseif ($codexPython -and (Test-Path $codexPython)) {
     $pythonExe = $codexPython
 }
 
