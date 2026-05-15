@@ -7,8 +7,41 @@ on:
 # NOTE: A coverage job (WS-I) and an e2e job (WS-R) will be added as
 # sibling jobs in this file and registered as required status checks
 # once those workstreams land. See docs/BRANCH_PROTECTION.md.
+#
+# The `architecture` job below runs the gated architecture-conformance tests
+# (tests/architecture/) on a fast ubuntu runner. The full matrix `test` job
+# already includes these tests (since `pytest` runs the whole suite), but the
+# dedicated job gives branch protection a cheap, fast-failing required check
+# named "architecture" that can be listed in
+# scripts/apply-branch-protection.sh.
 
 jobs:
+  architecture:
+    name: architecture
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Architecture tests grep `git diff` for the monolith; we need a
+          # working tree to diff against.
+          fetch-depth: 1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ALSA dev headers
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Run architecture-conformance tests
+        run: pytest tests/architecture/ -q
+
   test:
     name: test (${{ matrix.os }}, py${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

@@ -18,11 +18,14 @@ BRANCH="${BRANCH:-main}"
 # These context names must match the job names produced by .github/workflows/test.yml.
 # NOTE: when the WS-I coverage job and the WS-R e2e job land, add their
 # check names to this list (e.g. "coverage", "e2e") so they also gate merges.
+# The "architecture" check is the gated WS-T architecture-conformance suite
+# (tests/architecture/) -- it must stay green to merge into main.
 read -r -d '' PAYLOAD <<'JSON' || true
 {
   "required_status_checks": {
     "strict": true,
     "checks": [
+      { "context": "architecture" },
       { "context": "test (windows-latest, py3.11)" },
       { "context": "test (macos-latest, py3.11)" },
       { "context": "test (ubuntu-latest, py3.11)" }
