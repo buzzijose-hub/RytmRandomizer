@@ -33,6 +33,10 @@ Each step is locked against the V1.34 reference by characterization tests.
 - Further hardening: coverage policy, lint baseline, type-check baseline.
 - Out of scope for now: Pads 5-12, additional machines/profiles, new CC mappings, GUI/capture, SysEx, and Analog Four support.
 
+## Recent Cleanup
+
+- 2026-05-15: extracted `_PADN_SCAFFOLD` constants in `commands.py`; dedupes ~200 redundant metadata fields across `PAD{1,2,3,4}_COMMANDS`. No behavior change.
+
 ## Reference Docs
 
 - `docs/ARCHITECTURE_DIAGRAMS.md` -- current code-derived architecture maps.
