@@ -1,5 +1,40 @@
 # Next Action
 
+## Latest GitHub Actions Manual Gate Status Visibility Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_STATUS_VISIBILITY_CHECKPOINT.md`
+
+Purpose:
+
+- expose the manual GitHub Actions gate inside the passive project-status
+  report
+- show that local closeout is the daily no-cost feedback path
+- show that automatic PR, push, and release-tag Actions runs remain disabled
+- preserve the no-pay policy while keeping manual gated CI available
+
+Visible through:
+
+- `python -m rytm_randomizer.cli project-status-report`
+- `python -m rytm_randomizer.cli project-status-report --summary`
+- `python -m rytm_randomizer.cli project-status-report --check`
+- `python -m rytm_randomizer.cli project-status-report --json`
+
+Recommended next task:
+
+- keep waiting for Eddie's implementation branch or PR before intake
+- keep using local closeout for frequent feedback
+- manually trigger GitHub Actions only at explicit review gates
+
 ## Latest GitHub Actions Manual Gate Checkpoint
 
 Current review branch:

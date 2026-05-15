@@ -15,6 +15,9 @@ RytmRandomizer Project Status Summary
 - collaborator_implementation_branch_intake: waiting_for_branch
 - external_implementation_branch_observed: False
 - external_implementation_pr_observed: False
+- github_actions_manual_gate: manual_only
+- github_actions_auto_pr_runs: False
+- github_actions_no_pay_policy: True
 - real_midi: absent
 - port_opening: absent
 - active_execution: absent

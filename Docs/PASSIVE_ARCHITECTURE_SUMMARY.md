@@ -2,6 +2,32 @@
 
 Date: May 4, 2026
 
+## GitHub Actions Manual Gate Status Visibility
+
+The passive project-status report now includes the manual GitHub Actions gate
+status.
+
+Visible status:
+
+- `github_actions_manual_gate`: `manual_only`
+- automatic pull request runs: `False`
+- automatic push runs: `False`
+- automatic release tag runs: `False`
+- no-pay policy: `True`
+- daily feedback path: `local_closeout`
+
+The status appears in:
+
+- `project-status-report`
+- `project-status-report --summary`
+- `project-status-report --check`
+- `project-status-report --json`
+
+This is passive reporting only. It does not change runtime behavior,
+dispatch, active behavior, MIDI sending, MIDI port opening, hardware behavior,
+package publication, automatic GitHub Actions triggers, collaborator branch
+intake, or the V1.34 reference.
+
 ## GitHub Actions Manual Gate
 
 GitHub Actions are currently configured as manual gates to avoid automatic

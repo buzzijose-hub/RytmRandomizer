@@ -127,6 +127,28 @@ COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_STATUS = {
     "hardware_behavior": "absent",
 }
 
+GITHUB_ACTIONS_MANUAL_GATE_STATUS = {
+    "status": "manual_only",
+    "policy": "gated_pipeline_only",
+    "daily_feedback": "local_closeout",
+    "default_test_workflow": ".github/workflows/test.yml",
+    "full_matrix_workflow": ".github/workflows/test-full-matrix.yml",
+    "release_workflow": ".github/workflows/release.yml",
+    "codeql_workflow": ".github/workflows/codeql.yml",
+    "automatic_pull_request_runs": False,
+    "automatic_push_runs": False,
+    "automatic_release_tag_runs": False,
+    "manual_gate_required_for_pr_readiness": True,
+    "manual_gate_required_for_major_merge": True,
+    "manual_gate_required_for_collaborator_intake": True,
+    "actions_minute_policy": "spend_only_on_explicit_gate",
+    "no_pay_policy": True,
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+    "hardware_behavior": "absent",
+}
+
 PROJECT_STATUS_SAFETY = {
     "real_midi": "absent",
     "port_opening": "absent",
@@ -194,6 +216,15 @@ PROJECT_STATUS_CHECKS = (
     ("collaborator_implementation_branch_intake.port_opening", "absent"),
     ("collaborator_implementation_branch_intake.active_behavior", "absent"),
     ("collaborator_implementation_branch_intake.hardware_behavior", "absent"),
+    ("github_actions_manual_gate.status", "manual_only"),
+    ("github_actions_manual_gate.automatic_pull_request_runs", False),
+    ("github_actions_manual_gate.automatic_push_runs", False),
+    ("github_actions_manual_gate.automatic_release_tag_runs", False),
+    ("github_actions_manual_gate.no_pay_policy", True),
+    ("github_actions_manual_gate.real_midi", "absent"),
+    ("github_actions_manual_gate.port_opening", "absent"),
+    ("github_actions_manual_gate.active_behavior", "absent"),
+    ("github_actions_manual_gate.hardware_behavior", "absent"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -235,6 +266,7 @@ def build_project_status_report():
         "collaborator_implementation_branch_intake": (
             COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_STATUS
         ),
+        "github_actions_manual_gate": GITHUB_ACTIONS_MANUAL_GATE_STATUS,
         "closeout": CLOSEOUT_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
@@ -314,6 +346,15 @@ def summarize_project_status_report(report=None):
         "external_implementation_pr_observed": source_report[
             "collaborator_implementation_branch_intake"
         ]["implementation_pr_observed"],
+        "github_actions_manual_gate": source_report["github_actions_manual_gate"][
+            "status"
+        ],
+        "github_actions_auto_pr_runs": source_report["github_actions_manual_gate"][
+            "automatic_pull_request_runs"
+        ],
+        "github_actions_no_pay_policy": source_report["github_actions_manual_gate"][
+            "no_pay_policy"
+        ],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
@@ -358,6 +399,12 @@ def format_project_status_summary(report=None):
         (
             "- external_implementation_pr_observed: "
             f"{summary['external_implementation_pr_observed']}"
+        ),
+        f"- github_actions_manual_gate: {summary['github_actions_manual_gate']}",
+        f"- github_actions_auto_pr_runs: {summary['github_actions_auto_pr_runs']}",
+        (
+            "- github_actions_no_pay_policy: "
+            f"{summary['github_actions_no_pay_policy']}"
         ),
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
@@ -405,6 +452,7 @@ def format_project_status_report(report=None):
     collaborator = source_report["collaborator_review_intake"]
     triage_template = source_report["collaborator_review_triage_template"]
     implementation_intake = source_report["collaborator_implementation_branch_intake"]
+    actions_gate = source_report["github_actions_manual_gate"]
 
     lines = [
         source_report["title"],
@@ -514,6 +562,41 @@ def format_project_status_report(report=None):
             f"- port_opening: {implementation_intake['port_opening']}",
             f"- active_behavior: {implementation_intake['active_behavior']}",
             f"- hardware_behavior: {implementation_intake['hardware_behavior']}",
+            "GitHub Actions Manual Gate:",
+            f"- status: {actions_gate['status']}",
+            f"- policy: {actions_gate['policy']}",
+            f"- daily_feedback: {actions_gate['daily_feedback']}",
+            f"- default_test_workflow: {actions_gate['default_test_workflow']}",
+            f"- full_matrix_workflow: {actions_gate['full_matrix_workflow']}",
+            f"- release_workflow: {actions_gate['release_workflow']}",
+            f"- codeql_workflow: {actions_gate['codeql_workflow']}",
+            (
+                "- automatic_pull_request_runs: "
+                f"{actions_gate['automatic_pull_request_runs']}"
+            ),
+            f"- automatic_push_runs: {actions_gate['automatic_push_runs']}",
+            (
+                "- automatic_release_tag_runs: "
+                f"{actions_gate['automatic_release_tag_runs']}"
+            ),
+            (
+                "- manual_gate_required_for_pr_readiness: "
+                f"{actions_gate['manual_gate_required_for_pr_readiness']}"
+            ),
+            (
+                "- manual_gate_required_for_major_merge: "
+                f"{actions_gate['manual_gate_required_for_major_merge']}"
+            ),
+            (
+                "- manual_gate_required_for_collaborator_intake: "
+                f"{actions_gate['manual_gate_required_for_collaborator_intake']}"
+            ),
+            f"- actions_minute_policy: {actions_gate['actions_minute_policy']}",
+            f"- no_pay_policy: {actions_gate['no_pay_policy']}",
+            f"- real_midi: {actions_gate['real_midi']}",
+            f"- port_opening: {actions_gate['port_opening']}",
+            f"- active_behavior: {actions_gate['active_behavior']}",
+            f"- hardware_behavior: {actions_gate['hardware_behavior']}",
             "Closeout:",
         ]
     )

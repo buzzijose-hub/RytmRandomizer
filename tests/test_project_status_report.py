@@ -203,6 +203,34 @@ def test_project_status_report_records_collaborator_implementation_branch_intake
     }
 
 
+def test_project_status_report_records_manual_github_actions_gate():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["github_actions_manual_gate"] == {
+        "status": "manual_only",
+        "policy": "gated_pipeline_only",
+        "daily_feedback": "local_closeout",
+        "default_test_workflow": ".github/workflows/test.yml",
+        "full_matrix_workflow": ".github/workflows/test-full-matrix.yml",
+        "release_workflow": ".github/workflows/release.yml",
+        "codeql_workflow": ".github/workflows/codeql.yml",
+        "automatic_pull_request_runs": False,
+        "automatic_push_runs": False,
+        "automatic_release_tag_runs": False,
+        "manual_gate_required_for_pr_readiness": True,
+        "manual_gate_required_for_major_merge": True,
+        "manual_gate_required_for_collaborator_intake": True,
+        "actions_minute_policy": "spend_only_on_explicit_gate",
+        "no_pay_policy": True,
+        "real_midi": "absent",
+        "port_opening": "absent",
+        "active_behavior": "absent",
+        "hardware_behavior": "absent",
+    }
+
+
 def test_project_status_summary_is_deterministic():
     from rytm_randomizer.project_status_report import summarize_project_status_report
 
@@ -224,6 +252,9 @@ def test_project_status_summary_is_deterministic():
         "collaborator_implementation_branch_intake": "waiting_for_branch",
         "external_implementation_branch_observed": False,
         "external_implementation_pr_observed": False,
+        "github_actions_manual_gate": "manual_only",
+        "github_actions_auto_pr_runs": False,
+        "github_actions_no_pay_policy": True,
         "real_midi": "absent",
         "port_opening": "absent",
         "active_execution": "absent",
@@ -257,6 +288,9 @@ def test_project_status_summary_lines_are_deterministic():
         "- collaborator_implementation_branch_intake: waiting_for_branch",
         "- external_implementation_branch_observed: False",
         "- external_implementation_pr_observed: False",
+        "- github_actions_manual_gate: manual_only",
+        "- github_actions_auto_pr_runs: False",
+        "- github_actions_no_pay_policy: True",
         "- real_midi: absent",
         "- port_opening: absent",
         "- active_execution: absent",
@@ -330,6 +364,15 @@ def test_project_status_check_passes_for_current_report():
             "collaborator_implementation_branch_intake.port_opening": "absent",
             "collaborator_implementation_branch_intake.active_behavior": "absent",
             "collaborator_implementation_branch_intake.hardware_behavior": "absent",
+            "github_actions_manual_gate.status": "manual_only",
+            "github_actions_manual_gate.automatic_pull_request_runs": False,
+            "github_actions_manual_gate.automatic_push_runs": False,
+            "github_actions_manual_gate.automatic_release_tag_runs": False,
+            "github_actions_manual_gate.no_pay_policy": True,
+            "github_actions_manual_gate.real_midi": "absent",
+            "github_actions_manual_gate.port_opening": "absent",
+            "github_actions_manual_gate.active_behavior": "absent",
+            "github_actions_manual_gate.hardware_behavior": "absent",
             "source.in_memory_only": True,
             "source.writes_files": False,
             "closeout.failure_propagation": "guarded",
@@ -425,6 +468,15 @@ def test_project_status_check_lines_are_deterministic():
         "- collaborator_implementation_branch_intake.port_opening: absent",
         "- collaborator_implementation_branch_intake.active_behavior: absent",
         "- collaborator_implementation_branch_intake.hardware_behavior: absent",
+        "- github_actions_manual_gate.status: manual_only",
+        "- github_actions_manual_gate.automatic_pull_request_runs: False",
+        "- github_actions_manual_gate.automatic_push_runs: False",
+        "- github_actions_manual_gate.automatic_release_tag_runs: False",
+        "- github_actions_manual_gate.no_pay_policy: True",
+        "- github_actions_manual_gate.real_midi: absent",
+        "- github_actions_manual_gate.port_opening: absent",
+        "- github_actions_manual_gate.active_behavior: absent",
+        "- github_actions_manual_gate.hardware_behavior: absent",
         "- source.in_memory_only: True",
         "- source.writes_files: False",
         "- closeout.failure_propagation: guarded",
@@ -550,6 +602,26 @@ def test_formatted_project_status_report_is_deterministic():
         "- port_opening: absent",
         "- active_behavior: absent",
         "- hardware_behavior: absent",
+        "GitHub Actions Manual Gate:",
+        "- status: manual_only",
+        "- policy: gated_pipeline_only",
+        "- daily_feedback: local_closeout",
+        "- default_test_workflow: .github/workflows/test.yml",
+        "- full_matrix_workflow: .github/workflows/test-full-matrix.yml",
+        "- release_workflow: .github/workflows/release.yml",
+        "- codeql_workflow: .github/workflows/codeql.yml",
+        "- automatic_pull_request_runs: False",
+        "- automatic_push_runs: False",
+        "- automatic_release_tag_runs: False",
+        "- manual_gate_required_for_pr_readiness: True",
+        "- manual_gate_required_for_major_merge: True",
+        "- manual_gate_required_for_collaborator_intake: True",
+        "- actions_minute_policy: spend_only_on_explicit_gate",
+        "- no_pay_policy: True",
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_behavior: absent",
+        "- hardware_behavior: absent",
         "Closeout:",
         "- closeout_contract: present",
         "- failure_propagation: guarded",
@@ -604,6 +676,11 @@ def test_project_status_report_json_is_deterministic_and_parseable():
         ]
         is False
     )
+    assert parsed["github_actions_manual_gate"]["status"] == "manual_only"
+    assert (
+        parsed["github_actions_manual_gate"]["automatic_pull_request_runs"] is False
+    )
+    assert parsed["github_actions_manual_gate"]["no_pay_policy"] is True
     assert parsed["safety"]["real_midi"] == "absent"
     assert parsed["safety"]["hardware_required"] is False
     assert parsed["source"]["in_memory_only"] is True
@@ -621,6 +698,7 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     report["collaborator_review_intake"]["status"] = "MUTATED"
     report["collaborator_review_triage_template"]["status"] = "MUTATED"
     report["collaborator_implementation_branch_intake"]["status"] = "MUTATED"
+    report["github_actions_manual_gate"]["status"] = "MUTATED"
 
     fresh_report = build_project_status_report()
 
@@ -634,6 +712,7 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
         fresh_report["collaborator_implementation_branch_intake"]["status"]
         == "waiting_for_branch"
     )
+    assert fresh_report["github_actions_manual_gate"]["status"] == "manual_only"
 
 
 def test_project_status_report_imports_no_real_midi_libraries():
@@ -666,6 +745,7 @@ if __name__ == "__main__":
     test_project_status_report_records_collaborator_review_intake_checkpoint()
     test_project_status_report_records_collaborator_review_triage_template()
     test_project_status_report_records_collaborator_implementation_branch_intake()
+    test_project_status_report_records_manual_github_actions_gate()
     test_project_status_summary_is_deterministic()
     test_project_status_summary_lines_are_deterministic()
     test_project_status_check_passes_for_current_report()

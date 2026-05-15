@@ -3,6 +3,38 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## GitHub Actions Manual Gate Status Visibility Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_STATUS_VISIBILITY_CHECKPOINT.md`
+
+The passive project-status report now records the manual GitHub Actions gate:
+
+- status: `manual_only`
+- policy: `gated_pipeline_only`
+- daily feedback: `local_closeout`
+- automatic pull request runs: `False`
+- automatic push runs: `False`
+- automatic release tag runs: `False`
+- Actions minute policy: `spend_only_on_explicit_gate`
+- no-pay policy: `True`
+
+This is visible through the existing `project-status-report` CLI command in
+full, summary, check, and JSON modes.
+
+This checkpoint adds passive status visibility only. It adds no real MIDI,
+ports, dispatch, active behavior, hardware behavior, package publication,
+automatic Actions trigger, collaborator branch merge, or V1.34 reference edit.
+
 ## GitHub Actions Manual Gate Checkpoint
 
 Current review branch:

@@ -93,6 +93,26 @@ Collaborator Implementation Branch Intake:
 - port_opening: absent
 - active_behavior: absent
 - hardware_behavior: absent
+GitHub Actions Manual Gate:
+- status: manual_only
+- policy: gated_pipeline_only
+- daily_feedback: local_closeout
+- default_test_workflow: .github/workflows/test.yml
+- full_matrix_workflow: .github/workflows/test-full-matrix.yml
+- release_workflow: .github/workflows/release.yml
+- codeql_workflow: .github/workflows/codeql.yml
+- automatic_pull_request_runs: False
+- automatic_push_runs: False
+- automatic_release_tag_runs: False
+- manual_gate_required_for_pr_readiness: True
+- manual_gate_required_for_major_merge: True
+- manual_gate_required_for_collaborator_intake: True
+- actions_minute_policy: spend_only_on_explicit_gate
+- no_pay_policy: True
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
 Closeout:
 - closeout_contract: present
 - failure_propagation: guarded

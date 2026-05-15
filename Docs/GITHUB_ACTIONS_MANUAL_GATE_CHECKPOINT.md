@@ -132,3 +132,13 @@ has reached a meaningful review checkpoint.
 
 Continue waiting for Eddie's implementation branch or PR before running the
 collaborator implementation intake protocol.
+
+## Follow-Up Status Visibility
+
+Follow-up checkpoint:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_STATUS_VISIBILITY_CHECKPOINT.md`
+
+The passive project-status report now exposes the manual-only Actions policy,
+the local closeout daily feedback path, disabled automatic PR/push/release-tag
+runs, and the no-pay policy.

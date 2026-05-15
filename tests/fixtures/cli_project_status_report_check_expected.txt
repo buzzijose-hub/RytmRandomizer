@@ -41,6 +41,15 @@ RytmRandomizer Project Status Check
 - collaborator_implementation_branch_intake.port_opening: absent
 - collaborator_implementation_branch_intake.active_behavior: absent
 - collaborator_implementation_branch_intake.hardware_behavior: absent
+- github_actions_manual_gate.status: manual_only
+- github_actions_manual_gate.automatic_pull_request_runs: False
+- github_actions_manual_gate.automatic_push_runs: False
+- github_actions_manual_gate.automatic_release_tag_runs: False
+- github_actions_manual_gate.no_pay_policy: True
+- github_actions_manual_gate.real_midi: absent
+- github_actions_manual_gate.port_opening: absent
+- github_actions_manual_gate.active_behavior: absent
+- github_actions_manual_gate.hardware_behavior: absent
 - source.in_memory_only: True
 - source.writes_files: False
 - closeout.failure_propagation: guarded
