@@ -2,6 +2,27 @@
 
 Date: May 4, 2026
 
+## Collaborator Intake Readiness Report CLI
+
+The collaborator intake readiness report is now visible from the passive CLI:
+
+- `python -m rytm_randomizer.cli collaborator-intake-readiness-report`
+
+Help is available through:
+
+- `python -m rytm_randomizer.cli collaborator-intake-readiness-report --help`
+
+The command is read-only and deterministic. It prints the existing passive
+report and does not query GitHub or mutate repository state.
+
+The passive project-status report now includes this command in its passive CLI
+visibility list, bringing the passive CLI command count to `21`.
+
+This is passive reporting only. It does not change runtime behavior,
+dispatch, active behavior, MIDI sending, MIDI port opening, hardware behavior,
+package publication, automatic GitHub Actions triggers, collaborator branch
+intake, or the V1.34 reference.
+
 ## Collaborator Intake Readiness Report
 
 The project now has a passive in-memory collaborator intake readiness report:

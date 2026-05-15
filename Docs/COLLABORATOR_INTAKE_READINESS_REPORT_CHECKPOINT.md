@@ -121,3 +121,16 @@ Optional later passive-only work:
 
 - expose this report through CLI if direct operator visibility becomes useful
 - add it to the broader project status report after a separate small review
+
+## Follow-Up CLI Visibility
+
+Follow-up checkpoint:
+
+- `Docs/COLLABORATOR_INTAKE_READINESS_REPORT_CLI_CHECKPOINT.md`
+
+The readiness report is now exposed through the passive CLI:
+
+- `python -m rytm_randomizer.cli collaborator-intake-readiness-report`
+
+The passive project-status report now includes the command in its passive CLI
+visibility list.

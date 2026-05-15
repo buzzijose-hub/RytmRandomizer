@@ -7,7 +7,8 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "anchor-profile-report | behavior-parity-report | "
+    "collaborator-intake-readiness-report | inspect-command <key> | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
@@ -27,6 +28,7 @@ Usage:
   python -m rytm_randomizer.cli mock-runtime-active-bridge-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli collaborator-intake-readiness-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -57,6 +59,8 @@ Commands:
                      Print the read-only anchor/profile behavior report.
   behavior-parity-report
                      Print the read-only behavior-parity coverage report.
+  collaborator-intake-readiness-report
+                     Print the read-only collaborator intake readiness report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -766,6 +770,26 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required"""
+COLLABORATOR_INTAKE_READINESS_REPORT_HELP = """RytmRandomizer passive CLI: collaborator-intake-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli collaborator-intake-readiness-report
+  python -m rytm_randomizer.cli collaborator-intake-readiness-report --help
+
+Behavior:
+  Prints the deterministic read-only collaborator intake readiness report to stdout.
+
+Safety:
+  passive/read-only
+  no GitHub mutation
+  no branch merge
+  no MIDI sending
+  no port opening
+  no active execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required"""
 
 
 def main(argv=None):
@@ -806,6 +830,10 @@ def main(argv=None):
 
     if args == ["behavior-parity-report", "--help"]:
         sys.stdout.write(f"{BEHAVIOR_PARITY_REPORT_HELP}\n")
+        return 0
+
+    if args == ["collaborator-intake-readiness-report", "--help"]:
+        sys.stdout.write(f"{COLLABORATOR_INTAKE_READINESS_REPORT_HELP}\n")
         return 0
 
     if args == ["list-commands", "--help"]:
@@ -936,6 +964,15 @@ def main(argv=None):
         from .behavior_parity_coverage_report import format_behavior_parity_coverage_report
 
         sys.stdout.write("\n".join(format_behavior_parity_coverage_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["collaborator-intake-readiness-report"]:
+        from .collaborator_intake_readiness_report import (
+            format_collaborator_intake_readiness_report,
+        )
+
+        sys.stdout.write("\n".join(format_collaborator_intake_readiness_report()))
         sys.stdout.write("\n")
         return 0
 

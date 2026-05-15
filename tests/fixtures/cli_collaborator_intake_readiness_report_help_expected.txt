@@ -1,0 +1,20 @@
+RytmRandomizer passive CLI: collaborator-intake-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli collaborator-intake-readiness-report
+  python -m rytm_randomizer.cli collaborator-intake-readiness-report --help
+
+Behavior:
+  Prints the deterministic read-only collaborator intake readiness report to stdout.
+
+Safety:
+  passive/read-only
+  no GitHub mutation
+  no branch merge
+  no MIDI sending
+  no port opening
+  no active execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required

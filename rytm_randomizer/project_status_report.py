@@ -20,6 +20,7 @@ PASSIVE_CLI_COMMANDS = (
     "mock-runtime-active-bridge-report",
     "anchor-profile-report",
     "behavior-parity-report",
+    "collaborator-intake-readiness-report",
     "list-commands",
     "list-scenes",
     "list-group-profiles",

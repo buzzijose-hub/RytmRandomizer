@@ -1,5 +1,41 @@
 # Next Action
 
+## Latest Collaborator Intake Readiness Report CLI Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_INTAKE_READINESS_REPORT_CLI_CHECKPOINT.md`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli collaborator-intake-readiness-report`
+
+Purpose:
+
+- make Eddie implementation intake readiness visible from the passive CLI
+- keep the command read-only and deterministic
+- record that PR #1 is the review plan source, not implementation
+- record that PR #2 is the draft execution-plan foundation branch
+
+Project status update:
+
+- passive CLI command count is now `21`
+- project-status report lists `collaborator-intake-readiness-report`
+
+Recommended next task:
+
+- keep waiting for Eddie's implementation branch or PR before intake
+- when Eddie sends a branch or PR, run the collaborator implementation intake
+  protocol before review or merge
+
 ## Latest Collaborator Intake Readiness Report Checkpoint
 
 Current review branch:

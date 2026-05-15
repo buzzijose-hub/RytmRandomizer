@@ -9,7 +9,8 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "anchor-profile-report | behavior-parity-report | "
+    "collaborator-intake-readiness-report | inspect-command <key> | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
@@ -259,6 +260,16 @@ def test_behavior_parity_report_help_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_collaborator_intake_readiness_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("collaborator-intake-readiness-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_collaborator_intake_readiness_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_inspect_command_help_exits_zero_and_matches_fixture():
     result = run_cli("inspect-command", "--help")
 
@@ -497,6 +508,16 @@ def test_behavior_parity_report_command_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_collaborator_intake_readiness_report_exits_zero_and_matches_fixture():
+    result = run_cli("collaborator-intake-readiness-report")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_collaborator_intake_readiness_report_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_report_command_is_deterministic():
     first = run_cli("report")
     second = run_cli("report")
@@ -611,6 +632,17 @@ def test_anchor_profile_report_command_is_deterministic():
 def test_behavior_parity_report_command_is_deterministic():
     first = run_cli("behavior-parity-report")
     second = run_cli("behavior-parity-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_collaborator_intake_readiness_report_command_is_deterministic():
+    first = run_cli("collaborator-intake-readiness-report")
+    second = run_cli("collaborator-intake-readiness-report")
 
     assert first.returncode == 0
     assert second.returncode == 0
@@ -784,6 +816,34 @@ def test_runtime_plan_report_command_imports_no_real_midi_libraries():
                 "from rytm_randomizer.cli import main\n"
                 "with redirect_stdout(StringIO()):\n"
                 "    code = main(['runtime-plan-report'])\n"
+                "assert code == 0\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_collaborator_intake_readiness_report_imports_no_real_midi_libraries():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "from contextlib import redirect_stdout\n"
+                "from io import StringIO\n"
+                "from rytm_randomizer.cli import main\n"
+                "with redirect_stdout(StringIO()):\n"
+                "    code = main(['collaborator-intake-readiness-report'])\n"
                 "assert code == 0\n"
                 "assert 'mido' not in sys.modules\n"
                 "assert 'rtmidi' not in sys.modules\n"
@@ -1472,6 +1532,14 @@ def test_unknown_anchor_profile_report_arguments_fail_safely():
 
 def test_unknown_behavior_parity_report_arguments_fail_safely():
     result = run_cli("behavior-parity-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_unknown_collaborator_intake_readiness_report_arguments_fail_safely():
+    result = run_cli("collaborator-intake-readiness-report", "--mutate")
 
     assert result.returncode == 2
     assert result.stdout == ""

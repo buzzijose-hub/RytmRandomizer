@@ -3,6 +3,44 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Intake Readiness Report CLI Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_INTAKE_READINESS_REPORT_CLI_CHECKPOINT.md`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli collaborator-intake-readiness-report`
+
+The command prints the existing deterministic collaborator intake readiness
+report.
+
+It shows:
+
+- current status: `waiting_for_implementation_branch`
+- PR #1 as review plan source, not implementation
+- PR #2 as draft execution-plan foundation branch
+- required intake fields
+- merge policy
+- manual GitHub Actions policy
+- safety boundaries
+
+The passive project-status report now lists the new command and records a
+passive CLI command count of `21`.
+
+This checkpoint adds passive CLI visibility only. It adds no real MIDI,
+ports, dispatch, active behavior, hardware behavior, GitHub mutation, branch
+merge, package publication, automatic Actions trigger, or V1.34 reference edit.
+
 ## Collaborator Intake Readiness Report Checkpoint
 
 Current review branch:
