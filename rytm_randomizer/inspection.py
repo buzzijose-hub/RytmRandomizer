@@ -5,10 +5,9 @@ This module unifies the previously separate ``inspection``, ``preview``, and
 command metadata and returns copied dry-run reports without sending MIDI,
 opening ports, dispatching commands, or executing anything.
 
-The original public names (``inspect_command``, ``preview_command``,
-``audit_command_registry``, ``SAFETY_SUMMARY``) are preserved and re-exported
-from thin ``preview`` and ``audit`` shim modules so existing imports and the
-CLI keep working unchanged.
+The public names (``inspect_command``, ``preview_command``,
+``audit_command_registry``, ``SAFETY_SUMMARY``) are exposed directly from this
+module after the legacy ``preview`` and ``audit`` shims were retired.
 """
 
 from __future__ import annotations

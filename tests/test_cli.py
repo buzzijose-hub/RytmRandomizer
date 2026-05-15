@@ -866,7 +866,6 @@ def test_importing_cli_does_not_load_passive_metadata_modules():
                 "assert 'rytm_randomizer.scenes' not in sys.modules\n"
                 "assert 'rytm_randomizer.profiles' not in sys.modules\n"
                 "assert 'rytm_randomizer.registry' not in sys.modules\n"
-                "assert 'rytm_randomizer.preview' not in sys.modules\n"
                 "assert 'rytm_randomizer.inspection' not in sys.modules\n"
                 "assert 'rytm_randomizer.validation' not in sys.modules\n"
                 "assert 'mido' not in sys.modules\n"
