@@ -2,6 +2,54 @@
 
 Date: May 4, 2026
 
+## Collaborator PR #3 Wave 4 Intake
+
+Eddie's implementation PR is now visible:
+
+- PR #3: <https://github.com/buzzijose-hub/RytmRandomizer/pull/3>
+- head branch: `wave-4-integration`
+- base branch: `modularize-v1.34`
+- state: `OPEN`
+
+The initial intake report is recorded in:
+
+- `Docs/COLLABORATOR_PR3_WAVE4_INTAKE_REPORT.md`
+
+Intake was done in an isolated local worktree:
+
+- `.worktrees/pr-3-wave-4-intake`
+
+The PR is large:
+
+- `966 files changed`
+- `49227 insertions`
+- `291027 deletions`
+
+Focused local checks in the isolated PR worktree passed after disabling PR #3's
+pytest addopts because this local environment did not have `pytest-xdist`
+active:
+
+- architecture tests: `160 passed`
+- selected data/mock/real-MIDI safety tests: `36 passed`
+- import smoke: passed
+- passive app menu: passed
+
+High-signal intake risks:
+
+- PR #3 modifies `rytm_hybrid_randomizer_v134.py`.
+- PR #3 introduces real MIDI dependencies and an explicit `--arm` mode.
+- PR #3 performs a large `Docs` deletion/lowercase `docs` triage.
+- PR #3 adds workflow triggers that should be reviewed before spending Actions
+  minutes.
+
+Existing PR #3 GitHub checks were red because jobs did not start due
+billing/spend limit annotations. They did not run test logic. No new GitHub
+Actions run was triggered during intake.
+
+This is collaborator intake only. It does not merge PR #3, accept the phase
+transition, open local MIDI ports, send MIDI, run local hardware validation, or
+turn on hardware.
+
 ## Collaborator Branch Watch Status Alignment
 
 `Scripts/quick_status.ps1` and `Scripts/closeout_check.py` now include the
