@@ -190,10 +190,16 @@ ignore = [
 # bare-except in these scripts have been audited and are safe; rewriting
 # them would diverge from the on-disk record of what was actually run.
 "tooling/**" = ["S110", "S112", "E722", "B904"]
-# Scripts/ -- internal developer/CI utility scripts. Subprocess calls use
-# static argument lists with no shell. XML parsing is of coverage.xml that
-# coverage.py just generated locally, not untrusted input.
+# Scripts/ and scripts/ -- internal developer/CI utility scripts. The
+# capitalized directory holds the .ps1 closeout/quick-status wrappers;
+# the lowercase one holds the .py CI helpers (closeout_check.py,
+# coverage_check.py). Linux is case-sensitive so both spellings are
+# needed even though they look the same on Windows. Subprocess calls
+# in these scripts use static argument lists with no shell, and the
+# only XML parsed is coverage.xml that coverage.py just generated
+# locally, not untrusted input.
 "Scripts/**" = ["S603", "S314"]
+"scripts/**" = ["S603", "S607", "S314"]
 
 # -----------------------------------------------------------------------------
 # BeeWare briefcase — native end-user installer config.

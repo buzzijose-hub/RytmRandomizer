@@ -219,8 +219,11 @@ jobs:
       # advisory feed cannot silently mark the run green. pip-audit
       # scans the currently-installed environment (no `-r` argument), so
       # the previous `pip install -e .[dev]` is what gets scanned.
+      # --skip-editable excludes the editable-install of rytm-randomizer
+      # itself; this project is not published to PyPI so pip-audit cannot
+      # look it up and would otherwise fail with "Dependency not found".
       - name: Run pip-audit
-        run: pip-audit --strict
+        run: pip-audit --strict --skip-editable
 
   architecture:
     name: architecture
