@@ -851,15 +851,21 @@ def test_parity_apply_partial_guards():
     )
 
 
-def test_parity_discovery_commands():
-    for fn in [
+@pytest.mark.parametrize(
+    "fn",
+    [
         "sy_raw_wave_balance_discovery",
         "sy_raw_lp1_bassline_mode",
         "sy_raw_bandpass_mid_bass_mode",
         "sy_raw_scifi_motion_accent",
-    ]:
-        for seed in (1, 2, 5, 11, 42):
-            _parity_subprocess(f"['load', ({fn!r}, ())]", seed=seed)
+    ],
+)
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_discovery_commands(fn, seed):
+    """One parity call per (fn, seed) so xdist can fan the 20 cases across
+    workers (was a single 89s test before the split)."""
+
+    _parity_subprocess(f"['load', ({fn!r}, ())]", seed=seed)
 
 
 def test_parity_discovery_blocked_when_group_not_loaded():
@@ -878,17 +884,33 @@ def test_parity_return_to_anchor():
     _parity_subprocess("[('return_pad3_to_anchor', ())]")
 
 
-def test_parity_load_pad3_mode_each_mode():
-    for mode in ["anchor", "lp1", "bandpass", "wave", "scifi"]:
-        for seed in (1, 7, 42):
-            _parity_subprocess(
-                f"['load', ('load_pad3_mode', ({mode!r},))]", seed=seed
-            )
-    # unknown mode key
+@pytest.mark.parametrize("mode", ["anchor", "lp1", "bandpass", "wave", "scifi"])
+@pytest.mark.parametrize("seed", [1, 7, 42])
+def test_parity_load_pad3_mode_each_mode(mode, seed):
+    """One parity call per (mode, seed) so xdist can fan the 15 cases across
+    workers (was part of a single 72s test before the split)."""
+
+    _parity_subprocess(
+        f"['load', ('load_pad3_mode', ({mode!r},))]", seed=seed
+    )
+
+
+def test_parity_load_pad3_mode_unknown_key():
+    """Unknown mode key when group is loaded."""
+
     _parity_subprocess("['load', ('load_pad3_mode', ('nope',))]")
-    # non-anchor mode when group not loaded
+
+
+def test_parity_load_pad3_mode_non_anchor_unloaded():
+    """Non-anchor mode when the group is not loaded (guard path)."""
+
     _parity_subprocess("[('load_pad3_mode', ('lp1',))]")
-    # anchor mode when group not loaded is still allowed by the monolith guard
+
+
+def test_parity_load_pad3_mode_anchor_unloaded():
+    """Anchor mode when the group is not loaded -- still allowed by the
+    monolith guard."""
+
     _parity_subprocess("[('load_pad3_mode', ('anchor',))]")
 
 
@@ -903,31 +925,52 @@ def test_parity_rotate_pad3_mode():
     )
 
 
-def test_parity_mutate_current_pad3_mode():
-    # guard: no plan / not loaded
+def test_parity_mutate_current_pad3_mode_guard():
+    """Guard: no plan / not loaded -- single-call check."""
+
     _parity_subprocess("[('mutate_current_pad3_mode', ())]")
-    # every mode, several seeds (covers the generic-zone branch + sub-modes)
-    for mode_setup in [
+
+
+@pytest.mark.parametrize(
+    "mode_setup",
+    [
         "sy_raw_lp1_bassline_mode",
         "sy_raw_bandpass_mid_bass_mode",
         "sy_raw_wave_balance_discovery",
         "sy_raw_scifi_motion_accent",
-    ]:
-        for seed in (1, 2, 5, 11, 42):
-            _parity_subprocess(
-                f"['load', ({mode_setup!r}, ()), "
-                "('mutate_current_pad3_mode', ())]",
-                seed=seed,
-            )
-    # anchor-mode mutation (generic zone branch: body/lfo/morph)
-    for seed in (1, 2, 5, 11, 42):
-        _parity_subprocess(
-            "['load', ('mutate_current_pad3_mode', ())]", seed=seed
-        )
+    ],
+)
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_mutate_current_pad3_mode_each_setup(mode_setup, seed):
+    """One parity call per (mode_setup, seed) so xdist can fan the 20 cases
+    across workers (was part of a single 111s test before the split)."""
+
+    _parity_subprocess(
+        f"['load', ({mode_setup!r}, ()), "
+        "('mutate_current_pad3_mode', ())]",
+        seed=seed,
+    )
 
 
-def test_parity_long_interactive_session():
-    """A realistic multi-step Pad 3 session: load, discover, rotate, mutate."""
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_mutate_current_pad3_mode_anchor(seed):
+    """Anchor-mode mutation (generic zone branch: body/lfo/morph). One parity
+    call per seed so xdist can fan the 5 cases across workers."""
+
+    _parity_subprocess(
+        "['load', ('mutate_current_pad3_mode', ())]", seed=seed
+    )
+
+
+@pytest.mark.parametrize("seed", [1, 7, 99, 2024])
+def test_parity_long_interactive_session(seed):
+    """A realistic multi-step Pad 3 session: load, discover, rotate, mutate.
+
+    One parity call per seed so xdist can fan the 4 cases across workers (was
+    a single 32s test before the split). Each seed exercises the same
+    multi-step sequence -- the *sequence* itself is ordered, but the four
+    seeds are independent parity checks (the warm worker reseeds + resets
+    state on each request)."""
 
     steps = (
         "["
@@ -943,5 +986,4 @@ def test_parity_long_interactive_session():
         "('mutate_current_pad3_mode', ())"
         "]"
     )
-    for seed in (1, 7, 99, 2024):
-        _parity_subprocess(steps, seed=seed)
+    _parity_subprocess(steps, seed=seed)
