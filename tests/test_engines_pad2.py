@@ -833,18 +833,24 @@ def test_parity_mutate_current_pad2_profile_guards():
     )
 
 
-def test_parity_discovery_helpers():
-    for key in ["3", "9", "10", "11"]:
-        for fn in [
-            "pad2_tone_discovery",
-            "pad2_pressure_body_discovery",
-            "pad2_grit_noise_discovery",
-        ]:
-            for seed in (1, 2, 5, 11, 42):
-                _parity_subprocess(
-                    f"[('load_pad2_profile', ({key!r},)), ({fn!r}, ())]",
-                    seed=seed,
-                )
+@pytest.mark.parametrize("key", ["3", "9", "10", "11"])
+@pytest.mark.parametrize(
+    "fn",
+    [
+        "pad2_tone_discovery",
+        "pad2_pressure_body_discovery",
+        "pad2_grit_noise_discovery",
+    ],
+)
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_discovery_helpers(key, fn, seed):
+    """One parity call per (key, fn, seed) so xdist can fan the 60 cases
+    across workers (was a single ~85s test before the split)."""
+
+    _parity_subprocess(
+        f"[('load_pad2_profile', ({key!r},)), ({fn!r}, ())]",
+        seed=seed,
+    )
 
 
 def test_parity_discovery_helpers_cold():
@@ -870,17 +876,23 @@ def test_parity_rotation():
     )
 
 
-def test_parity_mutate_current_pad2_rotation_profile():
-    # not loaded guard (default key valid + has a plan, but no group state)
+def test_parity_mutate_current_pad2_rotation_profile_guard():
+    """Not-loaded guard: default key valid + has a plan, but no group state."""
+
     _parity_subprocess("[('mutate_current_pad2_rotation_profile', ())]")
-    # loaded then mutate
-    for key in ["3", "9", "10", "11"]:
-        for seed in (1, 2, 5, 11, 42):
-            _parity_subprocess(
-                f"[('load_pad2_profile', ({key!r},)), "
-                "('mutate_current_pad2_rotation_profile', ())]",
-                seed=seed,
-            )
+
+
+@pytest.mark.parametrize("key", ["3", "9", "10", "11"])
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_mutate_current_pad2_rotation_profile(key, seed):
+    """One parity call per (key, seed) so xdist can fan the 20 cases across
+    workers (was part of a single ~28s test before the split)."""
+
+    _parity_subprocess(
+        f"[('load_pad2_profile', ({key!r},)), "
+        "('mutate_current_pad2_rotation_profile', ())]",
+        seed=seed,
+    )
 
 
 def test_parity_return_to_anchor():
@@ -891,8 +903,12 @@ def test_parity_return_to_anchor():
         )
 
 
-def test_parity_long_interactive_session():
-    """A realistic multi-step Pad 2 session: load, discover, rotate, mutate."""
+@pytest.mark.parametrize("seed", [1, 7, 99, 2024])
+def test_parity_long_interactive_session(seed):
+    """A realistic multi-step Pad 2 session: load, discover, rotate, mutate.
+
+    One parity call per seed so xdist can fan the 4 cases across workers
+    (was a single ~25s test before the split)."""
 
     steps = (
         "["
@@ -908,5 +924,4 @@ def test_parity_long_interactive_session():
         "('mutate_current_pad2_rotation_profile', ())"
         "]"
     )
-    for seed in (1, 7, 99, 2024):
-        _parity_subprocess(steps, seed=seed)
+    _parity_subprocess(steps, seed=seed)

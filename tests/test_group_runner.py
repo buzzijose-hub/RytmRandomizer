@@ -941,16 +941,27 @@ def test_parity_mutate_group():
     _parity_subprocess("[('mutate_group', ('definitely-not-a-zone',))]")
 
 
-def test_parity_mutate_group_intensity():
-    for plan in [
+@pytest.mark.parametrize(
+    "plan",
+    [
         "balanced", "deeper", "intense", "harder", "rolling_light",
         "rolling_push", "deeper_groove", "deeper_pressure", "intense_motion",
         "intense_grit", "wild_controlled", "wild_maximum",
-    ]:
-        for seed in (1, 11):
-            _parity_subprocess(
-                f"[('mutate_group_intensity', ({plan!r},))]", seed=seed
-            )
+    ],
+)
+@pytest.mark.parametrize("seed", [1, 11])
+def test_parity_mutate_group_intensity(plan, seed):
+    """One parity call per (plan, seed) so xdist can fan the 24 cases across
+    workers (was a single ~117s test before the split)."""
+
+    _parity_subprocess(
+        f"[('mutate_group_intensity', ({plan!r},))]", seed=seed
+    )
+
+
+def test_parity_mutate_group_intensity_unknown_plan():
+    """Unknown plan key -- single-call check."""
+
     _parity_subprocess("[('mutate_group_intensity', ('nope',))]")
 
 
@@ -962,13 +973,21 @@ def test_parity_mutate_group_with_depth():
         )
 
 
-def test_parity_mutate_global_page_plan():
-    for page in ["src", "filter", "grit"]:
-        for depth in ["1", "2", "3"]:
-            _parity_subprocess(
-                f"[('mutate_global_page_plan', ({page!r},))]",
-                answers_repr=f"[{depth!r}]",
-            )
+@pytest.mark.parametrize("page", ["src", "filter", "grit"])
+@pytest.mark.parametrize("depth", ["1", "2", "3"])
+def test_parity_mutate_global_page_plan(page, depth):
+    """One parity call per (page, depth) so xdist can fan the 9 cases across
+    workers (was a single ~40s test before the split)."""
+
+    _parity_subprocess(
+        f"[('mutate_global_page_plan', ({page!r},))]",
+        answers_repr=f"[{depth!r}]",
+    )
+
+
+def test_parity_mutate_global_page_plan_unknown_page():
+    """Unknown page key -- single-call check."""
+
     _parity_subprocess(
         "[('mutate_global_page_plan', ('nope',))]", answers_repr="['1']"
     )
@@ -1023,8 +1042,13 @@ def test_parity_return_isolated_pad_to_anchor():
     )
 
 
-def test_parity_long_interactive_session():
-    """A realistic multi-step group session: load, mutate, isolate, return."""
+@pytest.mark.parametrize("seed", [1, 7, 99, 2024])
+def test_parity_long_interactive_session(seed):
+    """A realistic multi-step group session: load, mutate, isolate, return.
+
+    One parity call per seed so xdist can fan the 4 cases across workers (was
+    a single ~42s test before the split). The *sequence* itself is ordered,
+    but the four seeds are independent parity checks."""
 
     steps = (
         "["
@@ -1040,5 +1064,4 @@ def test_parity_long_interactive_session():
         "]"
     )
     # answers: choose_isolated_pad -> '2', the two depth prompts -> '2','3'
-    for seed in (1, 7, 99, 2024):
-        _parity_subprocess(steps, answers_repr="['2', '2', '3']", seed=seed)
+    _parity_subprocess(steps, answers_repr="['2', '2', '3']", seed=seed)
