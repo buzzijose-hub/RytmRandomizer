@@ -115,8 +115,8 @@ def test_project_status_report_tracks_convergence_behind_arm_flag():
         "real_midi_provider": (
             "rytm_randomizer.mido_provider.MidoMidiPortProvider"
         ),
-        "interactive_logic_owner": "rytm_hybrid_randomizer_v134",
-        "interactive_logic_converged": False,
+        "interactive_logic_owner": "rytm_randomizer.shell",
+        "interactive_logic_converged": True,
     }
 
 
@@ -332,8 +332,8 @@ def test_formatted_project_status_report_is_deterministic():
         "- total_modes: 3",
         "- real_midi_provider: "
         "rytm_randomizer.mido_provider.MidoMidiPortProvider",
-        "- interactive_logic_owner: rytm_hybrid_randomizer_v134",
-        "- interactive_logic_converged: False",
+        "- interactive_logic_owner: rytm_randomizer.shell",
+        "- interactive_logic_converged: True",
         "Safety:",
         "- real_midi: present_behind_arm_flag",
         "- port_opening: present_behind_arm_flag",

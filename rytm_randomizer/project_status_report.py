@@ -78,6 +78,12 @@ PROJECT_STATUS_SAFETY = {
 # Convergence tracking: the package entry point now has three explicit modes.
 # ``armed`` and ``dry_run`` carry active execution; ``default`` stays passive.
 # ``active_modes_present`` / ``total_modes`` give a simple progress ratio.
+#
+# Wave 4 / WS-O closed the interactive logic gap: the command shell now lives
+# in :mod:`rytm_randomizer.shell` (see ``--arm`` and ``--dry-run`` in
+# ``rytm_randomizer.app``). The V1.34 monolith is retained on disk only as a
+# frozen byte-parity reference for the test suite. The package therefore owns
+# the interactive runtime end-to-end: ``interactive_logic_converged`` is True.
 CONVERGENCE_STATUS = {
     "active_execution": "present",
     "active_execution_gate": "--arm flag",
@@ -87,8 +93,8 @@ CONVERGENCE_STATUS = {
     "active_modes_present": 2,
     "total_modes": 3,
     "real_midi_provider": "rytm_randomizer.mido_provider.MidoMidiPortProvider",
-    "interactive_logic_owner": "rytm_hybrid_randomizer_v134",
-    "interactive_logic_converged": False,
+    "interactive_logic_owner": "rytm_randomizer.shell",
+    "interactive_logic_converged": True,
 }
 
 PROJECT_STATUS_CHECKS = (

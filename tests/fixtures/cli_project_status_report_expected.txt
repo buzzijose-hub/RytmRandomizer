@@ -58,8 +58,8 @@ Convergence:
 - active_modes_present: 2
 - total_modes: 3
 - real_midi_provider: rytm_randomizer.mido_provider.MidoMidiPortProvider
-- interactive_logic_owner: rytm_hybrid_randomizer_v134
-- interactive_logic_converged: False
+- interactive_logic_owner: rytm_randomizer.shell
+- interactive_logic_converged: True
 Safety:
 - real_midi: present_behind_arm_flag
 - port_opening: present_behind_arm_flag
