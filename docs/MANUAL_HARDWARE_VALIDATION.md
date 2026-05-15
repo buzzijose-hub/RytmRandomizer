@@ -1,0 +1,130 @@
+# Manual Hardware Validation Checklist
+
+This is the exact, repeatable checklist for validating the RytmRandomizer
+against a real Elektron Analog Rytm MK2. The automated WS-R end-to-end suite
+(`tests/e2e/`) drives the same canonical operator-command flow against the
+`MockMidiSender` on every CI run, so the suite already proves the *logic* is
+correct. This checklist is the final confirmation that the **hardware path**
+(`--arm`) behaves identically to what the mock recorded.
+
+Run this whenever it is convenient after merging to `main`. It is **not** a
+gate on the WS-R workstream itself; the automated suite is. The
+`.github/workflows/release.yml` notes this checklist as a recommended
+pre-release step.
+
+## Prerequisites
+
+- An Elektron Analog Rytm MK2 (firmware OS 1.61+ recommended).
+- A USB-MIDI connection from the host to the Rytm.
+- The Rytm powered on, set to a clean kit you do not mind being mutated, and
+  no external MIDI program-change traffic running.
+- A working install of this repository:
+  ```
+  pip install -e ".[dev]"
+  ```
+- Confirm the entry point resolves:
+  ```
+  rytm-randomizer --help
+  ```
+
+## Canonical operator-command flow
+
+These ten commands mirror the V1.34 baseline operator flow and the
+centerpiece `tests/e2e/test_canonical_validation_flow.py` test:
+
+```
+SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> 1 -> Z -> Q
+```
+
+## Checklist
+
+### 1. Identify the MIDI port
+
+- [ ] Run `rytm-randomizer --arm`.
+- [ ] The tool prints the available MIDI output ports.
+- [ ] Note the index of the Analog Rytm output port. If multiple Rytm-related
+      entries appear, choose the one labeled as the device output (not the
+      input / control port).
+- [ ] Enter the chosen index at the prompt. Confirm the next line reads
+      `Opening MIDI output: <your port>`.
+
+### 2. Entry flow
+
+- [ ] At the target-pad prompt, enter `1` (Pad 1 / BD slot).
+- [ ] Confirm the printout reads `Targeting Pad 1 / MIDI Channel 1`.
+- [ ] At the profile prompt, enter `1` (My BD Hard / machine CC15 value 0,
+      the primary default).
+- [ ] Confirm the Rytm switches the active machine to My BD Hard. The
+      tool prints `Switching Rytm machine to My BD Hard:` and the Rytm's
+      Pad 1 machine LED reflects the change.
+
+### 3. Drive the canonical flow
+
+Enter each command in order; after each, sanity-check the device:
+
+- [ ] `SCN` -- the scene/preset menu prints. No MIDI is sent to the Rytm.
+- [ ] `GM` -- the global four-pad mutation menu prints. No MIDI is sent.
+- [ ] `S1A` -- "Rolling Light" scene runs. The Rytm's four pads first jump
+      to anchor values (auto-load), then mutate softly. Audible change on
+      Pads 2-4; Pad 1 stays grounded.
+- [ ] `S3A` -- "Intense Motion" scene runs. Pads 2-4 push further; Pad 3
+      carries the most motion.
+- [ ] `S3B` -- "Intense Grit" scene runs. Grit-forward push, kick still
+      controlled.
+- [ ] `S4B` -- "Wild Maximum" scene runs. The widest documented push;
+      every pad should change clearly but the kick foundation stays
+      recognizable.
+- [ ] `S5` -- "Back to Clean" scene runs. **All four pads return to the
+      validated anchor state.** This is the critical safety behavior:
+      listen for every pad snapping back to its baseline.
+- [ ] `1` -- bare depth digit at the main Command prompt. **The tool
+      prints the guardrail message and sends NO MIDI** -- confirm the
+      Rytm does not change. The console output should include
+      `No MIDI was sent.`
+- [ ] `Z` -- "return group to anchors". Same audible behavior as `S5`:
+      every pad returns to anchor.
+- [ ] `Q` -- quit. The tool prints `Exiting.` and returns to the shell
+      prompt cleanly. **No exception, no stack trace.**
+
+### 4. Confirm clean exit
+
+- [ ] The MIDI port closes silently (no errors in the console).
+- [ ] The Rytm holds the anchor state it ended on (since the last command
+      was an anchor-return).
+- [ ] Re-running `rytm-randomizer --arm` and immediately quitting with
+      `Q` exits cleanly too.
+
+### 5. Cross-check against the automated suite
+
+- [ ] On the same machine that just passed the hardware run, run:
+      ```
+      pytest tests/e2e/ -v
+      ```
+- [ ] All E2E tests pass. The automated suite's canonical-flow test
+      asserts the **same** ten-command sequence against the
+      `MockMidiSender`-recorded golden file. A green E2E suite plus a
+      green hardware run is the full validation gate.
+
+## What to do if a step fails
+
+- **Scene does not audibly change the Rytm**: confirm the MIDI cable, the
+  Rytm's MIDI channel routing (Pad 1 = ch 1, Pad 2 = ch 2, etc.), and
+  that no external sequencer is overriding values on the same CCs.
+- **Bare-depth `1` sent MIDI**: this is a regression. The automated
+  `test_bare_main_prompt_depth_digit_emits_no_midi[1]` test would also
+  have failed; capture the console output and open an issue.
+- **`S5`/`Z` did not return to anchors**: this is a regression. The
+  automated `test_s5_returns_all_four_pads_to_anchors` and
+  `test_z_returns_all_four_pads_to_anchors` tests guard this; capture
+  the console output and open an issue.
+- **`Q` raises an exception**: capture the stack trace; the interactive
+  shell catches `EOFError` / `KeyboardInterrupt` but other exceptions
+  should never happen.
+
+## Why this exists
+
+The Analog Rytm cannot be driven from CI. The WS-R E2E suite proves the
+randomizer's MIDI message stream is identical between runs and matches the
+committed golden file, but only a human at the device can confirm those
+messages actually translate into the audible behavior the V1.34 baseline
+documents. This checklist is the bridge.

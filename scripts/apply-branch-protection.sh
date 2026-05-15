@@ -16,8 +16,10 @@ BRANCH="${BRANCH:-main}"
 
 # Required status checks.
 # These context names must match the job names produced by .github/workflows/test.yml.
-# NOTE: when the WS-I coverage job and the WS-R e2e job land, add their
-# check names to this list (e.g. "coverage", "e2e") so they also gate merges.
+# NOTE: when the WS-I coverage job lands, add its check name to this list
+# (e.g. "coverage") so it also gates merges. The WS-R e2e job is already
+# wired below; do not remove its three OS-matrix entries -- the canonical
+# operator-command flow gates every merge to main.
 read -r -d '' PAYLOAD <<'JSON' || true
 {
   "required_status_checks": {
@@ -25,7 +27,10 @@ read -r -d '' PAYLOAD <<'JSON' || true
     "checks": [
       { "context": "test (windows-latest, py3.11)" },
       { "context": "test (macos-latest, py3.11)" },
-      { "context": "test (ubuntu-latest, py3.11)" }
+      { "context": "test (ubuntu-latest, py3.11)" },
+      { "context": "e2e (windows-latest, py3.11)" },
+      { "context": "e2e (macos-latest, py3.11)" },
+      { "context": "e2e (ubuntu-latest, py3.11)" }
     ]
   },
   "enforce_admins": true,
