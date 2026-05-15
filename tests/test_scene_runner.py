@@ -426,13 +426,20 @@ def test_parity_run_scene_unknown_key():
     _parity_subprocess("['s99']")
 
 
-def test_parity_every_scene_command_cold():
-    for key in [
+@pytest.mark.parametrize(
+    "key",
+    [
         "s0", "s1", "s1a", "s1b", "s2", "s2a", "s2b",
         "s3", "s3a", "s3b", "s4", "s4a", "s4b", "s5",
-    ]:
-        for seed in (1, 42):
-            _parity_subprocess(f"[{key!r}]", seed=seed)
+    ],
+)
+@pytest.mark.parametrize("seed", [1, 42])
+def test_parity_every_scene_command_cold(key, seed):
+    """One parity call per (key, seed) so xdist can fan the 28 cases across
+    workers (was a single ~129s test before the split). Each scene command
+    is a self-contained cold-start parity check."""
+
+    _parity_subprocess(f"[{key!r}]", seed=seed)
 
 
 def test_parity_home_warm_vs_cold():
@@ -441,20 +448,26 @@ def test_parity_home_warm_vs_cold():
     _parity_subprocess("['s1', 's5']")  # warm clean -> return
 
 
-def test_parity_documented_validation_flow():
-    """The documented V1.34 scene validation flow must reproduce exactly."""
+@pytest.mark.parametrize("seed", [1, 7, 99, 2024, 12345])
+def test_parity_documented_validation_flow(seed):
+    """The documented V1.34 scene validation flow must reproduce exactly.
+
+    One parity call per seed so xdist can fan the 5 cases across workers
+    (was a single ~58s test before the split)."""
 
     flow = "['scn', 'gm', 's1a', 's3a', 's3b', 's4b', 's5']"
-    for seed in (1, 7, 99, 2024, 12345):
-        _parity_subprocess(flow, seed=seed)
+    _parity_subprocess(flow, seed=seed)
 
 
-def test_parity_full_scene_walk():
-    """Walk every scene command in sequence from a single cold start."""
+@pytest.mark.parametrize("seed", [3, 88, 2024])
+def test_parity_full_scene_walk(seed):
+    """Walk every scene command in sequence from a single cold start.
+
+    One parity call per seed so xdist can fan the 3 cases across workers
+    (was a single ~60s test before the split)."""
 
     walk = (
         "['scn', 's0', 's1', 's1a', 's1b', 's2', 's2a', 's2b', "
         "'s3', 's3a', 's3b', 's4', 's4a', 's4b', 's5', 'scn']"
     )
-    for seed in (3, 88, 2024):
-        _parity_subprocess(walk, seed=seed)
+    _parity_subprocess(walk, seed=seed)
