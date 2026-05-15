@@ -26340,3 +26340,25 @@ wiring, dispatch, command execution, MIDI, ports, package metadata, active
 behavior, runtime execution, or hardware behavior was added.
 
 The next recommended task is a docs-only checkpoint review.
+# Passive Architecture Summary
+
+## Collaborator PR3 Review Note
+
+The current local branch remains passive-safe, with `rytm_hybrid_randomizer_v134.py` protected in this branch.
+
+Collaborator PR #3 is under review separately in an isolated worktree:
+
+- `Docs/COLLABORATOR_PR3_CODE_REVIEW_REPORT.md`
+
+Important review result:
+
+- PR #3 local tests passed strongly.
+- PR #3 also changes the V1.34 reference file and introduces real-MIDI-capable `--arm` behavior.
+- Those are phase-change decisions, not routine passive documentation updates.
+
+Until PR #3 is explicitly accepted and merged:
+
+- passive/mock safety boundaries remain the current baseline,
+- hardware remains off,
+- no MIDI ports should be opened,
+- no MIDI should be sent.
