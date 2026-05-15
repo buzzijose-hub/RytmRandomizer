@@ -115,7 +115,6 @@ class RealMidiSender:
             raise TypeError("provider must be a RealMidiPortProvider")
         if not isinstance(port_name, str) or not port_name:
             raise RealMidiPortError("midi_output_port_required")
-        self._provider = provider
         self._port_name = port_name
         self._port = provider.open_output(port_name)
 

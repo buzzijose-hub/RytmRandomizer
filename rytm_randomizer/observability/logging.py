@@ -30,7 +30,6 @@ from __future__ import annotations
 import json as _json
 import logging
 import sys
-from collections.abc import Mapping
 from typing import Any
 
 __all__ = [
@@ -223,13 +222,3 @@ def get_logger(name: str) -> logging.Logger:
     if not isinstance(name, str) or not name:
         raise ValueError("logger name must be a non-empty string")
     return logging.getLogger(name)
-
-
-def log_extra(**fields: Any) -> Mapping[str, Any]:
-    """Build a stdlib ``extra={...}`` mapping that JSON formatting respects.
-
-    Convenience helper so call sites read clearly without spelling out the
-    ``extra`` keyword and so future schema fields land in one place.
-    """
-
-    return dict(fields)

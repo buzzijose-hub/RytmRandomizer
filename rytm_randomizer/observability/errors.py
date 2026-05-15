@@ -162,17 +162,6 @@ def _rehome(original_module: str, class_name: str, new_base: type) -> type:
     return cls
 
 
-def _lazy_rehome_imports() -> None:
-    """Wire the re-exports of the re-homed errors.
-
-    Calling this at import time would create an import cycle
-    (observability -> real_midi_adapter -> observability), so the re-exports
-    are populated lazily on first attribute access via :func:`__getattr__`
-    below. This keeps :mod:`rytm_randomizer.observability.errors` a leaf
-    module per the architecture conformance test.
-    """
-
-
 def __getattr__(name: str) -> type:
     """Lazily re-export re-homed error classes from their original modules.
 
