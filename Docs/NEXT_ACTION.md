@@ -25473,3 +25473,30 @@ Current recommendation:
 - The third gate is that automatic GitHub Actions workflows can burn private-repo minutes.
 
 Hardware remains off. Do not open ports. Do not send MIDI.
+
+## Latest Collaborator PR3 Install Smoke And Gate Status
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_PR3_INSTALL_SMOKE_AND_GATE_STATUS.md`
+
+Facts now recorded:
+
+- the repository is public
+- GitHub Actions still did not reach test execution because GitHub reported an
+  account payment/spending-limit block
+- PR #3 local editable install smoke passed in the isolated worktree
+- `python -m rytm_randomizer.app --help` worked
+- `rytm-randomizer --help` worked
+- passive import did not load `mido` or `rtmidi`
+
+Remaining merge gate:
+
+- PR #3 still changes `rytm_hybrid_randomizer_v134.py` while claiming the
+  V1.34 monolith remains byte-frozen
+
+Recommended next task:
+
+- wait for Eddie's answer on the V1.34 reference policy
+- do not merge PR #3 yet
+- keep hardware off

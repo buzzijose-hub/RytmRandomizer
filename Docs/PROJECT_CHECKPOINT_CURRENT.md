@@ -31736,3 +31736,40 @@ Current decision:
 - Hardware remains off.
 - No ports opened locally.
 - No MIDI sent locally.
+
+## Collaborator PR3 Install Smoke And Gate Status
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_PR3_INSTALL_SMOKE_AND_GATE_STATUS.md`
+
+Repository visibility:
+
+- public
+
+GitHub Actions status:
+
+- latest PR #3 Actions jobs still did not reach real test execution
+- GitHub annotations report an account payment/spending-limit block
+- current failures are not evidence of test failures
+
+Local PR #3 install smoke:
+
+- editable install succeeded in the isolated PR #3 worktree
+- `python -m rytm_randomizer.app --help` worked
+- `rytm-randomizer --help` worked
+- passive import avoided loading `mido` and `rtmidi`
+
+Remaining review gate:
+
+- resolve the V1.34 reference policy before merge
+- PR #3 either needs a true frozen V1.34 reference preserved, or the PR/docs
+  need to explicitly acknowledge that `rytm_hybrid_randomizer_v134.py` is now
+  a compatibility shim
+
+Current decision:
+
+- do not merge PR #3 yet
+- hardware remains off
+- no ports opened
+- no MIDI sent

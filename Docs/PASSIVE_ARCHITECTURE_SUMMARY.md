@@ -26362,3 +26362,27 @@ Until PR #3 is explicitly accepted and merged:
 - hardware remains off,
 - no MIDI ports should be opened,
 - no MIDI should be sent.
+
+## Collaborator PR3 Install Smoke Follow-Up
+
+After the repository was made public, GitHub Actions still did not reach real
+test execution. GitHub reported an account payment/spending-limit block.
+
+Codex then tested PR #3 locally in the isolated worktree using the install path:
+
+- editable install succeeded
+- app help worked
+- console-script help worked
+- passive import did not load `mido`
+- passive import did not load `rtmidi`
+
+This improves confidence that PR #3 can be inspected and installed locally
+before merge.
+
+It does not resolve the remaining review gate:
+
+- PR #3 changes `rytm_hybrid_randomizer_v134.py`
+- the PR still claims the V1.34 monolith remains byte-frozen
+
+Until the V1.34 reference policy is resolved, PR #3 remains under review and
+should not be merged.
