@@ -1,10 +1,29 @@
 from pathlib import Path
+import shutil
 import subprocess
+
+import pytest
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 QUICK_STATUS_SCRIPT = PROJECT_ROOT / "Scripts" / "quick_status.ps1"
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
+
+
+def _find_powershell_executable():
+    return shutil.which("pwsh") or shutil.which("powershell")
+
+
+def test_quick_status_script_prefers_cross_platform_powershell(monkeypatch):
+    def fake_which(name):
+        return {
+            "pwsh": "/usr/bin/pwsh",
+            "powershell": "/usr/bin/powershell",
+        }.get(name)
+
+    monkeypatch.setattr(shutil, "which", fake_which)
+
+    assert _find_powershell_executable() == "/usr/bin/pwsh"
 
 
 def test_quick_status_script_exists_and_stays_passive():
@@ -39,13 +58,18 @@ def test_quick_status_script_runs_passive_status_checks():
         check=False,
     ).stdout.strip()
 
+    powershell = _find_powershell_executable()
+    if powershell is None:
+        pytest.skip("PowerShell executable is not available")
+
     result = subprocess.run(
         [
-            "powershell",
+            powershell,
+            "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
             "-File",
-            ".\\Scripts\\quick_status.ps1",
+            str(QUICK_STATUS_SCRIPT),
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,
