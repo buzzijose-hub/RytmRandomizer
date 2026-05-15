@@ -1,11 +1,44 @@
-from pathlib import Path
+import shutil
 import subprocess
 import sys
+from pathlib import Path
 
+import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 QUICK_STATUS_SCRIPT = PROJECT_ROOT / "Scripts" / "quick_status.ps1"
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
+
+# Skip Powershell-script execution tests off Windows: the script is .ps1,
+# Powershell isn't installed on the GitHub Linux/macOS runners, and the
+# behavior is verified separately by the cross-platform `scripts/closeout_check.py`
+# (WS-E). The static-content tests below DO still run everywhere -- they
+# read the .ps1 as text to confirm the closeout contract.
+_pwsh_path = shutil.which("powershell") or shutil.which("pwsh")
+_skip_if_no_powershell = pytest.mark.skipif(
+    sys.platform != "win32" or _pwsh_path is None,
+    reason=(
+        "quick_status.ps1 is a Windows PowerShell script; this test invokes it "
+        "via the local Powershell interpreter. Skipped on non-Windows runners. "
+        "The cross-platform equivalent runs via scripts/closeout_check.py."
+    ),
+)
+
+
+def _find_powershell_executable():
+    return shutil.which("pwsh") or shutil.which("powershell")
+
+
+def test_quick_status_script_prefers_cross_platform_powershell(monkeypatch):
+    def fake_which(name):
+        return {
+            "pwsh": "/usr/bin/pwsh",
+            "powershell": "/usr/bin/powershell",
+        }.get(name)
+
+    monkeypatch.setattr(shutil, "which", fake_which)
+
+    assert _find_powershell_executable() == "/usr/bin/pwsh"
 
 
 def test_quick_status_script_exists_and_stays_passive():
@@ -17,6 +50,8 @@ def test_quick_status_script_exists_and_stays_passive():
     assert "git log --oneline -1" in text
     assert "git diff -- rytm_hybrid_randomizer_v134.py" in text
     assert "git status --short" in text
+    assert "$homePath = $HOME" in text
+    assert "$codexPython -and (Test-Path $codexPython)" in text
     assert "mido" not in text.lower()
     assert "open-port" not in text.lower()
     assert "send-command" not in text.lower()
@@ -24,6 +59,7 @@ def test_quick_status_script_exists_and_stays_passive():
     assert "hardware-test" not in text.lower()
 
 
+@_skip_if_no_powershell
 def test_quick_status_script_runs_passive_status_checks():
     branch = subprocess.run(
         ["git", "branch", "--show-current"],
@@ -40,13 +76,18 @@ def test_quick_status_script_runs_passive_status_checks():
         check=False,
     ).stdout.strip()
 
+    powershell = _find_powershell_executable()
+    if powershell is None:
+        pytest.skip("PowerShell executable is not available")
+
     result = subprocess.run(
         [
-            "powershell",
+            powershell,
+            "-NoProfile",
             "-ExecutionPolicy",
             "Bypass",
             "-File",
-            ".\\Scripts\\quick_status.ps1",
+            str(QUICK_STATUS_SCRIPT),
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,

@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -12,7 +12,6 @@ from rytm_randomizer.command_lookup import (
     list_command_keys,
 )
 from rytm_randomizer.commands import COMMANDS
-
 
 FORBIDDEN_EXECUTION_FIELDS = {"handler", "callable", "execute", "function", "callback"}
 OUT_OF_SCOPE_PAD_TEXT = (
@@ -284,8 +283,7 @@ def test_command_lookup_does_not_expose_pads_5_to_12():
         report = describe_command(command_key)
         metadata = report["metadata"]
         command_text = " ".join(
-            str(metadata.get(field, ""))
-            for field in ("label", "name", "description", "scope")
+            str(metadata.get(field, "")) for field in ("label", "name", "description", "scope")
         )
 
         for pad_text in OUT_OF_SCOPE_PAD_TEXT:

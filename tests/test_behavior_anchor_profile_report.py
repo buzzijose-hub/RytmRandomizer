@@ -1,7 +1,7 @@
-from pathlib import Path
 import inspect
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -44,7 +44,7 @@ def _entry_by_key(section, command_key):
 
 def test_importing_behavior_anchor_profile_report_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.behavior_anchor_profile_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -57,9 +57,7 @@ def test_importing_behavior_anchor_profile_report_prints_nothing():
 
 
 def test_report_summarizes_supported_anchor_profile_sections():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -96,9 +94,7 @@ def test_report_summarizes_supported_anchor_profile_sections():
 
 
 def test_report_entries_include_read_only_behavior_details():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -138,9 +134,7 @@ def test_report_entries_include_read_only_behavior_details():
 
 
 def test_report_marks_pz_and_profile_4_as_parked_not_supported():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -172,9 +166,7 @@ def test_report_marks_pz_and_profile_4_as_parked_not_supported():
 
 
 def test_report_records_safety_boundaries_and_closeout_coverage():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -204,9 +196,7 @@ def test_report_records_safety_boundaries_and_closeout_coverage():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        summarize_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import summarize_anchor_profile_report
 
     assert summarize_anchor_profile_report() == {
         "title": "RytmRandomizer Anchor/Profile Behavior Report",
@@ -221,9 +211,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        format_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import format_anchor_profile_report
 
     first = format_anchor_profile_report()
     second = format_anchor_profile_report()
@@ -260,9 +248,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.behavior_anchor_profile_report import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
     report["supported_sections"][0]["entries"][0]["label"] = "MUTATED"
@@ -281,9 +267,16 @@ def test_returned_report_data_is_copied_and_mutation_safe():
 
 
 def test_report_module_does_not_call_cli_or_mock_message_mapping():
-    import rytm_randomizer.behavior_anchor_profile_report as report
+    # After WS-P the per-report shim modules were collapsed into a single
+    # ``rytm_randomizer.reports`` module. The consolidated module still
+    # houses the mock-mapper-report builder, which legitimately delegates
+    # to ``map_group_profile_to_mock_messages``. We therefore tighten the
+    # purity check to the anchor-profile builder's own source rather than
+    # the whole consolidated module: the anchor-profile report logic must
+    # not import or call CLI / mock_message_mapper code.
+    from rytm_randomizer.reports import build_anchor_profile_report
 
-    source = inspect.getsource(report)
+    source = inspect.getsource(build_anchor_profile_report)
 
     assert "from .cli" not in source
     assert "import rytm_randomizer.cli" not in source
@@ -293,7 +286,7 @@ def test_report_module_does_not_call_cli_or_mock_message_mapping():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_anchor_profile_report  # noqa: F401
+    import rytm_randomizer.reports  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -312,9 +305,7 @@ def test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_un
     assert "send-command" not in anchor_profile_result.stdout
     assert "hardware-test" not in anchor_profile_result.stdout
     assert report_result.returncode == 0
-    assert normalize_newlines(report_result.stdout) == fixture_text(
-        "registry_report_expected.txt"
-    )
+    assert normalize_newlines(report_result.stdout) == fixture_text("registry_report_expected.txt")
     assert report_result.stderr == ""
 
 
@@ -347,7 +338,7 @@ def test_pz_readiness_and_profile_4_behavior_remain_safe():
 
 
 def test_behavior_anchor_profile_report_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_anchor_profile_report as report
+    import rytm_randomizer.reports as report
 
     exposed_names = set(dir(report))
 
@@ -360,9 +351,12 @@ def test_behavior_anchor_profile_report_exposes_no_active_behavior_names():
     assert "MidiPortProvider" not in exposed_names
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
-        assert not (PROJECT_ROOT / filename).exists()
+def test_packaging_uses_pyproject_not_legacy_setup():
+    # WS-A introduced PEP 621 packaging. The project ships pyproject.toml as the
+    # single source of packaging truth; legacy setup.py / setup.cfg must not be used.
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for legacy in ("setup.py", "setup.cfg"):
+        assert not (PROJECT_ROOT / legacy).exists()
 
 
 if __name__ == "__main__":
@@ -379,4 +373,4 @@ if __name__ == "__main__":
     test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_unchanged()
     test_pz_readiness_and_profile_4_behavior_remain_safe()
     test_behavior_anchor_profile_report_exposes_no_active_behavior_names()
-    test_no_package_metadata_files_are_introduced()
+    test_packaging_uses_pyproject_not_legacy_setup()

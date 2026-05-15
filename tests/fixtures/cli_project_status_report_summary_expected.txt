@@ -1,5 +1,5 @@
 RytmRandomizer Project Status Summary
-- phase_name: Passive/Mock Runtime Visibility Phase
+- phase_name: Convergence Phase (armed behind --arm flag)
 - creative_identity_candidate: KitForge
 - passive_cli_command_count: 20
 - accepted_packet_count: 12
@@ -8,12 +8,16 @@ RytmRandomizer Project Status Summary
 - active_boundary_candidate: group_profile:2
 - mock_bridge_candidate: 2
 - public_api_hardening: checkpointed
-- public_api_module_count: 5
+- public_api_module_count: 3
 - collaborator_review_intake: checkpointed
 - external_review_findings_received: False
 - collaborator_review_triage_template: accepted
-- real_midi: absent
-- port_opening: absent
-- active_execution: absent
+- real_midi: present_behind_arm_flag
+- port_opening: present_behind_arm_flag
+- active_execution: present_behind_arm_flag
+- active_execution_gate: --arm flag
+- default_mode: passive
+- active_modes_present: 2
+- total_modes: 3
 - hardware_required: False
 - v134_reference: untouched

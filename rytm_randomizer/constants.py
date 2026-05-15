@@ -1,6 +1,11 @@
-"""Shared constants for the modular RytmRandomizer scaffold."""
+"""Shared constants for the modular RytmRandomizer scaffold.
 
-MACHINE_CC = 15
+``MACHINE_CC`` is re-exported from the shared data layer
+(:mod:`rytm_randomizer.data`) so the package and the monolith share one copy.
+The remaining values are package-scaffold concerns with no monolith equivalent.
+"""
+
+from .data import MACHINE_CC  # noqa: F401  (intentional re-export)
 
 DEFAULT_TARGET_PAD = 1
 DEFAULT_MIDI_CHANNEL = 0

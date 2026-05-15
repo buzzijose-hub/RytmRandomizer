@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -19,7 +19,7 @@ def run_cli(*args):
 
 
 def test_importing_behavior_pad2_lane_prints_nothing():
-    code = "import rytm_randomizer.behavior_pad2_lane"
+    code = "import rytm_randomizer.behavior_pad_lane"
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=PROJECT_ROOT,
@@ -34,7 +34,7 @@ def test_importing_behavior_pad2_lane_prints_nothing():
 
 
 def test_p2b_returns_read_only_pad2_home_anchor_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2B")
 
@@ -76,7 +76,7 @@ def test_p2b_returns_read_only_pad2_home_anchor_intent():
 
 
 def test_p2b_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2B")
 
@@ -96,7 +96,7 @@ def test_p2b_metadata_contains_expected_passive_sources():
 
 
 def test_p2h_returns_read_only_pad2_sd_hard_anchor_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2H")
 
@@ -138,7 +138,7 @@ def test_p2h_returns_read_only_pad2_sd_hard_anchor_intent():
 
 
 def test_p2h_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2H")
 
@@ -160,7 +160,7 @@ def test_p2h_metadata_contains_expected_passive_sources():
 
 
 def test_p2c_returns_read_only_pad2_sd_classic_anchor_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2C")
 
@@ -202,7 +202,7 @@ def test_p2c_returns_read_only_pad2_sd_classic_anchor_intent():
 
 
 def test_p2c_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2C")
 
@@ -224,7 +224,7 @@ def test_p2c_metadata_contains_expected_passive_sources():
 
 
 def test_p2f_returns_read_only_pad2_sd_fm_anchor_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2F")
 
@@ -266,7 +266,7 @@ def test_p2f_returns_read_only_pad2_sd_fm_anchor_intent():
 
 
 def test_p2f_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2F")
 
@@ -288,7 +288,7 @@ def test_p2f_metadata_contains_expected_passive_sources():
 
 
 def test_p2t_returns_read_only_pad2_tone_snap_discovery_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2T")
 
@@ -330,7 +330,7 @@ def test_p2t_returns_read_only_pad2_tone_snap_discovery_intent():
 
 
 def test_p2t_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2T")
 
@@ -352,7 +352,7 @@ def test_p2t_metadata_contains_expected_passive_sources():
 
 
 def test_p2p_returns_read_only_pad2_pressure_body_discovery_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2P")
 
@@ -394,7 +394,7 @@ def test_p2p_returns_read_only_pad2_pressure_body_discovery_intent():
 
 
 def test_p2p_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2P")
 
@@ -416,7 +416,7 @@ def test_p2p_metadata_contains_expected_passive_sources():
 
 
 def test_p2g_returns_read_only_pad2_grit_noise_discovery_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2G")
 
@@ -458,7 +458,7 @@ def test_p2g_returns_read_only_pad2_grit_noise_discovery_intent():
 
 
 def test_p2g_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2G")
 
@@ -480,7 +480,7 @@ def test_p2g_metadata_contains_expected_passive_sources():
 
 
 def test_p2r_returns_read_only_pad2_profile_rotation_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2R")
 
@@ -522,7 +522,7 @@ def test_p2r_returns_read_only_pad2_profile_rotation_intent():
 
 
 def test_p2r_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2R")
 
@@ -533,10 +533,7 @@ def test_p2r_metadata_contains_expected_passive_sources():
     assert result.metadata["behavior_family"] == "pad2-lane/profile-rotation"
     assert result.metadata["lane_action"] == "describe_pad2_profile_rotation_intent"
     assert result.metadata["intent_kind"] == "rotation_intent"
-    assert (
-        result.metadata["rotation_concept"]
-        == "Pad 2 profiled secondary-lane engine rotation"
-    )
+    assert result.metadata["rotation_concept"] == "Pad 2 profiled secondary-lane engine rotation"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -547,7 +544,7 @@ def test_p2r_metadata_contains_expected_passive_sources():
 
 
 def test_p2x_returns_read_only_pad2_current_profile_safe_mutation_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2X")
 
@@ -590,7 +587,7 @@ def test_p2x_returns_read_only_pad2_current_profile_safe_mutation_intent():
 
 
 def test_p2x_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2X")
 
@@ -598,21 +595,11 @@ def test_p2x_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "mutation"
     assert result.metadata["target_pad"] == 2
     assert result.metadata["lane"] == "pad_2_secondary_lane"
-    assert result.metadata["behavior_family"] == (
-        "pad2-lane/current-profile-safe-mutation"
-    )
-    assert result.metadata["lane_action"] == (
-        "describe_pad2_current_profile_safe_mutation_intent"
-    )
+    assert result.metadata["behavior_family"] == ("pad2-lane/current-profile-safe-mutation")
+    assert result.metadata["lane_action"] == ("describe_pad2_current_profile_safe_mutation_intent")
     assert result.metadata["intent_kind"] == "mutation_intent"
-    assert (
-        result.metadata["mutation_concept"]
-        == "Pad 2 current-profile safe mutation"
-    )
-    assert (
-        result.metadata["selected_profile_dependency"]
-        == "current_pad2_profile_state"
-    )
+    assert result.metadata["mutation_concept"] == "Pad 2 current-profile safe mutation"
+    assert result.metadata["selected_profile_dependency"] == "current_pad2_profile_state"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -623,7 +610,7 @@ def test_p2x_metadata_contains_expected_passive_sources():
 
 
 def test_p2z_returns_read_only_pad2_current_profile_anchor_return_intent():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2Z")
 
@@ -666,7 +653,7 @@ def test_p2z_returns_read_only_pad2_current_profile_anchor_return_intent():
 
 
 def test_p2z_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2Z")
 
@@ -674,21 +661,11 @@ def test_p2z_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "anchor_return"
     assert result.metadata["target_pad"] == 2
     assert result.metadata["lane"] == "pad_2_secondary_lane"
-    assert result.metadata["behavior_family"] == (
-        "pad2-lane/current-profile-anchor-return"
-    )
-    assert result.metadata["lane_action"] == (
-        "describe_pad2_current_profile_anchor_return_intent"
-    )
+    assert result.metadata["behavior_family"] == ("pad2-lane/current-profile-anchor-return")
+    assert result.metadata["lane_action"] == ("describe_pad2_current_profile_anchor_return_intent")
     assert result.metadata["intent_kind"] == "anchor_return_intent"
-    assert (
-        result.metadata["anchor_return_concept"]
-        == "Pad 2 current-profile anchor return"
-    )
-    assert (
-        result.metadata["selected_profile_dependency"]
-        == "current_pad2_profile_state"
-    )
+    assert result.metadata["anchor_return_concept"] == "Pad 2 current-profile anchor return"
+    assert result.metadata["selected_profile_dependency"] == "current_pad2_profile_state"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -699,7 +676,7 @@ def test_p2z_metadata_contains_expected_passive_sources():
 
 
 def test_pad2_lane_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("P2B")
 
@@ -717,7 +694,7 @@ def test_pad2_lane_metadata_is_copied_and_immutable():
 
 
 def test_deferred_packet_6_pad2_lane_keys_fail_safely():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     for command_key in ("P2M",):
         result = evaluate_pad2_lane_behavior(command_key)
@@ -731,7 +708,7 @@ def test_deferred_packet_6_pad2_lane_keys_fail_safely():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_pad2_lane import evaluate_pad2_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad2_lane_behavior
 
     result = evaluate_pad2_lane_behavior("DOES_NOT_EXIST")
 
@@ -771,19 +748,22 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_pad2_lane  # noqa: F401
+    import rytm_randomizer.behavior_pad_lane  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
-        assert not (PROJECT_ROOT / filename).exists()
+def test_packaging_uses_pyproject_not_legacy_setup():
+    # WS-A introduced PEP 621 packaging. The project ships pyproject.toml as the
+    # single source of packaging truth; legacy setup.py / setup.cfg must not be used.
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for legacy in ("setup.py", "setup.cfg"):
+        assert not (PROJECT_ROOT / legacy).exists()
 
 
 def test_behavior_pad2_lane_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_pad2_lane as behavior_pad2_lane
+    import rytm_randomizer.behavior_pad_lane as behavior_pad2_lane
 
     exposed_names = set(dir(behavior_pad2_lane))
 
@@ -793,7 +773,7 @@ def test_behavior_pad2_lane_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_pad2_lane as behavior_pad2_lane
+    import rytm_randomizer.behavior_pad_lane as behavior_pad2_lane
 
     module_text = "\n".join(
         [
@@ -834,6 +814,6 @@ if __name__ == "__main__":
     test_packet_1_p2m_menu_behavior_remains_unchanged()
     test_passive_cli_behavior_remains_unchanged()
     test_no_real_midi_library_is_imported()
-    test_no_package_metadata_files_are_introduced()
+    test_packaging_uses_pyproject_not_legacy_setup()
     test_behavior_pad2_lane_exposes_no_active_behavior_names()
     test_no_out_of_scope_support_is_exposed()

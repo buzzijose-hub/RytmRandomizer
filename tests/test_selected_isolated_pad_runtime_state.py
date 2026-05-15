@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -112,9 +112,7 @@ def test_missing_selected_target_fails_safely():
         build_missing_selected_target_runtime_state,
     )
 
-    result = build_missing_selected_target_runtime_state(
-        anchor_state=build_unknown_anchor_state()
-    )
+    result = build_missing_selected_target_runtime_state(anchor_state=build_unknown_anchor_state())
 
     assert result.runtime_state == "invalid"
     assert result.target_anchor_status == "target-missing"
@@ -131,9 +129,7 @@ def test_missing_anchor_fails_safely():
     from rytm_randomizer.selected_isolated_pad_runtime_state import (
         build_missing_anchor_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
-        build_default_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_default_selected_target_state
 
     result = build_missing_anchor_runtime_state(
         selected_target_state=build_default_selected_target_state()
@@ -156,9 +152,7 @@ def test_unsupported_selected_target_fails_safely():
     from rytm_randomizer.selected_isolated_pad_runtime_state import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
-        build_unsupported_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_unsupported_selected_target_state
 
     result = build_selected_isolated_pad_runtime_state(
         selected_target_state=build_unsupported_selected_target_state(5),
@@ -180,9 +174,7 @@ def test_unsupported_anchor_fails_safely():
     from rytm_randomizer.selected_isolated_pad_runtime_state import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
-        build_default_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_default_selected_target_state
 
     result = build_selected_isolated_pad_runtime_state(
         selected_target_state=build_default_selected_target_state(),
@@ -235,10 +227,7 @@ def test_stale_target_and_stale_anchor_fail_safely():
 
 
 def test_invalid_target_and_invalid_anchor_fail_safely():
-    from rytm_randomizer.anchor_state import (
-        build_invalid_anchor_state,
-        build_unknown_anchor_state,
-    )
+    from rytm_randomizer.anchor_state import build_invalid_anchor_state, build_unknown_anchor_state
     from rytm_randomizer.selected_isolated_pad_runtime_state import (
         build_selected_isolated_pad_runtime_state,
     )

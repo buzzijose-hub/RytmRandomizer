@@ -1,0 +1,568 @@
+name: test
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # Weekly scan: re-runs the security (pip-audit) and architecture
+    # gates against currently-merged code so a freshly-disclosed CVE in
+    # mido / python-rtmidi can be caught even when no PRs are open.
+    # Sunday 06:00 UTC keeps it out of weekday peak hours.
+    - cron: "0 6 * * 0"
+  workflow_dispatch:
+
+# NOTE: This workflow runs six required-check jobs gated by path filters
+# so a docs-only change doesn't burn 30 minutes of CI on the full matrix.
+#
+# Job summary:
+#
+#   detect-changes — fast preamble that classifies what changed and emits
+#       boolean flags (`code`, `tests`, `deps`, `docs-only`, `ci`). Every
+#       downstream job has an `if:` condition gated on these flags.
+#       Skipped required-check jobs are reported as success to branch
+#       protection (the workflow itself always runs).
+#
+#   lint — runs on any .py change, pyproject.toml change, or pre-commit
+#       config change. Enforces ruff/black/isort.
+#
+#   security — runs on any dependency-surface change (pyproject.toml,
+#       requirements-*.txt) OR on the weekly schedule (see below). Runs
+#       pip-audit against the installed env.
+#
+#   architecture (WS-T) — fast ubuntu runner that runs the gated
+#       architecture-conformance tests (tests/architecture/). Triggers
+#       on any rytm_randomizer/ or rytm_hybrid_randomizer_v134.py change.
+#       Gives branch protection a cheap, fast-failing required check.
+#
+#   test (WS-E) — 3-OS matrix running the full pytest suite + branch-
+#       coverage gate (configured in pyproject.toml under
+#       [tool.coverage.report] fail_under). Triggers on any rytm_randomizer/,
+#       tests/, pyproject.toml, or monolith change.
+#
+#   e2e (WS-R) — 3-OS matrix running the end-to-end suite (tests/e2e/),
+#       which drives the real entry point through the V1.34 canonical
+#       operator-command flow in --dry-run mode against MockMidiSender,
+#       with random.seed() set for full determinism. Triggers on the same
+#       paths as `test` plus tests/e2e/.
+#
+#   docs-gate — pull-request-only gate that fails when production code or
+#       pyproject.toml changes without an accompanying docs/, README.md,
+#       or CONTRIBUTING.md edit. Prevents silent rot of onboarding
+#       material when behavior changes. Skipped on push/schedule/
+#       workflow_dispatch (treated as success by the aggregate).
+#
+# Weekly schedule also runs the security + architecture jobs so freshly-
+# disclosed CVEs in mido / python-rtmidi cannot sit hidden in already-
+# merged code.
+#
+# All jobs cache pip downloads via actions/setup-python's `cache: pip` option,
+# keyed off pyproject.toml's hash, to keep CI minutes low.
+# All required-check context names are referenced from
+# scripts/apply-branch-protection.sh — see docs/BRANCH_PROTECTION.md.
+
+jobs:
+  detect-changes:
+    # Classify which categories of files changed in this push/PR so the
+    # heavier downstream jobs can opt out of running for docs-only edits.
+    # On a `push` event without a base SHA (e.g. branch creation),
+    # paths-filter falls back to "everything changed" via the `base: false`
+    # default behavior, which is the safe default.
+    name: detect-changes
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      tests: ${{ steps.filter.outputs.tests }}
+      deps: ${{ steps.filter.outputs.deps }}
+      ci: ${{ steps.filter.outputs.ci }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      architecture: ${{ steps.filter.outputs.architecture }}
+      lint-targets: ${{ steps.filter.outputs.lint-targets }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          # Default predicate-quantifier is "some": a category is true if
+          # ANY listed pattern matches a changed file. That is what we want.
+          filters: |
+            # `code` -- any change that affects runtime / production code.
+            # The byte-frozen monolith counts too: changing it would trigger
+            # the architecture-conformance test and the parity tests.
+            code:
+              - 'rytm_randomizer/**'
+              - 'rytm_hybrid_randomizer_v134.py'
+              - 'Scripts/**'
+
+            # `tests` -- any test source change. Note tests/architecture/ is
+            # called out separately so a pure architecture-test edit triggers
+            # the cheap arch job without spinning up the 3-OS matrix.
+            tests:
+              - 'tests/**'
+
+            # `architecture` -- any architecture-conformance test change OR
+            # any production code change. The arch tests must validate the
+            # current state of the package on every code-touching PR.
+            architecture:
+              - 'rytm_randomizer/**'
+              - 'rytm_hybrid_randomizer_v134.py'
+              - 'tests/architecture/**'
+
+            # `e2e` -- triggers the (slow) 3-OS e2e matrix. Production code,
+            # the monolith, or anything under tests/e2e/.
+            e2e:
+              - 'rytm_randomizer/**'
+              - 'rytm_hybrid_randomizer_v134.py'
+              - 'tests/e2e/**'
+              - 'pyproject.toml'
+
+            # `deps` -- dependency surface. Triggers the security (pip-audit)
+            # job. Bumping a dep can introduce a CVE.
+            deps:
+              - 'pyproject.toml'
+              - 'requirements-dev.txt'
+              - '.github/workflows/**'
+
+            # `ci` -- workflow / CI infrastructure change. Always re-runs
+            # the lint+security gates to make sure the new workflow itself
+            # validates.
+            ci:
+              - '.github/workflows/**'
+              - '.pre-commit-config.yaml'
+              - 'scripts/apply-branch-protection.sh'
+
+            # `lint-targets` -- anything that black/ruff/isort would
+            # inspect, or the config that drives them.
+            lint-targets:
+              - '**/*.py'
+              - 'pyproject.toml'
+              - '.pre-commit-config.yaml'
+
+  lint:
+    name: lint
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.lint-targets == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      # Pin lint tool versions in lockstep with .pre-commit-config.yaml so
+      # local pre-commit runs and CI produce identical verdicts. When you
+      # bump a hook in .pre-commit-config.yaml, bump it here too.
+      - name: Install lint tools
+        run: pip install "ruff==0.15.13" "black==26.3.1" "isort==8.0.1"
+
+      - name: ruff check
+        run: ruff check .
+
+      - name: black --check
+        run: black --check .
+
+      - name: isort --check
+        run: isort --check-only --profile black .
+
+  security:
+    # Static security scan of declared dependencies. pip-audit cross-references
+    # every locked dependency against the PyPI Advisory Database (powered by
+    # OSV) and fails on any known CVE in something the project pulls in.
+    # Runs on any dependency or workflow change; the scheduled nightly run
+    # (configured separately in this workflow) re-scans already-merged code
+    # against newly-published advisories.
+    name: security
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.deps == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ALSA dev headers
+        # python-rtmidi's C-extension wheel build links against ALSA.
+        # Without the headers, the pip install step below fails when
+        # resolving the project's runtime deps. Required for both the
+        # editable install and the subsequent freeze.
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        # We install the project + dev extras so pip resolves the entire
+        # transitive dependency closure exactly the way a contributor's
+        # environment would. The next step then pulls out only the
+        # third-party packages for the audit.
+        run: pip install -e ".[dev]"
+
+      - name: Install pip-audit
+        run: pip install "pip-audit>=2.10,<3"
+
+      # Capture exact pinned versions of every third-party dep that pip
+      # actually resolved, excluding our own editable-install (which is
+      # not on PyPI and would otherwise trip --strict). `pip freeze
+      # --exclude-editable` drops the `-e .` entry and leaves mido,
+      # python-rtmidi, pytest, pytest-cov, etc. with `==` pins -- exactly
+      # what pip-audit wants to cross-reference against the PyPI Advisory
+      # Database. Single source of truth: pyproject.toml decides what to
+      # install; pip freeze captures what was resolved.
+      - name: Generate audit input from installed env
+        run: pip freeze --exclude-editable > .pip-audit-input.txt
+
+      # --strict turns transient resolver errors into failures so a flaky
+      # advisory feed cannot silently mark the run green.
+      - name: Run pip-audit
+        run: pip-audit --strict -r .pip-audit-input.txt
+
+  architecture:
+    name: architecture
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.architecture == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Architecture tests grep `git diff` for the monolith; we need a
+          # working tree to diff against.
+          fetch-depth: 1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ALSA dev headers
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Run architecture-conformance tests
+        run: pytest tests/architecture/ -q
+
+  test:
+    name: test (${{ matrix.os }}, py${{ matrix.python-version }})
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.code == 'true' ||
+      needs.detect-changes.outputs.tests == 'true' ||
+      needs.detect-changes.outputs.deps == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ${{ matrix.os }}
+    # `contents: write` is needed so the coverage-ratchet auto-commit step
+    # (see below) can push the bumped .coveragerc back to the PR branch.
+    # All other steps are read-only; this is the minimum scope required.
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS is the most queue-constrained runner pool on GitHub
+        # Actions (20-60 min waits are common for public repos). The
+        # `os` list is built from a JSON string that drops macos-latest
+        # on pull_request events and keeps the full 3-OS matrix on
+        # push / schedule / workflow_dispatch, so PR turnaround stays
+        # in minutes while main and the weekly scan still validate
+        # macOS. python-rtmidi is the only platform-sensitive dep, and
+        # the briefcase installer job builds on macOS at release time,
+        # so coverage of macOS does not need to gate every PR.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["windows-latest", "ubuntu-latest"]' || '["windows-latest", "macos-latest", "ubuntu-latest"]') }}
+        python-version: ["3.11"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ALSA dev headers (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        run: pip install -e ".[dev]"
+
+      # Run the full suite with branch coverage. The gate floor is
+      # configured in pyproject.toml under [tool.coverage.report]
+      # fail_under and is currently set to the measured baseline (86%)
+      # while a dedicated workstream ratchets toward 100%. Bump the
+      # pyproject.toml value when coverage measurably improves; never
+      # lower it. Any new production code without a covering test will
+      # fail this step.
+      - name: Run pytest with coverage
+        run: pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml
+
+      # Auto-ratchet the coverage floor in .coveragerc when measured branch
+      # coverage exceeds the current floor by >= 1pp. The script exits 0
+      # with no change when within 1pp of the floor, exits 0 after rewriting
+      # .coveragerc when ratcheting, and exits 1 when measured is below the
+      # floor (which would already have failed the pytest step above, but we
+      # keep the check defensive). Restricted to ubuntu-latest because
+      # coverage is OS-independent and we want exactly one auto-commit if
+      # the floor moves -- running on all 3 matrix OSes would race three
+      # competing pushes against the PR branch.
+      - name: Ratchet coverage floor
+        if: matrix.os == 'ubuntu-latest'
+        run: python scripts/coverage_ratchet.py coverage.xml
+
+      # When the ratchet step above rewrote .coveragerc, commit the bump
+      # back to the PR branch as github-actions[bot] so the new floor
+      # becomes the baseline for subsequent runs. `[skip ci]` in the commit
+      # message prevents an infinite re-trigger loop. Gated to pull_request
+      # and push events because schedule / workflow_dispatch runs have no
+      # PR branch to push back to.
+      - name: Auto-commit ratcheted coverage floor
+        if: |
+          matrix.os == 'ubuntu-latest' &&
+          (github.event_name == 'pull_request' || github.event_name == 'push')
+        run: |
+          if git diff --quiet .coveragerc; then
+            echo "No coverage floor change to commit."
+            exit 0
+          fi
+          new_floor=$(grep -E '^fail_under' .coveragerc | grep -oE '[0-9]+(\.[0-9]+)?' | head -n 1)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .coveragerc
+          git commit -m "chore(coverage): ratchet floor to ${new_floor}% [skip ci]"
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
+
+      - name: Upload coverage XML (for downstream inspection)
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Import smoke test
+        run: python -c "import rytm_hybrid_randomizer_v134; import rytm_randomizer"
+
+  e2e:
+    # WS-R end-to-end gate: drives the real entry point (rytm-randomizer)
+    # through the V1.34 canonical operator-command flow in --dry-run mode
+    # against MockMidiSender, with random.seed() set for full determinism.
+    # The canonical-flow test asserts byte-for-byte parity against the
+    # committed golden file tests/e2e/_golden/canonical_validation_flow.json.
+    #
+    # Branch-protection references only the `required-checks` aggregate
+    # job (see scripts/apply-branch-protection.sh). This e2e job is one
+    # of the upstream gates that aggregate depends on; renaming or
+    # removing a matrix entry is now safe without touching branch
+    # protection config.
+    name: e2e (${{ matrix.os }}, py${{ matrix.python-version }})
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.e2e == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS is the most queue-constrained runner pool on GitHub
+        # Actions (20-60 min waits are common for public repos). The
+        # `os` list is built from a JSON string that drops macos-latest
+        # on pull_request events and keeps the full 3-OS matrix on
+        # push / schedule / workflow_dispatch, so PR turnaround stays
+        # in minutes while main and the weekly scan still validate
+        # macOS. python-rtmidi is the only platform-sensitive dep, and
+        # the briefcase installer job builds on macOS at release time,
+        # so coverage of macOS does not need to gate every PR.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["windows-latest", "ubuntu-latest"]' || '["windows-latest", "macos-latest", "ubuntu-latest"]') }}
+        python-version: ["3.11"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ALSA dev headers (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Run E2E suite
+        # --dry-run against MockMidiSender, no hardware, no port opened.
+        run: pytest tests/e2e/ -v
+
+  docs-gate:
+    # Pull-request-only gate enforcing the data-not-code rule's onboarding
+    # corollary: when production code (rytm_randomizer/) or the dependency
+    # surface (pyproject.toml) changes, the same PR must touch user-facing
+    # documentation (docs/, README.md, or CONTRIBUTING.md). Feature or
+    # behavior changes that skip docs silently rot the project's
+    # onboarding material; this gate makes that rot impossible to merge.
+    #
+    # Skipped on push/schedule/workflow_dispatch — branch protection
+    # treats skipped required checks as success via the aggregate.
+    name: docs-gate
+    needs: detect-changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Skip when no production code changed
+        # No production code touched (no rytm_randomizer/** or pyproject.toml
+        # change) -- nothing to document. Succeed immediately so we don't
+        # spuriously block doc-only / test-only / CI-only PRs.
+        if: |
+          needs.detect-changes.outputs.code == 'false' &&
+          needs.detect-changes.outputs.deps == 'false'
+        run: |
+          echo "No production code or dependency changes detected; docs-gate is a no-op."
+
+      - name: Checkout
+        if: |
+          needs.detect-changes.outputs.code == 'true' ||
+          needs.detect-changes.outputs.deps == 'true'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Detect docs touches
+        id: docs-filter
+        if: |
+          needs.detect-changes.outputs.code == 'true' ||
+          needs.detect-changes.outputs.deps == 'true'
+        uses: dorny/paths-filter@v3
+        with:
+          # `docs-touched` is true if ANY user-facing documentation file
+          # under docs/, the top-level README, or CONTRIBUTING.md changed.
+          filters: |
+            docs-touched:
+              - 'docs/**'
+              - 'README.md'
+              - 'CONTRIBUTING.md'
+
+      - name: Enforce docs accompany code changes
+        if: |
+          needs.detect-changes.outputs.code == 'true' &&
+          steps.docs-filter.outputs.docs-touched == 'false'
+        # Fail loudly with remediation guidance. The contributor can fix
+        # this by editing the relevant doc in the same PR, or by adding
+        # a short note to README.md / CONTRIBUTING.md explaining the
+        # behavior change.
+        run: |
+          echo "::error::docs-gate: production code under rytm_randomizer/ changed but no docs/, README.md, or CONTRIBUTING.md edit was included in this PR."
+          echo ""
+          echo "Feature and behavior changes must update user-facing documentation in the same PR to keep onboarding material in sync."
+          echo ""
+          echo "To fix:"
+          echo "  1. Update the relevant page under docs/ (architecture, workflow, profile spec, etc.), OR"
+          echo "  2. Update README.md if the change affects the getting-started flow, OR"
+          echo "  3. Update CONTRIBUTING.md if the change affects contributor workflow."
+          echo ""
+          echo "If this PR is genuinely doc-irrelevant (e.g. pure internal refactor with no observable change), justify that in the PR description and a reviewer can override branch protection."
+          exit 1
+
+      - name: docs-gate passed
+        if: |
+          needs.detect-changes.outputs.code == 'true' &&
+          steps.docs-filter.outputs.docs-touched == 'true'
+        run: |
+          echo "Production code change is accompanied by documentation updates."
+
+  required-checks:
+    # Aggregate gate for branch protection. Path filters cause individual
+    # upstream jobs to skip on irrelevant changes (e.g. a docs-only edit
+    # skips the test matrix). GitHub branch protection treats "skipped"
+    # required checks as pending and blocks the PR forever -- so we
+    # require only THIS job and let it enforce the real semantics:
+    # "every upstream job either succeeded or was correctly skipped."
+    #
+    # The job always runs (`if: always()`) so the required-check status
+    # is always reported. It fails only if any upstream job's result is
+    # `failure` or `cancelled`. `skipped` counts as success because the
+    # path filter said this category did not need to be re-validated.
+    name: required-checks
+    needs: [detect-changes, lint, security, architecture, test, e2e, docs-gate]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Summarize upstream job results
+        # Echo each upstream result for the run log so a failure is
+        # easy to triage from the GitHub UI without expanding every job.
+        run: |
+          echo "detect-changes : ${{ needs.detect-changes.result }}"
+          echo "lint           : ${{ needs.lint.result }}"
+          echo "security       : ${{ needs.security.result }}"
+          echo "architecture   : ${{ needs.architecture.result }}"
+          echo "test           : ${{ needs.test.result }}"
+          echo "e2e            : ${{ needs.e2e.result }}"
+          echo "docs-gate      : ${{ needs.docs-gate.result }}"
+
+      - name: Fail if any upstream job failed or was cancelled
+        # GitHub workflow `needs.*.result` is one of: success, failure,
+        # cancelled, skipped. Treat `skipped` as success (the path
+        # filter said the job did not need to run); any other non-
+        # `success` value is a real problem and fails the gate.
+        run: |
+          for result in \
+            "${{ needs.detect-changes.result }}" \
+            "${{ needs.lint.result }}" \
+            "${{ needs.security.result }}" \
+            "${{ needs.architecture.result }}" \
+            "${{ needs.test.result }}" \
+            "${{ needs.e2e.result }}" \
+            "${{ needs.docs-gate.result }}"; do
+            case "$result" in
+              success|skipped) ;;
+              *)
+                echo "Upstream job result '$result' is not success/skipped — failing the gate."
+                exit 1
+                ;;
+            esac
+          done
+          echo "All upstream jobs either succeeded or were correctly skipped."

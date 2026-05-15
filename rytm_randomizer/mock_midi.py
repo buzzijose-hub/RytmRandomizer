@@ -7,9 +7,9 @@ ports, send MIDI, or touch hardware.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Iterable, Mapping
 
 
 def _validate_integer(name: str, value: int) -> None:
@@ -40,6 +40,12 @@ class MidiMessage:
         _validate_integer("control", self.control)
         _validate_integer("value", self.value)
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
+
+    @property
+    def type(self) -> str:
+        """Mido-compatible message type alias for runtime dry-run capture."""
+
+        return self.message_type
 
 
 def build_cc_message(

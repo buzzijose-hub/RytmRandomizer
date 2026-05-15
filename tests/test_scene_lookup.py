@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -12,7 +12,6 @@ from rytm_randomizer.scene_lookup import (
     list_scene_keys,
 )
 from rytm_randomizer.scenes import SCENE_COMMANDS
-
 
 OUT_OF_SCOPE_PAD_TEXT = (
     "Pad 5",

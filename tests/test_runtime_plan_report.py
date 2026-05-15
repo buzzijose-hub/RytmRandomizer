@@ -1,7 +1,7 @@
-from pathlib import Path
 import importlib
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 def test_importing_runtime_plan_report_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.runtime_plan_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -24,7 +24,7 @@ def test_importing_runtime_plan_report_prints_nothing():
 
 
 def test_report_summarizes_runtime_plan_inputs():
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     report = build_runtime_plan_report()
 
@@ -123,7 +123,7 @@ def test_report_summarizes_runtime_plan_inputs():
 
 
 def test_report_records_read_only_runtime_boundaries():
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     report = build_runtime_plan_report()
 
@@ -145,7 +145,7 @@ def test_report_records_read_only_runtime_boundaries():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.runtime_plan_report import summarize_runtime_plan_report
+    from rytm_randomizer.reports import summarize_runtime_plan_report
 
     assert summarize_runtime_plan_report() == {
         "title": "RytmRandomizer Runtime Plan Report",
@@ -166,7 +166,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.runtime_plan_report import format_runtime_plan_report
+    from rytm_randomizer.reports import format_runtime_plan_report
 
     first = format_runtime_plan_report()
     second = format_runtime_plan_report()
@@ -201,7 +201,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     report = build_runtime_plan_report()
     report["supported_planning_inputs"][0]["target"] = "MUTATED"
@@ -214,15 +214,15 @@ def test_returned_report_data_is_copied_and_mutation_safe():
 
 
 def test_no_real_midi_library_is_imported():
-    sys.modules.pop("rytm_randomizer.runtime_plan_report", None)
-    importlib.import_module("rytm_randomizer.runtime_plan_report")
+    sys.modules.pop("rytm_randomizer.reports", None)
+    importlib.import_module("rytm_randomizer.reports")
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
 
 
 def test_runtime_plan_report_exposes_no_active_behavior_names():
-    import rytm_randomizer.runtime_plan_report as report
+    import rytm_randomizer.reports as report
 
     exposed_names = set(dir(report))
 
@@ -235,9 +235,14 @@ def test_runtime_plan_report_exposes_no_active_behavior_names():
 
 
 def test_runtime_plan_report_exposes_explicit_public_api():
-    import rytm_randomizer.runtime_plan_report as report
+    import rytm_randomizer.reports as report
 
-    assert report.__all__ == [
+    # After the WS-P consolidation the per-report shim modules were removed
+    # and the runtime-plan report public API moved onto the unified
+    # ``rytm_randomizer.reports`` module. The Pad 4-style ``__all__``
+    # equality check is therefore replaced with a subset assertion against
+    # the consolidated module's public surface.
+    runtime_plan_public_names = {
         "PARKED_REPORT_INPUTS",
         "RUNTIME_PLAN_REPORT_BOUNDARY",
         "SUPPORTED_REPORT_INPUTS",
@@ -245,7 +250,10 @@ def test_runtime_plan_report_exposes_explicit_public_api():
         "build_runtime_plan_report",
         "format_runtime_plan_report",
         "summarize_runtime_plan_report",
-    ]
+    }
+    exposed_names = set(dir(report))
+
+    assert runtime_plan_public_names.issubset(exposed_names)
 
 
 if __name__ == "__main__":

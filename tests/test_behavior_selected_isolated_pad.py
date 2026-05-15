@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -104,14 +104,8 @@ def test_l_metadata_contains_expected_passive_sources():
     assert result.metadata["source"] == "ISOLATED_PAD_UTILITY_COMMANDS"
     assert result.metadata["command_type"] == "selection"
     assert result.metadata["source_scope"] == "isolated_pad_target"
-    assert (
-        result.metadata["behavior_family"]
-        == "selected-isolated-pad/target-selection"
-    )
-    assert (
-        result.metadata["utility_action"]
-        == "describe_selected_isolated_pad_target_intent"
-    )
+    assert result.metadata["behavior_family"] == "selected-isolated-pad/target-selection"
+    assert result.metadata["utility_action"] == "describe_selected_isolated_pad_target_intent"
     assert result.metadata["intent_kind"] == "selected_isolated_pad_target_selection"
     assert result.metadata["default_pad"] == 3
     assert result.metadata["target_pad"] == 3
@@ -187,27 +181,19 @@ def test_pz_reports_read_only_anchor_return_readiness_for_default_context():
     assert result.hardware_required is False
     assert result.active_behavior is False
     assert result.metadata["source"] == "ISOLATED_PAD_UTILITY_COMMANDS"
-    assert result.metadata["behavior_family"] == (
-        "selected-isolated-pad/anchor-return-readiness"
-    )
+    assert result.metadata["behavior_family"] == ("selected-isolated-pad/anchor-return-readiness")
     assert result.metadata["utility_action"] == (
         "describe_selected_isolated_pad_anchor_return_readiness"
     )
-    assert result.metadata["intent_kind"] == (
-        "selected_isolated_pad_anchor_return_readiness"
-    )
-    assert result.metadata["runtime_state_source"] == (
-        "selected_isolated_pad_runtime_state"
-    )
+    assert result.metadata["intent_kind"] == ("selected_isolated_pad_anchor_return_readiness")
+    assert result.metadata["runtime_state_source"] == ("selected_isolated_pad_runtime_state")
     assert result.metadata["runtime_state"] == "passive-default"
     assert result.metadata["target_pad"] == 3
     assert result.metadata["target_state"] == "defaulted"
     assert result.metadata["target_anchor_status"] == "anchor-unavailable"
     assert result.metadata["anchor_state"] == "unknown"
     assert result.metadata["reason"] == "anchor_unavailable_for_selected_target"
-    assert result.metadata["safe_failure_code"] == (
-        "anchor_unavailable_for_selected_target"
-    )
+    assert result.metadata["safe_failure_code"] == ("anchor_unavailable_for_selected_target")
     assert result.metadata["pz_ready"] is False
     assert result.metadata["pz_executed"] is False
     assert result.metadata["anchor_return_intent"] is True
@@ -294,9 +280,7 @@ def test_packet_1_selected_pad_status_behavior_remains_unchanged():
 
 
 def test_packet_3_selected_isolated_pad_mutation_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("PM")
 
@@ -313,9 +297,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
     assert result.returncode == 0
     assert "Command: L" in result.stdout
-    assert "Label: select isolated single-pad mutation target, default Pad 3" in (
-        result.stdout
-    )
+    assert "Label: select isolated single-pad mutation target, default Pad 3" in (result.stdout)
     assert result.stderr == ""
 
 
@@ -326,9 +308,12 @@ def test_no_real_midi_library_is_imported():
     assert "rtmidi" not in sys.modules
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
-        assert not (PROJECT_ROOT / filename).exists()
+def test_packaging_uses_pyproject_not_legacy_setup():
+    # WS-A introduced PEP 621 packaging. The project ships pyproject.toml as the
+    # single source of packaging truth; legacy setup.py / setup.cfg must not be used.
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for legacy in ("setup.py", "setup.cfg"):
+        assert not (PROJECT_ROOT / legacy).exists()
 
 
 def test_behavior_selected_isolated_pad_exposes_no_active_behavior_names():
@@ -347,8 +332,7 @@ def test_no_out_of_scope_support_is_exposed():
     module_text = "\n".join(
         [
             behavior_selected_isolated_pad.__doc__ or "",
-            behavior_selected_isolated_pad.evaluate_selected_isolated_pad_behavior.__doc__
-            or "",
+            behavior_selected_isolated_pad.evaluate_selected_isolated_pad_behavior.__doc__ or "",
         ]
     )
 
@@ -370,6 +354,6 @@ if __name__ == "__main__":
     test_packet_3_selected_isolated_pad_mutation_behavior_remains_unchanged()
     test_passive_cli_behavior_remains_unchanged()
     test_no_real_midi_library_is_imported()
-    test_no_package_metadata_files_are_introduced()
+    test_packaging_uses_pyproject_not_legacy_setup()
     test_behavior_selected_isolated_pad_exposes_no_active_behavior_names()
     test_no_out_of_scope_support_is_exposed()

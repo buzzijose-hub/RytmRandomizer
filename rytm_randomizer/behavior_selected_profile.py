@@ -5,12 +5,11 @@ runtime profile state, machine changes, anchor loading, dispatching commands,
 opening ports, sending MIDI, or touching hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .commands import COMMANDS, PROFILE_WORKFLOW_COMMANDS
-
 
 PACKET_10A_SELECTED_PROFILE_KEYS = ("P",)
 PACKET_10B_SELECTED_PROFILE_KEYS = ("M",)

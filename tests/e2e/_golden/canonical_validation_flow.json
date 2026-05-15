@@ -1,0 +1,3068 @@
+[
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 15,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 15,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 21,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 22,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 23,
+    "value": 88
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 75,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 77,
+    "value": 63
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 81,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 15,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 58
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 32
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 68
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 42
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 22,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 23,
+    "value": 24
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 77,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 81,
+    "value": 19
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 15,
+    "value": 32
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 16,
+    "value": 100
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 17,
+    "value": 69
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 19,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 20,
+    "value": 70
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 3
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 70,
+    "value": 12
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 71,
+    "value": 28
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 74,
+    "value": 98
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 75,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 76,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 77,
+    "value": 55
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 79,
+    "value": 9
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 80,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 81,
+    "value": 21
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 82,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 83,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 96
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 103,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 42
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 105,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 106,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 89
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 108,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 15,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 95
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 22,
+    "value": 110
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 23,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 77,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 81,
+    "value": 17
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 49
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 89
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 59
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 69
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 39
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 97
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 46
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 84
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 87
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 17,
+    "value": 67
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 24
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 20,
+    "value": 71
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 95
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 79,
+    "value": 10
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 80,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 87
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 92
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 24
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 99
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 84
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 48
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 84
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 60
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 48
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 33
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 62
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 46
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 28
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 71,
+    "value": 66
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 77,
+    "value": 68
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 99
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 48
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 77
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 6
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 98
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 17,
+    "value": 66
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 20
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 20,
+    "value": 76
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 79,
+    "value": 10
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 80,
+    "value": 20
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 70,
+    "value": 6
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 71,
+    "value": 24
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 74,
+    "value": 98
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 77,
+    "value": 49
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 107
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 83
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 71,
+    "value": 54
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 77,
+    "value": 66
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 60
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 55
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 87
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 87
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 21,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 23,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 75,
+    "value": 55
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 81,
+    "value": 20
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 19
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 29
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 23,
+    "value": 29
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 28
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 81,
+    "value": 17
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 71,
+    "value": 65
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 77,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 19,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 81,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 82
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 87
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 18
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 41
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 68
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 49
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 96
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 98
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 79
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 110
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 84
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 22,
+    "value": 102
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 81,
+    "value": 13
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 71,
+    "value": 62
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 33
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 77,
+    "value": 65
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 59
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 56
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 58
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 29
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 85
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 71,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 75,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 77,
+    "value": 63
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 56
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 54
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 58
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 50
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 23,
+    "value": 31
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 71,
+    "value": 75
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 77,
+    "value": 69
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 8
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 101
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 81,
+    "value": 20
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 23,
+    "value": 20
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 21
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 81,
+    "value": 15
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 17,
+    "value": 74
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 34
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 19,
+    "value": 6
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 20,
+    "value": 88
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 3
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 70,
+    "value": 18
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 71,
+    "value": 43
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 74,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 77,
+    "value": 55
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 107
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 40
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 118
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 97
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 19,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 81,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 76
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 49
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 84
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 87
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 85
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 22,
+    "value": 106
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 71,
+    "value": 70
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 77,
+    "value": 65
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 88
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 81,
+    "value": 16
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 109
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 78
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 69
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 22,
+    "value": 99
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 29
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 81,
+    "value": 14
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 15,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 21,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 22,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 23,
+    "value": 88
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 75,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 77,
+    "value": 63
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 81,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 15,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 58
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 32
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 68
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 42
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 22,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 23,
+    "value": 24
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 77,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 81,
+    "value": 19
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 15,
+    "value": 32
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 16,
+    "value": 100
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 17,
+    "value": 69
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 19,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 20,
+    "value": 70
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 3
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 70,
+    "value": 12
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 71,
+    "value": 28
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 74,
+    "value": 98
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 75,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 76,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 77,
+    "value": 55
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 79,
+    "value": 9
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 80,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 81,
+    "value": 21
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 82,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 83,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 96
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 103,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 42
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 105,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 106,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 89
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 108,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 15,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 95
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 22,
+    "value": 110
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 23,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 77,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 81,
+    "value": 17
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 15,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 17,
+    "value": 61
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 18,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 19,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 20,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 21,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 22,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 23,
+    "value": 88
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 74,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 75,
+    "value": 51
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 77,
+    "value": 63
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 80,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 81,
+    "value": 22
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 0,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 15,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 17,
+    "value": 58
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 18,
+    "value": 53
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 19,
+    "value": 32
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 20,
+    "value": 68
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 21,
+    "value": 42
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 22,
+    "value": 1
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 23,
+    "value": 24
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 74,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 75,
+    "value": 26
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 77,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 79,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 80,
+    "value": 93
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 81,
+    "value": 19
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 1,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 15,
+    "value": 32
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 16,
+    "value": 100
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 17,
+    "value": 69
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 18,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 19,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 20,
+    "value": 70
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 21,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 22,
+    "value": 3
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 23,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 70,
+    "value": 12
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 71,
+    "value": 28
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 74,
+    "value": 98
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 75,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 76,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 77,
+    "value": 55
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 79,
+    "value": 9
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 80,
+    "value": 25
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 81,
+    "value": 21
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 82,
+    "value": 5
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 83,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 10,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 102,
+    "value": 96
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 103,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 104,
+    "value": 42
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 105,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 106,
+    "value": 2
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 107,
+    "value": 89
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 108,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 2,
+    "control": 109,
+    "value": 86
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 15,
+    "value": 30
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 17,
+    "value": 52
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 18,
+    "value": 94
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 19,
+    "value": 90
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 20,
+    "value": 95
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 21,
+    "value": 91
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 22,
+    "value": 110
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 23,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 70,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 71,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 72,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 73,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 74,
+    "value": 23
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 75,
+    "value": 27
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 76,
+    "value": 4
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 77,
+    "value": 64
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 78,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 79,
+    "value": 103
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 80,
+    "value": 81
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 81,
+    "value": 17
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 82,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 83,
+    "value": 0
+  },
+  {
+    "message_type": "control_change",
+    "channel": 3,
+    "control": 10,
+    "value": 64
+  }
+]

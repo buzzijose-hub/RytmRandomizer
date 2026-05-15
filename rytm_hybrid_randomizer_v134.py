@@ -2,1740 +2,221 @@ import mido
 import random
 import time
 
-print("\nRYTM HYBRID RANDOMIZER V1.34 - DOCUMENTATION CHECKPOINT / EXPANDED SCENE LAYER COMPLETE\n")
+# ------------------------------------------------------------
+# EXTRACTED DOMAIN MODULES (Wave 4 decomposition)
+# ------------------------------------------------------------
+# The leaf-level MIDI I/O primitives and the randomization core now live in
+# small typed modules under rytm_randomizer/. They are imported here and the
+# monolith's same-named functions below are thin shims that forward the
+# monolith's module globals (out/channel/active_profile and the mutable
+# anchor_state / current_state / previous_state) into the pure package
+# functions. Behavior is byte-identical to pre-extraction V1.34.
+from rytm_randomizer import midi_io as _midi_io
+from rytm_randomizer import randomization as _randomization
 
-outputs = mido.get_output_names()
-
-if not outputs:
-    print("No MIDI outputs found.")
-    raise SystemExit
-
-print("Available MIDI outputs:\n")
-for i, name in enumerate(outputs):
-    print(f"{i}: {name}")
-
-choice = input("\nChoose the Analog Rytm MIDI output number: ").strip()
-
-try:
-    port_name = outputs[int(choice)]
-except:
-    print("Invalid choice.")
-    raise SystemExit
+# ------------------------------------------------------------
+# SHARED DATA LAYER (single source of truth)
+# ------------------------------------------------------------
+# All canonical V1.34 domain data (param maps, anchors, safe limits, deltas,
+# zones, the profile registry, scene presets, the 4-pad layout, and the
+# intensity / page / per-pad mode mutation plans) now lives in
+# rytm_randomizer/data/. It is imported here so the monolith and the
+# rytm_randomizer package share one copy and can never drift apart.
+from rytm_randomizer.data import (
+    BD_ACOUSTIC_DELTAS,
+    BD_ACOUSTIC_ORDER,
+    BD_ACOUSTIC_PARAMS,
+    BD_ACOUSTIC_SAFE,
+    BD_ACOUSTIC_ZONES,
+    BD_CLASSIC_DELTAS,
+    BD_CLASSIC_ORDER,
+    BD_CLASSIC_PARAMS,
+    BD_CLASSIC_SAFE,
+    BD_CLASSIC_ZONES,
+    BD_EXTRA_MACHINES,
+    BD_FM_DELTAS,
+    BD_FM_ORDER,
+    BD_FM_PARAMS,
+    BD_FM_SAFE,
+    BD_FM_ZONES,
+    BD_HARD_DELTAS,
+    BD_HARD_ORDER,
+    BD_HARD_PARAMS,
+    BD_HARD_SAFE,
+    BD_HARD_ZONES,
+    BD_PLASTIC_DELTAS,
+    BD_PLASTIC_ORDER,
+    BD_PLASTIC_PARAMS,
+    BD_PLASTIC_SAFE,
+    BD_PLASTIC_ZONES,
+    BD_SHARP_DELTAS,
+    BD_SHARP_ORDER,
+    BD_SHARP_PARAMS,
+    BD_SHARP_SAFE,
+    BD_SHARP_ZONES,
+    BD_SILKY_DELTAS,
+    BD_SILKY_ORDER,
+    BD_SILKY_PARAMS,
+    BD_SILKY_SAFE,
+    BD_SILKY_ZONES,
+    FILTER_TYPE_NAMES,
+    GLOBAL_PAGE_PLANS,
+    GROUP_LAYOUT,
+    INTENSITY_PLANS,
+    MACHINE_CC,
+    MY_BD_ACOUSTIC_ANCHOR,
+    MY_BD_CLASSIC_ANCHOR,
+    MY_BD_FM_ANCHOR,
+    MY_BD_HARD_ANCHOR,
+    MY_BD_PLASTIC_ANCHOR,
+    MY_BD_SHARP_ANCHOR,
+    MY_BD_SILKY_ANCHOR,
+    PAD1_BD_MUTATION_PLANS,
+    PAD1_BD_ROTATION_ORDER,
+    PAD2_MUTATION_PLANS,
+    PAD2_PROFILE_KEYS,
+    PAD2_PROFILE_LABELS,
+    PAD2_SD_CLASSIC_ANCHOR,
+    PAD2_SD_FM_ANCHOR,
+    PAD2_SD_HARD_ANCHOR,
+    PAD3_MODE_LABELS,
+    PAD3_MODE_MUTATION_PLANS,
+    PAD3_MODE_ORDER,
+    PAD4_MODE_LABELS,
+    PAD4_MODE_MUTATION_PLANS,
+    PAD4_MODE_ORDER,
+    PAD_3_SY_RAW_ANCHOR,
+    PROFILES,
+    SCENE_PRESETS,
+    SD_CLASSIC_DELTAS,
+    SD_CLASSIC_ORDER,
+    SD_CLASSIC_PARAMS,
+    SD_CLASSIC_SAFE,
+    SD_CLASSIC_ZONES,
+    SD_FM_DELTAS,
+    SD_FM_ORDER,
+    SD_FM_PARAMS,
+    SD_FM_SAFE,
+    SD_FM_ZONES,
+    SD_HARD_DELTAS,
+    SD_HARD_ORDER,
+    SD_HARD_PARAMS,
+    SD_HARD_SAFE,
+    SD_HARD_ZONES,
+    SY_RAW_DELTAS,
+    SY_RAW_FILTER_NAMES,
+    SY_RAW_ORDER,
+    SY_RAW_PARAMS,
+    SY_RAW_SAFE_LIMITS,
+    SY_RAW_ZONES,
+)
 
 # Target pad/channel setup.
 # Pad 1 = MIDI Channel 1, Pad 2 = MIDI Channel 2, etc.
 target_pad = 1
 channel = 0
 
-MACHINE_CC = 15
 
 # ------------------------------------------------------------
 # PARAM MAPS
 # ------------------------------------------------------------
 
-BD_SHARP_PARAMS = {
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Sweep Depth": 19,
-    "SRC Sweep Time": 20,
-    "SRC Hold Time": 21,
-    "SRC Tick Level": 22,
-    "SRC Waveform": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
-
-BD_HARD_PARAMS = {
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Hold": 19,
-    "SRC Sweep Time": 20,
-    "SRC Snap": 21,
-    "SRC Waveform": 22,
-    "SRC Transient Tick": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
-
-BD_FM_PARAMS = {
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Sweep Time": 18,
-    "SRC FM Decay": 19,
-    "SRC Decay": 20,
-    "SRC FM Tune": 21,
-    "SRC FM Amount": 22,
-    "SRC Tick Level": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
-
-BD_PLASTIC_PARAMS = {
-    # V1.14 provisional profile. The official BD Plastic machine centers on
-    # Tune, Sweep Time/Depth, Decay, Modulation Type/Level, Tick, and Level.
-    # The CC positions follow the Analog Rytm SRC parameter slots CC16-23.
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Sweep Depth": 19,
-    "SRC Sweep Time": 20,
-    "SRC Mod Type": 21,
-    "SRC Mod Level": 22,
-    "SRC Tick Level": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
-
-BD_SILKY_PARAMS = {
-    # V1.15 provisional profile. The official BD Silky machine centers on
-    # Tune, Decay, Sweep Depth/Time, Hold, VCO Click, Dust Level, and Level.
-    # The CC positions follow the Analog Rytm SRC parameter slots CC16-23.
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Sweep Depth": 19,
-    "SRC Sweep Time": 20,
-    "SRC Hold": 21,
-    "SRC VCO Click": 22,
-    "SRC Dust Level": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
-
-BD_CLASSIC_PARAMS = {
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Sweep Depth": 19,
-    "SRC Sweep Time": 20,
-    "SRC Hold": 21,
-    "SRC Waveform": 22,
-    "SRC Transient": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
-
-BD_ACOUSTIC_PARAMS = {
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Sweep Depth": 19,
-    "SRC Sweep Time": 20,
-    "SRC Hold": 21,
-    "SRC Impact": 22,
-    "SRC Waveform": 23,
-
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
-
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
 
 
-SD_HARD_PARAMS = {
-    # Pad 2 SD Hard machine. SRC parameter slots follow Analog Rytm CC16-23:
-    # Level, Tune, Decay, Sweep Depth, Tick Level, Noise Decay, Noise Level, Sweep Time.
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Sweep Depth": 19,
-    "SRC Tick Level": 20,
-    "SRC Noise Decay": 21,
-    "SRC Noise Level": 22,
-    "SRC Sweep Time": 23,
 
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
 
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
 
-SD_CLASSIC_PARAMS = {
-    # Pad 2 SD Classic machine. SRC parameter slots follow Analog Rytm CC16-23:
-    # Level, Tune, Decay, Detune, Snap Amount, Noise Decay, Noise Level, Osc Balance.
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC Detune": 19,
-    "SRC Snap Amount": 20,
-    "SRC Noise Decay": 21,
-    "SRC Noise Level": 22,
-    "SRC Osc Balance": 23,
 
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
 
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
 
-SD_FM_PARAMS = {
-    # Pad 2 SD FM machine. SRC parameter slots follow Analog Rytm CC16-23:
-    # Level, Tune, Decay, FM Tune, FM Decay Time, Noise Decay, Noise Level, FM Amount.
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Decay": 18,
-    "SRC FM Tune": 19,
-    "SRC FM Decay Time": 20,
-    "SRC Noise Decay": 21,
-    "SRC Noise Level": 22,
-    "SRC FM Amount": 23,
 
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
 
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
-}
 
 
 # ------------------------------------------------------------
 # ORDER
 # ------------------------------------------------------------
 
-BD_SHARP_ORDER = [
-    "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-    "SRC Hold Time", "SRC Tick Level", "SRC Waveform",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
-
-BD_HARD_ORDER = [
-    "SRC Tune", "SRC Decay", "SRC Hold", "SRC Sweep Time",
-    "SRC Snap", "SRC Waveform", "SRC Transient Tick",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
-
-BD_FM_ORDER = [
-    "SRC Level", "SRC Tune", "SRC Sweep Time", "SRC FM Decay",
-    "SRC Decay", "SRC FM Tune", "SRC FM Amount", "SRC Tick Level",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
-
-BD_PLASTIC_ORDER = [
-    "SRC Level", "SRC Tune", "SRC Decay", "SRC Sweep Depth",
-    "SRC Sweep Time", "SRC Mod Type", "SRC Mod Level", "SRC Tick Level",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
-
-BD_SILKY_ORDER = [
-    "SRC Level", "SRC Tune", "SRC Decay", "SRC Sweep Depth",
-    "SRC Sweep Time", "SRC Hold", "SRC VCO Click", "SRC Dust Level",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
-
-BD_CLASSIC_ORDER = [
-    "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-    "SRC Hold", "SRC Waveform", "SRC Transient",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
-
-BD_ACOUSTIC_ORDER = [
-    "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-    "SRC Hold", "SRC Impact", "SRC Waveform",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
 
 
-SD_HARD_ORDER = [
-    "SRC Level", "SRC Tune", "SRC Decay", "SRC Sweep Depth",
-    "SRC Tick Level", "SRC Noise Decay", "SRC Noise Level", "SRC Sweep Time",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
 
-SD_CLASSIC_ORDER = [
-    "SRC Level", "SRC Tune", "SRC Decay", "SRC Detune",
-    "SRC Snap Amount", "SRC Noise Decay", "SRC Noise Level", "SRC Osc Balance",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
 
-SD_FM_ORDER = [
-    "SRC Level", "SRC Tune", "SRC Decay", "SRC FM Tune",
-    "SRC FM Decay Time", "SRC Noise Decay", "SRC Noise Level", "SRC FM Amount",
-    "FLT Attack", "FLT Decay", "FLT Sustain", "FLT Release",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Attack", "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "AMP Delay Send", "AMP Reverb Send", "AMP Pan",
-]
+
+
+
+
+
+
 
 
 # ------------------------------------------------------------
 # ANCHORS
 # ------------------------------------------------------------
 
-MY_BD_SHARP_ANCHOR = {
-    "SRC Tune": 59,
-    "SRC Decay": 58,
-    "SRC Sweep Depth": 93,
-    "SRC Sweep Time": 81,
-    "SRC Hold Time": 40,
-    "SRC Tick Level": 127,
-    "SRC Waveform": 1,
-
-    "FLT Attack": 0,
-    "FLT Decay": 35,
-    "FLT Sustain": 0,
-    "FLT Release": 10,
-    "FLT Frequency": 23,
-    "FLT Resonance": 77,
-    "FLT Type": 4,
-    "FLT Env Depth": 64,
-
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 93,
-    "AMP Overdrive": 22,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
-
-MY_BD_HARD_ANCHOR = {
-    "SRC Tune": 61,
-    "SRC Decay": 51,
-    "SRC Hold": 52,
-    "SRC Sweep Time": 90,
-    "SRC Snap": 26,
-    "SRC Waveform": 0,
-    "SRC Transient Tick": 88,
-
-    "FLT Attack": 0,
-    "FLT Decay": 64,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 27,
-    "FLT Resonance": 51,
-    "FLT Type": 4,
-    "FLT Env Depth": 63,
-
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 86,
-    "AMP Overdrive": 22,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
-
-MY_BD_FM_ANCHOR = {
-    # V1.13 provisional musical anchor for metallic hard-techno discovery.
-    # The SRC parameter order follows the Analog Rytm BD FM machine layout:
-    # Level, Tune, Sweep Time, FM Decay, Decay, FM Tune, FM Amount, Tick Level.
-    "SRC Level": 100,
-    "SRC Tune": 60,
-    "SRC Sweep Time": 82,
-    "SRC FM Decay": 38,
-    "SRC Decay": 56,
-    "SRC FM Tune": 68,
-    "SRC FM Amount": 44,
-    "SRC Tick Level": 88,
-
-    "FLT Attack": 0,
-    "FLT Decay": 58,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 28,
-    "FLT Resonance": 58,
-    "FLT Type": 4,
-    "FLT Env Depth": 63,
-
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 86,
-    "AMP Overdrive": 24,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
-
-MY_BD_PLASTIC_ANCHOR = {
-    # V1.14 provisional musical anchor for synthetic / rubbery punch discovery.
-    # Start conservative so BP is usable immediately while PT/PK/PX explore.
-    "SRC Level": 100,
-    "SRC Tune": 60,
-    "SRC Decay": 58,
-    "SRC Sweep Depth": 52,
-    "SRC Sweep Time": 78,
-    "SRC Mod Type": 0,
-    "SRC Mod Level": 38,
-    "SRC Tick Level": 84,
-
-    "FLT Attack": 0,
-    "FLT Decay": 60,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 28,
-    "FLT Resonance": 54,
-    "FLT Type": 4,
-    "FLT Env Depth": 63,
-
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 86,
-    "AMP Overdrive": 23,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
-
-MY_BD_SILKY_ANCHOR = {
-    # V1.15 provisional musical anchor for smooth / deep low-end discovery.
-    # Designed as a lower-risk contrast to BD Hard, FM, and Plastic.
-    "SRC Level": 100,
-    "SRC Tune": 60,
-    "SRC Decay": 66,
-    "SRC Sweep Depth": 34,
-    "SRC Sweep Time": 82,
-    "SRC Hold": 24,
-    "SRC VCO Click": 38,
-    "SRC Dust Level": 14,
-
-    "FLT Attack": 0,
-    "FLT Decay": 62,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 27,
-    "FLT Resonance": 48,
-    "FLT Type": 4,
-    "FLT Env Depth": 63,
-
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 92,
-    "AMP Overdrive": 20,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
-
-MY_BD_CLASSIC_ANCHOR = {
-    "SRC Tune": 58,
-    "SRC Decay": 53,
-    "SRC Sweep Depth": 32,
-    "SRC Sweep Time": 68,
-    "SRC Hold": 42,
-    "SRC Waveform": 1,
-    "SRC Transient": 24,
-
-    "FLT Attack": 0,
-    "FLT Decay": 64,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 25,
-    "FLT Resonance": 26,
-    "FLT Type": 4,
-    "FLT Env Depth": 64,
-
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 93,
-    "AMP Overdrive": 19,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
-
-MY_BD_ACOUSTIC_ANCHOR = {
-    "SRC Tune": 52,
-    "SRC Decay": 94,
-    "SRC Sweep Depth": 90,
-    "SRC Sweep Time": 95,
-    "SRC Hold": 91,
-    "SRC Impact": 110,
-    "SRC Waveform": 0,
-
-    "FLT Attack": 0,
-    "FLT Decay": 64,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 23,
-    "FLT Resonance": 27,
-    "FLT Type": 4,
-    "FLT Env Depth": 64,
-
-    "AMP Attack": 0,
-    "AMP Hold": 103,
-    "AMP Decay": 81,
-    "AMP Overdrive": 17,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
 
 
-PAD2_SD_HARD_ANCHOR = {
-    # V1.26 checkpoint retains V1.20 Pad 2 pressure snare anchor. Designed as a hard-techno backbeat/pressure layer,
-    # not a polished acoustic snare. HP filtering keeps it away from the Pad 1 low-end lane.
-    "SRC Level": 100,
-    "SRC Tune": 65,
-    "SRC Decay": 46,
-    "SRC Sweep Depth": 48,
-    "SRC Tick Level": 92,
-    "SRC Noise Decay": 54,
-    "SRC Noise Level": 78,
-    "SRC Sweep Time": 58,
 
-    "FLT Attack": 0,
-    "FLT Decay": 44,
-    "FLT Sustain": 0,
-    "FLT Release": 42,
-    "FLT Frequency": 56,
-    "FLT Resonance": 22,
-    "FLT Type": 3,
-    "FLT Env Depth": 34,
 
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 58,
-    "AMP Overdrive": 25,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
 
-PAD2_SD_CLASSIC_ANCHOR = {
-    # V1.26 checkpoint retains V1.20 Pad 2 classic/snappy snare anchor. Slightly rounder than SD Hard,
-    # useful as a rolling secondary percussion voice or tougher offbeat layer.
-    "SRC Level": 100,
-    "SRC Tune": 62,
-    "SRC Decay": 52,
-    "SRC Detune": 8,
-    "SRC Snap Amount": 58,
-    "SRC Noise Decay": 58,
-    "SRC Noise Level": 72,
-    "SRC Osc Balance": 64,
 
-    "FLT Attack": 0,
-    "FLT Decay": 48,
-    "FLT Sustain": 0,
-    "FLT Release": 46,
-    "FLT Frequency": 52,
-    "FLT Resonance": 20,
-    "FLT Type": 3,
-    "FLT Env Depth": 30,
 
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 64,
-    "AMP Overdrive": 21,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
 
-PAD2_SD_FM_ANCHOR = {
-    # V1.26 checkpoint retains V1.20 Pad 2 metallic FM snare anchor. Designed as a harsher pressure layer
-    # for hard-techno accents without stealing the Pad 1 low-end lane.
-    "SRC Level": 100,
-    "SRC Tune": 64,
-    "SRC Decay": 48,
-    "SRC FM Tune": 70,
-    "SRC FM Decay Time": 42,
-    "SRC Noise Decay": 52,
-    "SRC Noise Level": 74,
-    "SRC FM Amount": 54,
 
-    "FLT Attack": 0,
-    "FLT Decay": 44,
-    "FLT Sustain": 0,
-    "FLT Release": 44,
-    "FLT Frequency": 58,
-    "FLT Resonance": 24,
-    "FLT Type": 3,
-    "FLT Env Depth": 36,
 
-    "AMP Attack": 0,
-    "AMP Hold": 0,
-    "AMP Decay": 62,
-    "AMP Overdrive": 27,
-    "AMP Delay Send": 0,
-    "AMP Reverb Send": 0,
-    "AMP Pan": 64,
-}
 
 
 # ------------------------------------------------------------
 # SAFE LIMITS
 # ------------------------------------------------------------
 
-BD_SHARP_SAFE = {
-    "SRC Tune": (56, 62),
-    "SRC Decay": (48, 70),
-    "SRC Sweep Depth": (75, 110),
-    "SRC Sweep Time": (65, 100),
-    "SRC Hold Time": (28, 58),
-    "SRC Tick Level": (105, 127),
-    "SRC Waveform": (1, 1),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (20, 55),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (0, 20),
-    "FLT Frequency": (22, 35),
-    "FLT Resonance": (68, 85),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (56, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (0, 8),
-    "AMP Decay": (78, 110),
-    "AMP Overdrive": (16, 35),
-    "AMP Delay Send": (0, 6),
-    "AMP Reverb Send": (0, 6),
-    "AMP Pan": (60, 68),
-}
-
-BD_HARD_SAFE = {
-    "SRC Tune": (58, 64),
-    "SRC Decay": (38, 66),
-    "SRC Hold": (35, 70),
-    "SRC Sweep Time": (70, 110),
-    "SRC Snap": (8, 55),
-    "SRC Waveform": (0, 0),
-    "SRC Transient Tick": (60, 115),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (45, 80),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 80),
-    "FLT Frequency": (23, 36),
-    "FLT Resonance": (40, 68),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (55, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (0, 8),
-    "AMP Decay": (72, 105),
-    "AMP Overdrive": (16, 35),
-    "AMP Delay Send": (0, 6),
-    "AMP Reverb Send": (0, 6),
-    "AMP Pan": (60, 68),
-}
-
-BD_FM_SAFE = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (56, 65),
-    "SRC Sweep Time": (55, 112),
-    "SRC FM Decay": (14, 78),
-    "SRC Decay": (38, 76),
-    "SRC FM Tune": (42, 96),
-    "SRC FM Amount": (18, 88),
-    "SRC Tick Level": (55, 118),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (40, 80),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 80),
-    "FLT Frequency": (23, 38),
-    "FLT Resonance": (42, 76),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (55, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (0, 8),
-    "AMP Decay": (72, 108),
-    "AMP Overdrive": (16, 38),
-    "AMP Delay Send": (0, 8),
-    "AMP Reverb Send": (0, 8),
-    "AMP Pan": (60, 68),
-}
-
-BD_PLASTIC_SAFE = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (56, 65),
-    "SRC Decay": (38, 78),
-    "SRC Sweep Depth": (24, 88),
-    "SRC Sweep Time": (52, 108),
-    "SRC Mod Type": (0, 1),
-    "SRC Mod Level": (14, 88),
-    "SRC Tick Level": (50, 116),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (40, 82),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 80),
-    "FLT Frequency": (23, 38),
-    "FLT Resonance": (38, 74),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (55, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (0, 8),
-    "AMP Decay": (72, 108),
-    "AMP Overdrive": (16, 38),
-    "AMP Delay Send": (0, 8),
-    "AMP Reverb Send": (0, 8),
-    "AMP Pan": (60, 68),
-}
-
-BD_SILKY_SAFE = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (56, 65),
-    "SRC Decay": (44, 94),
-    "SRC Sweep Depth": (10, 72),
-    "SRC Sweep Time": (45, 106),
-    "SRC Hold": (0, 54),
-    "SRC VCO Click": (8, 88),
-    "SRC Dust Level": (0, 48),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (40, 84),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 80),
-    "FLT Frequency": (23, 37),
-    "FLT Resonance": (32, 68),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (55, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (0, 8),
-    "AMP Decay": (76, 114),
-    "AMP Overdrive": (12, 34),
-    "AMP Delay Send": (0, 8),
-    "AMP Reverb Send": (0, 8),
-    "AMP Pan": (60, 68),
-}
-
-BD_CLASSIC_SAFE = {
-    "SRC Tune": (54, 62),
-    "SRC Decay": (42, 68),
-    "SRC Sweep Depth": (18, 55),
-    "SRC Sweep Time": (50, 85),
-    "SRC Hold": (28, 60),
-    "SRC Waveform": (1, 1),
-    "SRC Transient": (10, 45),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (45, 80),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 80),
-    "FLT Frequency": (22, 36),
-    "FLT Resonance": (18, 42),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (55, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (0, 8),
-    "AMP Decay": (78, 110),
-    "AMP Overdrive": (14, 32),
-    "AMP Delay Send": (0, 6),
-    "AMP Reverb Send": (0, 6),
-    "AMP Pan": (60, 68),
-}
-
-BD_ACOUSTIC_SAFE = {
-    "SRC Tune": (48, 56),
-    "SRC Decay": (78, 110),
-    "SRC Sweep Depth": (72, 110),
-    "SRC Sweep Time": (75, 115),
-    "SRC Hold": (70, 110),
-    "SRC Impact": (90, 127),
-    "SRC Waveform": (0, 0),
-
-    "FLT Attack": (0, 10),
-    "FLT Decay": (45, 80),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 80),
-    "FLT Frequency": (22, 34),
-    "FLT Resonance": (18, 42),
-    "FLT Type": (4, 4),
-    "FLT Env Depth": (55, 72),
-
-    "AMP Attack": (0, 5),
-    "AMP Hold": (80, 115),
-    "AMP Decay": (68, 96),
-    "AMP Overdrive": (12, 30),
-    "AMP Delay Send": (0, 6),
-    "AMP Reverb Send": (0, 6),
-    "AMP Pan": (60, 68),
-}
 
 
-SD_HARD_SAFE = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (56, 74),
-    "SRC Decay": (28, 72),
-    "SRC Sweep Depth": (20, 80),
-    "SRC Tick Level": (65, 118),
-    "SRC Noise Decay": (30, 84),
-    "SRC Noise Level": (48, 108),
-    "SRC Sweep Time": (35, 90),
 
-    "FLT Attack": (0, 10),
-    "FLT Decay": (20, 70),
-    "FLT Sustain": (0, 25),
-    "FLT Release": (24, 72),
-    "FLT Frequency": (42, 76),
-    "FLT Resonance": (8, 42),
-    "FLT Type": (3, 4),
-    "FLT Env Depth": (12, 55),
 
-    "AMP Attack": (0, 6),
-    "AMP Hold": (0, 10),
-    "AMP Decay": (36, 86),
-    "AMP Overdrive": (12, 42),
-    "AMP Delay Send": (0, 8),
-    "AMP Reverb Send": (0, 8),
-    "AMP Pan": (60, 68),
-}
 
-SD_CLASSIC_SAFE = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (54, 72),
-    "SRC Decay": (34, 82),
-    "SRC Detune": (0, 24),
-    "SRC Snap Amount": (28, 94),
-    "SRC Noise Decay": (32, 88),
-    "SRC Noise Level": (42, 102),
-    "SRC Osc Balance": (42, 88),
 
-    "FLT Attack": (0, 10),
-    "FLT Decay": (22, 76),
-    "FLT Sustain": (0, 25),
-    "FLT Release": (24, 76),
-    "FLT Frequency": (40, 76),
-    "FLT Resonance": (6, 40),
-    "FLT Type": (3, 4),
-    "FLT Env Depth": (10, 52),
 
-    "AMP Attack": (0, 6),
-    "AMP Hold": (0, 12),
-    "AMP Decay": (40, 92),
-    "AMP Overdrive": (10, 38),
-    "AMP Delay Send": (0, 8),
-    "AMP Reverb Send": (0, 8),
-    "AMP Pan": (60, 68),
-}
 
-SD_FM_SAFE = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (56, 74),
-    "SRC Decay": (30, 78),
-    "SRC FM Tune": (42, 96),
-    "SRC FM Decay Time": (16, 84),
-    "SRC Noise Decay": (28, 84),
-    "SRC Noise Level": (42, 110),
-    "SRC FM Amount": (20, 94),
 
-    "FLT Attack": (0, 10),
-    "FLT Decay": (20, 74),
-    "FLT Sustain": (0, 25),
-    "FLT Release": (24, 76),
-    "FLT Frequency": (42, 82),
-    "FLT Resonance": (8, 46),
-    "FLT Type": (3, 4),
-    "FLT Env Depth": (12, 58),
 
-    "AMP Attack": (0, 6),
-    "AMP Hold": (0, 12),
-    "AMP Decay": (38, 94),
-    "AMP Overdrive": (16, 46),
-    "AMP Delay Send": (0, 8),
-    "AMP Reverb Send": (0, 8),
-    "AMP Pan": (60, 68),
-}
 
 
 # ------------------------------------------------------------
 # DELTAS
 # ------------------------------------------------------------
 
-BD_SHARP_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Decay": 3, "SRC Sweep Depth": 5,
-        "SRC Sweep Time": 5, "SRC Hold Time": 3, "SRC Tick Level": 5,
-        "FLT Decay": 3, "FLT Frequency": 2, "FLT Resonance": 4,
-        "FLT Env Depth": 2,
-        "AMP Hold": 2, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Decay": 6, "SRC Sweep Depth": 10,
-        "SRC Sweep Time": 10, "SRC Hold Time": 6, "SRC Tick Level": 10,
-        "FLT Decay": 8, "FLT Frequency": 4, "FLT Resonance": 8,
-        "FLT Env Depth": 5,
-        "AMP Hold": 4, "AMP Decay": 8, "AMP Overdrive": 5,
-    },
-    "strong": {
-        "SRC Tune": 3, "SRC Decay": 10, "SRC Sweep Depth": 16,
-        "SRC Sweep Time": 16, "SRC Hold Time": 10, "SRC Tick Level": 18,
-        "FLT Decay": 14, "FLT Frequency": 7, "FLT Resonance": 10,
-        "FLT Env Depth": 8,
-        "AMP Hold": 8, "AMP Decay": 14, "AMP Overdrive": 8,
-    },
-}
-
-BD_HARD_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Decay": 3, "SRC Hold": 3,
-        "SRC Sweep Time": 5, "SRC Snap": 4, "SRC Transient Tick": 5,
-        "FLT Decay": 5, "FLT Frequency": 2, "FLT Resonance": 4,
-        "FLT Env Depth": 2,
-        "AMP Hold": 2, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Decay": 7, "SRC Hold": 6,
-        "SRC Sweep Time": 10, "SRC Snap": 8, "SRC Transient Tick": 10,
-        "FLT Decay": 10, "FLT Frequency": 4, "FLT Resonance": 8,
-        "FLT Env Depth": 5,
-        "AMP Hold": 4, "AMP Decay": 8, "AMP Overdrive": 5,
-    },
-    "strong": {
-        "SRC Tune": 3, "SRC Decay": 12, "SRC Hold": 10,
-        "SRC Sweep Time": 16, "SRC Snap": 14, "SRC Transient Tick": 16,
-        "FLT Decay": 15, "FLT Frequency": 7, "FLT Resonance": 10,
-        "FLT Env Depth": 8,
-        "AMP Hold": 8, "AMP Decay": 14, "AMP Overdrive": 8,
-    },
-}
-
-BD_FM_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Sweep Time": 5, "SRC FM Decay": 5,
-        "SRC Decay": 4, "SRC FM Tune": 5, "SRC FM Amount": 6,
-        "SRC Tick Level": 5,
-        "FLT Decay": 5, "FLT Frequency": 2, "FLT Resonance": 5,
-        "FLT Env Depth": 2,
-        "AMP Hold": 2, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Sweep Time": 11, "SRC FM Decay": 12,
-        "SRC Decay": 8, "SRC FM Tune": 13, "SRC FM Amount": 15,
-        "SRC Tick Level": 12,
-        "FLT Decay": 10, "FLT Frequency": 5, "FLT Resonance": 9,
-        "FLT Env Depth": 5,
-        "AMP Hold": 4, "AMP Decay": 9, "AMP Overdrive": 6,
-    },
-    "strong": {
-        "SRC Tune": 4, "SRC Sweep Time": 18, "SRC FM Decay": 22,
-        "SRC Decay": 14, "SRC FM Tune": 22, "SRC FM Amount": 28,
-        "SRC Tick Level": 20,
-        "FLT Decay": 15, "FLT Frequency": 8, "FLT Resonance": 13,
-        "FLT Env Depth": 8,
-        "AMP Hold": 8, "AMP Decay": 15, "AMP Overdrive": 10,
-    },
-}
-
-BD_PLASTIC_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Decay": 4, "SRC Sweep Depth": 5,
-        "SRC Sweep Time": 5, "SRC Mod Level": 6, "SRC Tick Level": 5,
-        "FLT Decay": 5, "FLT Frequency": 2, "FLT Resonance": 5,
-        "FLT Env Depth": 2,
-        "AMP Hold": 2, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Decay": 8, "SRC Sweep Depth": 12,
-        "SRC Sweep Time": 11, "SRC Mod Level": 14, "SRC Tick Level": 12,
-        "FLT Decay": 10, "FLT Frequency": 5, "FLT Resonance": 9,
-        "FLT Env Depth": 5,
-        "AMP Hold": 4, "AMP Decay": 9, "AMP Overdrive": 6,
-    },
-    "strong": {
-        "SRC Tune": 4, "SRC Decay": 15, "SRC Sweep Depth": 22,
-        "SRC Sweep Time": 18, "SRC Mod Level": 26, "SRC Tick Level": 20,
-        "FLT Decay": 15, "FLT Frequency": 8, "FLT Resonance": 12,
-        "FLT Env Depth": 8,
-        "AMP Hold": 8, "AMP Decay": 15, "AMP Overdrive": 10,
-    },
-}
-
-BD_SILKY_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Decay": 4, "SRC Sweep Depth": 5,
-        "SRC Sweep Time": 5, "SRC Hold": 4, "SRC VCO Click": 5,
-        "SRC Dust Level": 3,
-        "FLT Decay": 5, "FLT Frequency": 2, "FLT Resonance": 4,
-        "FLT Env Depth": 2,
-        "AMP Hold": 2, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Decay": 9, "SRC Sweep Depth": 12,
-        "SRC Sweep Time": 12, "SRC Hold": 10, "SRC VCO Click": 12,
-        "SRC Dust Level": 8,
-        "FLT Decay": 10, "FLT Frequency": 5, "FLT Resonance": 8,
-        "FLT Env Depth": 5,
-        "AMP Hold": 4, "AMP Decay": 9, "AMP Overdrive": 5,
-    },
-    "strong": {
-        "SRC Tune": 4, "SRC Decay": 18, "SRC Sweep Depth": 22,
-        "SRC Sweep Time": 20, "SRC Hold": 18, "SRC VCO Click": 24,
-        "SRC Dust Level": 18,
-        "FLT Decay": 16, "FLT Frequency": 8, "FLT Resonance": 12,
-        "FLT Env Depth": 8,
-        "AMP Hold": 8, "AMP Decay": 16, "AMP Overdrive": 8,
-    },
-}
-
-BD_CLASSIC_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Decay": 3, "SRC Sweep Depth": 4,
-        "SRC Sweep Time": 4, "SRC Hold": 3, "SRC Transient": 4,
-        "FLT Decay": 5, "FLT Frequency": 2, "FLT Resonance": 3,
-        "FLT Env Depth": 2,
-        "AMP Hold": 2, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Decay": 7, "SRC Sweep Depth": 8,
-        "SRC Sweep Time": 9, "SRC Hold": 6, "SRC Transient": 8,
-        "FLT Decay": 10, "FLT Frequency": 4, "FLT Resonance": 6,
-        "FLT Env Depth": 5,
-        "AMP Hold": 4, "AMP Decay": 8, "AMP Overdrive": 5,
-    },
-    "strong": {
-        "SRC Tune": 4, "SRC Decay": 12, "SRC Sweep Depth": 14,
-        "SRC Sweep Time": 15, "SRC Hold": 10, "SRC Transient": 14,
-        "FLT Decay": 15, "FLT Frequency": 7, "FLT Resonance": 10,
-        "FLT Env Depth": 8,
-        "AMP Hold": 8, "AMP Decay": 14, "AMP Overdrive": 8,
-    },
-}
-
-BD_ACOUSTIC_DELTAS = {
-    "micro": {
-        "SRC Tune": 1, "SRC Decay": 4, "SRC Sweep Depth": 4,
-        "SRC Sweep Time": 4, "SRC Hold": 4, "SRC Impact": 5,
-        "FLT Decay": 5, "FLT Frequency": 2, "FLT Resonance": 3,
-        "FLT Env Depth": 2,
-        "AMP Hold": 4, "AMP Decay": 4, "AMP Overdrive": 2,
-    },
-    "groove": {
-        "SRC Tune": 2, "SRC Decay": 8, "SRC Sweep Depth": 8,
-        "SRC Sweep Time": 9, "SRC Hold": 8, "SRC Impact": 10,
-        "FLT Decay": 10, "FLT Frequency": 4, "FLT Resonance": 6,
-        "FLT Env Depth": 5,
-        "AMP Hold": 8, "AMP Decay": 8, "AMP Overdrive": 5,
-    },
-    "strong": {
-        "SRC Tune": 4, "SRC Decay": 14, "SRC Sweep Depth": 14,
-        "SRC Sweep Time": 16, "SRC Hold": 14, "SRC Impact": 18,
-        "FLT Decay": 15, "FLT Frequency": 7, "FLT Resonance": 10,
-        "FLT Env Depth": 8,
-        "AMP Hold": 14, "AMP Decay": 12, "AMP Overdrive": 8,
-    },
-}
 
 
-SD_HARD_DELTAS = {
-    "micro": {
-        "SRC Tune": 2,
-        "SRC Decay": 4,
-        "SRC Sweep Depth": 5,
-        "SRC Tick Level": 5,
-        "SRC Noise Decay": 5,
-        "SRC Noise Level": 6,
-        "SRC Sweep Time": 5,
-        "FLT Decay": 4,
-        "FLT Frequency": 4,
-        "FLT Resonance": 3,
-        "FLT Env Depth": 3,
-        "AMP Hold": 2,
-        "AMP Decay": 5,
-        "AMP Overdrive": 3,
-    },
-    "groove": {
-        "SRC Tune": 5,
-        "SRC Decay": 9,
-        "SRC Sweep Depth": 12,
-        "SRC Tick Level": 12,
-        "SRC Noise Decay": 11,
-        "SRC Noise Level": 13,
-        "SRC Sweep Time": 10,
-        "FLT Decay": 9,
-        "FLT Frequency": 9,
-        "FLT Resonance": 7,
-        "FLT Env Depth": 7,
-        "AMP Hold": 5,
-        "AMP Decay": 11,
-        "AMP Overdrive": 8,
-    },
-    "strong": {
-        "SRC Tune": 8,
-        "SRC Decay": 16,
-        "SRC Sweep Depth": 22,
-        "SRC Tick Level": 22,
-        "SRC Noise Decay": 18,
-        "SRC Noise Level": 22,
-        "SRC Sweep Time": 18,
-        "FLT Decay": 16,
-        "FLT Frequency": 14,
-        "FLT Resonance": 12,
-        "FLT Env Depth": 12,
-        "AMP Hold": 9,
-        "AMP Decay": 18,
-        "AMP Overdrive": 13,
-    },
-}
 
-SD_CLASSIC_DELTAS = {
-    "micro": {
-        "SRC Tune": 2,
-        "SRC Decay": 4,
-        "SRC Detune": 3,
-        "SRC Snap Amount": 6,
-        "SRC Noise Decay": 5,
-        "SRC Noise Level": 6,
-        "SRC Osc Balance": 5,
-        "FLT Decay": 4,
-        "FLT Frequency": 4,
-        "FLT Resonance": 3,
-        "FLT Env Depth": 3,
-        "AMP Hold": 2,
-        "AMP Decay": 5,
-        "AMP Overdrive": 3,
-    },
-    "groove": {
-        "SRC Tune": 5,
-        "SRC Decay": 10,
-        "SRC Detune": 8,
-        "SRC Snap Amount": 14,
-        "SRC Noise Decay": 12,
-        "SRC Noise Level": 14,
-        "SRC Osc Balance": 11,
-        "FLT Decay": 9,
-        "FLT Frequency": 9,
-        "FLT Resonance": 7,
-        "FLT Env Depth": 7,
-        "AMP Hold": 5,
-        "AMP Decay": 12,
-        "AMP Overdrive": 8,
-    },
-    "strong": {
-        "SRC Tune": 8,
-        "SRC Decay": 18,
-        "SRC Detune": 14,
-        "SRC Snap Amount": 24,
-        "SRC Noise Decay": 20,
-        "SRC Noise Level": 24,
-        "SRC Osc Balance": 18,
-        "FLT Decay": 16,
-        "FLT Frequency": 14,
-        "FLT Resonance": 12,
-        "FLT Env Depth": 12,
-        "AMP Hold": 10,
-        "AMP Decay": 20,
-        "AMP Overdrive": 13,
-    },
-}
 
-SD_FM_DELTAS = {
-    "micro": {
-        "SRC Tune": 2,
-        "SRC Decay": 4,
-        "SRC FM Tune": 6,
-        "SRC FM Decay Time": 6,
-        "SRC Noise Decay": 5,
-        "SRC Noise Level": 6,
-        "SRC FM Amount": 7,
-        "FLT Decay": 4,
-        "FLT Frequency": 4,
-        "FLT Resonance": 3,
-        "FLT Env Depth": 3,
-        "AMP Hold": 2,
-        "AMP Decay": 5,
-        "AMP Overdrive": 3,
-    },
-    "groove": {
-        "SRC Tune": 5,
-        "SRC Decay": 10,
-        "SRC FM Tune": 14,
-        "SRC FM Decay Time": 14,
-        "SRC Noise Decay": 12,
-        "SRC Noise Level": 15,
-        "SRC FM Amount": 18,
-        "FLT Decay": 9,
-        "FLT Frequency": 10,
-        "FLT Resonance": 7,
-        "FLT Env Depth": 7,
-        "AMP Hold": 5,
-        "AMP Decay": 12,
-        "AMP Overdrive": 9,
-    },
-    "strong": {
-        "SRC Tune": 8,
-        "SRC Decay": 18,
-        "SRC FM Tune": 24,
-        "SRC FM Decay Time": 24,
-        "SRC Noise Decay": 20,
-        "SRC Noise Level": 26,
-        "SRC FM Amount": 32,
-        "FLT Decay": 16,
-        "FLT Frequency": 15,
-        "FLT Resonance": 12,
-        "FLT Env Depth": 12,
-        "AMP Hold": 10,
-        "AMP Decay": 20,
-        "AMP Overdrive": 14,
-    },
-}
+
+
+
+
+
+
 
 
 # ------------------------------------------------------------
 # ZONES
 # ------------------------------------------------------------
 
-BD_SHARP_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold Time", "SRC Tick Level",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold Time", "SRC Tick Level",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Tick Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold Time", "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-}
-
-BD_HARD_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Hold", "SRC Sweep Time",
-        "SRC Snap", "SRC Transient Tick",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Hold", "SRC Sweep Time",
-        "SRC Snap", "SRC Transient Tick",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Snap", "SRC Transient Tick", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Hold", "SRC Sweep Time",
-        "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-}
-
-BD_FM_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Sweep Time", "SRC FM Decay", "SRC Decay",
-        "SRC FM Tune", "SRC FM Amount", "SRC Tick Level",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Sweep Time", "SRC FM Decay", "SRC Decay",
-        "SRC FM Tune", "SRC FM Amount", "SRC Tick Level",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC FM Amount", "SRC Tick Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Sweep Time", "SRC FM Decay", "SRC Decay",
-        "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-    "fm": [
-        "SRC FM Decay", "SRC FM Tune", "SRC FM Amount", "SRC Tick Level",
-        "FLT Resonance", "AMP Overdrive",
-    ],
-}
-
-BD_PLASTIC_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Mod Type", "SRC Mod Level", "SRC Tick Level",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Mod Type", "SRC Mod Level", "SRC Tick Level",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Mod Level", "SRC Tick Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-    "plastic": [
-        "SRC Mod Type", "SRC Mod Level", "SRC Sweep Depth", "SRC Tick Level",
-        "FLT Resonance", "AMP Overdrive",
-    ],
-}
-
-BD_SILKY_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "SRC VCO Click", "SRC Dust Level",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "SRC VCO Click", "SRC Dust Level",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC VCO Click", "SRC Dust Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-    "silky": [
-        "SRC Hold", "SRC VCO Click", "SRC Dust Level", "SRC Sweep Depth",
-        "FLT Resonance", "AMP Overdrive",
-    ],
-}
-
-BD_CLASSIC_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "SRC Transient",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "SRC Transient",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Transient", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-}
-
-BD_ACOUSTIC_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "SRC Impact",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "SRC Impact",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Impact", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Hold", "FLT Frequency", "AMP Hold", "AMP Decay",
-    ],
-}
 
 
-SD_HARD_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Tick Level",
-        "SRC Noise Decay", "SRC Noise Level", "SRC Sweep Time",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Tick Level",
-        "SRC Noise Decay", "SRC Noise Level", "SRC Sweep Time",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Tick Level", "SRC Noise Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-        "SRC Noise Decay", "FLT Frequency", "AMP Decay",
-    ],
-    "snap": [
-        "SRC Tick Level", "SRC Sweep Depth", "SRC Sweep Time", "AMP Overdrive",
-    ],
-}
 
-SD_CLASSIC_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC Detune", "SRC Snap Amount",
-        "SRC Noise Decay", "SRC Noise Level", "SRC Osc Balance",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC Detune", "SRC Snap Amount",
-        "SRC Noise Decay", "SRC Noise Level", "SRC Osc Balance",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC Snap Amount", "SRC Noise Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC Detune", "SRC Noise Decay",
-        "SRC Osc Balance", "FLT Frequency", "AMP Decay",
-    ],
-    "snap": [
-        "SRC Snap Amount", "SRC Noise Level", "SRC Osc Balance", "AMP Overdrive",
-    ],
-}
 
-SD_FM_ZONES = {
-    "full": [
-        "SRC Tune", "SRC Decay", "SRC FM Tune", "SRC FM Decay Time",
-        "SRC Noise Decay", "SRC Noise Level", "SRC FM Amount",
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "src": [
-        "SRC Tune", "SRC Decay", "SRC FM Tune", "SRC FM Decay Time",
-        "SRC Noise Decay", "SRC Noise Level", "SRC FM Amount",
-    ],
-    "filter": [
-        "FLT Decay", "FLT Frequency", "FLT Resonance", "FLT Env Depth",
-    ],
-    "amp": [
-        "AMP Hold", "AMP Decay", "AMP Overdrive",
-    ],
-    "grit": [
-        "SRC FM Amount", "SRC FM Tune", "SRC Noise Level", "FLT Resonance", "AMP Overdrive",
-    ],
-    "body": [
-        "SRC Tune", "SRC Decay", "SRC FM Decay Time", "SRC Noise Decay",
-        "FLT Frequency", "AMP Decay",
-    ],
-    "snap": [
-        "SRC FM Tune", "SRC FM Amount", "SRC Noise Level", "AMP Overdrive",
-    ],
-}
+
+
+
+
+
+
 
 
 # ------------------------------------------------------------
 # PROFILES
 # ------------------------------------------------------------
 
-PROFILES = {
-    "1": {
-        "name": "My BD Sharp",
-        "machine_value": 26,
-        "params": BD_SHARP_PARAMS,
-        "order": BD_SHARP_ORDER,
-        "anchor": MY_BD_SHARP_ANCHOR,
-        "safe": BD_SHARP_SAFE,
-        "deltas": BD_SHARP_DELTAS,
-        "zones": BD_SHARP_ZONES,
-        "filter_mode": "sharp",
-        "waveform_range": (0, 3),
-    },
-    "2": {
-        "name": "My BD Hard",
-        "machine_value": 0,
-        "params": BD_HARD_PARAMS,
-        "order": BD_HARD_ORDER,
-        "anchor": MY_BD_HARD_ANCHOR,
-        "safe": BD_HARD_SAFE,
-        "deltas": BD_HARD_DELTAS,
-        "zones": BD_HARD_ZONES,
-        "filter_mode": "hard",
-        "waveform_range": (0, 2),
-    },
-    "3": {
-        "name": "My BD Classic",
-        "machine_value": 1,
-        "params": BD_CLASSIC_PARAMS,
-        "order": BD_CLASSIC_ORDER,
-        "anchor": MY_BD_CLASSIC_ANCHOR,
-        "safe": BD_CLASSIC_SAFE,
-        "deltas": BD_CLASSIC_DELTAS,
-        "zones": BD_CLASSIC_ZONES,
-        "filter_mode": "classic",
-        "waveform_range": (0, 3),
-    },
-    "4": {
-        "name": "My BD Acoustic",
-        "machine_value": 30,
-        "params": BD_ACOUSTIC_PARAMS,
-        "order": BD_ACOUSTIC_ORDER,
-        "anchor": MY_BD_ACOUSTIC_ANCHOR,
-        "safe": BD_ACOUSTIC_SAFE,
-        "deltas": BD_ACOUSTIC_DELTAS,
-        "zones": BD_ACOUSTIC_ZONES,
-        "filter_mode": "acoustic",
-        "waveform_range": (0, 3),
-    },
-    "6": {
-        "name": "BD FM Metallic Kick",
-        "machine_value": 13,
-        "params": BD_FM_PARAMS,
-        "order": BD_FM_ORDER,
-        "anchor": MY_BD_FM_ANCHOR,
-        "safe": BD_FM_SAFE,
-        "deltas": BD_FM_DELTAS,
-        "zones": BD_FM_ZONES,
-        "filter_mode": "fm",
-    },
-    "7": {
-        "name": "BD Plastic Rubber Kick",
-        "machine_value": 21,
-        "params": BD_PLASTIC_PARAMS,
-        "order": BD_PLASTIC_ORDER,
-        "anchor": MY_BD_PLASTIC_ANCHOR,
-        "safe": BD_PLASTIC_SAFE,
-        "deltas": BD_PLASTIC_DELTAS,
-        "zones": BD_PLASTIC_ZONES,
-        "filter_mode": "plastic",
-    },
-    "8": {
-        "name": "BD Silky Deep Kick",
-        "machine_value": 22,
-        "params": BD_SILKY_PARAMS,
-        "order": BD_SILKY_ORDER,
-        "anchor": MY_BD_SILKY_ANCHOR,
-        "safe": BD_SILKY_SAFE,
-        "deltas": BD_SILKY_DELTAS,
-        "zones": BD_SILKY_ZONES,
-        "filter_mode": "silky",
-    },
-    "9": {
-        "name": "Pad 2 SD Hard Pressure Snare",
-        "machine_value": 2,
-        "params": SD_HARD_PARAMS,
-        "order": SD_HARD_ORDER,
-        "anchor": PAD2_SD_HARD_ANCHOR,
-        "safe": SD_HARD_SAFE,
-        "deltas": SD_HARD_DELTAS,
-        "zones": SD_HARD_ZONES,
-        "filter_mode": "classic",
-    },
-    "10": {
-        "name": "Pad 2 SD Classic Rolling Snare",
-        "machine_value": 3,
-        "params": SD_CLASSIC_PARAMS,
-        "order": SD_CLASSIC_ORDER,
-        "anchor": PAD2_SD_CLASSIC_ANCHOR,
-        "safe": SD_CLASSIC_SAFE,
-        "deltas": SD_CLASSIC_DELTAS,
-        "zones": SD_CLASSIC_ZONES,
-        "filter_mode": "classic",
-    },
-    "11": {
-        "name": "Pad 2 SD FM Metallic Snare",
-        "machine_value": 14,
-        "params": SD_FM_PARAMS,
-        "order": SD_FM_ORDER,
-        "anchor": PAD2_SD_FM_ANCHOR,
-        "safe": SD_FM_SAFE,
-        "deltas": SD_FM_DELTAS,
-        "zones": SD_FM_ZONES,
-        "filter_mode": "classic",
-    },
-}
 
 
 # ------------------------------------------------------------
@@ -1748,306 +229,11 @@ PROFILES = {
 # CC19 = SRC Noise Level
 # CC23 = SRC Balance
 
-SY_RAW_PARAMS = {
-    "SRC Level": 16,
-    "SRC Tune": 17,
-    "SRC Detune": 18,
-    "SRC Noise Level": 19,
-    "SRC Osc 2 Decay": 20,
-    "SRC Osc 1 Wave": 21,
-    "SRC Osc 2 Wave": 22,
-    "SRC Balance": 23,
 
-    "FLT Attack": 70,
-    "FLT Decay": 71,
-    "FLT Sustain": 72,
-    "FLT Release": 73,
-    "FLT Frequency": 74,
-    "FLT Resonance": 75,
-    "FLT Type": 76,
-    "FLT Env Depth": 77,
 
-    "AMP Attack": 78,
-    "AMP Hold": 79,
-    "AMP Decay": 80,
-    "AMP Overdrive": 81,
-    "AMP Delay Send": 82,
-    "AMP Reverb Send": 83,
-    "AMP Pan": 10,
 
-    "LFO Speed": 102,
-    "LFO Multiplier": 103,
-    "LFO Fade": 104,
-    "LFO Destination": 105,
-    "LFO Waveform": 106,
-    "LFO Start Phase": 107,
-    "LFO Trig Mode": 108,
-    "LFO Depth": 109,
-}
 
-SY_RAW_ORDER = [
-    "SRC Level",
-    "SRC Tune",
-    "SRC Detune",
-    "SRC Noise Level",
-    "SRC Osc 2 Decay",
-    "SRC Osc 1 Wave",
-    "SRC Osc 2 Wave",
-    "SRC Balance",
 
-    "FLT Attack",
-    "FLT Decay",
-    "FLT Sustain",
-    "FLT Release",
-    "FLT Frequency",
-    "FLT Resonance",
-    "FLT Type",
-    "FLT Env Depth",
-
-    "AMP Attack",
-    "AMP Hold",
-    "AMP Decay",
-    "AMP Overdrive",
-    "AMP Delay Send",
-    "AMP Reverb Send",
-    "AMP Pan",
-
-    "LFO Speed",
-    "LFO Multiplier",
-    "LFO Fade",
-    "LFO Destination",
-    "LFO Waveform",
-    "LFO Start Phase",
-    "LFO Trig Mode",
-    "LFO Depth",
-]
-
-PAD_3_SY_RAW_ANCHOR = {
-    "SRC Level": 100,
-    "SRC Tune": 69,
-    "SRC Detune": 23,
-    "SRC Noise Level": 5,
-    "SRC Osc 2 Decay": 70,
-    "SRC Osc 1 Wave": 5,
-    "SRC Osc 2 Wave": 3,
-    "SRC Balance": 91,
-
-    "FLT Attack": 12,
-    "FLT Decay": 28,
-    "FLT Sustain": 0,
-    "FLT Release": 64,
-    "FLT Frequency": 98,
-    "FLT Resonance": 0,
-    "FLT Type": 2,
-    "FLT Env Depth": 55,
-
-    "AMP Attack": 0,
-    "AMP Hold": 9,
-    "AMP Decay": 25,
-    "AMP Overdrive": 21,
-    "AMP Delay Send": 5,
-    "AMP Reverb Send": 103,
-    "AMP Pan": 64,
-
-    "LFO Speed": 96,
-    "LFO Multiplier": 0,
-    "LFO Fade": 42,
-    "LFO Destination": 30,
-    "LFO Waveform": 2,
-    "LFO Start Phase": 89,
-    "LFO Trig Mode": 0,
-    "LFO Depth": 86,
-}
-
-SY_RAW_SAFE_LIMITS = {
-    "SRC Level": (100, 100),
-    "SRC Tune": (58, 82),
-    "SRC Detune": (8, 42),
-    "SRC Noise Level": (0, 24),
-    "SRC Osc 2 Decay": (45, 100),
-    "SRC Osc 1 Wave": (3, 6),
-    "SRC Osc 2 Wave": (1, 3),
-    "SRC Balance": (70, 115),
-
-    "FLT Attack": (0, 25),
-    "FLT Decay": (15, 55),
-    "FLT Sustain": (0, 20),
-    "FLT Release": (40, 85),
-    "FLT Frequency": (82, 115),
-    "FLT Resonance": (0, 12),
-    "FLT Type": (1, 6),
-    "FLT Env Depth": (45, 68),
-
-    "AMP Attack": (0, 8),
-    "AMP Hold": (2, 24),
-    "AMP Decay": (12, 50),
-    "AMP Overdrive": (12, 38),
-    "AMP Delay Send": (0, 18),
-    "AMP Reverb Send": (82, 118),
-    "AMP Pan": (60, 68),
-
-    "LFO Speed": (68, 118),
-    "LFO Multiplier": (0, 0),
-    "LFO Fade": (15, 72),
-    "LFO Destination": (30, 30),
-    "LFO Waveform": (2, 2),
-    "LFO Start Phase": (0, 127),
-    "LFO Trig Mode": (0, 0),
-    "LFO Depth": (68, 108),
-}
-
-SY_RAW_DELTAS = {
-    "micro": {
-        "SRC Tune": 2,
-        "SRC Detune": 3,
-        "SRC Noise Level": 2,
-        "SRC Osc 2 Decay": 5,
-        "SRC Osc 1 Wave": 1,
-        "SRC Osc 2 Wave": 1,
-        "SRC Balance": 5,
-
-        "FLT Attack": 3,
-        "FLT Decay": 4,
-        "FLT Frequency": 4,
-        "FLT Env Depth": 3,
-
-        "AMP Hold": 3,
-        "AMP Decay": 4,
-        "AMP Overdrive": 2,
-        "AMP Delay Send": 3,
-        "AMP Reverb Send": 3,
-
-        "LFO Speed": 4,
-        "LFO Fade": 5,
-        "LFO Start Phase": 16,
-        "LFO Depth": 4,
-    },
-
-    "groove": {
-        "SRC Tune": 5,
-        "SRC Detune": 7,
-        "SRC Noise Level": 5,
-        "SRC Osc 2 Decay": 12,
-        "SRC Osc 1 Wave": 2,
-        "SRC Osc 2 Wave": 2,
-        "SRC Balance": 10,
-
-        "FLT Attack": 6,
-        "FLT Decay": 9,
-        "FLT Frequency": 9,
-        "FLT Env Depth": 6,
-
-        "AMP Hold": 7,
-        "AMP Decay": 9,
-        "AMP Overdrive": 6,
-        "AMP Delay Send": 6,
-        "AMP Reverb Send": 7,
-
-        "LFO Speed": 10,
-        "LFO Fade": 10,
-        "LFO Start Phase": 40,
-        "LFO Depth": 9,
-    },
-
-    "strong": {
-        "SRC Tune": 9,
-        "SRC Detune": 12,
-        "SRC Noise Level": 10,
-        "SRC Osc 2 Decay": 22,
-        "SRC Osc 1 Wave": 3,
-        "SRC Osc 2 Wave": 3,
-        "SRC Balance": 18,
-
-        "FLT Attack": 10,
-        "FLT Decay": 16,
-        "FLT Frequency": 15,
-        "FLT Env Depth": 10,
-
-        "AMP Hold": 12,
-        "AMP Decay": 16,
-        "AMP Overdrive": 10,
-        "AMP Delay Send": 10,
-        "AMP Reverb Send": 12,
-
-        "LFO Speed": 18,
-        "LFO Fade": 18,
-        "LFO Start Phase": 70,
-        "LFO Depth": 16,
-    },
-}
-
-SY_RAW_ZONES = {
-    "full": [
-        "SRC Tune",
-        "SRC Detune",
-        "SRC Noise Level",
-        "SRC Osc 2 Decay",
-        "SRC Balance",
-        "FLT Frequency",
-        "FLT Env Depth",
-        "AMP Hold",
-        "AMP Decay",
-        "AMP Overdrive",
-        "LFO Speed",
-        "LFO Fade",
-        "LFO Start Phase",
-        "LFO Depth",
-    ],
-
-    "src": [
-        "SRC Tune",
-        "SRC Detune",
-        "SRC Noise Level",
-        "SRC Osc 2 Decay",
-        "SRC Osc 1 Wave",
-        "SRC Osc 2 Wave",
-        "SRC Balance",
-    ],
-
-    "filter": [
-        "FLT Attack",
-        "FLT Decay",
-        "FLT Frequency",
-        "FLT Env Depth",
-    ],
-
-    "amp": [
-        "AMP Hold",
-        "AMP Decay",
-        "AMP Overdrive",
-        "AMP Delay Send",
-        "AMP Reverb Send",
-    ],
-
-    "grit": [
-        "SRC Noise Level",
-        "AMP Overdrive",
-        "LFO Depth",
-    ],
-
-    "body": [
-        "SRC Tune",
-        "SRC Detune",
-        "SRC Osc 2 Decay",
-        "SRC Balance",
-        "AMP Hold",
-        "AMP Decay",
-    ],
-
-    "lfo": [
-        "LFO Speed",
-        "LFO Fade",
-        "LFO Start Phase",
-        "LFO Depth",
-    ],
-
-    "morph": [
-        "SRC Osc 1 Wave",
-        "SRC Osc 2 Wave",
-        "SRC Balance",
-        "SRC Detune",
-    ],
-}
 
 PROFILES["5"] = {
     "name": "Pad 3 SY Raw Mid Bass",
@@ -2069,7 +255,6 @@ PROFILES["5"] = {
 # All Pad 1 bass drum discovery engines are now profiled as of V1.16.
 # BD_EXTRA_MACHINES is kept for future switch-only experiments.
 
-BD_EXTRA_MACHINES = {}
 
 active_profile = None
 anchor_state = {}
@@ -2082,32 +267,6 @@ previous_state = None
 # This is the first full-kit behavior layer.
 # It uses the profiles we already confirmed working.
 
-GROUP_LAYOUT = {
-    1: {
-        "role": "Main kick / BD Hard default",
-        "profile": "2",   # My BD Hard - primary Buzzi default
-        "zone": "full",
-        "depth": "micro",
-    },
-    2: {
-        "role": "Secondary kick / rolling low percussion",
-        "profile": "3",   # My BD Classic
-        "zone": "body",
-        "depth": "groove",
-    },
-    3: {
-        "role": "SY Raw midrange bass / synth-percussion",
-        "profile": "5",   # Pad 3 SY Raw Mid Bass
-        "zone": "lfo",
-        "depth": "groove",
-    },
-    4: {
-        "role": "Body hit / accent layer",
-        "profile": "4",   # My BD Acoustic
-        "zone": "body",
-        "depth": "micro",
-    },
-}
 
 group_anchor_states = {}
 group_current_states = {}
@@ -2131,161 +290,26 @@ pad4_current_mode_key = "anchor"  # default Pad 4 BD Acoustic body/accent mode /
 # D pushes Pads 2-4 harder while keeping Pad 1 protected.
 # I is controlled chaos: Pad 1 remains subtle, Pads 2-4 get stronger multi-zone movement.
 
-INTENSITY_PLANS = {
-    "balanced": {
-        # V1.34: four-lane default performance mutation.
-        # Pad 1 remains the foundation; Pads 2-4 provide motion.
-        1: [("body", "micro")],
-        2: [("body", "groove")],
-        3: [("lfo", "groove"), ("body", "micro")],
-        4: [("body", "micro")],
-    },
-
-    "deeper": {
-        # Pad 1 stays protected with micro body movement only.
-        1: [("body", "micro")],
-
-        # Pad 2 gets stronger rolling percussion movement plus small grit.
-        2: [("body", "strong"), ("grit", "micro")],
-
-        # Pad 3 carries most of the moving bass/synth-percussion energy.
-        3: [("body", "groove"), ("lfo", "groove"), ("morph", "micro")],
-
-        # Pad 4 pushes the body/accent lane without destabilizing the kit.
-        4: [("body", "groove"), ("grit", "micro")],
-    },
-
-    "intense": {
-        # Controlled chaos: Pad 1 still avoids strong movement.
-        1: [("body", "micro"), ("filter", "micro")],
-
-        # Pad 2 adds pressure and noise without taking over the kick.
-        2: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
-
-        # Pad 3 is the main chaos/motion carrier.
-        3: [("body", "strong"), ("filter", "groove"), ("morph", "groove"), ("lfo", "strong"), ("grit", "groove")],
-
-        # Pad 4 becomes the accent pressure layer.
-        4: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
-    },
-
-    "harder": {
-        # Wild discovery mode. Still lane-aware: Pad 1 is not allowed to go fully wild.
-        1: [("body", "groove"), ("filter", "micro")],
-        2: [("full", "strong"), ("grit", "strong")],
-        3: [("src", "strong"), ("filter", "strong"), ("morph", "strong"), ("lfo", "strong"), ("grit", "strong")],
-        4: [("full", "strong"), ("body", "strong"), ("grit", "strong")],
-    },
-
-    # V1.34 scene-depth expansion: these are performance-scene variants built
-    # only from already validated zones and depth levels. No new parameter
-    # ranges are introduced here.
-    "rolling_light": {
-        1: [("body", "micro")],
-        2: [("body", "micro")],
-        3: [("lfo", "micro"), ("body", "micro")],
-        4: [("body", "micro")],
-    },
-
-    "rolling_push": {
-        1: [("body", "micro")],
-        2: [("body", "groove"), ("src", "micro")],
-        3: [("lfo", "groove"), ("morph", "micro"), ("body", "micro")],
-        4: [("body", "groove")],
-    },
-
-    "deeper_groove": {
-        1: [("body", "micro")],
-        2: [("body", "groove"), ("grit", "micro")],
-        3: [("body", "groove"), ("lfo", "groove")],
-        4: [("body", "groove")],
-    },
-
-    "deeper_pressure": {
-        1: [("body", "micro"), ("filter", "micro")],
-        2: [("body", "strong"), ("filter", "groove"), ("grit", "micro")],
-        3: [("body", "groove"), ("lfo", "groove"), ("morph", "micro"), ("filter", "micro")],
-        4: [("body", "groove"), ("grit", "groove")],
-    },
-
-    "intense_motion": {
-        1: [("body", "micro")],
-        2: [("body", "groove"), ("filter", "groove")],
-        3: [("lfo", "strong"), ("morph", "groove"), ("body", "groove"), ("filter", "groove")],
-        4: [("body", "groove"), ("filter", "groove")],
-    },
-
-    "intense_grit": {
-        1: [("body", "micro"), ("grit", "micro")],
-        2: [("body", "strong"), ("grit", "groove"), ("filter", "groove")],
-        3: [("grit", "groove"), ("morph", "groove"), ("lfo", "groove")],
-        4: [("body", "strong"), ("grit", "groove"), ("filter", "groove")],
-    },
-
-    "wild_controlled": {
-        1: [("body", "groove"), ("filter", "micro")],
-        2: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
-        3: [("morph", "strong"), ("lfo", "strong"), ("filter", "groove"), ("body", "groove")],
-        4: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
-    },
-
-    "wild_maximum": {
-        # Alias-level behavior for the wildest scene variant: same guardrails as "harder".
-        1: [("body", "groove"), ("filter", "micro")],
-        2: [("full", "strong"), ("grit", "strong")],
-        3: [("src", "strong"), ("filter", "strong"), ("morph", "strong"), ("lfo", "strong"), ("grit", "strong")],
-        4: [("full", "strong"), ("body", "strong"), ("grit", "strong")],
-    },
-}
 
 # V1.34 lane-aware page plans for Y / V / N.
 # These keep the spirit of SRC / FILTER / GRIT commands while respecting each pad role.
-GLOBAL_PAGE_PLANS = {
-    "src": {
-        1: ["src"],       # BD Hard source movement
-        2: ["src"],       # secondary percussion source movement
-        3: ["morph"],     # SY Raw wave/balance movement is more musical than full SRC every time
-        4: ["src"],       # BD Acoustic source/body movement
-    },
-    "filter": {
-        1: ["filter"],
-        2: ["filter"],
-        3: ["filter"],
-        4: ["filter"],
-    },
-    "grit": {
-        1: ["grit"],
-        2: ["grit"],
-        3: ["grit"],
-        4: ["grit"],
-    },
-}
 
 # ------------------------------------------------------------
 # FUNCTIONS
 # ------------------------------------------------------------
 
+# clamp / send_cc / send_machine are now thin shims over
+# rytm_randomizer.midi_io. They forward the monolith's `channel` global so
+# behavior stays byte-identical.
+
 def clamp(value, low, high):
-    return max(low, min(high, value))
+    return _midi_io.clamp(value, low, high)
 
 def send_cc(out, cc, value):
-    msg = mido.Message(
-        "control_change",
-        channel=channel,
-        control=cc,
-        value=value
-    )
-    out.send(msg)
-    time.sleep(0.02)
+    _midi_io.send_cc(out, cc, value, channel=channel)
 
 def send_machine(out):
-    value = active_profile["machine_value"]
-    name = active_profile["name"]
-
-    print(f"\nSwitching Rytm machine to {name}:")
-    send_cc(out, MACHINE_CC, value)
-    print(f"  Machine CC15 -> {value}")
-    time.sleep(0.40)
+    _midi_io.send_machine(out, active_profile, channel=channel)
 
 def select_profile(out):
     global active_profile, anchor_state, current_state, previous_state
@@ -2345,232 +369,103 @@ def require_profile():
         return False
     return True
 
+# send_param / apply_state / get_depth and the randomization core are now thin
+# shims over rytm_randomizer.midi_io and rytm_randomizer.randomization. The
+# shims forward the monolith's `channel` global and the mutable
+# anchor_state / current_state / previous_state globals, then write back any
+# new state the package functions return. Behavior is byte-identical.
+
 def send_param(out, name, value):
-    cc = active_profile["params"][name]
-    send_cc(out, cc, value)
-    print(f"  {name}: CC{cc} -> {value}")
+    _midi_io.send_param(out, active_profile, name, value, channel=channel)
 
 def apply_state(out, state, label, set_anchor=False, switch_machine_first=False):
     global anchor_state, current_state, previous_state
 
-    if not require_profile():
+    result = _midi_io.apply_state(
+        out,
+        active_profile if active_profile else None,
+        state,
+        label,
+        anchor_state=anchor_state,
+        current_state=current_state,
+        previous_state=previous_state,
+        set_anchor=set_anchor,
+        switch_machine_first=switch_machine_first,
+        channel=channel,
+    )
+
+    if not result.applied:
         return
 
-    if switch_machine_first:
-        send_machine(out)
-
-    print(f"\n{label}:")
-
-    if current_state:
-        previous_state = current_state.copy()
-
-    for name in active_profile["order"]:
-        if name in state:
-            send_param(out, name, state[name])
-
-    current_state = state.copy()
-
-    if set_anchor:
-        anchor_state = state.copy()
-        active_profile["anchor"] = state.copy()
-        print("  Anchor updated.")
+    anchor_state = dict(result.anchor_state)
+    current_state = dict(result.current_state)
+    previous_state = (
+        dict(result.previous_state) if result.previous_state is not None else None
+    )
 
 def get_depth():
-    depth = input("Depth 1=micro, 2=groove, 3=strong: ").strip()
-
-    if depth == "1":
-        return "micro"
-    elif depth == "2":
-        return "groove"
-    elif depth == "3":
-        return "strong"
-    else:
-        print("Invalid depth. Using groove.")
-        return "groove"
+    return _randomization.get_depth()
 
 def random_value_around_anchor(name, depth_name):
-    safe = active_profile["safe"]
-    deltas = active_profile["deltas"]
-
-    anchor_value = anchor_state[name]
-    delta = deltas[depth_name][name]
-    low_limit, high_limit = safe[name]
-
-    # For maxed transient/tick-like values, pull downward only.
-    if name in ["SRC Tick Level", "SRC Impact"] and anchor_value >= 110:
-        low = clamp(anchor_value - delta, low_limit, high_limit)
-        high = anchor_value
-
-    # For zero amp hold kicks, only open hold upward.
-    elif name == "AMP Hold" and anchor_value <= 2:
-        low = anchor_value
-        high = clamp(anchor_value + delta, low_limit, high_limit)
-
-    else:
-        low = clamp(anchor_value - delta, low_limit, high_limit)
-        high = clamp(anchor_value + delta, low_limit, high_limit)
-
-    if low > high:
-        low, high = high, low
-
-    return random.randint(low, high)
+    return _randomization.random_value_around_anchor(
+        name,
+        depth_name,
+        profile=active_profile,
+        anchor_state=anchor_state,
+        rng=random,
+    )
 
 def random_hp2_filter_pair(depth_name):
-    safe = active_profile["safe"]
-    deltas = active_profile["deltas"]
-
-    freq_anchor = anchor_state["FLT Frequency"]
-    res_anchor = anchor_state["FLT Resonance"]
-
-    freq_delta = deltas[depth_name]["FLT Frequency"]
-    res_delta = deltas[depth_name]["FLT Resonance"]
-
-    freq_low_limit, freq_high_limit = safe["FLT Frequency"]
-    res_low_limit, res_high_limit = safe["FLT Resonance"]
-
-    freq_low = clamp(freq_anchor - freq_delta, freq_low_limit, freq_high_limit)
-    freq_high = clamp(freq_anchor + freq_delta, freq_low_limit, freq_high_limit)
-
-    if freq_low > freq_high:
-        freq_low, freq_high = freq_high, freq_low
-
-    freq = random.randint(freq_low, freq_high)
-
-    mode = active_profile["filter_mode"]
-
-    if mode == "sharp":
-        if freq <= 25:
-            pair_res_low = 72
-            pair_res_high = 85
-        elif freq <= 30:
-            pair_res_low = 68
-            pair_res_high = 85
-        else:
-            pair_res_low = 64
-            pair_res_high = 82
-
-    elif mode == "hard":
-        if freq <= 26:
-            pair_res_low = 45
-            pair_res_high = 62
-        elif freq <= 31:
-            pair_res_low = 42
-            pair_res_high = 68
-        else:
-            pair_res_low = 40
-            pair_res_high = 64
-
-    elif mode == "classic":
-        if freq <= 25:
-            pair_res_low = 22
-            pair_res_high = 36
-        elif freq <= 30:
-            pair_res_low = 20
-            pair_res_high = 42
-        else:
-            pair_res_low = 18
-            pair_res_high = 38
-
-    elif mode == "fm":
-        # BD FM can handle more resonance than Classic/Acoustic because its metallic
-        # character benefits from the sharper HP2 contour. Still keep it bounded.
-        if freq <= 26:
-            pair_res_low = 52
-            pair_res_high = 74
-        elif freq <= 32:
-            pair_res_low = 48
-            pair_res_high = 76
-        else:
-            pair_res_low = 44
-            pair_res_high = 72
-
-    else:
-        # Acoustic: keep HP2 resonance restrained so long body does not bloom too much.
-        if freq <= 25:
-            pair_res_low = 22
-            pair_res_high = 36
-        elif freq <= 30:
-            pair_res_low = 18
-            pair_res_high = 40
-        else:
-            pair_res_low = 18
-            pair_res_high = 38
-
-    res_low = clamp(res_anchor - res_delta, res_low_limit, res_high_limit)
-    res_high = clamp(res_anchor + res_delta, res_low_limit, res_high_limit)
-
-    final_res_low = max(res_low, pair_res_low, res_low_limit)
-    final_res_high = min(res_high, pair_res_high, res_high_limit)
-
-    if final_res_low > final_res_high:
-        final_res_low = res_low_limit
-        final_res_high = res_high_limit
-
-    resonance = random.randint(final_res_low, final_res_high)
-
-    return freq, resonance
+    return _randomization.random_hp2_filter_pair(
+        depth_name,
+        profile=active_profile,
+        anchor_state=anchor_state,
+        rng=random,
+    )
 
 def mutate_zone(out, zone_name, depth_name):
     global current_state, previous_state
 
-    if not require_profile():
+    result = _randomization.mutate_zone(
+        out,
+        zone_name,
+        depth_name,
+        profile=active_profile if active_profile else None,
+        anchor_state=anchor_state,
+        current_state=current_state,
+        previous_state=previous_state,
+        channel=channel,
+        rng=random,
+    )
+
+    if not result.applied:
         return
 
-    if not current_state:
-        current_state.update(anchor_state.copy())
-
-    previous_state = current_state.copy()
-    new_state = current_state.copy()
-
-    print(f"\n{active_profile['name']} / {zone_name.upper()} mutation / {depth_name.upper()} depth:")
-    print("  Mutating around current anchor.")
-
-    zone_params = active_profile["zones"][zone_name]
-    handled_filter_pair = False
-
-    for name in zone_params:
-        if name not in active_profile["deltas"][depth_name]:
-            continue
-
-        if name == "FLT Frequency" and "FLT Resonance" in zone_params:
-            freq, resonance = random_hp2_filter_pair(depth_name)
-
-            new_state["FLT Frequency"] = freq
-            new_state["FLT Resonance"] = resonance
-
-            send_param(out, "FLT Frequency", freq)
-            send_param(out, "FLT Resonance", resonance)
-
-            handled_filter_pair = True
-            continue
-
-        if name == "FLT Resonance" and handled_filter_pair:
-            continue
-
-        value = random_value_around_anchor(name, depth_name)
-        new_state[name] = value
-        send_param(out, name, value)
-
-    current_state = new_state.copy()
+    current_state = dict(result.current_state)
+    previous_state = (
+        dict(result.previous_state) if result.previous_state is not None else None
+    )
 
 def random_waveform(out):
     global current_state, previous_state
 
-    if not require_profile():
+    result = _randomization.random_waveform(
+        out,
+        profile=active_profile if active_profile else None,
+        anchor_state=anchor_state,
+        current_state=current_state,
+        previous_state=previous_state,
+        channel=channel,
+        rng=random,
+    )
+
+    if not result.applied:
         return
 
-    if not current_state:
-        current_state.update(anchor_state.copy())
-
-    previous_state = current_state.copy()
-
-    low, high = active_profile["waveform_range"]
-    value = random.randint(low, high)
-
-    print(f"\n{active_profile['name']} waveform exploration:")
-    send_param(out, "SRC Waveform", value)
-
-    current_state["SRC Waveform"] = value
+    current_state = dict(result.current_state)
+    previous_state = (
+        dict(result.previous_state) if result.previous_state is not None else None
+    )
 
 def undo(out):
     global current_state, previous_state
@@ -2891,78 +786,6 @@ def show_global_mutation_tools():
 # four-lane global mutation layer. No new parameter ranges are introduced here.
 # Scene commands are performance shortcuts for musically useful states.
 
-SCENE_PRESETS = {
-    "s0": {
-        "name": "Home / Clean",
-        "description": "Load or return all four pads to the validated anchors.",
-        "action": "home",
-    },
-    "s1": {
-        "name": "Rolling",
-        "description": "Balanced four-lane movement. Kick stays protected; Pads 2-4 move musically.",
-        "action": "balanced",
-    },
-    "s1a": {
-        "name": "Rolling Light",
-        "description": "Lower-risk rolling movement for subtle live variation.",
-        "action": "rolling_light",
-    },
-    "s1b": {
-        "name": "Rolling Push",
-        "description": "A stronger rolling push while keeping the kick foundation protected.",
-        "action": "rolling_push",
-    },
-    "s2": {
-        "name": "Deeper",
-        "description": "More pressure on Pads 2-4 while keeping Pad 1 bounded.",
-        "action": "deeper",
-    },
-    "s2a": {
-        "name": "Deeper Groove",
-        "description": "Deeper body movement with groove-first pressure.",
-        "action": "deeper_groove",
-    },
-    "s2b": {
-        "name": "Deeper Pressure",
-        "description": "More filter/grit pressure on the secondary lanes while Pad 1 stays bounded.",
-        "action": "deeper_pressure",
-    },
-    "s3": {
-        "name": "Intense",
-        "description": "Controlled chaos with Pad 3 carrying most of the motion.",
-        "action": "intense",
-    },
-    "s3a": {
-        "name": "Intense Motion",
-        "description": "Motion-heavy intensity with Pad 3 as the main moving lane.",
-        "action": "intense_motion",
-    },
-    "s3b": {
-        "name": "Intense Grit",
-        "description": "Grit-forward intensity while keeping the main kick controlled.",
-        "action": "intense_grit",
-    },
-    "s4": {
-        "name": "Wild",
-        "description": "The most aggressive discovery scene while keeping the kick foundation bounded.",
-        "action": "harder",
-    },
-    "s4a": {
-        "name": "Wild Controlled",
-        "description": "A wider discovery scene with the harshest guardrails still active.",
-        "action": "wild_controlled",
-    },
-    "s4b": {
-        "name": "Wild Maximum",
-        "description": "The maximum V1.34 discovery scene, using the existing wild guardrails.",
-        "action": "wild_maximum",
-    },
-    "s5": {
-        "name": "Back to Clean",
-        "description": "Return all four pads to anchors after scene movement.",
-        "action": "clean",
-    },
-}
 
 
 def show_scene_tools():
@@ -3166,20 +989,10 @@ def return_isolated_pad_to_anchor(out):
 # - Osc 1 Wave movement + Osc 2 Wave held near Saw can become bassline-like
 # - LP1 and Bandpass are the most useful filter types so far
 
-SY_RAW_FILTER_NAMES = {
-    0: "LP2",
-    1: "LP1",
-    2: "Bandpass",
-    3: "HP1",
-    4: "HP2",
-    5: "Bandstop",
-    6: "Peak",
-}
 
 # General filter type names used by non-SY Raw menu/status views.
 # Kept separate from SY_RAW_FILTER_NAMES so Pad 4 and future pad lanes can
 # print readable filter labels without depending on the Pad 3-specific name.
-FILTER_TYPE_NAMES = SY_RAW_FILTER_NAMES.copy()
 
 
 def require_pad3_sy_raw_context():
@@ -3430,22 +1243,7 @@ def return_pad3_sy_raw_to_anchor(out):
 # These commands keep the current machine as SY Raw and rotate musical behavior modes.
 # They target Pad 3 only and do not touch Pads 1, 2, or 4.
 
-PAD3_MODE_ORDER = ["anchor", "lp1", "bandpass", "wave", "scifi"]
-PAD3_MODE_LABELS = {
-    "anchor": "SY Raw Mid Bass anchor / home",
-    "lp1": "SY Raw LP1 bassline mode",
-    "bandpass": "SY Raw Bandpass mid-bass mode",
-    "wave": "SY Raw Wave/Balance variation",
-    "scifi": "SY Raw sci-fi motion accent",
-}
 
-PAD3_MODE_MUTATION_PLANS = {
-    "anchor": ["body", "lfo", "morph"],
-    "lp1": ["lp1", "body", "lfo"],
-    "bandpass": ["bandpass", "body", "morph"],
-    "wave": ["wave", "morph", "body"],
-    "scifi": ["scifi", "lfo", "grit"],
-}
 
 
 def show_pad3_tools():
@@ -3585,22 +1383,7 @@ def return_pad3_to_anchor(out):
 # V1.26 checkpoints the validated Pad 4 BD Acoustic lane for safety.
 # Future versions can add CP/RS/SY/UT machines after their CC15 values and SRC maps are captured.
 
-PAD4_MODE_ORDER = ["anchor", "tight", "long", "filter", "impact"]
-PAD4_MODE_LABELS = {
-    "anchor": "BD Acoustic body/accent anchor / home",
-    "tight": "BD Acoustic tight body hit",
-    "long": "BD Acoustic long boom accent",
-    "filter": "BD Acoustic filtered punch accent",
-    "impact": "BD Acoustic impact/grit accent",
-}
 
-PAD4_MODE_MUTATION_PLANS = {
-    "anchor": ["body", "grit", "filter"],
-    "tight": ["tight", "body", "filter"],
-    "long": ["long", "body", "grit"],
-    "filter": ["filter", "body", "grit"],
-    "impact": ["impact", "grit", "filter"],
-}
 
 
 def require_pad4_bd_acoustic_context():
@@ -4379,14 +2162,7 @@ def return_pad1_bd_silky_to_anchor(out):
 # BM mutates whichever Pad 1 BD engine is currently loaded, while keeping
 # Pads 2, 3, and 4 untouched.
 
-PAD1_BD_ROTATION_ORDER = ["2", "1", "3", "4", "6", "7", "8"]
 
-PAD1_BD_MUTATION_PLANS = {
-    "2": [("full", "micro"), ("body", "micro"), ("grit", "micro")],      # BD Hard
-    "1": [("body", "micro"), ("grit", "micro"), ("full", "micro")],      # BD Sharp
-    "3": [("body", "micro"), ("full", "micro"), ("grit", "micro")],      # BD Classic
-    "4": [("body", "micro"), ("full", "micro"), ("grit", "micro")],      # BD Acoustic
-}
 
 
 def show_bd_rotation_status():
@@ -4497,22 +2273,7 @@ def mutate_current_pad1_bd_engine(out):
 # low-percussion layer or switch into SD Hard / SD Classic / SD FM snare pressure.
 # All commands below target Pad 2 only and should not touch Pads 1, 3, or 4.
 
-PAD2_PROFILE_KEYS = ["3", "9", "10", "11"]
-PAD2_PROFILE_LABELS = {
-    "3": "BD Classic rolling low percussion / home",
-    "9": "SD Hard pressure snare",
-    "10": "SD Classic rolling snare",
-    "11": "SD FM metallic snare",
-}
 
-PAD2_MUTATION_PLANS = {
-    # BD Classic: keep it as rolling low percussion; alternate body/src/grit movement.
-    "3": [("body", "groove"), ("src", "groove"), ("grit", "groove")],
-    # SD Hard / SD Classic: rotate between snap, body, and grit/noise behavior.
-    "9": [("snap", "groove"), ("body", "groove"), ("grit", "groove")],
-    "10": [("snap", "groove"), ("body", "groove"), ("grit", "groove")],
-    "11": [("snap", "groove"), ("body", "groove"), ("grit", "groove")],
-}
 
 
 def load_pad2_profile(out, profile_key):
@@ -4847,316 +2608,343 @@ def print_commands():
 # MAIN
 # ------------------------------------------------------------
 
-print(f"\nOpening MIDI output: {port_name}")
+def main() -> None:
+    global channel
 
-with mido.open_output(port_name) as out:
-    choose_target_pad()
-    select_profile(out)
-    print_commands()
+    print("\nRYTM HYBRID RANDOMIZER V1.34 - DOCUMENTATION CHECKPOINT / EXPANDED SCENE LAYER COMPLETE\n")
 
-    while True:
-        cmd = input("Command: ").strip().lower()
+    outputs = mido.get_output_names()
 
-        if cmd == "q":
-            print("Exiting.")
-            break
+    if not outputs:
+        print("No MIDI outputs found.")
+        raise SystemExit
 
-        elif cmd == "t":
-            choose_target_pad()
+    print("Available MIDI outputs:\n")
+    for i, name in enumerate(outputs):
+        print(f"{i}: {name}")
 
-        elif cmd == "p":
-            select_profile(out)
+    choice = input("\nChoose the Analog Rytm MIDI output number: ").strip()
 
-        elif cmd == "bd":
-            show_bd_engine_tools()
+    try:
+        port_name = outputs[int(choice)]
+    except (ValueError, IndexError):
+        print("Invalid choice.")
+        raise SystemExit
 
-        elif cmd == "br":
-            rotate_pad1_bd_engine(out)
+    print(f"\nOpening MIDI output: {port_name}")
 
-        elif cmd == "bm":
-            mutate_current_pad1_bd_engine(out)
+    with mido.open_output(port_name) as out:
+        choose_target_pad()
+        select_profile(out)
+        print_commands()
 
-        elif cmd == "bh":
-            load_pad1_bd_profile(out, "2")
+        while True:
+            cmd = input("Command: ").strip().lower()
 
-        elif cmd == "bs":
-            load_pad1_bd_profile(out, "1")
+            if cmd == "q":
+                print("Exiting.")
+                break
 
-        elif cmd == "bc":
-            load_pad1_bd_profile(out, "3")
+            elif cmd == "t":
+                choose_target_pad()
 
-        elif cmd == "ba":
-            load_pad1_bd_profile(out, "4")
+            elif cmd == "p":
+                select_profile(out)
 
-        elif cmd == "bf":
-            load_pad1_bd_profile(out, "6")
+            elif cmd == "bd":
+                show_bd_engine_tools()
 
-        elif cmd == "fm":
-            show_bd_fm_tools()
+            elif cmd == "br":
+                rotate_pad1_bd_engine(out)
 
-        elif cmd == "ft":
-            bd_fm_tone_discovery(out)
+            elif cmd == "bm":
+                mutate_current_pad1_bd_engine(out)
 
-        elif cmd == "fk":
-            bd_fm_kick_body_discovery(out)
+            elif cmd == "bh":
+                load_pad1_bd_profile(out, "2")
 
-        elif cmd == "fg":
-            bd_fm_grit_discovery(out)
+            elif cmd == "bs":
+                load_pad1_bd_profile(out, "1")
 
-        elif cmd == "fz":
-            return_pad1_bd_fm_to_anchor(out)
+            elif cmd == "bc":
+                load_pad1_bd_profile(out, "3")
 
-        elif cmd == "bp":
-            load_pad1_bd_profile(out, "7")
+            elif cmd == "ba":
+                load_pad1_bd_profile(out, "4")
 
-        elif cmd == "pd":
-            show_bd_plastic_tools()
+            elif cmd == "bf":
+                load_pad1_bd_profile(out, "6")
 
-        elif cmd == "pt":
-            bd_plastic_tone_discovery(out)
+            elif cmd == "fm":
+                show_bd_fm_tools()
 
-        elif cmd == "pk":
-            bd_plastic_kick_body_discovery(out)
+            elif cmd == "ft":
+                bd_fm_tone_discovery(out)
 
-        elif cmd == "px":
-            bd_plastic_rubber_discovery(out)
+            elif cmd == "fk":
+                bd_fm_kick_body_discovery(out)
 
-        elif cmd == "pbh":
-            return_pad1_bd_plastic_to_anchor(out)
+            elif cmd == "fg":
+                bd_fm_grit_discovery(out)
 
-        elif cmd == "bi":
-            load_pad1_bd_profile(out, "8")
+            elif cmd == "fz":
+                return_pad1_bd_fm_to_anchor(out)
 
-        elif cmd == "sm":
-            show_bd_silky_tools()
+            elif cmd == "bp":
+                load_pad1_bd_profile(out, "7")
 
-        elif cmd == "st":
-            bd_silky_smooth_tone_discovery(out)
+            elif cmd == "pd":
+                show_bd_plastic_tools()
 
-        elif cmd == "sk":
-            bd_silky_kick_body_discovery(out)
+            elif cmd == "pt":
+                bd_plastic_tone_discovery(out)
 
-        elif cmd == "sc":
-            bd_silky_click_dust_discovery(out)
+            elif cmd == "pk":
+                bd_plastic_kick_body_discovery(out)
 
-        elif cmd == "sbh":
-            return_pad1_bd_silky_to_anchor(out)
+            elif cmd == "px":
+                bd_plastic_rubber_discovery(out)
 
-        elif cmd == "p2m":
-            show_pad2_tools()
+            elif cmd == "pbh":
+                return_pad1_bd_plastic_to_anchor(out)
 
-        elif cmd == "p2b":
-            load_pad2_profile(out, "3")
+            elif cmd == "bi":
+                load_pad1_bd_profile(out, "8")
 
-        elif cmd == "p2h":
-            load_pad2_profile(out, "9")
+            elif cmd == "sm":
+                show_bd_silky_tools()
 
-        elif cmd == "p2c":
-            load_pad2_profile(out, "10")
+            elif cmd == "st":
+                bd_silky_smooth_tone_discovery(out)
 
-        elif cmd == "p2f":
-            load_pad2_profile(out, "11")
+            elif cmd == "sk":
+                bd_silky_kick_body_discovery(out)
 
-        elif cmd == "p2t":
-            pad2_tone_discovery(out)
+            elif cmd == "sc":
+                bd_silky_click_dust_discovery(out)
 
-        elif cmd == "p2p":
-            pad2_pressure_body_discovery(out)
+            elif cmd == "sbh":
+                return_pad1_bd_silky_to_anchor(out)
 
-        elif cmd == "p2g":
-            pad2_grit_noise_discovery(out)
+            elif cmd == "p2m":
+                show_pad2_tools()
 
-        elif cmd == "p2z":
-            return_pad2_to_current_anchor(out)
+            elif cmd == "p2b":
+                load_pad2_profile(out, "3")
 
-        elif cmd == "p2r":
-            rotate_pad2_profile(out)
+            elif cmd == "p2h":
+                load_pad2_profile(out, "9")
 
-        elif cmd == "p2x":
-            mutate_current_pad2_rotation_profile(out)
+            elif cmd == "p2c":
+                load_pad2_profile(out, "10")
 
-        elif cmd == "j":
-            show_group_layout()
+            elif cmd == "p2f":
+                load_pad2_profile(out, "11")
 
-        elif cmd == "o":
-            load_group_anchors(out)
+            elif cmd == "p2t":
+                pad2_tone_discovery(out)
 
-        elif cmd == "gm":
-            show_global_mutation_tools()
+            elif cmd == "p2p":
+                pad2_pressure_body_discovery(out)
 
-        elif cmd == "scn":
-            show_scene_tools()
+            elif cmd == "p2g":
+                pad2_grit_noise_discovery(out)
 
-        elif cmd in SCENE_PRESETS:
-            run_scene(out, cmd)
+            elif cmd == "p2z":
+                return_pad2_to_current_anchor(out)
 
-        elif cmd == "x":
-            mutate_group_intensity(out, "balanced")
+            elif cmd == "p2r":
+                rotate_pad2_profile(out)
 
-        elif cmd == "d":
-            mutate_group_intensity(out, "deeper")
+            elif cmd == "p2x":
+                mutate_current_pad2_rotation_profile(out)
 
-        elif cmd == "i":
-            mutate_group_intensity(out, "intense")
+            elif cmd == "j":
+                show_group_layout()
 
-        elif cmd == "4":
-            mutate_group_intensity(out, "harder")
+            elif cmd == "o":
+                load_group_anchors(out)
 
-        elif cmd == "y":
-            mutate_global_page_plan(out, "src")
+            elif cmd == "gm":
+                show_global_mutation_tools()
 
-        elif cmd == "v":
-            mutate_global_page_plan(out, "filter")
+            elif cmd == "scn":
+                show_scene_tools()
 
-        elif cmd == "n":
-            mutate_global_page_plan(out, "grit")
+            elif cmd in SCENE_PRESETS:
+                run_scene(out, cmd)
 
-        elif cmd == "z":
-            return_group_to_anchors(out)
+            elif cmd == "x":
+                mutate_group_intensity(out, "balanced")
 
-        elif cmd == "l":
-            choose_isolated_pad()
+            elif cmd == "d":
+                mutate_group_intensity(out, "deeper")
 
-        elif cmd == "pm":
-            mutate_isolated_pad(out)
+            elif cmd == "i":
+                mutate_group_intensity(out, "intense")
 
-        elif cmd == "ps":
-            mutate_isolated_pad_with_depth(out, "src")
+            elif cmd == "4":
+                mutate_group_intensity(out, "harder")
 
-        elif cmd == "pf":
-            mutate_isolated_pad_with_depth(out, "filter")
+            elif cmd == "y":
+                mutate_global_page_plan(out, "src")
 
-        elif cmd == "pa":
-            mutate_isolated_pad_with_depth(out, "amp")
+            elif cmd == "v":
+                mutate_global_page_plan(out, "filter")
 
-        elif cmd == "pl":
-            mutate_isolated_pad_with_depth(out, "lfo")
+            elif cmd == "n":
+                mutate_global_page_plan(out, "grit")
 
-        elif cmd == "po":
-            mutate_isolated_pad_with_depth(out, "morph")
+            elif cmd == "z":
+                return_group_to_anchors(out)
 
-        elif cmd == "pb":
-            mutate_isolated_pad_with_depth(out, "body")
+            elif cmd == "l":
+                choose_isolated_pad()
 
-        elif cmd == "pg":
-            mutate_isolated_pad_with_depth(out, "grit")
+            elif cmd == "pm":
+                mutate_isolated_pad(out)
 
-        elif cmd == "pz":
-            return_isolated_pad_to_anchor(out)
+            elif cmd == "ps":
+                mutate_isolated_pad_with_depth(out, "src")
 
-        elif cmd == "pr":
-            show_isolated_pad()
+            elif cmd == "pf":
+                mutate_isolated_pad_with_depth(out, "filter")
 
-        elif cmd == "sr":
-            show_sy_raw_discovery_menu()
+            elif cmd == "pa":
+                mutate_isolated_pad_with_depth(out, "amp")
 
-        elif cmd == "sw":
-            sy_raw_wave_balance_discovery(out)
+            elif cmd == "pl":
+                mutate_isolated_pad_with_depth(out, "lfo")
 
-        elif cmd == "sl":
-            sy_raw_lp1_bassline_mode(out)
+            elif cmd == "po":
+                mutate_isolated_pad_with_depth(out, "morph")
 
-        elif cmd == "sb":
-            sy_raw_bandpass_mid_bass_mode(out)
+            elif cmd == "pb":
+                mutate_isolated_pad_with_depth(out, "body")
 
-        elif cmd == "sx":
-            sy_raw_scifi_motion_accent(out)
+            elif cmd == "pg":
+                mutate_isolated_pad_with_depth(out, "grit")
 
-        elif cmd == "sa":
-            return_pad3_sy_raw_to_anchor(out)
+            elif cmd == "pz":
+                return_isolated_pad_to_anchor(out)
 
-        elif cmd == "p3m":
-            show_pad3_tools()
+            elif cmd == "pr":
+                show_isolated_pad()
 
-        elif cmd == "p3r":
-            rotate_pad3_mode(out)
+            elif cmd == "sr":
+                show_sy_raw_discovery_menu()
 
-        elif cmd == "p3x":
-            mutate_current_pad3_mode(out)
+            elif cmd == "sw":
+                sy_raw_wave_balance_discovery(out)
 
-        elif cmd == "p3a":
-            return_pad3_to_anchor(out)
+            elif cmd == "sl":
+                sy_raw_lp1_bassline_mode(out)
 
-        elif cmd == "p4m":
-            show_pad4_tools()
+            elif cmd == "sb":
+                sy_raw_bandpass_mid_bass_mode(out)
 
-        elif cmd == "p4r":
-            rotate_pad4_mode(out)
+            elif cmd == "sx":
+                sy_raw_scifi_motion_accent(out)
 
-        elif cmd == "p4x":
-            mutate_current_pad4_mode(out)
+            elif cmd == "sa":
+                return_pad3_sy_raw_to_anchor(out)
 
-        elif cmd == "p4a":
-            return_pad4_to_anchor(out)
+            elif cmd == "p3m":
+                show_pad3_tools()
 
-        elif cmd == "c":
-            new_channel = input("Enter MIDI channel 1-16: ").strip()
-            try:
-                new_channel = int(new_channel)
-                if 1 <= new_channel <= 16:
-                    channel = new_channel - 1
-                    print(f"Now sending on MIDI Channel {new_channel}")
-                else:
-                    print("Use a number from 1 to 16.")
-            except:
-                print("Invalid channel.")
+            elif cmd == "p3r":
+                rotate_pad3_mode(out)
 
-        elif cmd == "m":
-            apply_state(
-                out,
-                anchor_state,
-                f"{active_profile['name']} anchor",
-                set_anchor=True,
-                switch_machine_first=True
-            )
+            elif cmd == "p3x":
+                mutate_current_pad3_mode(out)
 
-        elif cmd == "b":
-            apply_state(out, anchor_state, "Back to current anchor", set_anchor=False)
+            elif cmd == "p3a":
+                return_pad3_to_anchor(out)
 
-        elif cmd == "e":
-            commit_current_as_anchor()
+            elif cmd == "p4m":
+                show_pad4_tools()
 
-        elif cmd == "h":
-            show_anchor()
+            elif cmd == "p4r":
+                rotate_pad4_mode(out)
 
-        elif cmd == "r":
-            show_current()
+            elif cmd == "p4x":
+                mutate_current_pad4_mode(out)
 
-        elif cmd == "m1":
-            mutate_zone(out, "full", "micro")
+            elif cmd == "p4a":
+                return_pad4_to_anchor(out)
 
-        elif cmd == "m2":
-            mutate_zone(out, "full", "groove")
+            elif cmd == "c":
+                new_channel = input("Enter MIDI channel 1-16: ").strip()
+                try:
+                    new_channel = int(new_channel)
+                    if 1 <= new_channel <= 16:
+                        channel = new_channel - 1
+                        print(f"Now sending on MIDI Channel {new_channel}")
+                    else:
+                        print("Use a number from 1 to 16.")
+                except ValueError:
+                    print("Invalid channel.")
 
-        elif cmd == "m3":
-            mutate_zone(out, "full", "strong")
+            elif cmd == "m":
+                apply_state(
+                    out,
+                    anchor_state,
+                    f"{active_profile['name']} anchor",
+                    set_anchor=True,
+                    switch_machine_first=True
+                )
 
-        elif cmd in ["1", "2", "3"]:
-            print("\nDepth number entered at the main Command prompt. No MIDI was sent.")
-            print("Use Y, V, N, S, F, A, G, or K first, then answer the depth prompt with 1, 2, or 3.")
-            print("For legacy single-profile full mutation, use M1, M2, or M3.")
+            elif cmd == "b":
+                apply_state(out, anchor_state, "Back to current anchor", set_anchor=False)
 
-        elif cmd == "s":
-            mutate_zone(out, "src", get_depth())
+            elif cmd == "e":
+                commit_current_as_anchor()
 
-        elif cmd == "f":
-            mutate_zone(out, "filter", get_depth())
+            elif cmd == "h":
+                show_anchor()
 
-        elif cmd == "a":
-            mutate_zone(out, "amp", get_depth())
+            elif cmd == "r":
+                show_current()
 
-        elif cmd == "g":
-            mutate_zone(out, "grit", get_depth())
+            elif cmd == "m1":
+                mutate_zone(out, "full", "micro")
 
-        elif cmd == "k":
-            mutate_zone(out, "body", get_depth())
+            elif cmd == "m2":
+                mutate_zone(out, "full", "groove")
 
-        elif cmd == "w":
-            random_waveform(out)
+            elif cmd == "m3":
+                mutate_zone(out, "full", "strong")
 
-        elif cmd == "u":
-            undo(out)
+            elif cmd in ["1", "2", "3"]:
+                print("\nDepth number entered at the main Command prompt. No MIDI was sent.")
+                print("Use Y, V, N, S, F, A, G, or K first, then answer the depth prompt with 1, 2, or 3.")
+                print("For legacy single-profile full mutation, use M1, M2, or M3.")
 
-        else:
-            print("Unknown command.")
-            print_commands()
+            elif cmd == "s":
+                mutate_zone(out, "src", get_depth())
+
+            elif cmd == "f":
+                mutate_zone(out, "filter", get_depth())
+
+            elif cmd == "a":
+                mutate_zone(out, "amp", get_depth())
+
+            elif cmd == "g":
+                mutate_zone(out, "grit", get_depth())
+
+            elif cmd == "k":
+                mutate_zone(out, "body", get_depth())
+
+            elif cmd == "w":
+                random_waveform(out)
+
+            elif cmd == "u":
+                undo(out)
+
+            else:
+                print("Unknown command.")
+                print_commands()
+
+
+if __name__ == "__main__":
+    main()

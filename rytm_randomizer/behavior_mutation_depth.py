@@ -4,9 +4,9 @@ This module models deterministic mutation-depth intent without prompt loops,
 dispatching commands, opening ports, sending MIDI, or touching hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .commands import (
     COMMANDS,
@@ -17,17 +17,10 @@ from .commands import (
 )
 from .constants import GUARDED_MAIN_PROMPT_DEPTH_COMMANDS
 
-
 PACKET_3A_GUARDED_DEPTH_KEYS = GUARDED_MAIN_PROMPT_DEPTH_COMMANDS
-PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS = tuple(
-    LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS
-)
-PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS = tuple(
-    CURRENT_PROFILE_PAGE_MUTATION_COMMANDS
-)
-PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS = tuple(
-    ISOLATED_PAD_MUTATION_COMMANDS
-)
+PACKET_3B_LEGACY_SINGLE_PROFILE_MUTATION_KEYS = tuple(LEGACY_SINGLE_PROFILE_MUTATION_COMMANDS)
+PACKET_3C_CURRENT_PROFILE_PAGE_MUTATION_KEYS = tuple(CURRENT_PROFILE_PAGE_MUTATION_COMMANDS)
+PACKET_3D_SELECTED_ISOLATED_PAD_MUTATION_KEYS = tuple(ISOLATED_PAD_MUTATION_COMMANDS)
 DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS = ()
 
 
@@ -136,9 +129,7 @@ def _accepted_guarded_depth_result(command_key):
         metadata={
             "source": "MAIN_PROMPT_DEPTH_GUARDRAIL",
             "source_command_type": command_metadata["type"],
-            "depth_prompt_context": MAIN_PROMPT_DEPTH_GUARDRAIL[
-                "depth_prompt_context"
-            ],
+            "depth_prompt_context": MAIN_PROMPT_DEPTH_GUARDRAIL["depth_prompt_context"],
             "mock_only": True,
             "sends_real_midi": False,
             "opens_ports": False,
@@ -256,9 +247,7 @@ def _accepted_selected_isolated_pad_mutation_result(command_key):
     mutation_area = command_metadata["mutation_area"]
     scope = command_metadata["scope"]
     requires_depth_selection = command_metadata.get("requires_depth_selection", False)
-    uses_group_default_zone_depth = command_metadata.get(
-        "uses_group_default_zone_depth", False
-    )
+    uses_group_default_zone_depth = command_metadata.get("uses_group_default_zone_depth", False)
 
     if uses_group_default_zone_depth:
         mode_line = "Uses group default zone/depth."

@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 V134_REFERENCE = PROJECT_ROOT / "rytm_hybrid_randomizer_v134.py"
@@ -12,18 +12,16 @@ PASSIVE_AND_MOCK_MODULES = (
     "rytm_randomizer.cli",
     "rytm_randomizer.mock_midi",
     "rytm_randomizer.mock_message_mapper",
-    "rytm_randomizer.mock_mapper_report",
     "rytm_randomizer.active_boundary",
-    "rytm_randomizer.active_boundary_report",
+    "rytm_randomizer.reports",
 )
 
 SOURCE_FILES = (
     PROJECT_ROOT / "rytm_randomizer" / "cli.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_midi.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_message_mapper.py",
-    PROJECT_ROOT / "rytm_randomizer" / "mock_mapper_report.py",
     PROJECT_ROOT / "rytm_randomizer" / "active_boundary.py",
-    PROJECT_ROOT / "rytm_randomizer" / "active_boundary_report.py",
+    PROJECT_ROOT / "rytm_randomizer" / "reports.py",
 )
 
 FORBIDDEN_REAL_MIDI_TOKENS = (
@@ -88,10 +86,7 @@ def test_passive_and_mock_sources_expose_no_real_midi_affordances():
 
 
 def test_active_boundary_scope_remains_profile_2_only():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     accepted_sender = MockMidiSender()

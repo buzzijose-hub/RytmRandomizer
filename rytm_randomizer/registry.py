@@ -6,7 +6,6 @@ from .commands import COMMANDS
 from .profiles import GROUP_PROFILE_METADATA
 from .scenes import SCENE_COMMANDS
 
-
 REGISTRY_SECTIONS = ("commands", "scenes", "group_profiles")
 
 
@@ -99,8 +98,7 @@ def summarize_registry():
     """Return a passive summary of section counts and total item count."""
     registry = _source_registry()
     section_counts = {
-        section_name: len(registry[section_name])
-        for section_name in REGISTRY_SECTIONS
+        section_name: len(registry[section_name]) for section_name in REGISTRY_SECTIONS
     }
     return {
         "sections": REGISTRY_SECTIONS,

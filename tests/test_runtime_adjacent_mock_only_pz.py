@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -104,16 +104,12 @@ def test_missing_target_and_missing_anchor_contexts_fail_safely():
         build_missing_anchor_runtime_state,
         build_missing_selected_target_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
-        build_default_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_default_selected_target_state
 
     sender = MockMidiSender()
     cases = (
         (
-            build_missing_selected_target_runtime_state(
-                anchor_state=build_unknown_anchor_state()
-            ),
+            build_missing_selected_target_runtime_state(anchor_state=build_unknown_anchor_state()),
             "missing_selected_target_state",
             "target-missing",
         ),
@@ -127,9 +123,7 @@ def test_missing_target_and_missing_anchor_contexts_fail_safely():
     )
 
     for runtime_state, reason, target_anchor_status in cases:
-        result = evaluate_selected_isolated_pad_behavior(
-            "PZ", runtime_state=runtime_state
-        )
+        result = evaluate_selected_isolated_pad_behavior("PZ", runtime_state=runtime_state)
 
         assert_pz_safe_failure(
             result,
@@ -214,9 +208,7 @@ def test_unsupported_stale_and_invalid_contexts_fail_safely():
     )
 
     for runtime_state, reason, target_anchor_status in cases:
-        result = evaluate_selected_isolated_pad_behavior(
-            "PZ", runtime_state=runtime_state
-        )
+        result = evaluate_selected_isolated_pad_behavior("PZ", runtime_state=runtime_state)
 
         assert_pz_safe_failure(
             result,

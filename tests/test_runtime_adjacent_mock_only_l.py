@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -118,8 +118,8 @@ def test_unset_unsupported_stale_and_invalid_l_target_contexts_fail_safely():
     from rytm_randomizer.selected_target_state import (
         build_invalid_selected_target_state,
         build_stale_selected_target_state,
-        build_unsupported_selected_target_state,
         build_unset_selected_target_state,
+        build_unsupported_selected_target_state,
     )
 
     sender = MockMidiSender()
@@ -152,9 +152,7 @@ def test_runtime_adjacent_l_checks_are_deterministic_and_copy_safe():
     from rytm_randomizer.behavior_selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
-    from rytm_randomizer.selected_target_state import (
-        build_default_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_default_selected_target_state
 
     first = evaluate_selected_isolated_pad_behavior("L")
     second = evaluate_selected_isolated_pad_behavior("L")

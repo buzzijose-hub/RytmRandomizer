@@ -1,7 +1,7 @@
-from pathlib import Path
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -155,9 +155,7 @@ def test_inspect_scene_help_exits_zero_and_matches_fixture():
     result = run_cli("inspect-scene", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_inspect_scene_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_inspect_scene_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -175,9 +173,7 @@ def test_list_commands_help_exits_zero_and_matches_fixture():
     result = run_cli("list-commands", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_commands_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_commands_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -185,9 +181,7 @@ def test_list_scenes_help_exits_zero_and_matches_fixture():
     result = run_cli("list-scenes", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_scenes_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_scenes_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -215,9 +209,7 @@ def test_search_scenes_help_exits_zero_and_matches_fixture():
     result = run_cli("search-scenes", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_search_scenes_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_search_scenes_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -245,9 +237,7 @@ def test_preview_scene_help_exits_zero_and_matches_fixture():
     result = run_cli("preview-scene", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_preview_scene_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_preview_scene_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -310,10 +300,14 @@ def test_project_status_report_json_command_exits_zero_and_returns_json():
     assert parsed["runtime_plan"]["runtime_execution"] == "absent"
     assert parsed["active_boundary"]["active_cli_behavior"] == "absent"
     assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
-    assert parsed["safety"]["real_midi"] == "absent"
-    assert parsed["safety"]["port_opening"] == "absent"
-    assert parsed["safety"]["active_execution"] == "absent"
+    assert parsed["safety"]["real_midi"] == "present_behind_arm_flag"
+    assert parsed["safety"]["port_opening"] == "present_behind_arm_flag"
+    assert parsed["safety"]["active_execution"] == "present_behind_arm_flag"
+    assert parsed["safety"]["default_mode"] == "passive"
     assert parsed["safety"]["hardware_required"] is False
+    assert parsed["convergence"]["active_execution"] == "present"
+    assert parsed["convergence"]["active_execution_gate"] == "--arm flag"
+    assert parsed["convergence"]["default_mode"] == "passive"
     assert parsed["source"]["in_memory_only"] is True
     assert parsed["source"]["writes_files"] is False
     assert result.stderr == ""
@@ -323,9 +317,7 @@ def test_mock_mapper_report_command_exits_zero_and_matches_fixture():
     result = run_cli("mock-mapper-report")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_mock_mapper_report_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_mock_mapper_report_expected.txt")
     assert result.stderr == ""
 
 
@@ -333,9 +325,7 @@ def test_runtime_plan_report_command_exits_zero_and_matches_fixture():
     result = run_cli("runtime-plan-report")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_runtime_plan_report_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_runtime_plan_report_expected.txt")
     assert result.stderr == ""
 
 
@@ -771,6 +761,11 @@ def test_mock_runtime_active_bridge_report_command_does_not_load_bridge_or_mock_
 
 
 def test_importing_cli_does_not_load_behavior_report_modules():
+    # After WS-P the per-report shim modules were collapsed into the unified
+    # ``rytm_randomizer.reports`` module. Importing ``rytm_randomizer.cli``
+    # must still keep the consolidated reports module (and any
+    # report-adjacent behavior modules) out of ``sys.modules`` until a report
+    # subcommand actually triggers a lazy import.
     result = subprocess.run(
         [
             sys.executable,
@@ -778,8 +773,7 @@ def test_importing_cli_does_not_load_behavior_report_modules():
             (
                 "import sys\n"
                 "import rytm_randomizer.cli\n"
-                "assert 'rytm_randomizer.behavior_anchor_profile_report' not in sys.modules\n"
-                "assert 'rytm_randomizer.behavior_parity_coverage_report' not in sys.modules\n"
+                "assert 'rytm_randomizer.reports' not in sys.modules\n"
                 "assert 'rytm_randomizer.behavior_selected_isolated_pad' not in sys.modules\n"
                 "assert 'rytm_randomizer.selected_isolated_pad_runtime_state' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_midi' not in sys.modules\n"
@@ -799,6 +793,10 @@ def test_importing_cli_does_not_load_behavior_report_modules():
 
 
 def test_importing_cli_does_not_load_runtime_or_bridge_report_modules():
+    # After WS-P the runtime-plan and bridge report shim modules were
+    # collapsed into the unified ``rytm_randomizer.reports`` module. The
+    # lazy-load contract still applies: ``rytm_randomizer.reports`` must not
+    # appear in ``sys.modules`` from importing ``rytm_randomizer.cli`` alone.
     result = subprocess.run(
         [
             sys.executable,
@@ -806,9 +804,8 @@ def test_importing_cli_does_not_load_runtime_or_bridge_report_modules():
             (
                 "import sys\n"
                 "import rytm_randomizer.cli\n"
-                "assert 'rytm_randomizer.runtime_plan_report' not in sys.modules\n"
+                "assert 'rytm_randomizer.reports' not in sys.modules\n"
                 "assert 'rytm_randomizer.runtime_plan' not in sys.modules\n"
-                "assert 'rytm_randomizer.mock_runtime_active_bridge_report' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_runtime_active_bridge' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_midi' not in sys.modules\n"
                 "assert 'mido' not in sys.modules\n"
@@ -862,7 +859,6 @@ def test_importing_cli_does_not_load_passive_metadata_modules():
                 "assert 'rytm_randomizer.scenes' not in sys.modules\n"
                 "assert 'rytm_randomizer.profiles' not in sys.modules\n"
                 "assert 'rytm_randomizer.registry' not in sys.modules\n"
-                "assert 'rytm_randomizer.preview' not in sys.modules\n"
                 "assert 'rytm_randomizer.inspection' not in sys.modules\n"
                 "assert 'rytm_randomizer.validation' not in sys.modules\n"
                 "assert 'mido' not in sys.modules\n"
@@ -961,9 +957,7 @@ def test_inspect_scene_known_key_exits_zero_and_matches_fixture():
     result = run_cli("inspect-scene", "S1A")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_inspect_scene_known_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_inspect_scene_known_expected.txt")
     assert result.stderr == ""
 
 
@@ -1003,9 +997,7 @@ def test_list_commands_exits_zero_and_matches_fixture():
     result = run_cli("list-commands")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_commands_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_commands_expected.txt")
     assert result.stderr == ""
 
 
@@ -1013,9 +1005,7 @@ def test_list_scenes_exits_zero_and_matches_fixture():
     result = run_cli("list-scenes")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_scenes_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_scenes_expected.txt")
     assert result.stderr == ""
 
 
@@ -1023,9 +1013,7 @@ def test_list_group_profiles_exits_zero_and_matches_fixture():
     result = run_cli("list-group-profiles")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_group_profiles_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_group_profiles_expected.txt")
     assert result.stderr == ""
 
 
@@ -1076,9 +1064,7 @@ def test_search_scenes_known_query_exits_zero_and_matches_fixture():
     result = run_cli("search-scenes", "Wild")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_search_scenes_known_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_search_scenes_known_expected.txt")
     assert result.stderr == ""
 
 
@@ -1106,9 +1092,7 @@ def test_search_scenes_no_match_exits_zero_and_matches_fixture():
     result = run_cli("search-scenes", "NO_MATCH")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_search_scenes_none_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_search_scenes_none_expected.txt")
     assert result.stderr == ""
 
 
@@ -1182,9 +1166,7 @@ def test_preview_scene_known_key_exits_zero_and_matches_fixture():
     result = run_cli("preview-scene", "S1A")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_preview_scene_known_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_preview_scene_known_expected.txt")
     assert result.stderr == ""
 
 
@@ -1448,21 +1430,27 @@ def test_report_command_exposes_no_active_behavior_or_support_expansion():
     assert "- Analog Four" in output
 
 
-def test_project_status_report_exposes_no_active_behavior_or_support_expansion():
+def test_project_status_report_tracks_convergence_behind_arm_flag():
     result = run_cli("project-status-report")
     output = normalize_newlines(result.stdout)
 
-    assert "- real_midi: absent" in output
-    assert "- port_opening: absent" in output
-    assert "- active_execution: absent" in output
-    assert "- dispatch: absent" in output
-    assert "- command_execution: absent" in output
+    # Convergence wave: active execution is present, but only behind --arm.
+    # The default landing mode stays passive and the monolith stays untouched.
+    assert "- real_midi: present_behind_arm_flag" in output
+    assert "- port_opening: present_behind_arm_flag" in output
+    assert "- active_execution: present_behind_arm_flag" in output
+    assert "- dispatch: present_behind_arm_flag" in output
+    assert "- command_execution: present_behind_arm_flag" in output
+    assert "- default_mode: passive" in output
     assert "- hardware_required: False" in output
-    assert "- hardware_behavior: absent" in output
+    assert "- hardware_behavior: opt_in_behind_arm_flag" in output
     assert "- analog_four_support: absent" in output
     assert "- pads_5_12_support: absent" in output
     assert "- v134_reference: untouched" in output
     assert "- package_metadata: untouched" in output
+    assert "- active_execution_gate: --arm flag" in output
+    assert "- active_modes_present: 2" in output
+    assert "- total_modes: 3" in output
     assert "execute-command" not in output
     assert "send-command" not in output
     assert "hardware-test" not in output
@@ -1478,7 +1466,10 @@ def test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion():
 
     assert "- 2: My BD Hard (Pad 1 / BD Hard)" in output
     assert "- 3: My BD Classic (Pad 2 / BD Classic)" in output
-    assert "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - intentionally unsupported until separately approved" in output
+    assert (
+        "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - intentionally unsupported until separately approved"
+        in output
+    )
     assert "- mock_only: True" in output
     assert "- real_midi: absent" in output
     assert "- port_opening: absent" in output
@@ -1528,9 +1519,15 @@ def test_active_boundary_report_exposes_no_active_behavior_or_support_expansion(
     assert "- group_profile 2: My BD Hard (Pad 1 / BD Hard)" in output
     assert "- boundary: mock_active_boundary" in output
     assert "- supported_candidate: group_profile:2" in output
-    assert "- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi" in output
+    assert (
+        "- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi"
+        in output
+    )
     assert "- failure_reason: included on failure paths" in output
-    assert "- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported" in output
+    assert (
+        "- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported"
+        in output
+    )
     assert "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - parked until separately approved" in output
     assert "- explicit arming" in output
     assert "- dry-run confirmation" in output
@@ -1635,8 +1632,14 @@ def test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion()
     assert "- current_anchor_state: B, E" in output
     assert "- selected_profile_workflow: P, M" in output
     assert "- selected_isolated_pad_target: L" in output
-    assert "- PZ: selected_isolated_pad_anchor_return - deferred_selected_isolated_pad_anchor_return" in output
-    assert "- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved" in output
+    assert (
+        "- PZ: selected_isolated_pad_anchor_return - deferred_selected_isolated_pad_anchor_return"
+        in output
+    )
+    assert (
+        "- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved"
+        in output
+    )
     assert "- read_only: True" in output
     assert "- passive_cli_visibility: present" in output
     assert "- real_midi: absent" in output
@@ -2080,7 +2083,7 @@ if __name__ == "__main__":
     test_missing_preview_scene_key_fails_safely()
     test_missing_preview_group_profile_key_fails_safely()
     test_report_command_exposes_no_active_behavior_or_support_expansion()
-    test_project_status_report_exposes_no_active_behavior_or_support_expansion()
+    test_project_status_report_tracks_convergence_behind_arm_flag()
     test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion()
     test_runtime_plan_report_exposes_no_active_behavior_or_support_expansion()
     test_active_boundary_report_exposes_no_active_behavior_or_support_expansion()

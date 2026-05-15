@@ -1,0 +1,39 @@
+# Pre-commit hooks for RytmRandomizer.
+# Install once with:  pre-commit install
+# Run on all files:   pre-commit run --all-files
+#
+# Quality gates: formatting (black), import sorting (isort), linting (ruff),
+# plus standard repo hygiene checks.
+#
+# IMPORTANT: when bumping any hook version below, also bump the matching
+# pin in .github/workflows/test.yml's `lint` job, otherwise local and CI
+# can produce different verdicts.
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 26.3.1
+    hooks:
+      - id: black
+        language_version: python3
+
+  - repo: https://github.com/pycqa/isort
+    rev: 8.0.1
+    hooks:
+      - id: isort
+        name: isort (import sorting)
+        args: ["--profile", "black"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.13
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict

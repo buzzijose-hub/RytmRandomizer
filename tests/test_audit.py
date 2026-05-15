@@ -1,13 +1,12 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from rytm_randomizer.audit import audit_command_registry
 from rytm_randomizer.commands import COMMANDS
-from rytm_randomizer.preview import SAFETY_SUMMARY
+from rytm_randomizer.inspection import SAFETY_SUMMARY, audit_command_registry
 
 
 def test_real_commands_registry_audit_passes_validation():

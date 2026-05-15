@@ -2,27 +2,53 @@
 
 This module defines a future real MIDI boundary without importing real MIDI
 libraries at module import time. Unit tests must use fake providers only.
+
+The three error classes below are also members of the unified
+:mod:`rytm_randomizer.observability.errors` taxonomy: they inherit from both
+:class:`~rytm_randomizer.observability.errors.MidiError` AND ``RuntimeError``.
+The multi-inheritance preserves every existing ``except RuntimeError``
+behaviour AND lets new code ``except MidiError`` to catch the whole MIDI
+boundary in one clause. Class identity is unchanged -- ``isinstance`` checks
+in existing tests and ``from rytm_randomizer.real_midi_adapter import ...``
+imports keep working.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping, Protocol, Sequence
+from typing import Protocol
 
 from .mock_midi import MidiMessage
+from .observability.errors import MidiError
 
 
-class RealMidiDependencyError(RuntimeError):
-    """Raised when a real MIDI provider is required but absent."""
+class RealMidiDependencyError(MidiError, RuntimeError):
+    """Raised when a real MIDI provider is required but absent.
+
+    Member of the unified :class:`~rytm_randomizer.observability.errors.MidiError`
+    taxonomy. ``RuntimeError`` is kept as an additional base for
+    backward-compatibility with any ``except RuntimeError`` caller.
+    """
 
 
-class RealMidiPortError(RuntimeError):
-    """Raised when MIDI port selection fails safely."""
+class RealMidiPortError(MidiError, RuntimeError):
+    """Raised when MIDI port selection fails safely.
+
+    Member of the unified :class:`~rytm_randomizer.observability.errors.MidiError`
+    taxonomy. ``RuntimeError`` is kept as an additional base for
+    backward-compatibility with any ``except RuntimeError`` caller.
+    """
 
 
-class RealMidiSendError(RuntimeError):
-    """Raised when a send request cannot be translated safely."""
+class RealMidiSendError(MidiError, RuntimeError):
+    """Raised when a send request cannot be translated safely.
+
+    Member of the unified :class:`~rytm_randomizer.observability.errors.MidiError`
+    taxonomy. ``RuntimeError`` is kept as an additional base for
+    backward-compatibility with any ``except RuntimeError`` caller.
+    """
 
 
 class RealMidiOutputPort(Protocol):
@@ -113,9 +139,7 @@ def _translate_message(message: MidiMessage) -> Mapping[str, object]:
     if not isinstance(message, MidiMessage):
         raise TypeError("message must be a MidiMessage")
     if message.message_type != "cc":
-        raise RealMidiSendError(
-            f"unsupported_midi_message_type: {message.message_type}"
-        )
+        raise RealMidiSendError(f"unsupported_midi_message_type: {message.message_type}")
     return {
         "message_type": message.message_type,
         "channel": message.channel,

@@ -4,13 +4,12 @@ This module models deterministic anchor/profile intent without dispatching
 commands, opening ports, sending MIDI, or touching hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .commands import COMMANDS, PAD1_COMMANDS
 from .profile_lookup import describe_group_profile
-
 
 PACKET_2A_ANCHOR_PROFILE_KEYS = ("BH", "BC")
 PACKET_2B_ANCHOR_PROFILE_KEYS = ("BS",)

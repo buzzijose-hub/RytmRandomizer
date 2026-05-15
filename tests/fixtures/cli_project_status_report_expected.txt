@@ -1,6 +1,6 @@
 RytmRandomizer Project Status Report
 Phase:
-- name: Passive/Mock Runtime Visibility Phase
+- name: Convergence Phase (armed behind --arm flag)
 - technical_name: RytmRandomizer
 - creative_identity_candidate: KitForge
 Passive CLI Visibility:
@@ -47,9 +47,9 @@ Mock Runtime Active Bridge:
 - emits_messages: False
 Public API Hardening:
 - status: checkpointed
-- module_count: 5
+- module_count: 3
 - exports_documented: True
-- modules: rytm_randomizer.active_boundary, rytm_randomizer.active_boundary_report, rytm_randomizer.runtime_plan, rytm_randomizer.runtime_plan_report, rytm_randomizer.mock_runtime_active_bridge_report
+- modules: rytm_randomizer.active_boundary, rytm_randomizer.reports, rytm_randomizer.runtime_plan
 - real_midi: absent
 - port_opening: absent
 - active_behavior: absent
@@ -68,8 +68,8 @@ Collaborator Review Intake:
 - package_metadata_changes: requires_explicit_approval
 Collaborator Review Triage Template:
 - status: accepted
-- template_path: Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md
-- review_gate_path: Docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md
+- template_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md
+- review_gate_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md
 - findings_recorded: False
 - requires_text_or_markdown: True
 - screenshot_only_sufficient: False
@@ -83,14 +83,26 @@ Closeout:
 - closeout_contract: present
 - failure_propagation: guarded
 - closeout_script: Scripts/closeout_check.ps1
+Convergence:
+- active_execution: present
+- active_execution_gate: --arm flag
+- entry_point: rytm_randomizer.app
+- default_mode: passive
+- modes: default, arm, dry-run
+- active_modes_present: 2
+- total_modes: 3
+- real_midi_provider: rytm_randomizer.mido_provider.MidoMidiPortProvider
+- interactive_logic_owner: rytm_randomizer.shell
+- interactive_logic_converged: True
 Safety:
-- real_midi: absent
-- port_opening: absent
-- active_execution: absent
-- dispatch: absent
-- command_execution: absent
+- real_midi: present_behind_arm_flag
+- port_opening: present_behind_arm_flag
+- active_execution: present_behind_arm_flag
+- dispatch: present_behind_arm_flag
+- command_execution: present_behind_arm_flag
+- default_mode: passive
 - hardware_required: False
-- hardware_behavior: absent
+- hardware_behavior: opt_in_behind_arm_flag
 - analog_four_support: absent
 - pads_5_12_support: absent
 - v134_reference: untouched

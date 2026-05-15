@@ -1,114 +1,44 @@
-"""Passive in-memory reports for the unified registry view."""
+"""Passive in-memory reports for the unified registry view.
 
-from copy import deepcopy
-import sys
+Thin shim over :mod:`rytm_randomizer.reports`. The report logic was
+consolidated into ``reports.py``; this module preserves the original public
+names and the ``python -m rytm_randomizer.registry_report`` entry point.
 
-from .registry import build_registry, list_registry_sections, summarize_registry
+TODO: migrate callers and delete this shim. Unlike the other report shims
+removed alongside the WS-P consolidation, this module is retained because
+its ``__main__`` block provides the
+``python -m rytm_randomizer.registry_report`` CLI entry point used by
+``tests/test_registry_report_cli.py`` and ``Scripts/closeout_check.ps1``.
+The consolidated ``rytm_randomizer.reports`` module does not currently
+expose an equivalent ``__main__`` block, and giving it one would
+asymmetrically pick the registry report out of seven report builders as
+the package's default ``python -m rytm_randomizer.reports`` behavior.
+Delete this module once the registry CLI entry point has been re-homed
+(for example as ``python -m rytm_randomizer.reports registry`` or via a
+``rytm_randomizer.__main__``).
+"""
 
-
-SAFETY_BOUNDARIES = (
-    "no MIDI sending",
-    "no port opening",
-    "no runtime dispatch",
-    "no command execution",
-    "no hardware mutation",
-    "no SysEx writes",
-    "no GUI",
-    "no capture",
-    "no Analog Four support",
-    "no Pads 5-12 support",
+from .reports import (
+    ACTIVE_BEHAVIOR_STATUS,
+    SAFETY_BOUNDARIES,
+    UNSUPPORTED_SCOPE,
+    build_registry_report,
+    format_registry_report,
+)
+from .reports import registry_report_main as main
+from .reports import (
+    summarize_registry_report,
 )
 
-UNSUPPORTED_SCOPE = (
-    "MIDI sending",
-    "MIDI port opening",
-    "runtime dispatch",
-    "command execution",
-    "hardware state mutation",
-    "SysEx writes",
-    "GUI",
-    "capture",
-    "Analog Four",
-    "Pads 5-12",
-)
-
-ACTIVE_BEHAVIOR_STATUS = {
-    "executes_commands": False,
-    "dispatches_commands": False,
-    "sends_midi": False,
-    "opens_ports": False,
-    "mutates_hardware": False,
-    "writes_sysex": False,
-}
-
-
-def build_registry_report():
-    """Return a copied, in-memory report for passive registry inspection."""
-    registry_summary = summarize_registry()
-    return {
-        "title": "RytmRandomizer Passive Registry Report",
-        "sections": tuple(list_registry_sections()),
-        "section_counts": deepcopy(registry_summary["section_counts"]),
-        "known_sections": ("commands", "scenes", "group_profiles"),
-        "safety_boundaries": SAFETY_BOUNDARIES,
-        "unsupported_scope": UNSUPPORTED_SCOPE,
-        "active_behavior": deepcopy(ACTIVE_BEHAVIOR_STATUS),
-        "source": {
-            "registry_module": "rytm_randomizer.registry",
-            "sections": tuple(build_registry().keys()),
-            "in_memory_only": True,
-        },
-    }
-
-
-def summarize_registry_report(report=None):
-    """Return a compact copied summary for a registry report."""
-    source_report = build_registry_report() if report is None else report
-    return {
-        "title": source_report["title"],
-        "section_count": len(source_report["sections"]),
-        "total_items": sum(source_report["section_counts"].values()),
-        "sections": tuple(source_report["sections"]),
-        "active_behavior": deepcopy(source_report["active_behavior"]),
-    }
-
-
-def format_registry_report(report=None):
-    """Return a deterministic human-readable report as a list of strings."""
-    source_report = build_registry_report() if report is None else report
-    lines = [
-        source_report["title"],
-        "Sections:",
-    ]
-
-    for section in source_report["sections"]:
-        count = source_report["section_counts"][section]
-        lines.append(f"- {section}: {count}")
-
-    lines.extend(
-        [
-            "Safety Boundaries:",
-            *[f"- {boundary}" for boundary in source_report["safety_boundaries"]],
-            "Unsupported Scope:",
-            *[f"- {scope}" for scope in source_report["unsupported_scope"]],
-            "Active Behavior:",
-        ]
-    )
-
-    for key in sorted(source_report["active_behavior"]):
-        lines.append(f"- {key}: {source_report['active_behavior'][key]}")
-
-    lines.append("Source: rytm_randomizer.registry")
-    lines.append("In-memory only: True")
-    return lines
-
-
-def main(argv=None):
-    """Print the passive registry report for explicit module execution."""
-    _ = [] if argv is None else list(argv)
-    sys.stdout.write("\n".join(format_registry_report()))
-    sys.stdout.write("\n")
-    return 0
+__all__ = [
+    "ACTIVE_BEHAVIOR_STATUS",
+    "SAFETY_BOUNDARIES",
+    "UNSUPPORTED_SCOPE",
+    "build_registry_report",
+    "format_registry_report",
+    "main",
+    "summarize_registry_report",
+]
 
 
 if __name__ == "__main__":

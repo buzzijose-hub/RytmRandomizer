@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -337,9 +337,7 @@ def test_lane_aware_group_mutation_keys_return_read_only_intent_results():
 
         assert result.accepted is True
         assert result.command_key == command_key
-        assert result.behavior_family == (
-            "scene-group/lane-aware-group-mutation-intent"
-        )
+        assert result.behavior_family == ("scene-group/lane-aware-group-mutation-intent")
         assert result.reason == "supported_lane_aware_group_mutation_intent"
         assert result.scene_scope == "four_pad_group"
         assert result.scene_name == ""
@@ -452,9 +450,7 @@ def test_packet_1_menu_utility_behavior_remains_unchanged():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 
@@ -467,9 +463,7 @@ def test_packet_2_anchor_profile_behavior_remains_unchanged():
 
 
 def test_packet_3_mutation_depth_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("PM")
 
@@ -495,9 +489,12 @@ def test_no_real_midi_library_is_imported():
     assert "rtmidi" not in sys.modules
 
 
-def test_no_package_metadata_files_are_introduced():
-    for filename in ("pyproject.toml", "requirements.txt", "setup.py", "setup.cfg"):
-        assert not (PROJECT_ROOT / filename).exists()
+def test_packaging_uses_pyproject_not_legacy_setup():
+    # WS-A introduced PEP 621 packaging. The project ships pyproject.toml as the
+    # single source of packaging truth; legacy setup.py / setup.cfg must not be used.
+    assert (PROJECT_ROOT / "pyproject.toml").exists()
+    for legacy in ("setup.py", "setup.cfg"):
+        assert not (PROJECT_ROOT / legacy).exists()
 
 
 def test_behavior_scene_group_exposes_no_active_behavior_names():
@@ -547,6 +544,6 @@ if __name__ == "__main__":
     test_packet_3_mutation_depth_behavior_remains_unchanged()
     test_passive_cli_behavior_remains_unchanged()
     test_no_real_midi_library_is_imported()
-    test_no_package_metadata_files_are_introduced()
+    test_packaging_uses_pyproject_not_legacy_setup()
     test_behavior_scene_group_exposes_no_active_behavior_names()
     test_no_out_of_scope_support_is_exposed()

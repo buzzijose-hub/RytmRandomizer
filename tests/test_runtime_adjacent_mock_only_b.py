@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -92,9 +92,7 @@ def test_importing_runtime_adjacent_b_modules_prints_nothing():
 
 def test_b_current_anchor_context_defaults_to_safe_failure_without_mock_messages():
     from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -113,9 +111,7 @@ def test_unsupported_stale_and_invalid_b_anchor_contexts_fail_safely():
         build_stale_anchor_state,
         build_unsupported_anchor_state,
     )
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -153,9 +149,7 @@ def test_unsupported_stale_and_invalid_b_anchor_contexts_fail_safely():
 
 def test_runtime_adjacent_b_checks_are_deterministic_and_copy_safe():
     from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     first = evaluate_undo_commit_state_behavior("B")
     second = evaluate_undo_commit_state_behavior("B")

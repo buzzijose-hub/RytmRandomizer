@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -29,7 +29,7 @@ def run_cli(*args):
 
 def test_importing_active_boundary_report_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.active_boundary_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -42,7 +42,7 @@ def test_importing_active_boundary_report_prints_nothing():
 
 
 def test_report_summarizes_active_boundary_candidate_and_unsupported_profiles():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+    from rytm_randomizer.reports import build_active_boundary_report
 
     report = build_active_boundary_report()
 
@@ -77,7 +77,7 @@ def test_report_summarizes_active_boundary_candidate_and_unsupported_profiles():
 
 
 def test_report_exposes_packet_1_result_metadata_fields():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+    from rytm_randomizer.reports import build_active_boundary_report
 
     report = build_active_boundary_report()
 
@@ -99,7 +99,7 @@ def test_report_exposes_packet_1_result_metadata_fields():
 
 
 def test_report_records_required_conditions_and_read_only_boundaries():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+    from rytm_randomizer.reports import build_active_boundary_report
 
     report = build_active_boundary_report()
 
@@ -129,7 +129,7 @@ def test_report_records_required_conditions_and_read_only_boundaries():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.active_boundary_report import summarize_active_boundary_report
+    from rytm_randomizer.reports import summarize_active_boundary_report
 
     assert summarize_active_boundary_report() == {
         "title": "RytmRandomizer Active Boundary Report",
@@ -145,7 +145,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.active_boundary_report import format_active_boundary_report
+    from rytm_randomizer.reports import format_active_boundary_report
 
     first = format_active_boundary_report()
     second = format_active_boundary_report()
@@ -186,7 +186,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_formatted_report_join_matches_cli_fixture():
-    from rytm_randomizer.active_boundary_report import format_active_boundary_report
+    from rytm_randomizer.reports import format_active_boundary_report
 
     assert "\n".join(format_active_boundary_report()) == fixture_text(
         "cli_active_boundary_report_expected.txt"
@@ -194,7 +194,7 @@ def test_formatted_report_join_matches_cli_fixture():
 
 
 def test_summary_exposes_no_real_midi_port_provider_or_hardware_target_fields():
-    from rytm_randomizer.active_boundary_report import summarize_active_boundary_report
+    from rytm_randomizer.reports import summarize_active_boundary_report
 
     summary = summarize_active_boundary_report()
 
@@ -207,7 +207,7 @@ def test_summary_exposes_no_real_midi_port_provider_or_hardware_target_fields():
 
 
 def test_unsupported_source_kinds_remain_limited_to_scene_and_command():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+    from rytm_randomizer.reports import build_active_boundary_report
 
     report = build_active_boundary_report()
 
@@ -215,7 +215,7 @@ def test_unsupported_source_kinds_remain_limited_to_scene_and_command():
 
 
 def test_closeout_coverage_lists_only_passive_mock_labels():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+    from rytm_randomizer.reports import build_active_boundary_report
 
     report = build_active_boundary_report()
 
@@ -228,7 +228,7 @@ def test_closeout_coverage_lists_only_passive_mock_labels():
 
 
 def test_mutating_formatted_report_output_does_not_mutate_future_output():
-    from rytm_randomizer.active_boundary_report import format_active_boundary_report
+    from rytm_randomizer.reports import format_active_boundary_report
 
     lines = format_active_boundary_report()
     lines[0] = "MUTATED"
@@ -238,7 +238,8 @@ def test_mutating_formatted_report_output_does_not_mutate_future_output():
 
 def test_report_module_remains_decoupled_from_active_boundary_evaluation():
     import inspect
-    import rytm_randomizer.active_boundary_report as report
+
+    import rytm_randomizer.reports as report
 
     source = inspect.getsource(report)
 
@@ -248,7 +249,7 @@ def test_report_module_remains_decoupled_from_active_boundary_evaluation():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
+    from rytm_randomizer.reports import build_active_boundary_report
 
     report = build_active_boundary_report()
     report["accepted_candidate"]["name"] = "MUTATED"
@@ -269,7 +270,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.active_boundary_report  # noqa: F401
+    import rytm_randomizer.reports  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -284,10 +285,7 @@ def test_passive_cli_report_behavior_remains_unchanged():
 
 
 def test_no_profile_3_or_4_active_boundary_support_is_added():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     for key in ("3", "4"):
@@ -309,7 +307,7 @@ def test_no_profile_3_or_4_active_boundary_support_is_added():
 
 
 def test_active_boundary_report_exposes_no_active_behavior_names():
-    import rytm_randomizer.active_boundary_report as report
+    import rytm_randomizer.reports as report
 
     exposed_names = set(dir(report))
 
@@ -323,11 +321,16 @@ def test_active_boundary_report_exposes_no_active_behavior_names():
 
 
 def test_active_boundary_report_exposes_explicit_public_api():
-    import rytm_randomizer.active_boundary_report as report
+    import rytm_randomizer.reports as report
 
-    assert report.__all__ == [
+    # After the WS-P consolidation the per-report shim modules were removed
+    # and the active-boundary report public API moved onto the unified
+    # ``rytm_randomizer.reports`` module. The CLOSEOUT_COVERAGE alias that
+    # the deleted shim exposed is now reachable as
+    # ``ACTIVE_BOUNDARY_CLOSEOUT_COVERAGE`` on the canonical module.
+    active_boundary_public_names = {
         "ACTIVE_BOUNDARY_SAFETY",
-        "CLOSEOUT_COVERAGE",
+        "ACTIVE_BOUNDARY_CLOSEOUT_COVERAGE",
         "REQUIRED_CONDITIONS",
         "RESULT_METADATA_FIELDS",
         "SAFE_FAILURE_SUMMARY",
@@ -336,7 +339,10 @@ def test_active_boundary_report_exposes_explicit_public_api():
         "build_active_boundary_report",
         "format_active_boundary_report",
         "summarize_active_boundary_report",
-    ]
+    }
+    exposed_names = set(dir(report))
+
+    assert active_boundary_public_names.issubset(exposed_names)
 
 
 if __name__ == "__main__":

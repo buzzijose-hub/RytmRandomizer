@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -29,7 +29,7 @@ def run_cli(*args):
 
 def test_importing_behavior_parity_coverage_report_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.behavior_parity_coverage_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -42,9 +42,7 @@ def test_importing_behavior_parity_coverage_report_prints_nothing():
 
 
 def test_report_summarizes_packet_coverage_and_runtime_adjacent_surfaces():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
 
@@ -67,13 +65,11 @@ def test_report_summarizes_packet_coverage_and_runtime_adjacent_surfaces():
 
 
 def test_report_records_structured_selected_isolated_pad_packet_coverage():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
     from rytm_randomizer.behavior_selected_isolated_pad import (
         PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
     )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
 
@@ -92,16 +88,16 @@ def test_report_records_structured_selected_isolated_pad_packet_coverage():
 
 
 def test_report_records_structured_pad_lane_packet_coverage():
-    from rytm_randomizer.behavior_pad1_lane import (
+    from rytm_randomizer.behavior_pad_lane import (
         DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+        DEFERRED_PACKET_6_PAD2_LANE_KEYS,
+        DEFERRED_PACKET_7_PAD3_LANE_KEYS,
+        DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
         PACKET_5B_PAD1_BD_FM_KEYS,
         PACKET_5C_PAD1_BD_PLASTIC_KEYS,
         PACKET_5D_PAD1_BD_SILKY_KEYS,
         PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
-    )
-    from rytm_randomizer.behavior_pad2_lane import (
-        DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         PACKET_6A_PAD2_LANE_KEYS,
         PACKET_6B_PAD2_LANE_KEYS,
         PACKET_6C_PAD2_LANE_KEYS,
@@ -112,9 +108,6 @@ def test_report_records_structured_pad_lane_packet_coverage():
         PACKET_6H_PAD2_LANE_KEYS,
         PACKET_6I_PAD2_LANE_KEYS,
         PACKET_6J_PAD2_LANE_KEYS,
-    )
-    from rytm_randomizer.behavior_pad3_lane import (
-        DEFERRED_PACKET_7_PAD3_LANE_KEYS,
         PACKET_7A_PAD3_LANE_KEYS,
         PACKET_7B_PAD3_LANE_KEYS,
         PACKET_7C_PAD3_LANE_KEYS,
@@ -123,16 +116,11 @@ def test_report_records_structured_pad_lane_packet_coverage():
         PACKET_7F_PAD3_LANE_KEYS,
         PACKET_7G_PAD3_LANE_KEYS,
         PACKET_7H_PAD3_LANE_KEYS,
-    )
-    from rytm_randomizer.behavior_pad4_lane import (
-        DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         PACKET_8A_PAD4_LANE_KEYS,
         PACKET_8B_PAD4_LANE_KEYS,
         PACKET_8C_PAD4_LANE_KEYS,
     )
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
 
@@ -188,9 +176,7 @@ def test_report_records_structured_pad_lane_packet_coverage():
             "packet": "8",
             "lane": "Pad 4 BD Acoustic lane",
             "command_keys": (
-                PACKET_8A_PAD4_LANE_KEYS
-                + PACKET_8B_PAD4_LANE_KEYS
-                + PACKET_8C_PAD4_LANE_KEYS
+                PACKET_8A_PAD4_LANE_KEYS + PACKET_8B_PAD4_LANE_KEYS + PACKET_8C_PAD4_LANE_KEYS
             ),
             "deferred_keys": DEFERRED_PACKET_8_PAD4_LANE_KEYS,
             "coverage": "Pad 4 command-helper scope for the current read-only phase",
@@ -199,9 +185,7 @@ def test_report_records_structured_pad_lane_packet_coverage():
 
 
 def test_report_records_parked_scope_and_absent_behavior():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
 
@@ -233,9 +217,7 @@ def test_report_records_parked_scope_and_absent_behavior():
 
 
 def test_report_records_closeout_coverage_and_protected_file_state():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
 
@@ -267,9 +249,7 @@ def test_report_records_closeout_coverage_and_protected_file_state():
 
 
 def test_report_records_read_only_safety_boundaries():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
 
@@ -287,9 +267,7 @@ def test_report_records_read_only_safety_boundaries():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        summarize_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import summarize_behavior_parity_coverage_report
 
     assert summarize_behavior_parity_coverage_report() == {
         "title": "V1.34 Behavior Parity Coverage Report",
@@ -308,9 +286,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        format_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import format_behavior_parity_coverage_report
 
     first = format_behavior_parity_coverage_report()
     second = format_behavior_parity_coverage_report()
@@ -384,9 +360,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.behavior_parity_coverage_report import (
-        build_behavior_parity_coverage_report,
-    )
+    from rytm_randomizer.reports import build_behavior_parity_coverage_report
 
     report = build_behavior_parity_coverage_report()
     report["accepted_packet_coverage"] = ("MUTATED",)
@@ -405,7 +379,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_parity_coverage_report  # noqa: F401
+    import rytm_randomizer.reports  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -420,7 +394,7 @@ def test_passive_cli_report_behavior_remains_unchanged():
 
 
 def test_no_packet_12_cli_visibility_or_active_names_are_exposed():
-    import rytm_randomizer.behavior_parity_coverage_report as report
+    import rytm_randomizer.reports as report
 
     exposed_names = set(dir(report))
 
@@ -435,7 +409,8 @@ def test_no_packet_12_cli_visibility_or_active_names_are_exposed():
 
 def test_module_remains_decoupled_from_cli_and_runtime_execution():
     import inspect
-    import rytm_randomizer.behavior_parity_coverage_report as report
+
+    import rytm_randomizer.reports as report
 
     source = inspect.getsource(report)
 
