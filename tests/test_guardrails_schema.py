@@ -471,4 +471,6 @@ def test_guardrails_package_reexports_public_surface():
         "compute_content_hash",
     }
     assert expected.issubset(set(dir(guardrails)))
-    assert expected == set(guardrails.__all__)
+    # The schema surface MUST be re-exported; the package may also re-export
+    # later WS-W modules' surfaces (validation, store, resolver) on top of it.
+    assert expected.issubset(set(guardrails.__all__))
