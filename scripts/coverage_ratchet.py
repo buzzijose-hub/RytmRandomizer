@@ -4,13 +4,13 @@ This script is intended to run in CI after the test+coverage step. It
 parses the freshly-written coverage.xml, reads the current floor from
 .coveragerc, and:
 
-* fails the step if measured branch coverage is BELOW the floor (this is
+* fails the step if measured total coverage is BELOW the floor (this is
   a redundant guard; coverage.py itself enforces fail_under, but having
   a second check here catches the case where coverage.xml was generated
   without ``--cov-fail-under`` on the pytest command line);
 
 * rewrites .coveragerc with a higher fail_under and prints a one-line
-  summary if measured branch coverage is ABOVE floor by at least 1
+  summary if measured total coverage is ABOVE floor by at least 1
   percentage point. The intended CI step then commits and pushes the
   bump on the PR branch so the floor only ever goes up.
 
@@ -62,8 +62,8 @@ def _read_floor_from_coveragerc() -> int:
     return int(match.group(1))
 
 
-def _read_branch_coverage_from_xml(path: Path) -> float:
-    """Return measured branch-coverage percentage as a float in [0, 100]."""
+def _read_total_coverage_from_xml(path: Path) -> float:
+    """Return coverage.py's measured total percentage as a float in [0, 100]."""
 
     if not path.exists():
         print(f"[coverage_ratchet] coverage XML not found: {path}", file=sys.stderr)
@@ -78,15 +78,38 @@ def _read_branch_coverage_from_xml(path: Path) -> float:
         )
         sys.exit(2)
 
-    branch_rate = root.get("branch-rate")
-    if branch_rate is None:
+    count_attrs = {
+        name: root.get(name)
+        for name in (
+            "lines-valid",
+            "lines-covered",
+            "branches-valid",
+            "branches-covered",
+        )
+    }
+    if any(value is None for value in count_attrs.values()):
         print(
-            f"[coverage_ratchet] coverage XML at {path} has no branch-rate "
-            "attribute; was --cov-branch used?",
+            f"[coverage_ratchet] coverage XML at {path} is missing one or "
+            "more coverage count attributes; was --cov-branch and "
+            "--cov-report=xml used?",
             file=sys.stderr,
         )
         sys.exit(2)
-    return float(branch_rate) * 100.0
+
+    lines_valid = int(count_attrs["lines-valid"] or 0)
+    lines_covered = int(count_attrs["lines-covered"] or 0)
+    branches_valid = int(count_attrs["branches-valid"] or 0)
+    branches_covered = int(count_attrs["branches-covered"] or 0)
+
+    denominator = lines_valid + branches_valid
+    if denominator == 0:
+        print(
+            f"[coverage_ratchet] coverage XML at {path} has no measurable " "lines or branches",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    return ((lines_covered + branches_covered) / denominator) * 100.0
 
 
 def _bump_floor_in_coveragerc(new_floor: int) -> None:
@@ -121,14 +144,14 @@ def main(argv: list[str]) -> int:
     coverage_xml = Path(argv[1])
 
     floor = _read_floor_from_coveragerc()
-    measured = _read_branch_coverage_from_xml(coverage_xml)
+    measured = _read_total_coverage_from_xml(coverage_xml)
     # Floor is held as an integer percent; compare measured against it
     # at the same precision.
     measured_int = int(measured)
 
     if measured_int < floor:
         print(
-            f"[coverage_ratchet] FAIL: measured branch coverage "
+            f"[coverage_ratchet] FAIL: measured total coverage "
             f"{measured:.2f}% (floor={floor}%). Add tests to cover the "
             "missing lines/branches before merging.",
             file=sys.stderr,
@@ -138,7 +161,7 @@ def main(argv: list[str]) -> int:
     delta = measured_int - floor
     if delta < RATCHET_DELTA_THRESHOLD:
         print(
-            f"[coverage_ratchet] OK: measured branch coverage "
+            f"[coverage_ratchet] OK: measured total coverage "
             f"{measured:.2f}% at floor={floor}% (delta {delta}pp < "
             f"{RATCHET_DELTA_THRESHOLD}pp threshold). No bump."
         )
