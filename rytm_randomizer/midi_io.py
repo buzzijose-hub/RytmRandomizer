@@ -83,14 +83,6 @@ def send_cc(
     breadcrumb in the log.
     """
 
-    import mido  # noqa: PLC0415 - intentional lazy import for import-safety
-
-    msg = mido.Message(
-        "control_change",
-        channel=channel,
-        control=cc,
-        value=value,
-    )
     _logger.debug(
         "midi_send cc",
         extra={
@@ -99,6 +91,30 @@ def send_cc(
             "value": value,
             "kind": "midi_send",
         },
+    )
+
+    if out.__class__.__name__ == "MockMidiSender":
+        from .mock_midi import MidiMessage, MockMidiSender
+
+        if isinstance(out, MockMidiSender):
+            out.send(
+                MidiMessage(
+                    message_type="control_change",
+                    channel=channel,
+                    control=cc,
+                    value=value,
+                )
+            )
+            sleep(0.02)
+            return
+
+    import mido  # noqa: PLC0415 - intentional lazy import for import-safety
+
+    msg = mido.Message(
+        "control_change",
+        channel=channel,
+        control=cc,
+        value=value,
     )
     out.send(msg)
     sleep(0.02)

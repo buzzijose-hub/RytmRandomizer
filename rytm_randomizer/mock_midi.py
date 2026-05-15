@@ -41,6 +41,12 @@ class MidiMessage:
         _validate_integer("value", self.value)
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
 
+    @property
+    def type(self) -> str:
+        """Mido-compatible message type alias for runtime dry-run capture."""
+
+        return self.message_type
+
 
 def build_cc_message(
     channel: int,

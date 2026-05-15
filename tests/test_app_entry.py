@@ -108,6 +108,29 @@ def test_app_main_dry_run_runs_against_mock_and_opens_no_port(capsys):
     assert captured.err == ""
 
 
+def test_app_main_dry_run_accepts_operator_profile_then_quit(monkeypatch, capsys):
+    """A real dry-run operator flow must not crash after profile selection."""
+
+    _seed()
+    for module_name in ("mido", "rtmidi", "pythonrtmidi"):
+        sys.modules.pop(module_name, None)
+
+    from rytm_randomizer import app
+
+    scripted_inputs = iter(["1", "1", "Q"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(["--dry-run"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Selected profile: My BD Hard" in captured.out
+    assert "Dry-run complete." in captured.out
+    assert captured.err == ""
+    for module_name in ("mido", "rtmidi", "pythonrtmidi"):
+        assert module_name not in sys.modules, module_name
+
+
 def test_app_main_dry_run_imports_no_real_midi_library():
     result = run_python(
         """
