@@ -61,9 +61,9 @@ The core musical behavior — scenes, guardrails, the four-pad layout — is **p
 
 ## Parallelization strategy
 
-Work is split into **18 workstreams (WS-A … WS-R)** grouped into **4 waves**. Within a wave, streams own disjoint file sets and can run as simultaneous subagents. Waves are gated by dependencies.
+Work is split into **20 workstreams (WS-A … WS-T)** grouped into **4 waves**. Within a wave, streams own disjoint file sets and can run as simultaneous subagents. Waves are gated by dependencies.
 
-### Diagram 1 — Workstream dependency graph (all 18 workstreams, 4 waves)
+### Diagram 1 — Workstream dependency graph (all 20 workstreams, 4 waves)
 
 ```mermaid
 graph TD
@@ -85,12 +85,14 @@ graph TD
         H["WS-H<br/>Wire real MIDI behind --arm"]
         J["WS-J<br/>Release process"]
     end
-    subgraph W4["WAVE 4 — Decompose the monolith (6, mostly serial)"]
+    subgraph W4["WAVE 4 — Decompose the monolith (8, mostly serial)"]
         K["WS-K<br/>MIDI I/O + randomization"]
         L["WS-L<br/>Per-domain state objects"]
         M["WS-M<br/>Per-pad engines (x4 parallel)"]
         N["WS-N<br/>Scene + group orchestration"]
         O["WS-O<br/>Shell + retire monolith"]
+        S["WS-S<br/>Dead code elimination"]
+        T["WS-T<br/>Architecture standards + enforcement tests"]
         R["WS-R<br/>E2E validation suite — completion gate"]
     end
 
@@ -109,7 +111,9 @@ graph TD
     L --> M
     M --> N
     N --> O
-    O --> R
+    O --> S
+    S --> T
+    T --> R
 
     classDef wave1 fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
     classDef wave2 fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
@@ -589,8 +593,68 @@ Steps:
 1. Move the command loop and menu system into `shell.py`; `app.py:main()` becomes the real, complete entry point composing shell + engines + scene runner + real adapter. The `--dry-run` / `--arm` flags from WS-H now drive the *fully package-native* application.
 2. Reduce `legacy_monolith.py` to a deprecation shim (`from rytm_randomizer.app import main`) or delete it; point the run scripts at the package.
 3. **Final documentation reconciliation.** Because the monolith is now retired, every doc that still describes "the monolith is the real code / the package is passive scaffolding" is now wrong. Sweep `README.md` (repository map — the package *is* the product now; there is no two-codebase split), `CONTRIBUTING.md` (the "preserve V1.34 behavior" rule becomes "preserve parity with the V1.34 tag / characterization tests"), `docs/STATUS.md` (decomposition complete), `docs/ARCHITECTURE_DIAGRAMS.md` (the final module layout), and grep all of `docs/` for references to `rytm_hybrid_randomizer_v134.py` / `legacy_monolith.py` / "passive" / "scaffold" and correct each. This is the capstone of the cross-cutting "documentation must stay accurate" rule.
+4. **README setup — split developer and end-user paths.** The README must contain two clearly-separated, complete setup sections:
+   - **End-user setup** — for someone who just wants to *run* the tool: install via `pip install rytm-randomizer` (or the platform installer once Phase 3 ships), the per-OS MIDI prerequisites (Windows/macOS wheels just work; Linux ALSA note), how to launch (`rytm-randomizer` — lands on the passive menu by default), how to try it with no hardware (`--dry-run`), and how to actually drive the Rytm (`--arm`). No git, no test suite, no dev tooling — just get-it-running.
+   - **Developer setup** — for someone who wants to *work on* the code: clone, `pip install -e ".[dev]"`, `pre-commit install`, run the suite (`pytest`), the coverage check, where the architecture standard lives (`docs/ARCHITECTURE.md`), and a pointer to `CONTRIBUTING.md`.
+   These two paths must not be intermingled — an end user should never have to read the developer section, and vice versa.
 
 Acceptance: `rytm-randomizer` runs the complete tool from the package alone; `legacy_monolith.py` is a shim or gone; the ~5,162-line file no longer holds any behavior; whole-repo branch coverage reaches **100%** (the coverage ratchet's exit condition); **no doc anywhere in the repo still describes the retired two-codebase architecture**. Parity is proven by WS-R's automated end-to-end suite in CI (next) — no human checkpoint gates this workstream.
+
+---
+
+### WS-S — Dead code elimination + post-migration cleanup
+**Owns:** unused/dead code across the whole tree — `legacy_monolith.py` (if still a shim), the Wave 1–2 backward-compat shims, unused imports, orphaned helpers, stale auxiliary directories
+**Addresses:** the directive: *kill all dead code paths and remove all unnecessary code once we have migrated to the new structure.* Also closes the review's Minor items (dead `run_modular.py` paths, packet-number constants, `re.compile` shadow, etc.).
+**Depends on:** WS-O (the monolith must be fully retired and the package must own all behavior before dead code can be safely identified — you cannot delete a path until its replacement is proven and in place).
+
+Once Wave 4 has migrated everything to the package, the tree carries migration scaffolding that is now dead weight:
+- **`legacy_monolith.py`** — if WS-O left it as a deprecation shim, decide deliberately: keep a *minimal* shim only if something external still imports it, otherwise delete it outright.
+- **Backward-compat shims from Waves 1–2** — `behavior_pad1_lane.py`…`pad4_lane.py` (WS-G's thin re-export shims), the 10 `*_report.py` / `audit.py` / `inspection.py` / `preview.py` shims (WS-P's). These existed to keep old import paths and module-name string literals working through the migration. Now: update every caller and test to import from the real modules (`behavior_pad_lane.py`, `reports.py`, `inspection.py`), then delete the shims.
+- **The old state modules** — `anchor_state.py`, `selected_target_state.py`, `selected_isolated_pad_runtime_state.py` (superseded by `state/`) — delete if nothing depends on them; migrate any remaining dependents first.
+- **Auxiliary directories** — `Patches/` (the `make_v1X_*.py` one-off patch scripts) and `CaptureTools/`: these are historical, not product code. Evaluate each — relocate genuinely-useful capture tooling to a clearly-labelled `tooling/` location, delete the rest.
+- **Unused imports, unreachable branches, orphaned helpers** — run static analysis (`ruff` with the unused-import / unreachable rules, `python -m pyflakes`, optionally `vulture` for dead-code detection) across `rytm_randomizer/` and fix everything it flags.
+- **Migration-artifact noise** — packet-number constants (`PACKET_5C_*`), "scaffold_only" flags, `re.compile` builtin shadow (`validation.py`), and similar review Minor items.
+
+Steps:
+1. Run dead-code analysis (`ruff check --select F401,F811,F841 .`, `vulture rytm_randomizer/`, `python -m pyflakes rytm_randomizer/`) and produce a candidate list.
+2. For each shim/old-module: grep for every importer and module-name string-literal reference; migrate them to the real module; then delete the shim. Do this one shim at a time, running the suite between each, so a break is immediately attributable.
+3. Delete confirmed-dead code (unreachable branches, orphaned helpers, unused imports).
+4. Resolve the auxiliary directories (`Patches/`, `CaptureTools/`) — relocate or delete with a one-line rationale per decision.
+5. Sweep the review's Minor items (packet constants, `re.compile` shadow, dead `run_modular.py` paths if any remain).
+
+**Constraint:** this is a *deletion* workstream — it must not change behavior. Every deletion is proven safe by the suite staying green. If removing something turns a test red, that thing was not dead — revert and investigate.
+
+Acceptance: `ruff check` reports no unused-import / unreachable warnings across `rytm_randomizer/`; the Wave 1–2 compat shims are gone (callers migrated); `legacy_monolith.py` is gone or a deliberate minimal shim; `Patches/` and `CaptureTools/` are resolved; the full suite is still green at the same count (deletions removed code, not tests); whole-repo branch coverage holds at 100% (less code, same coverage — dead branches removed *raise* the honest number).
+
+---
+
+### WS-T — Architecture standards + enforcement tests
+**Owns:** `.claude/skills/` (architecture-standard skills), `.claude/rules/` (architecture rules), `.claude/agents/` (an architecture-guardian agent), `docs/ARCHITECTURE.md` (the canonical standards doc), `tests/architecture/**` (new — automated architecture-enforcement tests), the architecture CI job in `.github/workflows/test.yml`
+**Addresses:** the directive: *create a set of skills, rules, and agents that set the architecture standards; add tests that enforce the architecture so it can't be undone by another agent; run those tests gated and enforced.*
+**Depends on:** WS-S — the architecture must be in its final, dead-code-free shape before its standards can be codified and locked.
+
+By the end of Wave 4 the codebase has a clear, intentional architecture: a single modular package (`rytm_randomizer/`), a shared data layer (`data/`), per-domain state objects (`state/`), per-pad engines (`engines/`), orchestration modules (`scene_runner.py`, `group_runner.py`), a thin shell, a passive CLI, an injected MIDI adapter boundary, house style (frozen dataclasses, full type annotations, `Protocol` boundaries, no module-level mutable state, no module-level I/O side effects). **That architecture must be documented as the standard AND mechanically defended** — otherwise the next agent or contributor erodes it.
+
+This workstream has two halves:
+
+**Half 1 — Codify the standards (skills / rules / agent):**
+1. **`docs/ARCHITECTURE.md`** — the canonical, human-readable architecture standard: the layer diagram, the module-responsibility map, the dependency direction rules (e.g. `engines/` may import `data/` + `state/` + `midi_io` + `randomization` but NOT `cli`/`shell`/`app`; `data/` imports nothing from the package; nothing imports the retired monolith), and the house-style rules (frozen dataclasses for state/DTOs, full type annotations on all signatures, `Protocol` for boundaries, no module-level mutable globals, no I/O at import time, data-not-code for fact tables, lazy `mido` import).
+2. **`.claude/rules/architecture.md`** — a concise rules file (the machine/agent-facing distillation of `ARCHITECTURE.md`) so any agent working in this repo inherits the constraints.
+3. **`.claude/skills/`** — one or more skills that encode *how* to work within the architecture: e.g. an `add-pad-command` skill (where command data goes, which engine, which registry, what test), an `extend-data-layer` skill, an `architecture-review` skill. Each skill is a `SKILL.md` with the procedure.
+4. **`.claude/agents/architecture-guardian.md`** — an agent definition specialized to review changes against `ARCHITECTURE.md` and the enforcement tests — usable proactively on any future change.
+
+**Half 2 — Enforce it mechanically (the tests are the real lock):**
+5. **`tests/architecture/`** — automated tests that FAIL if the architecture is violated. These are the irreversible part — skills/rules guide, but tests *enforce*. Concretely:
+   - **Import-direction tests** — parse each module's imports (via `ast`) and assert the dependency rules: `data/` imports nothing from `rytm_randomizer`; `engines/` does not import `cli`/`shell`/`app`/`scene_runner`/`group_runner`; `state/` is leaf; no module imports `rytm_hybrid_randomizer_v134` / `legacy_monolith`; the passive layer (`cli`, `reports`, `inspection`) imports no `mido` and opens no ports.
+   - **No-module-level-side-effects test** — importing any `rytm_randomizer` submodule must be silent and must not open ports / call `input()` / construct real senders (extend the existing import-safety tests to the whole package).
+   - **House-style tests** — assert state/DTO classes are `@dataclass(frozen=True)`; assert public function signatures are type-annotated (`ast`-walk for missing annotations); assert no module-level mutable globals in the package (`ast`-walk for module-scope mutable assignments outside constants).
+   - **Layering structure test** — assert the expected package layout exists (`data/`, `state/`, `engines/`, the orchestration + shell + adapter modules) and that the monolith is gone or a ≤N-line shim.
+   - **Data-not-code test** — assert the fact tables live under `data/` and aren't re-typed elsewhere (extend WS-F's drift-guard).
+6. **Wire `tests/architecture/` into CI as a required, gated check** — add an `architecture` job (or fold into the existing test job) to `.github/workflows/test.yml`, and add it to the branch-protection required-checks list (via the `scripts/apply-branch-protection.sh` update). After this, **a PR that violates the architecture cannot merge** — the enforcement is gated, not advisory.
+
+**Why this matters:** the whole plan's value is undone if the architecture drifts back. Skills and rules make the right thing easy; the gated `tests/architecture/` suite makes the wrong thing *impossible to merge*. That combination is what keeps the architecture intact after this plan ends.
+
+Acceptance: `docs/ARCHITECTURE.md` documents the standard; `.claude/rules/architecture.md`, the `.claude/skills/`, and the `architecture-guardian` agent exist; `tests/architecture/` enforces import-direction, no-side-effects, house-style, layering, and data-not-code rules and is GREEN on the final tree; the `architecture` CI job runs on every push/PR and is a **required merge check**; a deliberate violation (tested locally) is caught by the suite and blocks merge.
 
 ---
 
