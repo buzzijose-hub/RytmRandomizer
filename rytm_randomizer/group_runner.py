@@ -51,6 +51,7 @@ from .data import (
     INTENSITY_PLANS,
     PROFILES,
 )
+from .guardrails.resolver import ResolvedBounds
 from .observability.logging import get_logger
 from .observability.tracing import operation
 
@@ -126,6 +127,7 @@ class GroupRunner:
         group_anchor_states: dict[int, State] | None = None,
         group_current_states: dict[int, State] | None = None,
         group_previous_states: dict[int, State | None] | None = None,
+        resolved_bounds: ResolvedBounds | None = None,
     ) -> None:
         self.out = out
         # The monolith uses the stdlib ``random`` module directly; default to it
@@ -159,6 +161,13 @@ class GroupRunner:
             group_previous_states if group_previous_states is not None else {}
         )
 
+        # Optional resolved-bounds: when ``None`` (the default) the runner
+        # mutates against ``data/``'s static ranges exactly as today --
+        # parity tests stay green untouched. When set, ``_resolved_profile``
+        # narrows ``safe`` against the resolved bounds and ``_send_param``
+        # clamps individual sends.
+        self.resolved_bounds: ResolvedBounds | None = resolved_bounds
+
     # ------------------------------------------------------------------
     # Injected I/O helpers
     # ------------------------------------------------------------------
@@ -188,7 +197,47 @@ class GroupRunner:
             self.out, self.active_profile, channel=self.channel, sleep=self.sleep
         )
 
+    def _resolved_profile(self) -> Mapping[str, Any] | None:
+        """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
+
+        See :meth:`Pad1Engine._resolved_profile`. When
+        ``resolved_bounds`` is ``None``, returns ``active_profile``
+        unchanged (parity stays green). Otherwise narrows the ``safe``
+        ranges for the *current* pad context.
+        """
+
+        if self.resolved_bounds is None or self.active_profile is None:
+            return self.active_profile
+
+        base_safe: Mapping[str, tuple[int, int]] = self.active_profile["safe"]
+        anchor: Mapping[str, int] = self.active_profile["anchor"]
+        narrowed: dict[str, tuple[int, int]] = dict(base_safe)
+        for name in list(base_safe.keys()):
+            bound = self.resolved_bounds.get(self.target_pad, name)
+            if bound is None:
+                continue
+            base_low, base_high = base_safe[name]
+            new_low = max(base_low, bound.low)
+            new_high = min(base_high, bound.high)
+            if new_low > new_high:
+                pinned = anchor.get(name, base_low)
+                new_low = new_high = pinned
+            narrowed[name] = (new_low, new_high)
+
+        profile_copy: dict[str, Any] = dict(self.active_profile)
+        profile_copy["safe"] = narrowed
+        return profile_copy
+
     def _send_param(self, name: str, value: int) -> None:
+        if self.resolved_bounds is not None:
+            clamped = self.resolved_bounds.clamp_value(
+                self.target_pad, name, value
+            )
+            if clamped is None:
+                # LOCKED_DEFAULT / FORBIDDEN -- profile says this
+                # parameter must not mutate on this pad.
+                return
+            value = clamped
         _midi_io.send_param(
             self.out,
             self.active_profile,
@@ -197,6 +246,27 @@ class GroupRunner:
             channel=self.channel,
             sleep=self.sleep,
         )
+
+    def _clamp_state(
+        self, state: Mapping[str, int]
+    ) -> Mapping[str, int]:
+        """Return ``state`` with values clamped through resolved bounds.
+
+        See ``Pad1Engine._clamp_state``. Byte-identical parity when
+        ``resolved_bounds`` is ``None``.
+        """
+
+        if self.resolved_bounds is None:
+            return state
+        out: dict[str, int] = {}
+        for name, value in state.items():
+            clamped = self.resolved_bounds.clamp_value(
+                self.target_pad, name, value
+            )
+            if clamped is None:
+                continue
+            out[name] = clamped
+        return out
 
     def _apply_state(
         self,
@@ -208,8 +278,8 @@ class GroupRunner:
     ) -> None:
         result = _midi_io.apply_state(
             self.out,
-            self.active_profile if self.active_profile else None,
-            state,
+            self._resolved_profile() if self.active_profile else None,
+            self._clamp_state(state),
             label,
             anchor_state=self.anchor_state,
             current_state=self.current_state,
@@ -236,7 +306,7 @@ class GroupRunner:
             self.out,
             zone_name,
             depth_name,
-            profile=self.active_profile if self.active_profile else None,
+            profile=self._resolved_profile() if self.active_profile else None,
             anchor_state=self.anchor_state,
             current_state=self.current_state,
             previous_state=self.previous_state,

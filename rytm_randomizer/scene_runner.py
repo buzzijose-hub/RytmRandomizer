@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from .data import SCENE_PRESETS
 from .group_runner import GroupRunner
+from .guardrails.resolver import ResolvedBounds
 from .observability.logging import get_logger
 from .observability.tracing import operation
 
@@ -52,9 +53,21 @@ class SceneRunner:
         group_runner: GroupRunner,
         *,
         current_scene_name: str = DEFAULT_SCENE_NAME,
+        resolved_bounds: ResolvedBounds | None = None,
     ) -> None:
         self.group = group_runner
         self.current_scene_name = current_scene_name
+
+        # Scenes delegate to ``group_runner``, so the resolved bounds need
+        # to live there too. When the caller passes ``resolved_bounds``
+        # explicitly, it overrides any value previously set on the wrapped
+        # ``GroupRunner``. When ``None``, we leave the wrapped runner's
+        # existing setting alone -- this keeps parity tests (that never
+        # construct a ``SceneRunner`` with ``resolved_bounds``) byte-
+        # identical to the monolith.
+        if resolved_bounds is not None:
+            self.group.resolved_bounds = resolved_bounds
+        self.resolved_bounds: ResolvedBounds | None = self.group.resolved_bounds
 
     def show_scene_tools(self) -> None:
         """Mirror the monolith ``show_scene_tools`` menu/status view.
