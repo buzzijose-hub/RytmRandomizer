@@ -31773,3 +31773,26 @@ Current decision:
 - hardware remains off
 - no ports opened
 - no MIDI sent
+
+## Collaborator PR3 Merge Gate Resolution Plan
+
+New plan:
+
+- `Docs/COLLABORATOR_PR3_MERGE_GATE_RESOLUTION_PLAN.md`
+
+The plan defines the current gates before PR #3 can merge:
+
+- V1.34 reference policy
+- real MIDI / `--arm` phase decision
+- GitHub Actions billing/check status
+- documentation memory preservation
+- installer signing/release-blocker classification
+
+Current recommendation:
+
+- preserve a separate true frozen V1.34 reference fixture if PR #3 keeps
+  `rytm_hybrid_randomizer_v134.py` as a compatibility shim
+- require explicit owner acceptance before merging real-MIDI-capable code
+- keep hardware validation as a later explicit phase
+
+No merge has been performed.

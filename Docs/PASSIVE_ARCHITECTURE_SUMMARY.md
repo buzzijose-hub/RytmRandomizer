@@ -26386,3 +26386,24 @@ It does not resolve the remaining review gate:
 
 Until the V1.34 reference policy is resolved, PR #3 remains under review and
 should not be merged.
+
+## Collaborator PR3 Merge Gate Plan
+
+The current PR #3 review is now tracked in:
+
+- `Docs/COLLABORATOR_PR3_MERGE_GATE_RESOLUTION_PLAN.md`
+
+The plan preserves the passive/mock safety stance while PR #3 is reviewed.
+
+Key point:
+
+- install/test smoke is encouraging
+- the remaining V1.34 issue is a policy/design gate, not a local install
+  problem
+
+Preferred resolution:
+
+- keep a true frozen V1.34 parity fixture/reference even if the root
+  `rytm_hybrid_randomizer_v134.py` becomes a package-backed compatibility shim
+
+Hardware remains off and no local MIDI behavior is authorized by this plan.

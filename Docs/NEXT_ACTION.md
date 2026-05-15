@@ -25500,3 +25500,26 @@ Recommended next task:
 - wait for Eddie's answer on the V1.34 reference policy
 - do not merge PR #3 yet
 - keep hardware off
+
+## Latest Collaborator PR3 Merge Gate Resolution Plan
+
+New plan:
+
+- `Docs/COLLABORATOR_PR3_MERGE_GATE_RESOLUTION_PLAN.md`
+
+Purpose:
+
+- convert the PR #3 review findings into explicit merge gates
+- separate code/test evidence from owner decisions
+- define acceptable resolution paths before merge
+
+Current recommended resolution:
+
+- prefer preserving a separate true frozen V1.34 reference fixture while
+  allowing PR #3's compatibility shim to exist separately
+- require explicit owner acceptance before merging real-MIDI-capable `--arm`
+  code
+- fix GitHub account/billing/spending-limit block before relying on Actions
+- verify the docs migration preserves project memory
+
+Do not merge PR #3 until the merge gates are resolved or explicitly accepted.
