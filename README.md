@@ -12,10 +12,23 @@ This path is for someone who just wants to run RytmRandomizer against their Anal
 
 ### 1. Requirements
 
-- Python >= 3.9
 - An Analog Rytm MK2 connected over USB MIDI
+- One of: a native installer (preferred, see below) **or** Python >= 3.9 + `pip`
 
-### 2. Install
+### 2. Install — option A: native installer (recommended)
+
+> **Coming soon.** The native installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) but the **first signed release has not shipped yet**. The build matrix lives in `.github/workflows/installers.yml`; release artifacts will be attached to the GitHub Release page once code-signing is provisioned. Until then, use option B.
+
+When available, the install flow is:
+
+1. Visit the [GitHub Releases](https://github.com/misteredr/RytmRandomizer/releases) page.
+2. Download the artifact for your OS:
+   - Windows: `RytmRandomizer-<version>.msi`
+   - macOS: `RytmRandomizer-<version>.pkg`
+   - Linux: `RytmRandomizer-<version>.AppImage` or `.deb` / `.rpm`
+3. Double-click to install. The installer drops a `rytm-randomizer` CLI binary on your PATH with its own bundled Python — no `pip`, no terminal experience needed.
+
+### 2. Install — option B: `pip` (works today)
 
 ```bash
 pip install rytm-randomizer
@@ -29,8 +42,8 @@ pip install -e .
 
 ### 3. Per-OS MIDI notes
 
-- **Windows / macOS** — `python-rtmidi` ships prebuilt wheels, so `pip install` just works.
-- **Linux** — if no wheel is available for your platform, `python-rtmidi` builds from source and you may need the ALSA development headers first: `sudo apt install libasound2-dev`.
+- **Windows / macOS** — `python-rtmidi` ships prebuilt wheels, so `pip install` just works. The native installers bundle the wheel directly, so end users do not need a working compiler.
+- **Linux** — if no wheel is available for your platform, `python-rtmidi` builds from source and you may need the ALSA development headers first: `sudo apt install libasound2-dev`. The AppImage / `.deb` carry the ALSA runtime so end users do not need the dev headers.
 
 ### 4. Launch
 

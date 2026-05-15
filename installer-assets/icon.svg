@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Placeholder app icon for RytmRandomizer briefcase installers.
+     Text-only "RR" wordmark on a dark square. NOT FOR FINAL RELEASE.
+     A designer-supplied rendered set (.ico, .icns, multi-size PNGs)
+     must replace this before the first signed installer ships.
+     See installer-assets/README.md for the full export checklist. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="80" ry="80" fill="#101418"/>
+  <rect x="32" y="32" width="448" height="448" rx="64" ry="64"
+        fill="none" stroke="#ff6a3d" stroke-width="8"/>
+  <text x="256" y="320"
+        font-family="Helvetica, Arial, sans-serif"
+        font-size="260"
+        font-weight="800"
+        text-anchor="middle"
+        fill="#f5f5f5"
+        letter-spacing="-10">RR</text>
+  <text x="256" y="400"
+        font-family="Helvetica, Arial, sans-serif"
+        font-size="40"
+        font-weight="500"
+        text-anchor="middle"
+        fill="#ff6a3d"
+        letter-spacing="6">RANDOMIZER</text>
+</svg>

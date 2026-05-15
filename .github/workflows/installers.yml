@@ -1,0 +1,119 @@
+name: installers
+
+# Native end-user installer builds for RytmRandomizer.
+#
+# Produces a .msi (Windows), .pkg (macOS, console-app spec), AppImage + .deb
+# (Linux) using BeeWare briefcase. The full release-engineer story is
+# documented in docs/BUILDING_INSTALLERS.md.
+#
+# WHY NOT REQUIRED-CHECK: installer builds take ~20 minutes per OS and
+# don't add useful signal on day-to-day PRs. The existing test / e2e /
+# architecture jobs continue to gate PR merges (see .github/workflows/
+# test.yml). This workflow only fires on:
+#
+#   - v* tag pushes (alongside release.yml's wheel publish)
+#   - workflow_dispatch (manual release dry-run from the Actions tab)
+#
+# Artifacts are uploaded to the workflow run (not the GitHub Release)
+# so the release engineer can download, sign locally (Windows EV cert,
+# macOS Developer ID + notarization), and attach to the Release manually.
+# Doing signing in CI requires storing private keys in GitHub Secrets,
+# which is a posture decision the project owner has not yet made.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    name: installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # 30 min cap: installer builds are slow but should never hang.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # Briefcase MUST build each OS's artifact on that OS:
+        #   - Windows MSI: needs WiX (Windows-only tool)
+        #   - macOS PKG:   needs codesign + pkgbuild (macOS-only)
+        #   - Linux:       Docker-based manylinux build (cross-distro)
+        include:
+          - os: windows-latest
+            artifact_glob: "dist/*.msi"
+          - os: macos-latest
+            artifact_glob: "dist/*.pkg"
+          - os: ubuntu-latest
+            artifact_glob: "dist/*.AppImage dist/*.deb"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ----- Per-OS prerequisites for briefcase. -----
+
+      - name: Install WiX Toolset (Windows)
+        if: runner.os == 'Windows'
+        # WiX v3 ships as a .NET tool; briefcase shells out to it to
+        # generate the .msi. dotnet is preinstalled on windows-latest.
+        run: dotnet tool install --global wix
+        shell: pwsh
+
+      - name: Install Xcode command line tools (macOS)
+        if: runner.os == 'macOS'
+        # macos-latest images preinstall Xcode CLT; this is a defensive
+        # ensure step that's effectively a no-op on fresh runners.
+        run: xcode-select -p || sudo xcode-select --install || true
+
+      - name: Install ALSA + AppImage tooling (Linux)
+        if: runner.os == 'Linux'
+        # libasound2-dev: python-rtmidi C-extension link target.
+        # libfuse2: required to *run* an AppImage (and briefcase smoke-
+        #   tests the artifact post-build).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libfuse2
+
+      # ----- Briefcase install + build. -----
+
+      - name: Install package with installer extras
+        run: pip install -e ".[installer]"
+
+      - name: briefcase create
+        run: briefcase create
+
+      - name: briefcase build
+        run: briefcase build
+
+      - name: briefcase package (no signing in CI)
+        # --no-sign / --adhoc-sign deliberately skips code-signing. CI
+        # produces unsigned artifacts; the release engineer signs locally
+        # with the EV cert / Developer ID. See docs/BUILDING_INSTALLERS.md
+        # for the signing workflow.
+        run: briefcase package --adhoc-sign
+        # On Linux the Briefcase docs note adhoc-sign is a no-op (Linux
+        # artifacts are not code-signed in the same sense). The flag is
+        # accepted everywhere, so we keep it uniform across the matrix.
+
+      - name: List built artifacts
+        # Diagnostic step -- shows what landed in dist/ before upload.
+        # Helps debug a missing-glob without re-running the whole matrix.
+        shell: bash
+        run: ls -la dist/ || true
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rytm-randomizer-installer-${{ runner.os }}
+          path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+          retention-days: 30
