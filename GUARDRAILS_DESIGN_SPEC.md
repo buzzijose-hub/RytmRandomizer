@@ -282,20 +282,24 @@ Specified in §5.4. The acceptance test for this layer: with no profile active, 
 
 ## 10. How this maps to the execution plan
 
-This spec is delivered by **WS-V**, with dependencies on earlier workstreams:
+**The four-layer system is split across two workstreams** (decided 2026-05-14, via the brainstorming process). The split seam is the **Guardrail Profile contract** (`guardrails/schema.py`): WS-V *produces* a draft Profile conforming to that schema; WS-W *validates and consumes* it. That schema is the entire interface between the two — clean, well-bounded, each workstream gets its own spec→plan→build cycle.
 
 | Spec layer | Workstream | Notes |
 |---|---|---|
 | The `data/` ranges the resolver intersects against | **WS-F** (done) | `*_SAFE`/`*_ZONES`/`*_DELTAS` shared data layer already exists |
 | Engines that will consume resolved bounds | **WS-M, WS-N** (done) | `engines/`, `scene_runner`, `group_runner` exist and are parity-tested |
-| Layer 1 — `style_analysis/` deterministic extraction | **WS-V Half 2** | `librosa` as an optional `style` extra |
-| Layer 2 — restructured, token-lean, auto-invoked skill | **WS-V Half 1** | tight `SKILL.md` + on-demand `reference.md` + `skill-routing.md` entry (WS-T) |
-| Layer 3 — `guardrails/` schema + validator + store | **WS-V** (extends Half 2) | the typed Profile, the validator, the lifecycle state machine |
-| Layer 4 — `guardrails/resolver.py` + engine wiring | **WS-V** (extends Half 2) | the missing link — profiles actually drive the randomizer |
-| Observability of the analysis pipeline | **WS-U** | the analysis + validation steps log through the unified observability layer |
-| Architecture conformance (profile is data, not re-typed; layering) | **WS-T** | `tests/architecture/` enforces the guardrails module's boundaries |
+| **Layer 1** — `style_analysis/` deterministic audio-feature extraction | **WS-V** (style analysis) | `librosa` as an optional `style` extra; produces the `FeatureReport` |
+| **Layer 2** — restructured, token-lean, auto-invoked interpretation skill | **WS-V** (style analysis) | tight `SKILL.md` + on-demand `reference.md` + `skill-routing.md` entry (WS-T); produces the draft Guardrail Profile |
+| **Layer 3** — `guardrails/schema.py` + `validation.py` + `store.py` | **WS-W** (guardrails engine) | the typed Profile contract, the three-layer validator, the JSON-file profile store + lifecycle state machine |
+| **Layer 4** — `guardrails/resolver.py` + engine wiring | **WS-W** (guardrails engine) | the missing link — the resolver intersects profile ∩ `data/` ∩ mode; the engines gain an optional `resolved_bounds` parameter |
+| Observability of the analysis + validation pipeline | **WS-U** | the analysis, validation, and resolution steps log through the unified observability layer; `GuardrailResolutionError` lives in WS-U's error taxonomy |
+| Architecture conformance (profile is data, layering, import-direction) | **WS-T** | `tests/architecture/` enforces the `guardrails/` and `style_analysis/` package boundaries |
 
-**Recommendation:** WS-V as currently scoped in `EXECUTION_PLAN.md` covers Layers 1–2 well but under-specifies Layers 3–4 (the typed profile, the validator, the resolver, the engine wiring). This spec should be used to **expand WS-V's acceptance criteria** to include the full four-layer system — or split WS-V into `WS-V` (style analysis: Layers 1–2) and a new `WS-W` (guardrails engine: Layers 3–4), since Layers 3–4 are a substantial, code-heavy subsystem of their own. That split decision is for the plan owner.
+**WS-V — style analysis (Layers 1–2).** Owns audio measurement and the interpretation skill. Its deliverable is a *draft* Guardrail Profile (a `guardrails/schema.py` object). WS-V imports `schema` from WS-W and nothing else of WS-W. Detailed in `EXECUTION_PLAN.md`.
+
+**WS-W — guardrails engine (Layers 3–4).** Owns the typed Profile contract, the validator, the profile store, the resolver, and the engine wiring. This is the code-heavy subsystem that turns a draft into a *validated, enforced, consumed* artifact. Sections 11–14 below are WS-W's detailed design (the output of the brainstorming process).
+
+The dependency order: WS-W's `schema.py` can be built first (it is a leaf — no dependencies); WS-V then builds against it; WS-W's `validation`/`store`/`resolver` and the engine wiring complete the loop. In the `EXECUTION_PLAN.md` Wave 4 chain, WS-V precedes WS-W (style analysis produces what the guardrails engine consumes), but `schema.py` is the shared contract both are written against.
 
 ---
 
@@ -319,5 +323,167 @@ The guardrails system is what makes RytmRandomizer *intelligent* rather than *ra
 4. **Code consumes** the validated profile — the resolver intersects it with the hardware ranges, and the engines mutate strictly within the result.
 
 The Guardrail Profile — versioned, typed, validated, lifecycle-tracked — is the artifact that ties all four together. It is the unit of the platform's intelligence, and it is copyright-safe by construction because it can only express *behavior boundaries*, never a replica.
+
+---
+
+# Part B — WS-W Detailed Design (Layers 3–4: the guardrails engine)
+
+Sections 13–16 are the detailed design for **WS-W**, produced through the brainstorming process and approved section-by-section. They define the code-heavy half of the system: the typed Profile contract, the validator, the profile store, the resolver, and the engine wiring.
+
+## 13. WS-W Components & boundaries
+
+Four new modules under a `rytm_randomizer/guardrails/` package, each with one clear purpose:
+
+| Module | Purpose | Depends on |
+|---|---|---|
+| `guardrails/schema.py` | The typed Guardrail Profile model — frozen dataclasses, closed enums (`GuardrailClass`, `RiskTier`, `SourceType`, `Confidence`, `ProfileState`). The data contract WS-V produces and WS-W validates. | nothing (leaf) |
+| `guardrails/validation.py` | The validator — structural + semantic (cross-checked against `data/`'s real hardware ranges) + the non-negotiable safety floor. Turns an untrusted draft into a `VALIDATED` artifact or a `REJECTED` one with a specific reason. | `schema`, `rytm_randomizer.data` |
+| `guardrails/store.py` | Profile persistence — JSON files under a user profiles directory, schema-version-stamped, lifecycle-state-tracked. List / load / save / promote-state. | `schema`, `validation` |
+| `guardrails/resolver.py` | Intersects (profile guardrails) ∩ (hardware `data/` ranges) ∩ (current mode) → effective per-pad/param bounds. Per-parameter fail-loud (drops to `LOCKED_DEFAULT`, surfaces the conflict); hard-refuses lifecycle-state mismatches. | `schema`, `rytm_randomizer.data` |
+
+**The seam with WS-V:** WS-V produces a draft Profile object conforming to `guardrails/schema.py`. That is the entire interface between the two workstreams — WS-V imports `schema`, nothing else of WS-W.
+
+**The seam with the engines:** `engines/pad1-4.py`, `scene_runner.py`, `group_runner.py` gain an *optional* resolved-bounds parameter. No profile active → they use `data/`'s static ranges exactly as today (full backward compatibility — the existing parity tests stay green). Profile active → they mutate within the resolver's output. The engines depend on `resolver`'s *output type*, not the resolver itself.
+
+## 14. WS-W The Guardrail Profile data model (`schema.py`)
+
+The existing JSON template gives the shape; `schema.py` makes it typed and closed.
+
+```mermaid
+classDiagram
+    class GuardrailProfile {
+        +Provenance provenance
+        +MusicalCharacter character
+        +RoleMapping role_mapping
+        +tuple~GuardrailBound~ bounds
+        +tuple~str~ locked_default
+        +tuple~str~ forbidden
+        +tuple~SceneGuardrail~ scenes
+        +ProfileState state
+        +str schema_version
+        +str content_hash
+    }
+    class Provenance {
+        +str profile_name
+        +SourceType source_type
+        +Confidence confidence
+        +str feature_report_hash
+        +str derived_at
+    }
+    class GuardrailBound {
+        +int pad
+        +str parameter
+        +int low
+        +int high
+        +GuardrailClass guardrail_class
+        +str direction
+    }
+    class SceneGuardrail {
+        +str scene_key
+        +tuple~int~ pads_allowed
+        +str mutation_depth
+        +GuardrailClass risk_class
+        +tuple~str~ locked_roles
+    }
+    GuardrailProfile *-- Provenance
+    GuardrailProfile *-- MusicalCharacter
+    GuardrailProfile *-- RoleMapping
+    GuardrailProfile *-- "many" GuardrailBound
+    GuardrailProfile *-- "many" SceneGuardrail
+```
+
+**Key design decisions:**
+
+- **Everything frozen.** `@dataclass(frozen=True)`, `MappingProxyType` for nested maps, `tuple` not `list` — matches the established house style (`mock_midi.py`, `state/`). A validated profile is immutable; a change means a new version.
+- **Closed enums** — `GuardrailClass` (LIVE_SAFE / STUDIO_DISCOVERY / EXPERIMENTAL / LOCKED_DEFAULT / FORBIDDEN), `RiskTier` (low / medium / high), `SourceType` (the 7 from the skill), `Confidence` (HIGH / MEDIUM / LOW), `ProfileState` (DRAFT / VALIDATED / REJECTED / STUDIO_TESTED / LIVE_APPROVED / ARCHIVED). No free-text where a choice belongs.
+- **`GuardrailBound` is the atom** — one pad + one parameter + a range + a class + a direction. A profile is fundamentally *a set of these*. The resolver works bound-by-bound (which is why per-parameter fail-loud is natural — it drops one `GuardrailBound`, not the profile).
+- **`content_hash` + `schema_version`** on every profile — so the store can detect tampering, the resolver can confirm what it is running, and schema evolution is survivable.
+- **`feature_report_hash`** in provenance — ties the profile to exactly the WS-V `FeatureReport` it was derived from. Full traceability: profile → measurement → source audio.
+- **No field for a melody, arrangement, or patch.** The copyright-safety guarantee is structural — the schema simply has nowhere to put a replica.
+
+## 15. WS-W Validation rules & the safety floor (`validation.py`)
+
+`validation.py` turns an untrusted draft into `VALIDATED` or `REJECTED` with a specific reason. Three rule layers, run in order, short-circuiting on first failure:
+
+```mermaid
+flowchart TD
+    DRAFT["Draft GuardrailProfile<br/>(untrusted - from WS-V agent)"]
+    DRAFT --> STRUCT{"1. Structural<br/>required sections present?<br/>types correct? enums valid?<br/>schema_version known?"}
+    STRUCT -->|fail| R1["REJECTED<br/>+ structural reason"]
+    STRUCT -->|pass| SEM{"2. Semantic<br/>bound ranges within the machine's<br/>physical data/ ranges? pad/param<br/>exists? no param both LIVE_SAFE<br/>and FORBIDDEN? every mutated<br/>param mapped to a role?"}
+    SEM -->|fail| R2["REJECTED<br/>+ semantic reason"]
+    SEM -->|pass| SAFETY{"3. Safety floor<br/>is any high-risk param in a<br/>mutating class?"}
+    SAFETY -->|yes| FORCE["FORCE high-risk params to<br/>LOCKED_DEFAULT / FORBIDDEN<br/>(rewrite, do not reject)"]
+    SAFETY -->|no| OK["VALIDATED<br/>+ content_hash computed<br/>+ frozen"]
+    FORCE --> OK
+
+    classDef gate fill:#fff3e0,stroke:#ef6c00,color:#e65100
+    classDef bad fill:#ffebee,stroke:#c62828,color:#b71c1c
+    classDef ok fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+    class STRUCT,SEM,SAFETY gate
+    class R1,R2 bad
+    class OK,FORCE ok
+```
+
+**The three layers:**
+
+1. **Structural** — required sections present, field types correct, every enum value valid, `schema_version` is one the validator understands. A malformed draft is `REJECTED` here. Cheap; runs first.
+2. **Semantic** — the draft is well-formed but could still be *wrong*:
+   - Every `GuardrailBound`'s `[low, high]` must fit inside that machine's physical range from `rytm_randomizer/data/` (e.g. a Pad-1 BD Hard filter bound must be within `BD_HARD_SAFE` / the param's hardware range). A bound outside it → `REJECTED` naming the param.
+   - The `pad` + `parameter` must actually exist on the target machine.
+   - No parameter can appear in both a mutating class and `forbidden`.
+   - Every parameter that has a `GuardrailBound` must have a role in `role_mapping` first (the skill's "map to role before deriving ranges" rule, now enforced).
+3. **Safety floor** — the non-negotiable part, and it **rewrites rather than rejects**: if the draft puts a *high-risk* parameter (track/master volume, clock, transport, pattern/program/project change, kit save/clear, extreme tuning, unvalidated SysEx, live machine switching) into any mutating class, the validator **forces it to `LOCKED_DEFAULT`** (or `FORBIDDEN` for the truly destructive set) and records that it did so. The agent *cannot* author an unsafe profile — not because it gets rejected, but because the unsafe part gets neutralized. The profile still validates; it has just been made safe.
+
+**Why rewrite, not reject, for the safety floor:** an agent draft that is 95% good but put one risky param in `STUDIO_DISCOVERY` should not be thrown away — the *intent* is fine, the *safety* just needs enforcing. Rejecting would waste the whole analysis; rewriting keeps the good 95% and guarantees the safe 100%. The rewrite is logged (WS-U observability) so it is never silent.
+
+**Output:** a `VALIDATED` (frozen, content-hashed) profile, or a `REJECTED` one carrying the specific structural/semantic reason so WS-V's agent loop can correct and resubmit.
+
+## 16. WS-W The resolver, engine wiring & testing
+
+### The resolver (`resolver.py`)
+
+```mermaid
+flowchart LR
+    PROFILE["VALIDATED+ GuardrailProfile"]
+    MODE["Current mode<br/>(passive / dry-run / arm<br/>+ LIVE_SAFE vs STUDIO)"]
+    DATA["rytm_randomizer.data<br/>physical hardware ranges"]
+
+    PROFILE --> STATECHK{"lifecycle-state OK<br/>for this mode?"}
+    STATECHK -->|"no (e.g. VALIDATED<br/>asked for LIVE_SAFE)"| HARDREFUSE["HARD REFUSE<br/>GuardrailResolutionError<br/>- session does not start"]
+    STATECHK -->|yes| PERBOUND["for each GuardrailBound:<br/>intersect profile range<br/>∩ data/ range ∩ mode"]
+    PERBOUND --> CHECK{"intersection<br/>non-empty &<br/>param exists?"}
+    CHECK -->|no| DROP["drop to LOCKED_DEFAULT<br/>+ surface the conflict<br/>(that param will not mutate)"]
+    CHECK -->|yes| KEEP["effective bound"]
+    DROP --> RESOLVED["ResolvedBounds<br/>(per pad/param)"]
+    KEEP --> RESOLVED
+
+    classDef gate fill:#fff3e0,stroke:#ef6c00,color:#e65100
+    classDef bad fill:#ffebee,stroke:#c62828,color:#b71c1c
+    classDef ok fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
+    class STATECHK,CHECK gate
+    class HARDREFUSE bad
+    class RESOLVED,KEEP ok
+```
+
+- **Two failure modes** (decided 2026-05-14): lifecycle-state mismatch → **hard refuse** (`GuardrailResolutionError`, session does not start — it is a state violation, not a range conflict). Range/param conflict → **per-bound drop to `LOCKED_DEFAULT`** + surface the conflict (that knob just does not move; the session runs with everything resolvable).
+- **Output:** a `ResolvedBounds` value object — the effective `[low, high]` per pad/param for *this* profile in *this* mode. It is an intersection; it can only ever be *narrower* than `data/`, never wider.
+
+### Engine wiring
+
+`engines/pad1-4.py`, `scene_runner.py`, `group_runner.py` each gain an **optional `resolved_bounds` parameter**:
+- **Omitted (no profile active)** → engines use `data/`'s static ranges exactly as today. The existing parity tests stay green untouched — full backward compatibility.
+- **Provided** → the engine clamps its mutation to `resolved_bounds`. Same command, profile-constrained output.
+
+The engines depend on the `ResolvedBounds` *type*, not on `resolver` — clean dependency direction (WS-T's architecture tests enforce this).
+
+### Testing — the decisive proof
+
+- **`schema`** — construction, immutability, enum-closure tests.
+- **`validation`** — a good draft validates; a bound outside `data/` range → `REJECTED` with the right reason; a high-risk param in a mutating class → validated-but-rewritten-to-`LOCKED_DEFAULT`; structural garbage → `REJECTED`.
+- **`store`** — round-trip a profile through JSON; lifecycle state machine permits only legal transitions; schema-version stamping survives.
+- **`resolver`** — empty intersection drops that bound to `LOCKED_DEFAULT`; lifecycle mismatch hard-refuses; resolved bounds are always ⊆ `data/` ranges.
+- **The decisive end-to-end test** — *the same randomizer command, run with profile A vs. profile B vs. no profile, produces three different but each-within-bounds MIDI sequences* (asserted via `MockMidiSender`, the Wave-4 parity-test pattern). **This test passing is the proof the intelligence is real** — that a profile genuinely steers the tool.
+- All new modules at **100% branch coverage** (the ratchet); `tests/architecture/` gets guardrails-package import-direction rules (WS-T).
 
 Build this, and "how does it learn my style" has a real answer: it measures your reference material, interprets it into guardrails, validates them for safety, and mutates your hardware inside them — and a "rolling hypnotic" profile and a "raw peak-time" profile genuinely make the same machine behave like two different instruments.
