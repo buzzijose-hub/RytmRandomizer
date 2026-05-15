@@ -1,8 +1,30 @@
 # RytmRandomizer — Parallel Execution Plan
 
+> ## ✅ STATUS: COMPLETE (2026-05-15)
+>
+> **All 23 workstreams in this plan are implemented and integrated on the `wave-4-integration` branch (PR #3).** A merge with the parallel `modularize-v1.34` updates was resolved and pushed; the final local verification shows **1690+ tests passing in ~5:30 via pytest-xdist parallelism**. A subsequent cleanup pass landed **a 45% suite speedup (253s → 140s, 2006 tests passing)** by parameterizing the slow parity tests for better xdist distribution, plus **9 of 10 backward-compat shims removed** (1 deferred with documented reason — `registry_report.py` retains its CLI `__main__`), and a **BeeWare briefcase native-installer track** for Windows `.msi` / macOS `.app`/`.pkg` / Linux AppImage is in place behind a `[installer]` extra with full release docs at `docs/BUILDING_INSTALLERS.md`.
+>
+> ### What shipped (the short version)
+> - **Wave 1 (foundation):** PEP 621 `pyproject.toml`, importable monolith, real README + CONTRIBUTING + Apache-2.0 LICENSE, 762-file `Docs/` accuracy triage → ~12-file curated `docs/`, cross-OS CI matrix + merge gating + CODEOWNERS + Dependabot + CodeQL, ratcheting coverage, `pre-commit`.
+> - **Wave 2 (architecture):** shared `rytm_randomizer/data/` layer (kills monolith↔package drift), pad-lane modules collapsed to one registry, 7 report modules consolidated, CLI help text extracted to data.
+> - **Wave 3 (convergence):** real MIDI provider wired behind explicit `--arm` (default = passive menu, `--dry-run` = MockMidiSender — nothing opens a real port unless explicitly requested); `release.yml` + `CHANGELOG.md`; `project_status_report` flipped from "passive forever" to convergence-tracking.
+> - **Wave 4 (decomposition):** the 5,162-line monolith decomposed into `midi_io.py` + `randomization.py` + `state/` (5 per-domain frozen state modules) + `engines/pad1-4.py` + `scene_runner.py` + `group_runner.py` + `shell.py` — every domain parity-tested byte-for-byte via a warm-subprocess test harness. The monolith file is byte-frozen; a `test_v134_reference_has_no_working_tree_diff` guard enforces it.
+> - **Observability (WS-U):** unified `rytm_randomizer/observability/` — leveled `logging`, the `RytmRandomizerError` taxonomy with 5 legacy errors re-homed under it via multi-inheritance, operation tracing, MIDI-send observability, `--debug`/`--log-json` flags, conformance tests that block bare `print()` / bare `except:` / non-taxonomy `raise` in new package code.
+> - **Architecture standards (WS-T):** `docs/ARCHITECTURE.md` + `.claude/rules/architecture.md`, the `.claude/skills/` set (code-review, add-pad-command, extend-data-layer, python-on-windows), `.claude/agents/` (architecture-guardian + code-reviewer with post-push hook), **6 architecture conformance test modules (170 tests)** that mechanically prevent erosion — import-direction, no-side-effects-on-import, house-style, layering, data-not-code, observability.
+> - **Guardrails intelligence (WS-V + WS-W):** the platform's value-add. `rytm_randomizer/style_analysis/` (Layer 1 — deterministic audio extraction via optional `librosa`), restructured guardrails skills (Layer 2 — token-lean, auto-routed), `rytm_randomizer/guardrails/` (Layers 3–4 — typed `GuardrailProfile` schema, three-layer validator with rewriting safety floor, JSON-file store + lifecycle state machine, resolver with per-bound `LOCKED_DEFAULT` fallback and hard-refuse on lifecycle mismatch, engine wiring). **The decisive test passes**: same command + profile A vs B vs none → three different but each-within-bounds MIDI streams. 100% branch coverage on `guardrails/`.
+> - **E2E suite (WS-R):** 43 tests drive the real entry point through the canonical V1.34 flow (`SCN → GM → S1A → S3A → S3B → S4B → S5 → 1 → Z → Q`) with deterministic-seed parity against a committed golden file. CI-gated on all 3 OSs.
+> - **Release process (WS-J):** tag-triggered `release.yml`, Keep-a-Changelog, version-bump flow. Native installers (`installers.yml`) are a separate 3-OS workflow on `v*` tags + manual dispatch.
+> - **Test infrastructure:** `pytest-xdist -n auto`, `pytest-sugar`, `pytest-timeout` (180s/test), `--durations=20`, warm-subprocess parity worker, parametrized parity tests. **Full suite ~3-4 min on a multi-core machine.**
+>
+> ### What this document is now
+>
+> The plan was the *forward-looking proposal* that drove the migration. It's preserved here as the historical record of the design decisions and the proven parallelization strategy. The detailed workstream sections below describe what was built. For **current** status, `docs/STATUS.md` is the live source.
+>
+> ---
+
 **Source:** `CODE_REVIEW_SUGGESTIONS.md` (2026-05-14 multi-agent review)
 **Repo:** `RytmRandomizer`, branch `modularize-v1.34`
-**Status:** Proposal for repo-owner review. No code changes are included with this document — it is the execution plan only.
+**Status:** ✅ Complete and shipped — see the STATUS box above. The original "Proposal for repo-owner review" framing below is preserved as historical record.
 **Sequencing:** Interleaved — independent Phase 1 (packaging/onboarding) and Phase 2 (architecture) streams run in parallel from the start, since they touch disjoint files.
 **Docs policy:** Accuracy pass, not blind archival. Every `Docs/` file is triaged: **accurate + useful → keep/curate**, **inaccurate but worth having → update**, **inaccurate or pure process exhaust → remove**.
 **Quality gates:** CI must run the tests on every push/PR and **block merge** unless they pass. Coverage is enforced with a **ratcheting, package-first** policy: 100% branch coverage on `rytm_randomizer/` immediately, a whole-repo floor that can only increase, and the monolith reaching 100% as its logic is extracted (WS-F/WS-K…WS-O). Hardware I/O paths are excluded with explicit `# pragma: no cover` justification.
