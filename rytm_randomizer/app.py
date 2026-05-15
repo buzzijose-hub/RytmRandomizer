@@ -31,8 +31,12 @@ always what actually runs the interactive logic.
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from typing import Sequence
+
+from .observability.logging import configure_logging as _configure_logging
+from .observability.logging import get_logger as _observability_get_logger
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -59,6 +63,23 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "Run the interactive randomizer logic against the in-memory mock "
             "sender. No hardware, no port opened."
+        ),
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help=(
+            "Configure the package's logging at DEBUG level (default INFO). "
+            "Diagnostic output goes to stderr; the interactive stdout UI is "
+            "unaffected. See docs/OBSERVABILITY.md for the structured format."
+        ),
+    )
+    parser.add_argument(
+        "--log-json",
+        action="store_true",
+        help=(
+            "Switch the package logger to JSON-line output for log shippers. "
+            "Implies that --debug controls the level. Defaults to off."
         ),
     )
     return parser
@@ -180,10 +201,16 @@ def _run_arm() -> int:
     finally:
         close = getattr(port, "close", None)
         if callable(close):
+            # Port close is best-effort: the OS / mido backend can raise any of
+            # OSError / RuntimeError / AttributeError on shutdown depending on
+            # the backend. We list the realistic family explicitly rather than
+            # bare ``except Exception`` so a programming error in this block
+            # still propagates.
             try:
                 close()
-            except Exception:  # pragma: no cover - best-effort port shutdown
-                pass
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("port_close_failed_best_effort")
 
 
 def _choose_arm_port_name(output_names: Sequence[str]) -> str | None:
@@ -253,6 +280,28 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     parser = _build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    # Configure the package logger before any other work so every subsequent
+    # operation has a real sink. The default INFO level keeps test output
+    # quiet (the package only emits INFO at meaningful operation boundaries,
+    # not on the hot path); ``--debug`` raises to DEBUG. ``--log-json`` swaps
+    # the formatter so a log shipper can pick records up. The package logger
+    # writes to stderr -- stdout is reserved for interactive UI.
+    _configure_logging(
+        level=logging.DEBUG if args.debug else logging.INFO,
+        json=args.log_json,
+    )
+    logger = _observability_get_logger(__name__)
+    logger.debug(
+        "app_start",
+        extra={
+            "mode": (
+                "arm" if args.arm else ("dry_run" if args.dry_run else "passive")
+            ),
+            "debug": args.debug,
+            "log_json": args.log_json,
+        },
+    )
 
     if args.arm:
         return _run_arm()

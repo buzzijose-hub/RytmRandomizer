@@ -27,6 +27,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
 from .data import MACHINE_CC
+from .observability.logging import get_logger
 
 __all__ = [
     "ApplyStateResult",
@@ -36,6 +37,14 @@ __all__ = [
     "send_machine",
     "send_param",
 ]
+
+
+# Module logger for MIDI I/O diagnostic output. Records sit alongside the
+# V1.34-parity stdout UI (e.g. "  X: CC42 -> 64"). The log is the
+# troubleshooter's grep target -- structured, level-filterable, and JSON-
+# shippable -- while stdout remains the operator UI. See
+# docs/OBSERVABILITY.md for the structured format and the --debug flag.
+_logger = get_logger(__name__)
 
 # A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
 Sender = Any
@@ -64,6 +73,14 @@ def send_cc(
     Mirrors the monolith's ``send_cc``: a real ``mido`` message is constructed
     and sent, followed by a short settle delay. ``mido`` is imported lazily so
     importing this module stays inert.
+
+    Every CC is also logged at ``DEBUG`` level under the structured field
+    set ``channel`` / ``control`` / ``value`` so a troubleshooter running
+    ``python -m rytm_randomizer.app --arm --debug`` can ``grep midi_send``
+    their stderr log and reconstruct the exact wire-level stream the
+    operator just produced. The mock-sender path already records the
+    messages on the ``MockMidiSender``; the real path now leaves the same
+    breadcrumb in the log.
     """
 
     import mido  # noqa: PLC0415 - intentional lazy import for import-safety
@@ -73,6 +90,15 @@ def send_cc(
         channel=channel,
         control=cc,
         value=value,
+    )
+    _logger.debug(
+        "midi_send cc",
+        extra={
+            "channel": channel,
+            "control": cc,
+            "value": value,
+            "kind": "midi_send",
+        },
     )
     out.send(msg)
     sleep(0.02)

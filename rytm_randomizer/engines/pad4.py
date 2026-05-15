@@ -49,8 +49,12 @@ from ..data import (
     PAD4_MODE_ORDER,
     PROFILES,
 )
+from ..observability.logging import get_logger
+from ..observability.tracing import trace
 
 __all__ = ["Pad4Engine"]
+
+_logger = get_logger(__name__)
 
 # A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
 Sender = Any
@@ -470,6 +474,7 @@ class Pad4Engine:
         finally:
             self.isolated_pad = previous_isolated
 
+    @trace("pad4.load_pad4_mode")
     def load_pad4_mode(self, mode_key: str) -> None:
         if mode_key not in PAD4_MODE_ORDER:
             print(f"\nUnknown Pad 4 mode: {mode_key}")
@@ -498,6 +503,7 @@ class Pad4Engine:
             # identical to the monolith's ``elif mode_key == "impact"``.
             self.pad4_impact_grit_accent_mode()
 
+    @trace("pad4.rotate_pad4_mode")
     def rotate_pad4_mode(self) -> None:
         current_key = self.pad4_current_mode_key
         if current_key not in PAD4_MODE_ORDER:
@@ -517,6 +523,7 @@ class Pad4Engine:
 
         self.load_pad4_mode(next_key)
 
+    @trace("pad4.mutate_current_pad4_mode")
     def mutate_current_pad4_mode(self) -> None:
         if self.pad4_current_mode_key not in PAD4_MODE_MUTATION_PLANS:
             print("\nCurrent Pad 4 mode does not have a P4X mutation plan yet.")

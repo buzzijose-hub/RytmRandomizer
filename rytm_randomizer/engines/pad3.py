@@ -49,8 +49,12 @@ from ..data import (
     PROFILES,
     SY_RAW_FILTER_NAMES,
 )
+from ..observability.logging import get_logger
+from ..observability.tracing import trace
 
 __all__ = ["Pad3Engine"]
+
+_logger = get_logger(__name__)
 
 # A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
 Sender = Any
@@ -583,6 +587,7 @@ class Pad3Engine:
         else:
             print("\nCurrent Pad 3 state: not loaded yet. Use O first.")
 
+    @trace("pad3.load_pad3_mode")
     def load_pad3_mode(self, mode_key: str) -> None:
         if mode_key not in PAD3_MODE_ORDER:
             print(f"\nUnknown Pad 3 mode: {mode_key}")
@@ -611,6 +616,7 @@ class Pad3Engine:
             # identical to the monolith's ``elif mode_key == "scifi"``.
             self.sy_raw_scifi_motion_accent()
 
+    @trace("pad3.rotate_pad3_mode")
     def rotate_pad3_mode(self) -> None:
         current_key = self.pad3_current_mode_key
         if current_key not in PAD3_MODE_ORDER:
@@ -630,6 +636,7 @@ class Pad3Engine:
 
         self.load_pad3_mode(next_key)
 
+    @trace("pad3.mutate_current_pad3_mode")
     def mutate_current_pad3_mode(self) -> None:
         if self.pad3_current_mode_key not in PAD3_MODE_MUTATION_PLANS:
             print("\nCurrent Pad 3 mode does not have a P3X mutation plan yet.")

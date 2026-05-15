@@ -2,6 +2,12 @@
 
 This module does not import MIDI libraries, open ports, send MIDI, expose CLI
 commands, dispatch runtime behavior, or touch hardware.
+
+``ActiveBoundaryError`` is also a member of the unified
+:mod:`rytm_randomizer.observability.errors` taxonomy: it inherits from both
+:class:`~rytm_randomizer.observability.errors.BoundaryError` AND
+``ValueError``, so existing ``except ValueError`` callers and new
+``except BoundaryError`` callers both work.
 """
 
 from __future__ import annotations
@@ -12,6 +18,7 @@ from typing import Mapping
 
 from .mock_message_mapper import map_group_profile_to_mock_messages
 from .mock_midi import MidiMessage, MockMidiSender
+from .observability.errors import BoundaryError
 
 SUPPORTED_SOURCE_KIND = "group_profile"
 SUPPORTED_SOURCE_KEY = "2"
@@ -68,8 +75,14 @@ class ActiveBoundaryResult:
         object.__setattr__(self, "metadata", _freeze_metadata(self.metadata))
 
 
-class ActiveBoundaryError(ValueError):
-    """Raised when active boundary inputs are invalid for tests."""
+class ActiveBoundaryError(BoundaryError, ValueError):
+    """Raised when active boundary inputs are invalid for tests.
+
+    Member of the unified
+    :class:`~rytm_randomizer.observability.errors.BoundaryError` taxonomy.
+    ``ValueError`` is kept as an additional base for backward-compatibility
+    with any ``except ValueError`` caller.
+    """
 
 
 def _result_metadata(

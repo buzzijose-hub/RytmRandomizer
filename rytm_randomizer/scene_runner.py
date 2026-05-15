@@ -27,8 +27,12 @@ from __future__ import annotations
 
 from .data import SCENE_PRESETS
 from .group_runner import GroupRunner
+from .observability.logging import get_logger
+from .observability.tracing import operation
 
 __all__ = ["SceneRunner"]
+
+_logger = get_logger(__name__)
 
 # The monolith's cold-start ``current_scene_name`` global.
 DEFAULT_SCENE_NAME = "None"
@@ -115,53 +119,59 @@ class SceneRunner:
         other action auto-loads anchors then runs the matching intensity plan
         through the wrapped :class:`GroupRunner`. ``current_scene_name`` is
         updated to the scene's name on success.
+
+        Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
+        span keyed on the scene key so a ``--debug`` log shows entry / exit /
+        elapsed time for the whole scene dispatch. Stdout output is
+        byte-identical to the monolith; tracing only emits on stderr.
         """
 
-        if scene_key not in SCENE_PRESETS:
-            print(f"\nUnknown scene command: {scene_key.upper()}")
-            self.show_scene_tools()
-            return
+        with operation("scene_run", scene_key=scene_key):
+            if scene_key not in SCENE_PRESETS:
+                print(f"\nUnknown scene command: {scene_key.upper()}")
+                self.show_scene_tools()
+                return
 
-        scene = SCENE_PRESETS[scene_key]
-        action = scene["action"]
+            scene = SCENE_PRESETS[scene_key]
+            action = scene["action"]
 
-        print(f"\nScene / Preset - V1.34: {scene['name']}")
-        print(f"  {scene['description']}")
+            print(f"\nScene / Preset - V1.34: {scene['name']}")
+            print(f"  {scene['description']}")
 
-        if action == "home":
-            if len(self.group.group_current_states) < 4:
-                print(
-                    "  Four-pad state not loaded yet. Loading validated "
-                    "anchors now."
-                )
-                self.group.load_group_anchors()
-            else:
-                print("  Returning all four pads to validated anchors.")
-                self.group.return_group_to_anchors()
+            if action == "home":
+                if len(self.group.group_current_states) < 4:
+                    print(
+                        "  Four-pad state not loaded yet. Loading validated "
+                        "anchors now."
+                    )
+                    self.group.load_group_anchors()
+                else:
+                    print("  Returning all four pads to validated anchors.")
+                    self.group.return_group_to_anchors()
+                self.current_scene_name = scene["name"]
+                print(f"\nScene active: {self.current_scene_name}")
+                return
+
+            if action == "clean":
+                if len(self.group.group_current_states) < 4:
+                    print(
+                        "  Four-pad state not loaded yet. Loading validated "
+                        "anchors now."
+                    )
+                    self.group.load_group_anchors()
+                else:
+                    print("  Returning all four pads to validated anchors.")
+                    self.group.return_group_to_anchors()
+                self.current_scene_name = scene["name"]
+                print(f"\nScene active: {self.current_scene_name}")
+                return
+
+            self.group.ensure_group_anchors_loaded(f"Scene {scene_key.upper()}")
+
+            print(
+                "  Applying scene through the validated global four-lane mutation "
+                "layer."
+            )
+            self.group.mutate_group_intensity(action)
             self.current_scene_name = scene["name"]
             print(f"\nScene active: {self.current_scene_name}")
-            return
-
-        if action == "clean":
-            if len(self.group.group_current_states) < 4:
-                print(
-                    "  Four-pad state not loaded yet. Loading validated "
-                    "anchors now."
-                )
-                self.group.load_group_anchors()
-            else:
-                print("  Returning all four pads to validated anchors.")
-                self.group.return_group_to_anchors()
-            self.current_scene_name = scene["name"]
-            print(f"\nScene active: {self.current_scene_name}")
-            return
-
-        self.group.ensure_group_anchors_loaded(f"Scene {scene_key.upper()}")
-
-        print(
-            "  Applying scene through the validated global four-lane mutation "
-            "layer."
-        )
-        self.group.mutate_group_intensity(action)
-        self.current_scene_name = scene["name"]
-        print(f"\nScene active: {self.current_scene_name}")
