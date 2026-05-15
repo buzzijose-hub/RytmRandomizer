@@ -11,7 +11,7 @@ on:
     - cron: "0 6 * * 0"
   workflow_dispatch:
 
-# NOTE: This workflow runs five required-check jobs gated by path filters
+# NOTE: This workflow runs six required-check jobs gated by path filters
 # so a docs-only change doesn't burn 30 minutes of CI on the full matrix.
 #
 # Job summary:
@@ -44,6 +44,12 @@ on:
 #       operator-command flow in --dry-run mode against MockMidiSender,
 #       with random.seed() set for full determinism. Triggers on the same
 #       paths as `test` plus tests/e2e/.
+#
+#   docs-gate — pull-request-only gate that fails when production code or
+#       pyproject.toml changes without an accompanying docs/, README.md,
+#       or CONTRIBUTING.md edit. Prevents silent rot of onboarding
+#       material when behavior changes. Skipped on push/schedule/
+#       workflow_dispatch (treated as success by the aggregate).
 #
 # Weekly schedule also runs the security + architecture jobs so freshly-
 # disclosed CVEs in mido / python-rtmidi cannot sit hidden in already-
@@ -278,11 +284,31 @@ jobs:
       needs.detect-changes.outputs.deps == 'true' ||
       needs.detect-changes.outputs.ci == 'true'
     runs-on: ${{ matrix.os }}
+    # `contents: write` is needed so the coverage-ratchet auto-commit step
+    # (see below) can push the bumped .coveragerc back to the PR branch.
+    # All other steps are read-only; this is the minimum scope required.
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
+        # macos-latest is excluded from the pull_request matrix below.
+        # The macOS runner pool on GitHub Actions has long queue times
+        # (often 20-60 minutes), and macOS-only breakage is rare in a
+        # Python project whose only platform-sensitive dep is python-
+        # rtmidi. Skipping macOS on PRs cuts CI time from ~hour to
+        # ~minutes; the macOS jobs still run on `main` pushes and the
+        # weekly schedule, so macOS-only regressions get caught before
+        # release without blocking every PR. See `exclude:` below.
         os: [windows-latest, macos-latest, ubuntu-latest]
         python-version: ["3.11"]
+        exclude:
+          # On pull_request events, drop the macos-latest entry from
+          # the matrix entirely (GitHub Actions does not let `if:` gate
+          # an individual matrix entry, hence the exclude form). Other
+          # event types -- push, schedule, workflow_dispatch -- still
+          # see the full 3-OS matrix.
+          - os: ${{ github.event_name == 'pull_request' && 'macos-latest' || '' }}
 
     steps:
       - name: Checkout
@@ -311,6 +337,41 @@ jobs:
       # fail this step.
       - name: Run pytest with coverage
         run: pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml
+
+      # Auto-ratchet the coverage floor in .coveragerc when measured branch
+      # coverage exceeds the current floor by >= 1pp. The script exits 0
+      # with no change when within 1pp of the floor, exits 0 after rewriting
+      # .coveragerc when ratcheting, and exits 1 when measured is below the
+      # floor (which would already have failed the pytest step above, but we
+      # keep the check defensive). Restricted to ubuntu-latest because
+      # coverage is OS-independent and we want exactly one auto-commit if
+      # the floor moves -- running on all 3 matrix OSes would race three
+      # competing pushes against the PR branch.
+      - name: Ratchet coverage floor
+        if: matrix.os == 'ubuntu-latest'
+        run: python scripts/coverage_ratchet.py coverage.xml
+
+      # When the ratchet step above rewrote .coveragerc, commit the bump
+      # back to the PR branch as github-actions[bot] so the new floor
+      # becomes the baseline for subsequent runs. `[skip ci]` in the commit
+      # message prevents an infinite re-trigger loop. Gated to pull_request
+      # and push events because schedule / workflow_dispatch runs have no
+      # PR branch to push back to.
+      - name: Auto-commit ratcheted coverage floor
+        if: |
+          matrix.os == 'ubuntu-latest' &&
+          (github.event_name == 'pull_request' || github.event_name == 'push')
+        run: |
+          if git diff --quiet .coveragerc; then
+            echo "No coverage floor change to commit."
+            exit 0
+          fi
+          new_floor=$(grep -E '^fail_under' .coveragerc | grep -oE '[0-9]+(\.[0-9]+)?' | head -n 1)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .coveragerc
+          git commit -m "chore(coverage): ratchet floor to ${new_floor}% [skip ci]"
+          git push origin HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Upload coverage XML (for downstream inspection)
         if: always()
@@ -347,8 +408,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # macos-latest is excluded from the pull_request matrix below.
+        # The macOS runner pool on GitHub Actions has long queue times
+        # (often 20-60 minutes), and macOS-only breakage is rare in a
+        # Python project whose only platform-sensitive dep is python-
+        # rtmidi. Skipping macOS on PRs cuts CI time from ~hour to
+        # ~minutes; the macOS jobs still run on `main` pushes and the
+        # weekly schedule, so macOS-only regressions get caught before
+        # release without blocking every PR. See `exclude:` below.
         os: [windows-latest, macos-latest, ubuntu-latest]
         python-version: ["3.11"]
+        exclude:
+          # On pull_request events, drop the macos-latest entry from
+          # the matrix entirely (GitHub Actions does not let `if:` gate
+          # an individual matrix entry, hence the exclude form). Other
+          # event types -- push, schedule, workflow_dispatch -- still
+          # see the full 3-OS matrix.
+          - os: ${{ github.event_name == 'pull_request' && 'macos-latest' || '' }}
 
     steps:
       - name: Checkout
@@ -372,6 +448,83 @@ jobs:
         # --dry-run against MockMidiSender, no hardware, no port opened.
         run: pytest tests/e2e/ -v
 
+  docs-gate:
+    # Pull-request-only gate enforcing the data-not-code rule's onboarding
+    # corollary: when production code (rytm_randomizer/) or the dependency
+    # surface (pyproject.toml) changes, the same PR must touch user-facing
+    # documentation (docs/, README.md, or CONTRIBUTING.md). Feature or
+    # behavior changes that skip docs silently rot the project's
+    # onboarding material; this gate makes that rot impossible to merge.
+    #
+    # Skipped on push/schedule/workflow_dispatch — branch protection
+    # treats skipped required checks as success via the aggregate.
+    name: docs-gate
+    needs: detect-changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Skip when no production code changed
+        # No production code touched (no rytm_randomizer/** or pyproject.toml
+        # change) -- nothing to document. Succeed immediately so we don't
+        # spuriously block doc-only / test-only / CI-only PRs.
+        if: |
+          needs.detect-changes.outputs.code == 'false' &&
+          needs.detect-changes.outputs.deps == 'false'
+        run: |
+          echo "No production code or dependency changes detected; docs-gate is a no-op."
+
+      - name: Checkout
+        if: |
+          needs.detect-changes.outputs.code == 'true' ||
+          needs.detect-changes.outputs.deps == 'true'
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Detect docs touches
+        id: docs-filter
+        if: |
+          needs.detect-changes.outputs.code == 'true' ||
+          needs.detect-changes.outputs.deps == 'true'
+        uses: dorny/paths-filter@v3
+        with:
+          # `docs-touched` is true if ANY user-facing documentation file
+          # under docs/, the top-level README, or CONTRIBUTING.md changed.
+          filters: |
+            docs-touched:
+              - 'docs/**'
+              - 'README.md'
+              - 'CONTRIBUTING.md'
+
+      - name: Enforce docs accompany code changes
+        if: |
+          needs.detect-changes.outputs.code == 'true' &&
+          steps.docs-filter.outputs.docs-touched == 'false'
+        # Fail loudly with remediation guidance. The contributor can fix
+        # this by editing the relevant doc in the same PR, or by adding
+        # a short note to README.md / CONTRIBUTING.md explaining the
+        # behavior change.
+        run: |
+          echo "::error::docs-gate: production code under rytm_randomizer/ changed but no docs/, README.md, or CONTRIBUTING.md edit was included in this PR."
+          echo ""
+          echo "Feature and behavior changes must update user-facing documentation in the same PR to keep onboarding material in sync."
+          echo ""
+          echo "To fix:"
+          echo "  1. Update the relevant page under docs/ (architecture, workflow, profile spec, etc.), OR"
+          echo "  2. Update README.md if the change affects the getting-started flow, OR"
+          echo "  3. Update CONTRIBUTING.md if the change affects contributor workflow."
+          echo ""
+          echo "If this PR is genuinely doc-irrelevant (e.g. pure internal refactor with no observable change), justify that in the PR description and a reviewer can override branch protection."
+          exit 1
+
+      - name: docs-gate passed
+        if: |
+          needs.detect-changes.outputs.code == 'true' &&
+          steps.docs-filter.outputs.docs-touched == 'true'
+        run: |
+          echo "Production code change is accompanied by documentation updates."
+
   required-checks:
     # Aggregate gate for branch protection. Path filters cause individual
     # upstream jobs to skip on irrelevant changes (e.g. a docs-only edit
@@ -385,7 +538,7 @@ jobs:
     # `failure` or `cancelled`. `skipped` counts as success because the
     # path filter said this category did not need to be re-validated.
     name: required-checks
-    needs: [detect-changes, lint, security, architecture, test, e2e]
+    needs: [detect-changes, lint, security, architecture, test, e2e, docs-gate]
     if: always()
     runs-on: ubuntu-latest
 
@@ -400,6 +553,7 @@ jobs:
           echo "architecture   : ${{ needs.architecture.result }}"
           echo "test           : ${{ needs.test.result }}"
           echo "e2e            : ${{ needs.e2e.result }}"
+          echo "docs-gate      : ${{ needs.docs-gate.result }}"
 
       - name: Fail if any upstream job failed or was cancelled
         # GitHub workflow `needs.*.result` is one of: success, failure,
@@ -413,7 +567,8 @@ jobs:
             "${{ needs.security.result }}" \
             "${{ needs.architecture.result }}" \
             "${{ needs.test.result }}" \
-            "${{ needs.e2e.result }}"; do
+            "${{ needs.e2e.result }}" \
+            "${{ needs.docs-gate.result }}"; do
             case "$result" in
               success|skipped) ;;
               *)
