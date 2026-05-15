@@ -1,0 +1,46 @@
+RytmRandomizer Operator Status Report
+Mode:
+- passive: True
+- daily_visibility: True
+- implementation_intake_ready: True
+Project:
+- phase_name: Passive/Mock Runtime Visibility Phase
+- creative_identity_candidate: KitForge
+- passive_cli_command_count: 22
+- v134_reference: import_safe_wrapped
+Collaborator Intake:
+- status: waiting_for_implementation_branch
+- implementation_branch_observed: False
+- implementation_pr_observed: False
+- direct_merge_allowed: False
+GitHub Actions:
+- status: manual_only
+- daily_feedback: local_closeout
+- automatic_pull_request_runs: False
+- automatic_push_runs: False
+- automatic_release_tag_runs: False
+- no_pay_policy: True
+Operator Commands:
+- project_status: python -m rytm_randomizer.cli project-status-report --summary
+- collaborator_intake_readiness: python -m rytm_randomizer.cli collaborator-intake-readiness-report
+- local_closeout: powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
+- v134_diff: git diff -- rytm_hybrid_randomizer_v134.py
+- git_status: git status --short
+Next Actions:
+- wait for Eddie implementation branch or PR
+- run collaborator implementation intake when branch or PR appears
+- use local closeout for frequent feedback
+- run manual GitHub Actions only at explicit review gates
+Safety:
+- real_midi: absent
+- mido: absent
+- port_opening: absent
+- midi_sending: absent
+- active_execution: absent
+- dispatch: absent
+- hardware_behavior: absent
+- hardware_required: False
+Source:
+- project_status: rytm_randomizer.project_status_report
+- collaborator_intake_readiness: rytm_randomizer.collaborator_intake_readiness_report
+In-memory only: True

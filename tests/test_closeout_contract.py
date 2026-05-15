@@ -63,6 +63,14 @@ def test_collaborator_intake_readiness_report_is_included_in_closeout():
     )
 
 
+def test_operator_status_report_is_included_in_closeout():
+    script = _script_text()
+
+    assert "=== Test: Operator Status Report ===" in script
+    assert ".\\tests\\test_operator_status_report.py" in script
+    assert 'Register-CloseoutStepExit "Operator Status Report"' in script
+
+
 def test_package_build_is_included_in_closeout():
     script = _script_text()
     cross_platform_script = CROSS_PLATFORM_CLOSEOUT_SCRIPT.read_text(encoding="utf-8")
@@ -112,6 +120,7 @@ if __name__ == "__main__":
     test_closeout_contract_test_is_included_in_closeout()
     test_project_status_check_is_included_in_closeout()
     test_collaborator_intake_readiness_report_is_included_in_closeout()
+    test_operator_status_report_is_included_in_closeout()
     test_package_build_is_included_in_closeout()
     test_wheel_install_smoke_is_included_in_closeout()
     test_cross_platform_closeout_script_exists_and_runs_core_gates()

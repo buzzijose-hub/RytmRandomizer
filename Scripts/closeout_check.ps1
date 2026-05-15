@@ -151,6 +151,11 @@ Register-CloseoutStepExit "Project Status Check"
 Register-CloseoutStepExit "Collaborator Intake Readiness Report"
 
 "" | Add-Content $summary
+"=== Test: Operator Status Report ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_operator_status_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_operator_status_report.log" | Add-Content $summary
+Register-CloseoutStepExit "Operator Status Report"
+
+"" | Add-Content $summary
 "=== Test: Quick Status Script ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_quick_status_script.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_quick_status_script.log" | Add-Content $summary
 Register-CloseoutStepExit "Quick Status Script"

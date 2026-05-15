@@ -2,6 +2,35 @@
 
 Date: May 4, 2026
 
+## Operator Status Report
+
+The project now has a passive daily operator status report:
+
+- `rytm_randomizer/operator_status_report.py`
+
+It is visible from the passive CLI:
+
+- `python -m rytm_randomizer.cli operator-status-report`
+- `python -m rytm_randomizer.cli operator-status-report --help`
+
+It is covered by:
+
+- `tests/test_operator_status_report.py`
+- closeout label:
+  - `=== Test: Operator Status Report ===`
+
+The report summarizes the current project phase, collaborator intake wait-state,
+manual GitHub Actions policy, local closeout path, V1.34 diff check, git status
+check, and next recommended operator actions.
+
+The passive project-status report now includes this command in its passive CLI
+visibility list, bringing the passive CLI command count to `22`.
+
+This is passive reporting only. It does not query GitHub, merge branches,
+trigger GitHub Actions, change runtime behavior, dispatch commands, add active
+behavior, send MIDI, open MIDI ports, mutate hardware, require hardware, or
+change the V1.34 reference.
+
 ## Collaborator Intake Readiness Report CLI
 
 The collaborator intake readiness report is now visible from the passive CLI:

@@ -1,0 +1,21 @@
+RytmRandomizer passive CLI: operator-status-report
+
+Usage:
+  python -m rytm_randomizer.cli operator-status-report
+  python -m rytm_randomizer.cli operator-status-report --help
+
+Behavior:
+  Prints the deterministic read-only daily operator status report to stdout.
+
+Safety:
+  passive/read-only
+  no GitHub mutation
+  no branch merge
+  no GitHub Actions trigger
+  no MIDI sending
+  no port opening
+  no active execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required
