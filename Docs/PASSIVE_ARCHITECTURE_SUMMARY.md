@@ -2,6 +2,30 @@
 
 Date: May 4, 2026
 
+## Cross-Platform Operator Status Closeout
+
+`Scripts/closeout_check.py` now includes the passive operator status report.
+
+New cross-platform closeout step:
+
+- `Operator Status Report`
+
+It runs:
+
+- `python -m rytm_randomizer.cli operator-status-report`
+
+It is covered by:
+
+- `tests/test_closeout_contract.py`
+
+Windows closeout, quick status, and cross-platform closeout now all surface the
+same passive operator status visibility.
+
+This keeps daily feedback local and no-cost. It does not query GitHub, merge
+branches, trigger GitHub Actions, change runtime behavior, dispatch commands,
+add active behavior, send MIDI, open MIDI ports, mutate hardware, require
+hardware, or change the V1.34 reference.
+
 ## Quick Status Operator Report
 
 `Scripts/quick_status.ps1` now includes the passive operator status report.

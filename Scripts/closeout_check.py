@@ -75,6 +75,16 @@ def main() -> int:
             ],
             "python -m rytm_randomizer.cli project-status-report --check",
         ),
+        (
+            "Operator Status Report",
+            [
+                sys.executable,
+                "-m",
+                "rytm_randomizer.cli",
+                "operator-status-report",
+            ],
+            "python -m rytm_randomizer.cli operator-status-report",
+        ),
         ("Package Build", [sys.executable, "-m", "build"], "python -m build"),
         (
             "Wheel Install Smoke",
