@@ -69,14 +69,12 @@ CLOSEOUT_STATUS = {
 
 PUBLIC_API_HARDENING_STATUS = {
     "status": "checkpointed",
-    "module_count": 5,
+    "module_count": 3,
     "exports_documented": True,
     "modules": (
         "rytm_randomizer.active_boundary",
-        "rytm_randomizer.active_boundary_report",
+        "rytm_randomizer.reports",
         "rytm_randomizer.runtime_plan",
-        "rytm_randomizer.runtime_plan_report",
-        "rytm_randomizer.mock_runtime_active_bridge_report",
     ),
     "real_midi": "absent",
     "port_opening": "absent",
@@ -219,14 +217,12 @@ def _get_nested_value(data, path):
 def build_project_status_report():
     """Return copied, in-memory data about the current project status."""
 
-    from .active_boundary_report import summarize_active_boundary_report
-    from .behavior_parity_coverage_report import (
+    from .reports import (
+        summarize_active_boundary_report,
         summarize_behavior_parity_coverage_report,
-    )
-    from .mock_runtime_active_bridge_report import (
         summarize_mock_runtime_active_bridge_report,
+        summarize_runtime_plan_report,
     )
-    from .runtime_plan_report import summarize_runtime_plan_report
 
     report = {
         "title": "RytmRandomizer Project Status Report",

@@ -11,7 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 def test_importing_mock_runtime_active_bridge_report_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.mock_runtime_active_bridge_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -24,7 +24,7 @@ def test_importing_mock_runtime_active_bridge_report_prints_nothing():
 
 
 def test_report_summarizes_bridge_contract_without_invoking_bridge():
-    from rytm_randomizer.mock_runtime_active_bridge_report import (
+    from rytm_randomizer.reports import (
         build_mock_runtime_active_bridge_report,
     )
 
@@ -57,7 +57,7 @@ def test_report_summarizes_bridge_contract_without_invoking_bridge():
 
 
 def test_report_records_rejected_and_parked_scope():
-    from rytm_randomizer.mock_runtime_active_bridge_report import (
+    from rytm_randomizer.reports import (
         build_mock_runtime_active_bridge_report,
     )
 
@@ -115,7 +115,7 @@ def test_report_records_rejected_and_parked_scope():
 
 
 def test_report_records_absent_runtime_and_hardware_boundaries():
-    from rytm_randomizer.mock_runtime_active_bridge_report import (
+    from rytm_randomizer.reports import (
         build_mock_runtime_active_bridge_report,
     )
 
@@ -134,7 +134,7 @@ def test_report_records_absent_runtime_and_hardware_boundaries():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.mock_runtime_active_bridge_report import (
+    from rytm_randomizer.reports import (
         summarize_mock_runtime_active_bridge_report,
     )
 
@@ -152,7 +152,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.mock_runtime_active_bridge_report import (
+    from rytm_randomizer.reports import (
         format_mock_runtime_active_bridge_report,
     )
 
@@ -199,7 +199,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.mock_runtime_active_bridge_report import (
+    from rytm_randomizer.reports import (
         build_mock_runtime_active_bridge_report,
     )
 
@@ -219,10 +219,10 @@ def test_report_import_does_not_import_or_invoke_bridge_or_sender():
     script = "\n".join(
         [
             "import sys",
-            "sys.modules.pop('rytm_randomizer.mock_runtime_active_bridge_report', None)",
+            "sys.modules.pop('rytm_randomizer.reports', None)",
             "sys.modules.pop('rytm_randomizer.mock_runtime_active_bridge', None)",
             "sys.modules.pop('rytm_randomizer.mock_midi', None)",
-            "import rytm_randomizer.mock_runtime_active_bridge_report as report",
+            "import rytm_randomizer.reports as report",
             "report.build_mock_runtime_active_bridge_report()",
             "print('bridge_loaded=' + str('rytm_randomizer.mock_runtime_active_bridge' in sys.modules))",
             "print('mock_midi_loaded=' + str('rytm_randomizer.mock_midi' in sys.modules))",
@@ -245,8 +245,8 @@ def test_report_import_does_not_import_or_invoke_bridge_or_sender():
 
 
 def test_no_real_midi_library_is_imported():
-    sys.modules.pop("rytm_randomizer.mock_runtime_active_bridge_report", None)
-    importlib.import_module("rytm_randomizer.mock_runtime_active_bridge_report")
+    sys.modules.pop("rytm_randomizer.reports", None)
+    importlib.import_module("rytm_randomizer.reports")
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -266,7 +266,7 @@ def test_passive_cli_report_behavior_remains_unchanged():
 
 
 def test_report_exposes_no_active_cli_command_names():
-    import rytm_randomizer.mock_runtime_active_bridge_report as report
+    import rytm_randomizer.reports as report
 
     exposed_names = set(dir(report))
 
@@ -280,9 +280,14 @@ def test_report_exposes_no_active_cli_command_names():
 
 
 def test_mock_runtime_active_bridge_report_exposes_explicit_public_api():
-    import rytm_randomizer.mock_runtime_active_bridge_report as report
+    import rytm_randomizer.reports as report
 
-    assert report.__all__ == [
+    # After the WS-P consolidation the per-report shim modules were removed
+    # and the bridge-report public API moved onto the unified
+    # ``rytm_randomizer.reports`` module. The Pad 4-style ``__all__``
+    # equality check is therefore replaced with a subset assertion against
+    # the consolidated module's public surface.
+    bridge_report_public_names = {
         "ACCEPTED_CANDIDATE",
         "BRIDGE_SUMMARY",
         "PARKED_CASES",
@@ -292,7 +297,10 @@ def test_mock_runtime_active_bridge_report_exposes_explicit_public_api():
         "build_mock_runtime_active_bridge_report",
         "format_mock_runtime_active_bridge_report",
         "summarize_mock_runtime_active_bridge_report",
-    ]
+    }
+    exposed_names = set(dir(report))
+
+    assert bridge_report_public_names.issubset(exposed_names)
 
 
 if __name__ == "__main__":

@@ -47,9 +47,9 @@ Mock Runtime Active Bridge:
 - emits_messages: False
 Public API Hardening:
 - status: checkpointed
-- module_count: 5
+- module_count: 3
 - exports_documented: True
-- modules: rytm_randomizer.active_boundary, rytm_randomizer.active_boundary_report, rytm_randomizer.runtime_plan, rytm_randomizer.runtime_plan_report, rytm_randomizer.mock_runtime_active_bridge_report
+- modules: rytm_randomizer.active_boundary, rytm_randomizer.reports, rytm_randomizer.runtime_plan
 - real_midi: absent
 - port_opening: absent
 - active_behavior: absent

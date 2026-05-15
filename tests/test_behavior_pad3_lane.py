@@ -19,7 +19,7 @@ def run_cli(*args):
 
 
 def test_importing_behavior_pad3_lane_prints_nothing():
-    code = "import rytm_randomizer.behavior_pad3_lane"
+    code = "import rytm_randomizer.behavior_pad_lane"
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=PROJECT_ROOT,
@@ -34,7 +34,7 @@ def test_importing_behavior_pad3_lane_prints_nothing():
 
 
 def test_p3a_returns_read_only_pad3_sy_raw_home_anchor_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3A")
 
@@ -76,7 +76,7 @@ def test_p3a_returns_read_only_pad3_sy_raw_home_anchor_intent():
 
 
 def test_p3a_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3A")
 
@@ -98,7 +98,7 @@ def test_p3a_metadata_contains_expected_passive_sources():
 
 
 def test_sa_returns_read_only_pad3_sy_raw_anchor_return_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SA")
 
@@ -140,7 +140,7 @@ def test_sa_returns_read_only_pad3_sy_raw_anchor_return_intent():
 
 
 def test_sa_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SA")
 
@@ -162,7 +162,7 @@ def test_sa_metadata_contains_expected_passive_sources():
 
 
 def test_sl_returns_read_only_pad3_sy_raw_lp1_bassline_mode_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SL")
 
@@ -204,7 +204,7 @@ def test_sl_returns_read_only_pad3_sy_raw_lp1_bassline_mode_intent():
 
 
 def test_sl_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SL")
 
@@ -226,7 +226,7 @@ def test_sl_metadata_contains_expected_passive_sources():
 
 
 def test_sb_returns_read_only_pad3_sy_raw_bandpass_mid_bass_mode_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SB")
 
@@ -268,7 +268,7 @@ def test_sb_returns_read_only_pad3_sy_raw_bandpass_mid_bass_mode_intent():
 
 
 def test_sb_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SB")
 
@@ -290,7 +290,7 @@ def test_sb_metadata_contains_expected_passive_sources():
 
 
 def test_sx_returns_read_only_pad3_sy_raw_sci_fi_motion_accent_mode_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SX")
 
@@ -332,7 +332,7 @@ def test_sx_returns_read_only_pad3_sy_raw_sci_fi_motion_accent_mode_intent():
 
 
 def test_sx_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SX")
 
@@ -354,7 +354,7 @@ def test_sx_metadata_contains_expected_passive_sources():
 
 
 def test_sw_returns_read_only_pad3_sy_raw_wave_balance_discovery_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SW")
 
@@ -395,7 +395,7 @@ def test_sw_returns_read_only_pad3_sy_raw_wave_balance_discovery_intent():
 
 
 def test_sw_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("SW")
 
@@ -417,7 +417,7 @@ def test_sw_metadata_contains_expected_passive_sources():
 
 
 def test_p3r_returns_read_only_pad3_sy_raw_mode_rotation_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3R")
 
@@ -458,7 +458,7 @@ def test_p3r_returns_read_only_pad3_sy_raw_mode_rotation_intent():
 
 
 def test_p3r_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3R")
 
@@ -480,7 +480,7 @@ def test_p3r_metadata_contains_expected_passive_sources():
 
 
 def test_p3x_returns_read_only_pad3_current_mode_safe_mutation_intent():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3X")
 
@@ -521,7 +521,7 @@ def test_p3x_returns_read_only_pad3_current_mode_safe_mutation_intent():
 
 
 def test_p3x_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3X")
 
@@ -549,7 +549,7 @@ def test_p3x_metadata_contains_expected_passive_sources():
 
 
 def test_pad3_lane_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("P3A")
 
@@ -633,7 +633,7 @@ def test_pad3_lane_metadata_is_copied_and_immutable():
 
 
 def test_deferred_packet_7_pad3_lane_keys_fail_safely():
-    from rytm_randomizer.behavior_pad3_lane import (
+    from rytm_randomizer.behavior_pad_lane import (
         DEFERRED_PACKET_7_PAD3_LANE_KEYS,
         evaluate_pad3_lane_behavior,
     )
@@ -658,7 +658,7 @@ def test_deferred_packet_7_pad3_lane_keys_fail_safely():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_pad3_lane import evaluate_pad3_lane_behavior
+    from rytm_randomizer.behavior_pad_lane import evaluate_pad3_lane_behavior
 
     result = evaluate_pad3_lane_behavior("NOPE")
 
@@ -694,7 +694,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_pad3_lane  # noqa: F401
+    import rytm_randomizer.behavior_pad_lane  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -709,7 +709,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_pad3_lane_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_pad3_lane as behavior_pad3_lane
+    import rytm_randomizer.behavior_pad_lane as behavior_pad3_lane
 
     exposed_names = set(dir(behavior_pad3_lane))
 
@@ -719,7 +719,7 @@ def test_behavior_pad3_lane_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_pad3_lane as behavior_pad3_lane
+    import rytm_randomizer.behavior_pad_lane as behavior_pad3_lane
 
     module_text = "\n".join(
         [

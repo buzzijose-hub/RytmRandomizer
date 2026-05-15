@@ -256,7 +256,7 @@ def build_active_boundary_report():
         "closeout_coverage": tuple(ACTIVE_BOUNDARY_CLOSEOUT_COVERAGE),
         "source": {
             "boundary_module": "rytm_randomizer.active_boundary",
-            "report_module": "rytm_randomizer.active_boundary_report",
+            "report_module": "rytm_randomizer.reports",
             "in_memory_only": True,
             "evaluates_active_requests": False,
         },
@@ -693,10 +693,12 @@ ANCHOR_PROFILE_PARKED_SECTIONS = (
 
 def _anchor_profile_section_specs():
     from .behavior_anchor_profile import evaluate_anchor_profile_behavior
-    from .behavior_pad1_lane import evaluate_pad1_lane_behavior
-    from .behavior_pad2_lane import evaluate_pad2_lane_behavior
-    from .behavior_pad3_lane import evaluate_pad3_lane_behavior
-    from .behavior_pad4_lane import evaluate_pad4_lane_behavior
+    from .behavior_pad_lane import (
+        evaluate_pad1_lane_behavior,
+        evaluate_pad2_lane_behavior,
+        evaluate_pad3_lane_behavior,
+        evaluate_pad4_lane_behavior,
+    )
     from .behavior_scene_group import evaluate_scene_group_behavior
     from .behavior_selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
@@ -716,7 +718,7 @@ def _anchor_profile_section_specs():
         (
             "pad1_lane_anchor_profile",
             "Pad 1 Lane Anchor/Profile",
-            "rytm_randomizer.behavior_pad1_lane",
+            "rytm_randomizer.behavior_pad_lane",
             evaluate_pad1_lane_behavior,
             ("FZ", "BP", "PBH", "BI", "SBH", "BA"),
             {},
@@ -724,7 +726,7 @@ def _anchor_profile_section_specs():
         (
             "pad2_lane_anchor_profile",
             "Pad 2 Lane Anchor/Profile",
-            "rytm_randomizer.behavior_pad2_lane",
+            "rytm_randomizer.behavior_pad_lane",
             evaluate_pad2_lane_behavior,
             ("P2B", "P2H", "P2C", "P2F", "P2Z"),
             {
@@ -739,7 +741,7 @@ def _anchor_profile_section_specs():
         (
             "pad3_anchor",
             "Pad 3 Anchor",
-            "rytm_randomizer.behavior_pad3_lane",
+            "rytm_randomizer.behavior_pad_lane",
             evaluate_pad3_lane_behavior,
             ("P3A", "SA"),
             {},
@@ -747,7 +749,7 @@ def _anchor_profile_section_specs():
         (
             "pad4_anchor",
             "Pad 4 Anchor",
-            "rytm_randomizer.behavior_pad4_lane",
+            "rytm_randomizer.behavior_pad_lane",
             evaluate_pad4_lane_behavior,
             ("P4A",),
             {},
@@ -903,7 +905,7 @@ def build_anchor_profile_report():
         "closeout_coverage": tuple(ANCHOR_PROFILE_CLOSEOUT_COVERAGE),
         "recommended_next_branch": "documentation checkpoint after passive CLI visibility",
         "source": {
-            "report_module": "rytm_randomizer.behavior_anchor_profile_report",
+            "report_module": "rytm_randomizer.reports",
             "in_memory_only": True,
             "calls_cli": False,
             "creates_runtime_state": False,
@@ -1067,16 +1069,16 @@ def _selected_isolated_pad_packet_coverage():
 
 
 def _pad_lane_packet_coverage():
-    from .behavior_pad1_lane import (
+    from .behavior_pad_lane import (
         DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+        DEFERRED_PACKET_6_PAD2_LANE_KEYS,
+        DEFERRED_PACKET_7_PAD3_LANE_KEYS,
+        DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
         PACKET_5B_PAD1_BD_FM_KEYS,
         PACKET_5C_PAD1_BD_PLASTIC_KEYS,
         PACKET_5D_PAD1_BD_SILKY_KEYS,
         PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
-    )
-    from .behavior_pad2_lane import (
-        DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         PACKET_6A_PAD2_LANE_KEYS,
         PACKET_6B_PAD2_LANE_KEYS,
         PACKET_6C_PAD2_LANE_KEYS,
@@ -1087,9 +1089,6 @@ def _pad_lane_packet_coverage():
         PACKET_6H_PAD2_LANE_KEYS,
         PACKET_6I_PAD2_LANE_KEYS,
         PACKET_6J_PAD2_LANE_KEYS,
-    )
-    from .behavior_pad3_lane import (
-        DEFERRED_PACKET_7_PAD3_LANE_KEYS,
         PACKET_7A_PAD3_LANE_KEYS,
         PACKET_7B_PAD3_LANE_KEYS,
         PACKET_7C_PAD3_LANE_KEYS,
@@ -1098,9 +1097,6 @@ def _pad_lane_packet_coverage():
         PACKET_7F_PAD3_LANE_KEYS,
         PACKET_7G_PAD3_LANE_KEYS,
         PACKET_7H_PAD3_LANE_KEYS,
-    )
-    from .behavior_pad4_lane import (
-        DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         PACKET_8A_PAD4_LANE_KEYS,
         PACKET_8B_PAD4_LANE_KEYS,
         PACKET_8C_PAD4_LANE_KEYS,
@@ -1191,7 +1187,7 @@ def build_behavior_parity_coverage_report():
             "review_document": (
                 "Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN_REVIEW.md"
             ),
-            "report_module": "rytm_randomizer.behavior_parity_coverage_report",
+            "report_module": "rytm_randomizer.reports",
         },
         **PARITY_REPORT_BOUNDARY,
     }
