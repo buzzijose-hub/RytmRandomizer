@@ -61,9 +61,9 @@ The core musical behavior — scenes, guardrails, the four-pad layout — is **p
 
 ## Parallelization strategy
 
-Work is split into **22 workstreams (WS-A … WS-V)** grouped into **4 waves**. Within a wave, streams own disjoint file sets and can run as simultaneous subagents. Waves are gated by dependencies.
+Work is split into **23 workstreams (WS-A … WS-W)** grouped into **4 waves**. Within a wave, streams own disjoint file sets and can run as simultaneous subagents. Waves are gated by dependencies.
 
-### Diagram 1 — Workstream dependency graph (all 22 workstreams, 4 waves)
+### Diagram 1 — Workstream dependency graph (all 23 workstreams, 4 waves)
 
 ```mermaid
 graph TD
@@ -85,7 +85,7 @@ graph TD
         H["WS-H<br/>Wire real MIDI behind --arm"]
         J["WS-J<br/>Release process"]
     end
-    subgraph W4["WAVE 4 — Decompose the monolith (10, mostly serial)"]
+    subgraph W4["WAVE 4 — Decompose the monolith (11, mostly serial)"]
         K["WS-K<br/>MIDI I/O + randomization"]
         L["WS-L<br/>Per-domain state objects"]
         M["WS-M<br/>Per-pad engines (x4 parallel)"]
@@ -94,7 +94,8 @@ graph TD
         S["WS-S<br/>Dead code elimination"]
         T["WS-T<br/>Architecture standards + enforcement tests"]
         U["WS-U<br/>Observability + unified handling"]
-        V["WS-V<br/>Musical-style analysis optimization"]
+        V["WS-V<br/>Style analysis (Layers 1-2)"]
+        W["WS-W<br/>Guardrails engine (Layers 3-4)"]
         R["WS-R<br/>E2E validation suite — completion gate"]
     end
 
@@ -117,7 +118,8 @@ graph TD
     S --> T
     T --> U
     U --> V
-    V --> R
+    V --> W
+    W --> R
 
     classDef wave1 fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
     classDef wave2 fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
@@ -691,26 +693,47 @@ Acceptance: `rytm_randomizer/observability/` provides unified logging, a single 
 
 ---
 
-### WS-V — Musical-style analysis: optimize skills + real audio-feature extraction
+### WS-V — Musical-style analysis (Layers 1–2: measurement + interpretation)
 **Owns:** `.claude/skills/MusicLibraryGuardrails/`, `.claude/skills/DataAnalysisGuardrails/` (restructure), `rytm_randomizer/style_analysis/` (new — deterministic audio-feature extraction), `tests/test_style_analysis.py`, `docs/STYLE_ANALYSIS.md`
-**Addresses:** the user's question made actionable: *how does the app learn a person's musical style, how are those skills invoked, can we optimize token usage.* Today there is **no style-learning code at all** — `MusicLibraryGuardrails` / `DataAnalysisGuardrails` are ~140-line agent-prose skills that have *Claude* eyeball a track/library and hand-write a `mutation_guardrail_profile` JSON. It is a manual agent ritual, not an app capability, and it is token-expensive (the whole skill loads every trigger).
-**Depends on:** WS-T (skill-routing infra) for the auto-invocation half; the audio-extraction half is independent but Wave 4 is its home.
+**Addresses:** the user's question made actionable: *how does the app learn a person's musical style, how are those skills invoked, can we optimize token usage.* Today there is **no style-learning code at all** — `MusicLibraryGuardrails` / `DataAnalysisGuardrails` are ~370-line agent-prose skills that have *Claude* eyeball a track/library and hand-write a profile JSON. It is a manual agent ritual, not an app capability, and it is token-expensive (the whole skill loads every trigger).
+**Depends on:** WS-T (skill-routing infra) for auto-invocation; **WS-W's `guardrails/schema.py`** for the output contract (see below); the audio-extraction half is otherwise independent and Wave 4 is its home.
+**Scope:** WS-V is **Layers 1–2** of the guardrails system — *measurement* and *interpretation*. It produces a **draft Guardrail Profile**. Validation, storage, and consumption are **WS-W** (Layers 3–4). The seam between them is `guardrails/schema.py`: WS-V imports that schema and produces a draft conforming to it; it imports nothing else of WS-W. Full design: `GUARDRAILS_DESIGN_SPEC.md` Part A (Layers 1–2) + §10.
 
 Two halves:
 
-**Half 1 — Optimize the existing skills (token + auto-invocation):**
-1. **Slim the skills.** `MusicLibraryGuardrails/SKILL.md` and `DataAnalysisGuardrails/SKILL.md` are loaded *in full* on every trigger. Cut each to a tight ~30-line procedure + decision tree; move the exhaustive feature checklists, examples, and the long input/output enumerations into a `reference.md` the agent reads *on demand only when actually running an analysis*. This is the biggest token win — eager skill load shrinks ~5×.
+**Half 1 — Layer 2: optimize the interpretation skill (token + auto-invocation):**
+1. **Slim the skills.** `MusicLibraryGuardrails/SKILL.md` and `DataAnalysisGuardrails/SKILL.md` are loaded *in full* on every trigger (~370 lines). Cut each to a tight ~40-line procedure + decision tree; move the exhaustive feature checklists, per-style mutation examples, role-behavior tables, and the output template into a `reference.md` the agent reads *on demand only when actually running an analysis*. This is the biggest token win — eager skill load shrinks sharply.
 2. **Tune for auto-invocation.** Give each skill a precise trigger-oriented `description` and add the music-analysis routing entry to WS-T's `.claude/rules/skill-routing.md`, so "analyze this track / my library / 'rolling techno'" auto-surfaces `MusicLibraryGuardrails` without the user naming it.
-3. Keep the `mutation_guardrail_profile` JSON template — it's already a low-token fill-in structure.
+3. **Output a draft `GuardrailProfile`.** The skill's output is no longer free-form JSON — it produces a draft conforming to **WS-W's `guardrails/schema.py`** (a `DRAFT`-state profile). This is the seam to WS-W.
 
-**Half 2 — Add real, deterministic style analysis (the actual capability):**
-4. **`rytm_randomizer/style_analysis/`** — a Python module that mechanically extracts musical features from audio files (BPM/tempo stability, kick/percussion density, low-end weight, spectral brightness, texture/noise amount, arrangement energy arc) using an audio library (`librosa` or similar — declare it as an optional `[project.optional-dependencies] style` extra so the core install stays lean). It emits the `mutation_guardrail_profile` JSON *deterministically* — no LLM in the measurement loop.
-5. **The division of labor becomes:** code *measures* (cheap, precise, repeatable), Claude *interprets* the measured summary into mutation-direction guidance (where judgment genuinely helps). The agent receives a compact feature summary, not a wall of raw audio description — turning an expensive imprecise pass into a cheap accurate one.
-6. **Tests + docs.** `tests/test_style_analysis.py` — deterministic tests on known fixture audio (or synthetic signals) asserting the extractor produces stable, correct feature values. `docs/STYLE_ANALYSIS.md` — explains the reference→discovery model, how the code+agent split works, how to run an analysis, and the copyright-safe "influence not replica" rule (preserved from the current skill).
+**Half 2 — Layer 1: add real, deterministic measurement (the actual capability):**
+4. **`rytm_randomizer/style_analysis/`** — a Python module that mechanically extracts musical features from audio files (BPM/tempo stability, kick/percussion density, low-end weight, spectral brightness, texture/noise amount, arrangement energy arc) using an audio library (`librosa` or similar — declare it as an optional `[project.optional-dependencies] style` extra so the core install stays lean). It emits a **`FeatureReport`** — a structured, typed, confidence-tagged, content-hashed measurement artifact. Same audio in → same `FeatureReport` out, deterministically — no LLM in the measurement loop.
+5. **The division of labor:** code *measures* into the `FeatureReport` (cheap, precise, repeatable); the Layer-2 skill *interprets* that compact report into mutation-direction guidance + a draft Profile (where judgment genuinely helps). The agent receives the `FeatureReport`, not a wall of raw audio description — turning an expensive imprecise pass into a cheap accurate one. The three input paths (audio / partial / description-only) each carry a `confidence` of `HIGH` / `MEDIUM` / `LOW`.
+6. **Tests + docs.** `tests/test_style_analysis.py` — deterministic tests on known fixture audio (or synthetic signals with known properties) asserting the extractor produces stable, correct `FeatureReport` values. `docs/STYLE_ANALYSIS.md` — explains the reference→discovery model, the code-measures/agent-interprets split, how to run an analysis, and the copyright-safe "influence not replica" rule (preserved from the current skill).
 
-**Why this matters:** "how does it learn my style" currently has the uncomfortable answer "it doesn't — an agent guesses from a description." WS-V makes it a real, testable, token-efficient capability: deterministic measurement in code, judgment from the agent only where it adds value, and the skills auto-invoked and ~5× lighter.
+**Why this matters:** "how does it learn my style" currently has the uncomfortable answer "it doesn't — an agent guesses from a description." WS-V makes Layers 1–2 a real, testable, token-efficient capability: deterministic measurement in code, judgment from the agent only where it adds value, the skills auto-invoked and far lighter — and the output a typed draft Profile that WS-W can then validate and the randomizer can consume.
 
-Acceptance: the two style skills are restructured (tight `SKILL.md` + on-demand `reference.md`), auto-invoke via tuned descriptions + `skill-routing.md`; `rytm_randomizer/style_analysis/` deterministically extracts audio features into the guardrail-profile JSON; `librosa` (or chosen lib) is an optional `style` extra, core install unaffected; `tests/test_style_analysis.py` is green; `docs/STYLE_ANALYSIS.md` documents the model; total token cost of a style analysis is materially lower than the all-prose status quo.
+Acceptance: the two style skills are restructured (tight `SKILL.md` + on-demand `reference.md`), auto-invoke via tuned descriptions + `skill-routing.md`; `rytm_randomizer/style_analysis/` deterministically extracts audio features into a typed `FeatureReport`; `librosa` (or chosen lib) is an optional `style` extra, core install unaffected; the Layer-2 skill produces a draft `GuardrailProfile` conforming to WS-W's `guardrails/schema.py`; `tests/test_style_analysis.py` is green; `docs/STYLE_ANALYSIS.md` documents the model; total token cost of a style analysis is materially lower than the all-prose status quo.
+
+---
+
+### WS-W — Guardrails engine (Layers 3–4: validate, store, resolve, consume)
+**Owns:** `rytm_randomizer/guardrails/` (new package — `schema.py`, `validation.py`, `store.py`, `resolver.py`), the optional `resolved_bounds` parameter on `engines/pad1-4.py` / `scene_runner.py` / `group_runner.py`, `tests/test_guardrails_*.py`, `docs/GUARDRAILS.md`
+**Addresses:** the platform's value-add — turning a *draft* Guardrail Profile into a *validated, enforced, consumed* artifact that actually steers the randomizer. This is the code-heavy half of the guardrails intelligence system. Full design: `GUARDRAILS_DESIGN_SPEC.md` **Part B (§13–16)** — produced and approved section-by-section via the brainstorming process.
+**Depends on:** WS-F (the `data/` ranges the resolver intersects against — done), WS-M + WS-N (the engines that gain `resolved_bounds` — done), WS-U (the `GuardrailResolutionError` lives in WS-U's error taxonomy; the validate/resolve steps log through WS-U's observability). WS-V depends on *this* workstream's `schema.py` for its output contract — so `schema.py` is built first as the shared leaf.
+
+The system is four modules under `rytm_randomizer/guardrails/`, each one clear purpose (`GUARDRAILS_DESIGN_SPEC.md` §13):
+
+1. **`schema.py` — the typed Guardrail Profile contract** (§14). Frozen dataclasses, closed enums (`GuardrailClass`, `RiskTier`, `SourceType`, `Confidence`, `ProfileState`). `GuardrailBound` is the atom (one pad + one parameter + range + class + direction). Every profile carries `content_hash`, `schema_version`, and a `feature_report_hash` tying it to its WS-V measurement. The schema has **no field for a melody, arrangement, or patch** — copyright-safety is structural. This module is a *leaf* (no dependencies) and is built first — it is the seam WS-V is also written against.
+2. **`validation.py` — the three-layer validator** (§15). Structural → semantic (every `GuardrailBound` range cross-checked against the machine's physical `data/` range; pad/param must exist; every mutated param must map to a role first) → the **safety floor**. The safety floor **rewrites rather than rejects**: a high-risk parameter (volume, clock, transport, pattern/program/project change, kit save/clear, extreme tuning, unvalidated SysEx, live machine switching) put in any mutating class is *forced* to `LOCKED_DEFAULT`/`FORBIDDEN` and the rewrite is logged. The agent *cannot* author an unsafe profile. Output: a `VALIDATED` (frozen, content-hashed) profile, or `REJECTED` with a specific structural/semantic reason for WS-V's loop to correct.
+3. **`store.py` — the profile store** (§13). Validated profiles persist as **schema-version-stamped JSON files under a user profiles directory** (owner decision, 2026-05-14 — JSON files, not a bundled file, not SQLite; profiles become shareable artifacts). List / load / save / promote-state. The lifecycle state machine (`DRAFT → VALIDATED → STUDIO_TESTED → LIVE_APPROVED`, with `REJECTED`/`ARCHIVED`) lives in each file; only legal transitions are permitted.
+4. **`resolver.py` — the consumption layer** (§16). Intersects (profile guardrails) ∩ (`data/` physical ranges) ∩ (current mode) → a `ResolvedBounds` value object (effective `[low, high]` per pad/param — always ⊆ `data/`, never wider). **Two failure modes** (owner decision, 2026-05-14): a lifecycle-state mismatch (e.g. a `VALIDATED`-only profile asked to drive a `LIVE_SAFE` performance) is a **hard refuse** — `GuardrailResolutionError`, session does not start. A range/param conflict is a **per-bound drop to `LOCKED_DEFAULT`** — that parameter just does not mutate, the conflict is surfaced prominently, the session runs with every resolvable bound.
+
+**Engine wiring** (§16): `engines/pad1-4.py`, `scene_runner.py`, `group_runner.py` each gain an **optional `resolved_bounds` parameter**. Omitted (no profile active) → engines mutate against `data/`'s static ranges exactly as today, the existing Wave-4 parity tests stay green untouched (full backward compatibility). Provided → the engine clamps its mutation to `resolved_bounds`. The engines depend on the `ResolvedBounds` *type*, not on `resolver` (clean dependency direction, WS-T-enforced).
+
+**The decisive test** (§16): *the same randomizer command, run with profile A vs. profile B vs. no profile, produces three different but each-within-bounds MIDI sequences* (asserted via `MockMidiSender`, the Wave-4 parity pattern). **This test passing is the proof the intelligence is real** — that a profile genuinely steers the tool. All four `guardrails/` modules at 100% branch coverage (the ratchet); `tests/architecture/` (WS-T) gets the guardrails-package import-direction rules.
+
+Acceptance: `rytm_randomizer/guardrails/` provides the typed Profile schema, the three-layer validator (with the rewriting safety floor), the JSON-file profile store with a legal-transition-only lifecycle state machine, and the resolver with its two settled failure modes; the engines accept an optional `resolved_bounds` and are fully backward-compatible when it is omitted; the decisive A-vs-B-vs-none test passes; all four modules are at 100% branch coverage; `docs/GUARDRAILS.md` documents the system; the full suite is green.
 
 ---
 
