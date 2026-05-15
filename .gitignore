@@ -28,6 +28,7 @@ Docs/Session_Logs/latest_cross_platform_closeout_summary.txt
 # Local agent/tool scratch
 .claude/
 docs-scratch/
+.worktrees/
 
 # Python packaging / coverage
 .coverage
