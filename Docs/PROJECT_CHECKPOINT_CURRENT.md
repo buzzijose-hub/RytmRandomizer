@@ -3,6 +3,48 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Branch Watch Status Alignment Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_BRANCH_WATCH_STATUS_ALIGNMENT_CHECKPOINT.md`
+
+Updated quick status:
+
+- `Scripts/quick_status.ps1`
+
+Updated cross-platform closeout:
+
+- `Scripts/closeout_check.py`
+
+The quick-status helper now includes:
+
+- `=== Collaborator Branch Watch ===`
+
+The cross-platform closeout runner now includes:
+
+- `Collaborator Branch Watch`
+
+Both run:
+
+- `python -m rytm_randomizer.cli collaborator-branch-watch`
+
+This aligns branch-watch visibility across quick status, Windows closeout, and
+cross-platform closeout.
+
+This checkpoint adds passive local visibility only. It adds no GitHub
+mutation, branch checkout, branch merge, GitHub Actions trigger, real MIDI,
+MIDI port opening, MIDI sending, dispatch, active behavior, hardware behavior,
+hardware requirement, or V1.34 reference edit.
+
 ## Collaborator Branch Watch Checkpoint
 
 Current review branch:

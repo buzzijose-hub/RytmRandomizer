@@ -2,6 +2,35 @@
 
 Date: May 4, 2026
 
+## Collaborator Branch Watch Status Alignment
+
+`Scripts/quick_status.ps1` and `Scripts/closeout_check.py` now include the
+passive collaborator branch-watch report.
+
+Quick-status section:
+
+- `=== Collaborator Branch Watch ===`
+
+Cross-platform closeout step:
+
+- `Collaborator Branch Watch`
+
+Both run:
+
+- `python -m rytm_randomizer.cli collaborator-branch-watch`
+
+Windows closeout already includes the report test:
+
+- `=== Test: Collaborator Branch Watch Report ===`
+
+This keeps collaborator wait-state visibility aligned across the fast local
+status path and both closeout paths.
+
+This is passive reporting only. It does not query GitHub, merge branches,
+check out branches, trigger GitHub Actions, change runtime behavior, dispatch
+commands, add active behavior, send MIDI, open MIDI ports, mutate hardware,
+require hardware, or change the V1.34 reference.
+
 ## Collaborator Branch Watch Report
 
 The project now has a passive collaborator branch-watch report:

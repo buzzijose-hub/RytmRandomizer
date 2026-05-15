@@ -55,6 +55,11 @@ Write-Output "=== Project Status Check ==="
 Register-QuickStatusStepExit "Project Status Check"
 
 Write-Output ""
+Write-Output "=== Collaborator Branch Watch ==="
+& $pythonExe @pythonArgs -m rytm_randomizer.cli collaborator-branch-watch
+Register-QuickStatusStepExit "Collaborator Branch Watch"
+
+Write-Output ""
 Write-Output "=== Operator Status Report ==="
 & $pythonExe @pythonArgs -m rytm_randomizer.cli operator-status-report
 Register-QuickStatusStepExit "Operator Status Report"

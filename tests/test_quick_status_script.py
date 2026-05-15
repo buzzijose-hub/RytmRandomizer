@@ -16,6 +16,9 @@ def test_quick_status_script_exists_and_stays_passive():
 
     assert "project-status-report --summary" in text
     assert "project-status-report --check" in text
+    assert "collaborator-branch-watch" in text
+    assert "=== Collaborator Branch Watch ===" in text
+    assert 'Register-QuickStatusStepExit "Collaborator Branch Watch"' in text
     assert "operator-status-report" in text
     assert "=== Operator Status Report ===" in text
     assert 'Register-QuickStatusStepExit "Operator Status Report"' in text
@@ -77,6 +80,10 @@ def test_quick_status_script_runs_passive_status_checks():
     assert "=== Project Status Check ===" in result.stdout
     assert "RytmRandomizer Project Status Check" in result.stdout
     assert "- ok: True" in result.stdout
+    assert "=== Collaborator Branch Watch ===" in result.stdout
+    assert "RytmRandomizer Collaborator Branch Watch Report" in result.stdout
+    assert "- status: waiting_for_external_implementation_branch" in result.stdout
+    assert "- report_triggers_actions: False" in result.stdout
     assert "=== Operator Status Report ===" in result.stdout
     assert "RytmRandomizer Operator Status Report" in result.stdout
     assert "- daily_feedback: local_closeout" in result.stdout

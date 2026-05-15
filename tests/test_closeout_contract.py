@@ -109,6 +109,9 @@ def test_cross_platform_closeout_script_exists_and_runs_core_gates():
     assert "--cov=rytm_randomizer" in script
     assert "--cov-fail-under=84" in script
     assert "project-status-report" in script
+    assert "Collaborator Branch Watch" in script
+    assert "collaborator-branch-watch" in script
+    assert "python -m rytm_randomizer.cli collaborator-branch-watch" in script
     assert "Operator Status Report" in script
     assert "operator-status-report" in script
     assert "python -m rytm_randomizer.cli operator-status-report" in script

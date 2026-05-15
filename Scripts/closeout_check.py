@@ -76,6 +76,16 @@ def main() -> int:
             "python -m rytm_randomizer.cli project-status-report --check",
         ),
         (
+            "Collaborator Branch Watch",
+            [
+                sys.executable,
+                "-m",
+                "rytm_randomizer.cli",
+                "collaborator-branch-watch",
+            ],
+            "python -m rytm_randomizer.cli collaborator-branch-watch",
+        ),
+        (
             "Operator Status Report",
             [
                 sys.executable,
