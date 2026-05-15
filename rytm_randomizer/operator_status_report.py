@@ -42,6 +42,9 @@ _OPERATOR_COMMANDS = {
     "collaborator_intake_readiness": (
         "python -m rytm_randomizer.cli collaborator-intake-readiness-report"
     ),
+    "collaborator_branch_watch": (
+        "python -m rytm_randomizer.cli collaborator-branch-watch"
+    ),
     "local_closeout": (
         "powershell -ExecutionPolicy Bypass -File .\\Scripts\\closeout_check.ps1"
     ),
@@ -117,6 +120,9 @@ def build_operator_status_report():
             "project_status": "rytm_randomizer.project_status_report",
             "collaborator_intake_readiness": (
                 "rytm_randomizer.collaborator_intake_readiness_report"
+            ),
+            "collaborator_branch_watch": (
+                "rytm_randomizer.collaborator_branch_watch_report"
             ),
             "in_memory_only": True,
         },
@@ -195,6 +201,10 @@ def format_operator_status_report(report=None):
             (
                 "- collaborator_intake_readiness: "
                 f"{source_report['source']['collaborator_intake_readiness']}"
+            ),
+            (
+                "- collaborator_branch_watch: "
+                f"{source_report['source']['collaborator_branch_watch']}"
             ),
             f"In-memory only: {source_report['source']['in_memory_only']}",
         ]

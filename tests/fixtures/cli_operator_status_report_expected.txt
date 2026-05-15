@@ -6,7 +6,7 @@ Mode:
 Project:
 - phase_name: Passive/Mock Runtime Visibility Phase
 - creative_identity_candidate: KitForge
-- passive_cli_command_count: 22
+- passive_cli_command_count: 23
 - v134_reference: import_safe_wrapped
 Collaborator Intake:
 - status: waiting_for_implementation_branch
@@ -23,6 +23,7 @@ GitHub Actions:
 Operator Commands:
 - project_status: python -m rytm_randomizer.cli project-status-report --summary
 - collaborator_intake_readiness: python -m rytm_randomizer.cli collaborator-intake-readiness-report
+- collaborator_branch_watch: python -m rytm_randomizer.cli collaborator-branch-watch
 - local_closeout: powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1
 - v134_diff: git diff -- rytm_hybrid_randomizer_v134.py
 - git_status: git status --short
@@ -43,4 +44,5 @@ Safety:
 Source:
 - project_status: rytm_randomizer.project_status_report
 - collaborator_intake_readiness: rytm_randomizer.collaborator_intake_readiness_report
+- collaborator_branch_watch: rytm_randomizer.collaborator_branch_watch_report
 In-memory only: True

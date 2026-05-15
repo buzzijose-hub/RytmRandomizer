@@ -10,7 +10,8 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | "
-    "collaborator-intake-readiness-report | operator-status-report | "
+    "collaborator-intake-readiness-report | collaborator-branch-watch | "
+    "operator-status-report | "
     "inspect-command <key> | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
@@ -267,6 +268,16 @@ def test_collaborator_intake_readiness_report_help_exits_zero_and_matches_fixtur
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_collaborator_intake_readiness_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_collaborator_branch_watch_help_exits_zero_and_matches_fixture():
+    result = run_cli("collaborator-branch-watch", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_collaborator_branch_watch_help_expected.txt"
     )
     assert result.stderr == ""
 
@@ -529,6 +540,16 @@ def test_collaborator_intake_readiness_report_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
+def test_collaborator_branch_watch_exits_zero_and_matches_fixture():
+    result = run_cli("collaborator-branch-watch")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_collaborator_branch_watch_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_operator_status_report_exits_zero_and_matches_fixture():
     result = run_cli("operator-status-report")
 
@@ -664,6 +685,17 @@ def test_behavior_parity_report_command_is_deterministic():
 def test_collaborator_intake_readiness_report_command_is_deterministic():
     first = run_cli("collaborator-intake-readiness-report")
     second = run_cli("collaborator-intake-readiness-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_collaborator_branch_watch_command_is_deterministic():
+    first = run_cli("collaborator-branch-watch")
+    second = run_cli("collaborator-branch-watch")
 
     assert first.returncode == 0
     assert second.returncode == 0
@@ -876,6 +908,34 @@ def test_collaborator_intake_readiness_report_imports_no_real_midi_libraries():
                 "from rytm_randomizer.cli import main\n"
                 "with redirect_stdout(StringIO()):\n"
                 "    code = main(['collaborator-intake-readiness-report'])\n"
+                "assert code == 0\n"
+                "assert 'mido' not in sys.modules\n"
+                "assert 'rtmidi' not in sys.modules\n"
+            ),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == ""
+    assert result.stderr == ""
+
+
+def test_collaborator_branch_watch_imports_no_real_midi_libraries():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys\n"
+                "from contextlib import redirect_stdout\n"
+                "from io import StringIO\n"
+                "from rytm_randomizer.cli import main\n"
+                "with redirect_stdout(StringIO()):\n"
+                "    code = main(['collaborator-branch-watch'])\n"
                 "assert code == 0\n"
                 "assert 'mido' not in sys.modules\n"
                 "assert 'rtmidi' not in sys.modules\n"
@@ -1606,6 +1666,14 @@ def test_unknown_collaborator_intake_readiness_report_arguments_fail_safely():
     assert normalize_newlines(result.stderr) == USAGE
 
 
+def test_unknown_collaborator_branch_watch_arguments_fail_safely():
+    result = run_cli("collaborator-branch-watch", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
 def test_unknown_operator_status_report_arguments_fail_safely():
     result = run_cli("operator-status-report", "--mutate")
 
@@ -1996,6 +2064,38 @@ def test_operator_status_report_exposes_no_active_behavior_or_support_expansion(
     assert "Analog Four support" not in output
 
 
+def test_collaborator_branch_watch_exposes_no_active_behavior_or_support_expansion():
+    result = run_cli("collaborator-branch-watch")
+    output = normalize_newlines(result.stdout)
+
+    assert "RytmRandomizer Collaborator Branch Watch Report" in output
+    assert "- status: waiting_for_external_implementation_branch" in output
+    assert "- report_triggers_actions: False" in output
+    assert "- github_mutation: absent" in output
+    assert "- branch_checkout: absent" in output
+    assert "- branch_merge: absent" in output
+    assert "- real_midi: absent" in output
+    assert "- mido: absent" in output
+    assert "- port_opening: absent" in output
+    assert "- midi_sending: absent" in output
+    assert "- active_execution: absent" in output
+    assert "- dispatch: absent" in output
+    assert "- hardware_behavior: absent" in output
+    assert "- hardware_required: False" in output
+    assert "execute-command" not in output
+    assert "send-command" not in output
+    assert "hardware-test" not in output
+    assert "Pad 5" not in output
+    assert "Pad 6" not in output
+    assert "Pad 7" not in output
+    assert "Pad 8" not in output
+    assert "Pad 9" not in output
+    assert "Pad 10" not in output
+    assert "Pad 11" not in output
+    assert "Pad 12" not in output
+    assert "Analog Four support" not in output
+
+
 def test_inspect_command_exposes_no_active_behavior_or_support_expansion():
     result = run_cli("inspect-command", "P3A")
     output = normalize_newlines(result.stdout)
@@ -2261,6 +2361,7 @@ if __name__ == "__main__":
     test_anchor_profile_report_help_exits_zero_and_matches_fixture()
     test_behavior_parity_report_help_exits_zero_and_matches_fixture()
     test_collaborator_intake_readiness_report_help_exits_zero_and_matches_fixture()
+    test_collaborator_branch_watch_help_exits_zero_and_matches_fixture()
     test_operator_status_report_help_exits_zero_and_matches_fixture()
     test_inspect_command_help_exits_zero_and_matches_fixture()
     test_inspect_scene_help_exits_zero_and_matches_fixture()
@@ -2286,6 +2387,7 @@ if __name__ == "__main__":
     test_anchor_profile_report_command_exits_zero_and_matches_fixture()
     test_behavior_parity_report_command_exits_zero_and_matches_fixture()
     test_collaborator_intake_readiness_report_exits_zero_and_matches_fixture()
+    test_collaborator_branch_watch_exits_zero_and_matches_fixture()
     test_operator_status_report_exits_zero_and_matches_fixture()
     test_report_command_is_deterministic()
     test_project_status_report_command_is_deterministic()
@@ -2299,6 +2401,7 @@ if __name__ == "__main__":
     test_anchor_profile_report_command_is_deterministic()
     test_behavior_parity_report_command_is_deterministic()
     test_collaborator_intake_readiness_report_command_is_deterministic()
+    test_collaborator_branch_watch_command_is_deterministic()
     test_operator_status_report_command_is_deterministic()
     test_top_level_help_exposes_no_active_execution_commands()
     test_cli_source_does_not_evaluate_active_boundary_or_construct_sender()
@@ -2318,6 +2421,7 @@ if __name__ == "__main__":
     test_anchor_profile_report_command_imports_no_real_midi_libraries()
     test_behavior_parity_report_command_imports_no_real_midi_libraries()
     test_collaborator_intake_readiness_report_imports_no_real_midi_libraries()
+    test_collaborator_branch_watch_imports_no_real_midi_libraries()
     test_operator_status_report_imports_no_real_midi_libraries()
     test_inspect_command_known_key_exits_zero_and_matches_fixture()
     test_inspect_command_known_key_is_deterministic()
@@ -2363,6 +2467,7 @@ if __name__ == "__main__":
     test_unknown_anchor_profile_report_arguments_fail_safely()
     test_unknown_behavior_parity_report_arguments_fail_safely()
     test_unknown_collaborator_intake_readiness_report_arguments_fail_safely()
+    test_unknown_collaborator_branch_watch_arguments_fail_safely()
     test_unknown_operator_status_report_arguments_fail_safely()
     test_unknown_list_arguments_fail_safely()
     test_missing_search_query_fails_safely()
@@ -2383,6 +2488,7 @@ if __name__ == "__main__":
     test_active_boundary_report_output_keeps_passive_safety_explicit()
     test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion()
     test_behavior_parity_report_exposes_no_active_behavior_or_support_expansion()
+    test_collaborator_branch_watch_exposes_no_active_behavior_or_support_expansion()
     test_operator_status_report_exposes_no_active_behavior_or_support_expansion()
     test_inspect_command_exposes_no_active_behavior_or_support_expansion()
     test_inspect_scene_exposes_no_active_behavior_or_support_expansion()

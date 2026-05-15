@@ -151,6 +151,11 @@ Register-CloseoutStepExit "Project Status Check"
 Register-CloseoutStepExit "Collaborator Intake Readiness Report"
 
 "" | Add-Content $summary
+"=== Test: Collaborator Branch Watch Report ===" | Add-Content $summary
+& $pythonExe @pythonArgs .\tests\test_collaborator_branch_watch_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_collaborator_branch_watch_report.log" | Add-Content $summary
+Register-CloseoutStepExit "Collaborator Branch Watch Report"
+
+"" | Add-Content $summary
 "=== Test: Operator Status Report ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_operator_status_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_operator_status_report.log" | Add-Content $summary
 Register-CloseoutStepExit "Operator Status Report"

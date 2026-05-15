@@ -1,0 +1,52 @@
+RytmRandomizer Collaborator Branch Watch Report
+Current State:
+- status: waiting_for_external_implementation_branch
+- current_branch: codex/execute-eddie-plan
+- current_pr: #2 Execute Eddie review plan foundation
+Observed Remote Branches:
+- modularize-v1.34
+- docs/review-and-execution-plan
+- codex/execute-eddie-plan
+Observed Pull Requests:
+- #1 edward-rosado docs/review-and-execution-plan -> modularize-v1.34 (review_plan_source, implementation_branch: False)
+- #2 buzzijose-hub codex/execute-eddie-plan -> modularize-v1.34 (draft_foundation_branch, implementation_branch: False)
+Watch Rules:
+- expected_collaborator: Eddie
+- expected_github_owner: edward-rosado
+- implementation_branch_observed: False
+- implementation_pr_observed: False
+- direct_merge_allowed: False
+- intake_required_before_review: True
+- intake_required_before_merge: True
+Refresh Commands:
+- remote_branches: git ls-remote --heads origin
+- pull_requests: gh pr list --repo buzzijose-hub/RytmRandomizer --state all --limit 20 --json number,title,headRefName,baseRefName,state,isDraft,updatedAt,url
+- local_status: git status --short
+- v134_diff: git diff -- rytm_hybrid_randomizer_v134.py
+GitHub Actions Policy:
+- status: manual_only
+- automatic_pull_request_runs: False
+- automatic_push_runs: False
+- automatic_release_tag_runs: False
+- report_triggers_actions: False
+- no_pay_policy: True
+Next Actions:
+- wait for Eddie implementation branch or PR
+- run collaborator implementation intake when branch or PR appears
+- keep GitHub Actions manual-only unless explicitly triggered
+- do not merge collaborator work before intake review
+Safety:
+- github_mutation: absent
+- branch_checkout: absent
+- branch_merge: absent
+- real_midi: absent
+- mido: absent
+- port_opening: absent
+- midi_sending: absent
+- active_execution: absent
+- dispatch: absent
+- hardware_behavior: absent
+- hardware_required: False
+- v134_reference: untouched
+Source: Docs/COLLABORATOR_IMPLEMENTATION_BRANCH_INTAKE_PROTOCOL.md
+In-memory only: True

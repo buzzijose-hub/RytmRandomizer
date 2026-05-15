@@ -37,7 +37,7 @@ def test_report_summarizes_daily_operator_state():
     assert report["project"] == {
         "phase_name": "Passive/Mock Runtime Visibility Phase",
         "creative_identity_candidate": "KitForge",
-        "passive_cli_command_count": 22,
+        "passive_cli_command_count": 23,
         "v134_reference": "import_safe_wrapped",
     }
     assert report["collaborator_intake"] == {
@@ -67,6 +67,9 @@ def test_report_records_operator_commands_and_next_actions():
         ),
         "collaborator_intake_readiness": (
             "python -m rytm_randomizer.cli collaborator-intake-readiness-report"
+        ),
+        "collaborator_branch_watch": (
+            "python -m rytm_randomizer.cli collaborator-branch-watch"
         ),
         "local_closeout": (
             "powershell -ExecutionPolicy Bypass -File .\\Scripts\\closeout_check.ps1"
@@ -106,7 +109,7 @@ def test_summary_is_deterministic():
         "title": "RytmRandomizer Operator Status Report",
         "phase_name": "Passive/Mock Runtime Visibility Phase",
         "creative_identity_candidate": "KitForge",
-        "passive_cli_command_count": 22,
+        "passive_cli_command_count": 23,
         "collaborator_intake_status": "waiting_for_implementation_branch",
         "implementation_branch_observed": False,
         "implementation_pr_observed": False,
@@ -135,7 +138,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
         "Project:",
         "- phase_name: Passive/Mock Runtime Visibility Phase",
         "- creative_identity_candidate: KitForge",
-        "- passive_cli_command_count: 22",
+        "- passive_cli_command_count: 23",
         "- v134_reference: import_safe_wrapped",
         "Collaborator Intake:",
         "- status: waiting_for_implementation_branch",
@@ -157,6 +160,10 @@ def test_formatted_report_is_deterministic_and_human_readable():
         (
             "- collaborator_intake_readiness: "
             "python -m rytm_randomizer.cli collaborator-intake-readiness-report"
+        ),
+        (
+            "- collaborator_branch_watch: "
+            "python -m rytm_randomizer.cli collaborator-branch-watch"
         ),
         (
             "- local_closeout: "
@@ -183,6 +190,10 @@ def test_formatted_report_is_deterministic_and_human_readable():
         (
             "- collaborator_intake_readiness: "
             "rytm_randomizer.collaborator_intake_readiness_report"
+        ),
+        (
+            "- collaborator_branch_watch: "
+            "rytm_randomizer.collaborator_branch_watch_report"
         ),
         "In-memory only: True",
     ]

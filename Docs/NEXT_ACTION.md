@@ -1,5 +1,63 @@
 # Next Action
 
+## Latest Collaborator Branch Watch Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_BRANCH_WATCH_CHECKPOINT.md`
+
+New passive report module:
+
+- `rytm_randomizer/collaborator_branch_watch_report.py`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli collaborator-branch-watch`
+
+Purpose:
+
+- give the owner a deterministic local snapshot of collaborator branch/PR
+  wait-state
+- record the manual commands used to refresh remote branches and PRs
+- keep collaborator intake local, passive, and no-cost
+
+Current watch state:
+
+- no external implementation branch observed
+- no external implementation PR observed
+- PR #1 remains the review-plan source
+- PR #2 remains the draft execution-plan foundation
+- direct merge remains disallowed before intake
+
+Recommended next task:
+
+- keep waiting for Eddie's implementation branch or PR before intake
+- when Eddie sends a branch or PR, run the collaborator implementation intake
+  protocol before review or merge
+- continue using quick status and closeout for frequent verification
+- trigger GitHub Actions only at explicit manual gates
+
+Safety status:
+
+- no GitHub mutation
+- no branch checkout
+- no branch merge
+- no GitHub Actions trigger
+- no real MIDI
+- no port opening
+- no MIDI sending
+- no active execution
+- no hardware behavior
+- no V1.34 reference edit
+
 ## Latest Cross-Platform Operator Status Closeout Checkpoint
 
 Current review branch:

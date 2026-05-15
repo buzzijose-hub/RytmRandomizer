@@ -21,6 +21,7 @@ PASSIVE_CLI_COMMANDS = (
     "anchor-profile-report",
     "behavior-parity-report",
     "collaborator-intake-readiness-report",
+    "collaborator-branch-watch",
     "operator-status-report",
     "list-commands",
     "list-scenes",

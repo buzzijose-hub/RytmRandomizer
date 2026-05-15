@@ -1,0 +1,22 @@
+RytmRandomizer passive CLI: collaborator-branch-watch
+
+Usage:
+  python -m rytm_randomizer.cli collaborator-branch-watch
+  python -m rytm_randomizer.cli collaborator-branch-watch --help
+
+Behavior:
+  Prints the deterministic read-only collaborator branch watch report to stdout.
+
+Safety:
+  passive/read-only
+  no GitHub mutation
+  no branch checkout
+  no branch merge
+  no GitHub Actions trigger
+  no MIDI sending
+  no port opening
+  no active execution
+  no command execution
+  no dispatch
+  no hardware mutation
+  no hardware required

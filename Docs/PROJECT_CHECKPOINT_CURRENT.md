@@ -3,6 +3,52 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Branch Watch Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_BRANCH_WATCH_CHECKPOINT.md`
+
+New passive report module:
+
+- `rytm_randomizer/collaborator_branch_watch_report.py`
+
+New passive CLI command:
+
+- `python -m rytm_randomizer.cli collaborator-branch-watch`
+
+New closeout coverage:
+
+- `=== Test: Collaborator Branch Watch Report ===`
+
+The report records the current collaborator wait-state:
+
+- no external implementation branch observed
+- no external implementation PR observed
+- current known remote branches:
+  - `modularize-v1.34`
+  - `docs/review-and-execution-plan`
+  - `codex/execute-eddie-plan`
+- current known PRs:
+  - PR #1 review-plan source
+  - PR #2 draft execution-plan foundation
+
+The passive project-status report now records `23` passive CLI commands and
+includes `collaborator-branch-watch`.
+
+This checkpoint adds passive local visibility only. It adds no GitHub
+mutation, branch checkout, branch merge, GitHub Actions trigger, real MIDI,
+MIDI port opening, MIDI sending, dispatch, active behavior, hardware behavior,
+hardware requirement, or V1.34 reference edit.
+
 ## Cross-Platform Operator Status Closeout Checkpoint
 
 Current review branch:

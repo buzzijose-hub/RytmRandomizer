@@ -13,6 +13,7 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli collaborator-intake-readiness-report
+  python -m rytm_randomizer.cli collaborator-branch-watch
   python -m rytm_randomizer.cli operator-status-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -46,6 +47,8 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   collaborator-intake-readiness-report
                      Print the read-only collaborator intake readiness report.
+  collaborator-branch-watch
+                     Print the read-only collaborator branch watch report.
   operator-status-report
                      Print the read-only daily operator status report.
   inspect-command    Inspect passive command metadata by key.

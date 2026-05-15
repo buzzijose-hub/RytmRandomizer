@@ -2,6 +2,36 @@
 
 Date: May 4, 2026
 
+## Collaborator Branch Watch Report
+
+The project now has a passive collaborator branch-watch report:
+
+- `rytm_randomizer/collaborator_branch_watch_report.py`
+
+It is visible from the passive CLI:
+
+- `python -m rytm_randomizer.cli collaborator-branch-watch`
+- `python -m rytm_randomizer.cli collaborator-branch-watch --help`
+
+It is covered by:
+
+- `tests/test_collaborator_branch_watch_report.py`
+- closeout label:
+  - `=== Test: Collaborator Branch Watch Report ===`
+
+The report summarizes the last known remote branch/PR snapshot for
+collaborator implementation intake. It records that no external implementation
+branch or PR has been observed yet, and it lists the manual commands the owner
+can run to refresh branch/PR state.
+
+The passive project-status report now includes this command in its passive CLI
+visibility list, bringing the passive CLI command count to `23`.
+
+This is passive reporting only. It does not query GitHub, merge branches,
+check out branches, trigger GitHub Actions, change runtime behavior, dispatch
+commands, add active behavior, send MIDI, open MIDI ports, mutate hardware,
+require hardware, or change the V1.34 reference.
+
 ## Cross-Platform Operator Status Closeout
 
 `Scripts/closeout_check.py` now includes the passive operator status report.
