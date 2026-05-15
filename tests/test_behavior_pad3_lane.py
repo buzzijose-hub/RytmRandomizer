@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -531,14 +531,10 @@ def test_p3x_metadata_contains_expected_passive_sources():
     assert result.metadata["lane"] == "pad_3_sy_raw_lane"
     assert result.metadata["behavior_family"] == "pad3-lane/sy-raw-current-mode-safe-mutation"
     assert (
-        result.metadata["lane_action"]
-        == "describe_pad3_sy_raw_current_mode_safe_mutation_intent"
+        result.metadata["lane_action"] == "describe_pad3_sy_raw_current_mode_safe_mutation_intent"
     )
     assert result.metadata["intent_kind"] == "mutation"
-    assert (
-        result.metadata["mutation_concept"]
-        == "Pad 3 SY Raw current mode safe mutation"
-    )
+    assert result.metadata["mutation_concept"] == "Pad 3 SY Raw current mode safe mutation"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False

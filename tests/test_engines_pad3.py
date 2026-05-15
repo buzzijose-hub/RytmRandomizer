@@ -47,10 +47,10 @@ if str(PROJECT_ROOT) not in sys.path:
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Isolation helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
@@ -77,11 +77,12 @@ class _FakeMessage:
         self.value = value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _FakeMessage)
-            and (self.type, self.channel, self.control, self.value)
-            == (other.type, other.channel, other.control, other.value)
-        )
+        return isinstance(other, _FakeMessage) and (
+            self.type,
+            self.channel,
+            self.control,
+            self.value,
+        ) == (other.type, other.channel, other.control, other.value)
 
     def __repr__(self):  # pragma: no cover - debugging aid only
         return (
@@ -336,6 +337,7 @@ def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
 # In-process helpers: build an engine with the full 4-pad group "loaded".
 # ---------------------------------------------------------------------------
 
+
 def _loaded_group_dicts():
     """Return (ganc, gcur, gprev) dicts mimicking a full group load.
 
@@ -376,6 +378,7 @@ def _make_loaded_engine(out, **kwargs):
 # In-process import-safety + smoke
 # ===========================================================================
 
+
 def test_import_is_silent_and_mido_free(capsys):
     """Importing the engine module opens no ports and pulls in no mido."""
 
@@ -408,6 +411,7 @@ def test_engine_constructs_with_monolith_cold_start_defaults():
 # ===========================================================================
 # In-process behavior coverage (fake mido) -- every method + every branch
 # ===========================================================================
+
 
 def test_require_context_blocks_when_group_not_loaded(capsys):
     _install_fake_mido()
@@ -513,9 +517,7 @@ def test_apply_partial_skips_unknown_parameter(capsys):
 def test_apply_partial_ensure_machine_false_branch(capsys):
     out = RecordingOut()
     eng = _make_loaded_engine(out)
-    eng.apply_pad3_sy_raw_partial(
-        {"SRC Tune": 70}, "No Machine", ensure_machine=False
-    )
+    eng.apply_pad3_sy_raw_partial({"SRC Tune": 70}, "No Machine", ensure_machine=False)
     capsys.readouterr()
     # ensure_machine=False -> no CC15 machine switch in the message stream.
     assert all(msg.control != 15 for msg in out.sent)
@@ -531,9 +533,7 @@ def test_apply_partial_ensure_machine_false_branch(capsys):
         ("sy_raw_scifi_motion_accent", "scifi"),
     ],
 )
-def test_discovery_methods_send_params_and_set_mode(
-    discovery_method, expected_mode, capsys
-):
+def test_discovery_methods_send_params_and_set_mode(discovery_method, expected_mode, capsys):
     import random
 
     out = RecordingOut()
@@ -656,6 +656,7 @@ def test_show_pad3_tools_partial_state_skips_absent(capsys):
 # randomization primitives return ``applied=False`` and the shim is a no-op.
 # Mirrors the equivalent pad1 coverage tests.
 # ---------------------------------------------------------------------------
+
 
 def test_apply_state_shim_noop_when_no_profile(capsys):
     _install_fake_mido()
@@ -784,11 +785,18 @@ def test_mutate_current_pad3_mode_state_not_loaded(capsys):
 @pytest.mark.parametrize(
     "mode_key,seed",
     [
-        ("anchor", 1), ("anchor", 2), ("anchor", 5),   # body/lfo/morph
-        ("lp1", 1), ("lp1", 2),                        # lp1/body/lfo
-        ("bandpass", 1), ("bandpass", 2),              # bandpass/body/morph
-        ("wave", 1), ("wave", 2),                      # wave/morph/body
-        ("scifi", 1), ("scifi", 2), ("scifi", 5),      # scifi/lfo/grit
+        ("anchor", 1),
+        ("anchor", 2),
+        ("anchor", 5),  # body/lfo/morph
+        ("lp1", 1),
+        ("lp1", 2),  # lp1/body/lfo
+        ("bandpass", 1),
+        ("bandpass", 2),  # bandpass/body/morph
+        ("wave", 1),
+        ("wave", 2),  # wave/morph/body
+        ("scifi", 1),
+        ("scifi", 2),
+        ("scifi", 5),  # scifi/lfo/grit
     ],
 )
 def test_mutate_current_pad3_mode_all_actions(mode_key, seed, capsys):
@@ -816,6 +824,7 @@ def test_return_pad3_to_anchor(capsys):
 # Subprocess parity vs the committed monolith -- byte-identical behavior
 # ===========================================================================
 
+
 def test_parity_require_context_guard_not_loaded():
     _parity_subprocess("[('require_pad3_sy_raw_context', ())]")
 
@@ -836,18 +845,14 @@ def test_parity_show_menus_after_group_load():
 
 def test_parity_apply_partial_guards():
     # group not loaded -> first guard
-    _parity_subprocess(
-        "[('apply_pad3_sy_raw_partial', ({'SRC Tune': 70}, 'Guarded'))]"
-    )
+    _parity_subprocess("[('apply_pad3_sy_raw_partial', ({'SRC Tune': 70}, 'Guarded'))]")
     # group loaded -> applies, including an unknown-parameter skip
     _parity_subprocess(
-        "['load', ('apply_pad3_sy_raw_partial', "
-        "({'SRC Tune': 70, 'BOGUS PARAM': 5}, 'Mixed'))]"
+        "['load', ('apply_pad3_sy_raw_partial', " "({'SRC Tune': 70, 'BOGUS PARAM': 5}, 'Mixed'))]"
     )
     # ensure_machine False branch
     _parity_subprocess(
-        "['load', ('apply_pad3_sy_raw_partial', "
-        "({'SRC Tune': 70}, 'NoMachine', False))]"
+        "['load', ('apply_pad3_sy_raw_partial', " "({'SRC Tune': 70}, 'NoMachine', False))]"
     )
 
 
@@ -890,9 +895,7 @@ def test_parity_load_pad3_mode_each_mode(mode, seed):
     """One parity call per (mode, seed) so xdist can fan the 15 cases across
     workers (was part of a single 72s test before the split)."""
 
-    _parity_subprocess(
-        f"['load', ('load_pad3_mode', ({mode!r},))]", seed=seed
-    )
+    _parity_subprocess(f"['load', ('load_pad3_mode', ({mode!r},))]", seed=seed)
 
 
 def test_parity_load_pad3_mode_unknown_key():
@@ -946,8 +949,7 @@ def test_parity_mutate_current_pad3_mode_each_setup(mode_setup, seed):
     across workers (was part of a single 111s test before the split)."""
 
     _parity_subprocess(
-        f"['load', ({mode_setup!r}, ()), "
-        "('mutate_current_pad3_mode', ())]",
+        f"['load', ({mode_setup!r}, ()), " "('mutate_current_pad3_mode', ())]",
         seed=seed,
     )
 
@@ -957,9 +959,7 @@ def test_parity_mutate_current_pad3_mode_anchor(seed):
     """Anchor-mode mutation (generic zone branch: body/lfo/morph). One parity
     call per seed so xdist can fan the 5 cases across workers."""
 
-    _parity_subprocess(
-        "['load', ('mutate_current_pad3_mode', ())]", seed=seed
-    )
+    _parity_subprocess("['load', ('mutate_current_pad3_mode', ())]", seed=seed)
 
 
 @pytest.mark.parametrize("seed", [1, 7, 99, 2024])

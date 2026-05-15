@@ -34,13 +34,14 @@ real Rytm.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from dataclasses import dataclass
-from pathlib import Path
 import json
 import random
 import sys
-from typing import Any, Callable, Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import contextmanager
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable
 from unittest import mock
 
 import pytest
@@ -92,7 +93,7 @@ class CapturedMessage:
     value: int
 
     @classmethod
-    def from_any(cls, message: Any) -> "CapturedMessage":
+    def from_any(cls, message: Any) -> CapturedMessage:
         """Project a mido message OR a MidiMessage into a CapturedMessage."""
 
         if hasattr(message, "control") and hasattr(message, "value"):
@@ -103,9 +104,7 @@ class CapturedMessage:
                 control=int(message.control),
                 value=int(message.value),
             )
-        raise TypeError(
-            f"Unsupported MIDI message object for E2E capture: {type(message)!r}"
-        )
+        raise TypeError(f"Unsupported MIDI message object for E2E capture: {type(message)!r}")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -306,9 +305,11 @@ def run_canonical_dry_run(
     # untouched: the patch only lives for the duration of this run.
     no_op_sleep: Callable[[float], None] = lambda _seconds: None  # noqa: E731
 
-    with _no_op_sleep_defaults(no_op_sleep), mock.patch(
-        "builtins.input", feed_input
-    ), mock.patch.object(MockMidiSender, "send", recording_send):
+    with (
+        _no_op_sleep_defaults(no_op_sleep),
+        mock.patch("builtins.input", feed_input),
+        mock.patch.object(MockMidiSender, "send", recording_send),
+    ):
         try:
             exit_code = app.main(["--dry-run"])
         except SystemExit as exc:

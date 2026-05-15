@@ -1,7 +1,8 @@
-import mido
-import time
 import msvcrt
+import time
 from collections import defaultdict
+
+import mido
 
 CC_LABELS = {
     15: "Machine Type",
@@ -12,11 +13,9 @@ CC_LABELS = {
     21: "SRC Osc 1 Wave",
     22: "SRC Osc 2 Wave",
     23: "SRC Noise Level",
-
     74: "FLT Frequency",
     75: "FLT Resonance",
     76: "FLT Type",
-
     102: "LFO Speed",
     105: "LFO Destination",
     106: "LFO Waveform",
@@ -28,12 +27,14 @@ history = defaultdict(list)
 latest = {}
 channels = {}
 
+
 def list_inputs():
     inputs = mido.get_input_names()
     print("\nAvailable MIDI inputs:")
     for i, name in enumerate(inputs):
         print(f"{i}: {name}")
     return inputs
+
 
 def record(cc, value, midi_channel):
     label = CC_LABELS.get(cc, f"CC{cc}")
@@ -45,6 +46,7 @@ def record(cc, value, midi_channel):
         history[cc].append(value)
 
     print(f"{label}: {value}   CC{cc}   MIDI Channel: {midi_channel}")
+
 
 def print_report():
     print("\nSY RAW MORPH CAPTURE REPORT\n")
@@ -77,6 +79,7 @@ def print_report():
     print("- FLT Type / CC76")
     print("- FLT Frequency / CC74")
     print("- FLT Resonance / CC75")
+
 
 def main():
     print("\nRYTM SY RAW MORPH CAPTURE V0.1\n")
@@ -124,6 +127,7 @@ def main():
                     break
 
             time.sleep(0.01)
+
 
 if __name__ == "__main__":
     main()

@@ -6,15 +6,14 @@ execution, dispatching commands, opening ports, sending MIDI, or touching
 hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
 from .selected_isolated_pad_runtime_state import (
     build_passive_default_selected_isolated_pad_runtime_state,
 )
-
 
 PACKET_11A_SELECTED_ISOLATED_PAD_KEYS = ("L",)
 PACKET_11B_SELECTED_ISOLATED_PAD_KEYS = ("PZ",)
@@ -167,9 +166,7 @@ def _pz_readiness_result(runtime_state=None):
     )
     target_pad = getattr(selected_runtime_state, "target_pad", None)
     runtime_state_value = str(getattr(selected_runtime_state, "runtime_state", ""))
-    target_anchor_status = str(
-        getattr(selected_runtime_state, "target_anchor_status", "")
-    )
+    target_anchor_status = str(getattr(selected_runtime_state, "target_anchor_status", ""))
     anchor_state = str(getattr(selected_runtime_state, "anchor_state", ""))
 
     return SelectedIsolatedPadBehaviorResult(
@@ -218,19 +215,13 @@ def _pz_readiness_result(runtime_state=None):
             "target_pad": target_pad,
             "target_state": str(getattr(selected_runtime_state, "target_state", "")),
             "target_source": str(getattr(selected_runtime_state, "target_source", "")),
-            "target_command_key": str(
-                getattr(selected_runtime_state, "target_command_key", "")
-            ),
+            "target_command_key": str(getattr(selected_runtime_state, "target_command_key", "")),
             "target_anchor_status": target_anchor_status,
             "anchor_pad": getattr(selected_runtime_state, "anchor_pad", None),
             "anchor_state": anchor_state,
             "anchor_source": str(getattr(selected_runtime_state, "anchor_source", "")),
-            "anchor_identity": str(
-                getattr(selected_runtime_state, "anchor_identity", "")
-            ),
-            "operation_kind": str(
-                getattr(selected_runtime_state, "operation_kind", "")
-            ),
+            "anchor_identity": str(getattr(selected_runtime_state, "anchor_identity", "")),
+            "operation_kind": str(getattr(selected_runtime_state, "operation_kind", "")),
             "supported": bool(getattr(selected_runtime_state, "supported", False)),
             "stale": bool(getattr(selected_runtime_state, "stale", False)),
             "valid": bool(getattr(selected_runtime_state, "valid", False)),

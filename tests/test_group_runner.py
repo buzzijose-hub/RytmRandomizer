@@ -41,10 +41,10 @@ if str(PROJECT_ROOT) not in sys.path:
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Isolation helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
@@ -75,9 +75,7 @@ def _restore_shared_profile_data():
 
     from rytm_randomizer.data import GROUP_LAYOUT, PROFILES
 
-    profile_anchors = {
-        key: dict(profile["anchor"]) for key, profile in PROFILES.items()
-    }
+    profile_anchors = {key: dict(profile["anchor"]) for key, profile in PROFILES.items()}
     layout_snapshot = {pad: dict(cfg) for pad, cfg in GROUP_LAYOUT.items()}
     try:
         yield
@@ -99,11 +97,12 @@ class _FakeMessage:
         self.value = value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _FakeMessage)
-            and (self.type, self.channel, self.control, self.value)
-            == (other.type, other.channel, other.control, other.value)
-        )
+        return isinstance(other, _FakeMessage) and (
+            self.type,
+            self.channel,
+            self.control,
+            self.value,
+        ) == (other.type, other.channel, other.control, other.value)
 
     def __repr__(self):  # pragma: no cover - debugging aid only
         return (
@@ -279,9 +278,7 @@ def assert_parity(seed, steps, answers=()):
 _parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
 
 
-def _parity_subprocess(
-    steps_repr: str, answers_repr: str = "()", seed: int = 12345
-) -> None:
+def _parity_subprocess(steps_repr: str, answers_repr: str = "()", seed: int = 12345) -> None:
     """Run the harness against ``steps`` on the warm worker; assert parity.
 
     ``steps_repr`` and ``answers_repr`` are still Python source reprs (exactly
@@ -306,6 +303,7 @@ def _parity_subprocess(
 # ===========================================================================
 # In-process import-safety + smoke
 # ===========================================================================
+
 
 def test_import_is_silent_and_mido_free(capsys):
     """Importing the runner module opens no ports and pulls in no mido."""
@@ -350,6 +348,7 @@ def test_default_group_layout_is_a_fresh_mutable_copy():
 # In-process behavior coverage (fake mido) -- every method + every branch
 # ===========================================================================
 
+
 def _runner(**kwargs):
     _install_fake_mido()
     from rytm_randomizer.group_runner import GroupRunner
@@ -358,6 +357,7 @@ def _runner(**kwargs):
 
 
 # --- selected-profile / single-pad glue -----------------------------------
+
 
 def test_select_profile_valid_choice(capsys):
     runner = _runner(input_func=lambda _p: "1")
@@ -522,6 +522,7 @@ def test_show_current_with_current_state(capsys):
 
 
 # --- group orchestration ---------------------------------------------------
+
 
 def test_set_group_context_fallback_to_profile_anchor():
     runner = _runner()
@@ -725,9 +726,7 @@ def test_mutate_group_intensity_skips_unavailable_zone(capsys, monkeypatch):
     runner = gr.GroupRunner(RecordingOut(), sleep=_no_sleep)
     runner.load_group_anchors()
     capsys.readouterr()
-    monkeypatch.setitem(
-        gr.INTENSITY_PLANS, "fake_plan", {1: [("not-a-zone", "micro")]}
-    )
+    monkeypatch.setitem(gr.INTENSITY_PLANS, "fake_plan", {1: [("not-a-zone", "micro")]})
     runner.mutate_group_intensity("fake_plan")
     assert "not available for this profile. Skipping." in capsys.readouterr().out
 
@@ -759,9 +758,7 @@ def test_mutate_global_page_plan_skips_unavailable_zone(capsys, monkeypatch):
     _install_fake_mido()
     import rytm_randomizer.group_runner as gr
 
-    runner = gr.GroupRunner(
-        RecordingOut(), sleep=_no_sleep, input_func=lambda _p: "1"
-    )
+    runner = gr.GroupRunner(RecordingOut(), sleep=_no_sleep, input_func=lambda _p: "1")
     runner.load_group_anchors()
     capsys.readouterr()
     monkeypatch.setitem(gr.GLOBAL_PAGE_PLANS, "fake_page", {1: ["not-a-zone"]})
@@ -776,6 +773,7 @@ def test_show_global_mutation_tools(capsys):
 
 
 # --- isolated single-pad orchestration ------------------------------------
+
 
 def test_choose_isolated_pad_valid(capsys):
     runner = _runner(input_func=lambda _p: "2")
@@ -871,11 +869,10 @@ def test_return_isolated_pad_to_anchor(capsys):
 # Subprocess parity vs the committed monolith -- byte-identical behavior
 # ===========================================================================
 
+
 def test_parity_select_profile_all_menu_choices():
     for menu in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]:
-        _parity_subprocess(
-            "[('select_profile', ())]", answers_repr=f"[{menu!r}]"
-        )
+        _parity_subprocess("[('select_profile', ())]", answers_repr=f"[{menu!r}]")
 
 
 def test_parity_select_profile_invalid():
@@ -892,16 +889,12 @@ def test_parity_require_profile():
 
 def test_parity_choose_target_pad():
     for pad in ["1", "2", "3", "4", "bad"]:
-        _parity_subprocess(
-            "[('choose_target_pad', ())]", answers_repr=f"[{pad!r}]"
-        )
+        _parity_subprocess("[('choose_target_pad', ())]", answers_repr=f"[{pad!r}]")
 
 
 def test_parity_undo_paths():
     _parity_subprocess("[('undo', ())]")  # no profile
-    _parity_subprocess(
-        "[('select_profile', ()), ('undo', ())]", answers_repr="['1']"
-    )
+    _parity_subprocess("[('select_profile', ()), ('undo', ())]", answers_repr="['1']")
 
 
 def test_parity_commit_show_anchor_current():
@@ -923,16 +916,12 @@ def test_parity_set_group_context_and_layout():
 def test_parity_load_and_return_group_anchors():
     _parity_subprocess("[('load_group_anchors', ())]")
     _parity_subprocess("[('return_group_to_anchors', ())]")  # guard
-    _parity_subprocess(
-        "[('load_group_anchors', ()), ('return_group_to_anchors', ())]"
-    )
+    _parity_subprocess("[('load_group_anchors', ()), ('return_group_to_anchors', ())]")
 
 
 def test_parity_ensure_group_anchors_loaded():
     _parity_subprocess("[('ensure_group_anchors_loaded', ())]")
-    _parity_subprocess(
-        "[('load_group_anchors', ()), ('ensure_group_anchors_loaded', ())]"
-    )
+    _parity_subprocess("[('load_group_anchors', ()), ('ensure_group_anchors_loaded', ())]")
 
 
 def test_parity_mutate_group():
@@ -944,9 +933,18 @@ def test_parity_mutate_group():
 @pytest.mark.parametrize(
     "plan",
     [
-        "balanced", "deeper", "intense", "harder", "rolling_light",
-        "rolling_push", "deeper_groove", "deeper_pressure", "intense_motion",
-        "intense_grit", "wild_controlled", "wild_maximum",
+        "balanced",
+        "deeper",
+        "intense",
+        "harder",
+        "rolling_light",
+        "rolling_push",
+        "deeper_groove",
+        "deeper_pressure",
+        "intense_motion",
+        "intense_grit",
+        "wild_controlled",
+        "wild_maximum",
     ],
 )
 @pytest.mark.parametrize("seed", [1, 11])
@@ -954,9 +952,7 @@ def test_parity_mutate_group_intensity(plan, seed):
     """One parity call per (plan, seed) so xdist can fan the 24 cases across
     workers (was a single ~117s test before the split)."""
 
-    _parity_subprocess(
-        f"[('mutate_group_intensity', ({plan!r},))]", seed=seed
-    )
+    _parity_subprocess(f"[('mutate_group_intensity', ({plan!r},))]", seed=seed)
 
 
 def test_parity_mutate_group_intensity_unknown_plan():
@@ -988,9 +984,7 @@ def test_parity_mutate_global_page_plan(page, depth):
 def test_parity_mutate_global_page_plan_unknown_page():
     """Unknown page key -- single-call check."""
 
-    _parity_subprocess(
-        "[('mutate_global_page_plan', ('nope',))]", answers_repr="['1']"
-    )
+    _parity_subprocess("[('mutate_global_page_plan', ('nope',))]", answers_repr="['1']")
 
 
 def test_parity_show_global_mutation_tools():
@@ -999,9 +993,7 @@ def test_parity_show_global_mutation_tools():
 
 def test_parity_choose_isolated_pad():
     for pad in ["1", "2", "3", "4", "bad"]:
-        _parity_subprocess(
-            "[('choose_isolated_pad', ())]", answers_repr=f"[{pad!r}]"
-        )
+        _parity_subprocess("[('choose_isolated_pad', ())]", answers_repr=f"[{pad!r}]")
 
 
 def test_parity_isolated_pad_guards_and_status():
@@ -1020,26 +1012,20 @@ def test_parity_mutate_isolated_pad():
             "[('load_group_anchors', ()), ('mutate_isolated_pad', ())]",
             seed=seed,
         )
-    _parity_subprocess(
-        "[('load_group_anchors', ()), "
-        "('mutate_isolated_pad', ('not-a-zone',))]"
-    )
+    _parity_subprocess("[('load_group_anchors', ()), " "('mutate_isolated_pad', ('not-a-zone',))]")
 
 
 def test_parity_mutate_isolated_pad_with_depth():
     for depth in ["1", "2", "3"]:
         _parity_subprocess(
-            "[('load_group_anchors', ()), "
-            "('mutate_isolated_pad_with_depth', ('lfo',))]",
+            "[('load_group_anchors', ()), " "('mutate_isolated_pad_with_depth', ('lfo',))]",
             answers_repr=f"[{depth!r}]",
         )
 
 
 def test_parity_return_isolated_pad_to_anchor():
     _parity_subprocess("[('return_isolated_pad_to_anchor', ())]")  # guard
-    _parity_subprocess(
-        "[('load_group_anchors', ()), ('return_isolated_pad_to_anchor', ())]"
-    )
+    _parity_subprocess("[('load_group_anchors', ()), ('return_isolated_pad_to_anchor', ())]")
 
 
 @pytest.mark.parametrize("seed", [1, 7, 99, 2024])

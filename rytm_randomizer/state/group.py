@@ -15,9 +15,9 @@ Nothing here opens ports, sends MIDI, or touches hardware.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 State = Mapping[str, object]
 PadStates = Mapping[int, Mapping[str, object]]
@@ -65,9 +65,7 @@ def initial_group_runtime_state() -> GroupRuntimeState:
     return GroupRuntimeState()
 
 
-def set_group_anchor(
-    state: GroupRuntimeState, pad: int, anchor_state: State
-) -> GroupRuntimeState:
+def set_group_anchor(state: GroupRuntimeState, pad: int, anchor_state: State) -> GroupRuntimeState:
     """Set ``group_anchor_states[pad]`` to a copy of ``anchor_state``."""
 
     anchors = dict(state.group_anchor_states)

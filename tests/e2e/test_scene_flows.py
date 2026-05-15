@@ -20,10 +20,7 @@ import pytest
 
 from rytm_randomizer.data import SCENE_PRESETS
 
-from .conftest import (
-    CapturedMessage,
-    run_canonical_dry_run,
-)
+from .conftest import CapturedMessage, run_canonical_dry_run
 
 
 def _final_state_by_channel_control(
@@ -138,15 +135,11 @@ def test_scene_flow_ends_at_anchors_after_s5(
     for key, expected_value in anchor_state.items():
         actual = flow_state.get(key)
         if actual != expected_value:
-            drift.append(
-                f"  ch{key[0]} CC{key[1]}: anchor={expected_value} "
-                f"post-S5={actual}"
-            )
+            drift.append(f"  ch{key[0]} CC{key[1]}: anchor={expected_value} " f"post-S5={actual}")
 
     assert not drift, (
         f"Scene {scene_key.upper()} -> S5 did not return the four pads "
-        "to their validated anchors. Drift detected on:\n"
-        + "\n".join(drift)
+        "to their validated anchors. Drift detected on:\n" + "\n".join(drift)
     )
 
 

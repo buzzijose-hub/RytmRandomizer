@@ -39,10 +39,10 @@ if str(PROJECT_ROOT) not in sys.path:
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Isolation helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
@@ -69,11 +69,12 @@ class _FakeMessage:
         self.value = value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _FakeMessage)
-            and (self.type, self.channel, self.control, self.value)
-            == (other.type, other.channel, other.control, other.value)
-        )
+        return isinstance(other, _FakeMessage) and (
+            self.type,
+            self.channel,
+            self.control,
+            self.value,
+        ) == (other.type, other.channel, other.control, other.value)
 
     def __repr__(self):  # pragma: no cover - debugging aid only
         return (
@@ -246,6 +247,7 @@ def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
 # In-process import-safety + smoke
 # ===========================================================================
 
+
 def test_import_is_silent_and_mido_free(capsys):
     """Importing the engine module opens no ports and pulls in no mido."""
 
@@ -290,6 +292,7 @@ def test_default_group_layout_is_a_fresh_mutable_copy():
 # ===========================================================================
 # In-process behavior coverage (fake mido) -- every method + every branch
 # ===========================================================================
+
 
 def test_load_pad1_bd_profile_unknown_key(capsys):
     _install_fake_mido()
@@ -415,9 +418,7 @@ def test_show_tools_not_loaded_branch(show_method, capsys):
         ("8", "show_bd_silky_tools", "SRC VCO Click"),
     ],
 )
-def test_show_tools_loaded_snapshot_branch(
-    profile_key, show_method, snapshot_marker, capsys
-):
+def test_show_tools_loaded_snapshot_branch(profile_key, show_method, snapshot_marker, capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
@@ -433,9 +434,7 @@ def test_show_tools_loaded_snapshot_branch(
     "show_method",
     ["show_bd_fm_tools", "show_bd_plastic_tools", "show_bd_silky_tools"],
 )
-def test_show_tools_loaded_with_partial_state_skips_absent_names(
-    show_method, capsys
-):
+def test_show_tools_loaded_with_partial_state_skips_absent_names(show_method, capsys):
     """When ``group_current_states[1]`` is missing some snapshot names, the
     snapshot loop skips them (the absent-name branch of ``if name in current``)."""
 
@@ -520,9 +519,7 @@ def test_require_context_correct_profile(profile_key, require_method, capsys):
         ("8", "apply_pad1_bd_silky_partial"),
     ],
 )
-def test_apply_partial_guard_blocks_when_not_loaded(
-    profile_key, apply_method, capsys
-):
+def test_apply_partial_guard_blocks_when_not_loaded(profile_key, apply_method, capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
@@ -564,9 +561,7 @@ def test_apply_partial_skips_unknown_parameter(profile_key, apply_method, capsys
         ("8", "apply_pad1_bd_silky_partial"),
     ],
 )
-def test_apply_partial_ensure_machine_false_branch(
-    profile_key, apply_method, capsys
-):
+def test_apply_partial_ensure_machine_false_branch(profile_key, apply_method, capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
@@ -575,9 +570,7 @@ def test_apply_partial_ensure_machine_false_branch(
     eng.load_pad1_bd_profile(profile_key)
     out.sent.clear()
     capsys.readouterr()
-    getattr(eng, apply_method)(
-        {"SRC Tune": 60}, "No Machine", ensure_machine=False
-    )
+    getattr(eng, apply_method)({"SRC Tune": 60}, "No Machine", ensure_machine=False)
     # ensure_machine=False -> no CC15 machine switch in the message stream.
     assert all(msg.control != 15 for msg in out.sent)
     assert eng.previous_state is not None
@@ -597,9 +590,7 @@ def test_apply_partial_ensure_machine_false_branch(
         ("8", "bd_silky_click_dust_discovery"),
     ],
 )
-def test_discovery_method_sends_params_and_records_state(
-    profile_key, discovery_method, capsys
-):
+def test_discovery_method_sends_params_and_records_state(profile_key, discovery_method, capsys):
     """Each discovery helper, called directly, mutates state and emits CCs."""
 
     _install_fake_mido()
@@ -805,6 +796,7 @@ def test_mutate_zone_shim_noop_when_no_profile(capsys):
 # Subprocess parity vs the committed monolith -- byte-identical behavior
 # ===========================================================================
 
+
 def test_parity_load_each_profiled_engine():
     for key in ["2", "1", "3", "4", "6", "7", "8", "5"]:
         _parity_subprocess(f"[('load_pad1_bd_profile', ({key!r},))]")
@@ -830,39 +822,25 @@ def test_parity_show_menus_cold():
 
 
 def test_parity_show_menus_after_load():
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('6',)), ('show_bd_fm_tools', ())]"
-    )
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('7',)), ('show_bd_plastic_tools', ())]"
-    )
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('8',)), ('show_bd_silky_tools', ())]"
-    )
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('2',)), ('show_bd_rotation_status', ())]"
-    )
+    _parity_subprocess("[('load_pad1_bd_profile', ('6',)), ('show_bd_fm_tools', ())]")
+    _parity_subprocess("[('load_pad1_bd_profile', ('7',)), ('show_bd_plastic_tools', ())]")
+    _parity_subprocess("[('load_pad1_bd_profile', ('8',)), ('show_bd_silky_tools', ())]")
+    _parity_subprocess("[('load_pad1_bd_profile', ('2',)), ('show_bd_rotation_status', ())]")
 
 
 def test_parity_require_context_paths():
     # not-loaded guard
     _parity_subprocess("[('require_pad1_bd_fm_context', ())]")
     # wrong-profile guard
+    _parity_subprocess("[('load_pad1_bd_profile', ('2',)), ('require_pad1_bd_fm_context', ())]")
     _parity_subprocess(
-        "[('load_pad1_bd_profile', ('2',)), ('require_pad1_bd_fm_context', ())]"
+        "[('load_pad1_bd_profile', ('2',)), " "('require_pad1_bd_plastic_context', ())]"
     )
     _parity_subprocess(
-        "[('load_pad1_bd_profile', ('2',)), "
-        "('require_pad1_bd_plastic_context', ())]"
-    )
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('2',)), "
-        "('require_pad1_bd_silky_context', ())]"
+        "[('load_pad1_bd_profile', ('2',)), " "('require_pad1_bd_silky_context', ())]"
     )
     # correct profile
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('6',)), ('require_pad1_bd_fm_context', ())]"
-    )
+    _parity_subprocess("[('load_pad1_bd_profile', ('6',)), ('require_pad1_bd_fm_context', ())]")
 
 
 def test_parity_fm_discovery_commands():
@@ -871,9 +849,7 @@ def test_parity_fm_discovery_commands():
         "bd_fm_kick_body_discovery",
         "bd_fm_grit_discovery",
     ]:
-        _parity_subprocess(
-            f"[('load_pad1_bd_profile', ('6',)), ({fn!r}, ())]"
-        )
+        _parity_subprocess(f"[('load_pad1_bd_profile', ('6',)), ({fn!r}, ())]")
 
 
 def test_parity_plastic_discovery_commands():
@@ -882,9 +858,7 @@ def test_parity_plastic_discovery_commands():
         "bd_plastic_kick_body_discovery",
         "bd_plastic_rubber_discovery",
     ]:
-        _parity_subprocess(
-            f"[('load_pad1_bd_profile', ('7',)), ({fn!r}, ())]"
-        )
+        _parity_subprocess(f"[('load_pad1_bd_profile', ('7',)), ({fn!r}, ())]")
 
 
 def test_parity_silky_discovery_commands():
@@ -893,9 +867,7 @@ def test_parity_silky_discovery_commands():
         "bd_silky_kick_body_discovery",
         "bd_silky_click_dust_discovery",
     ]:
-        _parity_subprocess(
-            f"[('load_pad1_bd_profile', ('8',)), ({fn!r}, ())]"
-        )
+        _parity_subprocess(f"[('load_pad1_bd_profile', ('8',)), ({fn!r}, ())]")
 
 
 def test_parity_discovery_guard_when_not_loaded():
@@ -908,9 +880,7 @@ def test_parity_discovery_guard_when_not_loaded():
 
 def test_parity_discovery_wrong_profile_guard():
     # Load BD Hard, then fire a BD FM discovery: the guard should block it.
-    _parity_subprocess(
-        "[('load_pad1_bd_profile', ('2',)), ('bd_fm_tone_discovery', ())]"
-    )
+    _parity_subprocess("[('load_pad1_bd_profile', ('2',)), ('bd_fm_tone_discovery', ())]")
 
 
 def test_parity_return_helpers():
@@ -942,8 +912,7 @@ def test_parity_mutate_current_engine_discovery_modes(key, seed):
     workers (was a single ~23s test before the split)."""
 
     _parity_subprocess(
-        f"[('load_pad1_bd_profile', ({key!r},)), "
-        "('mutate_current_pad1_bd_engine', ())]",
+        f"[('load_pad1_bd_profile', ({key!r},)), " "('mutate_current_pad1_bd_engine', ())]",
         seed=seed,
     )
 
@@ -955,8 +924,7 @@ def test_parity_mutate_current_engine_generic_modes(key, seed):
     workers (was a single ~29s test before the split)."""
 
     _parity_subprocess(
-        f"[('load_pad1_bd_profile', ({key!r},)), "
-        "('mutate_current_pad1_bd_engine', ())]",
+        f"[('load_pad1_bd_profile', ({key!r},)), " "('mutate_current_pad1_bd_engine', ())]",
         seed=seed,
     )
 

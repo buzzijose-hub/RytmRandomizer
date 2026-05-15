@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -1060,9 +1060,7 @@ def test_packet_1_menu_utility_behavior_remains_unchanged():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 

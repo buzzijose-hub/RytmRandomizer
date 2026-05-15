@@ -274,8 +274,7 @@ def summarize_active_boundary_report(report=None):
         "supported_candidate": source_report["result_metadata"]["supported_candidate"],
         "accepted_key": source_report["accepted_candidate"]["profile_key"],
         "unsupported_keys": tuple(
-            profile["profile_key"]
-            for profile in source_report["unsupported_profiles"]
+            profile["profile_key"] for profile in source_report["unsupported_profiles"]
         ),
         "required_condition_count": len(source_report["required_conditions"]),
         "mock_only": source_report["mock_only"],
@@ -369,8 +368,7 @@ def build_mock_mapper_report():
     from .mock_message_mapper import SUPPORTED_GROUP_PROFILE_KEYS
 
     supported_profiles = tuple(
-        _profile_summary(profile_key)
-        for profile_key in SUPPORTED_GROUP_PROFILE_KEYS
+        _profile_summary(profile_key) for profile_key in SUPPORTED_GROUP_PROFILE_KEYS
     )
     unsupported_safe_profiles = tuple(
         _unsupported_safe_profile_summary(profile_key)
@@ -400,12 +398,10 @@ def summarize_mock_mapper_report(report=None):
         "supported_count": len(source_report["supported_group_profiles"]),
         "unsupported_safe_count": len(source_report["unsupported_safe_group_profiles"]),
         "supported_keys": tuple(
-            profile["profile_key"]
-            for profile in source_report["supported_group_profiles"]
+            profile["profile_key"] for profile in source_report["supported_group_profiles"]
         ),
         "unsupported_safe_keys": tuple(
-            profile["profile_key"]
-            for profile in source_report["unsupported_safe_group_profiles"]
+            profile["profile_key"] for profile in source_report["unsupported_safe_group_profiles"]
         ),
         "mock_only": source_report["mock_only"],
         "active_behavior": source_report["active_behavior"],
@@ -421,9 +417,7 @@ def format_mock_mapper_report(report=None):
     ]
 
     for profile in source_report["supported_group_profiles"]:
-        lines.append(
-            f"- {profile['profile_key']}: {profile['name']} ({profile['target']})"
-        )
+        lines.append(f"- {profile['profile_key']}: {profile['name']} ({profile['target']})")
 
     lines.append("Unsupported/Safe Group Profiles:")
     for profile in source_report["unsupported_safe_group_profiles"]:
@@ -543,16 +537,13 @@ def build_runtime_plan_report():
             "blocked_by_default": True,
         },
         "supported_planning_inputs": tuple(
-            _runtime_preview_summary(report_input)
-            for report_input in SUPPORTED_REPORT_INPUTS
+            _runtime_preview_summary(report_input) for report_input in SUPPORTED_REPORT_INPUTS
         ),
         "parked_planning_inputs": tuple(
-            _runtime_preview_summary(report_input)
-            for report_input in PARKED_REPORT_INPUTS
+            _runtime_preview_summary(report_input) for report_input in PARKED_REPORT_INPUTS
         ),
         "unsupported_planning_inputs": tuple(
-            _runtime_preview_summary(report_input)
-            for report_input in UNSUPPORTED_REPORT_INPUTS
+            _runtime_preview_summary(report_input) for report_input in UNSUPPORTED_REPORT_INPUTS
         ),
         "reason_codes": (
             "execution_not_implemented",
@@ -593,10 +584,7 @@ def summarize_runtime_plan_report(report=None):
 
 
 def _runtime_input_line(summary):
-    return (
-        f"- {summary['source_label']} -> {summary['target']} "
-        f"({summary['reason_code']})"
-    )
+    return f"- {summary['source_label']} -> {summary['target']} " f"({summary['reason_code']})"
 
 
 def format_runtime_plan_report(report=None):
@@ -700,9 +688,7 @@ def _anchor_profile_section_specs():
         evaluate_pad4_lane_behavior,
     )
     from .behavior_scene_group import evaluate_scene_group_behavior
-    from .behavior_selected_isolated_pad import (
-        evaluate_selected_isolated_pad_behavior,
-    )
+    from .behavior_selected_isolated_pad import evaluate_selected_isolated_pad_behavior
     from .behavior_selected_profile import evaluate_selected_profile_behavior
     from .behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
@@ -855,9 +841,7 @@ def _anchor_profile_supported_entry(command_key, result, source_helper, options)
         "source_helper": source_helper,
         "target_pad": getattr(result, "target_pad", None),
         "target_scope": _anchor_profile_target_scope(result, metadata),
-        "intent_kind": _anchor_profile_intent_kind(
-            command_key, result, metadata, options
-        ),
+        "intent_kind": _anchor_profile_intent_kind(command_key, result, metadata, options),
         "concept": _anchor_profile_concept(command_key, result, metadata, options),
         "read_only": True,
         "sends_real_midi": False,
@@ -897,8 +881,7 @@ def build_anchor_profile_report():
     report = {
         "title": ANCHOR_PROFILE_REPORT_TITLE,
         "supported_sections": tuple(
-            _anchor_profile_supported_section(spec)
-            for spec in _anchor_profile_section_specs()
+            _anchor_profile_supported_section(spec) for spec in _anchor_profile_section_specs()
         ),
         "parked_sections": deepcopy(ANCHOR_PROFILE_PARKED_SECTIONS),
         "safety": deepcopy(ANCHOR_PROFILE_SAFETY),
@@ -921,9 +904,7 @@ def summarize_anchor_profile_report(report=None):
     return {
         "title": source_report["title"],
         "supported_section_count": len(supported_sections),
-        "supported_entry_count": sum(
-            len(section["entries"]) for section in supported_sections
-        ),
+        "supported_entry_count": sum(len(section["entries"]) for section in supported_sections),
         "parked_count": len(source_report["parked_sections"]),
         "parked_keys": tuple(item["key"] for item in source_report["parked_sections"]),
         "read_only": source_report["safety"]["read_only"],
@@ -952,9 +933,7 @@ def format_anchor_profile_report(report=None):
     for key, value in source_report["safety"].items():
         lines.append(f"- {key}: {value}")
 
-    lines.append(
-        f"Recommended Next Branch: {source_report['recommended_next_branch']}"
-    )
+    lines.append(f"Recommended Next Branch: {source_report['recommended_next_branch']}")
     return lines
 
 
@@ -1154,9 +1133,7 @@ def _pad_lane_packet_coverage():
             "packet": "8",
             "lane": "Pad 4 BD Acoustic lane",
             "command_keys": (
-                PACKET_8A_PAD4_LANE_KEYS
-                + PACKET_8B_PAD4_LANE_KEYS
-                + PACKET_8C_PAD4_LANE_KEYS
+                PACKET_8A_PAD4_LANE_KEYS + PACKET_8B_PAD4_LANE_KEYS + PACKET_8C_PAD4_LANE_KEYS
             ),
             "deferred_keys": DEFERRED_PACKET_8_PAD4_LANE_KEYS,
             "coverage": "Pad 4 command-helper scope for the current read-only phase",
@@ -1169,21 +1146,15 @@ def build_behavior_parity_coverage_report():
     report = {
         "title": "V1.34 Behavior Parity Coverage Report",
         "accepted_packet_coverage": tuple(ACCEPTED_PACKET_COVERAGE),
-        "selected_isolated_pad_packet_coverage": deepcopy(
-            _selected_isolated_pad_packet_coverage()
-        ),
+        "selected_isolated_pad_packet_coverage": deepcopy(_selected_isolated_pad_packet_coverage()),
         "pad_lane_packet_coverage": deepcopy(_pad_lane_packet_coverage()),
-        "runtime_adjacent_mock_only_safe_failures": tuple(
-            RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES
-        ),
+        "runtime_adjacent_mock_only_safe_failures": tuple(RUNTIME_ADJACENT_MOCK_ONLY_SAFE_FAILURES),
         "parked_scope": tuple(PARITY_PARKED_SCOPE),
         "absent_behavior": tuple(PARITY_ABSENT_BEHAVIOR),
         "closeout_coverage": tuple(PARITY_CLOSEOUT_COVERAGE),
         "protected_file_state": dict(PARITY_PROTECTED_FILE_STATE),
         "source": {
-            "plan_document": (
-                "Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN.md"
-            ),
+            "plan_document": ("Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN.md"),
             "review_document": (
                 "Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN_REVIEW.md"
             ),
@@ -1196,9 +1167,7 @@ def build_behavior_parity_coverage_report():
 
 def summarize_behavior_parity_coverage_report(report=None):
     """Return a compact copied summary of the behavior-parity coverage report."""
-    source_report = (
-        build_behavior_parity_coverage_report() if report is None else report
-    )
+    source_report = build_behavior_parity_coverage_report() if report is None else report
     return {
         "title": source_report["title"],
         "accepted_packet_count": len(source_report["accepted_packet_coverage"]),
@@ -1207,8 +1176,7 @@ def summarize_behavior_parity_coverage_report(report=None):
         ),
         "pad_lane_packet_count": len(source_report["pad_lane_packet_coverage"]),
         "pad_lane_command_count": sum(
-            len(item["command_keys"])
-            for item in source_report["pad_lane_packet_coverage"]
+            len(item["command_keys"]) for item in source_report["pad_lane_packet_coverage"]
         ),
         "runtime_adjacent_safe_failure_count": len(
             source_report["runtime_adjacent_mock_only_safe_failures"]
@@ -1224,9 +1192,7 @@ def summarize_behavior_parity_coverage_report(report=None):
 
 def format_behavior_parity_coverage_report(report=None):
     """Return deterministic human-readable behavior-parity coverage lines."""
-    source_report = (
-        build_behavior_parity_coverage_report() if report is None else report
-    )
+    source_report = build_behavior_parity_coverage_report() if report is None else report
     lines = [
         source_report["title"],
         "Accepted Packet Coverage:",
@@ -1244,8 +1210,7 @@ def format_behavior_parity_coverage_report(report=None):
     for item in source_report["pad_lane_packet_coverage"]:
         command_keys = ", ".join(item["command_keys"])
         lines.append(
-            f"- Packet {item['packet']}: {item['lane']} - "
-            f"{command_keys} - {item['coverage']}"
+            f"- Packet {item['packet']}: {item['lane']} - " f"{command_keys} - {item['coverage']}"
         )
         deferred_keys = ", ".join(item["deferred_keys"]) or "none"
         lines.append(f"- Packet {item['packet']} deferred/safe: {deferred_keys}")
@@ -1392,9 +1357,7 @@ def build_mock_runtime_active_bridge_report():
 
 def summarize_mock_runtime_active_bridge_report(report=None):
     """Return a compact copied summary of the bridge report contract."""
-    source_report = (
-        build_mock_runtime_active_bridge_report() if report is None else report
-    )
+    source_report = build_mock_runtime_active_bridge_report() if report is None else report
     return {
         "title": source_report["title"],
         "accepted_source_key": source_report["accepted_candidate"]["source_key"],
@@ -1426,9 +1389,7 @@ def _bridge_parked_case_line(parked_case):
 
 def format_mock_runtime_active_bridge_report(report=None):
     """Return deterministic human-readable bridge report lines."""
-    source_report = (
-        build_mock_runtime_active_bridge_report() if report is None else report
-    )
+    source_report = build_mock_runtime_active_bridge_report() if report is None else report
     candidate = source_report["accepted_candidate"]
     lines = [
         source_report["title"],
@@ -1463,10 +1424,7 @@ def format_mock_runtime_active_bridge_report(report=None):
             f"- real_midi: {source_report['safety']['real_midi']}",
             f"- port_opening: {source_report['safety']['port_opening']}",
             f"- hardware_required: {source_report['safety']['hardware_required']}",
-            (
-                "- cli_execution_wiring: "
-                f"{source_report['safety']['cli_execution_wiring']}"
-            ),
+            ("- cli_execution_wiring: " f"{source_report['safety']['cli_execution_wiring']}"),
             f"- runtime_execution: {source_report['safety']['runtime_execution']}",
             f"- dispatch: {source_report['safety']['dispatch']}",
             f"- active_behavior: {source_report['safety']['active_behavior']}",

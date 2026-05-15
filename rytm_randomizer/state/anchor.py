@@ -18,9 +18,9 @@ Nothing here opens ports, sends MIDI, or touches hardware.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 State = Mapping[str, object]
 
@@ -44,12 +44,8 @@ class AnchorRuntimeState:
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "active_profile", _freeze(self.active_profile))
-        object.__setattr__(
-            self, "anchor_state", MappingProxyType(dict(self.anchor_state))
-        )
-        object.__setattr__(
-            self, "current_state", MappingProxyType(dict(self.current_state))
-        )
+        object.__setattr__(self, "anchor_state", MappingProxyType(dict(self.anchor_state)))
+        object.__setattr__(self, "current_state", MappingProxyType(dict(self.current_state)))
         object.__setattr__(self, "previous_state", _freeze(self.previous_state))
 
 
@@ -63,9 +59,7 @@ def initial_anchor_runtime_state() -> AnchorRuntimeState:
     return AnchorRuntimeState()
 
 
-def select_profile(
-    state: AnchorRuntimeState, profile: Mapping[str, object]
-) -> AnchorRuntimeState:
+def select_profile(state: AnchorRuntimeState, profile: Mapping[str, object]) -> AnchorRuntimeState:
     """Apply the monolith ``select_profile`` transition.
 
     ``anchor_state`` becomes a copy of ``profile["anchor"]``, ``current_state``

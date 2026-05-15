@@ -301,9 +301,7 @@ def test_mutate_result_keeps_anchor_and_profile():
     base = anchor.AnchorRuntimeState(
         active_profile=profile, anchor_state={"a": 1}, current_state={"c": 0}
     )
-    state = anchor.mutate_result(
-        base, current_state={"c": 9}, previous_state={"c": 0}
-    )
+    state = anchor.mutate_result(base, current_state={"c": 9}, previous_state={"c": 0})
     assert dict(state.anchor_state) == {"a": 1}
     assert dict(state.active_profile) == profile
     assert dict(state.current_state) == {"c": 9}

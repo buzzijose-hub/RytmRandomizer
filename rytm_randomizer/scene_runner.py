@@ -77,10 +77,7 @@ class SceneRunner:
         """
 
         print("\nScene / Preset Tools - V1.34")
-        print(
-            "  These are performance shortcuts built from the validated "
-            "four-lane system."
-        )
+        print("  These are performance shortcuts built from the validated " "four-lane system.")
         print(
             "  They do not introduce new parameter ranges; they call the "
             "existing safe global layer."
@@ -102,10 +99,7 @@ class SceneRunner:
         print("  S4B = Wild Maximum")
         print("  S5  = Back to Clean anchors")
         print("\nScene behavior:")
-        print(
-            "  SCN only displays this menu/status; it does not send MIDI or "
-            "load anchors."
-        )
+        print("  SCN only displays this menu/status; it does not send MIDI or " "load anchors.")
         print(
             "  S0 loads the full four-pad anchor state if needed, or returns "
             "all pads to anchors if already loaded."
@@ -153,10 +147,7 @@ class SceneRunner:
 
             if action == "home":
                 if len(self.group.group_current_states) < 4:
-                    print(
-                        "  Four-pad state not loaded yet. Loading validated "
-                        "anchors now."
-                    )
+                    print("  Four-pad state not loaded yet. Loading validated " "anchors now.")
                     self.group.load_group_anchors()
                 else:
                     print("  Returning all four pads to validated anchors.")
@@ -167,10 +158,7 @@ class SceneRunner:
 
             if action == "clean":
                 if len(self.group.group_current_states) < 4:
-                    print(
-                        "  Four-pad state not loaded yet. Loading validated "
-                        "anchors now."
-                    )
+                    print("  Four-pad state not loaded yet. Loading validated " "anchors now.")
                     self.group.load_group_anchors()
                 else:
                     print("  Returning all four pads to validated anchors.")
@@ -181,10 +169,7 @@ class SceneRunner:
 
             self.group.ensure_group_anchors_loaded(f"Scene {scene_key.upper()}")
 
-            print(
-                "  Applying scene through the validated global four-lane mutation "
-                "layer."
-            )
+            print("  Applying scene through the validated global four-lane mutation " "layer.")
             self.group.mutate_group_intensity(action)
             self.current_scene_name = scene["name"]
             print(f"\nScene active: {self.current_scene_name}")

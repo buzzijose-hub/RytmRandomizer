@@ -10,14 +10,25 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = "Apache-2.0"
 dependencies = [
-    "mido>=1.3,<2",
-    "python-rtmidi>=1.5,<2",
+    # Elektron-critical pins. mido encodes the wire-format MIDI messages
+    # the Analog Rytm MK2 receives over the cable; python-rtmidi drives the
+    # OS port. Changing either could shift byte-level encoding of CC /
+    # SysEx / NRPN sequences, which would break hardware compatibility
+    # silently (the Rytm would accept malformed packets and quietly
+    # misbehave). These exact versions are what the byte-frozen V1.34
+    # monolith and the E2E canonical-flow golden file were validated
+    # against. Any future bump goes through a hardware re-verification
+    # workstream -- do not widen these pins casually.
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8,<9",
-    "pytest-cov>=5,<7",
+    # pytest 9 is the current stable major. The suite passes on 9; we keep
+    # the 8 floor so contributors on older tooling can still run tests.
+    "pytest>=8,<10",
+    "pytest-cov>=5,<8",
     "pytest-timeout>=2,<3",
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
@@ -25,15 +36,16 @@ dev = [
 # WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
 # guardrails system). Only pulled in by users running real audio analyses;
 # the description-only path in style_analysis/ requires nothing extra.
+# librosa never touches MIDI, so its version is not Elektron-critical.
 style = [
-    "librosa>=0.10,<1",
+    "librosa>=0.11,<2",
 ]
 # Native end-user installer toolchain. Kept separate from `dev` so the test
 # suite stays lean and contributors are not forced to install briefcase just
 # to run pytest. Release engineers pull this in when building .msi / .pkg /
 # AppImage artifacts. See docs/BUILDING_INSTALLERS.md for the full flow.
 installer = [
-    "briefcase>=0.3.20,<1",
+    "briefcase>=0.4,<1",
 ]
 
 [project.scripts]
@@ -64,13 +76,124 @@ timeout_method = "thread"
 #                    targets, not guesses.
 addopts = "-n auto --durations=20"
 
-# WS-I fills these
-[tool.coverage.run]
-branch = true
-source = ["rytm_randomizer"]
+# Coverage configuration is in `.coveragerc` (not duplicated here). That
+# file is the single source of truth: branch=True, source=rytm_randomizer,
+# hardware-I/O exclusions, the ratcheting `fail_under` floor, and the
+# unreachable-by-construction exclude patterns (TYPE_CHECKING, __main__,
+# NotImplementedError, abstract methods).
+#
+# coverage.py reads .coveragerc natively. Keeping config there preserves
+# the existing hardware-boundary exclusion patterns (mido.open_output,
+# out.send, input(, get_output_names) that the project depends on.
 
-# WS-I fills these
-[tool.coverage.report]
+# -----------------------------------------------------------------------------
+# ruff — fast Python linter (and the security backstop in CI).
+#
+# Rule packs enabled here:
+#   E,F  -- pyflakes + pycodestyle (default; matches the pre-commit ruff hook).
+#   B    -- flake8-bugbear: catches common bug patterns (mutable defaults,
+#           unused loop vars, raising bare exceptions, etc.).
+#   S    -- flake8-bandit: security checks. THIS is the security backstop --
+#           hardcoded passwords, insecure subprocess use, eval/exec, weak
+#           crypto, etc. Bare-except (S110/S112) and a couple of pytest
+#           idioms (S101 assert-used) are per-file-ignored below.
+#   SIM  -- flake8-simplify: structural simplifications.
+#   UP   -- pyupgrade: modernization for the project's >=3.9 floor.
+#   C4   -- flake8-comprehensions: idiomatic list/dict/set comprehensions.
+#
+# When tightening this rule set, run `ruff check . --statistics` first to
+# scope the work, then either fix the violations or add a per-file ignore
+# below with a one-line comment explaining why.
+# -----------------------------------------------------------------------------
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311", "py312", "py313"]
+# Keep the byte-frozen V1.34 monolith out of the formatter -- the
+# architecture conformance test enforces it has zero working-tree diff,
+# so reformatting it would break the gate.
+extend-exclude = "rytm_hybrid_randomizer_v134.py"
+
+[tool.isort]
+profile = "black"
+line_length = 100
+skip = ["rytm_hybrid_randomizer_v134.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+# The byte-frozen V1.34 monolith is the hardware-validated reference. The
+# architecture conformance tests enforce it has zero working-tree diff vs.
+# the committed version. Linting it would either be a no-op (because we
+# cannot fix anything) or would fail the conformance test on auto-fix --
+# either way, it is not a useful gate. Excluded.
+extend-exclude = ["rytm_hybrid_randomizer_v134.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "S", "SIM", "UP", "C4"]
+ignore = [
+    # E501 is left to black; ruff's line-length check duplicates the
+    # formatter and creates conflict noise.
+    "E501",
+    # SIM105 (use contextlib.suppress) often produces less-readable code
+    # than an explicit try/except/pass guard; the project prefers the
+    # explicit form. The rare cases where suppress is genuinely clearer
+    # are written that way by hand.
+    "SIM105",
+    # SIM102 (collapsible if) -- explicit nested ifs are often more
+    # readable when each guard has its own semantic meaning.
+    "SIM102",
+    # SIM108 (use ternary) -- explicit if/else preferred for branchy logic.
+    "SIM108",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately need:
+#   S101         -- pytest asserts are how tests express invariants.
+#   S105         -- name collisions: a loop variable named `token` in the
+#                   architecture test triggers bandit's "hardcoded
+#                   password" rule even though the loop iterates over
+#                   import-statement tokens. False positive by name only.
+#   S110         -- defensive try/except/pass in fixtures, where re-raising
+#                   would corrupt the test report (explicitly annotated
+#                   `# pragma: no cover - defensive` at the site).
+#   S311         -- the project IS a non-crypto randomizer; tests
+#                   intentionally exercise random.Random() with seeded
+#                   determinism.
+#   S603/S607    -- subprocess.run(...) with a static list, no shell, no
+#                   user input. The processes are pytest + git, both safe.
+#   E402         -- many tests insert PROJECT_ROOT on sys.path *before*
+#                   importing rytm_randomizer.* so they run from any cwd;
+#                   this is an intentional import order.
+#   B007         -- two-tuple/three-tuple loop unpacking where one
+#                   element is documentary only (e.g. `for target, kind,
+#                   prior in restores:` where kind is used elsewhere).
+#   B011         -- assert False inside skipif clauses for documentation.
+#   B017         -- one `pytest.raises(Exception)` testing that a frozen
+#                   dataclass rejects any mutation, intentionally broad.
+#   B904         -- `raise EOFError` inside an `except StopIteration:` is a
+#                   deliberate fixture pattern (mirror closed stdin); we
+#                   want a fresh exception, not a chained one.
+"tests/**" = [
+    "S101", "S105", "S110", "S311", "S603", "S607",
+    "E402", "B007", "B011", "B017", "B904",
+]
+# rytm_randomizer/observability/errors.py: __all__ lists names that are
+# resolved via PEP 562 module-level __getattr__ (lazy re-export to avoid
+# import cycles). F822 does not understand PEP 562 lazy attributes.
+"rytm_randomizer/observability/errors.py" = ["F822"]
+# rytm_randomizer/randomization.py: this IS the randomization engine.
+# random.Random() is the load-bearing primitive, not a security concern.
+"rytm_randomizer/randomization.py" = ["S311"]
+# Capture-tool one-shots in tooling/ are frozen historical artifacts used
+# once to capture hardware response data. Subprocess, broad-except, and
+# bare-except in these scripts have been audited and are safe; rewriting
+# them would diverge from the on-disk record of what was actually run.
+"tooling/**" = ["S110", "S112", "E722", "B904"]
+# Scripts/ -- internal developer/CI utility scripts. Subprocess calls use
+# static argument lists with no shell. XML parsing is of coverage.xml that
+# coverage.py just generated locally, not untrusted input.
+"Scripts/**" = ["S603", "S314"]
 
 # -----------------------------------------------------------------------------
 # BeeWare briefcase — native end-user installer config.
@@ -119,8 +242,8 @@ console_app = true
 # pip uses, so the wheels (including python-rtmidi's platform-specific
 # C-extension wheels) get bundled into the installer.
 requires = [
-    "mido>=1.3,<2",
-    "python-rtmidi>=1.5,<2",
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
 ]
 # Placeholder icon. installer-assets/icon.svg is a text placeholder; the
 # release engineer must supply rendered PNGs (Windows .ico, macOS .icns,
@@ -141,14 +264,14 @@ universal_build = true
 # Macs in the wild.
 min_os_version = "11.0"
 requires = [
-    "mido>=1.3,<2",
-    "python-rtmidi>=1.5,<2",
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
 ]
 
 [tool.briefcase.app.rytm-randomizer.linux]
 requires = [
-    "mido>=1.3,<2",
-    "python-rtmidi>=1.5,<2",
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
 ]
 # python-rtmidi builds its C extension against ALSA on Linux. Without the
 # ALSA dev headers in the build environment, the wheel build fails. Listing
@@ -180,6 +303,6 @@ system_requires = [
 # is the path of least friction for end users who don't have admin rights.
 [tool.briefcase.app.rytm-randomizer.windows]
 requires = [
-    "mido>=1.3,<2",
-    "python-rtmidi>=1.5,<2",
+    "mido==1.3.3",
+    "python-rtmidi==1.5.8",
 ]

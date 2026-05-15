@@ -11,25 +11,25 @@ from __future__ import annotations
 GROUP_LAYOUT = {
     1: {
         "role": "Main kick / BD Hard default",
-        "profile": "2",   # My BD Hard - primary Buzzi default
+        "profile": "2",  # My BD Hard - primary Buzzi default
         "zone": "full",
         "depth": "micro",
     },
     2: {
         "role": "Secondary kick / rolling low percussion",
-        "profile": "3",   # My BD Classic
+        "profile": "3",  # My BD Classic
         "zone": "body",
         "depth": "groove",
     },
     3: {
         "role": "SY Raw midrange bass / synth-percussion",
-        "profile": "5",   # Pad 3 SY Raw Mid Bass
+        "profile": "5",  # Pad 3 SY Raw Mid Bass
         "zone": "lfo",
         "depth": "groove",
     },
     4: {
         "role": "Body hit / accent layer",
-        "profile": "4",   # My BD Acoustic
+        "profile": "4",  # My BD Acoustic
         "zone": "body",
         "depth": "micro",
     },
@@ -44,43 +44,45 @@ INTENSITY_PLANS = {
         3: [("lfo", "groove"), ("body", "micro")],
         4: [("body", "micro")],
     },
-
     "deeper": {
         # Pad 1 stays protected with micro body movement only.
         1: [("body", "micro")],
-
         # Pad 2 gets stronger rolling percussion movement plus small grit.
         2: [("body", "strong"), ("grit", "micro")],
-
         # Pad 3 carries most of the moving bass/synth-percussion energy.
         3: [("body", "groove"), ("lfo", "groove"), ("morph", "micro")],
-
         # Pad 4 pushes the body/accent lane without destabilizing the kit.
         4: [("body", "groove"), ("grit", "micro")],
     },
-
     "intense": {
         # Controlled chaos: Pad 1 still avoids strong movement.
         1: [("body", "micro"), ("filter", "micro")],
-
         # Pad 2 adds pressure and noise without taking over the kick.
         2: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
-
         # Pad 3 is the main chaos/motion carrier.
-        3: [("body", "strong"), ("filter", "groove"), ("morph", "groove"), ("lfo", "strong"), ("grit", "groove")],
-
+        3: [
+            ("body", "strong"),
+            ("filter", "groove"),
+            ("morph", "groove"),
+            ("lfo", "strong"),
+            ("grit", "groove"),
+        ],
         # Pad 4 becomes the accent pressure layer.
         4: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
     },
-
     "harder": {
         # Wild discovery mode. Still lane-aware: Pad 1 is not allowed to go fully wild.
         1: [("body", "groove"), ("filter", "micro")],
         2: [("full", "strong"), ("grit", "strong")],
-        3: [("src", "strong"), ("filter", "strong"), ("morph", "strong"), ("lfo", "strong"), ("grit", "strong")],
+        3: [
+            ("src", "strong"),
+            ("filter", "strong"),
+            ("morph", "strong"),
+            ("lfo", "strong"),
+            ("grit", "strong"),
+        ],
         4: [("full", "strong"), ("body", "strong"), ("grit", "strong")],
     },
-
     # V1.34 scene-depth expansion: these are performance-scene variants built
     # only from already validated zones and depth levels. No new parameter
     # ranges are introduced here.
@@ -90,64 +92,63 @@ INTENSITY_PLANS = {
         3: [("lfo", "micro"), ("body", "micro")],
         4: [("body", "micro")],
     },
-
     "rolling_push": {
         1: [("body", "micro")],
         2: [("body", "groove"), ("src", "micro")],
         3: [("lfo", "groove"), ("morph", "micro"), ("body", "micro")],
         4: [("body", "groove")],
     },
-
     "deeper_groove": {
         1: [("body", "micro")],
         2: [("body", "groove"), ("grit", "micro")],
         3: [("body", "groove"), ("lfo", "groove")],
         4: [("body", "groove")],
     },
-
     "deeper_pressure": {
         1: [("body", "micro"), ("filter", "micro")],
         2: [("body", "strong"), ("filter", "groove"), ("grit", "micro")],
         3: [("body", "groove"), ("lfo", "groove"), ("morph", "micro"), ("filter", "micro")],
         4: [("body", "groove"), ("grit", "groove")],
     },
-
     "intense_motion": {
         1: [("body", "micro")],
         2: [("body", "groove"), ("filter", "groove")],
         3: [("lfo", "strong"), ("morph", "groove"), ("body", "groove"), ("filter", "groove")],
         4: [("body", "groove"), ("filter", "groove")],
     },
-
     "intense_grit": {
         1: [("body", "micro"), ("grit", "micro")],
         2: [("body", "strong"), ("grit", "groove"), ("filter", "groove")],
         3: [("grit", "groove"), ("morph", "groove"), ("lfo", "groove")],
         4: [("body", "strong"), ("grit", "groove"), ("filter", "groove")],
     },
-
     "wild_controlled": {
         1: [("body", "groove"), ("filter", "micro")],
         2: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
         3: [("morph", "strong"), ("lfo", "strong"), ("filter", "groove"), ("body", "groove")],
         4: [("body", "strong"), ("filter", "groove"), ("grit", "groove")],
     },
-
     "wild_maximum": {
         # Alias-level behavior for the wildest scene variant: same guardrails as "harder".
         1: [("body", "groove"), ("filter", "micro")],
         2: [("full", "strong"), ("grit", "strong")],
-        3: [("src", "strong"), ("filter", "strong"), ("morph", "strong"), ("lfo", "strong"), ("grit", "strong")],
+        3: [
+            ("src", "strong"),
+            ("filter", "strong"),
+            ("morph", "strong"),
+            ("lfo", "strong"),
+            ("grit", "strong"),
+        ],
         4: [("full", "strong"), ("body", "strong"), ("grit", "strong")],
     },
 }
 
 GLOBAL_PAGE_PLANS = {
     "src": {
-        1: ["src"],       # BD Hard source movement
-        2: ["src"],       # secondary percussion source movement
-        3: ["morph"],     # SY Raw wave/balance movement is more musical than full SRC every time
-        4: ["src"],       # BD Acoustic source/body movement
+        1: ["src"],  # BD Hard source movement
+        2: ["src"],  # secondary percussion source movement
+        3: ["morph"],  # SY Raw wave/balance movement is more musical than full SRC every time
+        4: ["src"],  # BD Acoustic source/body movement
     },
     "filter": {
         1: ["filter"],
@@ -212,10 +213,10 @@ PAD4_MODE_MUTATION_PLANS = {
 PAD1_BD_ROTATION_ORDER = ["2", "1", "3", "4", "6", "7", "8"]
 
 PAD1_BD_MUTATION_PLANS = {
-    "2": [("full", "micro"), ("body", "micro"), ("grit", "micro")],      # BD Hard
-    "1": [("body", "micro"), ("grit", "micro"), ("full", "micro")],      # BD Sharp
-    "3": [("body", "micro"), ("full", "micro"), ("grit", "micro")],      # BD Classic
-    "4": [("body", "micro"), ("full", "micro"), ("grit", "micro")],      # BD Acoustic
+    "2": [("full", "micro"), ("body", "micro"), ("grit", "micro")],  # BD Hard
+    "1": [("body", "micro"), ("grit", "micro"), ("full", "micro")],  # BD Sharp
+    "3": [("body", "micro"), ("full", "micro"), ("grit", "micro")],  # BD Classic
+    "4": [("body", "micro"), ("full", "micro"), ("grit", "micro")],  # BD Acoustic
 }
 
 PAD2_PROFILE_KEYS = ["3", "9", "10", "11"]

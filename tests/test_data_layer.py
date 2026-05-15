@@ -119,7 +119,17 @@ def test_profile_registry_has_expected_keys():
     """The canonical profile registry must carry all 11 V1.34 profiles."""
 
     assert set(data.PROFILES) == {
-        "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
     }
     assert len(data.PROFILES) == 11
 
@@ -161,8 +171,20 @@ def test_sy_raw_cc_numbers_are_known_good():
 def test_scene_presets_has_14_entries_with_known_keys():
     assert len(data.SCENE_PRESETS) == 14
     assert set(data.SCENE_PRESETS) == {
-        "s0", "s1", "s1a", "s1b", "s2", "s2a", "s2b",
-        "s3", "s3a", "s3b", "s4", "s4a", "s4b", "s5",
+        "s0",
+        "s1",
+        "s1a",
+        "s1b",
+        "s2",
+        "s2a",
+        "s2b",
+        "s3",
+        "s3a",
+        "s3b",
+        "s4",
+        "s4a",
+        "s4b",
+        "s5",
     }
     assert data.SCENE_PRESETS["s0"]["name"] == "Home / Clean"
     assert data.SCENE_PRESETS["s0"]["action"] == "home"
@@ -207,9 +229,9 @@ def test_every_profile_order_name_exists_in_its_param_map():
         profile = data.PROFILES[key]
         params = profile["params"]
         for param_name in profile["order"]:
-            assert param_name in params, (
-                f"PROFILES[{key!r}] order references unknown param {param_name!r}"
-            )
+            assert (
+                param_name in params
+            ), f"PROFILES[{key!r}] order references unknown param {param_name!r}"
 
 
 def test_every_profile_anchor_name_exists_in_its_param_map():
@@ -217,9 +239,9 @@ def test_every_profile_anchor_name_exists_in_its_param_map():
         profile = data.PROFILES[key]
         params = profile["params"]
         for param_name in profile["anchor"]:
-            assert param_name in params, (
-                f"PROFILES[{key!r}] anchor references unknown param {param_name!r}"
-            )
+            assert (
+                param_name in params
+            ), f"PROFILES[{key!r}] anchor references unknown param {param_name!r}"
 
 
 def test_param_cc_numbers_are_within_midi_range():

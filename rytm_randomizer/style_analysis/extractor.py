@@ -93,7 +93,7 @@ def _require_librosa() -> tuple[object, object]:
     except ImportError as exc:
         raise StyleAnalysisDependencyError(
             "Audio feature extraction requires the 'style' optional extra. "
-            "Install it with: pip install -e \".[style,dev]\""
+            'Install it with: pip install -e ".[style,dev]"'
         ) from exc
     return librosa, numpy  # pragma: no cover - requires librosa
 
@@ -176,9 +176,7 @@ def _measure_audio_features(path: Path) -> dict[str, object]:  # pragma: no cove
     centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
     centroid_mean = float(numpy.mean(centroid)) if centroid.size else 0.0
     nyquist = float(sr) / 2.0
-    spectral_brightness = _normalize_unit(
-        centroid_mean / nyquist if nyquist > 0 else 0.0
-    )
+    spectral_brightness = _normalize_unit(centroid_mean / nyquist if nyquist > 0 else 0.0)
 
     # Low-end weight from an STFT power band.
     stft = numpy.abs(librosa.stft(y))
@@ -217,9 +215,7 @@ def _measure_audio_features(path: Path) -> dict[str, object]:  # pragma: no cove
             arc = tuple(0.0 for _ in range(8))
     else:
         # Very short audio: pad with zeros so the shape stays stable.
-        arc = tuple(
-            float(rms[i]) if i < rms.size else 0.0 for i in range(8)
-        )
+        arc = tuple(float(rms[i]) if i < rms.size else 0.0 for i in range(8))
 
     return {
         "bpm": bpm,
@@ -306,9 +302,7 @@ def extract_from_description(
     return _finalize(report)
 
 
-def extract_from_partial(
-    paths: list[Path], notes: str
-) -> FeatureReport:
+def extract_from_partial(paths: list[Path], notes: str) -> FeatureReport:
     """Mix audio measurements with user notes -> MEDIUM confidence.
 
     Aggregates per-file features by deterministic median across

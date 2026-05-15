@@ -16,8 +16,8 @@ Two isolation rules (matching ``tests/test_data_layer.py``):
 
 from __future__ import annotations
 
-import sys
 import subprocess
+import sys
 import types
 from pathlib import Path
 
@@ -32,6 +32,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # ---------------------------------------------------------------------------
 # Isolation helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
@@ -61,11 +62,12 @@ class _FakeMessage:
         self.value = value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _FakeMessage)
-            and (self.type, self.channel, self.control, self.value)
-            == (other.type, other.channel, other.control, other.value)
-        )
+        return isinstance(other, _FakeMessage) and (
+            self.type,
+            self.channel,
+            self.control,
+            self.value,
+        ) == (other.type, other.channel, other.control, other.value)
 
 
 def _install_fake_mido():
@@ -115,6 +117,7 @@ def _sample_profile() -> dict:
 # clamp -- pure, no mido, safe to compare in-process via subprocess parity
 # ===========================================================================
 
+
 def test_clamp_pure_values():
     from rytm_randomizer.midi_io import clamp
 
@@ -144,6 +147,7 @@ def test_clamp_parity_with_monolith():
 # ===========================================================================
 # send_cc -- in-process with a FAKE mido, plus subprocess parity vs monolith
 # ===========================================================================
+
 
 def test_send_cc_builds_cc_message_and_sleeps():
     _install_fake_mido()
@@ -199,6 +203,7 @@ def test_send_cc_parity_with_monolith():
 # ===========================================================================
 # send_machine / send_param -- subprocess parity (need monolith + real mido)
 # ===========================================================================
+
 
 def test_send_machine_parity_with_monolith():
     result = _run_python(
@@ -262,6 +267,7 @@ def test_send_param_parity_with_monolith():
 # a fake mido (capsys captures the printed output for assertions).
 # ===========================================================================
 
+
 def test_send_machine_in_process(capsys):
     _install_fake_mido()
     from rytm_randomizer.midi_io import send_machine
@@ -291,6 +297,7 @@ def test_send_param_in_process(capsys):
 
 
 # --- apply_state ----------------------------------------------------------
+
 
 def _monolith_apply_state_via_subprocess(state_repr, label, kwargs_repr):
     """Run the monolith's apply_state in a subprocess and return its result.
@@ -339,7 +346,7 @@ def test_apply_state_parity_basic(capsys):
     from rytm_randomizer.midi_io import apply_state
 
     pkg_profile = _sample_profile()
-    state = {name: 10 for name in pkg_profile["order"][:3]}
+    state = dict.fromkeys(pkg_profile["order"][:3], 10)
 
     mono = _monolith_apply_state_via_subprocess(repr(state), "Test Apply", "{}")
 
@@ -358,9 +365,7 @@ def test_apply_state_parity_basic(capsys):
     pkg_output = capsys.readouterr().out
 
     assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [
-        tuple(pair) for pair in mono["sent"]
-    ]
+    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(pair) for pair in mono["sent"]]
     assert result.applied is True
     assert result.current_state == mono["current_state"]
     assert result.previous_state == mono["previous_state"]
@@ -372,11 +377,9 @@ def test_apply_state_parity_set_anchor(capsys):
     from rytm_randomizer.midi_io import apply_state
 
     pkg_profile = _sample_profile()
-    state = {name: 20 for name in pkg_profile["order"][:2]}
+    state = dict.fromkeys(pkg_profile["order"][:2], 20)
 
-    mono = _monolith_apply_state_via_subprocess(
-        repr(state), "Anchor Apply", "{'set_anchor': True}"
-    )
+    mono = _monolith_apply_state_via_subprocess(repr(state), "Anchor Apply", "{'set_anchor': True}")
 
     pkg_out = RecordingOut()
     result = apply_state(
@@ -403,7 +406,7 @@ def test_apply_state_parity_switch_machine_first(capsys):
     from rytm_randomizer.midi_io import apply_state
 
     pkg_profile = _sample_profile()
-    state = {name: 5 for name in pkg_profile["order"][:1]}
+    state = dict.fromkeys(pkg_profile["order"][:1], 5)
 
     mono = _monolith_apply_state_via_subprocess(
         repr(state), "Switch Apply", "{'switch_machine_first': True}"
@@ -425,9 +428,7 @@ def test_apply_state_parity_switch_machine_first(capsys):
     pkg_output = capsys.readouterr().out
 
     assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [
-        tuple(pair) for pair in mono["sent"]
-    ]
+    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(pair) for pair in mono["sent"]]
     assert result.applied is True
 
 
@@ -491,7 +492,7 @@ def test_apply_state_set_anchor_with_immutable_profile(capsys):
 
     base = _sample_profile()
     immutable_profile = MappingProxyType(base)
-    state = {name: 15 for name in base["order"][:2]}
+    state = dict.fromkeys(base["order"][:2], 15)
 
     pkg_out = RecordingOut()
     result = apply_state(
@@ -537,6 +538,7 @@ def test_monolith_apply_state_without_profile_parity():
 # ===========================================================================
 # import safety
 # ===========================================================================
+
 
 def test_importing_midi_io_prints_nothing():
     result = _run_python("import rytm_randomizer.midi_io")

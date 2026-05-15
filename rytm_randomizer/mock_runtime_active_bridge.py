@@ -7,9 +7,9 @@ runtime state, or touch hardware.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
 from .mock_midi import MidiMessage, MockMidiSender

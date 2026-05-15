@@ -1,7 +1,7 @@
-from pathlib import Path
 import inspect
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -57,9 +57,7 @@ def test_importing_behavior_anchor_profile_report_prints_nothing():
 
 
 def test_report_summarizes_supported_anchor_profile_sections():
-    from rytm_randomizer.reports import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -96,9 +94,7 @@ def test_report_summarizes_supported_anchor_profile_sections():
 
 
 def test_report_entries_include_read_only_behavior_details():
-    from rytm_randomizer.reports import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -138,9 +134,7 @@ def test_report_entries_include_read_only_behavior_details():
 
 
 def test_report_marks_pz_and_profile_4_as_parked_not_supported():
-    from rytm_randomizer.reports import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -172,9 +166,7 @@ def test_report_marks_pz_and_profile_4_as_parked_not_supported():
 
 
 def test_report_records_safety_boundaries_and_closeout_coverage():
-    from rytm_randomizer.reports import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
 
@@ -204,9 +196,7 @@ def test_report_records_safety_boundaries_and_closeout_coverage():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.reports import (
-        summarize_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import summarize_anchor_profile_report
 
     assert summarize_anchor_profile_report() == {
         "title": "RytmRandomizer Anchor/Profile Behavior Report",
@@ -221,9 +211,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.reports import (
-        format_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import format_anchor_profile_report
 
     first = format_anchor_profile_report()
     second = format_anchor_profile_report()
@@ -260,9 +248,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.reports import (
-        build_anchor_profile_report,
-    )
+    from rytm_randomizer.reports import build_anchor_profile_report
 
     report = build_anchor_profile_report()
     report["supported_sections"][0]["entries"][0]["label"] = "MUTATED"
@@ -319,9 +305,7 @@ def test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_un
     assert "send-command" not in anchor_profile_result.stdout
     assert "hardware-test" not in anchor_profile_result.stdout
     assert report_result.returncode == 0
-    assert normalize_newlines(report_result.stdout) == fixture_text(
-        "registry_report_expected.txt"
-    )
+    assert normalize_newlines(report_result.stdout) == fixture_text("registry_report_expected.txt")
     assert report_result.stderr == ""
 
 

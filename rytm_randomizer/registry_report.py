@@ -24,7 +24,9 @@ from .reports import (
     UNSUPPORTED_SCOPE,
     build_registry_report,
     format_registry_report,
-    registry_report_main as main,
+)
+from .reports import registry_report_main as main
+from .reports import (
     summarize_registry_report,
 )
 

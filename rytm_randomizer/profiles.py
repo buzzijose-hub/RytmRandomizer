@@ -35,9 +35,7 @@ PAD_1_DEFAULT_PROFILE = {
 
 # Sliced from the canonical SY_RAW_PARAMS CC map so the CC numbers can never
 # drift from the monolith's SY Raw param definitions.
-PAD_3_SY_RAW_CC_MAP = {
-    name: SY_RAW_PARAMS[name] for name in _PAD_3_SY_RAW_CC_NAMES
-}
+PAD_3_SY_RAW_CC_MAP = {name: SY_RAW_PARAMS[name] for name in _PAD_3_SY_RAW_CC_NAMES}
 
 PAD_PROFILES = {
     1: PAD_1_DEFAULT_PROFILE,
@@ -57,9 +55,7 @@ def _build_group_profile_metadata() -> dict[str, dict[str, object]]:
     points at this key (the inverse of the layout mapping).
     """
 
-    profile_to_pad = {
-        layout["profile"]: pad for pad, layout in GROUP_LAYOUT.items()
-    }
+    profile_to_pad = {layout["profile"]: pad for pad, layout in GROUP_LAYOUT.items()}
     metadata: dict[str, dict[str, object]] = {}
     for key in _GROUP_PROFILE_KEYS:
         profile = PROFILES[key]

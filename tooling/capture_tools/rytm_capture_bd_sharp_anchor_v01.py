@@ -1,6 +1,7 @@
-import mido
-import time
 import msvcrt
+import time
+
+import mido
 
 print("\nRYTM CURRENT VALUE CAPTURE - BD SHARP ANCHOR BUILDER V0.1\n")
 
@@ -35,7 +36,6 @@ CC_TO_PARAM = {
     21: "SRC Hold Time",
     22: "SRC Tick Level",
     23: "SRC Waveform",
-
     # Filter page
     70: "FLT Attack",
     71: "FLT Decay",
@@ -45,7 +45,6 @@ CC_TO_PARAM = {
     75: "FLT Resonance",
     76: "FLT Type",
     77: "FLT Env Depth",
-
     # Amp page
     78: "AMP Attack",
     79: "AMP Hold",
@@ -64,7 +63,6 @@ PARAM_ORDER = [
     "SRC Hold Time",
     "SRC Tick Level",
     "SRC Waveform",
-
     "FLT Attack",
     "FLT Decay",
     "FLT Sustain",
@@ -73,7 +71,6 @@ PARAM_ORDER = [
     "FLT Resonance",
     "FLT Type",
     "FLT Env Depth",
-
     "AMP Attack",
     "AMP Hold",
     "AMP Decay",
@@ -84,6 +81,7 @@ PARAM_ORDER = [
 ]
 
 captured = {}
+
 
 def print_anchor():
     print("\n\nCAPTURED VALUES:\n")
@@ -108,6 +106,7 @@ def print_anchor():
             print(f"  - {name}")
 
     print("\nTip: If something is missing, go to that page on the Rytm and nudge that knob.")
+
 
 print(f"\nOpening MIDI input: {port_name}")
 print("Listening for CC values from Analog Rytm.")

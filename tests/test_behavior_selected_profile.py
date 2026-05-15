@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,9 +34,7 @@ def test_importing_behavior_selected_profile_prints_nothing():
 
 
 def test_p_returns_read_only_profile_selection_machine_change_intent():
-    from rytm_randomizer.behavior_selected_profile import (
-        evaluate_selected_profile_behavior,
-    )
+    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("P")
 
@@ -86,23 +84,15 @@ def test_p_returns_read_only_profile_selection_machine_change_intent():
 
 
 def test_p_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_selected_profile import (
-        evaluate_selected_profile_behavior,
-    )
+    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("P")
 
     assert result.metadata["source"] == "PROFILE_WORKFLOW_COMMANDS"
     assert result.metadata["command_type"] == "selection"
     assert result.metadata["source_scope"] == "profile_machine"
-    assert (
-        result.metadata["behavior_family"]
-        == "selected-profile-workflow/profile-selection"
-    )
-    assert (
-        result.metadata["workflow_action"]
-        == "describe_profile_selection_machine_change_intent"
-    )
+    assert result.metadata["behavior_family"] == "selected-profile-workflow/profile-selection"
+    assert result.metadata["workflow_action"] == "describe_profile_selection_machine_change_intent"
     assert result.metadata["intent_kind"] == "profile_machine_selection"
     assert result.metadata["selects_profile"] is True
     assert result.metadata["machine_change_intent"] is True
@@ -120,9 +110,7 @@ def test_p_metadata_contains_expected_passive_sources():
 
 
 def test_selected_profile_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_selected_profile import (
-        evaluate_selected_profile_behavior,
-    )
+    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("P")
 
@@ -153,10 +141,7 @@ def test_m_returns_read_only_selected_profile_anchor_load_intent():
     assert result.accepted is True
     assert result.reason == "supported_selected_profile_anchor_load_intent"
     assert result.label == "load selected profile anchor"
-    assert (
-        result.behavior_family
-        == "selected-profile-workflow/selected-profile-anchor-load"
-    )
+    assert result.behavior_family == "selected-profile-workflow/selected-profile-anchor-load"
     assert result.source_scope == "selected_profile"
     assert result.workflow_action == "describe_selected_profile_anchor_load_intent"
     assert result.intent_kind == "selected_profile_anchor_load"
@@ -201,9 +186,7 @@ def test_m_returns_read_only_selected_profile_anchor_load_intent():
 
 
 def test_m_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_selected_profile import (
-        evaluate_selected_profile_behavior,
-    )
+    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("M")
 
@@ -214,18 +197,12 @@ def test_m_metadata_contains_expected_passive_sources():
         result.metadata["behavior_family"]
         == "selected-profile-workflow/selected-profile-anchor-load"
     )
-    assert (
-        result.metadata["workflow_action"]
-        == "describe_selected_profile_anchor_load_intent"
-    )
+    assert result.metadata["workflow_action"] == "describe_selected_profile_anchor_load_intent"
     assert result.metadata["intent_kind"] == "selected_profile_anchor_load"
     assert result.metadata["selects_profile"] is False
     assert result.metadata["machine_change_intent"] is False
     assert result.metadata["uses_selected_profile"] is True
-    assert (
-        result.metadata["selected_profile_dependency"]
-        == "current_selected_profile_state"
-    )
+    assert result.metadata["selected_profile_dependency"] == "current_selected_profile_state"
     assert result.metadata["anchor_load_intent"] is True
     assert result.metadata["selected_profile_runtime_state_exists"] is False
     assert result.metadata["machine_change_executed"] is False
@@ -240,9 +217,7 @@ def test_m_metadata_contains_expected_passive_sources():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_selected_profile import (
-        evaluate_selected_profile_behavior,
-    )
+    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("NOPE")
 
@@ -256,9 +231,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 
@@ -272,9 +245,7 @@ def test_packet_2_anchor_profile_behavior_remains_unchanged():
 
 
 def test_packet_3_legacy_single_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("M1")
 
@@ -288,9 +259,7 @@ def test_packet_3_legacy_single_profile_behavior_remains_unchanged():
 
 
 def test_packet_9_undo_commit_state_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -341,8 +310,7 @@ def test_no_out_of_scope_support_is_exposed():
     module_text = "\n".join(
         [
             behavior_selected_profile.__doc__ or "",
-            behavior_selected_profile.evaluate_selected_profile_behavior.__doc__
-            or "",
+            behavior_selected_profile.evaluate_selected_profile_behavior.__doc__ or "",
         ]
     )
 

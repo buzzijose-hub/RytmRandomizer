@@ -37,7 +37,8 @@ package logger.
 from __future__ import annotations
 
 import dataclasses
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from ..data import PROFILES
 from ..observability.errors import BoundaryError
@@ -138,10 +139,10 @@ DESTRUCTIVE_HIGH_RISK_PARAMETERS: frozenset[str] = frozenset(
 
 
 PAD_PROFILE_KEY: Mapping[int, str] = {
-    1: "2",   # Pad 1 default: My BD Hard (the protected kick foundation).
-    2: "3",   # Pad 2 default: My BD Classic / SD profiles share param shape.
-    3: "5",   # Pad 3 default: Pad 3 SY Raw mid-bass.
-    4: "4",   # Pad 4 default: My BD Acoustic (body / impact / accent).
+    1: "2",  # Pad 1 default: My BD Hard (the protected kick foundation).
+    2: "3",  # Pad 2 default: My BD Classic / SD profiles share param shape.
+    3: "5",  # Pad 3 default: Pad 3 SY Raw mid-bass.
+    4: "4",  # Pad 4 default: My BD Acoustic (body / impact / accent).
 }
 """Default ``PROFILES`` key per pad.
 
@@ -442,10 +443,7 @@ def _check_semantic(draft: GuardrailProfile) -> None:
                 },
             )
 
-        if (
-            bound.guardrail_class in MUTATING_CLASSES
-            and bound.parameter in forbidden_set
-        ):
+        if bound.guardrail_class in MUTATING_CLASSES and bound.parameter in forbidden_set:
             raise ProfileRejectedError(
                 "parameter is both in a mutating class and in forbidden",
                 context={
@@ -455,10 +453,7 @@ def _check_semantic(draft: GuardrailProfile) -> None:
                 },
             )
 
-        if (
-            bound.guardrail_class in MUTATING_CLASSES
-            and bound.pad not in role_assignments
-        ):
+        if bound.guardrail_class in MUTATING_CLASSES and bound.pad not in role_assignments:
             raise ProfileRejectedError(
                 "mutated bound references a pad without a role mapping",
                 context={
@@ -493,10 +488,7 @@ def _apply_safety_floor(
     forbidden_seen = set(forbidden)
 
     for bound in draft.bounds:
-        if (
-            bound.parameter in HIGH_RISK_PARAMETERS
-            and bound.guardrail_class in MUTATING_CLASSES
-        ):
+        if bound.parameter in HIGH_RISK_PARAMETERS and bound.guardrail_class in MUTATING_CLASSES:
             if bound.parameter in DESTRUCTIVE_HIGH_RISK_PARAMETERS:
                 target_class = GuardrailClass.FORBIDDEN
                 if bound.parameter not in forbidden_seen:
@@ -518,9 +510,7 @@ def _apply_safety_floor(
                     "rewritten_class": target_class.value,
                 },
             )
-            new_bounds.append(
-                dataclasses.replace(bound, guardrail_class=target_class)
-            )
+            new_bounds.append(dataclasses.replace(bound, guardrail_class=target_class))
         else:
             new_bounds.append(bound)
 
@@ -571,9 +561,7 @@ def validate(draft: GuardrailProfile) -> GuardrailProfile:
         content_hash="",
     )
     digest = compute_content_hash(intermediate)
-    validated: GuardrailProfile = dataclasses.replace(
-        intermediate, content_hash=digest
-    )
+    validated: GuardrailProfile = dataclasses.replace(intermediate, content_hash=digest)
 
     _logger.info(
         "guardrails.validate",

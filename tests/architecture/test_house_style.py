@@ -83,11 +83,7 @@ def _dataclass_decorator_is_frozen(deco: ast.expr) -> bool:
     if name != "dataclass":
         return False
     for kw in deco.keywords:
-        if (
-            kw.arg == "frozen"
-            and isinstance(kw.value, ast.Constant)
-            and kw.value.value is True
-        ):
+        if kw.arg == "frozen" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
             return True
     return False
 
@@ -202,7 +198,9 @@ def _public_unannotated_signatures(path: Path) -> list[str]:
     return out
 
 
-@pytest.mark.parametrize("path", _house_style_scope(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
+@pytest.mark.parametrize(
+    "path", _house_style_scope(), ids=lambda p: str(p.relative_to(PROJECT_ROOT))
+)
 def test_public_signatures_are_annotated_in_core(path: Path) -> None:
     """Every public function in the architectural core has type annotations."""
 
@@ -265,7 +263,9 @@ def _module_level_mutable_globals(path: Path) -> list[str]:
     return out
 
 
-@pytest.mark.parametrize("path", _house_style_scope(), ids=lambda p: str(p.relative_to(PROJECT_ROOT)))
+@pytest.mark.parametrize(
+    "path", _house_style_scope(), ids=lambda p: str(p.relative_to(PROJECT_ROOT))
+)
 def test_no_module_level_mutable_globals_in_core(path: Path) -> None:
     """Architectural core may not declare module-level mutable globals.
 

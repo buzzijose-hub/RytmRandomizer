@@ -27,16 +27,12 @@ from __future__ import annotations
 
 import random as _random_module
 import time
-from typing import Any, Callable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Callable
 
 from .. import midi_io as _midi_io
 from .. import randomization as _randomization
-from ..data import (
-    PAD2_MUTATION_PLANS,
-    PAD2_PROFILE_KEYS,
-    PAD2_PROFILE_LABELS,
-    PROFILES,
-)
+from ..data import PAD2_MUTATION_PLANS, PAD2_PROFILE_KEYS, PAD2_PROFILE_LABELS, PROFILES
 from ..guardrails.resolver import ResolvedBounds
 from ..observability.logging import get_logger
 from ..observability.tracing import trace
@@ -154,13 +150,9 @@ class Pad2Engine:
         return profile_copy
 
     def _send_machine(self) -> None:
-        _midi_io.send_machine(
-            self.out, self.active_profile, channel=self.channel, sleep=self.sleep
-        )
+        _midi_io.send_machine(self.out, self.active_profile, channel=self.channel, sleep=self.sleep)
 
-    def _clamp_state(
-        self, state: Mapping[str, int]
-    ) -> Mapping[str, int]:
+    def _clamp_state(self, state: Mapping[str, int]) -> Mapping[str, int]:
         """Return ``state`` with values clamped through resolved bounds.
 
         See :meth:`Pad1Engine._clamp_state`. Byte-identical parity when
@@ -171,9 +163,7 @@ class Pad2Engine:
             return state
         out: dict[str, int] = {}
         for name, value in state.items():
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 continue
             out[name] = clamped
@@ -207,9 +197,7 @@ class Pad2Engine:
         self.anchor_state = dict(result.anchor_state)
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
@@ -231,9 +219,7 @@ class Pad2Engine:
 
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _set_group_context(self, pad: int, profile_key: str) -> None:
@@ -272,10 +258,7 @@ class Pad2Engine:
             return
 
         if profile_key not in PAD2_PROFILE_KEYS:
-            print(
-                f"\nProfile {profile_key} is not assigned to the Pad 2 "
-                "foundation lane."
-            )
+            print(f"\nProfile {profile_key} is not assigned to the Pad 2 " "foundation lane.")
             return
 
         self.pad2_current_profile_key = profile_key
@@ -299,8 +282,7 @@ class Pad2Engine:
         self.group_previous_states[2] = None
 
         print(
-            f"\nPad 2 is now using {self.active_profile['name']} as its "
-            "profiled secondary lane."
+            f"\nPad 2 is now using {self.active_profile['name']} as its " "profiled secondary lane."
         )
 
     def show_pad2_tools(self) -> None:
@@ -322,9 +304,7 @@ class Pad2Engine:
         print("\nRotation order:")
         for idx, rot_key in enumerate(PAD2_PROFILE_KEYS, start=1):
             profile = PROFILES[rot_key]
-            marker = (
-                " < current" if rot_key == self.pad2_current_profile_key else ""
-            )
+            marker = " < current" if rot_key == self.pad2_current_profile_key else ""
             print(
                 f"  {idx}. {profile['name']} / machine CC15 value "
                 f"{profile['machine_value']}{marker}"
@@ -349,8 +329,7 @@ class Pad2Engine:
                     print(f"  {name}: {state[name]}")
         else:
             print(
-                "\nCurrent Pad 2 state: not loaded yet. Use O, P2B, P2H, "
-                "P2C, P2F, or P2R first."
+                "\nCurrent Pad 2 state: not loaded yet. Use O, P2B, P2H, " "P2C, P2F, or P2R first."
             )
 
     # ==================================================================
@@ -358,14 +337,9 @@ class Pad2Engine:
     # ==================================================================
 
     @trace("pad2.mutate_current_pad2_profile")
-    def mutate_current_pad2_profile(
-        self, zone_name: str, depth_name: str, label: str
-    ) -> None:
+    def mutate_current_pad2_profile(self, zone_name: str, depth_name: str, label: str) -> None:
         if self.pad2_current_profile_key not in PROFILES:
-            print(
-                "\nNo valid Pad 2 profile selected. Use P2B, P2H, P2C, P2F, "
-                "or P2R first."
-            )
+            print("\nNo valid Pad 2 profile selected. Use P2B, P2H, P2C, P2F, " "or P2R first.")
             return
 
         self._set_group_context(2, self.pad2_current_profile_key)
@@ -391,14 +365,9 @@ class Pad2Engine:
         self.group_current_states[2] = dict(self.current_state)
         # Byte-parity with the monolith's
         # ``previous_state.copy() if previous_state else None``.
-        self.group_previous_states[2] = (
-            dict(self.previous_state) if self.previous_state else None
-        )
+        self.group_previous_states[2] = dict(self.previous_state) if self.previous_state else None
 
-        print(
-            "\nPad 2 discovery command complete. Pads 1, 3, and 4 were not "
-            "touched."
-        )
+        print("\nPad 2 discovery command complete. Pads 1, 3, and 4 were not " "touched.")
 
     def enforce_pad2_grit_floor(self) -> None:
         """Keep Pad 2 grit/noise commands from accidentally getting too clean."""
@@ -438,15 +407,9 @@ class Pad2Engine:
             next_key = "3"
         else:
             index = PAD2_PROFILE_KEYS.index(current_key)
-            next_key = PAD2_PROFILE_KEYS[
-                (index + 1) % len(PAD2_PROFILE_KEYS)
-            ]
+            next_key = PAD2_PROFILE_KEYS[(index + 1) % len(PAD2_PROFILE_KEYS)]
 
-        current_name = (
-            PROFILES[current_key]["name"]
-            if current_key in PROFILES
-            else "Unknown"
-        )
+        current_name = PROFILES[current_key]["name"] if current_key in PROFILES else "Unknown"
         next_name = PROFILES[next_key]["name"]
 
         print("\nPad 2 Secondary-Lane Rotation:")
@@ -459,34 +422,21 @@ class Pad2Engine:
     @trace("pad2.mutate_current_pad2_rotation_profile")
     def mutate_current_pad2_rotation_profile(self) -> None:
         if self.pad2_current_profile_key not in PROFILES:
-            print(
-                "\nNo valid Pad 2 profile selected. Use P2B, P2H, P2C, P2F, "
-                "or P2R first."
-            )
+            print("\nNo valid Pad 2 profile selected. Use P2B, P2H, P2C, P2F, " "or P2R first.")
             return
 
         if self.pad2_current_profile_key not in PAD2_MUTATION_PLANS:
-            print(
-                "\nCurrent Pad 2 profile does not have a P2X mutation plan yet."
-            )
+            print("\nCurrent Pad 2 profile does not have a P2X mutation plan yet.")
             return
 
         if 2 not in self.group_current_states:
-            print(
-                "\nPad 2 state is not loaded yet. Use O, P2B, P2H, P2C, P2F, "
-                "or P2R first."
-            )
+            print("\nPad 2 state is not loaded yet. Use O, P2B, P2H, P2C, P2F, " "or P2R first.")
             return
 
-        zone_name, depth_name = self.rng.choice(
-            PAD2_MUTATION_PLANS[self.pad2_current_profile_key]
-        )
+        zone_name, depth_name = self.rng.choice(PAD2_MUTATION_PLANS[self.pad2_current_profile_key])
 
         print("\nPad 2 Current Profile Mutation - V1.26")
-        print(
-            f"  Current engine: "
-            f"{PROFILES[self.pad2_current_profile_key]['name']}"
-        )
+        print(f"  Current engine: " f"{PROFILES[self.pad2_current_profile_key]['name']}")
         print("  Pad 2 only. Pads 1, 3, and 4 are not touched.")
 
         self.mutate_current_pad2_profile(
@@ -496,32 +446,18 @@ class Pad2Engine:
         )
 
     def pad2_tone_discovery(self) -> None:
-        zone_name = (
-            "snap"
-            if "snap"
-            in PROFILES[self.pad2_current_profile_key]["zones"]
-            else "src"
-        )
-        self.mutate_current_pad2_profile(
-            zone_name, "groove", "Tone / Snap Discovery"
-        )
+        zone_name = "snap" if "snap" in PROFILES[self.pad2_current_profile_key]["zones"] else "src"
+        self.mutate_current_pad2_profile(zone_name, "groove", "Tone / Snap Discovery")
 
     def pad2_pressure_body_discovery(self) -> None:
-        self.mutate_current_pad2_profile(
-            "body", "groove", "Pressure / Body Discovery"
-        )
+        self.mutate_current_pad2_profile("body", "groove", "Pressure / Body Discovery")
 
     def pad2_grit_noise_discovery(self) -> None:
-        self.mutate_current_pad2_profile(
-            "grit", "groove", "Grit / Noise Discovery"
-        )
+        self.mutate_current_pad2_profile("grit", "groove", "Grit / Noise Discovery")
 
     def return_pad2_to_current_anchor(self) -> None:
         if self.pad2_current_profile_key not in PROFILES:
-            print(
-                "\nNo valid Pad 2 profile selected. Use P2B, P2H, P2C, P2F, "
-                "or P2R first."
-            )
+            print("\nNo valid Pad 2 profile selected. Use P2B, P2H, P2C, P2F, " "or P2R first.")
             return
 
         self._set_group_context(2, self.pad2_current_profile_key)
@@ -543,7 +479,4 @@ class Pad2Engine:
         self.group_current_states[2] = dict(self.current_state)
         self.group_previous_states[2] = None
 
-        print(
-            "\nPad 2 returned to current profile anchor. Pads 1, 3, and 4 "
-            "were not touched."
-        )
+        print("\nPad 2 returned to current profile anchor. Pads 1, 3, and 4 " "were not touched.")

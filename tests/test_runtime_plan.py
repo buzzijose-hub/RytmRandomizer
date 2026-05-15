@@ -1,7 +1,7 @@
-from pathlib import Path
 import importlib
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -61,10 +61,7 @@ def test_runtime_intent_metadata_is_copied_and_immutable():
 
 
 def test_create_blocked_runtime_preview_never_executes():
-    from rytm_randomizer.runtime_plan import (
-        RuntimeIntent,
-        create_blocked_runtime_preview,
-    )
+    from rytm_randomizer.runtime_plan import RuntimeIntent, create_blocked_runtime_preview
 
     intent = RuntimeIntent(
         source_kind="group_profile",
@@ -280,10 +277,7 @@ def test_unsupported_source_kind_preview_metadata_fails_safely():
 
 
 def test_runtime_plan_preview_metadata_is_copied_and_immutable():
-    from rytm_randomizer.runtime_plan import (
-        RuntimeIntent,
-        create_blocked_runtime_preview,
-    )
+    from rytm_randomizer.runtime_plan import RuntimeIntent, create_blocked_runtime_preview
 
     intent = RuntimeIntent(
         source_kind="group_profile",

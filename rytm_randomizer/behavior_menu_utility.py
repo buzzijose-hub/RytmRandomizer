@@ -5,12 +5,11 @@ behavior results without dispatching commands, opening ports, sending MIDI, or
 touching hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .commands import MENU_COMMANDS, UTILITY_COMMANDS
-
 
 PACKET_1A_MENU_STATUS_KEYS = (
     "BD",

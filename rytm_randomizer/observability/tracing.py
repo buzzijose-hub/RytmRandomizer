@@ -36,8 +36,9 @@ import functools
 import itertools
 import logging
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Callable, Iterator, TypeVar
+from typing import Any, Callable, TypeVar
 
 from .logging import PACKAGE_LOGGER_NAME
 

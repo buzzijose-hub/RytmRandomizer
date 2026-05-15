@@ -5,9 +5,9 @@ pads, create selected target or selected isolated pad runtime state, dispatch
 commands, open ports, send MIDI, or touch hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 
 @dataclass(frozen=True)

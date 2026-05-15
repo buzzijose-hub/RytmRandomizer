@@ -43,10 +43,9 @@ from rytm_randomizer.style_analysis import (
     extract_from_description,
     extract_from_partial,
 )
-from rytm_randomizer.style_analysis import feature_report as feature_report_module
 from rytm_randomizer.style_analysis import extractor as extractor_module
+from rytm_randomizer.style_analysis import feature_report as feature_report_module
 from rytm_randomizer.style_analysis import library as library_module
-
 
 # ---------------------------------------------------------------------------
 # Builders
@@ -498,8 +497,9 @@ def _write_sine_wave(path: Path, frequency: float, sr: int, duration: float) -> 
     helper does not affect module-level imports of the test file.
     """
 
-    import numpy as np  # local import - matches the lazy discipline
     import wave
+
+    import numpy as np  # local import - matches the lazy discipline
 
     t = np.arange(0, int(sr * duration)) / float(sr)
     samples = (0.5 * np.sin(2.0 * np.pi * frequency * t)).astype(np.float32)

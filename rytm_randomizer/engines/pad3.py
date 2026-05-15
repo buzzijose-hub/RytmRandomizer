@@ -37,11 +37,11 @@ from __future__ import annotations
 
 import random as _random_module
 import time
-from typing import Any, Callable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Callable
 
 from .. import midi_io as _midi_io
 from .. import randomization as _randomization
-from ..guardrails.resolver import ResolvedBounds
 from ..data import (
     GROUP_LAYOUT,
     PAD3_MODE_LABELS,
@@ -50,6 +50,7 @@ from ..data import (
     PROFILES,
     SY_RAW_FILTER_NAMES,
 )
+from ..guardrails.resolver import ResolvedBounds
 from ..observability.logging import get_logger
 from ..observability.tracing import trace
 
@@ -73,19 +74,47 @@ SY_RAW_PROFILE_KEY = "5"
 
 # The fixed snapshot name list ``show_sy_raw_discovery_menu`` prints.
 _SY_RAW_MENU_SNAPSHOT_NAMES = (
-    "SRC Tune", "SRC Detune", "SRC Noise Level", "SRC Osc 2 Decay",
-    "SRC Osc 1 Wave", "SRC Osc 2 Wave", "SRC Balance",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Hold", "AMP Decay", "AMP Overdrive",
-    "LFO Speed", "LFO Fade", "LFO Start Phase", "LFO Depth",
+    "SRC Tune",
+    "SRC Detune",
+    "SRC Noise Level",
+    "SRC Osc 2 Decay",
+    "SRC Osc 1 Wave",
+    "SRC Osc 2 Wave",
+    "SRC Balance",
+    "FLT Frequency",
+    "FLT Resonance",
+    "FLT Type",
+    "FLT Env Depth",
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive",
+    "LFO Speed",
+    "LFO Fade",
+    "LFO Start Phase",
+    "LFO Depth",
 )
 # The (slightly longer) snapshot name list ``show_pad3_tools`` prints.
 _PAD3_TOOLS_SNAPSHOT_NAMES = (
-    "SRC Tune", "SRC Detune", "SRC Noise Level", "SRC Osc 2 Decay",
-    "SRC Osc 1 Wave", "SRC Osc 2 Wave", "SRC Balance",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Hold", "AMP Decay", "AMP Overdrive", "AMP Delay Send", "AMP Reverb Send",
-    "LFO Speed", "LFO Fade", "LFO Start Phase", "LFO Depth",
+    "SRC Tune",
+    "SRC Detune",
+    "SRC Noise Level",
+    "SRC Osc 2 Decay",
+    "SRC Osc 1 Wave",
+    "SRC Osc 2 Wave",
+    "SRC Balance",
+    "FLT Frequency",
+    "FLT Resonance",
+    "FLT Type",
+    "FLT Env Depth",
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive",
+    "AMP Delay Send",
+    "AMP Reverb Send",
+    "LFO Speed",
+    "LFO Fade",
+    "LFO Start Phase",
+    "LFO Depth",
 )
 
 
@@ -156,9 +185,7 @@ class Pad3Engine:
     # ------------------------------------------------------------------
 
     def _send_machine(self) -> None:
-        _midi_io.send_machine(
-            self.out, self.active_profile, channel=self.channel, sleep=self.sleep
-        )
+        _midi_io.send_machine(self.out, self.active_profile, channel=self.channel, sleep=self.sleep)
 
     def _resolved_profile(self) -> Mapping[str, Any] | None:
         """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
@@ -192,9 +219,7 @@ class Pad3Engine:
 
     def _send_param(self, name: str, value: int) -> None:
         if self.resolved_bounds is not None:
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 # LOCKED_DEFAULT / FORBIDDEN -- this parameter must not
                 # leave the wire.
@@ -209,9 +234,7 @@ class Pad3Engine:
             sleep=self.sleep,
         )
 
-    def _clamp_state(
-        self, state: Mapping[str, int]
-    ) -> Mapping[str, int]:
+    def _clamp_state(self, state: Mapping[str, int]) -> Mapping[str, int]:
         """Return ``state`` with values clamped through resolved bounds.
 
         See :meth:`Pad1Engine._clamp_state`. Byte-identical parity when
@@ -222,9 +245,7 @@ class Pad3Engine:
             return state
         out: dict[str, int] = {}
         for name, value in state.items():
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 continue
             out[name] = clamped
@@ -258,9 +279,7 @@ class Pad3Engine:
         self.anchor_state = dict(result.anchor_state)
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
@@ -282,9 +301,7 @@ class Pad3Engine:
 
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _set_group_context(self, pad: int, profile_key: str) -> None:
@@ -321,10 +338,7 @@ class Pad3Engine:
 
         if len(self.group_current_states) < 4:
             print("\nLoad the full 4-pad group first with O.")
-            print(
-                "This stores safe anchors for Pads 1-4 before isolated "
-                "mutation."
-            )
+            print("This stores safe anchors for Pads 1-4 before isolated " "mutation.")
             return False
         return True
 
@@ -343,15 +357,10 @@ class Pad3Engine:
         self._set_group_context(self.isolated_pad, profile_key)
 
         print("\nReturning isolated pad to anchor:")
-        print(
-            f"  Pad {self.isolated_pad}: {cfg['role']} / "
-            f"{self.active_profile['name']}"
-        )
+        print(f"  Pad {self.isolated_pad}: {cfg['role']} / " f"{self.active_profile['name']}")
         print(
             "  Pads not touched: "
-            + ", ".join(
-                str(p) for p in GROUP_LAYOUT if p != self.isolated_pad
-            )
+            + ", ".join(str(p) for p in GROUP_LAYOUT if p != self.isolated_pad)
         )
 
         anchor = dict(self.group_anchor_states[self.isolated_pad])
@@ -367,8 +376,7 @@ class Pad3Engine:
         self.group_previous_states[self.isolated_pad] = None
 
         print(
-            f"\nPad {self.isolated_pad} returned to anchor. Other group pads "
-            "were not touched."
+            f"\nPad {self.isolated_pad} returned to anchor. Other group pads " "were not touched."
         )
 
     # ==================================================================
@@ -449,10 +457,7 @@ class Pad3Engine:
         self.group_current_states[3] = dict(self.current_state)
         self.group_previous_states[3] = dict(self.previous_state)
 
-        print(
-            "\nPad 3 SY Raw discovery command complete. Other group pads were "
-            "not touched."
-        )
+        print("\nPad 3 SY Raw discovery command complete. Other group pads were " "not touched.")
 
     def sy_raw_wave_balance_discovery(self) -> None:
         if not self.require_pad3_sy_raw_context():
@@ -460,9 +465,7 @@ class Pad3Engine:
         self.pad3_current_mode_key = "wave"
 
         # Curated rather than completely random. Keeps the command useful live.
-        mode = self.rng.choice(
-            ["ring_lean", "saw_balance", "wide_balance", "tight_detuned"]
-        )
+        mode = self.rng.choice(["ring_lean", "saw_balance", "wide_balance", "tight_detuned"])
 
         if mode == "ring_lean":
             updates = {
@@ -630,15 +633,11 @@ class Pad3Engine:
         print("\nRotation order:")
 
         for idx, mode_key in enumerate(PAD3_MODE_ORDER, start=1):
-            marker = (
-                " < current" if mode_key == self.pad3_current_mode_key else ""
-            )
+            marker = " < current" if mode_key == self.pad3_current_mode_key else ""
             print(f"  {idx}. {PAD3_MODE_LABELS[mode_key]}{marker}")
 
         print("\nCurrent Pad 3 mode:")
-        print(
-            f"  {PAD3_MODE_LABELS.get(self.pad3_current_mode_key, 'Unknown')}"
-        )
+        print(f"  {PAD3_MODE_LABELS.get(self.pad3_current_mode_key, 'Unknown')}")
 
         if 3 in self.group_current_states:
             current = self.group_current_states[3]
@@ -714,15 +713,10 @@ class Pad3Engine:
             print("\nPad 3 state is not loaded yet. Use O first.")
             return
 
-        action = self.rng.choice(
-            PAD3_MODE_MUTATION_PLANS[self.pad3_current_mode_key]
-        )
+        action = self.rng.choice(PAD3_MODE_MUTATION_PLANS[self.pad3_current_mode_key])
 
         print("\nPad 3 Current SY Raw Mode Mutation - V1.26")
-        print(
-            f"  Current mode: "
-            f"{PAD3_MODE_LABELS.get(self.pad3_current_mode_key, 'Unknown')}"
-        )
+        print(f"  Current mode: " f"{PAD3_MODE_LABELS.get(self.pad3_current_mode_key, 'Unknown')}")
         print("  Pad 3 only. Pads 1, 2, and 4 are not touched.")
 
         if action == "lp1":

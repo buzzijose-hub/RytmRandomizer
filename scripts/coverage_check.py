@@ -61,8 +61,7 @@ def parse_coverage() -> float:
     """
     if not COVERAGE_XML.exists():
         print(
-            "[coverage_check] ERROR: coverage.xml not produced -- "
-            "is pytest-cov installed?",
+            "[coverage_check] ERROR: coverage.xml not produced -- " "is pytest-cov installed?",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -72,8 +71,7 @@ def parse_coverage() -> float:
     branch_rate = root.get("branch-rate")
     if line_rate is None:
         print(
-            "[coverage_check] ERROR: could not read coverage rate from "
-            "coverage.xml",
+            "[coverage_check] ERROR: could not read coverage rate from " "coverage.xml",
             file=sys.stderr,
         )
         sys.exit(2)

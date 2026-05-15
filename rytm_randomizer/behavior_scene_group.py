@@ -5,13 +5,12 @@ dispatching commands, executing scenes, opening ports, sending MIDI, or
 touching hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .commands import GROUP_COMMANDS
 from .scenes import SCENE_COMMANDS
-
 
 PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
 PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")
@@ -155,9 +154,7 @@ def _accepted_scene_intent_result(command_key):
     scene_description = scene_metadata["description"]
     scene_action = scene_metadata["action"]
     scene_scope = scene_metadata["scope"]
-    forbidden_early_hardware_scope = (
-        scene_action in _FORBIDDEN_EARLY_HARDWARE_ACTIONS
-    )
+    forbidden_early_hardware_scope = scene_action in _FORBIDDEN_EARLY_HARDWARE_ACTIONS
 
     return SceneGroupBehaviorResult(
         command_key=command_key,
@@ -181,9 +178,7 @@ def _accepted_scene_intent_result(command_key):
             "source_scene_action": scene_action,
             "source_scene_scope": scene_scope,
             "source_scene_executable": scene_metadata["executable"],
-            "source_v134_reference_command": scene_metadata[
-                "v134_reference_command"
-            ],
+            "source_v134_reference_command": scene_metadata["v134_reference_command"],
             "source_scaffold_only": scene_metadata["scaffold_only"],
             "loads_anchors": False,
             "executes_scene": False,
@@ -208,9 +203,7 @@ def _accepted_group_mutation_intent_result(command_key):
     intent_details = _GROUP_MUTATION_INTENT_DETAILS[command_key]
     group_mutation_mode = intent_details["mode"]
     mutation_intensity = intent_details["intensity"]
-    forbidden_early_hardware_scope = (
-        command_key in _FORBIDDEN_EARLY_HARDWARE_GROUP_MUTATION_KEYS
-    )
+    forbidden_early_hardware_scope = command_key in _FORBIDDEN_EARLY_HARDWARE_GROUP_MUTATION_KEYS
 
     return SceneGroupBehaviorResult(
         command_key=command_key,
@@ -231,9 +224,7 @@ def _accepted_group_mutation_intent_result(command_key):
             "source_group_command_type": command_type,
             "source_group_command_scope": scope,
             "source_group_command_executable": group_metadata["executable"],
-            "source_v134_reference_command": group_metadata[
-                "v134_reference_command"
-            ],
+            "source_v134_reference_command": group_metadata["v134_reference_command"],
             "source_scaffold_only": group_metadata["scaffold_only"],
             "group_mutation_mode": group_mutation_mode,
             "mutation_intensity": mutation_intensity,
@@ -281,9 +272,7 @@ def _accepted_lane_aware_group_mutation_intent_result(command_key):
             "source_group_command_scope": scope,
             "source_group_command_family": command_family,
             "source_group_command_executable": group_metadata["executable"],
-            "source_v134_reference_command": group_metadata[
-                "v134_reference_command"
-            ],
+            "source_v134_reference_command": group_metadata["v134_reference_command"],
             "source_scaffold_only": group_metadata["scaffold_only"],
             "lane_aware_page": lane_aware_page,
             "lane_aware_mutation_mode": lane_aware_mutation_mode,
@@ -327,9 +316,7 @@ def _accepted_group_anchor_intent_result(command_key):
             "source_group_command_type": command_type,
             "source_group_command_scope": scope,
             "source_group_command_executable": group_metadata["executable"],
-            "source_v134_reference_command": group_metadata[
-                "v134_reference_command"
-            ],
+            "source_v134_reference_command": group_metadata["v134_reference_command"],
             "source_scaffold_only": group_metadata["scaffold_only"],
             "anchor_action": anchor_action,
             "loads_anchors": False,

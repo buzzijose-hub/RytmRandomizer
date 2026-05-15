@@ -6,13 +6,12 @@ switch pads, mutate runtime state, dispatch commands, open ports, send MIDI,
 or touch hardware.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
 from .anchor_state import build_unknown_anchor_state
 from .selected_target_state import build_default_selected_target_state
-
 
 DEFAULT_OPERATION_KIND = "selected_isolated_pad_runtime_validation"
 

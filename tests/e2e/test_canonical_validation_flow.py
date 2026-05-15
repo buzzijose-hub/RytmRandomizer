@@ -29,7 +29,6 @@ from .conftest import (
     CANONICAL_VALIDATION_COMMANDS,
     E2E_RANDOM_SEED,
     GOLDEN_DIR,
-    CapturedMessage,
     load_golden,
     run_canonical_dry_run,
     save_golden,

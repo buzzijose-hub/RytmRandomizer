@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,9 +33,7 @@ def test_importing_selected_target_state_prints_nothing():
 
 
 def test_unset_selected_target_state_is_safe_and_deterministic():
-    from rytm_randomizer.selected_target_state import (
-        build_unset_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_unset_selected_target_state
 
     result = build_unset_selected_target_state()
 
@@ -107,9 +105,7 @@ def test_default_selected_target_state_uses_passive_pad_3_context():
 
 
 def test_unsupported_selected_target_fails_safely():
-    from rytm_randomizer.selected_target_state import (
-        build_unsupported_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_unsupported_selected_target_state
 
     result = build_unsupported_selected_target_state(5)
 
@@ -130,9 +126,7 @@ def test_unsupported_selected_target_fails_safely():
 
 
 def test_stale_selected_target_fails_safely():
-    from rytm_randomizer.selected_target_state import (
-        build_stale_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_stale_selected_target_state
 
     result = build_stale_selected_target_state(target_pad=3, command_key="L")
 
@@ -152,9 +146,7 @@ def test_stale_selected_target_fails_safely():
 
 
 def test_invalid_selected_target_fails_safely():
-    from rytm_randomizer.selected_target_state import (
-        build_invalid_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_invalid_selected_target_state
 
     result = build_invalid_selected_target_state(
         target_pad=None,
@@ -175,9 +167,7 @@ def test_invalid_selected_target_fails_safely():
 
 
 def test_selected_target_metadata_is_copied_and_immutable():
-    from rytm_randomizer.selected_target_state import (
-        build_default_selected_target_state,
-    )
+    from rytm_randomizer.selected_target_state import build_default_selected_target_state
 
     result = build_default_selected_target_state()
 
@@ -217,9 +207,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
     assert result.returncode == 0
     assert "Command: L" in result.stdout
-    assert "Label: select isolated single-pad mutation target, default Pad 3" in (
-        result.stdout
-    )
+    assert "Label: select isolated single-pad mutation target, default Pad 3" in (result.stdout)
     assert result.stderr == ""
 
 

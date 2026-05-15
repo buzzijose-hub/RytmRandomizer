@@ -31,11 +31,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field, fields, is_dataclass
 from enum import Enum
 from types import MappingProxyType
-from typing import Mapping
-
 
 SCHEMA_VERSION: str = "1.0"
 """Current Guardrail Profile schema version.
@@ -149,15 +148,11 @@ class MusicalCharacter:
 
     energy_profile: str
     density_profile: str
-    musical_findings: Mapping[str, str] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
+    musical_findings: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
 
     def __post_init__(self) -> None:
         # Freeze the nested mapping so callers can hold a reference safely.
-        object.__setattr__(
-            self, "musical_findings", _freeze_str_str(self.musical_findings)
-        )
+        object.__setattr__(self, "musical_findings", _freeze_str_str(self.musical_findings))
 
 
 @dataclass(frozen=True)
@@ -185,9 +180,7 @@ class RoleMapping:
     assignments: Mapping[int, RoleAssignment]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self, "assignments", MappingProxyType(dict(self.assignments))
-        )
+        object.__setattr__(self, "assignments", MappingProxyType(dict(self.assignments)))
 
 
 @dataclass(frozen=True)
@@ -293,9 +286,7 @@ def _to_canonical(value: object) -> object:
         return [_to_canonical(v) for v in value]
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
-    raise TypeError(
-        f"_to_canonical: unsupported value type {type(value).__name__!r}"
-    )
+    raise TypeError(f"_to_canonical: unsupported value type {type(value).__name__!r}")
 
 
 def compute_content_hash(profile_without_hash: GuardrailProfile) -> str:

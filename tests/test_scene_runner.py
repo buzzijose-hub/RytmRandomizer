@@ -37,10 +37,10 @@ if str(PROJECT_ROOT) not in sys.path:
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Isolation helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
@@ -68,9 +68,7 @@ def _restore_shared_profile_data():
 
     from rytm_randomizer.data import GROUP_LAYOUT, PROFILES
 
-    profile_anchors = {
-        key: dict(profile["anchor"]) for key, profile in PROFILES.items()
-    }
+    profile_anchors = {key: dict(profile["anchor"]) for key, profile in PROFILES.items()}
     layout_snapshot = {pad: dict(cfg) for pad, cfg in GROUP_LAYOUT.items()}
     try:
         yield
@@ -92,11 +90,12 @@ class _FakeMessage:
         self.value = value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _FakeMessage)
-            and (self.type, self.channel, self.control, self.value)
-            == (other.type, other.channel, other.control, other.value)
-        )
+        return isinstance(other, _FakeMessage) and (
+            self.type,
+            self.channel,
+            self.control,
+            self.value,
+        ) == (other.type, other.channel, other.control, other.value)
 
     def __repr__(self):  # pragma: no cover - debugging aid only
         return (
@@ -254,6 +253,7 @@ def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
 # In-process import-safety + smoke
 # ===========================================================================
 
+
 def test_import_is_silent_and_mido_free(capsys):
     """Importing the scene runner module opens no ports and pulls in no mido."""
 
@@ -294,6 +294,7 @@ def test_scene_runner_accepts_explicit_scene_name():
 # ===========================================================================
 # In-process behavior coverage (fake mido) -- every branch
 # ===========================================================================
+
 
 def test_show_scene_tools_not_loaded_branch(capsys):
     runner, _group = _scene_runner()
@@ -414,6 +415,7 @@ def test_run_scene_every_command_sets_scene_name(scene_key, expected_name, capsy
 # Subprocess parity vs the committed monolith -- byte-identical behavior
 # ===========================================================================
 
+
 def test_parity_show_scene_tools_cold():
     _parity_subprocess("['scn']")
 
@@ -429,8 +431,20 @@ def test_parity_run_scene_unknown_key():
 @pytest.mark.parametrize(
     "key",
     [
-        "s0", "s1", "s1a", "s1b", "s2", "s2a", "s2b",
-        "s3", "s3a", "s3b", "s4", "s4a", "s4b", "s5",
+        "s0",
+        "s1",
+        "s1a",
+        "s1b",
+        "s2",
+        "s2a",
+        "s2b",
+        "s3",
+        "s3a",
+        "s3b",
+        "s4",
+        "s4a",
+        "s4b",
+        "s5",
     ],
 )
 @pytest.mark.parametrize("seed", [1, 42])

@@ -41,7 +41,6 @@ from rytm_randomizer.guardrails.schema import (
     compute_content_hash,
 )
 
-
 # ---------------------------------------------------------------------------
 # Builders
 # ---------------------------------------------------------------------------
@@ -414,9 +413,7 @@ def test_to_canonical_rejects_dataclass_type_object():
 
 def test_guardrail_profile_round_trips_every_field():
     profile = _build_profile(content_hash="placeholder")
-    profile = dataclasses.replace(
-        profile, content_hash=compute_content_hash(profile)
-    )
+    profile = dataclasses.replace(profile, content_hash=compute_content_hash(profile))
 
     # Provenance
     assert profile.provenance.profile_name == "rolling-hypnotic"

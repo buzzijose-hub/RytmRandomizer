@@ -1,7 +1,7 @@
-from pathlib import Path
 import importlib
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,9 +24,7 @@ def test_importing_mock_runtime_active_bridge_report_prints_nothing():
 
 
 def test_report_summarizes_bridge_contract_without_invoking_bridge():
-    from rytm_randomizer.reports import (
-        build_mock_runtime_active_bridge_report,
-    )
+    from rytm_randomizer.reports import build_mock_runtime_active_bridge_report
 
     report = build_mock_runtime_active_bridge_report()
 
@@ -57,9 +55,7 @@ def test_report_summarizes_bridge_contract_without_invoking_bridge():
 
 
 def test_report_records_rejected_and_parked_scope():
-    from rytm_randomizer.reports import (
-        build_mock_runtime_active_bridge_report,
-    )
+    from rytm_randomizer.reports import build_mock_runtime_active_bridge_report
 
     report = build_mock_runtime_active_bridge_report()
 
@@ -115,9 +111,7 @@ def test_report_records_rejected_and_parked_scope():
 
 
 def test_report_records_absent_runtime_and_hardware_boundaries():
-    from rytm_randomizer.reports import (
-        build_mock_runtime_active_bridge_report,
-    )
+    from rytm_randomizer.reports import build_mock_runtime_active_bridge_report
 
     report = build_mock_runtime_active_bridge_report()
 
@@ -134,9 +128,7 @@ def test_report_records_absent_runtime_and_hardware_boundaries():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.reports import (
-        summarize_mock_runtime_active_bridge_report,
-    )
+    from rytm_randomizer.reports import summarize_mock_runtime_active_bridge_report
 
     assert summarize_mock_runtime_active_bridge_report() == {
         "title": "RytmRandomizer Mock Runtime Active Bridge Report",
@@ -152,9 +144,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.reports import (
-        format_mock_runtime_active_bridge_report,
-    )
+    from rytm_randomizer.reports import format_mock_runtime_active_bridge_report
 
     first = format_mock_runtime_active_bridge_report()
     second = format_mock_runtime_active_bridge_report()
@@ -199,9 +189,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.reports import (
-        build_mock_runtime_active_bridge_report,
-    )
+    from rytm_randomizer.reports import build_mock_runtime_active_bridge_report
 
     report = build_mock_runtime_active_bridge_report()
     report["accepted_candidate"]["source_name"] = "MUTATED"

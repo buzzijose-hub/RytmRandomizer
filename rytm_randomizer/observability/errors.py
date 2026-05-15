@@ -43,8 +43,8 @@ as a convenience.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Mapping
 
 __all__ = [
     "ActiveBoundaryError",
@@ -158,9 +158,7 @@ def _rehome(original_module: str, class_name: str, new_base: type) -> type:
     module = importlib.import_module(original_module)
     cls = getattr(module, class_name)
     if not issubclass(cls, new_base):  # pragma: no cover - defensive
-        raise TypeError(
-            f"{original_module}.{class_name} must inherit from {new_base.__name__}"
-        )
+        raise TypeError(f"{original_module}.{class_name} must inherit from {new_base.__name__}")
     return cls
 
 

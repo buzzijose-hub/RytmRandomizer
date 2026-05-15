@@ -25,7 +25,8 @@ from __future__ import annotations
 
 import random as _random_module
 import time
-from typing import Any, Callable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Callable
 
 from .. import midi_io as _midi_io
 from .. import randomization as _randomization
@@ -95,9 +96,7 @@ class Pad1Engine:
         self.rng: Any = rng if rng is not None else _random_module
         self.sleep = sleep
 
-        self.group_layout = (
-            group_layout if group_layout is not None else default_group_layout()
-        )
+        self.group_layout = group_layout if group_layout is not None else default_group_layout()
 
         self.active_profile: Mapping[str, Any] | None = active_profile
         self.anchor_state: State = anchor_state if anchor_state is not None else {}
@@ -177,15 +176,11 @@ class Pad1Engine:
         return profile_copy
 
     def _send_machine(self) -> None:
-        _midi_io.send_machine(
-            self.out, self.active_profile, channel=self.channel, sleep=self.sleep
-        )
+        _midi_io.send_machine(self.out, self.active_profile, channel=self.channel, sleep=self.sleep)
 
     def _send_param(self, name: str, value: int) -> None:
         if self.resolved_bounds is not None:
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 # The resolved entry is LOCKED_DEFAULT / FORBIDDEN -- the
                 # profile says this parameter must not mutate. Skip the
@@ -202,9 +197,7 @@ class Pad1Engine:
             sleep=self.sleep,
         )
 
-    def _clamp_state(
-        self, state: Mapping[str, int]
-    ) -> Mapping[str, int]:
+    def _clamp_state(self, state: Mapping[str, int]) -> Mapping[str, int]:
         """Return ``state`` with every value clamped through resolved bounds.
 
         Parameters whose resolved class is ``LOCKED_DEFAULT`` / ``FORBIDDEN``
@@ -220,9 +213,7 @@ class Pad1Engine:
             return state
         out: dict[str, int] = {}
         for name, value in state.items():
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 continue
             out[name] = clamped
@@ -262,9 +253,7 @@ class Pad1Engine:
         self.anchor_state = dict(result.anchor_state)
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
@@ -289,9 +278,7 @@ class Pad1Engine:
 
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _set_group_context(self, pad: int, profile_key: str) -> None:
@@ -379,9 +366,7 @@ class Pad1Engine:
         # Byte-parity with the monolith: it stores ``None`` (not absence) here.
         self.group_previous_states[1] = None
 
-        print(
-            f"\nPad 1 is now using {profile['name']} as its profiled kick engine."
-        )
+        print(f"\nPad 1 is now using {profile['name']} as its profiled kick engine.")
 
     def switch_pad1_extra_bd_machine_only(self, command_key: str) -> None:
         if command_key not in BD_EXTRA_MACHINES:
@@ -392,17 +377,11 @@ class Pad1Engine:
         self.target_pad = 1
         self.channel = 0
 
-        print(
-            f"\nSwitching Pad 1 to {machine['name']} - switch-only discovery mode"
-        )
+        print(f"\nSwitching Pad 1 to {machine['name']} - switch-only discovery mode")
         print(f"  Role: {machine['role']}")
         print("  Pad 1 only. Pads 2, 3, and 4 are not touched.")
-        print(
-            "  Machine CC15 will be sent, but no anchor parameters will be sent yet."
-        )
-        print(
-            "  This is intentional until we capture real SRC mappings and safe ranges."
-        )
+        print("  Machine CC15 will be sent, but no anchor parameters will be sent yet.")
+        print("  This is intentional until we capture real SRC mappings and safe ranges.")
 
         self._send_cc(MACHINE_CC, machine["machine_value"])
         print(f"  Machine CC15 -> {machine['machine_value']}")
@@ -439,10 +418,20 @@ class Pad1Engine:
             current = self.group_current_states[1]
             print("\nCurrent Pad 1 state snapshot:")
             for name in [
-                "SRC Tune", "SRC Sweep Time", "SRC FM Decay", "SRC Decay",
-                "SRC FM Tune", "SRC FM Amount", "SRC Tick Level",
-                "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-                "AMP Hold", "AMP Decay", "AMP Overdrive",
+                "SRC Tune",
+                "SRC Sweep Time",
+                "SRC FM Decay",
+                "SRC Decay",
+                "SRC FM Tune",
+                "SRC FM Amount",
+                "SRC Tick Level",
+                "FLT Frequency",
+                "FLT Resonance",
+                "FLT Type",
+                "FLT Env Depth",
+                "AMP Hold",
+                "AMP Decay",
+                "AMP Overdrive",
             ]:
                 if name in current:
                     print(f"  {name}: {current[name]}")
@@ -498,10 +487,7 @@ class Pad1Engine:
         self.group_current_states[1] = dict(self.current_state)
         self.group_previous_states[1] = dict(self.previous_state)
 
-        print(
-            "\nPad 1 BD FM discovery command complete. Pads 2, 3, and 4 were "
-            "not touched."
-        )
+        print("\nPad 1 BD FM discovery command complete. Pads 2, 3, and 4 were " "not touched.")
 
     def bd_fm_tone_discovery(self) -> None:
         updates = {
@@ -571,10 +557,20 @@ class Pad1Engine:
             current = self.group_current_states[1]
             print("\nCurrent Pad 1 state snapshot:")
             for name in [
-                "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-                "SRC Mod Type", "SRC Mod Level", "SRC Tick Level",
-                "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-                "AMP Hold", "AMP Decay", "AMP Overdrive",
+                "SRC Tune",
+                "SRC Decay",
+                "SRC Sweep Depth",
+                "SRC Sweep Time",
+                "SRC Mod Type",
+                "SRC Mod Level",
+                "SRC Tick Level",
+                "FLT Frequency",
+                "FLT Resonance",
+                "FLT Type",
+                "FLT Env Depth",
+                "AMP Hold",
+                "AMP Decay",
+                "AMP Overdrive",
             ]:
                 if name in current:
                     print(f"  {name}: {current[name]}")
@@ -628,8 +624,7 @@ class Pad1Engine:
         self.group_previous_states[1] = dict(self.previous_state)
 
         print(
-            "\nPad 1 BD Plastic discovery command complete. Pads 2, 3, and 4 "
-            "were not touched."
+            "\nPad 1 BD Plastic discovery command complete. Pads 2, 3, and 4 " "were not touched."
         )
 
     def bd_plastic_tone_discovery(self) -> None:
@@ -703,10 +698,20 @@ class Pad1Engine:
             current = self.group_current_states[1]
             print("\nCurrent Pad 1 state snapshot:")
             for name in [
-                "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-                "SRC Hold", "SRC VCO Click", "SRC Dust Level",
-                "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-                "AMP Hold", "AMP Decay", "AMP Overdrive",
+                "SRC Tune",
+                "SRC Decay",
+                "SRC Sweep Depth",
+                "SRC Sweep Time",
+                "SRC Hold",
+                "SRC VCO Click",
+                "SRC Dust Level",
+                "FLT Frequency",
+                "FLT Resonance",
+                "FLT Type",
+                "FLT Env Depth",
+                "AMP Hold",
+                "AMP Decay",
+                "AMP Overdrive",
             ]:
                 if name in current:
                     print(f"  {name}: {current[name]}")
@@ -759,10 +764,7 @@ class Pad1Engine:
         self.group_current_states[1] = dict(self.current_state)
         self.group_previous_states[1] = dict(self.previous_state)
 
-        print(
-            "\nPad 1 BD Silky discovery command complete. Pads 2, 3, and 4 "
-            "were not touched."
-        )
+        print("\nPad 1 BD Silky discovery command complete. Pads 2, 3, and 4 " "were not touched.")
 
     def bd_silky_smooth_tone_discovery(self) -> None:
         updates = {
@@ -838,10 +840,7 @@ class Pad1Engine:
             profile = PROFILES[current_key]
             print(f"\nCurrent Pad 1 loaded state: {profile['name']}")
         else:
-            print(
-                "\nCurrent Pad 1 loaded state: not loaded yet. Use O, BH, or "
-                "BR first."
-            )
+            print("\nCurrent Pad 1 loaded state: not loaded yet. Use O, BH, or " "BR first.")
 
     @trace("pad1.rotate_pad1_bd_engine")
     def rotate_pad1_bd_engine(self) -> None:
@@ -849,21 +848,14 @@ class Pad1Engine:
 
         if current_key not in PAD1_BD_ROTATION_ORDER:
             print(
-                "\nPad 1 is not currently on a profiled BD engine. Returning "
-                "to BD Hard first."
+                "\nPad 1 is not currently on a profiled BD engine. Returning " "to BD Hard first."
             )
             next_key = "2"
         else:
             index = PAD1_BD_ROTATION_ORDER.index(current_key)
-            next_key = PAD1_BD_ROTATION_ORDER[
-                (index + 1) % len(PAD1_BD_ROTATION_ORDER)
-            ]
+            next_key = PAD1_BD_ROTATION_ORDER[(index + 1) % len(PAD1_BD_ROTATION_ORDER)]
 
-        current_name = (
-            PROFILES[current_key]["name"]
-            if current_key in PROFILES
-            else "Unknown"
-        )
+        current_name = PROFILES[current_key]["name"] if current_key in PROFILES else "Unknown"
         next_name = PROFILES[next_key]["name"]
 
         print("\nPad 1 BD Engine Rotation:")
@@ -895,34 +887,38 @@ class Pad1Engine:
         # engines. These already send the correct machine CC and keep the rest
         # of the kit stable.
         if profile_key == "6":
-            self.rng.choice([
-                self.bd_fm_tone_discovery,
-                self.bd_fm_kick_body_discovery,
-                self.bd_fm_grit_discovery,
-            ])()
+            self.rng.choice(
+                [
+                    self.bd_fm_tone_discovery,
+                    self.bd_fm_kick_body_discovery,
+                    self.bd_fm_grit_discovery,
+                ]
+            )()
             return
 
         if profile_key == "7":
-            self.rng.choice([
-                self.bd_plastic_tone_discovery,
-                self.bd_plastic_kick_body_discovery,
-                self.bd_plastic_rubber_discovery,
-            ])()
+            self.rng.choice(
+                [
+                    self.bd_plastic_tone_discovery,
+                    self.bd_plastic_kick_body_discovery,
+                    self.bd_plastic_rubber_discovery,
+                ]
+            )()
             return
 
         if profile_key == "8":
-            self.rng.choice([
-                self.bd_silky_smooth_tone_discovery,
-                self.bd_silky_kick_body_discovery,
-                self.bd_silky_click_dust_discovery,
-            ])()
+            self.rng.choice(
+                [
+                    self.bd_silky_smooth_tone_discovery,
+                    self.bd_silky_kick_body_discovery,
+                    self.bd_silky_click_dust_discovery,
+                ]
+            )()
             return
 
         # Older profiled BD engines use the generic safe mutation engine.
         # Keep it conservative: micro depth only.
-        zone_name, depth_name = self.rng.choice(
-            PAD1_BD_MUTATION_PLANS[profile_key]
-        )
+        zone_name, depth_name = self.rng.choice(PAD1_BD_MUTATION_PLANS[profile_key])
 
         self._set_group_context(1, profile_key)
         self._send_machine()
@@ -933,11 +929,6 @@ class Pad1Engine:
         self.group_current_states[1] = dict(self.current_state)
         # Byte-parity with the monolith's
         # ``previous_state.copy() if previous_state else None``.
-        self.group_previous_states[1] = (
-            dict(self.previous_state) if self.previous_state else None
-        )
+        self.group_previous_states[1] = dict(self.previous_state) if self.previous_state else None
 
-        print(
-            "\nPad 1 current BD engine mutation complete. Pads 2, 3, and 4 "
-            "were not touched."
-        )
+        print("\nPad 1 current BD engine mutation complete. Pads 2, 3, and 4 " "were not touched.")

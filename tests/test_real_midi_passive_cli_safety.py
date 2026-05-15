@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLI_SOURCE = PROJECT_ROOT / "rytm_randomizer" / "cli.py"
@@ -125,9 +125,7 @@ def test_representative_passive_cli_commands_do_not_import_real_midi_libraries()
 
 def test_passive_cli_sweep_does_not_import_real_midi_or_adapter_modules():
     for command in PASSIVE_CLI_SWEEP_COMMANDS:
-        result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(
-            *command
-        )
+        result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(*command)
 
         assert result.returncode == 0, (command, result.stderr)
         assert result.stderr == ""

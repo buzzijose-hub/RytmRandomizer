@@ -22,14 +22,15 @@ import dataclasses
 import pytest
 
 from rytm_randomizer.guardrails import (
+    MODE_EXPERIMENTAL,
+    MODE_LIVE_SAFE,
+    MODE_STUDIO_DISCOVERY,
+    SCHEMA_VERSION,
     Confidence,
     GuardrailBound,
     GuardrailClass,
     GuardrailProfile,
     GuardrailResolutionError,
-    MODE_EXPERIMENTAL,
-    MODE_LIVE_SAFE,
-    MODE_STUDIO_DISCOVERY,
     MusicalCharacter,
     ProfileState,
     Provenance,
@@ -37,15 +38,12 @@ from rytm_randomizer.guardrails import (
     ResolvedBounds,
     RoleAssignment,
     RoleMapping,
-    SCHEMA_VERSION,
-    SceneGuardrail,
     SourceType,
     compute_content_hash,
     default_hardware_ranges_for_pad,
     resolve,
 )
 from rytm_randomizer.observability.errors import BoundaryError
-
 
 # ---------------------------------------------------------------------------
 # Builders
@@ -198,9 +196,7 @@ def test_bound_within_hardware_keeps_its_class_and_narrows_to_intersection():
         direction="tighten",
     )
     profile = _profile(bounds=(bound,))
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     rb = resolved.get(1, "FLT Frequency")
     assert rb is not None
@@ -213,15 +209,13 @@ def test_bound_wider_than_hardware_clamps_to_hardware():
     bound = GuardrailBound(
         pad=1,
         parameter="FLT Frequency",
-        low=10,    # below hardware low (23)
+        low=10,  # below hardware low (23)
         high=100,  # above hardware high (36)
         guardrail_class=GuardrailClass.STUDIO_DISCOVERY,
         direction="open",
     )
     profile = _profile(bounds=(bound,), state=ProfileState.LIVE_APPROVED)
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     rb = resolved.get(1, "FLT Frequency")
     # The intersection is exactly the hardware envelope.
@@ -241,9 +235,7 @@ def test_empty_intersection_drops_to_locked_default():
         direction="tighten",
     )
     profile = _profile(bounds=(bound,))
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     rb = resolved.get(1, "FLT Frequency")
     assert rb is not None
@@ -260,9 +252,7 @@ def test_unknown_param_drops_to_locked_default():
         direction="tighten",
     )
     profile = _profile(bounds=(bound,))
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     rb = resolved.get(1, "THIS PARAM DOES NOT EXIST")
     assert rb is not None
@@ -279,9 +269,7 @@ def test_forbidden_bound_stays_forbidden_even_in_hardware_range():
         direction="static",
     )
     profile = _profile(bounds=(bound,))
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     rb = resolved.get(1, "FLT Frequency")
     assert rb is not None
@@ -298,9 +286,7 @@ def test_locked_default_bound_remains_locked_default():
         direction="static",
     )
     profile = _profile(bounds=(bound,))
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     rb = resolved.get(1, "FLT Frequency")
     assert rb is not None
@@ -327,9 +313,7 @@ def test_resolved_bounds_are_subset_of_hardware_ranges():
         ),
     )
     profile = _profile(bounds=bounds)
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
 
     for (pad, param), rb in resolved.by_pad_param.items():
         hw_low, hw_high = _hardware_pad1(pad)[param]
@@ -491,7 +475,5 @@ def test_resolver_caches_hardware_lookups_per_pad():
 
 def test_empty_profile_yields_empty_resolved_bounds():
     profile = _profile(bounds=())
-    resolved = resolve(
-        profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1
-    )
+    resolved = resolve(profile, MODE_LIVE_SAFE, hardware_ranges_for_pad=_hardware_pad1)
     assert dict(resolved.by_pad_param) == {}

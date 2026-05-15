@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -238,6 +238,7 @@ def test_mutating_formatted_report_output_does_not_mutate_future_output():
 
 def test_report_module_remains_decoupled_from_active_boundary_evaluation():
     import inspect
+
     import rytm_randomizer.reports as report
 
     source = inspect.getsource(report)
@@ -284,10 +285,7 @@ def test_passive_cli_report_behavior_remains_unchanged():
 
 
 def test_no_profile_3_or_4_active_boundary_support_is_added():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     for key in ("3", "4"):

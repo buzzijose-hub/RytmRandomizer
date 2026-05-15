@@ -1,13 +1,12 @@
-import mido
-import time
 import msvcrt
+import time
+
+import mido
 
 CC_LABELS = {
     7: "AMP Volume / Track Volume",
     10: "AMP Pan",
-
     15: "Machine Type",
-
     16: "SRC Level",
     17: "SRC Param 1",
     18: "SRC Param 2",
@@ -16,7 +15,6 @@ CC_LABELS = {
     21: "SRC Param 5",
     22: "SRC Param 6",
     23: "SRC Param 7",
-
     70: "FLT Attack",
     71: "FLT Decay",
     72: "FLT Sustain",
@@ -25,14 +23,12 @@ CC_LABELS = {
     75: "FLT Resonance",
     76: "FLT Type",
     77: "FLT Env Depth",
-
     78: "AMP Attack",
     79: "AMP Hold",
     80: "AMP Decay",
     81: "AMP Overdrive",
     82: "AMP Delay Send",
     83: "AMP Reverb Send",
-
     102: "LFO Speed",
     103: "LFO Multiplier",
     104: "LFO Fade",
@@ -46,12 +42,14 @@ CC_LABELS = {
 captured = {}
 channels = {}
 
+
 def list_inputs():
     inputs = mido.get_input_names()
     print("\nAvailable MIDI inputs:")
     for i, name in enumerate(inputs):
         print(f"{i}: {name}")
     return inputs
+
 
 def print_capture():
     print("\nCAPTURED VALUES:\n")
@@ -73,7 +71,10 @@ def print_capture():
     print("\nIMPORTANT:")
     print("- For SY engines, SRC Param 1-7 need to be renamed from the Rytm SRC page labels.")
     print("- Send me this output plus a photo of the SRC page and LFO page.")
-    print("- Machine Type CC15 tells us the engine ID if you changed engines while capture was running.")
+    print(
+        "- Machine Type CC15 tells us the engine ID if you changed engines while capture was running."
+    )
+
 
 def main():
     print("\nRYTM GENERIC MACHINE + LFO CAPTURE V0.1\n")
@@ -125,6 +126,7 @@ def main():
                     break
 
             time.sleep(0.01)
+
 
 if __name__ == "__main__":
     main()

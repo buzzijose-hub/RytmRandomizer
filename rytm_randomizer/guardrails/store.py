@@ -33,11 +33,12 @@ from __future__ import annotations
 import dataclasses
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import is_dataclass
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 from ..observability.errors import StateError
 from ..observability.logging import get_logger
@@ -76,23 +77,15 @@ Created on demand by :class:`ProfileStore` (the constructor accepts an explicit
 """
 
 
-LEGAL_STATE_TRANSITIONS: Mapping[ProfileState, frozenset[ProfileState]] = (
-    MappingProxyType(
-        {
-            ProfileState.DRAFT: frozenset(
-                {ProfileState.VALIDATED, ProfileState.REJECTED}
-            ),
-            ProfileState.REJECTED: frozenset({ProfileState.DRAFT}),
-            ProfileState.VALIDATED: frozenset(
-                {ProfileState.STUDIO_TESTED, ProfileState.ARCHIVED}
-            ),
-            ProfileState.STUDIO_TESTED: frozenset(
-                {ProfileState.VALIDATED, ProfileState.LIVE_APPROVED}
-            ),
-            ProfileState.LIVE_APPROVED: frozenset({ProfileState.ARCHIVED}),
-            ProfileState.ARCHIVED: frozenset(),
-        }
-    )
+LEGAL_STATE_TRANSITIONS: Mapping[ProfileState, frozenset[ProfileState]] = MappingProxyType(
+    {
+        ProfileState.DRAFT: frozenset({ProfileState.VALIDATED, ProfileState.REJECTED}),
+        ProfileState.REJECTED: frozenset({ProfileState.DRAFT}),
+        ProfileState.VALIDATED: frozenset({ProfileState.STUDIO_TESTED, ProfileState.ARCHIVED}),
+        ProfileState.STUDIO_TESTED: frozenset({ProfileState.VALIDATED, ProfileState.LIVE_APPROVED}),
+        ProfileState.LIVE_APPROVED: frozenset({ProfileState.ARCHIVED}),
+        ProfileState.ARCHIVED: frozenset(),
+    }
 )
 """Spec section 4.3: which target states are reachable from each source state."""
 
@@ -142,9 +135,7 @@ def _to_json_primitive(value: object) -> object:
         return [_to_json_primitive(v) for v in value]
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
-    raise TypeError(
-        f"_to_json_primitive: unsupported value type {type(value).__name__!r}"
-    )
+    raise TypeError(f"_to_json_primitive: unsupported value type {type(value).__name__!r}")
 
 
 def _profile_to_canonical_json(profile: GuardrailProfile) -> str:
@@ -355,9 +346,7 @@ class ProfileStore:
     """
 
     def __init__(self, profiles_dir: Path | None = None) -> None:
-        self._dir: Path = (
-            profiles_dir if profiles_dir is not None else DEFAULT_PROFILES_DIR
-        )
+        self._dir: Path = profiles_dir if profiles_dir is not None else DEFAULT_PROFILES_DIR
 
     @property
     def profiles_dir(self) -> Path:
@@ -435,9 +424,7 @@ class ProfileStore:
         # Recompute hash on the rebuilt profile (with content_hash zeroed)
         # to verify integrity. If the file was hand-edited so the content
         # changed but the hash field did not, this catches it.
-        recomputed = compute_content_hash(
-            dataclasses.replace(profile, content_hash="")
-        )
+        recomputed = compute_content_hash(dataclasses.replace(profile, content_hash=""))
         if recomputed != profile.content_hash:
             raise StateError(
                 "profile content_hash does not match recomputed digest",
@@ -484,9 +471,7 @@ class ProfileStore:
         return result
 
     @staticmethod
-    def promote(
-        profile: GuardrailProfile, new_state: ProfileState
-    ) -> GuardrailProfile:
+    def promote(profile: GuardrailProfile, new_state: ProfileState) -> GuardrailProfile:
         """Return a new profile with ``state`` updated to ``new_state``.
 
         Raises :class:`IllegalStateTransitionError` (a member of
@@ -506,9 +491,7 @@ class ProfileStore:
                 },
             )
 
-        promoted = dataclasses.replace(
-            profile, state=new_state, content_hash=""
-        )
+        promoted = dataclasses.replace(profile, state=new_state, content_hash="")
         digest = compute_content_hash(promoted)
         promoted = dataclasses.replace(promoted, content_hash=digest)
 

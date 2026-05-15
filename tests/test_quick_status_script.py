@@ -1,10 +1,9 @@
 import shutil
+import subprocess
 import sys
 from pathlib import Path
-import subprocess
 
 import pytest
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 QUICK_STATUS_SCRIPT = PROJECT_ROOT / "Scripts" / "quick_status.ps1"

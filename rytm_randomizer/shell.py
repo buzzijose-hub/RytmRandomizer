@@ -37,8 +37,9 @@ from __future__ import annotations
 
 import random as _random_module
 import time
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, MutableMapping
+from typing import Any, Callable
 
 from . import midi_io as _midi_io
 from . import randomization as _randomization
@@ -85,7 +86,7 @@ def build_shell(
     rng: _random_module.Random | None = None,
     sleep: SleepFunc = time.sleep,
     input_func: InputFunc | None = None,
-) -> "InteractiveShell":
+) -> InteractiveShell:
     """Compose all engines/runners onto one ``out`` sender, return the shell.
 
     The shared mutable dicts (``group_layout``, ``group_anchor_states``,
@@ -353,9 +354,7 @@ class InteractiveShell:
     def _get_depth(self) -> str:
         """Mirror the monolith ``get_depth`` over the randomization core."""
 
-        return _randomization.get_depth(
-            self._input_func if self._input_func is not None else None
-        )
+        return _randomization.get_depth(self._input_func if self._input_func is not None else None)
 
     def _apply_state_for_selected_profile(
         self,
@@ -395,14 +394,10 @@ class InteractiveShell:
         gr.anchor_state = dict(result.anchor_state)
         gr.current_state = dict(result.current_state)
         gr.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
-    def _mutate_zone_for_selected_profile(
-        self, zone_name: str, depth_name: str
-    ) -> None:
+    def _mutate_zone_for_selected_profile(self, zone_name: str, depth_name: str) -> None:
         """Run a single-profile zone mutation against the GroupRunner runtime.
 
         Mirrors the monolith's ``mutate_zone`` call inside ``main()``'s
@@ -429,9 +424,7 @@ class InteractiveShell:
 
         gr.current_state = dict(result.current_state)
         gr.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _random_waveform_for_selected_profile(self) -> None:
@@ -455,9 +448,7 @@ class InteractiveShell:
 
         gr.current_state = dict(result.current_state)
         gr.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     # ------------------------------------------------------------------
@@ -878,10 +869,7 @@ class InteractiveShell:
             return True
 
         if cmd in ("1", "2", "3"):
-            print(
-                "\nDepth number entered at the main Command prompt. "
-                "No MIDI was sent."
-            )
+            print("\nDepth number entered at the main Command prompt. " "No MIDI was sent.")
             print(
                 "Use Y, V, N, S, F, A, G, or K first, then answer the depth "
                 "prompt with 1, 2, or 3."

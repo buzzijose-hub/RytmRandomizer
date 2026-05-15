@@ -69,8 +69,7 @@ def test_required_package_modules_exist() -> None:
             missing.append(rel)
     assert not missing, (
         "Required architectural modules are missing -- the layered structure "
-        "from docs/ARCHITECTURE.md has been broken. Missing:\n  "
-        + "\n  ".join(missing)
+        "from docs/ARCHITECTURE.md has been broken. Missing:\n  " + "\n  ".join(missing)
     )
 
 
@@ -99,9 +98,9 @@ def test_monolith_is_at_repo_root_not_inside_package() -> None:
     it as a package module).
     """
 
-    assert MONOLITH_PATH.is_file(), (
-        f"Expected the V1.34 monolith at {MONOLITH_PATH}, but it is missing."
-    )
+    assert (
+        MONOLITH_PATH.is_file()
+    ), f"Expected the V1.34 monolith at {MONOLITH_PATH}, but it is missing."
     inside = PACKAGE_ROOT / "rytm_hybrid_randomizer_v134.py"
     assert not inside.exists(), (
         f"The V1.34 monolith must remain at the repo root (frozen reference). "
@@ -153,13 +152,11 @@ def test_layout_summary_is_readable() -> None:
     """
 
     modules = sorted(
-        str(p.relative_to(PROJECT_ROOT)).replace("\\", "/")
-        for p in PACKAGE_ROOT.rglob("*.py")
+        str(p.relative_to(PROJECT_ROOT)).replace("\\", "/") for p in PACKAGE_ROOT.rglob("*.py")
     )
     digest = hashlib.sha256("\n".join(modules).encode("utf-8")).hexdigest()
     assert digest  # informational
     # Also stash on the test for debugging.
     sys.stderr.write(
-        f"[architecture] package-layout fingerprint = {digest[:16]} "
-        f"({len(modules)} modules)\n"
+        f"[architecture] package-layout fingerprint = {digest[:16]} " f"({len(modules)} modules)\n"
     )

@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -149,9 +149,7 @@ def test_importing_behavior_mutation_depth_prints_nothing():
 
 
 def test_guarded_numeric_inputs_return_read_only_results():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     for command_key in GUARDED_DEPTH_KEYS:
         result = evaluate_mutation_depth_behavior(command_key)
@@ -175,9 +173,7 @@ def test_guarded_numeric_inputs_return_read_only_results():
 
 
 def test_guarded_numeric_input_1_has_expected_display_and_metadata():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("1")
 
@@ -212,9 +208,7 @@ def test_guarded_numeric_input_1_has_expected_display_and_metadata():
 
 
 def test_repeated_mutation_depth_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     for command_key in GUARDED_DEPTH_KEYS:
         assert evaluate_mutation_depth_behavior(command_key) == (
@@ -223,13 +217,9 @@ def test_repeated_mutation_depth_evaluations_are_deterministic():
 
 
 def test_legacy_single_profile_mutations_return_read_only_results():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
-    for command_key, expected_label, expected_depth in (
-        LEGACY_SINGLE_PROFILE_MUTATION_CASES
-    ):
+    for command_key, expected_label, expected_depth in LEGACY_SINGLE_PROFILE_MUTATION_CASES:
         result = evaluate_mutation_depth_behavior(command_key)
 
         assert result.accepted is True
@@ -257,9 +247,7 @@ def test_legacy_single_profile_mutations_return_read_only_results():
 
 
 def test_legacy_single_profile_mutation_m1_has_expected_display_and_metadata():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("M1")
 
@@ -294,26 +282,18 @@ def test_legacy_single_profile_mutation_m1_has_expected_display_and_metadata():
 
 
 def test_repeated_legacy_single_profile_mutation_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
-    for command_key, _expected_label, _expected_depth in (
-        LEGACY_SINGLE_PROFILE_MUTATION_CASES
-    ):
+    for command_key, _expected_label, _expected_depth in LEGACY_SINGLE_PROFILE_MUTATION_CASES:
         assert evaluate_mutation_depth_behavior(command_key) == (
             evaluate_mutation_depth_behavior(command_key)
         )
 
 
 def test_current_profile_page_mutations_return_read_only_results():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
-    for command_key, expected_label, expected_area in (
-        CURRENT_PROFILE_PAGE_MUTATION_CASES
-    ):
+    for command_key, expected_label, expected_area in CURRENT_PROFILE_PAGE_MUTATION_CASES:
         result = evaluate_mutation_depth_behavior(command_key)
 
         assert result.accepted is True
@@ -341,9 +321,7 @@ def test_current_profile_page_mutations_return_read_only_results():
 
 
 def test_current_profile_page_mutation_s_has_expected_display_and_metadata():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("S")
 
@@ -378,22 +356,16 @@ def test_current_profile_page_mutation_s_has_expected_display_and_metadata():
 
 
 def test_repeated_current_profile_page_mutation_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
-    for command_key, _expected_label, _expected_area in (
-        CURRENT_PROFILE_PAGE_MUTATION_CASES
-    ):
+    for command_key, _expected_label, _expected_area in CURRENT_PROFILE_PAGE_MUTATION_CASES:
         assert evaluate_mutation_depth_behavior(command_key) == (
             evaluate_mutation_depth_behavior(command_key)
         )
 
 
 def test_selected_isolated_pad_mutations_return_read_only_results():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     for (
         command_key,
@@ -430,9 +402,7 @@ def test_selected_isolated_pad_mutations_return_read_only_results():
 
 
 def test_selected_isolated_pad_mutation_pm_has_expected_display_and_metadata():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("PM")
 
@@ -468,9 +438,7 @@ def test_selected_isolated_pad_mutation_pm_has_expected_display_and_metadata():
 
 
 def test_selected_isolated_pad_mutation_ps_has_expected_display_and_metadata():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("PS")
 
@@ -506,22 +474,22 @@ def test_selected_isolated_pad_mutation_ps_has_expected_display_and_metadata():
 
 
 def test_repeated_selected_isolated_pad_mutation_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
-    for command_key, _label, _area, _requires_depth, _uses_default in (
-        SELECTED_ISOLATED_PAD_MUTATION_CASES
-    ):
+    for (
+        command_key,
+        _label,
+        _area,
+        _requires_depth,
+        _uses_default,
+    ) in SELECTED_ISOLATED_PAD_MUTATION_CASES:
         assert evaluate_mutation_depth_behavior(command_key) == (
             evaluate_mutation_depth_behavior(command_key)
         )
 
 
 def test_packet_3d_keys_are_no_longer_deferred():
-    from rytm_randomizer.behavior_mutation_depth import (
-        DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS,
-    )
+    from rytm_randomizer.behavior_mutation_depth import DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS
 
     assert not set(PACKET_3D_KEYS).intersection(DEFERRED_PACKET_3_MUTATION_DEPTH_KEYS)
 
@@ -545,9 +513,7 @@ def test_mutation_depth_metadata_is_copied_and_immutable():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("DOES_NOT_EXIST")
 
@@ -569,9 +535,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_deferred_packet_3_keys_fail_safely():
-    from rytm_randomizer.behavior_mutation_depth import (
-        evaluate_mutation_depth_behavior,
-    )
+    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
 
     for command_key in DEFERRED_PACKET_3_KEYS:
         result = evaluate_mutation_depth_behavior(command_key)
@@ -597,9 +561,7 @@ def test_packet_1_menu_utility_behavior_remains_unchanged():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 

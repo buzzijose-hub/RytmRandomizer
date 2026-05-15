@@ -12,11 +12,11 @@ These tests verify the WS-H convergence wiring:
 Randomness is seeded so every test is deterministic.
 """
 
-from pathlib import Path
 import random
 import subprocess
 import sys
 import types
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,8 +39,7 @@ def run_python(code: str) -> subprocess.CompletedProcess:
 
 
 def test_app_module_import_is_side_effect_free_and_silent():
-    result = run_python(
-        """
+    result = run_python("""
 import sys
 import rytm_randomizer.app as app
 import rytm_randomizer.real_midi_adapter as adapter
@@ -49,8 +48,7 @@ import rytm_randomizer.mido_provider as provider
 assert app.__name__ == "rytm_randomizer.app"
 for module_name in ("mido", "rtmidi", "pythonrtmidi"):
     assert module_name not in sys.modules, module_name
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stdout == ""
@@ -78,8 +76,7 @@ def test_app_main_no_flag_shows_passive_menu_and_opens_no_port(capsys):
 
 
 def test_app_main_no_flag_imports_no_real_midi_library():
-    result = run_python(
-        """
+    result = run_python("""
 import sys
 from rytm_randomizer import app
 exit_code = app.main([])
@@ -88,8 +85,7 @@ for module_name in ("mido", "rtmidi", "pythonrtmidi"):
     assert module_name not in sys.modules, module_name
 # Default mode must not import the monolith either.
 assert "rytm_hybrid_randomizer_v134" not in sys.modules
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stderr == ""
@@ -109,16 +105,14 @@ def test_app_main_dry_run_runs_against_mock_and_opens_no_port(capsys):
 
 
 def test_app_main_dry_run_imports_no_real_midi_library():
-    result = run_python(
-        """
+    result = run_python("""
 import sys
 from rytm_randomizer import app
 exit_code = app.main(["--dry-run"])
 assert exit_code == 0, exit_code
 for module_name in ("mido", "rtmidi", "pythonrtmidi"):
     assert module_name not in sys.modules, module_name
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stderr == ""
@@ -230,8 +224,7 @@ def test_mido_provider_imports_mido_lazily_not_at_module_load():
     """Importing ``mido_provider`` must not import ``mido``; the import is
     lazy and only happens when a provider method actually needs it."""
 
-    result = run_python(
-        """
+    result = run_python("""
 import sys
 import rytm_randomizer.mido_provider as mp
 
@@ -240,8 +233,7 @@ provider = mp.build_mido_midi_port_provider()
 assert isinstance(provider, mp.MidoMidiPortProvider)
 # Still no mido until a method that needs it is called.
 assert "mido" not in sys.modules, "mido imported by provider construction"
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stdout == ""

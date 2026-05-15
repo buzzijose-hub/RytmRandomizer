@@ -35,6 +35,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # Isolation helpers
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
     snapshot = dict(sys.modules)
@@ -112,6 +113,7 @@ _PREAMBLE = (
 # get_depth
 # ===========================================================================
 
+
 def test_get_depth_parity_all_branches():
     """Subprocess parity across every depth-input branch."""
 
@@ -164,6 +166,7 @@ def test_get_depth_default_uses_builtin_input(monkeypatch):
 # random_value_around_anchor -- subprocess parity (monolith) + in-process
 # coverage (package only; pure, no mido).
 # ===========================================================================
+
 
 def _rvaa_parity(profile_repr, anchor_repr, name, depth, seeds):
     code = (
@@ -257,7 +260,10 @@ def test_random_value_around_anchor_in_process_all_branches():
     # normal branch
     profile = {"safe": {"P": (0, 100)}, "deltas": {"groove": {"P": 5}}}
     val = random_value_around_anchor(
-        "P", "groove", profile=profile, anchor_state={"P": 50},
+        "P",
+        "groove",
+        profile=profile,
+        anchor_state={"P": 50},
         rng=random.Random(1),
     )
     assert 45 <= val <= 55
@@ -268,8 +274,11 @@ def test_random_value_around_anchor_in_process_all_branches():
         "deltas": {"groove": {"SRC Tick Level": 10}},
     }
     tval = random_value_around_anchor(
-        "SRC Tick Level", "groove", profile=tick_profile,
-        anchor_state={"SRC Tick Level": 120}, rng=random.Random(2),
+        "SRC Tick Level",
+        "groove",
+        profile=tick_profile,
+        anchor_state={"SRC Tick Level": 120},
+        rng=random.Random(2),
     )
     assert 110 <= tval <= 120
 
@@ -279,22 +288,31 @@ def test_random_value_around_anchor_in_process_all_branches():
         "deltas": {"groove": {"AMP Hold": 8}},
     }
     aval = random_value_around_anchor(
-        "AMP Hold", "groove", profile=amp_profile,
-        anchor_state={"AMP Hold": 0}, rng=random.Random(3),
+        "AMP Hold",
+        "groove",
+        profile=amp_profile,
+        anchor_state={"AMP Hold": 0},
+        rng=random.Random(3),
     )
     assert 0 <= aval <= 8
 
     # swap branch (negative delta)
     swap_profile = {"safe": {"P": (0, 100)}, "deltas": {"groove": {"P": -10}}}
     sval = random_value_around_anchor(
-        "P", "groove", profile=swap_profile, anchor_state={"P": 50},
+        "P",
+        "groove",
+        profile=swap_profile,
+        anchor_state={"P": 50},
         rng=random.Random(4),
     )
     assert 40 <= sval <= 60
 
     # default RNG path (rng=None)
     dval = random_value_around_anchor(
-        "P", "groove", profile=profile, anchor_state={"P": 50},
+        "P",
+        "groove",
+        profile=profile,
+        anchor_state={"P": 50},
     )
     assert 45 <= dval <= 55
 
@@ -302,6 +320,7 @@ def test_random_value_around_anchor_in_process_all_branches():
 # ===========================================================================
 # random_hp2_filter_pair -- subprocess parity + in-process coverage
 # ===========================================================================
+
 
 def _hp2_parity(profile_repr, anchor_repr, depth, seeds):
     code = (
@@ -411,7 +430,9 @@ def test_random_hp2_filter_pair_in_process_all_branches():
             }
             for seed in range(6):
                 freq, res = random_hp2_filter_pair(
-                    "groove", profile=profile, anchor_state=anchor,
+                    "groove",
+                    profile=profile,
+                    anchor_state=anchor,
                     rng=random.Random(seed),
                 )
                 assert freq_safe[0] <= freq <= freq_safe[1]
@@ -420,7 +441,8 @@ def test_random_hp2_filter_pair_in_process_all_branches():
     # freq swap branch
     swap_profile = hp2_profile("hard", (0, 100), (0, 100), fd=-10)
     random_hp2_filter_pair(
-        "groove", profile=swap_profile,
+        "groove",
+        profile=swap_profile,
         anchor_state={"FLT Frequency": 30, "FLT Resonance": 50},
         rng=random.Random(1),
     )
@@ -428,7 +450,8 @@ def test_random_hp2_filter_pair_in_process_all_branches():
     # resonance fallback branch
     fallback_profile = hp2_profile("classic", (0, 10), (0, 5), rd=1)
     _, res = random_hp2_filter_pair(
-        "groove", profile=fallback_profile,
+        "groove",
+        profile=fallback_profile,
         anchor_state={"FLT Frequency": 5, "FLT Resonance": 2},
         rng=random.Random(1),
     )
@@ -436,7 +459,8 @@ def test_random_hp2_filter_pair_in_process_all_branches():
 
     # default RNG path (rng=None)
     random_hp2_filter_pair(
-        "groove", profile=hp2_profile("hard", (20, 26), (0, 100)),
+        "groove",
+        profile=hp2_profile("hard", (20, 26), (0, 100)),
         anchor_state={"FLT Frequency": 23, "FLT Resonance": 50},
     )
 
@@ -445,10 +469,10 @@ def test_random_hp2_filter_pair_in_process_all_branches():
 # random_waveform -- subprocess parity + in-process coverage
 # ===========================================================================
 
+
 def _drive_monolith_random_waveform(profile_key, current_repr, seed):
     code = (
-        _PREAMBLE
-        + f"profile = dict(PROFILES[{profile_key!r}], "
+        _PREAMBLE + f"profile = dict(PROFILES[{profile_key!r}], "
         f"anchor=dict(PROFILES[{profile_key!r}]['anchor']))\n"
         "m.active_profile = profile\n"
         "m.anchor_state = dict(profile['anchor'])\n"
@@ -495,9 +519,7 @@ def test_random_waveform_parity_seeded_current(capsys):
 
         assert pkg_output == mono["output"]
         assert result.applied is True
-        assert [(m.control, m.value) for m in pkg_out.sent] == [
-            tuple(p) for p in mono["sent"]
-        ]
+        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
         assert result.current_state == mono["current_state"]
         assert result.previous_state == mono["previous_state"]
 
@@ -525,9 +547,7 @@ def test_random_waveform_parity_empty_current(capsys):
     pkg_output = capsys.readouterr().out
 
     assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [
-        tuple(p) for p in mono["sent"]
-    ]
+    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
     assert result.current_state == mono["current_state"]
     assert result.previous_state == mono["previous_state"]
 
@@ -578,10 +598,10 @@ def test_random_waveform_default_rng(capsys):
 # mutate_zone -- subprocess parity + in-process coverage
 # ===========================================================================
 
+
 def _drive_monolith_mutate_zone(profile_repr, current_repr, zone, depth, seed):
     code = (
-        _PREAMBLE
-        + f"profile = {profile_repr}\n"
+        _PREAMBLE + f"profile = {profile_repr}\n"
         "m.active_profile = profile\n"
         "m.anchor_state = dict(profile['anchor'])\n"
         f"m.current_state = {current_repr}\n"
@@ -612,9 +632,7 @@ def test_mutate_zone_parity_filter_zone(capsys):
 
     profile = _sample_profile()
     for seed in range(8):
-        mono = _drive_monolith_mutate_zone(
-            _REAL_PROFILE_2, "{}", "filter", "groove", seed
-        )
+        mono = _drive_monolith_mutate_zone(_REAL_PROFILE_2, "{}", "filter", "groove", seed)
 
         pkg_out = RecordingOut()
         result = mutate_zone(
@@ -632,9 +650,7 @@ def test_mutate_zone_parity_filter_zone(capsys):
         pkg_output = capsys.readouterr().out
 
         assert pkg_output == mono["output"]
-        assert [(m.control, m.value) for m in pkg_out.sent] == [
-            tuple(p) for p in mono["sent"]
-        ]
+        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
         assert result.applied is True
         assert result.current_state == mono["current_state"]
         assert result.previous_state == mono["previous_state"]
@@ -668,9 +684,7 @@ def test_mutate_zone_parity_full_zone_seeded_current(capsys):
         pkg_output = capsys.readouterr().out
 
         assert pkg_output == mono["output"]
-        assert [(m.control, m.value) for m in pkg_out.sent] == [
-            tuple(p) for p in mono["sent"]
-        ]
+        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
         assert result.current_state == mono["current_state"]
         assert result.previous_state == mono["previous_state"]
 
@@ -682,9 +696,7 @@ def test_mutate_zone_parity_src_zone(capsys):
 
     profile = _sample_profile()
     for seed in range(6):
-        mono = _drive_monolith_mutate_zone(
-            _REAL_PROFILE_2, "{}", "src", "micro", seed
-        )
+        mono = _drive_monolith_mutate_zone(_REAL_PROFILE_2, "{}", "src", "micro", seed)
 
         pkg_out = RecordingOut()
         result = mutate_zone(
@@ -702,9 +714,7 @@ def test_mutate_zone_parity_src_zone(capsys):
         pkg_output = capsys.readouterr().out
 
         assert pkg_output == mono["output"]
-        assert [(m.control, m.value) for m in pkg_out.sent] == [
-            tuple(p) for p in mono["sent"]
-        ]
+        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
         assert result.current_state == mono["current_state"]
 
 
@@ -741,9 +751,7 @@ def test_mutate_zone_parity_skips_param_absent_from_depth_deltas(capsys):
     pkg_output = capsys.readouterr().out
 
     assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [
-        tuple(p) for p in mono["sent"]
-    ]
+    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
     # Only P_IN (cc 10) was sent; P_OUT was skipped.
     assert all(m.control == 10 for m in pkg_out.sent)
     assert result.current_state == mono["current_state"]
@@ -824,6 +832,7 @@ def test_mutate_zone_default_rng(capsys):
 # ===========================================================================
 # import safety
 # ===========================================================================
+
 
 def test_importing_randomization_prints_nothing():
     result = _run_python("import rytm_randomizer.randomization")

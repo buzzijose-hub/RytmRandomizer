@@ -6,10 +6,9 @@ or connect to hardware.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
-
 
 SUPPORTED_GROUP_PROFILE_KEYS = frozenset({"2", "3"})
 

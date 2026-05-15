@@ -32,9 +32,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass, fields, is_dataclass
 from enum import Enum
-from typing import Mapping
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 
@@ -120,9 +120,7 @@ def _to_canonical(value: object) -> object:
         return [_to_canonical(v) for v in value]
     if isinstance(value, (str, int, float, bool)) or value is None:
         return value
-    raise TypeError(
-        f"_to_canonical: unsupported value type {type(value).__name__!r}"
-    )
+    raise TypeError(f"_to_canonical: unsupported value type {type(value).__name__!r}")
 
 
 def compute_feature_report_hash(report: FeatureReport) -> str:

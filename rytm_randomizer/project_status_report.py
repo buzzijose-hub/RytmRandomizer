@@ -15,9 +15,8 @@ the package stays inert. The report module itself remains passive; only what it
 
 from __future__ import annotations
 
-from copy import deepcopy
 import json
-
+from copy import deepcopy
 
 PASSIVE_CLI_COMMANDS = (
     "report",
@@ -234,9 +233,7 @@ def build_project_status_report():
         "mock_runtime_active_bridge": summarize_mock_runtime_active_bridge_report(),
         "public_api_hardening": PUBLIC_API_HARDENING_STATUS,
         "collaborator_review_intake": COLLABORATOR_REVIEW_INTAKE_STATUS,
-        "collaborator_review_triage_template": (
-            COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS
-        ),
+        "collaborator_review_triage_template": (COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS),
         "closeout": CLOSEOUT_STATUS,
         "convergence": CONVERGENCE_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
@@ -278,48 +275,30 @@ def summarize_project_status_report(report=None):
     return {
         "title": source_report["title"],
         "phase_name": source_report["phase"]["name"],
-        "creative_identity_candidate": source_report["phase"][
-            "creative_identity_candidate"
-        ],
+        "creative_identity_candidate": source_report["phase"]["creative_identity_candidate"],
         "passive_cli_command_count": len(source_report["passive_cli_commands"]),
-        "accepted_packet_count": source_report["behavior_parity"][
-            "accepted_packet_count"
-        ],
-        "pad_lane_command_count": source_report["behavior_parity"][
-            "pad_lane_command_count"
-        ],
+        "accepted_packet_count": source_report["behavior_parity"]["accepted_packet_count"],
+        "pad_lane_command_count": source_report["behavior_parity"]["pad_lane_command_count"],
         "runtime_supported_count": source_report["runtime_plan"]["supported_count"],
-        "active_boundary_candidate": source_report["active_boundary"][
-            "supported_candidate"
-        ],
-        "mock_bridge_candidate": source_report["mock_runtime_active_bridge"][
-            "accepted_source_key"
-        ],
+        "active_boundary_candidate": source_report["active_boundary"]["supported_candidate"],
+        "mock_bridge_candidate": source_report["mock_runtime_active_bridge"]["accepted_source_key"],
         "public_api_hardening": source_report["public_api_hardening"]["status"],
-        "public_api_module_count": source_report["public_api_hardening"][
-            "module_count"
+        "public_api_module_count": source_report["public_api_hardening"]["module_count"],
+        "collaborator_review_intake": source_report["collaborator_review_intake"]["status"],
+        "external_review_findings_received": source_report["collaborator_review_intake"][
+            "findings_received"
         ],
-        "collaborator_review_intake": source_report["collaborator_review_intake"][
+        "collaborator_review_triage_template": source_report["collaborator_review_triage_template"][
             "status"
         ],
-        "external_review_findings_received": source_report[
-            "collaborator_review_intake"
-        ]["findings_received"],
-        "collaborator_review_triage_template": source_report[
-            "collaborator_review_triage_template"
-        ]["status"],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
         "default_mode": source_report["safety"]["default_mode"],
         "hardware_required": source_report["safety"]["hardware_required"],
         "v134_reference": source_report["safety"]["v134_reference"],
-        "active_execution_gate": source_report["convergence"][
-            "active_execution_gate"
-        ],
-        "active_modes_present": source_report["convergence"][
-            "active_modes_present"
-        ],
+        "active_execution_gate": source_report["convergence"]["active_execution_gate"],
+        "active_modes_present": source_report["convergence"]["active_modes_present"],
         "total_modes": source_report["convergence"]["total_modes"],
     }
 
@@ -341,10 +320,7 @@ def format_project_status_summary(report=None):
         f"- public_api_hardening: {summary['public_api_hardening']}",
         f"- public_api_module_count: {summary['public_api_module_count']}",
         f"- collaborator_review_intake: {summary['collaborator_review_intake']}",
-        (
-            "- external_review_findings_received: "
-            f"{summary['external_review_findings_received']}"
-        ),
+        ("- external_review_findings_received: " f"{summary['external_review_findings_received']}"),
         (
             "- collaborator_review_triage_template: "
             f"{summary['collaborator_review_triage_template']}"
@@ -455,38 +431,25 @@ def format_project_status_report(report=None):
             f"- findings_received: {collaborator['findings_received']}",
             f"- required_format: {collaborator['required_format']}",
             f"- implementation_policy: {collaborator['implementation_policy']}",
-            "- triage_categories: "
-            + ", ".join(collaborator["triage_categories"]),
+            "- triage_categories: " + ", ".join(collaborator["triage_categories"]),
             f"- real_midi: {collaborator['real_midi']}",
             f"- port_opening: {collaborator['port_opening']}",
             f"- active_behavior: {collaborator['active_behavior']}",
             f"- hardware_behavior: {collaborator['hardware_behavior']}",
-            (
-                "- package_metadata_changes: "
-                f"{collaborator['package_metadata_changes']}"
-            ),
+            ("- package_metadata_changes: " f"{collaborator['package_metadata_changes']}"),
             "Collaborator Review Triage Template:",
             f"- status: {triage_template['status']}",
             f"- template_path: {triage_template['template_path']}",
             f"- review_gate_path: {triage_template['review_gate_path']}",
             f"- findings_recorded: {triage_template['findings_recorded']}",
-            (
-                "- requires_text_or_markdown: "
-                f"{triage_template['requires_text_or_markdown']}"
-            ),
-            (
-                "- screenshot_only_sufficient: "
-                f"{triage_template['screenshot_only_sufficient']}"
-            ),
+            ("- requires_text_or_markdown: " f"{triage_template['requires_text_or_markdown']}"),
+            ("- screenshot_only_sufficient: " f"{triage_template['screenshot_only_sufficient']}"),
             f"- implementation_policy: {triage_template['implementation_policy']}",
             f"- real_midi: {triage_template['real_midi']}",
             f"- port_opening: {triage_template['port_opening']}",
             f"- active_behavior: {triage_template['active_behavior']}",
             f"- hardware_behavior: {triage_template['hardware_behavior']}",
-            (
-                "- package_metadata_changes: "
-                f"{triage_template['package_metadata_changes']}"
-            ),
+            ("- package_metadata_changes: " f"{triage_template['package_metadata_changes']}"),
             "Closeout:",
         ]
     )

@@ -45,9 +45,7 @@ def _iter_package_files() -> list[Path]:
     return sorted(p for p in PACKAGE_ROOT.rglob("*.py"))
 
 
-def _resolve_import(
-    node: ast.ImportFrom, module_name: str, is_init: bool
-) -> str | None:
+def _resolve_import(node: ast.ImportFrom, module_name: str, is_init: bool) -> str | None:
     """Resolve a relative ``from .x import ...`` to its absolute name.
 
     Returns ``None`` for absolute imports outside ``rytm_randomizer``.
@@ -91,9 +89,7 @@ def _imported_package_modules(path: Path) -> list[tuple[int, str]]:
                     out.append((node.lineno, n.name))
         elif isinstance(node, ast.ImportFrom):
             resolved = _resolve_import(node, mod, is_init)
-            if resolved and (
-                resolved == PACKAGE_NAME or resolved.startswith(PACKAGE_NAME + ".")
-            ):
+            if resolved and (resolved == PACKAGE_NAME or resolved.startswith(PACKAGE_NAME + ".")):
                 out.append((node.lineno, resolved))
     return out
 
@@ -160,9 +156,7 @@ def test_state_layer_imports_only_stdlib() -> None:
         # Allow ``from . import x`` / ``from .scene import ...`` within state/.
         for lineno, fq in _imported_package_modules(path):
             if not fq.startswith(f"{PACKAGE_NAME}.state"):
-                violations.append(
-                    f"{path.relative_to(PROJECT_ROOT)}:{lineno} imports package {fq}"
-                )
+                violations.append(f"{path.relative_to(PROJECT_ROOT)}:{lineno} imports package {fq}")
         for token in _all_top_level_import_tokens(path):
             if any(token == p or token.startswith(p + ".") for p in forbidden_prefixes):
                 violations.append(
@@ -216,10 +210,9 @@ def test_runners_do_not_import_upper_layers(module_path: str) -> None:
     for lineno, fq in _imported_package_modules(path):
         if any(fq == p or fq.startswith(p + ".") for p in forbidden_prefixes):
             violations.append(f"{path.relative_to(PROJECT_ROOT)}:{lineno} imports {fq}")
-    assert not violations, (
-        f"{module_path} must not import cli/shell/app. Violations:\n  "
-        + "\n  ".join(violations)
-    )
+    assert (
+        not violations
+    ), f"{module_path} must not import cli/shell/app. Violations:\n  " + "\n  ".join(violations)
 
 
 # ---------------------------------------------------------------------------
@@ -296,8 +289,7 @@ def test_cli_is_passive() -> None:
     all_violations = package_violations + external_violations
     assert not all_violations, (
         "cli.py must remain passive: no mido / mido_provider / engines / shell "
-        "/ app / runners / midi_io / randomization. Violations:\n  "
-        + "\n  ".join(all_violations)
+        "/ app / runners / midi_io / randomization. Violations:\n  " + "\n  ".join(all_violations)
     )
 
 

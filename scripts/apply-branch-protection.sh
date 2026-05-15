@@ -15,28 +15,28 @@ REPO="${REPO:-buzzijose-hub/RytmRandomizer}"
 BRANCH="${BRANCH:-main}"
 
 # Required status checks.
-# These context names must match the job names produced by .github/workflows/test.yml.
-# NOTE: this list gates every merge to main. The three required checks below:
-#   - "architecture" (WS-T): the gated architecture-conformance suite
-#       (tests/architecture/) — fast, ubuntu-only, must stay green.
-#   - "test (<os>, py3.11)" (WS-E): full pytest suite on each of the 3 OSs.
-#   - "e2e (<os>, py3.11)" (WS-R): the V1.34 canonical operator-command flow
-#       against MockMidiSender, deterministic, must stay green on each OS.
-# When the WS-I coverage job lands, add "coverage" here so it also gates.
-# Do NOT remove the 3-OS matrix entries — the canonical operator-command
-# flow gates every merge to main on every supported platform.
+# This list intentionally requires ONLY the `required-checks` aggregate
+# job from .github/workflows/test.yml. That job depends on every actual
+# gate (lint, security, architecture, test x3, e2e x3) and enforces:
+#   "every upstream job either succeeded or was correctly skipped".
+#
+# Why one aggregate instead of seven individual checks:
+#   * Path-filtered jobs (e.g. test matrix skipping on docs-only PRs)
+#     report status `skipped` to GitHub. By default branch protection
+#     treats `skipped` as pending and blocks the PR forever. The
+#     aggregate job always runs and translates `skipped` to `success`.
+#   * Adding/removing a matrix entry no longer requires editing this
+#     payload — only the aggregate job's needs: list.
+#   * Branch protection UI is simpler (one check, one source of truth).
+#
+# The aggregate job is the contract; the individual jobs are the
+# implementation detail. Do not add the individual job names back here.
 read -r -d '' PAYLOAD <<'JSON' || true
 {
   "required_status_checks": {
     "strict": true,
     "checks": [
-      { "context": "architecture" },
-      { "context": "test (windows-latest, py3.11)" },
-      { "context": "test (macos-latest, py3.11)" },
-      { "context": "test (ubuntu-latest, py3.11)" },
-      { "context": "e2e (windows-latest, py3.11)" },
-      { "context": "e2e (macos-latest, py3.11)" },
-      { "context": "e2e (ubuntu-latest, py3.11)" }
+      { "context": "required-checks" }
     ]
   },
   "enforce_admins": true,

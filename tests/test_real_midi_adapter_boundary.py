@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
@@ -66,16 +66,14 @@ def run_python(code):
 
 
 def test_real_midi_adapter_import_is_side_effect_free():
-    result = run_python(
-        """
+    result = run_python("""
 import sys
 import rytm_randomizer.real_midi_adapter as adapter
 
 assert adapter.__name__ == "rytm_randomizer.real_midi_adapter"
 for module_name in ("mido", "rtmidi", "pythonrtmidi"):
     assert module_name not in sys.modules, module_name
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stdout == ""
@@ -91,10 +89,7 @@ class FakeOutputPort:
 
 
 def test_build_real_midi_sender_requires_explicit_provider():
-    from rytm_randomizer.real_midi_adapter import (
-        RealMidiDependencyError,
-        build_real_midi_sender,
-    )
+    from rytm_randomizer.real_midi_adapter import RealMidiDependencyError, build_real_midi_sender
 
     try:
         build_real_midi_sender(provider=None, port_name="Fake Rytm")
@@ -105,10 +100,7 @@ def test_build_real_midi_sender_requires_explicit_provider():
 
 
 def test_real_midi_port_provider_unknown_port_fails_safely():
-    from rytm_randomizer.real_midi_adapter import (
-        RealMidiPortError,
-        RealMidiPortProvider,
-    )
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError, RealMidiPortProvider
 
     provider = RealMidiPortProvider(output_names=("Fake Rytm",), ports={})
 
@@ -121,10 +113,7 @@ def test_real_midi_port_provider_unknown_port_fails_safely():
 
 
 def test_real_midi_port_provider_rejects_configured_port_without_send():
-    from rytm_randomizer.real_midi_adapter import (
-        RealMidiPortError,
-        RealMidiPortProvider,
-    )
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError, RealMidiPortProvider
 
     provider = RealMidiPortProvider(
         output_names=("Fake Rytm",),
@@ -141,10 +130,7 @@ def test_real_midi_port_provider_rejects_configured_port_without_send():
 
 def test_real_midi_sender_records_to_fake_port_only():
     from rytm_randomizer.mock_midi import build_cc_message
-    from rytm_randomizer.real_midi_adapter import (
-        RealMidiPortProvider,
-        build_real_midi_sender,
-    )
+    from rytm_randomizer.real_midi_adapter import RealMidiPortProvider, build_real_midi_sender
 
     fake_port = FakeOutputPort()
     provider = RealMidiPortProvider(
@@ -227,13 +213,11 @@ def test_passive_imports_do_not_load_adapter_or_real_midi_modules():
         f"assert {module_name!r} not in sys.modules, {module_name!r}"
         for module_name in FORBIDDEN_IMPORTED_MODULES
     )
-    result = run_python(
-        f"""
+    result = run_python(f"""
 import sys
 {imports}
 {checks}
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stdout == ""
@@ -241,8 +225,7 @@ import sys
 
 
 def test_passive_cli_commands_do_not_load_adapter_or_real_midi_modules():
-    result = run_python(
-        f"""
+    result = run_python(f"""
 import sys
 from rytm_randomizer import cli
 commands = {PASSIVE_CLI_COMMANDS!r}
@@ -251,8 +234,7 @@ for command in commands:
     assert exit_code == 0, command
 for module_name in {FORBIDDEN_IMPORTED_MODULES!r}:
     assert module_name not in sys.modules, module_name
-"""
-    )
+""")
 
     assert result.returncode == 0
     assert result.stderr == ""
@@ -266,10 +248,7 @@ def test_passive_sources_do_not_reference_adapter_or_port_affordances():
 
 
 def test_active_boundary_scope_still_rejects_profiles_3_and_4():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     accepted_sender = MockMidiSender()

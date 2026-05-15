@@ -30,7 +30,8 @@ from __future__ import annotations
 import json as _json
 import logging
 import sys
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 __all__ = [
     "JSON_FORMAT_NAME",

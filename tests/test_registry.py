@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -15,7 +15,6 @@ from rytm_randomizer.registry import (
     summarize_registry,
 )
 from rytm_randomizer.scenes import SCENE_COMMANDS
-
 
 FORBIDDEN_EXECUTION_FIELDS = {"handler", "callable", "execute", "function", "callback"}
 OUT_OF_SCOPE_PAD_TEXT = (

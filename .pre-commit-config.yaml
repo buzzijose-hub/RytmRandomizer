@@ -4,23 +4,27 @@
 #
 # Quality gates: formatting (black), import sorting (isort), linting (ruff),
 # plus standard repo hygiene checks.
+#
+# IMPORTANT: when bumping any hook version below, also bump the matching
+# pin in .github/workflows/test.yml's `lint` job, otherwise local and CI
+# can produce different verdicts.
 
 repos:
   - repo: https://github.com/psf/black
-    rev: 24.10.0
+    rev: 26.3.1
     hooks:
       - id: black
         language_version: python3
 
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 8.0.1
     hooks:
       - id: isort
         name: isort (import sorting)
         args: ["--profile", "black"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.6
+    rev: v0.15.13
     hooks:
       - id: ruff
         args: ["--fix"]

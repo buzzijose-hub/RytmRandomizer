@@ -27,7 +27,6 @@ from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from .extractor import _aggregate_measurements, _measure_audio_features, _require_librosa
 from .feature_report import FeatureReport, compute_feature_report_hash
 
-
 _AUDIO_EXTENSIONS: tuple[str, ...] = (".wav", ".aif", ".aiff", ".flac", ".mp3")
 
 
@@ -97,7 +96,9 @@ def analyze_library(directory: Path) -> FeatureReport:
 
     # Measure each file, aggregate.
     _, numpy = _require_librosa()
-    per_file = [_measure_audio_features(p) for p in audio_files]  # pragma: no cover - requires librosa
+    per_file = [
+        _measure_audio_features(p) for p in audio_files
+    ]  # pragma: no cover - requires librosa
     aggregated = _aggregate_measurements(per_file, numpy)  # pragma: no cover - requires librosa
 
     report = FeatureReport(  # pragma: no cover - requires librosa

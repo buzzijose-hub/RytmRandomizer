@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,9 +34,7 @@ def test_importing_behavior_undo_commit_state_prints_nothing():
 
 
 def test_b_returns_read_only_current_anchor_return_intent():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -76,19 +74,14 @@ def test_b_returns_read_only_current_anchor_return_intent():
 
 
 def test_b_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
     assert result.metadata["source"] == "STATE_UTILITY_COMMANDS"
     assert result.metadata["command_type"] == "anchor_state"
     assert result.metadata["target_scope"] == "current_anchor"
-    assert (
-        result.metadata["behavior_family"]
-        == "undo-commit-state/current-anchor-return"
-    )
+    assert result.metadata["behavior_family"] == "undo-commit-state/current-anchor-return"
     assert result.metadata["state_action"] == "describe_current_anchor_return_intent"
     assert result.metadata["intent_kind"] == "anchor_return"
     assert result.metadata["anchor_concept"] == "current anchor"
@@ -102,9 +95,7 @@ def test_b_metadata_contains_expected_passive_sources():
 
 
 def test_e_returns_read_only_current_state_anchor_commit_intent():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("E")
 
@@ -147,23 +138,15 @@ def test_e_returns_read_only_current_state_anchor_commit_intent():
 
 
 def test_e_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("E")
 
     assert result.metadata["source"] == "STATE_UTILITY_COMMANDS"
     assert result.metadata["command_type"] == "anchor_state"
     assert result.metadata["target_scope"] == "current_anchor_state"
-    assert (
-        result.metadata["behavior_family"]
-        == "undo-commit-state/current-state-anchor-commit"
-    )
-    assert (
-        result.metadata["state_action"]
-        == "describe_current_state_anchor_commit_intent"
-    )
+    assert result.metadata["behavior_family"] == "undo-commit-state/current-state-anchor-commit"
+    assert result.metadata["state_action"] == "describe_current_state_anchor_commit_intent"
     assert result.metadata["intent_kind"] == "anchor_commit"
     assert result.metadata["anchor_concept"] == "current state as new anchor"
     assert result.metadata["lifecycle_effect"] == "described_only"
@@ -177,9 +160,7 @@ def test_e_metadata_contains_expected_passive_sources():
 
 
 def test_w_returns_read_only_waveform_exploration_intent():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("W")
 
@@ -223,9 +204,7 @@ def test_w_returns_read_only_waveform_exploration_intent():
 
 
 def test_w_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("W")
 
@@ -233,10 +212,7 @@ def test_w_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "exploration"
     assert result.metadata["source_scope"] == "waveform"
     assert result.metadata["target_scope"] == "waveform_exploration"
-    assert (
-        result.metadata["behavior_family"]
-        == "undo-commit-state/waveform-exploration"
-    )
+    assert result.metadata["behavior_family"] == "undo-commit-state/waveform-exploration"
     assert result.metadata["state_action"] == "describe_waveform_exploration_intent"
     assert result.metadata["intent_kind"] == "waveform_exploration"
     assert result.metadata["exploration_concept"] == "waveform exploration only"
@@ -251,9 +227,7 @@ def test_w_metadata_contains_expected_passive_sources():
 
 
 def test_u_returns_read_only_state_history_undo_intent():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("U")
 
@@ -263,10 +237,7 @@ def test_u_returns_read_only_state_history_undo_intent():
     assert result.label == "undo previous script-generated state"
     assert result.behavior_family == "undo-commit-state/script-generated-state-undo"
     assert result.target_scope == "script_generated_state_history"
-    assert (
-        result.state_action
-        == "describe_previous_script_generated_state_undo_intent"
-    )
+    assert result.state_action == "describe_previous_script_generated_state_undo_intent"
     assert result.intent_kind == "state_history_undo"
     assert result.history_concept == "previous script-generated state"
     assert result.lifecycle_effect == "described_only"
@@ -301,9 +272,7 @@ def test_u_returns_read_only_state_history_undo_intent():
 
 
 def test_u_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("U")
 
@@ -311,14 +280,8 @@ def test_u_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "state_history"
     assert result.metadata["source_scope"] == "script_generated_state"
     assert result.metadata["target_scope"] == "script_generated_state_history"
-    assert (
-        result.metadata["behavior_family"]
-        == "undo-commit-state/script-generated-state-undo"
-    )
-    assert (
-        result.metadata["state_action"]
-        == "describe_previous_script_generated_state_undo_intent"
-    )
+    assert result.metadata["behavior_family"] == "undo-commit-state/script-generated-state-undo"
+    assert result.metadata["state_action"] == "describe_previous_script_generated_state_undo_intent"
     assert result.metadata["intent_kind"] == "state_history_undo"
     assert result.metadata["history_concept"] == "previous script-generated state"
     assert result.metadata["lifecycle_effect"] == "described_only"
@@ -332,9 +295,7 @@ def test_u_metadata_contains_expected_passive_sources():
 
 
 def test_undo_commit_state_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -379,9 +340,7 @@ def test_deferred_packet_9_undo_commit_state_keys_fail_safely():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_undo_commit_state import (
-        evaluate_undo_commit_state_behavior,
-    )
+    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("NOPE")
 
@@ -455,8 +414,7 @@ def test_no_out_of_scope_support_is_exposed():
     module_text = "\n".join(
         [
             behavior_undo_commit_state.__doc__ or "",
-            behavior_undo_commit_state.evaluate_undo_commit_state_behavior.__doc__
-            or "",
+            behavior_undo_commit_state.evaluate_undo_commit_state_behavior.__doc__ or "",
         ]
     )
 

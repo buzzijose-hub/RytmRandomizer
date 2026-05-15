@@ -17,17 +17,11 @@ compatibility.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping
 
-from .commands import (
-    COMMANDS,
-    PAD1_COMMANDS,
-    PAD2_COMMANDS,
-    PAD3_COMMANDS,
-    PAD4_COMMANDS,
-)
+from .commands import COMMANDS, PAD1_COMMANDS, PAD2_COMMANDS, PAD3_COMMANDS, PAD4_COMMANDS
 
 
 # --------------------------------------------------------------------------
@@ -63,17 +57,11 @@ class PadLaneCommand:
     mode_concept: str = ""
     # Extra display lines that follow the dependency line, plus extra metadata.
     extra_display_lines: tuple[str, ...] = ()
-    extra_metadata: Mapping[str, object] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
+    extra_metadata: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self, "extra_display_lines", tuple(self.extra_display_lines)
-        )
-        object.__setattr__(
-            self, "extra_metadata", MappingProxyType(dict(self.extra_metadata))
-        )
+        object.__setattr__(self, "extra_display_lines", tuple(self.extra_display_lines))
+        object.__setattr__(self, "extra_metadata", MappingProxyType(dict(self.extra_metadata)))
 
 
 # --------------------------------------------------------------------------
@@ -686,9 +674,7 @@ _register(
         "pad_1_bd_acoustic",
         "bd_acoustic",
         "anchor_load",
-        extra_display_lines=(
-            "Group profile 4 is not used by this Pad 1 command.",
-        ),
+        extra_display_lines=("Group profile 4 is not used by this Pad 1 command.",),
         extra_metadata={
             "lane_family": "bd_acoustic",
             "requires_current_engine_state": False,
@@ -839,9 +825,7 @@ _register(
         "Read-only Pad 2 profile rotation intent.",
         "Rotation concept: Pad 2 profiled secondary-lane engine rotation",
         "rotation_intent",
-        extra_metadata={
-            "rotation_concept": "Pad 2 profiled secondary-lane engine rotation"
-        },
+        extra_metadata={"rotation_concept": "Pad 2 profiled secondary-lane engine rotation"},
     ),
     _padn(
         "P2X",
@@ -854,9 +838,7 @@ _register(
         "Read-only Pad 2 current-profile safe mutation intent.",
         "Mutation concept: Pad 2 current-profile safe mutation",
         "mutation_intent",
-        extra_display_lines=(
-            "Selected-profile dependency is recorded only.",
-        ),
+        extra_display_lines=("Selected-profile dependency is recorded only.",),
         extra_metadata={
             "mutation_concept": "Pad 2 current-profile safe mutation",
             "selected_profile_dependency": "current_pad2_profile_state",
@@ -874,9 +856,7 @@ _register(
         "Anchor return concept: Pad 2 current-profile anchor return",
         "anchor_return_intent",
         anchor_concept="Pad 2 current-profile anchor return",
-        extra_display_lines=(
-            "Selected-profile dependency is recorded only.",
-        ),
+        extra_display_lines=("Selected-profile dependency is recorded only.",),
         extra_metadata={
             "anchor_return_concept": "Pad 2 current-profile anchor return",
             "selected_profile_dependency": "current_pad2_profile_state",
@@ -954,9 +934,7 @@ _register(
         "Pad 3 SY Raw sci-fi motion accent mode dependency is recorded only.",
         "mode_load",
         mode_concept="Pad 3 SY Raw sci-fi motion accent mode",
-        extra_metadata={
-            "mode_concept": "Pad 3 SY Raw sci-fi motion accent mode"
-        },
+        extra_metadata={"mode_concept": "Pad 3 SY Raw sci-fi motion accent mode"},
     ),
     _padn(
         "SW",
@@ -969,9 +947,7 @@ _register(
         "Read-only Pad 3 SY Raw Wave + Balance discovery intent.",
         "Discovery concept: Pad 3 SY Raw Wave + Balance discovery",
         "discovery",
-        extra_metadata={
-            "discovery_concept": "Pad 3 SY Raw Wave + Balance discovery"
-        },
+        extra_metadata={"discovery_concept": "Pad 3 SY Raw Wave + Balance discovery"},
     ),
     _padn(
         "P3R",
@@ -984,9 +960,7 @@ _register(
         "Read-only Pad 3 SY Raw behavior mode rotation intent.",
         "Rotation concept: Pad 3 SY Raw behavior mode rotation",
         "rotation",
-        extra_metadata={
-            "rotation_concept": "Pad 3 SY Raw behavior mode rotation"
-        },
+        extra_metadata={"rotation_concept": "Pad 3 SY Raw behavior mode rotation"},
     ),
     _padn(
         "P3X",
@@ -999,9 +973,7 @@ _register(
         "Read-only Pad 3 SY Raw current mode safe mutation intent.",
         "Mutation concept: Pad 3 SY Raw current mode safe mutation",
         "mutation",
-        extra_metadata={
-            "mutation_concept": "Pad 3 SY Raw current mode safe mutation"
-        },
+        extra_metadata={"mutation_concept": "Pad 3 SY Raw current mode safe mutation"},
     ),
 )
 
@@ -1033,9 +1005,7 @@ _register(
         "Read-only Pad 4 BD Acoustic behavior mode rotation intent.",
         "Rotation concept: Pad 4 BD Acoustic behavior mode rotation",
         "rotation",
-        extra_metadata={
-            "rotation_concept": "Pad 4 BD Acoustic behavior mode rotation"
-        },
+        extra_metadata={"rotation_concept": "Pad 4 BD Acoustic behavior mode rotation"},
     ),
     _padn(
         "P4X",
@@ -1048,9 +1018,7 @@ _register(
         "Read-only Pad 4 BD Acoustic current mode safe mutation intent.",
         "Mutation concept: Pad 4 BD Acoustic current mode safe mutation",
         "mutation",
-        extra_metadata={
-            "mutation_concept": "Pad 4 BD Acoustic current mode safe mutation"
-        },
+        extra_metadata={"mutation_concept": "Pad 4 BD Acoustic current mode safe mutation"},
     ),
 )
 
@@ -1085,9 +1053,7 @@ def _pad1_accepted_metadata(command: PadLaneCommand) -> dict[str, object]:
         "source": "PAD1_COMMANDS",
         "source_command_type": command_metadata["type"],
         "source_command_scope": command_metadata["scope"],
-        "source_v134_reference_command": command_metadata[
-            "v134_reference_command"
-        ],
+        "source_v134_reference_command": command_metadata["v134_reference_command"],
         "source_scaffold_only": command_metadata["scaffold_only"],
         "target_pad": command.pad,
         "lane": command.lane_metadata,
@@ -1211,9 +1177,7 @@ def _pad1_accepted_state_descriptor(
     requires_profiled_engine = intent_kind == "discovery"
     anchor_key = command.command_key if requires_anchor else ""
     return_key = command.command_key if intent_kind == "anchor_return" else ""
-    requires_current_engine = (
-        command.command_key in PACKET_5A_PAD1_CURRENT_ENGINE_KEYS
-    )
+    requires_current_engine = command.command_key in PACKET_5A_PAD1_CURRENT_ENGINE_KEYS
 
     metadata = dict(behavior.metadata)
     metadata.update(
@@ -1298,9 +1262,7 @@ def _padn_accepted_result(command: PadLaneCommand, result_cls):
     lane_metadata_value = f"pad_{command.pad}_" + (
         "secondary_lane"
         if command.pad == 2
-        else "sy_raw_lane"
-        if command.pad == 3
-        else "bd_acoustic_lane"
+        else "sy_raw_lane" if command.pad == 3 else "bd_acoustic_lane"
     )
 
     result_metadata: dict[str, object] = {
@@ -1338,20 +1300,20 @@ def _padn_accepted_result(command: PadLaneCommand, result_cls):
         *_NO_PROMPT_TAIL,
     )
 
-    kwargs: dict[str, object] = dict(
-        command_key=command.command_key,
-        label=label,
-        behavior_family=command.behavior_family,
-        accepted=True,
-        reason=command.reason,
-        target_pad=command.pad,
-        lane=command.lane,
-        lane_action=command.lane_action,
-        intent_kind=command.intent_kind,
-        anchor_concept=command.anchor_concept,
-        display_lines=display_lines,
-        metadata=result_metadata,
-    )
+    kwargs: dict[str, object] = {
+        "command_key": command.command_key,
+        "label": label,
+        "behavior_family": command.behavior_family,
+        "accepted": True,
+        "reason": command.reason,
+        "target_pad": command.pad,
+        "lane": command.lane,
+        "lane_action": command.lane_action,
+        "intent_kind": command.intent_kind,
+        "anchor_concept": command.anchor_concept,
+        "display_lines": display_lines,
+        "metadata": result_metadata,
+    }
     if result_cls is Pad3LaneBehaviorResult:
         kwargs["mode_concept"] = command.mode_concept
     return result_cls(**kwargs)

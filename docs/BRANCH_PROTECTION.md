@@ -29,7 +29,7 @@ once, after `main` is created, by someone with admin rights on the repo. It is
 |---|---|
 | Require status checks to pass | Yes |
 | Require branches to be up to date before merging (`strict`) | Yes |
-| Required status checks | `test (windows-latest, py3.11)`, `test (macos-latest, py3.11)`, `test (ubuntu-latest, py3.11)` |
+| Required status checks | `required-checks` (one aggregate gate) |
 | Require pull request reviews | Yes |
 | Required approving reviews | 1 |
 | Dismiss stale approvals on new commits | Yes |
@@ -40,15 +40,27 @@ once, after `main` is created, by someone with admin rights on the repo. It is
 | Allow branch deletion | No |
 | Enforce for admins | Yes |
 
-## Required status checks — future additions
+## Required status checks — the aggregate pattern
 
-The required status check list currently covers the cross-platform test matrix
-from `.github/workflows/test.yml`. Two more checks will be added to the required
-list (in both `scripts/apply-branch-protection.sh` and the table above) when
-their workstreams land:
+Branch protection requires exactly one status check: `required-checks`. This is
+an aggregate job in `.github/workflows/test.yml` that depends on every actual
+gate (`lint`, `security`, `architecture`, the 3-OS `test` matrix, the 3-OS
+`e2e` matrix) and enforces the contract:
 
-- **Coverage job** — from WS-I.
-- **End-to-end (e2e) job** — from WS-R.
+> Every upstream job either succeeded or was correctly skipped.
 
-When those jobs are added as sibling jobs in the workflow, update the `checks`
-array in `scripts/apply-branch-protection.sh` and re-run the script.
+The individual jobs are not listed in branch protection. Two reasons:
+
+1. **Path filtering.** Each upstream job is gated by a `detect-changes`
+   preamble that classifies what files changed. A docs-only PR skips the
+   3-OS test matrix entirely. Without the aggregate, GitHub branch
+   protection treats a skipped required check as **pending** and blocks
+   the PR forever — the aggregate translates `skipped` to `success` so
+   the PR can merge.
+2. **Decoupling.** Adding or renaming a matrix entry no longer requires
+   editing `scripts/apply-branch-protection.sh`; only the aggregate
+   job's `needs:` list changes.
+
+When a new gate is added (e.g. a future `mypy` or `pyright` workstream),
+add it to the aggregate job's `needs:` list. Do not add the new gate name
+to branch protection separately.

@@ -26,11 +26,12 @@ import dataclasses
 import pytest
 
 from rytm_randomizer.guardrails import (
+    HIGH_RISK_PARAMETERS,
+    SCHEMA_VERSION,
     Confidence,
     GuardrailBound,
     GuardrailClass,
     GuardrailProfile,
-    HIGH_RISK_PARAMETERS,
     MusicalCharacter,
     ProfileRejectedError,
     ProfileState,
@@ -39,11 +40,9 @@ from rytm_randomizer.guardrails import (
     RoleMapping,
     SceneGuardrail,
     SourceType,
-    SCHEMA_VERSION,
     validate,
 )
 from rytm_randomizer.observability.errors import BoundaryError
-
 
 # ---------------------------------------------------------------------------
 # Builders -- a happy-path draft that should validate green
@@ -376,12 +375,8 @@ def test_safety_floor_rewrites_destructive_to_forbidden():
     original_safe = val_mod.HIGH_RISK_PARAMETERS
     original_destr = val_mod.DESTRUCTIVE_HIGH_RISK_PARAMETERS
     try:
-        val_mod.HIGH_RISK_PARAMETERS = frozenset(
-            original_safe | {"FLT Resonance"}
-        )
-        val_mod.DESTRUCTIVE_HIGH_RISK_PARAMETERS = frozenset(
-            original_destr | {"FLT Resonance"}
-        )
+        val_mod.HIGH_RISK_PARAMETERS = frozenset(original_safe | {"FLT Resonance"})
+        val_mod.DESTRUCTIVE_HIGH_RISK_PARAMETERS = frozenset(original_destr | {"FLT Resonance"})
         bound = GuardrailBound(
             pad=1,
             parameter="FLT Resonance",
@@ -421,12 +416,8 @@ def test_safety_floor_does_not_double_record_forbidden_param():
     original_safe = val_mod.HIGH_RISK_PARAMETERS
     original_destr = val_mod.DESTRUCTIVE_HIGH_RISK_PARAMETERS
     try:
-        val_mod.HIGH_RISK_PARAMETERS = frozenset(
-            original_safe | {"FLT Resonance"}
-        )
-        val_mod.DESTRUCTIVE_HIGH_RISK_PARAMETERS = frozenset(
-            original_destr | {"FLT Resonance"}
-        )
+        val_mod.HIGH_RISK_PARAMETERS = frozenset(original_safe | {"FLT Resonance"})
+        val_mod.DESTRUCTIVE_HIGH_RISK_PARAMETERS = frozenset(original_destr | {"FLT Resonance"})
         bound = GuardrailBound(
             pad=1,
             parameter="FLT Resonance",
@@ -812,6 +803,4 @@ def test_safety_floor_rewrite_emits_log_record():
         val_mod.HIGH_RISK_PARAMETERS = original
         val_mod._logger.removeHandler(handler)
 
-    assert any(
-        "guardrails.safety_floor" in r.getMessage() for r in records
-    )
+    assert any("guardrails.safety_floor" in r.getMessage() for r in records)

@@ -7,9 +7,7 @@ MAIN_PROMPT_DEPTH_GUARDRAIL = {
     "commands": GUARDED_MAIN_PROMPT_DEPTH_COMMANDS,
     "sends_midi": False,
     "message": "Depth number entered at the main Command prompt. No MIDI was sent.",
-    "depth_prompt_context": (
-        "Use a command that asks for depth before entering 1, 2, or 3."
-    ),
+    "depth_prompt_context": ("Use a command that asks for depth before entering 1, 2, or 3."),
 }
 
 MENU_COMMANDS = {

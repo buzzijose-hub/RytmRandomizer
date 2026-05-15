@@ -379,10 +379,7 @@ def main(argv=None):
         return 0
 
     if args == ["project-status-report", "--check"]:
-        from .project_status_report import (
-            check_project_status_report,
-            format_project_status_check,
-        )
+        from .project_status_report import check_project_status_report, format_project_status_check
 
         check = check_project_status_report()
         sys.stdout.write("\n".join(format_project_status_check()))
@@ -450,18 +447,14 @@ def main(argv=None):
 
     if args == ["list-group-profiles"]:
         sys.stdout.write(
-            "\n".join(
-                format_registry_list_report("group_profiles", "group profile list")
-            )
+            "\n".join(format_registry_list_report("group_profiles", "group profile list"))
         )
         sys.stdout.write("\n")
         return 0
 
     if len(args) == 2 and args[0] == "search-commands":
         sys.stdout.write(
-            "\n".join(
-                format_registry_search_report("commands", "command search", args[1])
-            )
+            "\n".join(format_registry_search_report("commands", "command search", args[1]))
         )
         sys.stdout.write("\n")
         return 0

@@ -1,7 +1,7 @@
-from pathlib import Path
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -155,9 +155,7 @@ def test_inspect_scene_help_exits_zero_and_matches_fixture():
     result = run_cli("inspect-scene", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_inspect_scene_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_inspect_scene_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -175,9 +173,7 @@ def test_list_commands_help_exits_zero_and_matches_fixture():
     result = run_cli("list-commands", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_commands_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_commands_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -185,9 +181,7 @@ def test_list_scenes_help_exits_zero_and_matches_fixture():
     result = run_cli("list-scenes", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_scenes_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_scenes_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -215,9 +209,7 @@ def test_search_scenes_help_exits_zero_and_matches_fixture():
     result = run_cli("search-scenes", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_search_scenes_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_search_scenes_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -245,9 +237,7 @@ def test_preview_scene_help_exits_zero_and_matches_fixture():
     result = run_cli("preview-scene", "--help")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_preview_scene_help_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_preview_scene_help_expected.txt")
     assert result.stderr == ""
 
 
@@ -327,9 +317,7 @@ def test_mock_mapper_report_command_exits_zero_and_matches_fixture():
     result = run_cli("mock-mapper-report")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_mock_mapper_report_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_mock_mapper_report_expected.txt")
     assert result.stderr == ""
 
 
@@ -337,9 +325,7 @@ def test_runtime_plan_report_command_exits_zero_and_matches_fixture():
     result = run_cli("runtime-plan-report")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_runtime_plan_report_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_runtime_plan_report_expected.txt")
     assert result.stderr == ""
 
 
@@ -971,9 +957,7 @@ def test_inspect_scene_known_key_exits_zero_and_matches_fixture():
     result = run_cli("inspect-scene", "S1A")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_inspect_scene_known_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_inspect_scene_known_expected.txt")
     assert result.stderr == ""
 
 
@@ -1013,9 +997,7 @@ def test_list_commands_exits_zero_and_matches_fixture():
     result = run_cli("list-commands")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_commands_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_commands_expected.txt")
     assert result.stderr == ""
 
 
@@ -1023,9 +1005,7 @@ def test_list_scenes_exits_zero_and_matches_fixture():
     result = run_cli("list-scenes")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_scenes_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_scenes_expected.txt")
     assert result.stderr == ""
 
 
@@ -1033,9 +1013,7 @@ def test_list_group_profiles_exits_zero_and_matches_fixture():
     result = run_cli("list-group-profiles")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_list_group_profiles_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_list_group_profiles_expected.txt")
     assert result.stderr == ""
 
 
@@ -1086,9 +1064,7 @@ def test_search_scenes_known_query_exits_zero_and_matches_fixture():
     result = run_cli("search-scenes", "Wild")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_search_scenes_known_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_search_scenes_known_expected.txt")
     assert result.stderr == ""
 
 
@@ -1116,9 +1092,7 @@ def test_search_scenes_no_match_exits_zero_and_matches_fixture():
     result = run_cli("search-scenes", "NO_MATCH")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_search_scenes_none_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_search_scenes_none_expected.txt")
     assert result.stderr == ""
 
 
@@ -1192,9 +1166,7 @@ def test_preview_scene_known_key_exits_zero_and_matches_fixture():
     result = run_cli("preview-scene", "S1A")
 
     assert result.returncode == 0
-    assert normalize_newlines(result.stdout) == fixture_text(
-        "cli_preview_scene_known_expected.txt"
-    )
+    assert normalize_newlines(result.stdout) == fixture_text("cli_preview_scene_known_expected.txt")
     assert result.stderr == ""
 
 
@@ -1494,7 +1466,10 @@ def test_mock_mapper_report_exposes_no_active_behavior_or_support_expansion():
 
     assert "- 2: My BD Hard (Pad 1 / BD Hard)" in output
     assert "- 3: My BD Classic (Pad 2 / BD Classic)" in output
-    assert "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - intentionally unsupported until separately approved" in output
+    assert (
+        "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - intentionally unsupported until separately approved"
+        in output
+    )
     assert "- mock_only: True" in output
     assert "- real_midi: absent" in output
     assert "- port_opening: absent" in output
@@ -1544,9 +1519,15 @@ def test_active_boundary_report_exposes_no_active_behavior_or_support_expansion(
     assert "- group_profile 2: My BD Hard (Pad 1 / BD Hard)" in output
     assert "- boundary: mock_active_boundary" in output
     assert "- supported_candidate: group_profile:2" in output
-    assert "- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi" in output
+    assert (
+        "- fields: source_kind, source_key, target, armed, dry_run_confirmed, operator_intent, mock_only, sends_real_midi"
+        in output
+    )
     assert "- failure_reason: included on failure paths" in output
-    assert "- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported" in output
+    assert (
+        "- 3: My BD Classic (Pad 2 / BD Classic) - mock mapper/report scope only; not active-boundary supported"
+        in output
+    )
     assert "- 4: My BD Acoustic (Pad 4 / BD Acoustic) - parked until separately approved" in output
     assert "- explicit arming" in output
     assert "- dry-run confirmation" in output
@@ -1651,8 +1632,14 @@ def test_anchor_profile_report_exposes_no_active_behavior_or_support_expansion()
     assert "- current_anchor_state: B, E" in output
     assert "- selected_profile_workflow: P, M" in output
     assert "- selected_isolated_pad_target: L" in output
-    assert "- PZ: selected_isolated_pad_anchor_return - deferred_selected_isolated_pad_anchor_return" in output
-    assert "- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved" in output
+    assert (
+        "- PZ: selected_isolated_pad_anchor_return - deferred_selected_isolated_pad_anchor_return"
+        in output
+    )
+    assert (
+        "- 4: group_profile_mock_mapper_support - profile 4 mock mapper support remains parked until separately approved"
+        in output
+    )
     assert "- read_only: True" in output
     assert "- passive_cli_visibility: present" in output
     assert "- real_midi: absent" in output

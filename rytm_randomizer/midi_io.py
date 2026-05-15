@@ -22,9 +22,9 @@ Import-safety: ``mido`` is imported lazily inside :func:`send_cc` only, so
 from __future__ import annotations
 
 import time
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from .data import MACHINE_CC
 from .observability.logging import get_logger

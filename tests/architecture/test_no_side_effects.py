@@ -70,12 +70,10 @@ def test_importing_every_package_module_is_silent() -> None:
         f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
     )
     assert result.stdout == "", (
-        "Importing rytm_randomizer.* must produce no stdout. Got:\n"
-        + result.stdout
+        "Importing rytm_randomizer.* must produce no stdout. Got:\n" + result.stdout
     )
     assert result.stderr == "", (
-        "Importing rytm_randomizer.* must produce no stderr. Got:\n"
-        + result.stderr
+        "Importing rytm_randomizer.* must produce no stderr. Got:\n" + result.stderr
     )
 
 
@@ -167,8 +165,7 @@ def test_each_module_imports_cleanly_in_isolation(module_name: str) -> None:
 
     result = _run_python(f"import {module_name}")
     assert result.returncode == 0, (
-        f"Importing {module_name} failed:\n"
-        f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
+        f"Importing {module_name} failed:\n" f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
     )
     assert result.stdout == "", f"{module_name} produced stdout: {result.stdout!r}"
     assert result.stderr == "", f"{module_name} produced stderr: {result.stderr!r}"

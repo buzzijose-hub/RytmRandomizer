@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -43,7 +43,6 @@ from rytm_randomizer.profiles import (
     PAD_PROFILES,
 )
 from rytm_randomizer.scenes import SCENE_COMMANDS
-
 
 FORBIDDEN_EXECUTION_FIELDS = {"handler", "callable", "execute", "function", "callback"}
 
@@ -99,8 +98,7 @@ def test_pads_5_to_12_are_absent_from_scaffold_surfaces():
     assert_no_out_of_scope_pad_keys(PAD_SELECTION_LABELS)
     assert_no_out_of_scope_pad_keys(GROUP_LAYOUT)
     assert not any(
-        profile["group_pad"] in OUT_OF_SCOPE_PADS
-        for profile in GROUP_PROFILE_METADATA.values()
+        profile["group_pad"] in OUT_OF_SCOPE_PADS for profile in GROUP_PROFILE_METADATA.values()
     )
 
 

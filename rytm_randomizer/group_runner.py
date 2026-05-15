@@ -41,16 +41,12 @@ from __future__ import annotations
 
 import random as _random_module
 import time
-from typing import Any, Callable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Callable
 
 from . import midi_io as _midi_io
 from . import randomization as _randomization
-from .data import (
-    GLOBAL_PAGE_PLANS,
-    GROUP_LAYOUT,
-    INTENSITY_PLANS,
-    PROFILES,
-)
+from .data import GLOBAL_PAGE_PLANS, GROUP_LAYOUT, INTENSITY_PLANS, PROFILES
 from .guardrails.resolver import ResolvedBounds
 from .observability.logging import get_logger
 from .observability.tracing import operation
@@ -138,9 +134,7 @@ class GroupRunner:
         # monkeypatched ``builtins.input`` is still honored when not injected.
         self._input_func = input_func
 
-        self.group_layout = (
-            group_layout if group_layout is not None else default_group_layout()
-        )
+        self.group_layout = group_layout if group_layout is not None else default_group_layout()
 
         self.active_profile: Mapping[str, Any] | None = active_profile
         self.anchor_state: State = anchor_state if anchor_state is not None else {}
@@ -193,9 +187,7 @@ class GroupRunner:
     # ------------------------------------------------------------------
 
     def _send_machine(self) -> None:
-        _midi_io.send_machine(
-            self.out, self.active_profile, channel=self.channel, sleep=self.sleep
-        )
+        _midi_io.send_machine(self.out, self.active_profile, channel=self.channel, sleep=self.sleep)
 
     def _resolved_profile(self) -> Mapping[str, Any] | None:
         """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
@@ -230,9 +222,7 @@ class GroupRunner:
 
     def _send_param(self, name: str, value: int) -> None:
         if self.resolved_bounds is not None:
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 # LOCKED_DEFAULT / FORBIDDEN -- profile says this
                 # parameter must not mutate on this pad.
@@ -247,9 +237,7 @@ class GroupRunner:
             sleep=self.sleep,
         )
 
-    def _clamp_state(
-        self, state: Mapping[str, int]
-    ) -> Mapping[str, int]:
+    def _clamp_state(self, state: Mapping[str, int]) -> Mapping[str, int]:
         """Return ``state`` with values clamped through resolved bounds.
 
         See ``Pad1Engine._clamp_state``. Byte-identical parity when
@@ -260,9 +248,7 @@ class GroupRunner:
             return state
         out: dict[str, int] = {}
         for name, value in state.items():
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 continue
             out[name] = clamped
@@ -296,9 +282,7 @@ class GroupRunner:
         self.anchor_state = dict(result.anchor_state)
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
@@ -320,17 +304,13 @@ class GroupRunner:
 
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _get_depth(self) -> str:
         """Mirror the monolith ``get_depth`` shim over the randomization core."""
 
-        return _randomization.get_depth(
-            self._input_func if self._input_func is not None else None
-        )
+        return _randomization.get_depth(self._input_func if self._input_func is not None else None)
 
     # ==================================================================
     # SELECTED-PROFILE / SINGLE-PAD GLUE
@@ -667,8 +647,7 @@ class GroupRunner:
             }
 
             print(
-                f"\n4-pad {labels.get(intensity_name, intensity_name.upper())} "
-                "mutation - V1.34:"
+                f"\n4-pad {labels.get(intensity_name, intensity_name.upper())} " "mutation - V1.34:"
             )
             print("  Pad 1 = protected kick foundation")
             print("  Pad 2 = secondary percussion movement")
@@ -704,9 +683,7 @@ class GroupRunner:
     def mutate_global_page_plan(self, page_name: str) -> None:
         """Mirror the monolith ``mutate_global_page_plan``: lane-aware page mutation."""
 
-        self.ensure_group_anchors_loaded(
-            f"4-pad lane-aware {page_name} mutation"
-        )
+        self.ensure_group_anchors_loaded(f"4-pad lane-aware {page_name} mutation")
 
         if page_name not in GLOBAL_PAGE_PLANS:
             print(f"\nUnknown global page plan: {page_name}")
@@ -714,8 +691,7 @@ class GroupRunner:
 
         depth = self._get_depth()
         print(
-            f"\n4-pad lane-aware {page_name.upper()} mutation - V1.34 / "
-            f"{depth.upper()} depth:"
+            f"\n4-pad lane-aware {page_name.upper()} mutation - V1.34 / " f"{depth.upper()} depth:"
         )
 
         plan = GLOBAL_PAGE_PLANS[page_name]
@@ -734,9 +710,7 @@ class GroupRunner:
 
                 self.mutate_group_pad(pad, cfg, zone_name, depth)
 
-        print(
-            f"\n4-pad lane-aware {page_name.upper()} mutation complete."
-        )
+        print(f"\n4-pad lane-aware {page_name.upper()} mutation complete.")
 
     def show_global_mutation_tools(self) -> None:
         """Mirror the monolith ``show_global_mutation_tools`` status view."""
@@ -762,10 +736,7 @@ class GroupRunner:
         print("  D pushes Pads 2-4 harder while protecting the kick foundation.")
         print("  I uses Pad 3 as the main chaos/motion carrier.")
         print("  4 is the wildest option but still keeps Pad 1 bounded.")
-        print(
-            "  Y maps Pad 3 to morph instead of full raw SRC for more musical "
-            "movement."
-        )
+        print("  Y maps Pad 3 to morph instead of full raw SRC for more musical " "movement.")
 
     # ==================================================================
     # ISOLATED SINGLE-PAD ORCHESTRATION
@@ -778,10 +749,7 @@ class GroupRunner:
         for pad, cfg in self.group_layout.items():
             profile = PROFILES[cfg["profile"]]
             current_marker = " < current" if pad == self.isolated_pad else ""
-            print(
-                f"{pad} = Pad {pad} / {cfg['role']} / {profile['name']}"
-                f"{current_marker}"
-            )
+            print(f"{pad} = Pad {pad} / {cfg['role']} / {profile['name']}" f"{current_marker}")
 
         choice = self._input("Pad for isolated mutation: ").strip()
 
@@ -804,9 +772,7 @@ class GroupRunner:
 
         if len(self.group_current_states) < 4:
             print("\nLoad the full 4-pad group first with O.")
-            print(
-                "This stores safe anchors for Pads 1-4 before isolated mutation."
-            )
+            print("This stores safe anchors for Pads 1-4 before isolated mutation.")
             return False
         return True
 
@@ -857,9 +823,7 @@ class GroupRunner:
         print(f"  Zone/depth: {zone} / {depth}")
         print(
             "  Pads not touched: "
-            + ", ".join(
-                str(p) for p in self.group_layout if p != self.isolated_pad
-            )
+            + ", ".join(str(p) for p in self.group_layout if p != self.isolated_pad)
         )
 
         self.mutate_group_pad(self.isolated_pad, cfg, zone, depth)
@@ -886,15 +850,10 @@ class GroupRunner:
         self.set_group_context(self.isolated_pad, profile_key)
 
         print("\nReturning isolated pad to anchor:")
-        print(
-            f"  Pad {self.isolated_pad}: {cfg['role']} / "
-            f"{self.active_profile['name']}"
-        )
+        print(f"  Pad {self.isolated_pad}: {cfg['role']} / " f"{self.active_profile['name']}")
         print(
             "  Pads not touched: "
-            + ", ".join(
-                str(p) for p in self.group_layout if p != self.isolated_pad
-            )
+            + ", ".join(str(p) for p in self.group_layout if p != self.isolated_pad)
         )
 
         anchor = dict(self.group_anchor_states[self.isolated_pad])
@@ -910,6 +869,5 @@ class GroupRunner:
         self.group_previous_states[self.isolated_pad] = None
 
         print(
-            f"\nPad {self.isolated_pad} returned to anchor. Other group pads "
-            "were not touched."
+            f"\nPad {self.isolated_pad} returned to anchor. Other group pads " "were not touched."
         )

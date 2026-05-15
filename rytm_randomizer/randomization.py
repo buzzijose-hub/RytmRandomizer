@@ -23,8 +23,9 @@ from __future__ import annotations
 
 import random
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Callable, Mapping
+from typing import Callable
 
 from .midi_io import Profile, Sender, SleepFunc, clamp, send_param
 
@@ -272,10 +273,7 @@ def mutate_zone(
     new_previous = dict(working_current)
     new_state = dict(working_current)
 
-    print(
-        f"\n{profile['name']} / {zone_name.upper()} mutation / "
-        f"{depth_name.upper()} depth:"
-    )
+    print(f"\n{profile['name']} / {zone_name.upper()} mutation / " f"{depth_name.upper()} depth:")
     print("  Mutating around current anchor.")
 
     zone_params = profile["zones"][zone_name]
@@ -296,10 +294,8 @@ def mutate_zone(
             new_state["FLT Frequency"] = freq
             new_state["FLT Resonance"] = resonance
 
-            send_param(out, profile, "FLT Frequency", freq,
-                       channel=channel, sleep=sleep)
-            send_param(out, profile, "FLT Resonance", resonance,
-                       channel=channel, sleep=sleep)
+            send_param(out, profile, "FLT Frequency", freq, channel=channel, sleep=sleep)
+            send_param(out, profile, "FLT Resonance", resonance, channel=channel, sleep=sleep)
 
             handled_filter_pair = True
             continue

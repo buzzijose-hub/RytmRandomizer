@@ -2,9 +2,7 @@
 
 import re
 
-FORBIDDEN_EXECUTION_FIELDS = frozenset(
-    {"handler", "callable", "execute", "function", "callback"}
-)
+FORBIDDEN_EXECUTION_FIELDS = frozenset({"handler", "callable", "execute", "function", "callback"})
 FORBIDDEN_PADS = frozenset(range(5, 13))
 PAD_TEXT_PATTERN = re.compile(r"\bPads?\s+(5|6|7|8|9|10|11|12)\b")
 PAD_SCOPE_PATTERN = re.compile(r"\bpad_(5|6|7|8|9|10|11|12)\b")
@@ -77,7 +75,4 @@ def _contains_forbidden_pad(value):
     if isinstance(value, (list, tuple, set, frozenset)):
         return any(_contains_forbidden_pad(child) for child in value)
 
-    if value in FORBIDDEN_PADS:
-        return True
-
-    return False
+    return value in FORBIDDEN_PADS

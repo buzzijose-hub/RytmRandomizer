@@ -22,16 +22,16 @@ import dataclasses
 import random
 import sys
 import types
-from typing import Any
 
 import pytest
 
 from rytm_randomizer.guardrails import (
+    MODE_LIVE_SAFE,
+    SCHEMA_VERSION,
     Confidence,
     GuardrailBound,
     GuardrailClass,
     GuardrailProfile,
-    MODE_LIVE_SAFE,
     MusicalCharacter,
     ProfileState,
     Provenance,
@@ -40,11 +40,9 @@ from rytm_randomizer.guardrails import (
     RoleMapping,
     SceneGuardrail,
     SourceType,
-    SCHEMA_VERSION,
     compute_content_hash,
     resolve,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fake mido so importing the engine inside the test process stays inert.
@@ -148,20 +146,26 @@ def _profile_a_rolling_hypnotic() -> GuardrailProfile:
 
     bounds = (
         GuardrailBound(
-            pad=1, parameter="FLT Frequency",
-            low=23, high=26,
+            pad=1,
+            parameter="FLT Frequency",
+            low=23,
+            high=26,
             guardrail_class=GuardrailClass.LIVE_SAFE,
             direction="anchor",
         ),
         GuardrailBound(
-            pad=1, parameter="FLT Resonance",
-            low=40, high=48,
+            pad=1,
+            parameter="FLT Resonance",
+            low=40,
+            high=48,
             guardrail_class=GuardrailClass.LIVE_SAFE,
             direction="anchor",
         ),
         GuardrailBound(
-            pad=1, parameter="AMP Overdrive",
-            low=16, high=20,
+            pad=1,
+            parameter="AMP Overdrive",
+            low=16,
+            high=20,
             guardrail_class=GuardrailClass.LIVE_SAFE,
             direction="restrained",
         ),
@@ -191,9 +195,7 @@ def _profile_a_rolling_hypnotic() -> GuardrailProfile:
         schema_version=SCHEMA_VERSION,
         content_hash="",
     )
-    return dataclasses.replace(
-        intermediate, content_hash=compute_content_hash(intermediate)
-    )
+    return dataclasses.replace(intermediate, content_hash=compute_content_hash(intermediate))
 
 
 def _profile_b_raw_peak_time() -> GuardrailProfile:
@@ -205,20 +207,26 @@ def _profile_b_raw_peak_time() -> GuardrailProfile:
 
     bounds = (
         GuardrailBound(
-            pad=1, parameter="FLT Frequency",
-            low=30, high=36,
+            pad=1,
+            parameter="FLT Frequency",
+            low=30,
+            high=36,
             guardrail_class=GuardrailClass.LIVE_SAFE,
             direction="open",
         ),
         GuardrailBound(
-            pad=1, parameter="FLT Resonance",
-            low=55, high=68,
+            pad=1,
+            parameter="FLT Resonance",
+            low=55,
+            high=68,
             guardrail_class=GuardrailClass.LIVE_SAFE,
             direction="open",
         ),
         GuardrailBound(
-            pad=1, parameter="AMP Overdrive",
-            low=28, high=35,
+            pad=1,
+            parameter="AMP Overdrive",
+            low=28,
+            high=35,
             guardrail_class=GuardrailClass.LIVE_SAFE,
             direction="hot",
         ),
@@ -240,9 +248,7 @@ def _profile_b_raw_peak_time() -> GuardrailProfile:
         schema_version=SCHEMA_VERSION,
         content_hash="",
     )
-    return dataclasses.replace(
-        intermediate, content_hash=compute_content_hash(intermediate)
-    )
+    return dataclasses.replace(intermediate, content_hash=compute_content_hash(intermediate))
 
 
 # ---------------------------------------------------------------------------
@@ -451,6 +457,4 @@ def test_profile_a_narrows_filter_frequency_observably():
     # The mutation engine MAY skip a parameter when its zone doesn't include
     # it, but if it did emit it, the value must be inside [23, 26].
     for v in flt_freq_values:
-        assert 23 <= v <= 26, (
-            f"FLT Frequency value {v} outside profile A's [23, 26] envelope"
-        )
+        assert 23 <= v <= 26, f"FLT Frequency value {v} outside profile A's [23, 26] envelope"

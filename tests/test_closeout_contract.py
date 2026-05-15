@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
 
@@ -31,8 +30,7 @@ def test_every_python_test_step_registers_exit_status():
     for index in test_invocation_indexes:
         following_lines = lines[index + 1 : index + 4]
         assert any(
-            line.strip().startswith("Register-CloseoutStepExit")
-            for line in following_lines
+            line.strip().startswith("Register-CloseoutStepExit") for line in following_lines
         ), lines[index]
 
 

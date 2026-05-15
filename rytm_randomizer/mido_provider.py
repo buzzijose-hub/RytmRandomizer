@@ -67,14 +67,19 @@ class MidoMidiPortProvider:
         # canonical type at the boundary.
         try:
             names = mido.get_output_names()
-        except (OSError, RuntimeError, ImportError, AttributeError) as exc:  # pragma: no cover - backend specific
+        except (
+            OSError,
+            RuntimeError,
+            ImportError,
+            AttributeError,
+        ) as exc:  # pragma: no cover - backend specific
             raise RealMidiPortError(
                 "midi_output_discovery_failed",
                 context={"underlying": repr(exc)},
             ) from exc
         return tuple(names)
 
-    def open_output(self, port_name: str) -> "RealMidiOutputPort":
+    def open_output(self, port_name: str) -> RealMidiOutputPort:
         """Open a hardware MIDI output port by name (lazy ``mido``).
 
         Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
@@ -97,7 +102,12 @@ class MidoMidiPortProvider:
             # convert to a single ``RealMidiPortError`` at the boundary.
             try:
                 port = mido.open_output(port_name)
-            except (OSError, RuntimeError, ImportError, AttributeError) as exc:  # pragma: no cover - backend specific
+            except (
+                OSError,
+                RuntimeError,
+                ImportError,
+                AttributeError,
+            ) as exc:  # pragma: no cover - backend specific
                 raise RealMidiPortError(
                     f"unavailable_midi_output_port: {port_name}",
                     context={"underlying": repr(exc)},

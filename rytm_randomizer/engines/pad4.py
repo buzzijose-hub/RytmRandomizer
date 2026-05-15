@@ -37,7 +37,8 @@ from __future__ import annotations
 
 import random as _random_module
 import time
-from typing import Any, Callable, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any, Callable
 
 from .. import midi_io as _midi_io
 from .. import randomization as _randomization
@@ -73,10 +74,22 @@ BD_ACOUSTIC_PROFILE_KEY = "4"
 
 # The fixed snapshot name list ``show_pad4_tools`` prints.
 _PAD4_TOOLS_SNAPSHOT_NAMES = (
-    "SRC Tune", "SRC Decay", "SRC Sweep Depth", "SRC Sweep Time",
-    "SRC Hold", "SRC Impact", "SRC Waveform",
-    "FLT Frequency", "FLT Resonance", "FLT Type", "FLT Env Depth",
-    "AMP Hold", "AMP Decay", "AMP Overdrive", "AMP Delay Send", "AMP Reverb Send",
+    "SRC Tune",
+    "SRC Decay",
+    "SRC Sweep Depth",
+    "SRC Sweep Time",
+    "SRC Hold",
+    "SRC Impact",
+    "SRC Waveform",
+    "FLT Frequency",
+    "FLT Resonance",
+    "FLT Type",
+    "FLT Env Depth",
+    "AMP Hold",
+    "AMP Decay",
+    "AMP Overdrive",
+    "AMP Delay Send",
+    "AMP Reverb Send",
 )
 
 
@@ -146,9 +159,7 @@ class Pad4Engine:
     # ------------------------------------------------------------------
 
     def _send_machine(self) -> None:
-        _midi_io.send_machine(
-            self.out, self.active_profile, channel=self.channel, sleep=self.sleep
-        )
+        _midi_io.send_machine(self.out, self.active_profile, channel=self.channel, sleep=self.sleep)
 
     def _resolved_profile(self) -> Mapping[str, Any] | None:
         """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
@@ -181,9 +192,7 @@ class Pad4Engine:
 
     def _send_param(self, name: str, value: int) -> None:
         if self.resolved_bounds is not None:
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 return
             value = clamped
@@ -196,9 +205,7 @@ class Pad4Engine:
             sleep=self.sleep,
         )
 
-    def _clamp_state(
-        self, state: Mapping[str, int]
-    ) -> Mapping[str, int]:
+    def _clamp_state(self, state: Mapping[str, int]) -> Mapping[str, int]:
         """Return ``state`` with values clamped through resolved bounds.
 
         See :meth:`Pad1Engine._clamp_state`. Byte-identical parity when
@@ -209,9 +216,7 @@ class Pad4Engine:
             return state
         out: dict[str, int] = {}
         for name, value in state.items():
-            clamped = self.resolved_bounds.clamp_value(
-                self.target_pad, name, value
-            )
+            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
             if clamped is None:
                 continue
             out[name] = clamped
@@ -245,9 +250,7 @@ class Pad4Engine:
         self.anchor_state = dict(result.anchor_state)
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
@@ -269,9 +272,7 @@ class Pad4Engine:
 
         self.current_state = dict(result.current_state)
         self.previous_state = (
-            dict(result.previous_state)
-            if result.previous_state is not None
-            else None
+            dict(result.previous_state) if result.previous_state is not None else None
         )
 
     def _set_group_context(self, pad: int, profile_key: str) -> None:
@@ -308,10 +309,7 @@ class Pad4Engine:
 
         if len(self.group_current_states) < 4:
             print("\nLoad the full 4-pad group first with O.")
-            print(
-                "This stores safe anchors for Pads 1-4 before isolated "
-                "mutation."
-            )
+            print("This stores safe anchors for Pads 1-4 before isolated " "mutation.")
             return False
         return True
 
@@ -330,15 +328,10 @@ class Pad4Engine:
         self._set_group_context(self.isolated_pad, profile_key)
 
         print("\nReturning isolated pad to anchor:")
-        print(
-            f"  Pad {self.isolated_pad}: {cfg['role']} / "
-            f"{self.active_profile['name']}"
-        )
+        print(f"  Pad {self.isolated_pad}: {cfg['role']} / " f"{self.active_profile['name']}")
         print(
             "  Pads not touched: "
-            + ", ".join(
-                str(p) for p in GROUP_LAYOUT if p != self.isolated_pad
-            )
+            + ", ".join(str(p) for p in GROUP_LAYOUT if p != self.isolated_pad)
         )
 
         anchor = dict(self.group_anchor_states[self.isolated_pad])
@@ -354,8 +347,7 @@ class Pad4Engine:
         self.group_previous_states[self.isolated_pad] = None
 
         print(
-            f"\nPad {self.isolated_pad} returned to anchor. Other group pads "
-            "were not touched."
+            f"\nPad {self.isolated_pad} returned to anchor. Other group pads " "were not touched."
         )
 
     # ==================================================================
@@ -384,15 +376,11 @@ class Pad4Engine:
         print("\nRotation order:")
 
         for idx, mode_key in enumerate(PAD4_MODE_ORDER, start=1):
-            marker = (
-                " < current" if mode_key == self.pad4_current_mode_key else ""
-            )
+            marker = " < current" if mode_key == self.pad4_current_mode_key else ""
             print(f"  {idx}. {PAD4_MODE_LABELS[mode_key]}{marker}")
 
         print("\nCurrent Pad 4 mode:")
-        print(
-            f"  {PAD4_MODE_LABELS.get(self.pad4_current_mode_key, 'Unknown')}"
-        )
+        print(f"  {PAD4_MODE_LABELS.get(self.pad4_current_mode_key, 'Unknown')}")
 
         if 4 in self.group_current_states:
             current = self.group_current_states[4]
@@ -446,8 +434,7 @@ class Pad4Engine:
         self.group_previous_states[4] = dict(self.previous_state)
 
         print(
-            "\nPad 4 BD Acoustic discovery command complete. Other group pads "
-            "were not touched."
+            "\nPad 4 BD Acoustic discovery command complete. Other group pads " "were not touched."
         )
 
     def pad4_tight_body_hit_mode(self) -> None:
@@ -597,15 +584,10 @@ class Pad4Engine:
             print("\nPad 4 state is not loaded yet. Use O first.")
             return
 
-        action = self.rng.choice(
-            PAD4_MODE_MUTATION_PLANS[self.pad4_current_mode_key]
-        )
+        action = self.rng.choice(PAD4_MODE_MUTATION_PLANS[self.pad4_current_mode_key])
 
         print("\nPad 4 Current BD Acoustic Mode Mutation - V1.26")
-        print(
-            f"  Current mode: "
-            f"{PAD4_MODE_LABELS.get(self.pad4_current_mode_key, 'Unknown')}"
-        )
+        print(f"  Current mode: " f"{PAD4_MODE_LABELS.get(self.pad4_current_mode_key, 'Unknown')}")
         print("  Pad 4 only. Pads 1, 2, and 3 are not touched.")
 
         if action == "tight":

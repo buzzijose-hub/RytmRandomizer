@@ -24,18 +24,14 @@ The resolved bounds are always a *narrowing* of the hardware envelope from
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Callable, Mapping
+from typing import Callable
 
 from ..observability.errors import BoundaryError
 from ..observability.logging import get_logger
-from .schema import (
-    GuardrailBound,
-    GuardrailClass,
-    GuardrailProfile,
-    ProfileState,
-)
+from .schema import GuardrailBound, GuardrailClass, GuardrailProfile, ProfileState
 from .validation import PAD_PROFILE_KEY
 
 __all__ = [
@@ -135,9 +131,7 @@ class ResolvedBounds:
     mode: str
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self, "by_pad_param", MappingProxyType(dict(self.by_pad_param))
-        )
+        object.__setattr__(self, "by_pad_param", MappingProxyType(dict(self.by_pad_param)))
 
     def get(self, pad: int, parameter: str) -> ResolvedBound | None:
         """Return the bound for ``(pad, parameter)`` or ``None`` if absent."""
@@ -307,9 +301,7 @@ def resolve(
     profile: GuardrailProfile,
     mode: str,
     *,
-    hardware_ranges_for_pad: (
-        Callable[[int], Mapping[str, tuple[int, int]]] | None
-    ) = None,
+    hardware_ranges_for_pad: Callable[[int], Mapping[str, tuple[int, int]]] | None = None,
 ) -> ResolvedBounds:
     """Resolve ``profile`` into :class:`ResolvedBounds` for ``mode``.
 

@@ -33,7 +33,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 from .observability.logging import configure_logging as _configure_logging
 from .observability.logging import get_logger as _observability_get_logger
@@ -113,10 +113,8 @@ def _print_passive_menu() -> None:
         [
             "",
             "Active modes (explicit opt-in required):",
-            "- --arm       open a real MIDI port and run the interactive "
-            "randomizer",
-            "- --dry-run   run the interactive randomizer against the mock "
-            "sender",
+            "- --arm       open a real MIDI port and run the interactive " "randomizer",
+            "- --dry-run   run the interactive randomizer against the mock " "sender",
             "",
             USAGE,
         ]
@@ -269,8 +267,7 @@ def _run_dry_run() -> int:
         exit_code = 0
 
     sys.stdout.write(
-        f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
-        "message(s).\n"
+        f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} " "message(s).\n"
     )
     return exit_code
 
@@ -295,9 +292,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     logger.debug(
         "app_start",
         extra={
-            "mode": (
-                "arm" if args.arm else ("dry_run" if args.dry_run else "passive")
-            ),
+            "mode": ("arm" if args.arm else ("dry_run" if args.dry_run else "passive")),
             "debug": args.debug,
             "log_json": args.log_json,
         },

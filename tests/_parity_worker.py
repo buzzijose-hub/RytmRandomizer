@@ -78,7 +78,7 @@ SHUTDOWN_TIMEOUT = 10.0
 # ...}`` maps onto ``assert_parity(seed, steps)`` and a dict that also carries
 # ``"answers"`` maps onto ``assert_parity(seed, steps, answers)`` -- each file
 # supplies whichever signature it needs, no per-file loop code required.
-_WORKER_LOOP = r'''
+_WORKER_LOOP = r"""
 
 import json as _json
 import sys as _sys
@@ -109,7 +109,7 @@ def _parity_worker_main():
 
 
 _parity_worker_main()
-'''
+"""
 
 
 def parse_steps(steps_repr: str) -> Any:
@@ -236,8 +236,7 @@ class ParityWorker:
             except (BrokenPipeError, OSError, ValueError) as exc:
                 stderr = self._read_stderr(proc)
                 raise ParityWorkerError(
-                    f"parity worker stdin failed ({exc!r}); "
-                    f"worker stderr:\n{stderr}"
+                    f"parity worker stdin failed ({exc!r}); " f"worker stderr:\n{stderr}"
                 ) from exc
 
             response_line = self._read_line_with_timeout(proc)
@@ -247,8 +246,7 @@ class ParityWorker:
             response = json.loads(response_line)
         except json.JSONDecodeError as exc:
             raise ParityWorkerError(
-                "parity worker returned non-JSON response: "
-                f"{response_line!r}"
+                "parity worker returned non-JSON response: " f"{response_line!r}"
             ) from exc
 
         if response.get("ok") is True:
@@ -292,9 +290,7 @@ class ParityWorker:
             )
 
         if "error" in result:  # pragma: no cover - defensive
-            raise ParityWorkerError(
-                f"parity worker stdout read failed: {result['error']}"
-            )
+            raise ParityWorkerError(f"parity worker stdout read failed: {result['error']}")
 
         line = result.get("line", "")
         if line == "":

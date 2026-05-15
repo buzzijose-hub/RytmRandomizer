@@ -1,8 +1,8 @@
-from pathlib import Path
 import importlib
 import json
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -112,9 +112,7 @@ def test_project_status_report_tracks_convergence_behind_arm_flag():
         "modes": ("default", "arm", "dry-run"),
         "active_modes_present": 2,
         "total_modes": 3,
-        "real_midi_provider": (
-            "rytm_randomizer.mido_provider.MidoMidiPortProvider"
-        ),
+        "real_midi_provider": ("rytm_randomizer.mido_provider.MidoMidiPortProvider"),
         "interactive_logic_owner": "rytm_randomizer.shell",
         "interactive_logic_converged": True,
     }
@@ -284,9 +282,7 @@ def test_project_status_check_passes_for_current_report():
             "public_api_hardening.active_behavior": "absent",
             "collaborator_review_intake.status": "checkpointed",
             "collaborator_review_intake.findings_received": False,
-            "collaborator_review_intake.implementation_policy": (
-                "verify_before_implementing"
-            ),
+            "collaborator_review_intake.implementation_policy": ("verify_before_implementing"),
             "collaborator_review_intake.real_midi": "absent",
             "collaborator_review_intake.port_opening": "absent",
             "collaborator_review_intake.active_behavior": "absent",
@@ -496,8 +492,7 @@ def test_formatted_project_status_report_is_deterministic():
         "- modes: default, arm, dry-run",
         "- active_modes_present: 2",
         "- total_modes: 3",
-        "- real_midi_provider: "
-        "rytm_randomizer.mido_provider.MidoMidiPortProvider",
+        "- real_midi_provider: " "rytm_randomizer.mido_provider.MidoMidiPortProvider",
         "- interactive_logic_owner: rytm_randomizer.shell",
         "- interactive_logic_converged: True",
         "Safety:",
@@ -564,10 +559,7 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
 
     fresh_report = build_project_status_report()
 
-    assert (
-        fresh_report["phase"]["name"]
-        == "Convergence Phase (armed behind --arm flag)"
-    )
+    assert fresh_report["phase"]["name"] == "Convergence Phase (armed behind --arm flag)"
     assert fresh_report["behavior_parity"]["accepted_packet_count"] == 12
     assert "project-status-report" in fresh_report["passive_cli_commands"]
     assert fresh_report["public_api_hardening"]["status"] == "checkpointed"

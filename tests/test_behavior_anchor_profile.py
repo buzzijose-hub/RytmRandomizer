@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -33,9 +33,7 @@ def test_importing_behavior_anchor_profile_prints_nothing():
 
 
 def test_bh_returns_read_only_bd_hard_anchor_profile_intent():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 
@@ -69,9 +67,7 @@ def test_bh_returns_read_only_bd_hard_anchor_profile_intent():
 
 
 def test_bc_returns_read_only_bd_classic_anchor_profile_intent():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BC")
 
@@ -105,9 +101,7 @@ def test_bc_returns_read_only_bd_classic_anchor_profile_intent():
 
 
 def test_bs_returns_read_only_bd_sharp_anchor_profile_intent_without_profile_metadata():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BS")
 
@@ -141,9 +135,7 @@ def test_bs_returns_read_only_bd_sharp_anchor_profile_intent_without_profile_met
 
 
 def test_bf_returns_read_only_bd_fm_anchor_profile_intent_without_profile_metadata():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BF")
 
@@ -195,9 +187,7 @@ def test_anchor_profile_metadata_is_copied_and_immutable():
 
 
 def test_bh_and_bc_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     expected = {
         "BH": {
@@ -232,9 +222,7 @@ def test_bh_and_bc_metadata_contains_expected_passive_sources():
 
 
 def test_bs_metadata_records_absent_group_profile_without_inventing_values():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BS")
 
@@ -255,9 +243,7 @@ def test_bs_metadata_records_absent_group_profile_without_inventing_values():
 
 
 def test_bf_metadata_records_absent_group_profile_without_inventing_values():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BF")
 
@@ -278,9 +264,7 @@ def test_bf_metadata_records_absent_group_profile_without_inventing_values():
 
 
 def test_repeated_anchor_profile_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     assert evaluate_anchor_profile_behavior("BH") == evaluate_anchor_profile_behavior("BH")
     assert evaluate_anchor_profile_behavior("BC") == evaluate_anchor_profile_behavior("BC")
@@ -289,9 +273,7 @@ def test_repeated_anchor_profile_evaluations_are_deterministic():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("DOES_NOT_EXIST")
 
@@ -307,9 +289,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_deferred_anchor_profile_keys_fail_safely():
-    from rytm_randomizer.behavior_anchor_profile import (
-        evaluate_anchor_profile_behavior,
-    )
+    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
 
     for command_key in ("BA", "BR", "P", "M", "O", "Z", "P2B", "P3A", "P4A"):
         result = evaluate_anchor_profile_behavior(command_key)

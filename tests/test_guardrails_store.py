@@ -18,13 +18,13 @@ import json
 import pytest
 
 from rytm_randomizer.guardrails import (
+    LEGAL_STATE_TRANSITIONS,
     SCHEMA_VERSION,
     Confidence,
     GuardrailBound,
     GuardrailClass,
     GuardrailProfile,
     IllegalStateTransitionError,
-    LEGAL_STATE_TRANSITIONS,
     MusicalCharacter,
     ProfileState,
     ProfileStore,
@@ -37,7 +37,6 @@ from rytm_randomizer.guardrails import (
     validate,
 )
 from rytm_randomizer.observability.errors import StateError
-
 
 # ---------------------------------------------------------------------------
 # Builders
@@ -296,9 +295,7 @@ def test_list_profiles_is_sorted(tmp_path):
     profile_a = _validated()
     profile_b_draft = dataclasses.replace(
         _draft(),
-        provenance=dataclasses.replace(
-            _draft().provenance, profile_name="aaa-other"
-        ),
+        provenance=dataclasses.replace(_draft().provenance, profile_name="aaa-other"),
     )
     profile_b = validate(profile_b_draft)
 
@@ -357,9 +354,7 @@ def test_save_sanitizes_profile_name_for_filename(tmp_path):
     weird = _draft()
     weird = dataclasses.replace(
         weird,
-        provenance=dataclasses.replace(
-            weird.provenance, profile_name="rolling/hypnotic v1"
-        ),
+        provenance=dataclasses.replace(weird.provenance, profile_name="rolling/hypnotic v1"),
     )
     validated = validate(weird)
 
@@ -650,9 +645,7 @@ def test_save_emits_a_log_record(tmp_path, caplog):
     finally:
         _logger.removeHandler(handler)
 
-    assert any(
-        "guardrails.store.save" in rec.getMessage() for rec in records
-    )
+    assert any("guardrails.store.save" in rec.getMessage() for rec in records)
 
 
 def test_promote_emits_a_log_record():
@@ -670,6 +663,4 @@ def test_promote_emits_a_log_record():
     finally:
         _logger.removeHandler(handler)
 
-    assert any(
-        "guardrails.store.promote" in rec.getMessage() for rec in records
-    )
+    assert any("guardrails.store.promote" in rec.getMessage() for rec in records)

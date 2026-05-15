@@ -154,8 +154,7 @@ def test_print_allowlist_files_actually_exist() -> None:
     missing = [p for p in ALLOW_LIST_PRINT_UI if not (PROJECT_ROOT / p).is_file()]
     assert not missing, (
         "ALLOW_LIST_PRINT_UI has entries that do not exist on disk -- update "
-        "the allow-list when removing files. Missing:\n  "
-        + "\n  ".join(missing)
+        "the allow-list when removing files. Missing:\n  " + "\n  ".join(missing)
     )
 
 
@@ -170,14 +169,16 @@ def test_print_allowlist_files_actually_exist() -> None:
 # in WS-U to the realistic OSError/RuntimeError/AttributeError family. The
 # allow-list below is empty; we keep the constant so a future principled
 # exception can be added with a clear comment.
-ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset({
-    # observability/tracing.py:166 — the operation() context manager intentionally
-    # catches BaseException (including KeyboardInterrupt / SystemExit) so that
-    # operation_error is logged with elapsed_ms + exception type BEFORE the
-    # exception propagates. The handler re-raises; nothing is silently swallowed.
-    # This is the one place in the package where catching everything is correct.
-    ("rytm_randomizer/observability/tracing.py", 166),
-})
+ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
+    {
+        # observability/tracing.py:167 — the operation() context manager intentionally
+        # catches BaseException (including KeyboardInterrupt / SystemExit) so that
+        # operation_error is logged with elapsed_ms + exception type BEFORE the
+        # exception propagates. The handler re-raises; nothing is silently swallowed.
+        # This is the one place in the package where catching everything is correct.
+        ("rytm_randomizer/observability/tracing.py", 167),
+    }
+)
 
 
 def _except_handlers(path: Path) -> list[tuple[int, str | None]]:
@@ -234,8 +235,7 @@ def test_no_broad_except_exception_in_package() -> None:
         "``except Exception:`` is forbidden in new package code -- narrow to "
         "the realistic family (OSError / RuntimeError / ImportError / ...). "
         "If a broad catch is truly required, add an explicit entry to "
-        "ALLOW_LIST_BROAD_EXCEPT with a comment.\n  "
-        + "\n  ".join(violations)
+        "ALLOW_LIST_BROAD_EXCEPT with a comment.\n  " + "\n  ".join(violations)
     )
 
 
@@ -378,8 +378,7 @@ def _imported_package_modules(path: Path) -> list[tuple[int, str]]:
     def _resolve(node: ast.ImportFrom) -> str | None:
         if node.level == 0:
             if node.module and (
-                node.module == PACKAGE_NAME
-                or node.module.startswith(PACKAGE_NAME + ".")
+                node.module == PACKAGE_NAME or node.module.startswith(PACKAGE_NAME + ".")
             ):
                 return node.module
             return None
@@ -397,9 +396,7 @@ def _imported_package_modules(path: Path) -> list[tuple[int, str]]:
                     out.append((node.lineno, n.name))
         elif isinstance(node, ast.ImportFrom):
             resolved = _resolve(node)
-            if resolved and (
-                resolved == PACKAGE_NAME or resolved.startswith(PACKAGE_NAME + ".")
-            ):
+            if resolved and (resolved == PACKAGE_NAME or resolved.startswith(PACKAGE_NAME + ".")):
                 out.append((node.lineno, resolved))
     return out
 
@@ -468,8 +465,7 @@ def test_importing_observability_is_silent() -> None:
     assert result.stderr == "", (
         "Importing rytm_randomizer.observability must be silent -- a stray "
         "logger.warning() must be swallowed by the NullHandler until the "
-        "caller opts into actual logging via configure_logging(). Got:\n"
-        + result.stderr
+        "caller opts into actual logging via configure_logging(). Got:\n" + result.stderr
     )
 
 

@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -84,19 +84,10 @@ def test_p4a_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "anchor_return"
     assert result.metadata["target_pad"] == 4
     assert result.metadata["lane"] == "pad_4_bd_acoustic_lane"
-    assert (
-        result.metadata["behavior_family"]
-        == "pad4-lane/bd-acoustic-body-accent-home-anchor"
-    )
-    assert (
-        result.metadata["lane_action"]
-        == "return_pad4_bd_acoustic_body_accent_home_anchor"
-    )
+    assert result.metadata["behavior_family"] == "pad4-lane/bd-acoustic-body-accent-home-anchor"
+    assert result.metadata["lane_action"] == "return_pad4_bd_acoustic_body_accent_home_anchor"
     assert result.metadata["intent_kind"] == "anchor_return"
-    assert (
-        result.metadata["anchor_concept"]
-        == "Pad 4 BD Acoustic body/accent home anchor"
-    )
+    assert result.metadata["anchor_concept"] == "Pad 4 BD Acoustic body/accent home anchor"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -157,15 +148,9 @@ def test_p4r_metadata_contains_expected_passive_sources():
     assert result.metadata["target_pad"] == 4
     assert result.metadata["lane"] == "pad_4_bd_acoustic_lane"
     assert result.metadata["behavior_family"] == "pad4-lane/bd-acoustic-mode-rotation"
-    assert (
-        result.metadata["lane_action"]
-        == "describe_pad4_bd_acoustic_mode_rotation_intent"
-    )
+    assert result.metadata["lane_action"] == "describe_pad4_bd_acoustic_mode_rotation_intent"
     assert result.metadata["intent_kind"] == "rotation"
-    assert (
-        result.metadata["rotation_concept"]
-        == "Pad 4 BD Acoustic behavior mode rotation"
-    )
+    assert result.metadata["rotation_concept"] == "Pad 4 BD Acoustic behavior mode rotation"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -184,16 +169,10 @@ def test_p4x_returns_read_only_pad4_bd_acoustic_current_mode_safe_mutation_inten
     assert result.accepted is True
     assert result.reason == "supported_pad4_bd_acoustic_current_mode_safe_mutation_intent"
     assert result.label == "safely mutate the currently loaded Pad 4 mode"
-    assert (
-        result.behavior_family
-        == "pad4-lane/bd-acoustic-current-mode-safe-mutation"
-    )
+    assert result.behavior_family == "pad4-lane/bd-acoustic-current-mode-safe-mutation"
     assert result.target_pad == 4
     assert result.lane == "Pad 4 BD Acoustic lane"
-    assert (
-        result.lane_action
-        == "describe_pad4_bd_acoustic_current_mode_safe_mutation_intent"
-    )
+    assert result.lane_action == "describe_pad4_bd_acoustic_current_mode_safe_mutation_intent"
     assert result.intent_kind == "mutation"
     assert result.state_changed is False
     assert result.prompt_required is False
@@ -231,19 +210,13 @@ def test_p4x_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "mutation"
     assert result.metadata["target_pad"] == 4
     assert result.metadata["lane"] == "pad_4_bd_acoustic_lane"
-    assert (
-        result.metadata["behavior_family"]
-        == "pad4-lane/bd-acoustic-current-mode-safe-mutation"
-    )
+    assert result.metadata["behavior_family"] == "pad4-lane/bd-acoustic-current-mode-safe-mutation"
     assert (
         result.metadata["lane_action"]
         == "describe_pad4_bd_acoustic_current_mode_safe_mutation_intent"
     )
     assert result.metadata["intent_kind"] == "mutation"
-    assert (
-        result.metadata["mutation_concept"]
-        == "Pad 4 BD Acoustic current mode safe mutation"
-    )
+    assert result.metadata["mutation_concept"] == "Pad 4 BD Acoustic current mode safe mutation"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False

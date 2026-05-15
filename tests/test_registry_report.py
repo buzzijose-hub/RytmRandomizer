@@ -1,5 +1,5 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -11,7 +11,6 @@ from rytm_randomizer.registry_report import (
     format_registry_report,
     summarize_registry_report,
 )
-
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 UNSUPPORTED_TEXT = (

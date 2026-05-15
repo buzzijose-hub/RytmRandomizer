@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
@@ -71,10 +71,7 @@ def test_importing_active_boundary_prints_nothing():
 
 
 def test_missing_arming_emits_no_messages():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -97,10 +94,7 @@ def test_missing_arming_emits_no_messages():
 
 
 def test_missing_dry_run_confirmation_emits_no_messages():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -121,10 +115,7 @@ def test_missing_dry_run_confirmation_emits_no_messages():
 
 
 def test_unknown_key_emits_no_messages():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -145,10 +136,7 @@ def test_unknown_key_emits_no_messages():
 
 
 def test_profile_4_remains_parked_and_emits_no_messages():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -202,10 +190,7 @@ def test_result_metadata_is_copied_and_immutable():
 
 
 def test_accepted_result_metadata_includes_target_and_is_immutable():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -229,10 +214,7 @@ def test_accepted_result_metadata_includes_target_and_is_immutable():
 
 
 def test_failure_result_metadata_records_mock_only_safety():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     request = ActiveBoundaryRequest(
@@ -254,10 +236,7 @@ def test_failure_result_metadata_records_mock_only_safety():
 
 
 def test_accepted_result_metadata_carries_boundary_scope_and_operator_intent():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     request = ActiveBoundaryRequest(
@@ -283,10 +262,7 @@ def test_accepted_result_metadata_carries_boundary_scope_and_operator_intent():
 
 
 def test_failure_result_metadata_carries_reason_and_boundary_scope():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -315,10 +291,7 @@ def test_failure_result_metadata_carries_reason_and_boundary_scope():
 
 
 def test_request_source_key_is_normalized_to_string_before_evaluation():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -339,10 +312,7 @@ def test_request_source_key_is_normalized_to_string_before_evaluation():
 
 
 def test_request_metadata_does_not_leak_into_emitted_messages():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     request = ActiveBoundaryRequest(
@@ -361,10 +331,7 @@ def test_request_metadata_does_not_leak_into_emitted_messages():
 
 
 def test_accepted_evaluation_does_not_mutate_request_metadata_object():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     metadata = {"operator_intent": "unchanged"}
@@ -384,10 +351,7 @@ def test_accepted_evaluation_does_not_mutate_request_metadata_object():
 
 
 def test_accepted_evaluation_does_not_mutate_source_mock_mapper_output():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_message_mapper import map_group_profile_to_mock_messages
     from rytm_randomizer.mock_midi import MockMidiSender
 
@@ -407,10 +371,7 @@ def test_accepted_evaluation_does_not_mutate_source_mock_mapper_output():
 
 
 def test_unsupported_source_kind_emits_no_messages():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -431,10 +392,7 @@ def test_unsupported_source_kind_emits_no_messages():
 
 
 def test_source_kind_matching_is_exact():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     for source_kind in ("GROUP_PROFILE", "group_profiles", " group_profile "):
@@ -456,10 +414,7 @@ def test_source_kind_matching_is_exact():
 
 
 def test_profile_3_is_not_active_boundary_supported():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -480,10 +435,7 @@ def test_profile_3_is_not_active_boundary_supported():
 
 
 def test_profile_2_emits_mock_messages_only_when_armed_and_confirmed():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -510,10 +462,7 @@ def test_profile_2_emits_mock_messages_only_when_armed_and_confirmed():
 
 
 def test_sender_receives_exactly_emitted_messages_and_no_extras():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -534,10 +483,7 @@ def test_sender_receives_exactly_emitted_messages_and_no_extras():
 
 
 def test_target_value_remains_metadata_only_and_does_not_select_ports():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -560,10 +506,7 @@ def test_target_value_remains_metadata_only_and_does_not_select_ports():
 
 
 def test_repeated_profile_2_evaluations_are_deterministic():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     request = ActiveBoundaryRequest(
@@ -583,14 +526,13 @@ def test_repeated_profile_2_evaluations_are_deterministic():
     assert second.accepted is True
     assert first.reason == second.reason == "accepted_mock_only"
     assert message_signature(first.emitted_messages) == message_signature(second.emitted_messages)
-    assert message_signature(first_sender.sent_messages) == message_signature(second_sender.sent_messages)
+    assert message_signature(first_sender.sent_messages) == message_signature(
+        second_sender.sent_messages
+    )
 
 
 def test_repeated_failure_evaluations_are_deterministic():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     request = ActiveBoundaryRequest(
@@ -611,10 +553,7 @@ def test_repeated_failure_evaluations_are_deterministic():
 
 
 def test_failure_paths_leave_sender_empty():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     requests = [
@@ -664,10 +603,7 @@ def test_failure_paths_leave_sender_empty():
 
 
 def test_invalid_boundary_inputs_fail_before_message_emission():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()

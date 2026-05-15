@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -533,10 +533,7 @@ def test_p2r_metadata_contains_expected_passive_sources():
     assert result.metadata["behavior_family"] == "pad2-lane/profile-rotation"
     assert result.metadata["lane_action"] == "describe_pad2_profile_rotation_intent"
     assert result.metadata["intent_kind"] == "rotation_intent"
-    assert (
-        result.metadata["rotation_concept"]
-        == "Pad 2 profiled secondary-lane engine rotation"
-    )
+    assert result.metadata["rotation_concept"] == "Pad 2 profiled secondary-lane engine rotation"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -598,21 +595,11 @@ def test_p2x_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "mutation"
     assert result.metadata["target_pad"] == 2
     assert result.metadata["lane"] == "pad_2_secondary_lane"
-    assert result.metadata["behavior_family"] == (
-        "pad2-lane/current-profile-safe-mutation"
-    )
-    assert result.metadata["lane_action"] == (
-        "describe_pad2_current_profile_safe_mutation_intent"
-    )
+    assert result.metadata["behavior_family"] == ("pad2-lane/current-profile-safe-mutation")
+    assert result.metadata["lane_action"] == ("describe_pad2_current_profile_safe_mutation_intent")
     assert result.metadata["intent_kind"] == "mutation_intent"
-    assert (
-        result.metadata["mutation_concept"]
-        == "Pad 2 current-profile safe mutation"
-    )
-    assert (
-        result.metadata["selected_profile_dependency"]
-        == "current_pad2_profile_state"
-    )
+    assert result.metadata["mutation_concept"] == "Pad 2 current-profile safe mutation"
+    assert result.metadata["selected_profile_dependency"] == "current_pad2_profile_state"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False
@@ -674,21 +661,11 @@ def test_p2z_metadata_contains_expected_passive_sources():
     assert result.metadata["command_type"] == "anchor_return"
     assert result.metadata["target_pad"] == 2
     assert result.metadata["lane"] == "pad_2_secondary_lane"
-    assert result.metadata["behavior_family"] == (
-        "pad2-lane/current-profile-anchor-return"
-    )
-    assert result.metadata["lane_action"] == (
-        "describe_pad2_current_profile_anchor_return_intent"
-    )
+    assert result.metadata["behavior_family"] == ("pad2-lane/current-profile-anchor-return")
+    assert result.metadata["lane_action"] == ("describe_pad2_current_profile_anchor_return_intent")
     assert result.metadata["intent_kind"] == "anchor_return_intent"
-    assert (
-        result.metadata["anchor_return_concept"]
-        == "Pad 2 current-profile anchor return"
-    )
-    assert (
-        result.metadata["selected_profile_dependency"]
-        == "current_pad2_profile_state"
-    )
+    assert result.metadata["anchor_return_concept"] == "Pad 2 current-profile anchor return"
+    assert result.metadata["selected_profile_dependency"] == "current_pad2_profile_state"
     assert result.metadata["mock_only"] is True
     assert result.metadata["sends_real_midi"] is False
     assert result.metadata["opens_ports"] is False

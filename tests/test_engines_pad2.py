@@ -38,10 +38,10 @@ if str(PROJECT_ROOT) not in sys.path:
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
-
 # ---------------------------------------------------------------------------
 # Isolation helpers
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _restore_sys_modules():
@@ -68,11 +68,12 @@ class _FakeMessage:
         self.value = value
 
     def __eq__(self, other):
-        return (
-            isinstance(other, _FakeMessage)
-            and (self.type, self.channel, self.control, self.value)
-            == (other.type, other.channel, other.control, other.value)
-        )
+        return isinstance(other, _FakeMessage) and (
+            self.type,
+            self.channel,
+            self.control,
+            self.value,
+        ) == (other.type, other.channel, other.control, other.value)
 
     def __repr__(self):  # pragma: no cover - debugging aid only
         return (
@@ -236,6 +237,7 @@ def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
 # In-process import-safety + smoke
 # ===========================================================================
 
+
 def test_import_is_silent_and_mido_free(capsys):
     """Importing the engine module opens no ports and pulls in no mido."""
 
@@ -271,6 +273,7 @@ def test_engine_constructs_with_monolith_cold_start_defaults():
 # In-process behavior coverage (fake mido) -- every method + every branch
 # ===========================================================================
 
+
 def test_load_pad2_profile_unknown_key(capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -299,9 +302,7 @@ def test_load_pad2_profile_unassigned_key(capsys):
 
 
 @pytest.mark.parametrize("profile_key", ["3", "9", "10", "11"])
-def test_load_pad2_profile_loads_anchor_and_records_group_state(
-    profile_key, capsys
-):
+def test_load_pad2_profile_loads_anchor_and_records_group_state(profile_key, capsys):
     _install_fake_mido()
     from rytm_randomizer.data import PROFILES
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -311,10 +312,7 @@ def test_load_pad2_profile_loads_anchor_and_records_group_state(
     eng.load_pad2_profile(profile_key)
     text = capsys.readouterr().out
 
-    assert (
-        f"Loading Pad 2 profiled engine: {PROFILES[profile_key]['name']}"
-        in text
-    )
+    assert f"Loading Pad 2 profiled engine: {PROFILES[profile_key]['name']}" in text
     assert eng.pad2_current_profile_key == profile_key
     assert eng.target_pad == 2
     assert eng.channel == 1
@@ -358,9 +356,7 @@ def test_show_pad2_tools_unknown_key(capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
-    eng = Pad2Engine(
-        RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope"
-    )
+    eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope")
     eng.show_pad2_tools()
     text = capsys.readouterr().out
 
@@ -392,9 +388,7 @@ def test_mutate_current_pad2_profile_no_valid_profile(capsys):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
-    eng = Pad2Engine(
-        out, sleep=_no_sleep, pad2_current_profile_key="not-a-profile"
-    )
+    eng = Pad2Engine(out, sleep=_no_sleep, pad2_current_profile_key="not-a-profile")
     eng.mutate_current_pad2_profile("body", "groove", "Test")
     text = capsys.readouterr().out
 
@@ -408,9 +402,7 @@ def test_mutate_current_pad2_profile_unsupported_zone(capsys):
 
     out = RecordingOut()
     eng = Pad2Engine(out, sleep=_no_sleep, pad2_current_profile_key="3")
-    eng.mutate_current_pad2_profile(
-        "not-a-real-zone", "groove", "Bad Zone Test"
-    )
+    eng.mutate_current_pad2_profile("not-a-real-zone", "groove", "Bad Zone Test")
     text = capsys.readouterr().out
 
     assert "does not support zone: not-a-real-zone" in text
@@ -567,9 +559,7 @@ def test_rotate_pad2_profile_from_unprofiled_returns_home(capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
-    eng = Pad2Engine(
-        RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="5"
-    )
+    eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="5")
     eng.rotate_pad2_profile()
     text = capsys.readouterr().out
 
@@ -605,9 +595,7 @@ def test_mutate_current_pad2_rotation_profile_no_valid_profile(capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
-    eng = Pad2Engine(
-        RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope"
-    )
+    eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope")
     eng.mutate_current_pad2_rotation_profile()
     assert "No valid Pad 2 profile selected" in capsys.readouterr().out
 
@@ -620,12 +608,8 @@ def test_mutate_current_pad2_rotation_profile_no_plan(capsys):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     # Find a real profile key that is not in PAD2_MUTATION_PLANS.
-    no_plan_key = next(
-        k for k in PROFILES if k not in PAD2_MUTATION_PLANS
-    )
-    eng = Pad2Engine(
-        RecordingOut(), sleep=_no_sleep, pad2_current_profile_key=no_plan_key
-    )
+    no_plan_key = next(k for k in PROFILES if k not in PAD2_MUTATION_PLANS)
+    eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key=no_plan_key)
     eng.mutate_current_pad2_rotation_profile()
     assert "does not have a P2X mutation plan yet" in capsys.readouterr().out
 
@@ -634,9 +618,7 @@ def test_mutate_current_pad2_rotation_profile_not_loaded(capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
-    eng = Pad2Engine(
-        RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="3"
-    )
+    eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="3")
     # Valid profile with a plan, but Pad 2 state never loaded.
     eng.mutate_current_pad2_rotation_profile()
     assert "Pad 2 state is not loaded yet" in capsys.readouterr().out
@@ -715,9 +697,7 @@ def test_return_pad2_to_current_anchor_no_valid_profile(capsys):
     _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
-    eng = Pad2Engine(
-        RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope"
-    )
+    eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope")
     eng.return_pad2_to_current_anchor()
     assert "No valid Pad 2 profile selected" in capsys.readouterr().out
 
@@ -804,6 +784,7 @@ def test_mutate_zone_shim_noop_when_no_profile(capsys):
 # Subprocess parity vs the committed monolith -- byte-identical behavior
 # ===========================================================================
 
+
 def test_parity_load_each_profile():
     for key in ["3", "9", "10", "11"]:
         _parity_subprocess(f"[('load_pad2_profile', ({key!r},))]")
@@ -820,17 +801,13 @@ def test_parity_show_pad2_tools_cold():
 
 def test_parity_show_pad2_tools_after_load():
     for key in ["3", "9", "10", "11"]:
-        _parity_subprocess(
-            f"[('load_pad2_profile', ({key!r},)), ('show_pad2_tools', ())]"
-        )
+        _parity_subprocess(f"[('load_pad2_profile', ({key!r},)), ('show_pad2_tools', ())]")
 
 
 def test_parity_mutate_current_pad2_profile_guards():
     # no valid profile -- never loaded, default key "3" IS valid, so drive it
     # onto an invalid zone instead for the unsupported-zone guard.
-    _parity_subprocess(
-        "[('mutate_current_pad2_profile', ('not-a-zone', 'groove', 'Z'))]"
-    )
+    _parity_subprocess("[('mutate_current_pad2_profile', ('not-a-zone', 'groove', 'Z'))]")
 
 
 @pytest.mark.parametrize("key", ["3", "9", "10", "11"])
@@ -889,8 +866,7 @@ def test_parity_mutate_current_pad2_rotation_profile(key, seed):
     workers (was part of a single ~28s test before the split)."""
 
     _parity_subprocess(
-        f"[('load_pad2_profile', ({key!r},)), "
-        "('mutate_current_pad2_rotation_profile', ())]",
+        f"[('load_pad2_profile', ({key!r},)), " "('mutate_current_pad2_rotation_profile', ())]",
         seed=seed,
     )
 
@@ -898,8 +874,7 @@ def test_parity_mutate_current_pad2_rotation_profile(key, seed):
 def test_parity_return_to_anchor():
     for key in ["3", "9", "10", "11"]:
         _parity_subprocess(
-            f"[('load_pad2_profile', ({key!r},)), "
-            "('return_pad2_to_current_anchor', ())]"
+            f"[('load_pad2_profile', ({key!r},)), " "('return_pad2_to_current_anchor', ())]"
         )
 
 

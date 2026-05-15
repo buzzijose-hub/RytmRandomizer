@@ -7,9 +7,9 @@ ports, send MIDI, or touch hardware.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Iterable, Mapping
 
 
 def _validate_integer(name: str, value: int) -> None:

@@ -120,7 +120,7 @@ def test_canonical_fact_tables_live_in_data_layer() -> None:
     assert not missing, (
         "These canonical fact tables MUST live under rytm_randomizer/data/ "
         "(see docs/ARCHITECTURE.md section 4 'Data, not code, for fact "
-        f"tables'). Missing:\n  " + "\n  ".join(missing)
+        "tables'). Missing:\n  " + "\n  ".join(missing)
     )
 
 
@@ -151,8 +151,7 @@ def test_no_module_redefines_a_data_layer_name() -> None:
                 )
     assert not violations, (
         "Modules outside data/ MUST NOT redefine a name that already exists "
-        "in the data layer. Re-export from data/ instead.\n  "
-        + "\n  ".join(violations)
+        "in the data layer. Re-export from data/ instead.\n  " + "\n  ".join(violations)
     )
 
 
@@ -168,8 +167,7 @@ def test_data_init_re_exports_canonical_fact_tables() -> None:
     missing = [name for name in _CANONICAL_FACT_TABLES if not hasattr(data_mod, name)]
     assert not missing, (
         "rytm_randomizer.data.__init__ must re-export the canonical fact "
-        "tables (single public import surface for consumers). Missing:\n  "
-        + "\n  ".join(missing)
+        "tables (single public import surface for consumers). Missing:\n  " + "\n  ".join(missing)
     )
 
 
@@ -186,6 +184,5 @@ def test_data_namespace_is_upper_snake_constants() -> None:
     assert public, "data/__init__.py must define __all__ with the public names."
     bad = [name for name in public if not name.isupper()]
     assert not bad, (
-        "All public data-layer names must be UPPER_SNAKE constants. "
-        f"Offenders: {bad}"
+        "All public data-layer names must be UPPER_SNAKE constants. " f"Offenders: {bad}"
     )

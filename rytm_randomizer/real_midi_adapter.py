@@ -15,9 +15,10 @@ imports keep working.
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Mapping, Protocol, Sequence
+from typing import Protocol
 
 from .mock_midi import MidiMessage
 from .observability.errors import MidiError
@@ -138,9 +139,7 @@ def _translate_message(message: MidiMessage) -> Mapping[str, object]:
     if not isinstance(message, MidiMessage):
         raise TypeError("message must be a MidiMessage")
     if message.message_type != "cc":
-        raise RealMidiSendError(
-            f"unsupported_midi_message_type: {message.message_type}"
-        )
+        raise RealMidiSendError(f"unsupported_midi_message_type: {message.message_type}")
     return {
         "message_type": message.message_type,
         "channel": message.channel,

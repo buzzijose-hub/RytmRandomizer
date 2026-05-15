@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 V134_REFERENCE = PROJECT_ROOT / "rytm_hybrid_randomizer_v134.py"
@@ -86,10 +86,7 @@ def test_passive_and_mock_sources_expose_no_real_midi_affordances():
 
 
 def test_active_boundary_scope_remains_profile_2_only():
-    from rytm_randomizer.active_boundary import (
-        ActiveBoundaryRequest,
-        evaluate_mock_active_boundary,
-    )
+    from rytm_randomizer.active_boundary import ActiveBoundaryRequest, evaluate_mock_active_boundary
     from rytm_randomizer.mock_midi import MockMidiSender
 
     accepted_sender = MockMidiSender()

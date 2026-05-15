@@ -1,8 +1,8 @@
-from pathlib import Path
 import importlib
 import inspect
 import subprocess
 import sys
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -27,8 +27,7 @@ def test_importing_alignment_report_dependencies_prints_nothing():
         [
             sys.executable,
             "-c",
-            "import rytm_randomizer.reports; "
-            "import rytm_randomizer.reports",
+            "import rytm_randomizer.reports; " "import rytm_randomizer.reports",
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,
@@ -42,8 +41,7 @@ def test_importing_alignment_report_dependencies_prints_nothing():
 
 
 def test_runtime_and_active_reports_align_on_profile_2_candidate():
-    from rytm_randomizer.reports import build_active_boundary_report
-    from rytm_randomizer.reports import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report, build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -71,8 +69,7 @@ def test_runtime_and_active_reports_align_on_profile_2_candidate():
 
 
 def test_profile_3_remains_runtime_supported_but_active_boundary_unsupported():
-    from rytm_randomizer.reports import build_active_boundary_report
-    from rytm_randomizer.reports import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report, build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -98,14 +95,11 @@ def test_profile_3_remains_runtime_supported_but_active_boundary_unsupported():
     assert active_profile_3["reason"] == (
         "mock mapper/report scope only; not active-boundary supported"
     )
-    assert "3" in tuple(
-        profile["profile_key"] for profile in active_report["unsupported_profiles"]
-    )
+    assert "3" in tuple(profile["profile_key"] for profile in active_report["unsupported_profiles"])
 
 
 def test_profile_4_remains_parked_in_both_report_surfaces():
-    from rytm_randomizer.reports import build_active_boundary_report
-    from rytm_randomizer.reports import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report, build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -129,14 +123,11 @@ def test_profile_4_remains_parked_in_both_report_surfaces():
 
     assert active_profile_4["name"] == "My BD Acoustic"
     assert active_profile_4["reason"] == "parked until separately approved"
-    assert "4" in tuple(
-        profile["profile_key"] for profile in active_report["unsupported_profiles"]
-    )
+    assert "4" in tuple(profile["profile_key"] for profile in active_report["unsupported_profiles"])
 
 
 def test_report_safety_boundaries_match_no_midi_no_ports_no_hardware():
-    from rytm_randomizer.reports import build_active_boundary_report
-    from rytm_randomizer.reports import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report, build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -204,8 +195,10 @@ def test_alignment_report_surfaces_do_not_evaluate_active_boundary_requests():
 
 
 def test_active_runtime_report_summaries_remain_consistent():
-    from rytm_randomizer.reports import summarize_active_boundary_report
-    from rytm_randomizer.reports import summarize_runtime_plan_report
+    from rytm_randomizer.reports import (
+        summarize_active_boundary_report,
+        summarize_runtime_plan_report,
+    )
 
     runtime_summary = summarize_runtime_plan_report()
     active_summary = summarize_active_boundary_report()

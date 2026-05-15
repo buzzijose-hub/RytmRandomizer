@@ -25,11 +25,10 @@ import pytest
 
 from .conftest import (
     CANONICAL_VALIDATION_COMMANDS,
-    CapturedMessage,
     E2E_RANDOM_SEED,
+    CapturedMessage,
     run_canonical_dry_run,
 )
-
 
 # -----------------------------------------------------------------------------
 # Bare-depth guardrail: main-prompt 1/2/3 must emit no MIDI by themselves.
@@ -75,9 +74,9 @@ def test_bare_main_prompt_depth_digit_emits_no_midi(
         "The V1.34 guardrail requires depth digits to be no-ops at the main "
         "Command prompt -- they only have meaning after S/F/A/G/K/Y/V/N/M1/M2/M3."
     )
-    assert with_bare.captured == baseline.captured, (
-        "Bare depth digit must not perturb the prior MIDI stream either."
-    )
+    assert (
+        with_bare.captured == baseline.captured
+    ), "Bare depth digit must not perturb the prior MIDI stream either."
     assert "No MIDI was sent." in with_bare.stdout
 
 
@@ -201,8 +200,7 @@ def test_passive_menu_opens_no_port_and_emits_no_midi(
     # Real MIDI library not imported by the passive path.
     for module_name in ("mido", "rtmidi", "pythonrtmidi"):
         assert module_name not in sys.modules or module_name == "mido", (
-            f"Passive mode pulled in {module_name!r}; that violates the "
-            "import-safety contract."
+            f"Passive mode pulled in {module_name!r}; that violates the " "import-safety contract."
         )
 
 
@@ -246,10 +244,10 @@ def test_dry_run_never_constructs_real_midi_provider() -> None:
         # here, just keep the call from raising TypeError.
         return None
 
-    with mock.patch.object(
-        mido_provider.MidoMidiPortProvider, "__init__", spy_init
-    ), mock.patch("builtins.input", feed), mock.patch.object(
-        MockMidiSender, "send", recording_send
+    with (
+        mock.patch.object(mido_provider.MidoMidiPortProvider, "__init__", spy_init),
+        mock.patch("builtins.input", feed),
+        mock.patch.object(MockMidiSender, "send", recording_send),
     ):
         exit_code = app.main(["--dry-run"])
 
@@ -273,7 +271,6 @@ def test_dry_run_does_not_import_real_midi_library() -> None:
     """
 
     # Re-run a canonical flow in isolation and check sys.modules afterwards.
-    import importlib
 
     # Force-unload the backends if a previous test loaded them.
     for backend in ("rtmidi", "pythonrtmidi"):
