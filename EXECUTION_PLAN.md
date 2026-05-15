@@ -61,9 +61,9 @@ The core musical behavior — scenes, guardrails, the four-pad layout — is **p
 
 ## Parallelization strategy
 
-Work is split into **20 workstreams (WS-A … WS-T)** grouped into **4 waves**. Within a wave, streams own disjoint file sets and can run as simultaneous subagents. Waves are gated by dependencies.
+Work is split into **22 workstreams (WS-A … WS-V)** grouped into **4 waves**. Within a wave, streams own disjoint file sets and can run as simultaneous subagents. Waves are gated by dependencies.
 
-### Diagram 1 — Workstream dependency graph (all 20 workstreams, 4 waves)
+### Diagram 1 — Workstream dependency graph (all 22 workstreams, 4 waves)
 
 ```mermaid
 graph TD
@@ -85,7 +85,7 @@ graph TD
         H["WS-H<br/>Wire real MIDI behind --arm"]
         J["WS-J<br/>Release process"]
     end
-    subgraph W4["WAVE 4 — Decompose the monolith (8, mostly serial)"]
+    subgraph W4["WAVE 4 — Decompose the monolith (10, mostly serial)"]
         K["WS-K<br/>MIDI I/O + randomization"]
         L["WS-L<br/>Per-domain state objects"]
         M["WS-M<br/>Per-pad engines (x4 parallel)"]
@@ -93,6 +93,8 @@ graph TD
         O["WS-O<br/>Shell + retire monolith"]
         S["WS-S<br/>Dead code elimination"]
         T["WS-T<br/>Architecture standards + enforcement tests"]
+        U["WS-U<br/>Observability + unified handling"]
+        V["WS-V<br/>Musical-style analysis optimization"]
         R["WS-R<br/>E2E validation suite — completion gate"]
     end
 
@@ -113,7 +115,9 @@ graph TD
     N --> O
     O --> S
     S --> T
-    T --> R
+    T --> U
+    U --> V
+    V --> R
 
     classDef wave1 fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
     classDef wave2 fill:#e8f5e9,stroke:#2e7d32,color:#1b5e20
@@ -663,6 +667,50 @@ This workstream has two halves:
 **Why this matters:** the whole plan's value is undone if the architecture drifts back. Skills and rules make the right thing easy; auto-invocation means an agent doesn't have to *know* to use them; the gated `tests/architecture/` suite makes the wrong thing *impossible to merge*; and the post-push code-review agent catches problems the instant they're pushed. Together that's defense in depth — guidance, automation, enforcement, and review — which is what keeps the architecture intact after this plan ends.
 
 Acceptance: `docs/ARCHITECTURE.md` documents the standard; `.claude/rules/` (architecture + skill-routing), the `.claude/skills/` (including `code-review`), and the `architecture-guardian` + `code-reviewer` agents exist; `tests/architecture/` enforces import-direction, no-side-effects, house-style, layering, and data-not-code rules and is GREEN on the final tree; the `architecture` CI job runs on every push/PR and is a **required merge check**; a deliberate violation (tested locally) is caught by the suite and blocks merge; the post-push hook in `.claude/settings.json` auto-fires the `code-reviewer` agent and is documented in `CONTRIBUTING.md`; skill descriptions and `.claude/rules/skill-routing.md` are tuned so agents auto-invoke the right skill for the task.
+
+---
+
+### WS-U — World-class observability + unified handling
+**Owns:** `rytm_randomizer/observability/` (new — unified logging + error taxonomy + diagnostic context), every package module's `print()` / `except` / `raise` sites, the `tests/architecture/` observability-conformance tests, `docs/OBSERVABILITY.md`
+**Addresses:** the directive: *ensure world-class observability for troubleshooting; unified handling.* Grounded in the code review: the package currently has **zero `logging` usage**, **8 modules + the monolith using bare `print()`** (554 `print()` calls in the monolith alone), **5 unrelated `*Error` classes** with no common base, and **no diagnostic/trace context** — which is exactly why failures (like a hung subprocess) are invisible.
+**Depends on:** WS-S — observability is woven through *every* module, so the module set must be final and dead-code-free first. Also informed by WS-T's house-style rules (the conformance tests live in `tests/architecture/`).
+
+The current state is the opposite of observable: output is unstructured stdout dumps, errors are an ad-hoc scattering of exception types, and there is no way to see *where* the program is or *how long* something took. World-class observability here means: structured, leveled, capturable logging; one coherent error taxonomy; diagnostic context on every operation; and conformance tests that keep it that way.
+
+Steps:
+1. **Unified logging.** Create `rytm_randomizer/observability/logging.py` — a single configured `logging` setup (named loggers per module, levels, a structured formatter, an opt-in JSON handler for machine parsing). Replace the package's bare `print()` calls: *user-facing* CLI/menu output stays as deliberate stdout writes (it's the product's UI), but *diagnostic* output — what the engines/runners/midi_io emit while working — moves to `logging` at appropriate levels. A `--verbose` / `--debug` flag on `app.py` raises the log level so a troubleshooter can see everything.
+2. **Unified error taxonomy.** Create `rytm_randomizer/observability/errors.py` — one base `RytmRandomizerError` and a coherent hierarchy under it (e.g. `MidiError`, `StateError`, `DataError`, `ConfigError`, with the existing `RealMidiDependencyError`/`RealMidiPortError`/`RealMidiSendError`/`ActiveBoundaryError`/`MockMessageMappingError` re-homed under the right parents). Every `raise` in the package raises a member of this taxonomy; every `except` catches specifically (no bare, no over-broad). Errors carry structured context (what operation, what inputs, what state) — not just a string.
+3. **Diagnostic context.** Add lightweight operation tracing — a context manager / decorator in `observability/` that logs entry/exit + timing for the meaningful operations (a scene run, a group mutation, a MIDI send batch, a subprocess parity call). When something stalls or misbehaves, the log shows exactly which operation was in flight and how long it ran. This is the direct fix for the "process stalled and we couldn't see why" class of problem.
+4. **MIDI-send observability.** The MIDI boundary specifically: every emitted CC is logged (channel/control/value) at debug level, so a troubleshooter can diff "what the tool intended to send" against "what the hardware did" without a logic analyzer. The `MockMidiSender` already captures messages — make the real path equally inspectable.
+5. **Conformance tests.** Add to `tests/architecture/`: assert no package module uses bare `print()` for diagnostics (user-facing UI writes are explicitly allow-listed); assert every package `raise` uses the `RytmRandomizerError` taxonomy; assert no bare `except:`. These keep observability from eroding — same gated-enforcement principle as WS-T.
+6. **`docs/OBSERVABILITY.md`** — how to turn on debug logging, how to read the structured output, the error taxonomy, how to use the trace context when troubleshooting. The troubleshooter's manual.
+
+**Why this matters:** the stall during this very plan's execution was invisible for two full test runs *because there was no observability*. World-class observability is not a nice-to-have — it is the difference between "the process hung, no idea why" and "operation X timed out after N seconds in module Y." Baked into every module, enforced by conformance tests.
+
+Acceptance: `rytm_randomizer/observability/` provides unified logging, a single `RytmRandomizerError` taxonomy, and operation tracing; the package's diagnostic `print()` calls are gone (user-facing UI writes deliberately retained); every package `raise`/`except` uses the taxonomy / is specific; a `--debug` flag surfaces full structured logs incl. every MIDI send; `tests/architecture/` enforces the no-bare-print / taxonomy / no-bare-except rules and is gated; `docs/OBSERVABILITY.md` is the troubleshooting guide; the full suite is still green.
+
+---
+
+### WS-V — Musical-style analysis: optimize skills + real audio-feature extraction
+**Owns:** `.claude/skills/MusicLibraryGuardrails/`, `.claude/skills/DataAnalysisGuardrails/` (restructure), `rytm_randomizer/style_analysis/` (new — deterministic audio-feature extraction), `tests/test_style_analysis.py`, `docs/STYLE_ANALYSIS.md`
+**Addresses:** the user's question made actionable: *how does the app learn a person's musical style, how are those skills invoked, can we optimize token usage.* Today there is **no style-learning code at all** — `MusicLibraryGuardrails` / `DataAnalysisGuardrails` are ~140-line agent-prose skills that have *Claude* eyeball a track/library and hand-write a `mutation_guardrail_profile` JSON. It is a manual agent ritual, not an app capability, and it is token-expensive (the whole skill loads every trigger).
+**Depends on:** WS-T (skill-routing infra) for the auto-invocation half; the audio-extraction half is independent but Wave 4 is its home.
+
+Two halves:
+
+**Half 1 — Optimize the existing skills (token + auto-invocation):**
+1. **Slim the skills.** `MusicLibraryGuardrails/SKILL.md` and `DataAnalysisGuardrails/SKILL.md` are loaded *in full* on every trigger. Cut each to a tight ~30-line procedure + decision tree; move the exhaustive feature checklists, examples, and the long input/output enumerations into a `reference.md` the agent reads *on demand only when actually running an analysis*. This is the biggest token win — eager skill load shrinks ~5×.
+2. **Tune for auto-invocation.** Give each skill a precise trigger-oriented `description` and add the music-analysis routing entry to WS-T's `.claude/rules/skill-routing.md`, so "analyze this track / my library / 'rolling techno'" auto-surfaces `MusicLibraryGuardrails` without the user naming it.
+3. Keep the `mutation_guardrail_profile` JSON template — it's already a low-token fill-in structure.
+
+**Half 2 — Add real, deterministic style analysis (the actual capability):**
+4. **`rytm_randomizer/style_analysis/`** — a Python module that mechanically extracts musical features from audio files (BPM/tempo stability, kick/percussion density, low-end weight, spectral brightness, texture/noise amount, arrangement energy arc) using an audio library (`librosa` or similar — declare it as an optional `[project.optional-dependencies] style` extra so the core install stays lean). It emits the `mutation_guardrail_profile` JSON *deterministically* — no LLM in the measurement loop.
+5. **The division of labor becomes:** code *measures* (cheap, precise, repeatable), Claude *interprets* the measured summary into mutation-direction guidance (where judgment genuinely helps). The agent receives a compact feature summary, not a wall of raw audio description — turning an expensive imprecise pass into a cheap accurate one.
+6. **Tests + docs.** `tests/test_style_analysis.py` — deterministic tests on known fixture audio (or synthetic signals) asserting the extractor produces stable, correct feature values. `docs/STYLE_ANALYSIS.md` — explains the reference→discovery model, how the code+agent split works, how to run an analysis, and the copyright-safe "influence not replica" rule (preserved from the current skill).
+
+**Why this matters:** "how does it learn my style" currently has the uncomfortable answer "it doesn't — an agent guesses from a description." WS-V makes it a real, testable, token-efficient capability: deterministic measurement in code, judgment from the agent only where it adds value, and the skills auto-invoked and ~5× lighter.
+
+Acceptance: the two style skills are restructured (tight `SKILL.md` + on-demand `reference.md`), auto-invoke via tuned descriptions + `skill-routing.md`; `rytm_randomizer/style_analysis/` deterministically extracts audio features into the guardrail-profile JSON; `librosa` (or chosen lib) is an optional `style` extra, core install unaffected; `tests/test_style_analysis.py` is green; `docs/STYLE_ANALYSIS.md` documents the model; total token cost of a style analysis is materially lower than the all-prose status quo.
 
 ---
 
