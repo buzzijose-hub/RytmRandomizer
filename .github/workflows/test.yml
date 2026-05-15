@@ -201,29 +201,37 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Install ALSA dev headers
+        # python-rtmidi's C-extension wheel build links against ALSA.
+        # Without the headers, the pip install step below fails when
+        # resolving the project's runtime deps. Required for both the
+        # editable install and the subsequent freeze.
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
 
-      # Upgrade pip itself so pip-audit doesn't flag the CI runner's
-      # bundled pip for CVEs (those are CI-runner infrastructure, not a
-      # project dependency, but pip-audit cannot tell the difference).
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
-
       - name: Install package with dev extras
+        # We install the project + dev extras so pip resolves the entire
+        # transitive dependency closure exactly the way a contributor's
+        # environment would. The next step then pulls out only the
+        # third-party packages for the audit.
         run: pip install -e ".[dev]"
 
       - name: Install pip-audit
         run: pip install "pip-audit>=2.10,<3"
 
+      # Capture exact pinned versions of every third-party dep that pip
+      # actually resolved, excluding our own editable-install (which is
+      # not on PyPI and would otherwise trip --strict). `pip freeze
+      # --exclude-editable` drops the `-e .` entry and leaves mido,
+      # python-rtmidi, pytest, pytest-cov, etc. with `==` pins -- exactly
+      # what pip-audit wants to cross-reference against the PyPI Advisory
+      # Database. Single source of truth: pyproject.toml decides what to
+      # install; pip freeze captures what was resolved.
+      - name: Generate audit input from installed env
+        run: pip freeze --exclude-editable > .pip-audit-input.txt
+
       # --strict turns transient resolver errors into failures so a flaky
-      # advisory feed cannot silently mark the run green. pip-audit
-      # scans the currently-installed environment (no `-r` argument), so
-      # the previous `pip install -e .[dev]` is what gets scanned.
-      # --skip-editable excludes the editable-install of rytm-randomizer
-      # itself; this project is not published to PyPI so pip-audit cannot
-      # look it up and would otherwise fail with "Dependency not found".
+      # advisory feed cannot silently mark the run green.
       - name: Run pip-audit
-        run: pip-audit --strict --skip-editable
+        run: pip-audit --strict -r .pip-audit-input.txt
 
   architecture:
     name: architecture
