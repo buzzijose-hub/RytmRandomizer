@@ -4,9 +4,10 @@ on:
   push:
   pull_request:
 
-# NOTE: A coverage job (WS-I) and an e2e job (WS-R) will be added as
-# sibling jobs in this file and registered as required status checks
-# once those workstreams land. See docs/BRANCH_PROTECTION.md.
+# NOTE: A coverage job (WS-I) will be added as a sibling job in this file
+# and registered as a required status check once that workstream lands. The
+# WS-R e2e job below MUST be in the branch-protection required-checks list
+# (see docs/BRANCH_PROTECTION.md and scripts/apply-branch-protection.sh).
 
 jobs:
   test:
@@ -39,3 +40,42 @@ jobs:
 
       - name: Import smoke test
         run: python -c "import rytm_hybrid_randomizer_v134; import rytm_randomizer"
+
+  e2e:
+    # WS-R end-to-end gate: drives the real entry point (rytm-randomizer)
+    # through the V1.34 canonical operator-command flow in --dry-run mode
+    # against MockMidiSender, with random.seed() set for full determinism.
+    # The canonical-flow test asserts byte-for-byte parity against the
+    # committed golden file tests/e2e/_golden/canonical_validation_flow.json.
+    #
+    # IMPORTANT: this job MUST be in the branch-protection required-checks
+    # list. See scripts/apply-branch-protection.sh -- the context names
+    # below ("e2e (windows-latest, py3.11)" etc.) are what branch protection
+    # references.
+    name: e2e (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python-version: ["3.11"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install ALSA dev headers (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install package with dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Run E2E suite
+        # --dry-run against MockMidiSender, no hardware, no port opened.
+        run: pytest tests/e2e/ -v

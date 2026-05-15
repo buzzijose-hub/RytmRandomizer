@@ -8,6 +8,12 @@ name: release
 # bundled native installers are a documented follow-up and are intentionally
 # out of scope here. This workflow performs the pip-based release only:
 # it builds the wheel + sdist from pyproject.toml and publishes a GitHub Release.
+#
+# Recommended manual pre-release step: run the hardware-side validation
+# checklist documented in docs/MANUAL_HARDWARE_VALIDATION.md. The WS-R E2E
+# suite already gates merges against the canonical operator-command flow
+# in --dry-run mode, but a human-driven sweep on a real Analog Rytm MK2 is
+# the final confirmation that the MIDI stream actually behaves on hardware.
 
 on:
   push:
