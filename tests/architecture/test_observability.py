@@ -284,6 +284,10 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "RealMidiSendError",
         "MockMessageMappingError",
         "ActiveBoundaryError",
+        # WS-V style_analysis: re-homed under DataError + RuntimeError so
+        # existing ``except RuntimeError`` callers still work AND the
+        # conformance check sees a taxonomy member.
+        "StyleAnalysisDependencyError",
     }
 )
 

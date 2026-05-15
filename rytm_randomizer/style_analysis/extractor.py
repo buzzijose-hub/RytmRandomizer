@@ -28,12 +28,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
+from rytm_randomizer.observability.errors import DataError
 
 from .feature_report import FeatureReport, compute_feature_report_hash
 
 
-class StyleAnalysisDependencyError(RuntimeError):
+class StyleAnalysisDependencyError(DataError, RuntimeError):
     """Raised when an audio-extraction call needs ``librosa`` but it is missing.
+
+    Multi-inheritance via ``DataError`` (the RytmRandomizerError taxonomy
+    branch for missing-dependency / malformed-data conditions) keeps existing
+    ``except RuntimeError`` callers working AND makes this a recognized
+    taxonomy member for the observability conformance tests.
 
     The package's core install does not require ``librosa`` -- the ``style``
     optional extra does (``pip install -e ".[style,dev]"``). The
