@@ -1,5 +1,40 @@
 # Next Action
 
+## Latest Collaborator Implementation Wait-State Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_WAIT_STATE_CHECKPOINT.md`
+
+Current GitHub observation:
+
+- Eddie's PR #1 remains the docs/review execution plan source.
+- PR #2 remains our draft execution-plan foundation branch.
+- No collaborator implementation branch or implementation PR is available for
+  intake yet.
+
+Current decision:
+
+- keep waiting for Eddie's implementation branch or PR
+- do not merge PR #1 as implementation
+- keep GitHub Actions manual-only
+- use local closeout as the daily no-cost feedback loop
+
+Recommended next task:
+
+- continue only safe local work that will not conflict with a future
+  collaborator implementation branch
+- when Eddie sends a branch or PR, run the collaborator implementation intake
+  protocol before review or merge
+
 ## Latest GitHub Actions Manual Gate Status Visibility Checkpoint
 
 Current review branch:

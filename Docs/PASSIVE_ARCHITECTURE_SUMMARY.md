@@ -2,6 +2,27 @@
 
 Date: May 4, 2026
 
+## Collaborator Implementation Wait-State
+
+The current collaborator implementation intake state is recorded in:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_WAIT_STATE_CHECKPOINT.md`
+
+Current observation:
+
+- Eddie's PR #1 remains the docs/review execution plan source.
+- PR #2 remains the draft execution-plan foundation branch.
+- No collaborator implementation branch or implementation PR is available for
+  intake yet.
+
+The project should continue waiting for an implementation branch or PR before
+running the collaborator implementation intake protocol.
+
+This is passive documentation only. It does not change runtime behavior,
+dispatch, active behavior, MIDI sending, MIDI port opening, hardware behavior,
+package publication, automatic GitHub Actions triggers, collaborator branch
+intake, or the V1.34 reference.
+
 ## GitHub Actions Manual Gate Status Visibility
 
 The passive project-status report now includes the manual GitHub Actions gate

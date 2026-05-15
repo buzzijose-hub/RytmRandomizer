@@ -3,6 +3,38 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## Collaborator Implementation Wait-State Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_IMPLEMENTATION_WAIT_STATE_CHECKPOINT.md`
+
+Current GitHub observation:
+
+- PR #1 from `edward-rosado` is still the docs/review execution plan source.
+- PR #2 is still the draft execution-plan foundation branch.
+- No collaborator implementation branch or implementation PR is available for
+  intake yet.
+
+Current decision:
+
+- continue waiting for Eddie's implementation branch or PR
+- do not treat PR #1 as implementation
+- keep GitHub Actions manual-only
+- use local closeout for frequent verification
+
+This checkpoint is documentation-only. It adds no code, tests, real MIDI,
+ports, dispatch, active behavior, hardware behavior, package publication,
+automatic Actions trigger, collaborator branch merge, or V1.34 reference edit.
+
 ## GitHub Actions Manual Gate Status Visibility Checkpoint
 
 Current review branch:
