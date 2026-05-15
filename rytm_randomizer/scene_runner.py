@@ -26,6 +26,7 @@ message order and ``current_scene_name`` bookkeeping exactly.
 from __future__ import annotations
 
 from .data import SCENE_PRESETS
+from .data.scene_display import scene_menu_lines
 from .group_runner import GroupRunner
 from .guardrails.resolver import ResolvedBounds
 from .observability.logging import get_logger
@@ -84,20 +85,8 @@ class SceneRunner:
         )
         print("\nScene commands:")
         print("  SCN = show this scene / preset menu")
-        print("  S0  = Home / Clean anchors")
-        print("  S1  = Rolling scene")
-        print("  S1A = Rolling Light")
-        print("  S1B = Rolling Push")
-        print("  S2  = Deeper scene")
-        print("  S2A = Deeper Groove")
-        print("  S2B = Deeper Pressure")
-        print("  S3  = Intense scene")
-        print("  S3A = Intense Motion")
-        print("  S3B = Intense Grit")
-        print("  S4  = Wild scene")
-        print("  S4A = Wild Controlled")
-        print("  S4B = Wild Maximum")
-        print("  S5  = Back to Clean anchors")
+        for line in scene_menu_lines("  "):
+            print(line)
         print("\nScene behavior:")
         print("  SCN only displays this menu/status; it does not send MIDI or " "load anchors.")
         print(
