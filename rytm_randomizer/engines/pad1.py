@@ -37,6 +37,7 @@ from ..data import (
     PAD1_BD_ROTATION_ORDER,
     PROFILES,
 )
+from ..guardrails.resolver import ResolvedBounds
 from ..observability.logging import get_logger
 from ..observability.tracing import trace
 
@@ -86,6 +87,7 @@ class Pad1Engine:
         group_anchor_states: dict[int, State] | None = None,
         group_current_states: dict[int, State] | None = None,
         group_previous_states: dict[int, State | None] | None = None,
+        resolved_bounds: ResolvedBounds | None = None,
     ) -> None:
         self.out = out
         # The monolith uses the stdlib ``random`` module directly; default to it
@@ -115,6 +117,12 @@ class Pad1Engine:
             group_previous_states if group_previous_states is not None else {}
         )
 
+        # When None -> engine clamps against the static ``data/`` ``safe``
+        # ranges exactly as today (parity tests stay green untouched). When
+        # set -> ``_send_param`` clamps each value through the
+        # ``ResolvedBounds`` table as an additional, non-widening narrowing.
+        self.resolved_bounds: ResolvedBounds | None = resolved_bounds
+
     # ------------------------------------------------------------------
     # Thin shims over the extracted primitives -- identical to the monolith
     # ``send_cc`` / ``send_machine`` / ``send_param`` / ``apply_state`` /
@@ -124,12 +132,67 @@ class Pad1Engine:
     def _send_cc(self, cc: int, value: int) -> None:
         _midi_io.send_cc(self.out, cc, value, channel=self.channel, sleep=self.sleep)
 
+    def _resolved_profile(self) -> Mapping[str, Any] | None:
+        """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
+
+        When :attr:`resolved_bounds` is ``None`` -- or no entry covers this
+        pad -- returns ``self.active_profile`` unchanged so the mutation
+        engines see byte-identical inputs (parity tests stay green).
+
+        When set, returns a shallow copy with ``safe`` replaced by the
+        intersection: for each parameter the new ``(low, high)`` is the
+        intersection of the profile's hardware ``safe`` range and the
+        resolved bound. ``LOCKED_DEFAULT`` / ``FORBIDDEN`` parameters are
+        clamped to the parameter's current anchor value so the mutation
+        loop's ``randint(low, high)`` collapses to a single value -- and
+        :meth:`_send_param` then refuses to send them.
+        """
+
+        if self.resolved_bounds is None or self.active_profile is None:
+            return self.active_profile
+
+        base_safe: Mapping[str, tuple[int, int]] = self.active_profile["safe"]
+        anchor: Mapping[str, int] = self.active_profile["anchor"]
+        narrowed: dict[str, tuple[int, int]] = dict(base_safe)
+        for name in list(base_safe.keys()):
+            bound = self.resolved_bounds.get(self.target_pad, name)
+            if bound is None:
+                continue
+            base_low, base_high = base_safe[name]
+            new_low = max(base_low, bound.low)
+            new_high = min(base_high, bound.high)
+            if new_low > new_high:
+                # Collapse to the anchor value so the mutation engine emits
+                # a stable, identity-style choice; ``_send_param`` will
+                # short-circuit on the LOCKED class.
+                pinned = anchor.get(name, base_low)
+                new_low = new_high = pinned
+            narrowed[name] = (new_low, new_high)
+
+        # Build a shallow-copy profile dict so downstream callers (the
+        # randomization core, the V1.34 stdout banners) see the same shape
+        # but a narrower ``safe`` table.
+        profile_copy: dict[str, Any] = dict(self.active_profile)
+        profile_copy["safe"] = narrowed
+        return profile_copy
+
     def _send_machine(self) -> None:
         _midi_io.send_machine(
             self.out, self.active_profile, channel=self.channel, sleep=self.sleep
         )
 
     def _send_param(self, name: str, value: int) -> None:
+        if self.resolved_bounds is not None:
+            clamped = self.resolved_bounds.clamp_value(
+                self.target_pad, name, value
+            )
+            if clamped is None:
+                # The resolved entry is LOCKED_DEFAULT / FORBIDDEN -- the
+                # profile says this parameter must not mutate. Skip the
+                # outgoing CC entirely. ``send_param`` would otherwise
+                # echo the value to stdout in V1.34-parity format.
+                return
+            value = clamped
         _midi_io.send_param(
             self.out,
             self.active_profile,
@@ -139,6 +202,32 @@ class Pad1Engine:
             sleep=self.sleep,
         )
 
+    def _clamp_state(
+        self, state: Mapping[str, int]
+    ) -> Mapping[str, int]:
+        """Return ``state`` with every value clamped through resolved bounds.
+
+        Parameters whose resolved class is ``LOCKED_DEFAULT`` / ``FORBIDDEN``
+        are dropped from the returned mapping -- ``apply_state`` then has
+        nothing to send for them, so no CC reaches the wire. Parameters
+        outside the resolved table pass through unchanged.
+
+        Returns ``state`` itself unchanged when ``resolved_bounds`` is
+        ``None`` so the parity path is byte-identical.
+        """
+
+        if self.resolved_bounds is None:
+            return state
+        out: dict[str, int] = {}
+        for name, value in state.items():
+            clamped = self.resolved_bounds.clamp_value(
+                self.target_pad, name, value
+            )
+            if clamped is None:
+                continue
+            out[name] = clamped
+        return out
+
     def _apply_state(
         self,
         state: Mapping[str, int],
@@ -147,10 +236,16 @@ class Pad1Engine:
         set_anchor: bool = False,
         switch_machine_first: bool = False,
     ) -> None:
+        # ``apply_state`` sends each parameter via :func:`midi_io.send_param`;
+        # we route it through ``_resolved_profile()`` so the narrowed ``safe``
+        # table determines which values reach the wire and ``_clamp_state``
+        # narrows the *input* state itself (anchor values, restored states,
+        # etc.). When ``resolved_bounds`` is ``None`` both helpers are
+        # no-ops -- byte-identical to today.
         result = _midi_io.apply_state(
             self.out,
-            self.active_profile if self.active_profile else None,
-            state,
+            self._resolved_profile() if self.active_profile else None,
+            self._clamp_state(state),
             label,
             anchor_state=self.anchor_state,
             current_state=self.current_state,
@@ -173,11 +268,14 @@ class Pad1Engine:
         )
 
     def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
+        # See ``_apply_state`` -- ``mutate_zone`` likewise reads the safe
+        # ranges from the profile we hand it, so ``_resolved_profile()``
+        # is the single hand-off point for guardrail-driven narrowing.
         result = _randomization.mutate_zone(
             self.out,
             zone_name,
             depth_name,
-            profile=self.active_profile if self.active_profile else None,
+            profile=self._resolved_profile() if self.active_profile else None,
             anchor_state=self.anchor_state,
             current_state=self.current_state,
             previous_state=self.previous_state,

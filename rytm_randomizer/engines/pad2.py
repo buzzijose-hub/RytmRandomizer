@@ -37,6 +37,7 @@ from ..data import (
     PAD2_PROFILE_LABELS,
     PROFILES,
 )
+from ..guardrails.resolver import ResolvedBounds
 from ..observability.logging import get_logger
 from ..observability.tracing import trace
 
@@ -79,6 +80,7 @@ class Pad2Engine:
         group_anchor_states: dict[int, State] | None = None,
         group_current_states: dict[int, State] | None = None,
         group_previous_states: dict[int, State | None] | None = None,
+        resolved_bounds: ResolvedBounds | None = None,
     ) -> None:
         self.out = out
         # The monolith uses the stdlib ``random`` module directly; default to it
@@ -106,6 +108,12 @@ class Pad2Engine:
             group_previous_states if group_previous_states is not None else {}
         )
 
+        # See ``Pad1Engine.__init__``: ``None`` => byte-identical to the
+        # monolith path; set => the engine narrows ``safe`` against the
+        # resolved bounds in ``_resolved_profile()`` and clamps individual
+        # sends in ``_send_param``.
+        self.resolved_bounds: ResolvedBounds | None = resolved_bounds
+
     # ------------------------------------------------------------------
     # Thin shims over the extracted primitives -- identical to the monolith
     # ``send_cc`` / ``send_machine`` / ``apply_state`` / ``mutate_zone`` shims,
@@ -115,10 +123,61 @@ class Pad2Engine:
     def _send_cc(self, cc: int, value: int) -> None:
         _midi_io.send_cc(self.out, cc, value, channel=self.channel, sleep=self.sleep)
 
+    def _resolved_profile(self) -> Mapping[str, Any] | None:
+        """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
+
+        See :meth:`Pad1Engine._resolved_profile` -- same contract for Pad 2.
+        Returns the original profile unchanged when ``resolved_bounds`` is
+        ``None`` (parity tests stay green).
+        """
+
+        if self.resolved_bounds is None or self.active_profile is None:
+            return self.active_profile
+
+        base_safe: Mapping[str, tuple[int, int]] = self.active_profile["safe"]
+        anchor: Mapping[str, int] = self.active_profile["anchor"]
+        narrowed: dict[str, tuple[int, int]] = dict(base_safe)
+        for name in list(base_safe.keys()):
+            bound = self.resolved_bounds.get(self.target_pad, name)
+            if bound is None:
+                continue
+            base_low, base_high = base_safe[name]
+            new_low = max(base_low, bound.low)
+            new_high = min(base_high, bound.high)
+            if new_low > new_high:
+                pinned = anchor.get(name, base_low)
+                new_low = new_high = pinned
+            narrowed[name] = (new_low, new_high)
+
+        profile_copy: dict[str, Any] = dict(self.active_profile)
+        profile_copy["safe"] = narrowed
+        return profile_copy
+
     def _send_machine(self) -> None:
         _midi_io.send_machine(
             self.out, self.active_profile, channel=self.channel, sleep=self.sleep
         )
+
+    def _clamp_state(
+        self, state: Mapping[str, int]
+    ) -> Mapping[str, int]:
+        """Return ``state`` with values clamped through resolved bounds.
+
+        See :meth:`Pad1Engine._clamp_state`. Byte-identical parity when
+        ``resolved_bounds`` is ``None``.
+        """
+
+        if self.resolved_bounds is None:
+            return state
+        out: dict[str, int] = {}
+        for name, value in state.items():
+            clamped = self.resolved_bounds.clamp_value(
+                self.target_pad, name, value
+            )
+            if clamped is None:
+                continue
+            out[name] = clamped
+        return out
 
     def _apply_state(
         self,
@@ -130,8 +189,8 @@ class Pad2Engine:
     ) -> None:
         result = _midi_io.apply_state(
             self.out,
-            self.active_profile if self.active_profile else None,
-            state,
+            self._resolved_profile() if self.active_profile else None,
+            self._clamp_state(state),
             label,
             anchor_state=self.anchor_state,
             current_state=self.current_state,
@@ -158,7 +217,7 @@ class Pad2Engine:
             self.out,
             zone_name,
             depth_name,
-            profile=self.active_profile if self.active_profile else None,
+            profile=self._resolved_profile() if self.active_profile else None,
             anchor_state=self.anchor_state,
             current_state=self.current_state,
             previous_state=self.previous_state,
