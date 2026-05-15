@@ -2,18 +2,30 @@
 
 This module is mock-only. It does not import MIDI libraries, open ports, send
 MIDI, wire into the CLI, or touch hardware.
+
+``MockMessageMappingError`` is also a member of the unified
+:mod:`rytm_randomizer.observability.errors` taxonomy: it inherits from both
+:class:`~rytm_randomizer.observability.errors.DataError` AND ``ValueError``,
+so existing ``except ValueError`` callers and new ``except DataError``
+callers both work.
 """
 
 from __future__ import annotations
 
 from .mock_midi import MidiMessage
+from .observability.errors import DataError
 from .profile_lookup import describe_group_profile
 
 SUPPORTED_GROUP_PROFILE_KEYS = ("2", "3")
 
 
-class MockMessageMappingError(ValueError):
-    """Raised when passive metadata cannot be mapped to mock messages."""
+class MockMessageMappingError(DataError, ValueError):
+    """Raised when passive metadata cannot be mapped to mock messages.
+
+    Member of the unified :class:`~rytm_randomizer.observability.errors.DataError`
+    taxonomy. ``ValueError`` is kept as an additional base for
+    backward-compatibility with any ``except ValueError`` caller.
+    """
 
 
 def _target_concept(profile):
