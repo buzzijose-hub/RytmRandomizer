@@ -18,6 +18,8 @@ dependencies = [
 dev = [
     "pytest>=8,<9",
     "pytest-cov>=5,<7",
+    "pytest-timeout>=2,<3",
+    "pytest-sugar>=1,<2",
 ]
 
 [project.scripts]
@@ -28,6 +30,16 @@ packages = ["rytm_randomizer"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Observability: no test may hang the suite silently. pytest-timeout aborts any
+# test exceeding the limit and prints a full traceback showing exactly where it
+# stuck (thread method works on Windows). A hung test becomes a visible failure.
+timeout = 180
+timeout_method = "thread"
+# Progress visibility: pytest-sugar activates automatically and shows a live
+# progress bar with running pass/fail counts and a % indicator -- so it is
+# always clear how far along a run is (the suite is ~15-25 min; silence is not
+# a hang). For non-interactive logs where the bar renders poorly, run with
+# `-p no:sugar -v` to get a clean line-per-test `[ NN%]` instead.
 
 # WS-I fills these
 [tool.coverage.run]

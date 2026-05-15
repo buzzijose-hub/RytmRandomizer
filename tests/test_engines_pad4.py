@@ -115,6 +115,11 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         text=True,
         check=False,
+        # Observability/safety: a parity subprocess must never hang the suite.
+        # stdin=DEVNULL gives any stray input() an immediate EOF instead of an
+        # infinite block; timeout is the hard backstop.
+        stdin=subprocess.DEVNULL,
+        timeout=120,
     )
 
 
