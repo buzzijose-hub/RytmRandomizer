@@ -292,23 +292,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macos-latest is excluded from the pull_request matrix below.
-        # The macOS runner pool on GitHub Actions has long queue times
-        # (often 20-60 minutes), and macOS-only breakage is rare in a
-        # Python project whose only platform-sensitive dep is python-
-        # rtmidi. Skipping macOS on PRs cuts CI time from ~hour to
-        # ~minutes; the macOS jobs still run on `main` pushes and the
-        # weekly schedule, so macOS-only regressions get caught before
-        # release without blocking every PR. See `exclude:` below.
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        # macOS is the most queue-constrained runner pool on GitHub
+        # Actions (20-60 min waits are common for public repos). The
+        # `os` list is built from a JSON string that drops macos-latest
+        # on pull_request events and keeps the full 3-OS matrix on
+        # push / schedule / workflow_dispatch, so PR turnaround stays
+        # in minutes while main and the weekly scan still validate
+        # macOS. python-rtmidi is the only platform-sensitive dep, and
+        # the briefcase installer job builds on macOS at release time,
+        # so coverage of macOS does not need to gate every PR.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["windows-latest", "ubuntu-latest"]' || '["windows-latest", "macos-latest", "ubuntu-latest"]') }}
         python-version: ["3.11"]
-        exclude:
-          # On pull_request events, drop the macos-latest entry from
-          # the matrix entirely (GitHub Actions does not let `if:` gate
-          # an individual matrix entry, hence the exclude form). Other
-          # event types -- push, schedule, workflow_dispatch -- still
-          # see the full 3-OS matrix.
-          - os: ${{ github.event_name == 'pull_request' && 'macos-latest' || '' }}
 
     steps:
       - name: Checkout
@@ -408,23 +402,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # macos-latest is excluded from the pull_request matrix below.
-        # The macOS runner pool on GitHub Actions has long queue times
-        # (often 20-60 minutes), and macOS-only breakage is rare in a
-        # Python project whose only platform-sensitive dep is python-
-        # rtmidi. Skipping macOS on PRs cuts CI time from ~hour to
-        # ~minutes; the macOS jobs still run on `main` pushes and the
-        # weekly schedule, so macOS-only regressions get caught before
-        # release without blocking every PR. See `exclude:` below.
-        os: [windows-latest, macos-latest, ubuntu-latest]
+        # macOS is the most queue-constrained runner pool on GitHub
+        # Actions (20-60 min waits are common for public repos). The
+        # `os` list is built from a JSON string that drops macos-latest
+        # on pull_request events and keeps the full 3-OS matrix on
+        # push / schedule / workflow_dispatch, so PR turnaround stays
+        # in minutes while main and the weekly scan still validate
+        # macOS. python-rtmidi is the only platform-sensitive dep, and
+        # the briefcase installer job builds on macOS at release time,
+        # so coverage of macOS does not need to gate every PR.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["windows-latest", "ubuntu-latest"]' || '["windows-latest", "macos-latest", "ubuntu-latest"]') }}
         python-version: ["3.11"]
-        exclude:
-          # On pull_request events, drop the macos-latest entry from
-          # the matrix entirely (GitHub Actions does not let `if:` gate
-          # an individual matrix entry, hence the exclude form). Other
-          # event types -- push, schedule, workflow_dispatch -- still
-          # see the full 3-OS matrix.
-          - os: ${{ github.event_name == 'pull_request' && 'macos-latest' || '' }}
 
     steps:
       - name: Checkout
