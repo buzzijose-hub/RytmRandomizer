@@ -13,8 +13,6 @@ package-scaffold concerns that do not exist in the monolith.
 
 from __future__ import annotations
 
-from types import MappingProxyType
-
 from .data import SCENE_PRESETS
 
 # Scaffold-only metadata attached to every scene command. These flags describe

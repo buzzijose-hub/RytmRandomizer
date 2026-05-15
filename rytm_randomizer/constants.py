@@ -5,7 +5,7 @@
 The remaining values are package-scaffold concerns with no monolith equivalent.
 """
 
-from .data import MACHINE_CC
+from .data import MACHINE_CC  # noqa: F401  (intentional re-export)
 
 DEFAULT_TARGET_PAD = 1
 DEFAULT_MIDI_CHANNEL = 0

@@ -213,7 +213,7 @@ def format_inspect_group_profile_report(profile_key):
 
 def format_preview_command_report(command_key):
     """Return deterministic passive command preview lines."""
-    from .preview import preview_command
+    from .inspection import preview_command
     from .registry import get_registry_section
 
     command = str(command_key).upper()

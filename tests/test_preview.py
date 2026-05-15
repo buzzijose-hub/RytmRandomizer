@@ -6,7 +6,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from rytm_randomizer.commands import COMMANDS
-from rytm_randomizer.preview import SAFETY_SUMMARY, preview_command
+from rytm_randomizer.inspection import SAFETY_SUMMARY, preview_command
 
 
 def assert_safe_dry_run_report(report):

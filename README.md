@@ -88,7 +88,7 @@ The full suite is ~1280 tests in roughly five to six minutes (pytest-xdist paral
 | `tests/` | The test suite (~50 test files). Includes byte-parity tests that drive the monolith side-by-side with the extracted engines. |
 | `docs/` | Project documentation, status, and process notes. See `docs/STATUS.md` for the current wave state. |
 | `Scripts/` | Helper scripts (e.g. closeout checks, quick status). |
-| `Patches/`, `CaptureTools/` | Auxiliary one-off tooling. Not part of the core product. |
+| `tooling/` | Developer utilities (hardware-capture scripts). Not part of the core product. |
 
 ### 4. Contributing
 

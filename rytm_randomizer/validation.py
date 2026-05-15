@@ -1,13 +1,13 @@
 """Passive metadata validation helpers for the modular scaffold."""
 
-from re import compile
+import re
 
 FORBIDDEN_EXECUTION_FIELDS = frozenset(
     {"handler", "callable", "execute", "function", "callback"}
 )
 FORBIDDEN_PADS = frozenset(range(5, 13))
-PAD_TEXT_PATTERN = compile(r"\bPads?\s+(5|6|7|8|9|10|11|12)\b")
-PAD_SCOPE_PATTERN = compile(r"\bpad_(5|6|7|8|9|10|11|12)\b")
+PAD_TEXT_PATTERN = re.compile(r"\bPads?\s+(5|6|7|8|9|10|11|12)\b")
+PAD_SCOPE_PATTERN = re.compile(r"\bpad_(5|6|7|8|9|10|11|12)\b")
 
 
 def validate_command_registry(registry):
