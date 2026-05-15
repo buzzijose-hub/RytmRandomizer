@@ -10,17 +10,19 @@ Isolation rules (matching ``tests/test_midi_io.py`` / ``tests/test_data_layer.py
 * Anything that imports the monolith (which does ``import mido`` at module
   scope) runs in a *subprocess*, so real ``mido`` never lands in this test
   process's ``sys.modules`` -- the package import-safety tests depend on that.
-* The subprocess seeds the stdlib ``random`` module identically before driving
-  the monolith function and the engine method, captures stdout + the recorded
-  MIDI messages for each, and asserts equality *inside* the subprocess. The
-  parent only checks the subprocess exited 0 and printed ``OK``.
+* That subprocess is a single **warm worker** reused across every parity check
+  in this file (see ``tests/_parity_worker.py``): it cold-imports the monolith
+  + package once, then services one parity request per stdin line. The worker
+  seeds the stdlib ``random`` module identically before driving the monolith
+  function and the engine method, captures stdout + the recorded MIDI messages
+  for each, and asserts equality *inside* the worker; ``_parity_subprocess``
+  just ships one JSON request and asserts the check passed.
 * In-process tests exercise the engine with a *fake* ``mido`` module; an autouse
   fixture snapshots/restores ``sys.modules`` so nothing leaks.
 """
 
 from __future__ import annotations
 
-import subprocess
 import sys
 import types
 from pathlib import Path
@@ -31,6 +33,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+# pytest puts this file's directory (``tests/``) on ``sys.path`` (prepend import
+# mode, no ``tests/__init__.py``), so the shared helper imports as a top-level
+# module without needing a package.
+from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -98,26 +105,11 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-def _run_python(code: str) -> subprocess.CompletedProcess[str]:
-    """Run a snippet in a fresh interpreter (keeps this process mido-free)."""
-
-    return subprocess.run(
-        [sys.executable, "-c", code],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-        # Observability/safety: a parity subprocess must never hang the suite.
-        # stdin=DEVNULL gives any stray input() an immediate EOF instead of an
-        # infinite block; timeout is the hard backstop.
-        stdin=subprocess.DEVNULL,
-        timeout=120,
-    )
-
-
-# Harness injected into every subprocess: builds a monolith run and an engine
-# run from the same RNG seed, captures stdout + MIDI messages + the relevant
-# state dicts, and asserts byte-parity.
+# Harness run once at warm-worker startup: imports the monolith + package, then
+# defines ``assert_parity(seed, steps)`` which builds a monolith run and an
+# engine run from the same RNG seed, captures stdout + MIDI messages + the
+# relevant state dicts, and asserts byte-parity. The worker loop appended by
+# ``tests/_parity_worker.py`` calls this once per JSON request line.
 _HARNESS = '''
 import io, contextlib, random
 import rytm_hybrid_randomizer_v134 as m
@@ -228,15 +220,26 @@ def assert_parity(seed, steps):
 '''
 
 
-def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
-    """Run the harness against ``steps`` in a subprocess; assert it printed OK."""
+# The warm worker for this file: ``_parity_worker`` is a module-scoped autouse
+# fixture that launches/owns it and tears it down at module teardown;
+# ``_run_parity`` ships one JSON request to it and asserts the parity check
+# passed (a mismatch re-raises the worker's diff as an AssertionError -- same
+# failure semantics as the old "fresh interpreter per call" version).
+_parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
 
-    code = _HARNESS + (
-        f"\nassert_parity({seed!r}, {steps_repr})\nprint('OK')\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip().endswith("OK"), result.stdout
+
+def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
+    """Run the harness against ``steps`` on the warm worker; assert parity.
+
+    ``steps_repr`` is still a Python source repr of the steps list (exactly as
+    every ``test_parity_*`` function builds it). ``parse_steps`` turns that same
+    literal -- the one the old code string-concatenated into
+    ``assert_parity(seed, <steps_repr>)`` -- into the real object, which is then
+    shipped as JSON so the warm worker receives structured data instead of
+    source text.
+    """
+
+    _run_parity({"seed": seed, "steps": parse_steps(steps_repr)})
 
 
 # ===========================================================================

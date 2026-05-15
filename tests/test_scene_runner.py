@@ -12,12 +12,15 @@ The most important parity targets are the documented validation flow
 must send NO MIDI and must NOT load anchors).
 
 Isolation rules match ``tests/test_group_runner.py`` / ``tests/test_engines_pad1.py``:
-monolith-touching code runs in a subprocess; in-process tests use a fake ``mido``.
+monolith-touching code runs in a subprocess. That subprocess is a single
+**warm worker** reused across every parity check in this file (see
+``tests/_parity_worker.py``) -- it cold-imports the monolith + package once,
+then services one parity request per stdin line. In-process tests use a fake
+``mido``.
 """
 
 from __future__ import annotations
 
-import subprocess
 import sys
 import types
 from pathlib import Path
@@ -28,6 +31,11 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+# pytest puts this file's directory (``tests/``) on ``sys.path`` (prepend import
+# mode, no ``tests/__init__.py``), so the shared helper imports as a top-level
+# module without needing a package.
+from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -120,26 +128,11 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-def _run_python(code: str) -> subprocess.CompletedProcess[str]:
-    """Run a snippet in a fresh interpreter (keeps this process mido-free)."""
-
-    return subprocess.run(
-        [sys.executable, "-c", code],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-        # Observability/safety: a parity subprocess must never hang the suite.
-        # stdin=DEVNULL gives any stray input() an immediate EOF instead of an
-        # infinite block; timeout is the hard backstop.
-        stdin=subprocess.DEVNULL,
-        timeout=120,
-    )
-
-
-# Harness injected into every subprocess: builds a monolith scene run and a
-# SceneRunner run from the same RNG seed, captures stdout + MIDI + the four-pad
-# state + current_scene_name, and asserts byte-parity.
+# Harness run once at warm-worker startup: imports the monolith + package, then
+# defines ``assert_parity(seed, scene_steps)`` which builds a monolith scene run
+# and a SceneRunner run from the same RNG seed, captures stdout + MIDI + the
+# four-pad state + current_scene_name, and asserts byte-parity. The worker loop
+# appended by ``tests/_parity_worker.py`` calls it once per JSON request line.
 _HARNESS = '''
 import io, contextlib, random
 import rytm_hybrid_randomizer_v134 as m
@@ -235,15 +228,26 @@ def assert_parity(seed, scene_steps):
 '''
 
 
-def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
-    """Run the harness against ``scene_steps`` in a subprocess; assert ``OK``."""
+# The warm worker for this file: ``_parity_worker`` is a module-scoped autouse
+# fixture that launches/owns it and tears it down at module teardown;
+# ``_run_parity`` ships one JSON request to it and asserts the parity check
+# passed (a mismatch re-raises the worker's diff as an AssertionError -- same
+# failure semantics as the old "fresh interpreter per call" version).
+_parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
 
-    code = _HARNESS + (
-        f"\nassert_parity({seed!r}, {steps_repr})\nprint('OK')\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip().endswith("OK"), result.stdout
+
+def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
+    """Run the harness against ``scene_steps`` on the warm worker; assert parity.
+
+    ``steps_repr`` is still a Python source repr of the scene-steps list
+    (exactly as every ``test_parity_*`` function builds it). ``parse_steps``
+    turns that same literal -- the one the old code string-concatenated into
+    ``assert_parity(seed, <steps_repr>)`` -- into the real object, shipped as
+    JSON under the ``scene_steps`` key so the warm worker's
+    ``assert_parity(seed, scene_steps)`` receives it positionally-by-name.
+    """
+
+    _run_parity({"seed": seed, "scene_steps": parse_steps(steps_repr)})
 
 
 # ===========================================================================
