@@ -22,6 +22,12 @@ dev = [
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
 ]
+# WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
+# guardrails system). Only pulled in by users running real audio analyses;
+# the description-only path in style_analysis/ requires nothing extra.
+style = [
+    "librosa>=0.10,<1",
+]
 
 [project.scripts]
 rytm-randomizer = "rytm_randomizer.app:main"
