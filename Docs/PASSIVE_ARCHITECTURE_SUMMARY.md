@@ -2,6 +2,31 @@
 
 Date: May 4, 2026
 
+## Quick Status Operator Report
+
+`Scripts/quick_status.ps1` now includes the passive operator status report.
+
+New quick-status section:
+
+- `=== Operator Status Report ===`
+
+It runs:
+
+- `python -m rytm_randomizer.cli operator-status-report`
+
+It is covered by:
+
+- `tests/test_quick_status_script.py`
+
+The quick-status helper now gives a fast local view of the current branch,
+latest commit, project status summary, project status safety check, operator
+status, V1.34 diff, and git status.
+
+This keeps daily feedback local and no-cost. It does not query GitHub, merge
+branches, trigger GitHub Actions, change runtime behavior, dispatch commands,
+add active behavior, send MIDI, open MIDI ports, mutate hardware, require
+hardware, or change the V1.34 reference.
+
 ## Operator Status Report
 
 The project now has a passive daily operator status report:

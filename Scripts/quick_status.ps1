@@ -55,6 +55,11 @@ Write-Output "=== Project Status Check ==="
 Register-QuickStatusStepExit "Project Status Check"
 
 Write-Output ""
+Write-Output "=== Operator Status Report ==="
+& $pythonExe @pythonArgs -m rytm_randomizer.cli operator-status-report
+Register-QuickStatusStepExit "Operator Status Report"
+
+Write-Output ""
 Write-Output "=== V1.34 Reference Diff ==="
 git diff -- rytm_hybrid_randomizer_v134.py
 Register-QuickStatusStepExit "V1.34 Reference Diff"

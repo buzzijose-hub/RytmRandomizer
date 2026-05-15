@@ -16,6 +16,9 @@ def test_quick_status_script_exists_and_stays_passive():
 
     assert "project-status-report --summary" in text
     assert "project-status-report --check" in text
+    assert "operator-status-report" in text
+    assert "=== Operator Status Report ===" in text
+    assert 'Register-QuickStatusStepExit "Operator Status Report"' in text
     assert "git branch --show-current" in text
     assert "git log --oneline -1" in text
     assert "git diff -- rytm_hybrid_randomizer_v134.py" in text
@@ -74,6 +77,10 @@ def test_quick_status_script_runs_passive_status_checks():
     assert "=== Project Status Check ===" in result.stdout
     assert "RytmRandomizer Project Status Check" in result.stdout
     assert "- ok: True" in result.stdout
+    assert "=== Operator Status Report ===" in result.stdout
+    assert "RytmRandomizer Operator Status Report" in result.stdout
+    assert "- daily_feedback: local_closeout" in result.stdout
+    assert "- no_pay_policy: True" in result.stdout
     assert "=== V1.34 Reference Diff ===" in result.stdout
     assert "=== Git Status ===" in result.stdout
     assert result.stderr == ""
