@@ -1,5 +1,42 @@
 # Next Action
 
+## Latest Collaborator Intake Readiness Report Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/COLLABORATOR_INTAKE_READINESS_REPORT_CHECKPOINT.md`
+
+New passive report:
+
+- `rytm_randomizer/collaborator_intake_readiness_report.py`
+
+New closeout coverage:
+
+- `=== Test: Collaborator Intake Readiness Report ===`
+
+Purpose:
+
+- make Eddie implementation intake readiness inspectable in code and tests
+- record that PR #1 is the review plan source, not implementation
+- record that PR #2 is the draft execution-plan foundation branch
+- keep local closeout as the daily no-cost verification path
+
+Recommended next task:
+
+- keep waiting for Eddie's implementation branch or PR before intake
+- when Eddie sends a branch or PR, run the collaborator implementation intake
+  protocol before review or merge
+- optionally expose this report through passive CLI later if direct operator
+  visibility becomes useful
+
 ## Latest Collaborator Implementation Wait-State Checkpoint
 
 Current review branch:

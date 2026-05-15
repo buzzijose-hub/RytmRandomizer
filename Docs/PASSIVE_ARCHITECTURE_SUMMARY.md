@@ -2,6 +2,36 @@
 
 Date: May 4, 2026
 
+## Collaborator Intake Readiness Report
+
+The project now has a passive in-memory collaborator intake readiness report:
+
+- `rytm_randomizer/collaborator_intake_readiness_report.py`
+
+It is covered by:
+
+- `tests/test_collaborator_intake_readiness_report.py`
+- closeout label:
+  - `=== Test: Collaborator Intake Readiness Report ===`
+
+The report captures the current wait-state while Eddie's implementation branch
+or PR has not arrived yet.
+
+It records:
+
+- PR #1 as the review plan source
+- PR #2 as the draft execution-plan foundation branch
+- no implementation branch observed
+- no implementation PR observed
+- intake-before-review and intake-before-merge policy
+- manual GitHub Actions policy
+- no real MIDI, ports, active execution, dispatch, or hardware behavior
+
+This is passive reporting only. It does not change runtime behavior,
+dispatch, active behavior, MIDI sending, MIDI port opening, hardware behavior,
+package publication, automatic GitHub Actions triggers, collaborator branch
+intake, or the V1.34 reference.
+
 ## Collaborator Implementation Wait-State
 
 The current collaborator implementation intake state is recorded in:

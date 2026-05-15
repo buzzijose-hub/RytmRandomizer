@@ -115,3 +115,17 @@ collaborator implementation branch.
 
 When Eddie sends a branch name or PR, run the collaborator implementation
 intake protocol before reviewing or merging anything.
+
+## Follow-Up Passive Report
+
+Follow-up checkpoint:
+
+- `Docs/COLLABORATOR_INTAKE_READINESS_REPORT_CHECKPOINT.md`
+
+The wait-state is now also represented by a passive in-memory report:
+
+- `rytm_randomizer/collaborator_intake_readiness_report.py`
+
+The report is covered by closeout under:
+
+- `=== Test: Collaborator Intake Readiness Report ===`
