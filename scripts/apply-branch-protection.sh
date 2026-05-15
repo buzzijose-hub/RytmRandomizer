@@ -16,15 +16,21 @@ BRANCH="${BRANCH:-main}"
 
 # Required status checks.
 # These context names must match the job names produced by .github/workflows/test.yml.
-# NOTE: when the WS-I coverage job lands, add its check name to this list
-# (e.g. "coverage") so it also gates merges. The WS-R e2e job is already
-# wired below; do not remove its three OS-matrix entries -- the canonical
-# operator-command flow gates every merge to main.
+# NOTE: this list gates every merge to main. The three required checks below:
+#   - "architecture" (WS-T): the gated architecture-conformance suite
+#       (tests/architecture/) — fast, ubuntu-only, must stay green.
+#   - "test (<os>, py3.11)" (WS-E): full pytest suite on each of the 3 OSs.
+#   - "e2e (<os>, py3.11)" (WS-R): the V1.34 canonical operator-command flow
+#       against MockMidiSender, deterministic, must stay green on each OS.
+# When the WS-I coverage job lands, add "coverage" here so it also gates.
+# Do NOT remove the 3-OS matrix entries — the canonical operator-command
+# flow gates every merge to main on every supported platform.
 read -r -d '' PAYLOAD <<'JSON' || true
 {
   "required_status_checks": {
     "strict": true,
     "checks": [
+      { "context": "architecture" },
       { "context": "test (windows-latest, py3.11)" },
       { "context": "test (macos-latest, py3.11)" },
       { "context": "test (ubuntu-latest, py3.11)" },

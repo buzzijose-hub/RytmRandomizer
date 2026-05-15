@@ -47,6 +47,53 @@ Anything that is "a table of facts" — commands, parameters, scenes, pad profil
 
 Any structural change must update the docs it affects. A change is not done until the `README.md`, this file, and any relevant `Docs/` entries reflect the new reality.
 
+## Architecture standard
+
+The codebase has a fixed architecture documented in `docs/ARCHITECTURE.md`
+and enforced by tests under `tests/architecture/`. Read both before any
+non-trivial change.
+
+The agent-facing distillation lives in `.claude/rules/architecture.md` and the
+skill-routing table is in `.claude/rules/skill-routing.md`. Repo-specific
+skills (`code-review`, `add-pad-command`, `extend-data-layer`) live under
+`.claude/skills/`.
+
+### Verification gate (architecture)
+
+Before opening a PR, in addition to the full suite:
+
+```bash
+pytest tests/architecture/ -q
+```
+
+This is also a required CI check (see `.github/workflows/test.yml`) and is
+listed in `scripts/apply-branch-protection.sh`.
+
+## Automated post-push code review
+
+The repo-local `.claude/settings.json` configures a `PostToolUse` hook that
+fires the `code-reviewer` agent (`.claude/agents/code-reviewer.md`) after any
+`git push` invocation made through the Claude Code harness. The agent reads
+the diff, runs the architecture gate (`pytest tests/architecture/`), and
+returns a structured Critical / Important / Minor verdict.
+
+**Harness fallback.** If your harness version does not yet support the
+`Agent` action type for hooks, the hook is silently ignored. You can run the
+same review manually:
+
+```
+/agent code-reviewer
+```
+
+or invoke the skill directly:
+
+```
+/skill code-review
+```
+
+The hook config is committed at `.claude/settings.json`; you can override it
+locally in `.claude/settings.local.json` if you prefer a different trigger.
+
 ## Releasing
 
 RytmRandomizer follows [Semantic Versioning](https://semver.org/). The release
