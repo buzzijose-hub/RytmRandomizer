@@ -288,6 +288,15 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # existing ``except RuntimeError`` callers still work AND the
         # conformance check sees a taxonomy member.
         "StyleAnalysisDependencyError",
+        # WS-W guardrails: members of the BoundaryError / StateError families
+        # surfaced by guardrails/validation.py, guardrails/store.py, and
+        # guardrails/resolver.py. Each inherits transitively from
+        # RytmRandomizerError so the taxonomy conformance check still
+        # passes; they are listed here so the AST-level allow-list mirrors
+        # the runtime hierarchy.
+        "ProfileRejectedError",
+        "IllegalStateTransitionError",
+        "GuardrailResolutionError",
     }
 )
 
