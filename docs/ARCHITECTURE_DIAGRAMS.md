@@ -61,10 +61,12 @@ flowchart TB
 
 Current nuance:
 
-- `rytm_hybrid_randomizer_v134.py` remains the protected hardware-tested
-  reference.
-- The modular package is the passive/mock scaffold and behavior-parity
-  workspace.
+- `rytm_hybrid_randomizer_v134.py` is retained as the frozen byte-parity
+  reference. Closeout verifies its working-tree diff stays empty.
+- The modular package now owns the interactive runtime end-to-end:
+  `rytm_randomizer.app` exposes the passive menu (default), `--arm` (real
+  MIDI), and `--dry-run` (mock sender) modes. The interactive command loop
+  lives in `rytm_randomizer.shell.InteractiveShell`.
 - Closeout repeatedly verifies tests and the V1.34 reference diff.
 
 ## 2. Package Layer Map
@@ -72,7 +74,8 @@ Current nuance:
 ```mermaid
 flowchart TB
     CLI["cli.py\npassive report/list/search/inspect/preview CLI"]
-    App["app.py\nminimal scaffold entry point"]
+    App["app.py\nentry point: passive menu / --arm / --dry-run"]
+    Shell["shell.py\ninteractive command shell"]
     Init["__init__.py\nexports constants only"]
 
     subgraph Metadata["Passive metadata"]

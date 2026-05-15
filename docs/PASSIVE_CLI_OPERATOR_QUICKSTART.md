@@ -2,11 +2,15 @@
 
 ## Purpose
 
-This quickstart is for using the current RytmRandomizer passive CLI safely
-during the V1.34 modularization phase.
+This quickstart is for using the RytmRandomizer **passive CLI** safely. The
+passive CLI is the read-only inspection / preview surface exposed by
+`rytm_randomizer.cli`; it never opens a MIDI port or sends MIDI.
+
+For the active interactive runtime (real MIDI or mock sender) use the
+`rytm-randomizer` entry point with `--arm` or `--dry-run`. See `README.md`.
 
 The CLI is passive/read-only. It is for inspection, previewing, reporting,
-listing, and searching existing scaffold metadata only.
+listing, and searching existing package metadata only.
 
 ## Current Safe Baseline
 

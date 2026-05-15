@@ -16,20 +16,22 @@ pytest
 
 All tests must pass. There is also `Scripts/closeout_check.ps1`, a PowerShell-only closeout check. A cross-platform equivalent is being added; until then, run the PowerShell script on Windows or rely on `pytest` elsewhere.
 
-## Preserve V1.34 behavior
+## Preserve parity with the V1.34 reference
 
-`rytm_hybrid_randomizer_v134.py` is the hardware-validated behavior reference. It was validated against the actual Analog Rytm MK2. **Any change must preserve its validated musical behavior.**
+The V1.34 hardware-validated musical behavior is the baseline of truth. It was validated against the actual Analog Rytm MK2. **Any change must preserve parity with that behavior.**
+
+As of Wave 4 / WS-O the modular package owns the interactive runtime end-to-end (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) is retained on disk **only as a frozen byte-parity reference** for the characterization tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`). The monolith file is kept byte-identical to its tagged V1.34 form -- `tests/test_real_midi_import_safety.py::test_v134_reference_has_no_working_tree_diff` enforces this -- and is not invoked by production code paths anymore.
 
 Concretely:
 
-- Build modular code in `rytm_randomizer/` *beside* the monolith, not instead of it. Do not remove the V1.34 script until the modular version is fully validated.
+- The V1.34 reference file must stay byte-identical. Do not edit `rytm_hybrid_randomizer_v134.py`. New behavior lives in the `rytm_randomizer/` package and is locked against the reference by the parity tests.
 - The following are **not allowed** without explicit approval:
   - New MIDI CC mappings.
   - New pad profiles or machines.
-  - Pads 5–12 expansion.
+  - Pads 5-12 expansion.
   - Parameter range changes.
-  - Command behavior changes.
-- **Allowed:** splitting the monolith into modules; moving constants, profiles, MIDI helpers, scene plans, and command handlers into separate files; adding tests that verify command names, profile keys, scene names, and safety guardrails; readability improvements that do not change behavior.
+  - Command behavior changes (the shell's command alphabet mirrors the V1.34 monolith exactly).
+- **Allowed:** further refactoring within the package; readability improvements that do not change behavior; new tests; documentation updates.
 - Add tests when you split code. Test after each major split.
 
 ## Commit conventions
