@@ -1,0 +1,32 @@
+{
+  "_doc": [
+    "Repo-local Claude Code settings for RytmRandomizer.",
+    "",
+    "The hooks block below auto-invokes the code-reviewer agent after a git",
+    "push. The matcher fires PostToolUse on any Bash invocation whose command",
+    "begins with `git push`. The harness invokes the agent definition at",
+    ".claude/agents/code-reviewer.md.",
+    "",
+    "If your harness version does not yet support the `Agent` action type for",
+    "hooks, the hook will be ignored harmlessly. The CONTRIBUTING.md hook",
+    "section documents the manual fallback (`/agent code-reviewer`).",
+    "",
+    "See docs/ARCHITECTURE.md and .claude/rules/architecture.md for the",
+    "architecture spec that the code-reviewer agent enforces."
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": {
+          "tool": "Bash",
+          "command_regex": "^\\s*git\\s+push(\\s|$)"
+        },
+        "action": {
+          "type": "Agent",
+          "agent": "code-reviewer",
+          "prompt": "A `git push` just completed in this worktree. Execute the code-review skill against the most recently pushed commits. Gather the diff with `git log --oneline -10` plus `git diff @{upstream}..HEAD` (or `git diff <base-branch>...HEAD` if no upstream), then produce the structured Critical/Important/Minor verdict. Run `pytest tests/architecture/ -q` as part of the review."
+        }
+      }
+    ]
+  }
+}

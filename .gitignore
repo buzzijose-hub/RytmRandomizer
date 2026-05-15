@@ -32,5 +32,16 @@ Docs/Session_Logs/*.log
 Docs/Session_Logs/latest_closeout_summary.txt
 
 # Agent process artifacts
-.claude/
+# Ignore the .claude/ directory by default (local agent state, transcripts,
+# caches, etc.), but explicitly track the committed rules / skills / agents /
+# settings that codify the architecture (WS-T):
+#   - .claude/rules/         agent-facing distillation of docs/ARCHITECTURE.md
+#   - .claude/skills/        repo-specific skills (code-review, etc.)
+#   - .claude/agents/        repo-specific agent definitions
+#   - .claude/settings.json  post-push code-review hook config
+.claude/*
+!.claude/rules/
+!.claude/skills/
+!.claude/agents/
+!.claude/settings.json
 docs-scratch/
