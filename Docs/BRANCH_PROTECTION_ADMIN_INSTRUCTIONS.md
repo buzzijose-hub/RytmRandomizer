@@ -45,7 +45,9 @@ Do not apply branch protection before:
 - collaborator review has been considered
 - the V1.34 import-safety diff has been inspected
 - package metadata has been inspected
-- GitHub Actions are green on the final PR head
+- local closeout has passed on the final PR head
+- manual GitHub Actions gates have been run if the owner chooses to spend
+  Actions minutes for that merge decision
 - the owner is ready for PR-based changes to become the normal workflow
 
 Branch protection is not required for local development. It is a repository
@@ -57,14 +59,16 @@ Recommended first policy for `modularize-v1.34`:
 
 - require a pull request before merging
 - require at least one approval
-- require status checks to pass
-- require branches to be up to date before merging
+- defer required Actions status checks while workflows are manual-only, unless
+  the owner wants to run the manual gate before every merge
+- require branches to be up to date before merging only if the chosen workflow
+  still fits the manual-gate policy
 - include administrators only if the owner wants the same rules to apply to
   their own pushes
 - allow force pushes: disabled
 - allow deletions: disabled
 
-Recommended required status checks after the cost-control update:
+Manual Actions gates available on demand:
 
 - `windows-latest / Python 3.13`
 - `macos-latest / Python 3.13`
@@ -72,8 +76,8 @@ Recommended required status checks after the cost-control update:
 
 The full Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix remains
 available as the manual `tests-full-matrix` workflow for final PR readiness.
-Do not require manual-only checks in branch protection unless the owner wants
-to manually run them before every merge.
+Do not require these manual-only checks in branch protection unless the owner
+wants to manually run them before every merge.
 
 Optional later checks:
 
@@ -93,11 +97,11 @@ Safer manual path:
    - `modularize-v1.34`
 6. Enable pull request requirement.
 7. Require at least one approval.
-8. Require status checks.
-9. Select the required checks listed above.
-10. Disable force pushes.
-11. Disable branch deletion.
-12. Save the rule.
+8. Leave status checks optional while Actions are manual-only, unless the owner
+   chooses to run manual gates before every merge.
+9. Disable force pushes.
+10. Disable branch deletion.
+11. Save the rule.
 
 This UI path is preferred for the first setup because the owner can inspect
 every setting before applying it.

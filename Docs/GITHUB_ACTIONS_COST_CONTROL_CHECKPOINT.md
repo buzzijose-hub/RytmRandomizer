@@ -43,11 +43,11 @@ Default test workflow:
 Changes:
 
 - removed direct `push` trigger
-- kept `pull_request`
-- added `workflow_dispatch`
+- later removed automatic `pull_request` trigger in favor of the manual gate
+- kept `workflow_dispatch`
 - added `concurrency`
 - enabled `cancel-in-progress: true`
-- reduced the routine PR matrix to:
+- reduced the gated matrix to:
   - Ubuntu / Python 3.13
   - Windows / Python 3.13
   - macOS / Python 3.13
@@ -78,8 +78,8 @@ Each event ran the full 9-job matrix.
 
 After this checkpoint:
 
-- routine PR updates run one 3-job matrix
-- older superseded runs are canceled
+- gated test runs use one 3-job matrix
+- older superseded manual runs are canceled
 - the full 9-job matrix remains available on demand
 
 This keeps CI useful while protecting the remaining free Actions minutes.
@@ -120,7 +120,11 @@ Use the regular PR workflow for pushed review updates.
 Run `tests-full-matrix` manually before marking PR #2 ready or before any
 major merge decision.
 
-Follow-up:
+Follow-ups:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_CHECKPOINT.md` records the later no-pay
+  policy update that made GitHub Actions manual-only during execution-plan
+  work.
 
 - `Docs/GITHUB_ACTIONS_NODE24_READINESS_CHECKPOINT.md` records the later
   workflow action-version update made after PR #2 showed Node.js 20

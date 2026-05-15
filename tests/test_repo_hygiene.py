@@ -98,19 +98,19 @@ def test_test_workflow_runs_package_coverage_gate():
     assert "python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84" in workflow
 
 
-def test_test_workflow_limits_actions_minutes_by_avoiding_duplicate_push_runs():
+def test_test_workflow_is_manual_only_for_gated_pipeline():
     workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
         encoding="utf-8"
     )
 
-    assert "pull_request:" in workflow
     assert "workflow_dispatch:" in workflow
+    assert "pull_request:" not in workflow
     assert "push:" not in workflow
     assert "concurrency:" in workflow
     assert "cancel-in-progress: true" in workflow
 
 
-def test_test_workflow_uses_lean_pr_matrix_for_actions_minutes():
+def test_test_workflow_uses_lean_manual_gate_matrix_for_actions_minutes():
     workflow = (PROJECT_ROOT / ".github/workflows/test.yml").read_text(
         encoding="utf-8"
     )
@@ -121,6 +121,18 @@ def test_test_workflow_uses_lean_pr_matrix_for_actions_minutes():
     assert 'python-version: "3.13"' in workflow
     assert 'python-version: "3.11"' not in workflow
     assert 'python-version: "3.12"' not in workflow
+
+
+def test_release_workflow_is_manual_only_until_release_phase():
+    workflow = (PROJECT_ROOT / ".github/workflows/release.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "workflow_dispatch:" in workflow
+    assert "push:" not in workflow
+    assert "tags:" not in workflow
+    assert "Upload distributions" in workflow
+    assert "actions/upload-artifact@v5" in workflow
 
 
 def test_full_matrix_workflow_is_manual_for_final_pr_readiness():

@@ -3,6 +3,41 @@
 Date: May 4, 2026
 Status: Active branch is modularize-v1.34
 
+## GitHub Actions Manual Gate Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_CHECKPOINT.md`
+
+GitHub Actions are now a manual gated pipeline during the current
+execution-plan phase.
+
+Manual-only workflows:
+
+- `.github/workflows/test.yml`
+- `.github/workflows/test-full-matrix.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/codeql.yml`
+
+Daily verification should use local closeout:
+
+- `powershell -ExecutionPolicy Bypass -File .\Scripts\closeout_check.ps1`
+- `git diff -- rytm_hybrid_randomizer_v134.py`
+- `git status --short`
+
+This checkpoint changes CI configuration, repo-hygiene tests, and
+documentation only. It adds no real MIDI, ports, dispatch, active behavior,
+hardware behavior, package publication, collaborator branch merge, or V1.34
+reference edit.
+
 ## GitHub Actions Node 24 Readiness Checkpoint
 
 Current review branch:
@@ -62,11 +97,11 @@ Default workflow:
 
 Default CI now:
 
-- runs on `pull_request`
-- can be triggered manually with `workflow_dispatch`
+- is triggered manually with `workflow_dispatch`
+- does not run automatically on `pull_request`
 - does not run separately on direct `push`
 - cancels older superseded runs
-- uses a lean routine matrix:
+- uses a lean manual gate matrix:
   - Ubuntu / Python 3.13
   - Windows / Python 3.13
   - macOS / Python 3.13
@@ -257,7 +292,7 @@ The checklist documents release readiness without publishing anything.
 It records:
 
 - current package name and version
-- current release workflow behavior
+- current manual release workflow behavior
 - local dry-run commands
 - no-publish release readiness checklist
 - tag safety rules
@@ -296,7 +331,7 @@ It documents:
 
 - when protection should be applied
 - recommended initial branch protection settings
-- required status checks from the current matrix
+- manual-gate guidance while Actions checks are not automatic
 - safer GitHub UI path
 - scripted path using `Scripts/apply_branch_protection.ps1`
 - what branch protection does not authorize

@@ -5,7 +5,7 @@
 Document package release readiness without publishing anything.
 
 This checklist exists because PR #2 adds package metadata, package build
-verification, wheel install smoke testing, and a tag-triggered release
+verification, wheel install smoke testing, and a manual release
 workflow scaffold. It clarifies what can be safely checked before any public
 package release or package registry publication is considered.
 
@@ -47,9 +47,9 @@ Hardware status:
 
 ## Current Release Workflow Behavior
 
-The current release workflow runs only on pushed tags matching:
+The current release workflow is manual-only during execution-plan work:
 
-- `v*`
+- `workflow_dispatch`
 
 Current workflow behavior:
 
@@ -72,10 +72,13 @@ Current workflow does not:
 
 ## No-Publish Release Readiness Checklist
 
-Before creating any release tag, confirm:
+Before creating any release tag or manually running the release workflow,
+confirm:
 
 - PR #2 has been reviewed.
-- GitHub Actions are green on the final PR head.
+- local closeout passes on the final PR head.
+- manual GitHub Actions gates have been run if the owner chooses to spend
+  Actions minutes for that release-readiness decision.
 - `pyproject.toml` metadata has been reviewed.
 - package name is intentional.
 - package version is intentional.
@@ -120,15 +123,15 @@ Expected dry-run result:
 - V1.34 current worktree diff is empty
 - git status is clean
 
-## Tag Dry-Run Rules
+## Tag And Manual Gate Rules
 
 Do not create a real `v*` tag until the owner chooses to exercise the release
 workflow.
 
 If testing tag behavior later, use a separate approved release-test slice.
 
-Do not push tags casually. A pushed `v*` tag will trigger the release
-workflow.
+Do not push tags casually. The release workflow is manual-only now, but release
+tags should still be treated as an explicit approval boundary.
 
 ## Publishing Boundary
 

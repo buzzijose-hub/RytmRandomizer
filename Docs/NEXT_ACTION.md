@@ -1,5 +1,40 @@
 # Next Action
 
+## Latest GitHub Actions Manual Gate Checkpoint
+
+Current review branch:
+
+- `codex/execute-eddie-plan`
+
+Current PR:
+
+- <https://github.com/buzzijose-hub/RytmRandomizer/pull/2>
+
+New checkpoint:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_CHECKPOINT.md`
+
+Purpose:
+
+- prevent automatic GitHub-hosted Actions minute usage during execution-plan
+  work
+- keep Actions as a deliberate gated pipeline only
+- use local closeout as the daily no-cost verification path
+
+Workflow policy:
+
+- `.github/workflows/test.yml` is manual-only with `workflow_dispatch`
+- `.github/workflows/test-full-matrix.yml` remains manual-only
+- `.github/workflows/release.yml` is manual-only during this phase
+- `.github/workflows/codeql.yml` remains manual-only
+
+Recommended next task:
+
+- keep waiting for Eddie's implementation branch or PR before intake
+- use local closeout for frequent feedback
+- manually trigger GitHub Actions only when a work packet or PR reaches a
+  meaningful gate
+
 ## Latest GitHub Actions Node 24 Readiness Checkpoint
 
 Current review branch:
@@ -53,14 +88,14 @@ Purpose:
 
 - reduce routine GitHub Actions minute usage after the 90% included-minutes
   warning
-- avoid duplicate `push` and `pull_request` runs for the same branch update
+- avoid automatic `push` and `pull_request` runs during execution-plan work
 - keep a manual full matrix available for final PR readiness
 
 Workflow changes:
 
-- `.github/workflows/test.yml` now runs on `pull_request` and
-  `workflow_dispatch`, not direct `push`
-- routine PR matrix is reduced to Windows/macOS/Ubuntu on Python 3.13
+- `.github/workflows/test.yml` now runs on `workflow_dispatch` only, not
+  automatic `pull_request` or direct `push`
+- manual gate matrix is Windows/macOS/Ubuntu on Python 3.13
 - concurrency cancels superseded runs
 - `.github/workflows/test-full-matrix.yml` preserves the full
   Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix as a manual workflow

@@ -2,6 +2,26 @@
 
 Date: May 4, 2026
 
+## GitHub Actions Manual Gate
+
+GitHub Actions are currently configured as manual gates to avoid automatic
+GitHub-hosted runner minute usage during execution-plan work.
+
+Manual-only workflows:
+
+- `.github/workflows/test.yml`
+- `.github/workflows/test-full-matrix.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/codeql.yml`
+
+Local closeout is the daily no-cost verification path. GitHub Actions should
+be triggered only when a work packet, PR, collaborator intake, or release
+readiness decision reaches an explicit gate.
+
+This is CI governance only. It does not change runtime behavior, dispatch,
+active behavior, MIDI sending, MIDI port opening, hardware behavior, package
+publication, collaborator branch intake, or the V1.34 reference.
+
 ## GitHub Actions Node 24 Readiness
 
 GitHub Actions workflow action versions have been updated after PR #2 showed
@@ -37,11 +57,11 @@ Default workflow:
 
 Current default behavior:
 
-- runs on pull requests
 - can be triggered manually
-- does not duplicate runs on direct pushes
+- does not run automatically on pull requests
+- does not run automatically on direct pushes
 - cancels superseded runs
-- uses a routine 3-job matrix:
+- uses a manual 3-job matrix:
   - Ubuntu / Python 3.13
   - Windows / Python 3.13
   - macOS / Python 3.13
@@ -156,7 +176,7 @@ readiness without publishing anything.
 
 It records that the current release workflow:
 
-- triggers only on pushed `v*` tags
+- is manual-only during execution-plan work
 - builds the Python package
 - uploads `dist/*` as workflow artifacts
 - does not publish to PyPI or TestPyPI
@@ -179,7 +199,7 @@ owner can later apply branch protection to `modularize-v1.34`.
 The document covers:
 
 - recommended initial branch protection policy
-- required status checks from the current CI matrix
+- manual-gate guidance while Actions checks are not automatic
 - safer GitHub UI setup path
 - scripted path through `Scripts/apply_branch_protection.ps1`
 - conditions that should be true before protection is applied

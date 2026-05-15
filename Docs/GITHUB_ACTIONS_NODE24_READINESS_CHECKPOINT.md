@@ -90,3 +90,9 @@ decision.
 
 Continue waiting for Eddie's implementation branch or PR before running the
 collaborator implementation intake protocol.
+
+Follow-up:
+
+- `Docs/GITHUB_ACTIONS_MANUAL_GATE_CHECKPOINT.md` records the later no-pay
+  policy update that made GitHub Actions manual-only during execution-plan
+  work.

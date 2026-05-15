@@ -48,11 +48,13 @@ On macOS/Linux, use:
 python Scripts/closeout_check.py
 ```
 
-The routine GitHub Actions pull request workflow runs a lean
-Windows/macOS/Ubuntu Python 3.13 matrix to conserve included Actions minutes.
-Workflow actions use current major versions prepared for GitHub's Node 24
-runner transition.
-It also runs the package coverage gate:
+GitHub Actions are currently manual-only gates to avoid automatic hosted-runner
+minute usage during execution-plan work. Use local closeout as the daily
+feedback loop. Workflow actions use current major versions prepared for
+GitHub's Node 24 runner transition.
+
+The manual `tests` workflow runs a lean Windows/macOS/Ubuntu Python 3.13
+matrix and the package coverage gate:
 
 ```powershell
 python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84
@@ -61,9 +63,10 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-fail-under=84
 The current ratchet floor is 84% branch coverage for `rytm_randomizer/`. Raise
 the floor when coverage improves; do not lower it.
 
-Before final PR readiness or a major merge decision, run the manual
-`tests-full-matrix` workflow on GitHub to exercise Windows/macOS/Ubuntu across
-Python 3.11, 3.12, and 3.13.
+Before final PR readiness or a major merge decision, manually run the `tests`
+workflow and, when the extra confidence is worth the Actions minutes, the
+`tests-full-matrix` workflow to exercise Windows/macOS/Ubuntu across Python
+3.11, 3.12, and 3.13.
 
 For quick orientation, run:
 

@@ -141,7 +141,7 @@ then-current full matrix:
 
 CI cost control has since been added:
 
-- routine PR checks now run Windows/macOS/Ubuntu on Python 3.13 only
+- the manual lean gate runs Windows/macOS/Ubuntu on Python 3.13 only
 - older superseded runs are canceled
 - direct push-triggered duplicates are avoided
 - the full Windows/macOS/Ubuntu and Python 3.11/3.12/3.13 matrix remains
@@ -155,6 +155,15 @@ CI Node 24 readiness has also been added:
 - `actions/upload-artifact@v5`
 - `github/codeql-action/init@v4`
 - `github/codeql-action/analyze@v4`
+
+CI manual-gate policy has since been added:
+
+- GitHub Actions are manual-only during execution-plan work
+- `.github/workflows/test.yml` no longer runs automatically on `pull_request`
+- `.github/workflows/release.yml` no longer runs automatically on pushed
+  release tags during this phase
+- local closeout is the daily no-cost feedback loop
+- GitHub Actions should be triggered only at explicit review or readiness gates
 
 ## Recommended Review Checklist
 
