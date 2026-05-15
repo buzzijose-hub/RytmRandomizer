@@ -170,7 +170,14 @@ def test_print_allowlist_files_actually_exist() -> None:
 # in WS-U to the realistic OSError/RuntimeError/AttributeError family. The
 # allow-list below is empty; we keep the constant so a future principled
 # exception can be added with a clear comment.
-ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset()
+ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset({
+    # observability/tracing.py:166 — the operation() context manager intentionally
+    # catches BaseException (including KeyboardInterrupt / SystemExit) so that
+    # operation_error is logged with elapsed_ms + exception type BEFORE the
+    # exception propagates. The handler re-raises; nothing is silently swallowed.
+    # This is the one place in the package where catching everything is correct.
+    ("rytm_randomizer/observability/tracing.py", 166),
+})
 
 
 def _except_handlers(path: Path) -> list[tuple[int, str | None]]:
