@@ -35,6 +35,8 @@ def test_quick_status_script_exists_and_stays_passive():
     assert "git log --oneline -1" in text
     assert "git diff -- rytm_hybrid_randomizer_v134.py" in text
     assert "git status --short" in text
+    assert "$homePath = $HOME" in text
+    assert "$codexPython -and (Test-Path $codexPython)" in text
     assert "mido" not in text.lower()
     assert "open-port" not in text.lower()
     assert "send-command" not in text.lower()
