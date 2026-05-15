@@ -256,7 +256,7 @@ def build_active_boundary_report():
         "closeout_coverage": tuple(ACTIVE_BOUNDARY_CLOSEOUT_COVERAGE),
         "source": {
             "boundary_module": "rytm_randomizer.active_boundary",
-            "report_module": "rytm_randomizer.active_boundary_report",
+            "report_module": "rytm_randomizer.reports",
             "in_memory_only": True,
             "evaluates_active_requests": False,
         },
@@ -905,7 +905,7 @@ def build_anchor_profile_report():
         "closeout_coverage": tuple(ANCHOR_PROFILE_CLOSEOUT_COVERAGE),
         "recommended_next_branch": "documentation checkpoint after passive CLI visibility",
         "source": {
-            "report_module": "rytm_randomizer.behavior_anchor_profile_report",
+            "report_module": "rytm_randomizer.reports",
             "in_memory_only": True,
             "calls_cli": False,
             "creates_runtime_state": False,
@@ -1187,7 +1187,7 @@ def build_behavior_parity_coverage_report():
             "review_document": (
                 "Docs/V134_BEHAVIOR_PARITY_PACKET_12_COVERAGE_REPORT_PLAN_REVIEW.md"
             ),
-            "report_module": "rytm_randomizer.behavior_parity_coverage_report",
+            "report_module": "rytm_randomizer.reports",
         },
         **PARITY_REPORT_BOUNDARY,
     }

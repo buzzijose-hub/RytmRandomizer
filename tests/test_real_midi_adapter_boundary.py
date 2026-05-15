@@ -14,9 +14,8 @@ PASSIVE_MODULES = (
     "rytm_randomizer.registry_report",
     "rytm_randomizer.mock_midi",
     "rytm_randomizer.mock_message_mapper",
-    "rytm_randomizer.mock_mapper_report",
     "rytm_randomizer.active_boundary",
-    "rytm_randomizer.active_boundary_report",
+    "rytm_randomizer.reports",
 )
 
 PASSIVE_CLI_COMMANDS = (
@@ -31,9 +30,8 @@ PASSIVE_SOURCE_FILES = (
     PROJECT_ROOT / "rytm_randomizer" / "registry_report.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_midi.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_message_mapper.py",
-    PROJECT_ROOT / "rytm_randomizer" / "mock_mapper_report.py",
     PROJECT_ROOT / "rytm_randomizer" / "active_boundary.py",
-    PROJECT_ROOT / "rytm_randomizer" / "active_boundary_report.py",
+    PROJECT_ROOT / "rytm_randomizer" / "reports.py",
 )
 
 FORBIDDEN_SOURCE_TOKENS = (

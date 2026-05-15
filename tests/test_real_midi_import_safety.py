@@ -12,18 +12,16 @@ PASSIVE_AND_MOCK_MODULES = (
     "rytm_randomizer.cli",
     "rytm_randomizer.mock_midi",
     "rytm_randomizer.mock_message_mapper",
-    "rytm_randomizer.mock_mapper_report",
     "rytm_randomizer.active_boundary",
-    "rytm_randomizer.active_boundary_report",
+    "rytm_randomizer.reports",
 )
 
 SOURCE_FILES = (
     PROJECT_ROOT / "rytm_randomizer" / "cli.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_midi.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_message_mapper.py",
-    PROJECT_ROOT / "rytm_randomizer" / "mock_mapper_report.py",
     PROJECT_ROOT / "rytm_randomizer" / "active_boundary.py",
-    PROJECT_ROOT / "rytm_randomizer" / "active_boundary_report.py",
+    PROJECT_ROOT / "rytm_randomizer" / "reports.py",
 )
 
 FORBIDDEN_REAL_MIDI_TOKENS = (

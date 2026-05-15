@@ -27,8 +27,8 @@ def test_importing_alignment_report_dependencies_prints_nothing():
         [
             sys.executable,
             "-c",
-            "import rytm_randomizer.runtime_plan_report; "
-            "import rytm_randomizer.active_boundary_report",
+            "import rytm_randomizer.reports; "
+            "import rytm_randomizer.reports",
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,
@@ -42,8 +42,8 @@ def test_importing_alignment_report_dependencies_prints_nothing():
 
 
 def test_runtime_and_active_reports_align_on_profile_2_candidate():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -71,8 +71,8 @@ def test_runtime_and_active_reports_align_on_profile_2_candidate():
 
 
 def test_profile_3_remains_runtime_supported_but_active_boundary_unsupported():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -104,8 +104,8 @@ def test_profile_3_remains_runtime_supported_but_active_boundary_unsupported():
 
 
 def test_profile_4_remains_parked_in_both_report_surfaces():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -135,8 +135,8 @@ def test_profile_4_remains_parked_in_both_report_surfaces():
 
 
 def test_report_safety_boundaries_match_no_midi_no_ports_no_hardware():
-    from rytm_randomizer.active_boundary_report import build_active_boundary_report
-    from rytm_randomizer.runtime_plan_report import build_runtime_plan_report
+    from rytm_randomizer.reports import build_active_boundary_report
+    from rytm_randomizer.reports import build_runtime_plan_report
 
     runtime_report = build_runtime_plan_report()
     active_report = build_active_boundary_report()
@@ -167,19 +167,19 @@ def test_report_safety_boundaries_match_no_midi_no_ports_no_hardware():
 
 
 def test_alignment_imports_no_real_midi_libraries():
-    sys.modules.pop("rytm_randomizer.runtime_plan_report", None)
-    sys.modules.pop("rytm_randomizer.active_boundary_report", None)
+    sys.modules.pop("rytm_randomizer.reports", None)
+    sys.modules.pop("rytm_randomizer.reports", None)
 
-    importlib.import_module("rytm_randomizer.runtime_plan_report")
-    importlib.import_module("rytm_randomizer.active_boundary_report")
+    importlib.import_module("rytm_randomizer.reports")
+    importlib.import_module("rytm_randomizer.reports")
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
 
 
 def test_alignment_report_surfaces_do_not_evaluate_active_boundary_requests():
-    import rytm_randomizer.active_boundary_report as active_report
-    import rytm_randomizer.runtime_plan_report as runtime_report
+    import rytm_randomizer.reports as active_report
+    import rytm_randomizer.reports as runtime_report
 
     combined_source = "\n".join(
         (
@@ -204,8 +204,8 @@ def test_alignment_report_surfaces_do_not_evaluate_active_boundary_requests():
 
 
 def test_active_runtime_report_summaries_remain_consistent():
-    from rytm_randomizer.active_boundary_report import summarize_active_boundary_report
-    from rytm_randomizer.runtime_plan_report import summarize_runtime_plan_report
+    from rytm_randomizer.reports import summarize_active_boundary_report
+    from rytm_randomizer.reports import summarize_runtime_plan_report
 
     runtime_summary = summarize_runtime_plan_report()
     active_summary = summarize_active_boundary_report()

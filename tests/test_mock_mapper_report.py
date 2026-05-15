@@ -29,7 +29,7 @@ def run_cli(*args):
 
 def test_importing_mock_mapper_report_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.mock_mapper_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -42,7 +42,7 @@ def test_importing_mock_mapper_report_prints_nothing():
 
 
 def test_report_summarizes_supported_and_unsupported_profiles():
-    from rytm_randomizer.mock_mapper_report import build_mock_mapper_report
+    from rytm_randomizer.reports import build_mock_mapper_report
 
     report = build_mock_mapper_report()
 
@@ -76,7 +76,7 @@ def test_report_summarizes_supported_and_unsupported_profiles():
 
 
 def test_report_records_passive_mock_only_boundaries():
-    from rytm_randomizer.mock_mapper_report import build_mock_mapper_report
+    from rytm_randomizer.reports import build_mock_mapper_report
 
     report = build_mock_mapper_report()
 
@@ -91,7 +91,7 @@ def test_report_records_passive_mock_only_boundaries():
 
 
 def test_formatted_report_is_deterministic_and_human_readable():
-    from rytm_randomizer.mock_mapper_report import format_mock_mapper_report
+    from rytm_randomizer.reports import format_mock_mapper_report
 
     first = format_mock_mapper_report()
     second = format_mock_mapper_report()
@@ -119,7 +119,7 @@ def test_formatted_report_is_deterministic_and_human_readable():
 
 
 def test_report_summary_is_deterministic():
-    from rytm_randomizer.mock_mapper_report import summarize_mock_mapper_report
+    from rytm_randomizer.reports import summarize_mock_mapper_report
 
     assert summarize_mock_mapper_report() == {
         "title": "RytmRandomizer Mock Mapper Report",
@@ -133,7 +133,7 @@ def test_report_summary_is_deterministic():
 
 
 def test_returned_report_data_is_copied_and_mutation_safe():
-    from rytm_randomizer.mock_mapper_report import build_mock_mapper_report
+    from rytm_randomizer.reports import build_mock_mapper_report
 
     report = build_mock_mapper_report()
     report["supported_group_profiles"][0]["name"] = "MUTATED"
@@ -146,7 +146,7 @@ def test_returned_report_data_is_copied_and_mutation_safe():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.mock_mapper_report  # noqa: F401
+    import rytm_randomizer.reports  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -175,7 +175,7 @@ def test_profile_4_mapping_is_not_added():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.mock_mapper_report as report
+    import rytm_randomizer.reports as report
 
     module_text = "\n".join(
         [
@@ -191,7 +191,7 @@ def test_no_out_of_scope_support_is_exposed():
 
 
 def test_mock_mapper_report_exposes_no_active_behavior_names():
-    import rytm_randomizer.mock_mapper_report as report
+    import rytm_randomizer.reports as report
 
     exposed_names = set(dir(report))
 

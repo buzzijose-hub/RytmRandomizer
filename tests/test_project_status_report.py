@@ -127,14 +127,12 @@ def test_project_status_report_records_public_api_hardening_checkpoint():
 
     assert report["public_api_hardening"] == {
         "status": "checkpointed",
-        "module_count": 5,
+        "module_count": 3,
         "exports_documented": True,
         "modules": (
             "rytm_randomizer.active_boundary",
-            "rytm_randomizer.active_boundary_report",
+            "rytm_randomizer.reports",
             "rytm_randomizer.runtime_plan",
-            "rytm_randomizer.runtime_plan_report",
-            "rytm_randomizer.mock_runtime_active_bridge_report",
         ),
         "real_midi": "absent",
         "port_opening": "absent",
@@ -210,7 +208,7 @@ def test_project_status_summary_is_deterministic():
         "active_execution": "present_behind_arm_flag",
         "default_mode": "passive",
         "public_api_hardening": "checkpointed",
-        "public_api_module_count": 5,
+        "public_api_module_count": 3,
         "collaborator_review_intake": "checkpointed",
         "external_review_findings_received": False,
         "collaborator_review_triage_template": "accepted",
@@ -240,7 +238,7 @@ def test_project_status_summary_lines_are_deterministic():
         "- active_boundary_candidate: group_profile:2",
         "- mock_bridge_candidate: 2",
         "- public_api_hardening: checkpointed",
-        "- public_api_module_count: 5",
+        "- public_api_module_count: 3",
         "- collaborator_review_intake: checkpointed",
         "- external_review_findings_received: False",
         "- collaborator_review_triage_template: accepted",
@@ -446,14 +444,12 @@ def test_formatted_project_status_report_is_deterministic():
         "- emits_messages: False",
         "Public API Hardening:",
         "- status: checkpointed",
-        "- module_count: 5",
+        "- module_count: 3",
         "- exports_documented: True",
         (
             "- modules: rytm_randomizer.active_boundary, "
-            "rytm_randomizer.active_boundary_report, "
-            "rytm_randomizer.runtime_plan, "
-            "rytm_randomizer.runtime_plan_report, "
-            "rytm_randomizer.mock_runtime_active_bridge_report"
+            "rytm_randomizer.reports, "
+            "rytm_randomizer.runtime_plan"
         ),
         "- real_midi: absent",
         "- port_opening: absent",
@@ -541,7 +537,7 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert parsed["safety"]["real_midi"] == "present_behind_arm_flag"
     assert parsed["safety"]["default_mode"] == "passive"
     assert parsed["public_api_hardening"]["status"] == "checkpointed"
-    assert parsed["public_api_hardening"]["module_count"] == 5
+    assert parsed["public_api_hardening"]["module_count"] == 3
     assert parsed["public_api_hardening"]["exports_documented"] is True
     assert parsed["collaborator_review_intake"]["status"] == "checkpointed"
     assert parsed["collaborator_review_intake"]["findings_received"] is False

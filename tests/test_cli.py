@@ -775,6 +775,11 @@ def test_mock_runtime_active_bridge_report_command_does_not_load_bridge_or_mock_
 
 
 def test_importing_cli_does_not_load_behavior_report_modules():
+    # After WS-P the per-report shim modules were collapsed into the unified
+    # ``rytm_randomizer.reports`` module. Importing ``rytm_randomizer.cli``
+    # must still keep the consolidated reports module (and any
+    # report-adjacent behavior modules) out of ``sys.modules`` until a report
+    # subcommand actually triggers a lazy import.
     result = subprocess.run(
         [
             sys.executable,
@@ -782,8 +787,7 @@ def test_importing_cli_does_not_load_behavior_report_modules():
             (
                 "import sys\n"
                 "import rytm_randomizer.cli\n"
-                "assert 'rytm_randomizer.behavior_anchor_profile_report' not in sys.modules\n"
-                "assert 'rytm_randomizer.behavior_parity_coverage_report' not in sys.modules\n"
+                "assert 'rytm_randomizer.reports' not in sys.modules\n"
                 "assert 'rytm_randomizer.behavior_selected_isolated_pad' not in sys.modules\n"
                 "assert 'rytm_randomizer.selected_isolated_pad_runtime_state' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_midi' not in sys.modules\n"
@@ -803,6 +807,10 @@ def test_importing_cli_does_not_load_behavior_report_modules():
 
 
 def test_importing_cli_does_not_load_runtime_or_bridge_report_modules():
+    # After WS-P the runtime-plan and bridge report shim modules were
+    # collapsed into the unified ``rytm_randomizer.reports`` module. The
+    # lazy-load contract still applies: ``rytm_randomizer.reports`` must not
+    # appear in ``sys.modules`` from importing ``rytm_randomizer.cli`` alone.
     result = subprocess.run(
         [
             sys.executable,
@@ -810,9 +818,8 @@ def test_importing_cli_does_not_load_runtime_or_bridge_report_modules():
             (
                 "import sys\n"
                 "import rytm_randomizer.cli\n"
-                "assert 'rytm_randomizer.runtime_plan_report' not in sys.modules\n"
+                "assert 'rytm_randomizer.reports' not in sys.modules\n"
                 "assert 'rytm_randomizer.runtime_plan' not in sys.modules\n"
-                "assert 'rytm_randomizer.mock_runtime_active_bridge_report' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_runtime_active_bridge' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_midi' not in sys.modules\n"
                 "assert 'mido' not in sys.modules\n"

@@ -397,44 +397,42 @@ def main(argv=None):
         return 0
 
     if args == ["mock-mapper-report"]:
-        from .mock_mapper_report import format_mock_mapper_report
+        from .reports import format_mock_mapper_report
 
         sys.stdout.write("\n".join(format_mock_mapper_report()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["runtime-plan-report"]:
-        from .runtime_plan_report import format_runtime_plan_report
+        from .reports import format_runtime_plan_report
 
         sys.stdout.write("\n".join(format_runtime_plan_report()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["active-boundary-report"]:
-        from .active_boundary_report import format_active_boundary_report
+        from .reports import format_active_boundary_report
 
         sys.stdout.write("\n".join(format_active_boundary_report()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["mock-runtime-active-bridge-report"]:
-        from .mock_runtime_active_bridge_report import (
-            format_mock_runtime_active_bridge_report,
-        )
+        from .reports import format_mock_runtime_active_bridge_report
 
         sys.stdout.write("\n".join(format_mock_runtime_active_bridge_report()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["anchor-profile-report"]:
-        from .behavior_anchor_profile_report import format_anchor_profile_report
+        from .reports import format_anchor_profile_report
 
         sys.stdout.write("\n".join(format_anchor_profile_report()))
         sys.stdout.write("\n")
         return 0
 
     if args == ["behavior-parity-report"]:
-        from .behavior_parity_coverage_report import format_behavior_parity_coverage_report
+        from .reports import format_behavior_parity_coverage_report
 
         sys.stdout.write("\n".join(format_behavior_parity_coverage_report()))
         sys.stdout.write("\n")
