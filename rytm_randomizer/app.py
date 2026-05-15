@@ -1,22 +1,31 @@
 """Application entry point for the modular RytmRandomizer package.
 
-Flag behavior (settled owner decision -- WS-H convergence):
+Flag behavior (Wave 4 / WS-O convergence):
 
 * **No flag (default): passive menu only.** Prints the read-only inspection /
   preview menu. Opens no MIDI port, sends no MIDI, imports no real MIDI
   library. This is the safe landing state.
 * ``--arm``: **the interactive sender.** Constructs the concrete ``mido``-backed
-  real MIDI provider, selects a real output port, and enters the interactive
-  randomizer. At this wave the interactive *logic* still lives in the validated
-  monolith ``rytm_hybrid_randomizer_v134.py`` -- ``--arm`` delegates to its
-  ``main()``. Wave 4 moves that logic into the package.
-* ``--dry-run``: **full logic against the mock.** Runs the interactive logic
-  against :class:`rytm_randomizer.mock_midi.MockMidiSender`. No hardware, no
-  port opened, no real MIDI library imported.
+  real MIDI provider, selects a real output port, then runs the interactive
+  command loop owned by :mod:`rytm_randomizer.shell` against that port. The
+  package shell is the canonical interactive logic owner -- the V1.34 monolith
+  ``rytm_hybrid_randomizer_v134`` is kept on disk only as a frozen reference
+  for the byte-parity tests.
+* ``--dry-run``: **full logic against the mock.** Runs the same interactive
+  command loop against :class:`rytm_randomizer.mock_midi.MockMidiSender`. No
+  hardware, no port opened, no real MIDI library imported.
 
-This module is import-safe: importing it does not import ``mido`` or the
-monolith and does not open ports. Those happen lazily inside ``--arm`` /
-``--dry-run`` handling only.
+This module is import-safe: importing it does not import ``mido`` and does not
+open ports. Those happen lazily inside the ``--arm`` handler only. The
+``--dry-run`` handler imports the mock sender and the package shell only -- no
+real MIDI library.
+
+Test-seam compatibility: when a test pre-injects a fake
+``rytm_hybrid_randomizer_v134`` module into ``sys.modules`` and that fake
+module exposes ``main`` (for ``--arm``) or ``run_with_sender`` (for
+``--dry-run``), the app honors those hooks before falling back to the package
+shell. Production paths never pre-load the monolith, so the package shell is
+always what actually runs the interactive logic.
 """
 
 from __future__ import annotations
@@ -95,8 +104,31 @@ def _print_passive_menu() -> None:
     sys.stdout.write("\n")
 
 
+def _preloaded_monolith_hook(attribute: str):
+    """Return a pre-injected monolith hook, if a test fake is in ``sys.modules``.
+
+    The test suite injects a fake ``rytm_hybrid_randomizer_v134`` module into
+    ``sys.modules`` to exercise the wiring without booting the real V1.34
+    interactive loop. This helper returns the matching hook only when the
+    fake is *already loaded*; it never imports the monolith itself. In
+    production the monolith is not pre-loaded, so this returns ``None`` and
+    the package shell takes over.
+    """
+
+    monolith = sys.modules.get("rytm_hybrid_randomizer_v134")
+    if monolith is None:
+        return None
+    hook = getattr(monolith, attribute, None)
+    return hook if callable(hook) else None
+
+
 def _run_arm() -> int:
-    """Construct the real MIDI provider, select a port, run the monolith."""
+    """Construct the real MIDI provider, open a port, run the package shell.
+
+    A pre-injected fake monolith with a callable ``main`` is honored as a
+    test seam: if present, it is called instead of the package shell. The
+    real monolith is never imported here.
+    """
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -120,19 +152,71 @@ def _run_arm() -> int:
         f"Available output ports: {', '.join(output_names)}\n"
     )
 
-    import rytm_hybrid_randomizer_v134
+    fake_main = _preloaded_monolith_hook("main")
+    if fake_main is not None:
+        result = fake_main()
+        return result if isinstance(result, int) else 0
 
-    result = rytm_hybrid_randomizer_v134.main()
-    return result if isinstance(result, int) else 0
+    # Production path: open the real port via the mido provider, then run the
+    # package shell against it. The port lifecycle is owned here -- mirroring
+    # the monolith's ``with mido.open_output(port_name) as out:`` pattern, but
+    # routed through the validated ``real_midi_adapter`` boundary.
+    port_name = _choose_arm_port_name(output_names)
+    if port_name is None:
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    from .shell import build_shell
+
+    try:
+        shell = build_shell(port)
+        return shell.run()
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except Exception:  # pragma: no cover - best-effort port shutdown
+                pass
+
+
+def _choose_arm_port_name(output_names: Sequence[str]) -> str | None:
+    """Prompt the user for the Analog Rytm MIDI output, mirroring V1.34.
+
+    Returns ``None`` on invalid input or EOF/closed stdin so the caller can
+    return a clean exit code instead of crashing with a traceback.
+    """
+
+    sys.stdout.write("\nAvailable MIDI outputs:\n\n")
+    for index, name in enumerate(output_names):
+        sys.stdout.write(f"{index}: {name}\n")
+
+    try:
+        raw = input("\nChoose the Analog Rytm MIDI output number: ").strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write("--arm failed: no MIDI output choice provided.\n")
+        return None
+
+    try:
+        chosen_index = int(raw)
+        return output_names[chosen_index]
+    except (ValueError, IndexError):
+        sys.stderr.write("--arm failed: invalid MIDI output choice.\n")
+        return None
 
 
 def _run_dry_run() -> int:
     """Run the interactive randomizer logic against the in-memory mock.
 
-    No hardware is touched and no real MIDI library is imported. If a future
-    monolith (Wave 4+) exposes ``run_with_sender`` it is used with the mock
-    sender; the monolith is only imported in that case, since importing it
-    today would pull in ``mido`` at module load.
+    A pre-injected fake monolith with ``run_with_sender`` is honored as a
+    test seam. The real monolith is never imported here, and no real MIDI
+    library is loaded.
     """
 
     from .mock_midi import MockMidiSender
@@ -143,21 +227,25 @@ def _run_dry_run() -> int:
         "MockMidiSender (no hardware, no port opened).\n"
     )
 
-    monolith = sys.modules.get("rytm_hybrid_randomizer_v134")
-    runner = getattr(monolith, "run_with_sender", None) if monolith else None
-    if callable(runner):
-        result = runner(sender)
+    fake_runner = _preloaded_monolith_hook("run_with_sender")
+    if fake_runner is not None:
+        result = fake_runner(sender)
         return result if isinstance(result, int) else 0
 
-    # Wave 4 will move the interactive logic into the package and accept an
-    # injected sender. Until then the monolith owns the interactive loop and
-    # imports ``mido`` at load time, so the dry-run path deliberately does NOT
-    # import it: the mock sender is constructed and exercised hardware-free.
+    # Production path: run the package shell against the mock sender.
+    from .shell import build_shell
+
+    shell = build_shell(sender)
+    try:
+        exit_code = shell.run()
+    except (EOFError, KeyboardInterrupt):
+        exit_code = 0
+
     sys.stdout.write(
         f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
         "message(s).\n"
     )
-    return 0
+    return exit_code
 
 
 def main(argv: Sequence[str] | None = None) -> int:
