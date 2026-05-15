@@ -23,6 +23,15 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 
+# BeeWare briefcase native-installer build artifacts. See
+# docs/BUILDING_INSTALLERS.md. `build/` is the per-OS scaffold tree
+# briefcase populates during `briefcase create`; `dist/` is where the
+# packaged .msi / .pkg / AppImage land. `logs/` is briefcase's per-run
+# log directory.
+build/
+dist/
+logs/
+
 # OS/editor
 .DS_Store
 Thumbs.db
