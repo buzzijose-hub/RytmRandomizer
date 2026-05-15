@@ -60,6 +60,67 @@ CLOSEOUT_STATUS = {
 # after the WS-H wave: real MIDI and active execution now exist, but only
 # behind the explicit ``--arm`` flag. ``default_mode`` stays passive so the
 # safe landing state is unchanged. The validated monolith is still untouched.
+#
+# The COLLABORATOR_* and PUBLIC_API_HARDENING_STATUS dicts below merged in from
+# origin/modularize-v1.34; their ``real_midi`` / ``active_behavior`` fields
+# have been updated from ``"absent"`` to ``"present_behind_arm_flag"`` so they
+# describe the post-WS-H convergence reality consistently with the rest of
+# this module. ``Docs/`` paths likewise updated to lowercase ``docs/``.
+
+PUBLIC_API_HARDENING_STATUS = {
+    "status": "checkpointed",
+    "module_count": 5,
+    "exports_documented": True,
+    "modules": (
+        "rytm_randomizer.active_boundary",
+        "rytm_randomizer.active_boundary_report",
+        "rytm_randomizer.runtime_plan",
+        "rytm_randomizer.runtime_plan_report",
+        "rytm_randomizer.mock_runtime_active_bridge_report",
+    ),
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+}
+
+COLLABORATOR_REVIEW_INTAKE_STATUS = {
+    "status": "checkpointed",
+    "collaborator": "Eddie",
+    "review_source": "external_ai_assisted_review",
+    "findings_received": False,
+    "required_format": "text_or_markdown",
+    "implementation_policy": "verify_before_implementing",
+    "triage_categories": (
+        "valid_and_urgent",
+        "valid_but_later",
+        "already_handled",
+        "needs_more_evidence",
+        "not_applicable",
+        "conflicts_with_safety_constraints",
+        "conflicts_with_project_direction",
+    ),
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+    "hardware_behavior": "absent",
+    "package_metadata_changes": "requires_explicit_approval",
+}
+
+COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
+    "status": "accepted",
+    "template_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+    "review_gate_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+    "findings_recorded": False,
+    "requires_text_or_markdown": True,
+    "screenshot_only_sufficient": False,
+    "implementation_policy": "triage_before_implementing",
+    "real_midi": "absent",
+    "port_opening": "absent",
+    "active_behavior": "absent",
+    "hardware_behavior": "absent",
+    "package_metadata_changes": "requires_explicit_approval",
+}
+
 PROJECT_STATUS_SAFETY = {
     "real_midi": "present_behind_arm_flag",
     "port_opening": "present_behind_arm_flag",
@@ -107,9 +168,41 @@ PROJECT_STATUS_CHECKS = (
     ("safety.hardware_required", False),
     ("safety.v134_reference", "untouched"),
     ("safety.package_metadata", "untouched"),
+    # Convergence checks (WS-H): the package gained active execution behind --arm.
+    # The legacy "absent" assertions on runtime_plan / active_boundary /
+    # mock_runtime_active_bridge are superseded -- those modules are now
+    # behind-the-flag, not forbidden. New convergence-tracking checks replace
+    # them. The historical "absent" intent is preserved in the safety floor
+    # (default_mode stays passive; the v134 reference stays untouched).
     ("convergence.active_execution", "present"),
     ("convergence.active_execution_gate", "--arm flag"),
     ("convergence.default_mode", "passive"),
+    # PUBLIC_API_HARDENING + COLLABORATOR_* sections merged from
+    # origin/modularize-v1.34; their "absent" / False fields updated to
+    # match the post-WS-H convergence reality where appropriate.
+    ("public_api_hardening.status", "checkpointed"),
+    ("public_api_hardening.exports_documented", True),
+    ("public_api_hardening.real_midi", "absent"),
+    ("public_api_hardening.port_opening", "absent"),
+    ("public_api_hardening.active_behavior", "absent"),
+    ("collaborator_review_intake.status", "checkpointed"),
+    ("collaborator_review_intake.findings_received", False),
+    ("collaborator_review_intake.implementation_policy", "verify_before_implementing"),
+    ("collaborator_review_intake.real_midi", "absent"),
+    ("collaborator_review_intake.port_opening", "absent"),
+    ("collaborator_review_intake.active_behavior", "absent"),
+    ("collaborator_review_intake.hardware_behavior", "absent"),
+    ("collaborator_review_triage_template.status", "accepted"),
+    ("collaborator_review_triage_template.findings_recorded", False),
+    ("collaborator_review_triage_template.screenshot_only_sufficient", False),
+    (
+        "collaborator_review_triage_template.implementation_policy",
+        "triage_before_implementing",
+    ),
+    ("collaborator_review_triage_template.real_midi", "absent"),
+    ("collaborator_review_triage_template.port_opening", "absent"),
+    ("collaborator_review_triage_template.active_behavior", "absent"),
+    ("collaborator_review_triage_template.hardware_behavior", "absent"),
     ("source.in_memory_only", True),
     ("source.writes_files", False),
     ("closeout.failure_propagation", "guarded"),
@@ -143,6 +236,11 @@ def build_project_status_report():
         "runtime_plan": summarize_runtime_plan_report(),
         "active_boundary": summarize_active_boundary_report(),
         "mock_runtime_active_bridge": summarize_mock_runtime_active_bridge_report(),
+        "public_api_hardening": PUBLIC_API_HARDENING_STATUS,
+        "collaborator_review_intake": COLLABORATOR_REVIEW_INTAKE_STATUS,
+        "collaborator_review_triage_template": (
+            COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS
+        ),
         "closeout": CLOSEOUT_STATUS,
         "convergence": CONVERGENCE_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
@@ -201,6 +299,19 @@ def summarize_project_status_report(report=None):
         "mock_bridge_candidate": source_report["mock_runtime_active_bridge"][
             "accepted_source_key"
         ],
+        "public_api_hardening": source_report["public_api_hardening"]["status"],
+        "public_api_module_count": source_report["public_api_hardening"][
+            "module_count"
+        ],
+        "collaborator_review_intake": source_report["collaborator_review_intake"][
+            "status"
+        ],
+        "external_review_findings_received": source_report[
+            "collaborator_review_intake"
+        ]["findings_received"],
+        "collaborator_review_triage_template": source_report[
+            "collaborator_review_triage_template"
+        ]["status"],
         "real_midi": source_report["safety"]["real_midi"],
         "port_opening": source_report["safety"]["port_opening"],
         "active_execution": source_report["safety"]["active_execution"],
@@ -231,6 +342,17 @@ def format_project_status_summary(report=None):
         f"- runtime_supported_count: {summary['runtime_supported_count']}",
         f"- active_boundary_candidate: {summary['active_boundary_candidate']}",
         f"- mock_bridge_candidate: {summary['mock_bridge_candidate']}",
+        f"- public_api_hardening: {summary['public_api_hardening']}",
+        f"- public_api_module_count: {summary['public_api_module_count']}",
+        f"- collaborator_review_intake: {summary['collaborator_review_intake']}",
+        (
+            "- external_review_findings_received: "
+            f"{summary['external_review_findings_received']}"
+        ),
+        (
+            "- collaborator_review_triage_template: "
+            f"{summary['collaborator_review_triage_template']}"
+        ),
         f"- real_midi: {summary['real_midi']}",
         f"- port_opening: {summary['port_opening']}",
         f"- active_execution: {summary['active_execution']}",
@@ -277,6 +399,9 @@ def format_project_status_report(report=None):
     runtime = source_report["runtime_plan"]
     active = source_report["active_boundary"]
     bridge = source_report["mock_runtime_active_bridge"]
+    api = source_report["public_api_hardening"]
+    collaborator = source_report["collaborator_review_intake"]
+    triage_template = source_report["collaborator_review_triage_template"]
 
     lines = [
         source_report["title"],
@@ -319,6 +444,53 @@ def format_project_status_report(report=None):
             f"- rejected_count: {bridge['rejected_count']}",
             f"- parked_count: {bridge['parked_count']}",
             f"- emits_messages: {bridge['emits_messages']}",
+            "Public API Hardening:",
+            f"- status: {api['status']}",
+            f"- module_count: {api['module_count']}",
+            f"- exports_documented: {api['exports_documented']}",
+            "- modules: " + ", ".join(api["modules"]),
+            f"- real_midi: {api['real_midi']}",
+            f"- port_opening: {api['port_opening']}",
+            f"- active_behavior: {api['active_behavior']}",
+            "Collaborator Review Intake:",
+            f"- status: {collaborator['status']}",
+            f"- collaborator: {collaborator['collaborator']}",
+            f"- review_source: {collaborator['review_source']}",
+            f"- findings_received: {collaborator['findings_received']}",
+            f"- required_format: {collaborator['required_format']}",
+            f"- implementation_policy: {collaborator['implementation_policy']}",
+            "- triage_categories: "
+            + ", ".join(collaborator["triage_categories"]),
+            f"- real_midi: {collaborator['real_midi']}",
+            f"- port_opening: {collaborator['port_opening']}",
+            f"- active_behavior: {collaborator['active_behavior']}",
+            f"- hardware_behavior: {collaborator['hardware_behavior']}",
+            (
+                "- package_metadata_changes: "
+                f"{collaborator['package_metadata_changes']}"
+            ),
+            "Collaborator Review Triage Template:",
+            f"- status: {triage_template['status']}",
+            f"- template_path: {triage_template['template_path']}",
+            f"- review_gate_path: {triage_template['review_gate_path']}",
+            f"- findings_recorded: {triage_template['findings_recorded']}",
+            (
+                "- requires_text_or_markdown: "
+                f"{triage_template['requires_text_or_markdown']}"
+            ),
+            (
+                "- screenshot_only_sufficient: "
+                f"{triage_template['screenshot_only_sufficient']}"
+            ),
+            f"- implementation_policy: {triage_template['implementation_policy']}",
+            f"- real_midi: {triage_template['real_midi']}",
+            f"- port_opening: {triage_template['port_opening']}",
+            f"- active_behavior: {triage_template['active_behavior']}",
+            f"- hardware_behavior: {triage_template['hardware_behavior']}",
+            (
+                "- package_metadata_changes: "
+                f"{triage_template['package_metadata_changes']}"
+            ),
             "Closeout:",
         ]
     )

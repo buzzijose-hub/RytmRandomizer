@@ -349,6 +349,25 @@ def test_runtime_plan_is_not_cli_execution_wiring():
     assert "MidiPortProvider" not in exposed_names
 
 
+def test_runtime_plan_exposes_explicit_public_api():
+    runtime_plan = importlib.import_module("rytm_randomizer.runtime_plan")
+
+    assert runtime_plan.__all__ == [
+        "MockRuntimeProvider",
+        "REASON_EXECUTION_NOT_IMPLEMENTED",
+        "REASON_MISSING_ARMING",
+        "REASON_PROFILE_4_PARKED",
+        "REASON_UNSUPPORTED_KEY",
+        "REASON_UNSUPPORTED_SOURCE_KIND",
+        "RuntimeIntent",
+        "RuntimePlanPreview",
+        "RuntimeSafetyEnvelope",
+        "SUPPORTED_GROUP_PROFILE_KEYS",
+        "create_blocked_runtime_preview",
+        "validate_runtime_intent_scope",
+    ]
+
+
 if __name__ == "__main__":
     test_importing_runtime_plan_prints_nothing()
     test_runtime_safety_envelope_defaults_are_inert()
@@ -368,3 +387,4 @@ if __name__ == "__main__":
     test_mock_runtime_provider_records_in_memory_only()
     test_runtime_plan_does_not_import_real_midi_libraries()
     test_runtime_plan_is_not_cli_execution_wiring()
+    test_runtime_plan_exposes_explicit_public_api()

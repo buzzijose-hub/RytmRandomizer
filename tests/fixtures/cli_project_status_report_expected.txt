@@ -45,6 +45,40 @@ Mock Runtime Active Bridge:
 - rejected_count: 7
 - parked_count: 1
 - emits_messages: False
+Public API Hardening:
+- status: checkpointed
+- module_count: 5
+- exports_documented: True
+- modules: rytm_randomizer.active_boundary, rytm_randomizer.active_boundary_report, rytm_randomizer.runtime_plan, rytm_randomizer.runtime_plan_report, rytm_randomizer.mock_runtime_active_bridge_report
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+Collaborator Review Intake:
+- status: checkpointed
+- collaborator: Eddie
+- review_source: external_ai_assisted_review
+- findings_received: False
+- required_format: text_or_markdown
+- implementation_policy: verify_before_implementing
+- triage_categories: valid_and_urgent, valid_but_later, already_handled, needs_more_evidence, not_applicable, conflicts_with_safety_constraints, conflicts_with_project_direction
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
+- package_metadata_changes: requires_explicit_approval
+Collaborator Review Triage Template:
+- status: accepted
+- template_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md
+- review_gate_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md
+- findings_recorded: False
+- requires_text_or_markdown: True
+- screenshot_only_sufficient: False
+- implementation_policy: triage_before_implementing
+- real_midi: absent
+- port_opening: absent
+- active_behavior: absent
+- hardware_behavior: absent
+- package_metadata_changes: requires_explicit_approval
 Closeout:
 - closeout_contract: present
 - failure_propagation: guarded

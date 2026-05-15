@@ -120,6 +120,78 @@ def test_project_status_report_tracks_convergence_behind_arm_flag():
     }
 
 
+def test_project_status_report_records_public_api_hardening_checkpoint():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["public_api_hardening"] == {
+        "status": "checkpointed",
+        "module_count": 5,
+        "exports_documented": True,
+        "modules": (
+            "rytm_randomizer.active_boundary",
+            "rytm_randomizer.active_boundary_report",
+            "rytm_randomizer.runtime_plan",
+            "rytm_randomizer.runtime_plan_report",
+            "rytm_randomizer.mock_runtime_active_bridge_report",
+        ),
+        "real_midi": "absent",
+        "port_opening": "absent",
+        "active_behavior": "absent",
+    }
+
+
+def test_project_status_report_records_collaborator_review_intake_checkpoint():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["collaborator_review_intake"] == {
+        "status": "checkpointed",
+        "collaborator": "Eddie",
+        "review_source": "external_ai_assisted_review",
+        "findings_received": False,
+        "required_format": "text_or_markdown",
+        "implementation_policy": "verify_before_implementing",
+        "triage_categories": (
+            "valid_and_urgent",
+            "valid_but_later",
+            "already_handled",
+            "needs_more_evidence",
+            "not_applicable",
+            "conflicts_with_safety_constraints",
+            "conflicts_with_project_direction",
+        ),
+        "real_midi": "absent",
+        "port_opening": "absent",
+        "active_behavior": "absent",
+        "hardware_behavior": "absent",
+        "package_metadata_changes": "requires_explicit_approval",
+    }
+
+
+def test_project_status_report_records_collaborator_review_triage_template():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["collaborator_review_triage_template"] == {
+        "status": "accepted",
+        "template_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+        "review_gate_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+        "findings_recorded": False,
+        "requires_text_or_markdown": True,
+        "screenshot_only_sufficient": False,
+        "implementation_policy": "triage_before_implementing",
+        "real_midi": "absent",
+        "port_opening": "absent",
+        "active_behavior": "absent",
+        "hardware_behavior": "absent",
+        "package_metadata_changes": "requires_explicit_approval",
+    }
+
+
 def test_project_status_summary_is_deterministic():
     from rytm_randomizer.project_status_report import summarize_project_status_report
 
@@ -137,6 +209,11 @@ def test_project_status_summary_is_deterministic():
         "port_opening": "present_behind_arm_flag",
         "active_execution": "present_behind_arm_flag",
         "default_mode": "passive",
+        "public_api_hardening": "checkpointed",
+        "public_api_module_count": 5,
+        "collaborator_review_intake": "checkpointed",
+        "external_review_findings_received": False,
+        "collaborator_review_triage_template": "accepted",
         "hardware_required": False,
         "v134_reference": "untouched",
         "active_execution_gate": "--arm flag",
@@ -162,6 +239,11 @@ def test_project_status_summary_lines_are_deterministic():
         "- runtime_supported_count: 2",
         "- active_boundary_candidate: group_profile:2",
         "- mock_bridge_candidate: 2",
+        "- public_api_hardening: checkpointed",
+        "- public_api_module_count: 5",
+        "- collaborator_review_intake: checkpointed",
+        "- external_review_findings_received: False",
+        "- collaborator_review_triage_template: accepted",
         "- real_midi: present_behind_arm_flag",
         "- port_opening: present_behind_arm_flag",
         "- active_execution: present_behind_arm_flag",
@@ -197,6 +279,30 @@ def test_project_status_check_passes_for_current_report():
             "convergence.active_execution": "present",
             "convergence.active_execution_gate": "--arm flag",
             "convergence.default_mode": "passive",
+            "public_api_hardening.status": "checkpointed",
+            "public_api_hardening.exports_documented": True,
+            "public_api_hardening.real_midi": "absent",
+            "public_api_hardening.port_opening": "absent",
+            "public_api_hardening.active_behavior": "absent",
+            "collaborator_review_intake.status": "checkpointed",
+            "collaborator_review_intake.findings_received": False,
+            "collaborator_review_intake.implementation_policy": (
+                "verify_before_implementing"
+            ),
+            "collaborator_review_intake.real_midi": "absent",
+            "collaborator_review_intake.port_opening": "absent",
+            "collaborator_review_intake.active_behavior": "absent",
+            "collaborator_review_intake.hardware_behavior": "absent",
+            "collaborator_review_triage_template.status": "accepted",
+            "collaborator_review_triage_template.findings_recorded": False,
+            "collaborator_review_triage_template.screenshot_only_sufficient": False,
+            "collaborator_review_triage_template.implementation_policy": (
+                "triage_before_implementing"
+            ),
+            "collaborator_review_triage_template.real_midi": "absent",
+            "collaborator_review_triage_template.port_opening": "absent",
+            "collaborator_review_triage_template.active_behavior": "absent",
+            "collaborator_review_triage_template.hardware_behavior": "absent",
             "source.in_memory_only": True,
             "source.writes_files": False,
             "closeout.failure_propagation": "guarded",
@@ -257,6 +363,26 @@ def test_project_status_check_lines_are_deterministic():
         "- convergence.active_execution: present",
         "- convergence.active_execution_gate: --arm flag",
         "- convergence.default_mode: passive",
+        "- public_api_hardening.status: checkpointed",
+        "- public_api_hardening.exports_documented: True",
+        "- public_api_hardening.real_midi: absent",
+        "- public_api_hardening.port_opening: absent",
+        "- public_api_hardening.active_behavior: absent",
+        "- collaborator_review_intake.status: checkpointed",
+        "- collaborator_review_intake.findings_received: False",
+        "- collaborator_review_intake.implementation_policy: verify_before_implementing",
+        "- collaborator_review_intake.real_midi: absent",
+        "- collaborator_review_intake.port_opening: absent",
+        "- collaborator_review_intake.active_behavior: absent",
+        "- collaborator_review_intake.hardware_behavior: absent",
+        "- collaborator_review_triage_template.status: accepted",
+        "- collaborator_review_triage_template.findings_recorded: False",
+        "- collaborator_review_triage_template.screenshot_only_sufficient: False",
+        "- collaborator_review_triage_template.implementation_policy: triage_before_implementing",
+        "- collaborator_review_triage_template.real_midi: absent",
+        "- collaborator_review_triage_template.port_opening: absent",
+        "- collaborator_review_triage_template.active_behavior: absent",
+        "- collaborator_review_triage_template.hardware_behavior: absent",
         "- source.in_memory_only: True",
         "- source.writes_files: False",
         "- closeout.failure_propagation: guarded",
@@ -318,6 +444,50 @@ def test_formatted_project_status_report_is_deterministic():
         "- rejected_count: 7",
         "- parked_count: 1",
         "- emits_messages: False",
+        "Public API Hardening:",
+        "- status: checkpointed",
+        "- module_count: 5",
+        "- exports_documented: True",
+        (
+            "- modules: rytm_randomizer.active_boundary, "
+            "rytm_randomizer.active_boundary_report, "
+            "rytm_randomizer.runtime_plan, "
+            "rytm_randomizer.runtime_plan_report, "
+            "rytm_randomizer.mock_runtime_active_bridge_report"
+        ),
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_behavior: absent",
+        "Collaborator Review Intake:",
+        "- status: checkpointed",
+        "- collaborator: Eddie",
+        "- review_source: external_ai_assisted_review",
+        "- findings_received: False",
+        "- required_format: text_or_markdown",
+        "- implementation_policy: verify_before_implementing",
+        (
+            "- triage_categories: valid_and_urgent, valid_but_later, "
+            "already_handled, needs_more_evidence, not_applicable, "
+            "conflicts_with_safety_constraints, conflicts_with_project_direction"
+        ),
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_behavior: absent",
+        "- hardware_behavior: absent",
+        "- package_metadata_changes: requires_explicit_approval",
+        "Collaborator Review Triage Template:",
+        "- status: accepted",
+        "- template_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+        "- review_gate_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+        "- findings_recorded: False",
+        "- requires_text_or_markdown: True",
+        "- screenshot_only_sufficient: False",
+        "- implementation_policy: triage_before_implementing",
+        "- real_midi: absent",
+        "- port_opening: absent",
+        "- active_behavior: absent",
+        "- hardware_behavior: absent",
+        "- package_metadata_changes: requires_explicit_approval",
         "Closeout:",
         "- closeout_contract: present",
         "- failure_propagation: guarded",
@@ -370,6 +540,13 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert parsed["mock_runtime_active_bridge"]["emits_messages"] is False
     assert parsed["safety"]["real_midi"] == "present_behind_arm_flag"
     assert parsed["safety"]["default_mode"] == "passive"
+    assert parsed["public_api_hardening"]["status"] == "checkpointed"
+    assert parsed["public_api_hardening"]["module_count"] == 5
+    assert parsed["public_api_hardening"]["exports_documented"] is True
+    assert parsed["collaborator_review_intake"]["status"] == "checkpointed"
+    assert parsed["collaborator_review_intake"]["findings_received"] is False
+    assert parsed["collaborator_review_triage_template"]["status"] == "accepted"
+    assert parsed["collaborator_review_triage_template"]["findings_recorded"] is False
     assert parsed["safety"]["hardware_required"] is False
     assert parsed["convergence"]["active_execution"] == "present"
     assert parsed["convergence"]["active_execution_gate"] == "--arm flag"
@@ -385,6 +562,9 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     report["phase"]["name"] = "MUTATED"
     report["behavior_parity"]["accepted_packet_count"] = 0
     report["passive_cli_commands"] = ()
+    report["public_api_hardening"]["status"] = "MUTATED"
+    report["collaborator_review_intake"]["status"] = "MUTATED"
+    report["collaborator_review_triage_template"]["status"] = "MUTATED"
 
     fresh_report = build_project_status_report()
 
@@ -394,6 +574,9 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     )
     assert fresh_report["behavior_parity"]["accepted_packet_count"] == 12
     assert "project-status-report" in fresh_report["passive_cli_commands"]
+    assert fresh_report["public_api_hardening"]["status"] == "checkpointed"
+    assert fresh_report["collaborator_review_intake"]["status"] == "checkpointed"
+    assert fresh_report["collaborator_review_triage_template"]["status"] == "accepted"
 
 
 def test_project_status_report_imports_no_real_midi_libraries():
@@ -422,6 +605,9 @@ if __name__ == "__main__":
     test_project_status_report_summarizes_current_project_state()
     test_project_status_report_records_passive_cli_visibility()
     test_project_status_report_tracks_convergence_behind_arm_flag()
+    test_project_status_report_records_public_api_hardening_checkpoint()
+    test_project_status_report_records_collaborator_review_intake_checkpoint()
+    test_project_status_report_records_collaborator_review_triage_template()
     test_project_status_summary_is_deterministic()
     test_project_status_summary_lines_are_deterministic()
     test_project_status_check_passes_for_current_report()
