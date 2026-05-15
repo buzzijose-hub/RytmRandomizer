@@ -20,6 +20,7 @@ dev = [
     "pytest-cov>=5,<7",
     "pytest-timeout>=2,<3",
     "pytest-sugar>=1,<2",
+    "pytest-xdist>=3,<4",
 ]
 
 [project.scripts]
@@ -37,9 +38,18 @@ timeout = 180
 timeout_method = "thread"
 # Progress visibility: pytest-sugar activates automatically and shows a live
 # progress bar with running pass/fail counts and a % indicator -- so it is
-# always clear how far along a run is (the suite is ~15-25 min; silence is not
-# a hang). For non-interactive logs where the bar renders poorly, run with
-# `-p no:sugar -v` to get a clean line-per-test `[ NN%]` instead.
+# always clear how far along a run is. For non-interactive logs where the bar
+# renders poorly, run with `-p no:sugar -v` to get a clean `[ NN%]` instead.
+# Default flags applied to every pytest invocation:
+#   -n auto        : pytest-xdist parallelizes tests across CPU cores. The
+#                    parity warm-workers each get their own pytest worker, so
+#                    they all run concurrently. Override with `-n 0` for
+#                    single-process debugging.
+#   --durations=20 : after every run, print the 20 slowest tests with their
+#                    elapsed times. Per-test timing visibility is on by
+#                    default -- so future work on test speed has measured
+#                    targets, not guesses.
+addopts = "-n auto --durations=20"
 
 # WS-I fills these
 [tool.coverage.run]
