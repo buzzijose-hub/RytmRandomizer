@@ -51,6 +51,10 @@ from .data import (
     INTENSITY_PLANS,
     PROFILES,
 )
+from .observability.logging import get_logger
+from .observability.tracing import operation
+
+_logger = get_logger(__name__)
 
 __all__ = ["GroupRunner", "default_group_layout"]
 
@@ -538,58 +542,27 @@ class GroupRunner:
         zone_override: str | None = None,
         depth_override: str | None = None,
     ) -> None:
-        """Mirror the monolith ``mutate_group``: balanced four-lane mutation."""
+        """Mirror the monolith ``mutate_group``: balanced four-lane mutation.
 
-        self.ensure_group_anchors_loaded("4-pad group mutation")
+        Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
+        span so a ``--debug`` run logs entry / exit / elapsed time for the
+        whole four-pad mutation alongside the V1.34-parity stdout banner.
+        Stdout output is unchanged; the log goes to stderr.
+        """
 
-        print("\n4-pad group mutation:")
+        with operation(
+            "mutate_group",
+            zone_override=zone_override,
+            depth_override=depth_override,
+        ):
+            self.ensure_group_anchors_loaded("4-pad group mutation")
 
-        for pad, cfg in self.group_layout.items():
-            zone_name = zone_override if zone_override else cfg["zone"]
-            depth_name = depth_override if depth_override else cfg["depth"]
+            print("\n4-pad group mutation:")
 
-            if zone_name not in PROFILES[cfg["profile"]]["zones"]:
-                print(
-                    f"\nPad {pad}: zone {zone_name} not available for this "
-                    "profile. Skipping."
-                )
-                continue
+            for pad, cfg in self.group_layout.items():
+                zone_name = zone_override if zone_override else cfg["zone"]
+                depth_name = depth_override if depth_override else cfg["depth"]
 
-            self.mutate_group_pad(pad, cfg, zone_name, depth_name)
-
-        print("\n4-pad group mutation complete.")
-
-    def mutate_group_intensity(self, intensity_name: str) -> None:
-        """Mirror the monolith ``mutate_group_intensity``: plan-driven mutation."""
-
-        self.ensure_group_anchors_loaded(f"4-pad {intensity_name} mutation")
-
-        if intensity_name not in INTENSITY_PLANS:
-            print(f"\nUnknown intensity plan: {intensity_name}")
-            return
-
-        labels = {
-            "balanced": "BALANCED / FOUR-LANE",
-            "deeper": "DEEPER / FOUR-LANE",
-            "intense": "INTENSE / CONTROLLED CHAOS",
-            "harder": "HARDER / WILD DISCOVERY",
-        }
-
-        print(
-            f"\n4-pad {labels.get(intensity_name, intensity_name.upper())} "
-            "mutation - V1.34:"
-        )
-        print("  Pad 1 = protected kick foundation")
-        print("  Pad 2 = secondary percussion movement")
-        print("  Pad 3 = SY Raw bass/synth-percussion motion")
-        print("  Pad 4 = body/accent pressure")
-
-        plan = INTENSITY_PLANS[intensity_name]
-
-        for pad, actions in plan.items():
-            cfg = self.group_layout[pad]
-
-            for zone_name, depth_name in actions:
                 if zone_name not in PROFILES[cfg["profile"]]["zones"]:
                     print(
                         f"\nPad {pad}: zone {zone_name} not available for this "
@@ -599,10 +572,58 @@ class GroupRunner:
 
                 self.mutate_group_pad(pad, cfg, zone_name, depth_name)
 
-        print(
-            f"\n4-pad {labels.get(intensity_name, intensity_name.upper())} "
-            "mutation complete."
-        )
+            print("\n4-pad group mutation complete.")
+
+    def mutate_group_intensity(self, intensity_name: str) -> None:
+        """Mirror the monolith ``mutate_group_intensity``: plan-driven mutation.
+
+        Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
+        span keyed on the intensity name so a ``--debug`` log records exactly
+        which plan was run and how long it took.
+        """
+
+        with operation("mutate_group_intensity", intensity_name=intensity_name):
+            self.ensure_group_anchors_loaded(f"4-pad {intensity_name} mutation")
+
+            if intensity_name not in INTENSITY_PLANS:
+                print(f"\nUnknown intensity plan: {intensity_name}")
+                return
+
+            labels = {
+                "balanced": "BALANCED / FOUR-LANE",
+                "deeper": "DEEPER / FOUR-LANE",
+                "intense": "INTENSE / CONTROLLED CHAOS",
+                "harder": "HARDER / WILD DISCOVERY",
+            }
+
+            print(
+                f"\n4-pad {labels.get(intensity_name, intensity_name.upper())} "
+                "mutation - V1.34:"
+            )
+            print("  Pad 1 = protected kick foundation")
+            print("  Pad 2 = secondary percussion movement")
+            print("  Pad 3 = SY Raw bass/synth-percussion motion")
+            print("  Pad 4 = body/accent pressure")
+
+            plan = INTENSITY_PLANS[intensity_name]
+
+            for pad, actions in plan.items():
+                cfg = self.group_layout[pad]
+
+                for zone_name, depth_name in actions:
+                    if zone_name not in PROFILES[cfg["profile"]]["zones"]:
+                        print(
+                            f"\nPad {pad}: zone {zone_name} not available for this "
+                            "profile. Skipping."
+                        )
+                        continue
+
+                    self.mutate_group_pad(pad, cfg, zone_name, depth_name)
+
+            print(
+                f"\n4-pad {labels.get(intensity_name, intensity_name.upper())} "
+                "mutation complete."
+            )
 
     def mutate_group_with_depth(self, zone_name: str) -> None:
         """Mirror the monolith ``mutate_group_with_depth`` legacy fallback."""

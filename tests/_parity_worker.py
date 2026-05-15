@@ -205,9 +205,19 @@ class ParityWorker:
         to the per-call version. On a dead/hung/garbled worker a
         :class:`ParityWorkerError` (also an ``AssertionError``) is raised with
         the worker's stderr so the test fails loudly instead of hanging.
+
+        Wrapped in a :func:`~rytm_randomizer.observability.tracing.operation`
+        span at DEBUG so a developer running pytest with
+        ``RYTM_DEBUG_LOG=1`` (which hooks the package logger -- see
+        ``docs/OBSERVABILITY.md``) gets a per-request timing breadcrumb
+        without altering the bytewise parity assertions inside the worker.
         """
 
-        with self._lock:
+        # Lazy import to keep this module independent of package import order
+        # in fresh interpreters that probe ``_parity_worker.py`` directly.
+        from rytm_randomizer.observability.tracing import operation as _operation
+
+        with self._lock, _operation("parity_round_trip"):
             proc = self._ensure_started()
 
             # Worker already dead before we even wrote? Surface its stderr.

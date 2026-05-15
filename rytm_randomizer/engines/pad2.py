@@ -37,8 +37,12 @@ from ..data import (
     PAD2_PROFILE_LABELS,
     PROFILES,
 )
+from ..observability.logging import get_logger
+from ..observability.tracing import trace
 
 __all__ = ["Pad2Engine"]
+
+_logger = get_logger(__name__)
 
 # A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
 Sender = Any
@@ -202,6 +206,7 @@ class Pad2Engine:
     # PAD 2 PROFILE LOAD / TOOLS - V1.26 / V1.34
     # ==================================================================
 
+    @trace("pad2.load_pad2_profile")
     def load_pad2_profile(self, profile_key: str) -> None:
         if profile_key not in PROFILES:
             print(f"\nUnknown Pad 2 profile key: {profile_key}")
@@ -293,6 +298,7 @@ class Pad2Engine:
     # PAD 2 CURRENT-PROFILE MUTATION + DISCOVERY - V1.26
     # ==================================================================
 
+    @trace("pad2.mutate_current_pad2_profile")
     def mutate_current_pad2_profile(
         self, zone_name: str, depth_name: str, label: str
     ) -> None:
@@ -362,6 +368,7 @@ class Pad2Engine:
             f"[kept at/above anchor {anchor_od}]"
         )
 
+    @trace("pad2.rotate_pad2_profile")
     def rotate_pad2_profile(self) -> None:
         current_key = self.pad2_current_profile_key
         if current_key not in PAD2_PROFILE_KEYS:
@@ -390,6 +397,7 @@ class Pad2Engine:
 
         self.load_pad2_profile(next_key)
 
+    @trace("pad2.mutate_current_pad2_rotation_profile")
     def mutate_current_pad2_rotation_profile(self) -> None:
         if self.pad2_current_profile_key not in PROFILES:
             print(

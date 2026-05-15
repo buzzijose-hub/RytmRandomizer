@@ -37,8 +37,12 @@ from ..data import (
     PAD1_BD_ROTATION_ORDER,
     PROFILES,
 )
+from ..observability.logging import get_logger
+from ..observability.tracing import trace
 
 __all__ = ["Pad1Engine", "default_group_layout"]
+
+_logger = get_logger(__name__)
 
 # A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
 Sender = Any
@@ -243,6 +247,7 @@ class Pad1Engine:
         print("  Use BH to return Pad 1 to the BD Hard default/home anchor.")
         self.show_bd_rotation_status()
 
+    @trace("pad1.load_pad1_bd_profile")
     def load_pad1_bd_profile(self, profile_key: str) -> None:
         if profile_key not in PROFILES:
             print(f"\nUnknown profile key: {profile_key}")
@@ -740,6 +745,7 @@ class Pad1Engine:
                 "BR first."
             )
 
+    @trace("pad1.rotate_pad1_bd_engine")
     def rotate_pad1_bd_engine(self) -> None:
         current_key = self.group_layout[1]["profile"]
 
@@ -769,6 +775,7 @@ class Pad1Engine:
 
         self.load_pad1_bd_profile(next_key)
 
+    @trace("pad1.mutate_current_pad1_bd_engine")
     def mutate_current_pad1_bd_engine(self) -> None:
         if 1 not in self.group_current_states:
             print("\nPad 1 state is not loaded yet. Use O, BH, or BR first.")
