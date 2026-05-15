@@ -935,28 +935,39 @@ def test_parity_mutate_current_engine_not_loaded():
     _parity_subprocess("[('mutate_current_pad1_bd_engine', ())]")
 
 
-def test_parity_mutate_current_engine_discovery_modes():
-    for key in ["6", "7", "8"]:
-        for seed in (1, 2, 5, 11, 42):
-            _parity_subprocess(
-                f"[('load_pad1_bd_profile', ({key!r},)), "
-                "('mutate_current_pad1_bd_engine', ())]",
-                seed=seed,
-            )
+@pytest.mark.parametrize("key", ["6", "7", "8"])
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_mutate_current_engine_discovery_modes(key, seed):
+    """One parity call per (key, seed) so xdist can fan the 15 cases across
+    workers (was a single ~23s test before the split)."""
+
+    _parity_subprocess(
+        f"[('load_pad1_bd_profile', ({key!r},)), "
+        "('mutate_current_pad1_bd_engine', ())]",
+        seed=seed,
+    )
 
 
-def test_parity_mutate_current_engine_generic_modes():
-    for key in ["2", "1", "3", "4"]:
-        for seed in (1, 2, 5, 11, 42):
-            _parity_subprocess(
-                f"[('load_pad1_bd_profile', ({key!r},)), "
-                "('mutate_current_pad1_bd_engine', ())]",
-                seed=seed,
-            )
+@pytest.mark.parametrize("key", ["2", "1", "3", "4"])
+@pytest.mark.parametrize("seed", [1, 2, 5, 11, 42])
+def test_parity_mutate_current_engine_generic_modes(key, seed):
+    """One parity call per (key, seed) so xdist can fan the 20 cases across
+    workers (was a single ~29s test before the split)."""
+
+    _parity_subprocess(
+        f"[('load_pad1_bd_profile', ({key!r},)), "
+        "('mutate_current_pad1_bd_engine', ())]",
+        seed=seed,
+    )
 
 
-def test_parity_long_interactive_session():
-    """A realistic multi-step Pad 1 session: load, discover, rotate, mutate."""
+@pytest.mark.parametrize("seed", [1, 7, 99, 2024])
+def test_parity_long_interactive_session(seed):
+    """A realistic multi-step Pad 1 session: load, discover, rotate, mutate.
+
+    One parity call per seed so xdist can fan the 4 cases across workers
+    (was a single ~26s test before the split). The *sequence* is ordered,
+    but the four seeds are independent parity checks."""
 
     steps = (
         "["
@@ -972,5 +983,4 @@ def test_parity_long_interactive_session():
         "('mutate_current_pad1_bd_engine', ())"
         "]"
     )
-    for seed in (1, 7, 99, 2024):
-        _parity_subprocess(steps, seed=seed)
+    _parity_subprocess(steps, seed=seed)
