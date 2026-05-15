@@ -92,16 +92,16 @@ def test_report_records_structured_selected_isolated_pad_packet_coverage():
 
 
 def test_report_records_structured_pad_lane_packet_coverage():
-    from rytm_randomizer.behavior_pad1_lane import (
+    from rytm_randomizer.behavior_pad_lane import (
         DEFERRED_PACKET_5_PAD1_LANE_KEYS,
+        DEFERRED_PACKET_6_PAD2_LANE_KEYS,
+        DEFERRED_PACKET_7_PAD3_LANE_KEYS,
+        DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         PACKET_5A_PAD1_CURRENT_ENGINE_KEYS,
         PACKET_5B_PAD1_BD_FM_KEYS,
         PACKET_5C_PAD1_BD_PLASTIC_KEYS,
         PACKET_5D_PAD1_BD_SILKY_KEYS,
         PACKET_5E_PAD1_BD_ACOUSTIC_KEYS,
-    )
-    from rytm_randomizer.behavior_pad2_lane import (
-        DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         PACKET_6A_PAD2_LANE_KEYS,
         PACKET_6B_PAD2_LANE_KEYS,
         PACKET_6C_PAD2_LANE_KEYS,
@@ -112,9 +112,6 @@ def test_report_records_structured_pad_lane_packet_coverage():
         PACKET_6H_PAD2_LANE_KEYS,
         PACKET_6I_PAD2_LANE_KEYS,
         PACKET_6J_PAD2_LANE_KEYS,
-    )
-    from rytm_randomizer.behavior_pad3_lane import (
-        DEFERRED_PACKET_7_PAD3_LANE_KEYS,
         PACKET_7A_PAD3_LANE_KEYS,
         PACKET_7B_PAD3_LANE_KEYS,
         PACKET_7C_PAD3_LANE_KEYS,
@@ -123,9 +120,6 @@ def test_report_records_structured_pad_lane_packet_coverage():
         PACKET_7F_PAD3_LANE_KEYS,
         PACKET_7G_PAD3_LANE_KEYS,
         PACKET_7H_PAD3_LANE_KEYS,
-    )
-    from rytm_randomizer.behavior_pad4_lane import (
-        DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         PACKET_8A_PAD4_LANE_KEYS,
         PACKET_8B_PAD4_LANE_KEYS,
         PACKET_8C_PAD4_LANE_KEYS,
