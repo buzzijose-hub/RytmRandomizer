@@ -76,6 +76,11 @@ ALLOW_LIST_PRINT_UI: frozenset[str] = frozenset(
         "rytm_randomizer/engines/pad2.py",
         "rytm_randomizer/engines/pad3.py",
         "rytm_randomizer/engines/pad4.py",
+        # Shared per-pad runtime mixin (H1 abstraction audit). The
+        # ``IsolatedPadMixin`` print() calls were previously inlined in
+        # pad3.py / pad4.py and are still asserted byte-for-byte against
+        # the monolith by the same parity tests.
+        "rytm_randomizer/engines/_runtime.py",
         "rytm_randomizer/group_runner.py",
         "rytm_randomizer/scene_runner.py",
         # MIDI-I/O primitives -- monolith-parity "Switching machine" /
