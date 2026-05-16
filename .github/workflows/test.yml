@@ -347,24 +347,33 @@ jobs:
 
       # When the ratchet step above rewrote .coveragerc, commit the bump
       # back to the PR branch as github-actions[bot] so the new floor
-      # becomes the baseline for subsequent runs. Gated to pull_request
-      # and push events because schedule / workflow_dispatch runs have no
-      # PR branch to push back to.
+      # becomes the baseline for subsequent runs.
       #
-      # NOTE: we intentionally do NOT use `[skip ci]` here. GitHub's
-      # required-checks is evaluated against the PR's HEAD commit; a
-      # `[skip ci]` follow-up commit would have no CI runs at all,
-      # leaving required-checks pending forever. The infinite-loop
-      # concern is moot: the only file the bot touches is .coveragerc,
-      # which is not in any detect-changes path filter, so the follow-up
-      # workflow run skips every downstream job (lint, test, e2e, etc.),
-      # the required-checks aggregate translates those skips to success,
-      # and the next ratchet measurement is a no-op (measured == floor,
-      # delta < 1pp threshold → no further commit).
+      # Restricted to `push` events ONLY (NOT pull_request). Reasoning:
+      # GitHub fires BOTH `push` and `pull_request` workflow runs for the
+      # same PR head SHA, in parallel. If both runs reach this auto-commit
+      # step simultaneously, they race: the first run pushes the bump,
+      # and the second run fails with "non-fast-forward" because the
+      # remote moved out from under it. That second failure contaminates
+      # the `required-checks` aggregate (which collects results from both
+      # runs and takes the worst), making the PR un-mergeable even though
+      # the underlying tests passed. Running this step on `push` events
+      # only sidesteps the race entirely — both events see the same
+      # coverage measurement, so the `push` arm alone is sufficient.
+      #
+      # Branch-protection note: GitHub Actions' `GITHUB_TOKEN` cannot
+      # trigger new workflow runs (documented anti-loop behavior), so the
+      # bot's push does not spawn a follow-up CI run. The PR's
+      # `required-checks` status therefore sticks at "pending" for the
+      # bot-commit SHA. This is a known cost; PRs whose CI triggered an
+      # auto-bump need an admin-merge or a manual no-op commit to break
+      # the deadlock. Documented in
+      # docs/STATUS.md / .claude/skills/learned/branch-protection-with-path-filters
+      # for contributors.
       - name: Auto-commit ratcheted coverage floor
         if: |
           matrix.os == 'ubuntu-latest' &&
-          (github.event_name == 'pull_request' || github.event_name == 'push')
+          github.event_name == 'push'
         run: |
           if git diff --quiet .coveragerc; then
             echo "No coverage floor change to commit."
