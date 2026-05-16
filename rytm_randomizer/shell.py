@@ -159,6 +159,129 @@ def build_shell(
     return InteractiveShell(deps, rng=rng, sleep=sleep, input_func=input_func)
 
 
+# ============================================================================
+# Dispatch table: maps a command key to a closure that runs its side effect.
+#
+# Per the H2 abstraction audit. The pre-table dispatch was a 92-arm
+# ``if cmd == "key": deps.padN.method(...); return True`` chain
+# (~396 LOC). Almost every arm has the exact same shape: call one method
+# on one collaborator, return True. The table below captures that uniform
+# majority as a ``Mapping[str, Callable[[InteractiveShell], None]]``. The
+# small number of *non-uniform* arms (quit, target/profile re-selection
+# that updates ``self.channel``, scene-preset lookup, depth-guardrail
+# 1/2/3 messages, the depth-prompting zone mutations, and the fallback
+# "Unknown command" branch) stay inline in :meth:`InteractiveShell.dispatch`
+# because their shapes do not fit the uniform pattern.
+#
+# Behavior parity: each closure runs exactly the same statement the
+# original arm ran. The dispatcher returns True (the original arms always
+# did, except for ``q``). Parity tests (``tests/test_scene_runner.py``,
+# ``tests/test_engines_pad*.py``, ``tests/test_group_runner.py``) compare
+# byte-for-byte against the monolith's stdout/MIDI, so any drift fails CI.
+# ============================================================================
+_DISPATCH: Mapping[str, Callable[[InteractiveShell], None]] = {
+    # Pad 1: BD engine tools / rotation / mutation
+    "bd": lambda s: s.deps.pad1.show_bd_engine_tools(),
+    "br": lambda s: s.deps.pad1.rotate_pad1_bd_engine(),
+    "bm": lambda s: s.deps.pad1.mutate_current_pad1_bd_engine(),
+    # Pad 1: BD profile loads (the digit is the V1.34 menu number)
+    "bh": lambda s: s.deps.pad1.load_pad1_bd_profile("2"),
+    "bs": lambda s: s.deps.pad1.load_pad1_bd_profile("1"),
+    "bc": lambda s: s.deps.pad1.load_pad1_bd_profile("3"),
+    "ba": lambda s: s.deps.pad1.load_pad1_bd_profile("4"),
+    "bf": lambda s: s.deps.pad1.load_pad1_bd_profile("6"),
+    "bp": lambda s: s.deps.pad1.load_pad1_bd_profile("7"),
+    "bi": lambda s: s.deps.pad1.load_pad1_bd_profile("8"),
+    # Pad 1: BD FM family
+    "fm": lambda s: s.deps.pad1.show_bd_fm_tools(),
+    "ft": lambda s: s.deps.pad1.bd_fm_tone_discovery(),
+    "fk": lambda s: s.deps.pad1.bd_fm_kick_body_discovery(),
+    "fg": lambda s: s.deps.pad1.bd_fm_grit_discovery(),
+    "fz": lambda s: s.deps.pad1.return_pad1_bd_fm_to_anchor(),
+    # Pad 1: BD Plastic family
+    "pd": lambda s: s.deps.pad1.show_bd_plastic_tools(),
+    "pt": lambda s: s.deps.pad1.bd_plastic_tone_discovery(),
+    "pk": lambda s: s.deps.pad1.bd_plastic_kick_body_discovery(),
+    "px": lambda s: s.deps.pad1.bd_plastic_rubber_discovery(),
+    "pbh": lambda s: s.deps.pad1.return_pad1_bd_plastic_to_anchor(),
+    # Pad 1: BD Silky family
+    "sm": lambda s: s.deps.pad1.show_bd_silky_tools(),
+    "st": lambda s: s.deps.pad1.bd_silky_smooth_tone_discovery(),
+    "sk": lambda s: s.deps.pad1.bd_silky_kick_body_discovery(),
+    "sc": lambda s: s.deps.pad1.bd_silky_click_dust_discovery(),
+    "sbh": lambda s: s.deps.pad1.return_pad1_bd_silky_to_anchor(),
+    # Pad 2
+    "p2m": lambda s: s.deps.pad2.show_pad2_tools(),
+    "p2b": lambda s: s.deps.pad2.load_pad2_profile("3"),
+    "p2h": lambda s: s.deps.pad2.load_pad2_profile("9"),
+    "p2c": lambda s: s.deps.pad2.load_pad2_profile("10"),
+    "p2f": lambda s: s.deps.pad2.load_pad2_profile("11"),
+    "p2t": lambda s: s.deps.pad2.pad2_tone_discovery(),
+    "p2p": lambda s: s.deps.pad2.pad2_pressure_body_discovery(),
+    "p2g": lambda s: s.deps.pad2.pad2_grit_noise_discovery(),
+    "p2z": lambda s: s.deps.pad2.return_pad2_to_current_anchor(),
+    "p2r": lambda s: s.deps.pad2.rotate_pad2_profile(),
+    "p2x": lambda s: s.deps.pad2.mutate_current_pad2_rotation_profile(),
+    # Group runner: layout / anchors / global tools
+    "j": lambda s: s.deps.group_runner.show_group_layout(),
+    "o": lambda s: s.deps.group_runner.load_group_anchors(),
+    "gm": lambda s: s.deps.group_runner.show_global_mutation_tools(),
+    "scn": lambda s: s.deps.scene_runner.show_scene_tools(),
+    # Group runner: intensity mutations
+    "x": lambda s: s.deps.group_runner.mutate_group_intensity("balanced"),
+    "d": lambda s: s.deps.group_runner.mutate_group_intensity("deeper"),
+    "i": lambda s: s.deps.group_runner.mutate_group_intensity("intense"),
+    "4": lambda s: s.deps.group_runner.mutate_group_intensity("harder"),
+    # Group runner: global page-plan mutations
+    "y": lambda s: s.deps.group_runner.mutate_global_page_plan("src"),
+    "v": lambda s: s.deps.group_runner.mutate_global_page_plan("filter"),
+    "n": lambda s: s.deps.group_runner.mutate_global_page_plan("grit"),
+    "z": lambda s: s.deps.group_runner.return_group_to_anchors(),
+    # Group runner: isolated-pad workflow
+    "l": lambda s: s.deps.group_runner.choose_isolated_pad(),
+    "pm": lambda s: s.deps.group_runner.mutate_isolated_pad(),
+    "ps": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("src"),
+    "pf": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("filter"),
+    "pa": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("amp"),
+    "pl": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("lfo"),
+    "po": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("morph"),
+    "pb": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("body"),
+    "pg": lambda s: s.deps.group_runner.mutate_isolated_pad_with_depth("grit"),
+    "pz": lambda s: s.deps.group_runner.return_isolated_pad_to_anchor(),
+    "pr": lambda s: s.deps.group_runner.show_isolated_pad(),
+    # Pad 3: SY Raw discovery + mode rotation
+    "sr": lambda s: s.deps.pad3.show_sy_raw_discovery_menu(),
+    "sw": lambda s: s.deps.pad3.sy_raw_wave_balance_discovery(),
+    "sl": lambda s: s.deps.pad3.sy_raw_lp1_bassline_mode(),
+    "sb": lambda s: s.deps.pad3.sy_raw_bandpass_mid_bass_mode(),
+    "sx": lambda s: s.deps.pad3.sy_raw_scifi_motion_accent(),
+    "sa": lambda s: s.deps.pad3.return_pad3_sy_raw_to_anchor(),
+    "p3m": lambda s: s.deps.pad3.show_pad3_tools(),
+    "p3r": lambda s: s.deps.pad3.rotate_pad3_mode(),
+    "p3x": lambda s: s.deps.pad3.mutate_current_pad3_mode(),
+    "p3a": lambda s: s.deps.pad3.return_pad3_to_anchor(),
+    # Pad 4
+    "p4m": lambda s: s.deps.pad4.show_pad4_tools(),
+    "p4r": lambda s: s.deps.pad4.rotate_pad4_mode(),
+    "p4x": lambda s: s.deps.pad4.mutate_current_pad4_mode(),
+    "p4a": lambda s: s.deps.pad4.return_pad4_to_anchor(),
+    # Shell-local: channel/anchor/state operations
+    "c": lambda s: s._change_midi_channel(),
+    "m": lambda s: s._load_selected_anchor(),
+    "b": lambda s: s._return_to_selected_anchor(),
+    "e": lambda s: s.deps.group_runner.commit_current_as_anchor(),
+    "h": lambda s: s.deps.group_runner.show_anchor(),
+    "r": lambda s: s.deps.group_runner.show_current(),
+    # Legacy single-profile full-mutation depths
+    "m1": lambda s: s._mutate_zone_for_selected_profile("full", "micro"),
+    "m2": lambda s: s._mutate_zone_for_selected_profile("full", "groove"),
+    "m3": lambda s: s._mutate_zone_for_selected_profile("full", "strong"),
+    # Random waveform / undo
+    "w": lambda s: s._random_waveform_for_selected_profile(),
+    "u": lambda s: s.deps.group_runner.undo(),
+}
+
+
 class InteractiveShell:
     """V1.34 interactive command shell with all runtime dependencies injected.
 
@@ -505,12 +628,32 @@ class InteractiveShell:
 
         The dispatch order, command alphabet, menu text and printed messages
         mirror the monolith's ``main()`` ``while True`` body byte-for-byte.
+
+        Routing strategy (per H2 abstraction audit):
+
+        1. Special-shaped commands handled inline at the top:
+           - ``q`` -- the only return-False command (quit).
+           - ``t`` / ``p`` -- re-select target/profile then sync
+             ``self.channel`` from the group runner.
+           - ``cmd in SCENE_PRESETS`` -- key lookup, not literal match.
+           - ``("1", "2", "3")`` -- print the two-line "depth at prompt"
+             warning (depth digits are valid as the answer to a depth
+             prompt but not as a top-level command).
+           - ``s``/``f``/``a``/``g``/``k`` -- depth-prompting zone
+             mutations that read ``self._get_depth()`` (a runtime input,
+             not a literal).
+        2. Everything else goes through the module-level ``_DISPATCH``
+           table (a ``Mapping[str, Callable[[InteractiveShell], None]]``).
+           Each table entry is a one-line closure that runs the original
+           arm's side effect; the dispatcher invokes it and returns True.
+        3. Fallback: unknown command -> print help.
         """
 
         cmd = raw_cmd.strip().lower()
         deps = self.deps
         gr = deps.group_runner
 
+        # ----- Special-shaped commands (do not fit the uniform table) -----
         if cmd == "q":
             print("Exiting.")
             return False
@@ -525,336 +668,8 @@ class InteractiveShell:
             self.channel = gr.channel
             return True
 
-        if cmd == "bd":
-            deps.pad1.show_bd_engine_tools()
-            return True
-
-        if cmd == "br":
-            deps.pad1.rotate_pad1_bd_engine()
-            return True
-
-        if cmd == "bm":
-            deps.pad1.mutate_current_pad1_bd_engine()
-            return True
-
-        if cmd == "bh":
-            deps.pad1.load_pad1_bd_profile("2")
-            return True
-
-        if cmd == "bs":
-            deps.pad1.load_pad1_bd_profile("1")
-            return True
-
-        if cmd == "bc":
-            deps.pad1.load_pad1_bd_profile("3")
-            return True
-
-        if cmd == "ba":
-            deps.pad1.load_pad1_bd_profile("4")
-            return True
-
-        if cmd == "bf":
-            deps.pad1.load_pad1_bd_profile("6")
-            return True
-
-        if cmd == "fm":
-            deps.pad1.show_bd_fm_tools()
-            return True
-
-        if cmd == "ft":
-            deps.pad1.bd_fm_tone_discovery()
-            return True
-
-        if cmd == "fk":
-            deps.pad1.bd_fm_kick_body_discovery()
-            return True
-
-        if cmd == "fg":
-            deps.pad1.bd_fm_grit_discovery()
-            return True
-
-        if cmd == "fz":
-            deps.pad1.return_pad1_bd_fm_to_anchor()
-            return True
-
-        if cmd == "bp":
-            deps.pad1.load_pad1_bd_profile("7")
-            return True
-
-        if cmd == "pd":
-            deps.pad1.show_bd_plastic_tools()
-            return True
-
-        if cmd == "pt":
-            deps.pad1.bd_plastic_tone_discovery()
-            return True
-
-        if cmd == "pk":
-            deps.pad1.bd_plastic_kick_body_discovery()
-            return True
-
-        if cmd == "px":
-            deps.pad1.bd_plastic_rubber_discovery()
-            return True
-
-        if cmd == "pbh":
-            deps.pad1.return_pad1_bd_plastic_to_anchor()
-            return True
-
-        if cmd == "bi":
-            deps.pad1.load_pad1_bd_profile("8")
-            return True
-
-        if cmd == "sm":
-            deps.pad1.show_bd_silky_tools()
-            return True
-
-        if cmd == "st":
-            deps.pad1.bd_silky_smooth_tone_discovery()
-            return True
-
-        if cmd == "sk":
-            deps.pad1.bd_silky_kick_body_discovery()
-            return True
-
-        if cmd == "sc":
-            deps.pad1.bd_silky_click_dust_discovery()
-            return True
-
-        if cmd == "sbh":
-            deps.pad1.return_pad1_bd_silky_to_anchor()
-            return True
-
-        if cmd == "p2m":
-            deps.pad2.show_pad2_tools()
-            return True
-
-        if cmd == "p2b":
-            deps.pad2.load_pad2_profile("3")
-            return True
-
-        if cmd == "p2h":
-            deps.pad2.load_pad2_profile("9")
-            return True
-
-        if cmd == "p2c":
-            deps.pad2.load_pad2_profile("10")
-            return True
-
-        if cmd == "p2f":
-            deps.pad2.load_pad2_profile("11")
-            return True
-
-        if cmd == "p2t":
-            deps.pad2.pad2_tone_discovery()
-            return True
-
-        if cmd == "p2p":
-            deps.pad2.pad2_pressure_body_discovery()
-            return True
-
-        if cmd == "p2g":
-            deps.pad2.pad2_grit_noise_discovery()
-            return True
-
-        if cmd == "p2z":
-            deps.pad2.return_pad2_to_current_anchor()
-            return True
-
-        if cmd == "p2r":
-            deps.pad2.rotate_pad2_profile()
-            return True
-
-        if cmd == "p2x":
-            deps.pad2.mutate_current_pad2_rotation_profile()
-            return True
-
-        if cmd == "j":
-            gr.show_group_layout()
-            return True
-
-        if cmd == "o":
-            gr.load_group_anchors()
-            return True
-
-        if cmd == "gm":
-            gr.show_global_mutation_tools()
-            return True
-
-        if cmd == "scn":
-            deps.scene_runner.show_scene_tools()
-            return True
-
         if cmd in SCENE_PRESETS:
             deps.scene_runner.run_scene(cmd)
-            return True
-
-        if cmd == "x":
-            gr.mutate_group_intensity("balanced")
-            return True
-
-        if cmd == "d":
-            gr.mutate_group_intensity("deeper")
-            return True
-
-        if cmd == "i":
-            gr.mutate_group_intensity("intense")
-            return True
-
-        if cmd == "4":
-            gr.mutate_group_intensity("harder")
-            return True
-
-        if cmd == "y":
-            gr.mutate_global_page_plan("src")
-            return True
-
-        if cmd == "v":
-            gr.mutate_global_page_plan("filter")
-            return True
-
-        if cmd == "n":
-            gr.mutate_global_page_plan("grit")
-            return True
-
-        if cmd == "z":
-            gr.return_group_to_anchors()
-            return True
-
-        if cmd == "l":
-            gr.choose_isolated_pad()
-            return True
-
-        if cmd == "pm":
-            gr.mutate_isolated_pad()
-            return True
-
-        if cmd == "ps":
-            gr.mutate_isolated_pad_with_depth("src")
-            return True
-
-        if cmd == "pf":
-            gr.mutate_isolated_pad_with_depth("filter")
-            return True
-
-        if cmd == "pa":
-            gr.mutate_isolated_pad_with_depth("amp")
-            return True
-
-        if cmd == "pl":
-            gr.mutate_isolated_pad_with_depth("lfo")
-            return True
-
-        if cmd == "po":
-            gr.mutate_isolated_pad_with_depth("morph")
-            return True
-
-        if cmd == "pb":
-            gr.mutate_isolated_pad_with_depth("body")
-            return True
-
-        if cmd == "pg":
-            gr.mutate_isolated_pad_with_depth("grit")
-            return True
-
-        if cmd == "pz":
-            gr.return_isolated_pad_to_anchor()
-            return True
-
-        if cmd == "pr":
-            gr.show_isolated_pad()
-            return True
-
-        if cmd == "sr":
-            deps.pad3.show_sy_raw_discovery_menu()
-            return True
-
-        if cmd == "sw":
-            deps.pad3.sy_raw_wave_balance_discovery()
-            return True
-
-        if cmd == "sl":
-            deps.pad3.sy_raw_lp1_bassline_mode()
-            return True
-
-        if cmd == "sb":
-            deps.pad3.sy_raw_bandpass_mid_bass_mode()
-            return True
-
-        if cmd == "sx":
-            deps.pad3.sy_raw_scifi_motion_accent()
-            return True
-
-        if cmd == "sa":
-            deps.pad3.return_pad3_sy_raw_to_anchor()
-            return True
-
-        if cmd == "p3m":
-            deps.pad3.show_pad3_tools()
-            return True
-
-        if cmd == "p3r":
-            deps.pad3.rotate_pad3_mode()
-            return True
-
-        if cmd == "p3x":
-            deps.pad3.mutate_current_pad3_mode()
-            return True
-
-        if cmd == "p3a":
-            deps.pad3.return_pad3_to_anchor()
-            return True
-
-        if cmd == "p4m":
-            deps.pad4.show_pad4_tools()
-            return True
-
-        if cmd == "p4r":
-            deps.pad4.rotate_pad4_mode()
-            return True
-
-        if cmd == "p4x":
-            deps.pad4.mutate_current_pad4_mode()
-            return True
-
-        if cmd == "p4a":
-            deps.pad4.return_pad4_to_anchor()
-            return True
-
-        if cmd == "c":
-            self._change_midi_channel()
-            return True
-
-        if cmd == "m":
-            self._load_selected_anchor()
-            return True
-
-        if cmd == "b":
-            self._return_to_selected_anchor()
-            return True
-
-        if cmd == "e":
-            gr.commit_current_as_anchor()
-            return True
-
-        if cmd == "h":
-            gr.show_anchor()
-            return True
-
-        if cmd == "r":
-            gr.show_current()
-            return True
-
-        if cmd == "m1":
-            self._mutate_zone_for_selected_profile("full", "micro")
-            return True
-
-        if cmd == "m2":
-            self._mutate_zone_for_selected_profile("full", "groove")
-            return True
-
-        if cmd == "m3":
-            self._mutate_zone_for_selected_profile("full", "strong")
             return True
 
         if cmd in ("1", "2", "3"):
@@ -886,14 +701,13 @@ class InteractiveShell:
             self._mutate_zone_for_selected_profile("body", self._get_depth())
             return True
 
-        if cmd == "w":
-            self._random_waveform_for_selected_profile()
+        # ----- Uniform table dispatch -----
+        entry = _DISPATCH.get(cmd)
+        if entry is not None:
+            entry(self)
             return True
 
-        if cmd == "u":
-            gr.undo()
-            return True
-
+        # ----- Fallback -----
         print("Unknown command.")
         self.print_commands()
         return True
