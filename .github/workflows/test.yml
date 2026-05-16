@@ -347,10 +347,20 @@ jobs:
 
       # When the ratchet step above rewrote .coveragerc, commit the bump
       # back to the PR branch as github-actions[bot] so the new floor
-      # becomes the baseline for subsequent runs. `[skip ci]` in the commit
-      # message prevents an infinite re-trigger loop. Gated to pull_request
+      # becomes the baseline for subsequent runs. Gated to pull_request
       # and push events because schedule / workflow_dispatch runs have no
       # PR branch to push back to.
+      #
+      # NOTE: we intentionally do NOT use `[skip ci]` here. GitHub's
+      # required-checks is evaluated against the PR's HEAD commit; a
+      # `[skip ci]` follow-up commit would have no CI runs at all,
+      # leaving required-checks pending forever. The infinite-loop
+      # concern is moot: the only file the bot touches is .coveragerc,
+      # which is not in any detect-changes path filter, so the follow-up
+      # workflow run skips every downstream job (lint, test, e2e, etc.),
+      # the required-checks aggregate translates those skips to success,
+      # and the next ratchet measurement is a no-op (measured == floor,
+      # delta < 1pp threshold → no further commit).
       - name: Auto-commit ratcheted coverage floor
         if: |
           matrix.os == 'ubuntu-latest' &&
@@ -364,7 +374,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .coveragerc
-          git commit -m "chore(coverage): ratchet floor to ${new_floor}% [skip ci]"
+          git commit -m "chore(coverage): ratchet floor to ${new_floor}%"
           git push origin HEAD:${{ github.head_ref || github.ref_name }}
 
       - name: Upload coverage XML (for downstream inspection)
