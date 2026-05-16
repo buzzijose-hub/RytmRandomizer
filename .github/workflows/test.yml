@@ -86,7 +86,7 @@ jobs:
 
       - name: Detect changed paths
         id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           # Default predicate-quantifier is "some": a category is true if
           # ANY listed pattern matches a changed file. That is what we want.
@@ -475,7 +475,7 @@ jobs:
         if: |
           needs.detect-changes.outputs.code == 'true' ||
           needs.detect-changes.outputs.deps == 'true'
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           # `docs-touched` is true if ANY user-facing documentation file
           # under docs/, the top-level README, or CONTRIBUTING.md changed.
