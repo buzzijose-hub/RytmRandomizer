@@ -6,6 +6,7 @@ Last updated: 2026-05-15. This file is a hand-authored snapshot and is meant to 
 
 - 2026-05-15: extracted PadRuntimeMixin (engines/_runtime.py) consolidating ~150 LOC duplicated across 5 engines/runners. No behavior change.
 - 2026-05-15: dead-code audit removed three trivially-unused symbols (`_lazy_rehome_imports` in `observability/errors.py`, `log_extra` in `observability/logging.py`, the unused `self._provider` bookkeeping in `RealMidiSender.__init__`). No behavior change; 197 tests still green.
+- 2026-05-15: extracted scene_menu_lines() data-driven generator; dedupes scene menu strings across shell.py + scene_runner.py + SCENE_PRESETS. No output change.
 
 ## Current Version
 
@@ -37,10 +38,6 @@ Each step is locked against the V1.34 reference by characterization tests.
 - A more detailed `docs/ARCHITECTURE.md` map of the post-decomposition package (planned).
 - Further hardening: coverage policy, lint baseline, type-check baseline.
 - Out of scope for now: Pads 5-12, additional machines/profiles, new CC mappings, GUI/capture, SysEx, and Analog Four support.
-
-## Recent Cleanup
-
-- 2026-05-15: extracted `_PADN_SCAFFOLD` constants in `commands.py`; dedupes ~200 redundant metadata fields across `PAD{1,2,3,4}_COMMANDS`. No behavior change.
 
 ## Reference Docs
 

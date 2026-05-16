@@ -44,6 +44,7 @@ from typing import Any, Callable
 from . import midi_io as _midi_io
 from . import randomization as _randomization
 from .data import GROUP_LAYOUT, PROFILES, SCENE_PRESETS
+from .data.scene_display import scene_menu_lines
 from .engines.pad1 import Pad1Engine
 from .engines.pad2 import Pad2Engine
 from .engines.pad3 import Pad3Engine
@@ -276,20 +277,8 @@ class InteractiveShell:
         print("O = load full 4-pad group anchors")
         print("GM = show global 4-pad mutation tools")
         print("SCN = show scene / preset tools")
-        print("S0 = scene Home / Clean anchors")
-        print("S1 = scene Rolling")
-        print("S1A = scene Rolling Light")
-        print("S1B = scene Rolling Push")
-        print("S2 = scene Deeper")
-        print("S2A = scene Deeper Groove")
-        print("S2B = scene Deeper Pressure")
-        print("S3 = scene Intense")
-        print("S3A = scene Intense Motion")
-        print("S3B = scene Intense Grit")
-        print("S4 = scene Wild")
-        print("S4A = scene Wild Controlled")
-        print("S4B = scene Wild Maximum")
-        print("S5 = scene Back to Clean")
+        for line in scene_menu_lines():
+            print(line)
         print("X = balanced four-lane mutate full 4-pad group")
         print("D = deeper four-lane mutation, Pads 2-4 pushed harder")
         print("I = intense / controlled chaos four-lane mutation")
