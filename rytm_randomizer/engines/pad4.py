@@ -41,18 +41,16 @@ from collections.abc import Mapping, MutableMapping
 from typing import Any, Callable
 
 from .. import midi_io as _midi_io
-from .. import randomization as _randomization
 from ..data import (
     FILTER_TYPE_NAMES,
-    GROUP_LAYOUT,
     PAD4_MODE_LABELS,
     PAD4_MODE_MUTATION_PLANS,
     PAD4_MODE_ORDER,
-    PROFILES,
 )
 from ..guardrails.resolver import ResolvedBounds
 from ..observability.logging import get_logger
 from ..observability.tracing import trace
+from ._runtime import IsolatedPadMixin, PadRuntimeMixin
 
 __all__ = ["Pad4Engine"]
 
@@ -93,12 +91,20 @@ _PAD4_TOOLS_SNAPSHOT_NAMES = (
 )
 
 
-class Pad4Engine:
+class Pad4Engine(PadRuntimeMixin, IsolatedPadMixin):
     """Stateful Pad 4 BD Acoustic engine with all runtime dependencies injected.
 
     Construction parameters mirror the monolith globals the Pad 4 functions
     touched. They default to the monolith's cold-start values so a bare
     ``Pad4Engine(out)`` behaves like the freshly imported monolith.
+
+    Shared per-pad helpers (``_send_machine`` / ``_send_param`` /
+    ``_resolved_profile`` / ``_clamp_state`` / ``_apply_state`` /
+    ``_mutate_zone`` / ``_set_group_context``) live in
+    :class:`~rytm_randomizer.engines._runtime.PadRuntimeMixin`. The
+    isolated-anchor helpers (``_require_group_for_single_pad`` and
+    ``_return_isolated_pad_to_anchor``) live in
+    :class:`~rytm_randomizer.engines._runtime.IsolatedPadMixin`.
     """
 
     def __init__(
@@ -152,203 +158,11 @@ class Pad4Engine:
             group_previous_states if group_previous_states is not None else {}
         )
 
-    # ------------------------------------------------------------------
-    # Thin shims over the extracted primitives -- identical to the monolith
-    # ``send_machine`` / ``send_param`` / ``apply_state`` / ``mutate_zone``
-    # shims, but forwarding instance state instead of globals.
-    # ------------------------------------------------------------------
-
-    def _send_machine(self) -> None:
-        _midi_io.send_machine(self.out, self.active_profile, channel=self.channel, sleep=self.sleep)
-
-    def _resolved_profile(self) -> Mapping[str, Any] | None:
-        """Return ``active_profile`` with ``safe`` narrowed by resolved bounds.
-
-        See :meth:`Pad1Engine._resolved_profile`. Byte-identical parity
-        when ``resolved_bounds`` is ``None``.
-        """
-
-        if self.resolved_bounds is None or self.active_profile is None:
-            return self.active_profile
-
-        base_safe: Mapping[str, tuple[int, int]] = self.active_profile["safe"]
-        anchor: Mapping[str, int] = self.active_profile["anchor"]
-        narrowed: dict[str, tuple[int, int]] = dict(base_safe)
-        for name in list(base_safe.keys()):
-            bound = self.resolved_bounds.get(self.target_pad, name)
-            if bound is None:
-                continue
-            base_low, base_high = base_safe[name]
-            new_low = max(base_low, bound.low)
-            new_high = min(base_high, bound.high)
-            if new_low > new_high:
-                pinned = anchor.get(name, base_low)
-                new_low = new_high = pinned
-            narrowed[name] = (new_low, new_high)
-
-        profile_copy: dict[str, Any] = dict(self.active_profile)
-        profile_copy["safe"] = narrowed
-        return profile_copy
-
-    def _send_param(self, name: str, value: int) -> None:
-        if self.resolved_bounds is not None:
-            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
-            if clamped is None:
-                return
-            value = clamped
-        _midi_io.send_param(
-            self.out,
-            self.active_profile,
-            name,
-            value,
-            channel=self.channel,
-            sleep=self.sleep,
-        )
-
-    def _clamp_state(self, state: Mapping[str, int]) -> Mapping[str, int]:
-        """Return ``state`` with values clamped through resolved bounds.
-
-        See :meth:`Pad1Engine._clamp_state`. Byte-identical parity when
-        ``resolved_bounds`` is ``None``.
-        """
-
-        if self.resolved_bounds is None:
-            return state
-        out: dict[str, int] = {}
-        for name, value in state.items():
-            clamped = self.resolved_bounds.clamp_value(self.target_pad, name, value)
-            if clamped is None:
-                continue
-            out[name] = clamped
-        return out
-
-    def _apply_state(
-        self,
-        state: Mapping[str, int],
-        label: str,
-        *,
-        set_anchor: bool = False,
-        switch_machine_first: bool = False,
-    ) -> None:
-        result = _midi_io.apply_state(
-            self.out,
-            self._resolved_profile() if self.active_profile else None,
-            self._clamp_state(state),
-            label,
-            anchor_state=self.anchor_state,
-            current_state=self.current_state,
-            previous_state=self.previous_state,
-            set_anchor=set_anchor,
-            switch_machine_first=switch_machine_first,
-            channel=self.channel,
-            sleep=self.sleep,
-        )
-
-        if not result.applied:
-            return
-
-        self.anchor_state = dict(result.anchor_state)
-        self.current_state = dict(result.current_state)
-        self.previous_state = (
-            dict(result.previous_state) if result.previous_state is not None else None
-        )
-
-    def _mutate_zone(self, zone_name: str, depth_name: str) -> None:
-        result = _randomization.mutate_zone(
-            self.out,
-            zone_name,
-            depth_name,
-            profile=self._resolved_profile() if self.active_profile else None,
-            anchor_state=self.anchor_state,
-            current_state=self.current_state,
-            previous_state=self.previous_state,
-            channel=self.channel,
-            sleep=self.sleep,
-            rng=self.rng,
-        )
-
-        if not result.applied:
-            return
-
-        self.current_state = dict(result.current_state)
-        self.previous_state = (
-            dict(result.previous_state) if result.previous_state is not None else None
-        )
-
-    def _set_group_context(self, pad: int, profile_key: str) -> None:
-        """Mirror the monolith ``set_group_context``: switch active pad/profile.
-
-        Loads anchor / current / previous state for ``pad`` from the group
-        state dicts, falling back to the profile anchor exactly as the monolith.
-        """
-
-        self.target_pad = pad
-        self.channel = pad - 1
-
-        self.active_profile = PROFILES[profile_key]
-
-        if pad in self.group_anchor_states:
-            self.anchor_state = dict(self.group_anchor_states[pad])
-        else:
-            self.anchor_state = dict(self.active_profile["anchor"])
-
-        if pad in self.group_current_states:
-            self.current_state = dict(self.group_current_states[pad])
-        else:
-            self.current_state = dict(self.anchor_state)
-
-        previous = self.group_previous_states.get(pad)
-        self.previous_state = dict(previous) if previous is not None else None
-
-    def _require_group_for_single_pad(self) -> bool:
-        """Mirror the monolith ``require_group_for_single_pad`` guard.
-
-        The Pad-4 dedicated commands require the full 4-pad group to have been
-        loaded first (so safe anchors exist for every pad).
-        """
-
-        if len(self.group_current_states) < 4:
-            print("\nLoad the full 4-pad group first with O.")
-            print("This stores safe anchors for Pads 1-4 before isolated " "mutation.")
-            return False
-        return True
-
-    def _return_isolated_pad_to_anchor(self) -> None:
-        """Mirror the monolith ``return_isolated_pad_to_anchor`` (V1.10).
-
-        ``return_pad4_bd_acoustic_to_anchor`` reuses this by temporarily
-        pointing ``isolated_pad`` at Pad 4.
-        """
-
-        if not self._require_group_for_single_pad():
-            return
-
-        cfg = GROUP_LAYOUT[self.isolated_pad]
-        profile_key = cfg["profile"]
-        self._set_group_context(self.isolated_pad, profile_key)
-
-        print("\nReturning isolated pad to anchor:")
-        print(f"  Pad {self.isolated_pad}: {cfg['role']} / " f"{self.active_profile['name']}")
-        print(
-            "  Pads not touched: "
-            + ", ".join(str(p) for p in GROUP_LAYOUT if p != self.isolated_pad)
-        )
-
-        anchor = dict(self.group_anchor_states[self.isolated_pad])
-
-        self._apply_state(
-            anchor,
-            f"Pad {self.isolated_pad} isolated back to anchor",
-            set_anchor=False,
-            switch_machine_first=True,
-        )
-
-        self.group_current_states[self.isolated_pad] = dict(self.current_state)
-        self.group_previous_states[self.isolated_pad] = None
-
-        print(
-            f"\nPad {self.isolated_pad} returned to anchor. Other group pads " "were not touched."
-        )
+    # Thin shims over the extracted primitives (``send_machine`` / ``send_param``
+    # / ``apply_state`` / ``mutate_zone`` / ``set_group_context``) live in
+    # ``PadRuntimeMixin``. The isolated-anchor helpers
+    # (``_require_group_for_single_pad`` / ``_return_isolated_pad_to_anchor``)
+    # live in ``IsolatedPadMixin``.
 
     # ==================================================================
     # PAD 4 BD ACOUSTIC BODY / ACCENT LANE - V1.26

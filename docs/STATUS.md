@@ -1,6 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-14. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+
+## Recent Cleanup
+
+- 2026-05-15: extracted PadRuntimeMixin (engines/_runtime.py) consolidating ~150 LOC duplicated across 5 engines/runners. No behavior change.
 
 ## Current Version
 
