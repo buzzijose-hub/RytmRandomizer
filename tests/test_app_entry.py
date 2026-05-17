@@ -353,7 +353,8 @@ def test_app_main_arm_production_path_opens_port_and_runs_shell(monkeypatch, cap
     # Guarantee no test fake monolith lingers, so the production hook fires.
     sys.modules.pop("rytm_hybrid_randomizer_v134", None)
 
-    from rytm_randomizer import app, mido_provider, shell as shellmod
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer import shell as shellmod
 
     saved = {
         "list_output_names": mido_provider.MidoMidiPortProvider.list_output_names,
@@ -533,7 +534,8 @@ def test_app_main_dry_run_swallows_eof_from_shell(monkeypatch, capsys):
     # Defensive: make sure no test fake monolith intercepts the path.
     sys.modules.pop("rytm_hybrid_randomizer_v134", None)
 
-    from rytm_randomizer import app, shell as shellmod
+    from rytm_randomizer import app
+    from rytm_randomizer import shell as shellmod
 
     class _RaisingShell:
         def __init__(self, sender) -> None:
@@ -558,9 +560,9 @@ def test_app_main_dry_run_swallows_eof_from_shell(monkeypatch, capsys):
 def test_app_main_arm_and_dry_run_are_mutually_exclusive(capsys):
     """argparse must reject ``--arm --dry-run`` with SystemExit code 2."""
 
-    from rytm_randomizer import app
-
     import pytest
+
+    from rytm_randomizer import app
 
     with pytest.raises(SystemExit) as exc_info:
         app.main(["--arm", "--dry-run"])
@@ -574,9 +576,9 @@ def test_app_main_arm_and_dry_run_are_mutually_exclusive(capsys):
 def test_app_main_unknown_flag_is_rejected_by_argparse(capsys):
     """Unknown CLI flags trigger argparse's normal error exit (code 2)."""
 
-    from rytm_randomizer import app
-
     import pytest
+
+    from rytm_randomizer import app
 
     with pytest.raises(SystemExit) as exc_info:
         app.main(["--nope"])
