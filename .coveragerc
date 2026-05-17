@@ -35,7 +35,7 @@ source = rytm_randomizer
 # coverage_ratchet.py reports from coverage.xml's branch-rate
 # attribute. The two stay in lockstep: bump only when pure-branch
 # rises by >=1pp.
-fail_under = 86
+fail_under = 87
 show_missing = True
 # NOTE: exclude_lines entries are regular expressions, so literal characters
 # like "(" are escaped below.
