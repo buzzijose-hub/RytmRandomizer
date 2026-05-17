@@ -1,16 +1,137 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-17: added the first passive saved-kit snapshot decoder and
+  `sysex-kit-snapshot-report <path> --slot <1-128>`. The decoder unpacks the
+  Rytm kit record's Elektron 7-bit payload and exposes all 12 pad sound blocks
+  as raw snapshot baselines with stable per-pad hashes. Jose's saved project
+  dump and `ANALOGRYTMKITS2.syx` both decode slot 1 into 12 pad blocks, and
+  slot 16 shows distinct per-pad hashes where the saved kit differs. Parameter
+  maps are still intentionally blocked; no live SysEx receive, MIDI sending,
+  hardware mutation, restore behavior, or SysEx writes were added.
+- 2026-05-17: added the passive whole-project SysEx analyzer and
+  `sysex-project-report <path>` CLI command. Jose's Rytm and Analog Four
+  whole-project dumps now resolve as complete 405-record streams with grouped
+  kits, sounds, patterns, song/project slots, global slots, and project
+  settings. This gives Live Snapshot planning a real project-dump inventory
+  layer without live SysEx receive, parameter decoding, MIDI sending, hardware
+  mutation, or SysEx writes.
+- 2026-05-16: added the first guarded Analog Four MKII hardware smoke path.
+  The app now supports `rytm-randomizer --dry-run --analog-four-smoke` and
+  `rytm-randomizer --arm --analog-four-smoke`, plus the one-track
+  `--analog-four-track-smoke <1-4>` variant and the first filter validation
+  path, `--analog-four-track-filter-smoke <1-4>`. The pan paths emit
+  deterministic Amp Pan CC10 left/right/center moves across A4 Tracks 1-4 or
+  a single selected track, returning Pan to 64. The filter path emits Filter 1
+  Frequency CC18 low/open/open-return on one selected track, ending at
+  127/open. This proves a cautious Track 1-4 channel-validation path and the
+  first A4 parameter smoke without Rytm sends, resonance/level/pitch mutation,
+  engine cycling, NRPN, CV, SysEx, cross-device scenes, snapshot capture, or
+  Analog Four runtime mutation.
+- 2026-05-16: added the first guarded 12-pad hardware smoke path. The app now
+  supports `rytm-randomizer --dry-run --twelve-pad-smoke` and
+  `rytm-randomizer --arm --twelve-pad-smoke`, emitting the same deterministic
+  Pads 5-12 Pan CC10 / Filter Frequency CC74 stream Jose validated manually on
+  hardware. This proves channel targeting across MIDI channels 5-12 without
+  engine cycling, SysEx, snapshot capture, Analog Four sends, or full Pads 5-12
+  runtime mutation.
+- 2026-05-16: added the first passive Analog Four MKII reference intake.
+  `analog-four-reference-report` records the midi.guide A4 source, license,
+  update date, parameter count, four planning track roles, and a starter
+  CC/NRPN mutation surface for tracks, oscillators, filters, envelopes, sends,
+  noise, and LFOs. This is reference-known/mock-only planning metadata. It
+  does not add Analog Four runtime support, port selection, MIDI sending, live
+  SysEx receive/write behavior, cross-device scene execution, or hardware
+  mutation.
+- 2026-05-16: added the first mock-only 12-pad runtime contract.
+  `twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>]`
+  turns Style Intent into mapped 12-pad machine selections, MIDI channel
+  assignments, and inert mock CC messages. It uses currently mapped V1.34-safe
+  profiles only and falls back from preferred future-only engines to mapped
+  candidates, making all 12 pads inspectable before any active hardware path
+  exists. No MIDI sending, port opening, live SysEx receive/write behavior,
+  runtime state mutation, hardware mutation, or Analog Four behavior was added.
+- 2026-05-16: added a passive Style Intent Kit layer.
+  `style-intent-report --style <text> [--discovery <0..1>]` maps broad
+  genre/style prompts such as broken techno, dark techno, Birmingham techno,
+  hardcore, schranz, classic Detroit techno, driving techno, and peak-time
+  techno into non-copying essence tags and the existing passive 12-pad plan.
+  `essence-application-readiness-report --mode <mode> --style <text> ...`
+  now feeds those same prompts into the per-pad readiness gate, using profile
+  Discovery hints unless overridden. Analog Four is recorded as future-only
+  metadata. No audio analysis, MIDI sending, hardware mutation, live SysEx
+  capture, Pads 5-12 runtime mutation, or Analog Four runtime behavior was
+  added.
+- 2026-05-16: added passive mock 12-pad snapshot fixtures for Live Snapshot
+  planning. `rytm_randomizer.snapshot_fixtures` now exposes the AM9-inspired
+  `am9-slot-01` fixture, and
+  `essence-application-readiness-report ... --fixture am9-slot-01` uses that
+  captured-machine support mix to block unmapped snapshot pads before any live
+  SysEx receive or hardware capture exists.
+- 2026-05-16: added a passive Essence Application Readiness gate.
+  `rytm_randomizer.essence_application` evaluates whether a 12-pad Essence
+  Plan is ready, blocked, or future-only under Safe Anchors or Live Snapshot,
+  and the CLI now exposes
+  `essence-application-readiness-report --mode <mode> ...`. This makes the
+  current boundary explicit: Safe Anchors is four-pad runtime-ready today, Live
+  Snapshot needs a complete 12-pad snapshot, and unmapped future engines remain
+  blocked. No MIDI sending, live SysEx receive, hardware mutation, or Pads 5-12
+  runtime mutation was added.
+- 2026-05-16: added a passive description-to-essence bridge. The new
+  `rytm_randomizer.essence_tag_adapter` derives broad, non-copying musical
+  tags from written reference language or a passive `FeatureReport`, and
+  `essence-plan-report --description <text> --discovery <0..1>` now feeds
+  those tags into the existing 12-pad engine plan preview. No audio file
+  analysis, MIDI, hardware mutation, SysEx writes, or Pads 5-12 runtime
+  mutation was added.
+- 2026-05-16: exposed the passive Essence Plan Preview through
+  `essence-plan-report --tags <csv> --discovery <0..1>`. This prints a 12-pad
+  role plan and candidate Rytm engines from manually supplied essence tags,
+  making the future audio-analyzer-to-engine-choice path visible without audio
+  analysis, MIDI, hardware, or Pads 5-12 runtime mutation.
+- 2026-05-16: added the first passive Machine Catalog and Essence Matcher.
+  `rytm_randomizer.machine_catalog` records currently mutable V1.34 machines,
+  future inventory-only engines such as SY Chip and Dual VCO, a 12-pad
+  reference-role template, and passive ranking from role/essence tags. This is
+  planning metadata for future audio-analyzer-driven engine choice; it does not
+  add audio analysis, Pads 5-12 runtime mutation, new MIDI sends, or SysEx
+  capture/write behavior.
+- 2026-05-16: added the first passive SysEx kit bank analyzer and CLI report
+  command. `sysex-kit-bank-report <path>` reads an existing `.syx` file,
+  splits complete SysEx records, identifies fixed-length kit slots, and marks
+  repeated unnamed records as blank/default candidates. Jose's `AM9KITS.syx`
+  reports slots 1-16 as nonblank and 17-128 as blank/default candidates. No
+  MIDI receive path, parameter decoding, SysEx writes, or hardware capture was
+  added.
+- 2026-05-16: added the Live Snapshot mode design checkpoint and the first
+  passive `performance_modes` model. This records startup mode semantics and
+  blocks Live Snapshot mutation unless a complete 12-pad snapshot exists. No
+  MIDI receive path, hardware capture, or runtime mutation behavior was added.
+- 2026-05-15: completed the first end-user Analog Rytm MKII hardware
+  validation pass for V1.34 alpha. The freshly rebuilt installer wheel
+  installed cleanly, `--dry-run` completed the canonical flow, `--arm`
+  opened `Elektron Analog Rytm MKII 1`, scene mutations were audible, and
+  `S5`/`Z` returned all four pads to clean anchors.
+- 2026-05-15: prepared the first real-machine validation session by updating
+  the manual hardware checklist with a dry-run preflight, volume/restorable-kit
+  reminders, and a notes template. No runtime behavior change.
+- 2026-05-15: captured the future audio analyzer Reference/Discovery slider
+  direction in `docs/FUTURE_AUDIO_ANALYZER_REFERENCE_DISCOVERY.md`. No runtime
+  behavior change.
+- 2026-05-15: captured the future Analog Four expansion direction in
+  `docs/FUTURE_ANALOG_FOUR_EXPANSION.md`. No runtime behavior change.
+- 2026-05-15: aligned the coverage policy doc with the live `.coveragerc`
+  floor and ratchet workflow. No CI behavior change.
 - 2026-05-15: extracted PadRuntimeMixin (engines/_runtime.py) consolidating ~150 LOC duplicated across 5 engines/runners. No behavior change.
 - 2026-05-15: dead-code audit removed three trivially-unused symbols (`_lazy_rehome_imports` in `observability/errors.py`, `log_extra` in `observability/logging.py`, the unused `self._provider` bookkeeping in `RealMidiSender.__init__`). No behavior change; 197 tests still green.
 - 2026-05-15: extracted scene_menu_lines() data-driven generator; dedupes scene menu strings across shell.py + scene_runner.py + SCENE_PRESETS. No output change.
 
 ## Current Version
 
-**V1.34** musical behavior, owned end-to-end by the modular package as of Wave 4 / WS-O. Stable tag: `v1.34-stable-expanded-scene-layer`. Working branch: `wave-4-integration`.
+**V1.34** musical behavior, owned end-to-end by the modular package as of Wave 4 / WS-O. Stable tag: `v1.34-stable-expanded-scene-layer`. Working branch: `modularize-v1.34`.
 
 ## What Works
 
@@ -18,6 +139,18 @@ Last updated: 2026-05-15. This file is a hand-authored snapshot and is meant to 
   - **Default (no flag)**: passive read-only inspection / preview menu. Opens no port, sends no MIDI.
   - `--arm`: opens a real MIDI port and runs the interactive command shell (`rytm_randomizer.shell.InteractiveShell`). This is the supported way to drive the Rytm.
   - `--dry-run`: runs the same interactive command shell against `rytm_randomizer.mock_midi.MockMidiSender`. No hardware, no port opened.
+- The active app also exposes a guarded `--twelve-pad-smoke` modifier with
+  `--dry-run` or `--arm`. It sends only Pan CC10 and Filter Frequency CC74 to
+  Pads 5-12, returning both controls to 64, then exits. This is channel
+  validation only, not full Pads 5-12 mutation support.
+- The active app also exposes a guarded `--analog-four-smoke` modifier with
+  `--dry-run` or `--arm`. It sends only Amp Pan CC10 to Analog Four Tracks
+  1-4, returning Pan to 64, then exits. This is channel validation only, not
+  Analog Four runtime mutation support. The companion
+  `--analog-four-track-smoke <1-4>` modifier runs the same pan-only validation
+  for one selected A4 track. The
+  `--analog-four-track-filter-smoke <1-4>` modifier runs Filter 1 Frequency
+  CC18 low/open/open-return for one selected A4 track.
 - Pad coverage is complete relative to V1.34: BD engine anchors/discovery (Pad 1), snare/secondary percussion (Pad 2), SY Raw bass (Pad 3), BD Acoustic (Pad 4), a four-pad group layer, scenes (S0-S5 plus variants), isolated single-pad mutation, legacy single-profile mutation, and the full command surface.
 - The V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) is retained on disk byte-for-byte as a frozen reference for the byte-parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`). It is not invoked by any production code path.
 
@@ -35,9 +168,16 @@ Each step is locked against the V1.34 reference by characterization tests.
 
 ## What's Next
 
-- A more detailed `docs/ARCHITECTURE.md` map of the post-decomposition package (planned).
-- Further hardening: coverage policy, lint baseline, type-check baseline.
-- Out of scope for now: Pads 5-12, additional machines/profiles, new CC mappings, GUI/capture, SysEx, and Analog Four support.
+- Stabilize the V1.34 alpha around the first hardware pass: keep the canonical
+  dry-run and project-status checks green after every installer rebuild.
+- Polish the end-user operator flow without changing the validated MIDI
+  ranges or the protected V1.34 reference.
+- Further hardening: installer polish, release checklist, lint/type-check
+  baseline, and repeat hardware validation before a release candidate.
+- Out of scope for now: Pads 5-12 active runtime mutation, additional
+  hardware-validated Rytm machines/profiles, GUI/capture, live SysEx
+  receive/write behavior, Analog Four runtime mutation beyond pan-only smoke,
+  and cross-device hardware execution.
 
 ## Reference Docs
 
@@ -46,4 +186,15 @@ Each step is locked against the V1.34 reference by characterization tests.
 - `docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md` -- the V1.34 command surface, as preserved by `rytm_randomizer.shell`.
 - `docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md` -- how to run the passive CLI.
 - `docs/HARDWARE_MANUAL_REFERENCE_INVENTORY.md`, `docs/LOCAL_DEV_TOOLING_NOTES.md` -- reference/tooling notes.
+- `docs/FUTURE_AUDIO_ANALYZER_REFERENCE_DISCOVERY.md` -- future analyzer slider
+  and 12-pad role-map direction; not current runtime scope.
+- `docs/FUTURE_ANALOG_FOUR_EXPANSION.md` -- future cross-device Analog Four
+  direction and passive reference-intake status; not current runtime scope.
+- `docs/LIVE_SNAPSHOT_MODE_DESIGN_CHECKPOINT.md` -- startup mode selection,
+  Safe Anchors versus Live Snapshot semantics, and the future 12-pad snapshot
+  capture safety model.
+- `docs/SYSEX_KIT_BANK_ANALYZER_CHECKPOINT.md` -- passive saved-kit-bank
+  analyzer scope, AM9KITS observation, and Live Snapshot relevance.
+- `docs/MACHINE_CATALOG_ESSENCE_MATCHER_CHECKPOINT.md` -- passive machine
+  catalog, 12-pad role template, and future analyzer-to-engine-choice bridge.
 - `docs/TRIAGE_REPORT.md` -- audit record of the `docs/` accuracy triage.

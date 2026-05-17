@@ -20,4 +20,5 @@ RytmRandomizer Project Status Summary
 - active_modes_present: 2
 - total_modes: 3
 - hardware_required: False
+- hardware_validation: first_end_user_pass
 - v134_reference: untouched

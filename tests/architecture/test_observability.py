@@ -293,6 +293,13 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # existing ``except RuntimeError`` callers still work AND the
         # conformance check sees a taxonomy member.
         "StyleAnalysisDependencyError",
+        # Passive SysEx/snapshot analysis errors: re-homed under DataError +
+        # ValueError so existing validation callers keep working while the
+        # runtime hierarchy remains under RytmRandomizerError.
+        "SysexBankAnalysisError",
+        "SysexProjectAnalysisError",
+        "SysexSnapshotDecodeError",
+        "SnapshotMutationPlanError",
         # WS-W guardrails: members of the BoundaryError / StateError families
         # surfaced by guardrails/validation.py, guardrails/store.py, and
         # guardrails/resolver.py. Each inherits transitively from

@@ -8,6 +8,11 @@ RytmRandomizer Project Status Check
 - safety.dispatch: present_behind_arm_flag
 - safety.default_mode: passive
 - safety.hardware_required: False
+- hardware_validation.status: first_end_user_pass
+- hardware_validation.dry_run: passed
+- hardware_validation.arm_port_open: passed
+- hardware_validation.audible_scene_mutation: confirmed_by_operator
+- hardware_validation.anchor_return: confirmed_by_operator
 - safety.v134_reference: untouched
 - safety.package_metadata: untouched
 - convergence.active_execution: present

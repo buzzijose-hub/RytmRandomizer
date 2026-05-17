@@ -118,6 +118,33 @@ def test_project_status_report_tracks_convergence_behind_arm_flag():
     }
 
 
+def test_project_status_report_records_first_hardware_validation_pass():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["hardware_validation"] == {
+        "status": "first_end_user_pass",
+        "date": "2026-05-15",
+        "validated_device": "Elektron Analog Rytm MKII",
+        "operator": "Jose Buzzi",
+        "collaborator": "Eddie",
+        "installer_wheel": "rytm_randomizer-1.34.0-py3-none-any.whl",
+        "dry_run": "passed",
+        "arm_port_open": "passed",
+        "audible_scene_mutation": "confirmed_by_operator",
+        "anchor_return": "confirmed_by_operator",
+        "guardrails": (
+            "profile_prompt_rejected_scn_without_midi",
+            "scn_command_menu_no_midi",
+            "bare_depth_digit_no_midi",
+        ),
+        "canonical_scene_flow": ("S1A", "S3A", "S3B", "S4B", "S5", "Z"),
+        "analog_four_support": "absent",
+        "pads_5_12_support": "absent",
+    }
+
+
 def test_project_status_report_records_public_api_hardening_checkpoint():
     from rytm_randomizer.project_status_report import build_project_status_report
 
@@ -211,6 +238,7 @@ def test_project_status_summary_is_deterministic():
         "external_review_findings_received": False,
         "collaborator_review_triage_template": "accepted",
         "hardware_required": False,
+        "hardware_validation": "first_end_user_pass",
         "v134_reference": "untouched",
         "active_execution_gate": "--arm flag",
         "active_modes_present": 2,
@@ -248,6 +276,7 @@ def test_project_status_summary_lines_are_deterministic():
         "- active_modes_present: 2",
         "- total_modes: 3",
         "- hardware_required: False",
+        "- hardware_validation: first_end_user_pass",
         "- v134_reference: untouched",
     ]
 
@@ -270,6 +299,11 @@ def test_project_status_check_passes_for_current_report():
             "safety.dispatch": "present_behind_arm_flag",
             "safety.default_mode": "passive",
             "safety.hardware_required": False,
+            "hardware_validation.status": "first_end_user_pass",
+            "hardware_validation.dry_run": "passed",
+            "hardware_validation.arm_port_open": "passed",
+            "hardware_validation.audible_scene_mutation": "confirmed_by_operator",
+            "hardware_validation.anchor_return": "confirmed_by_operator",
             "safety.v134_reference": "untouched",
             "safety.package_metadata": "untouched",
             "convergence.active_execution": "present",
@@ -352,6 +386,11 @@ def test_project_status_check_lines_are_deterministic():
         "- safety.dispatch: present_behind_arm_flag",
         "- safety.default_mode: passive",
         "- safety.hardware_required: False",
+        "- hardware_validation.status: first_end_user_pass",
+        "- hardware_validation.dry_run: passed",
+        "- hardware_validation.arm_port_open: passed",
+        "- hardware_validation.audible_scene_mutation: confirmed_by_operator",
+        "- hardware_validation.anchor_return: confirmed_by_operator",
         "- safety.v134_reference: untouched",
         "- safety.package_metadata: untouched",
         "- convergence.active_execution: present",
@@ -495,6 +534,24 @@ def test_formatted_project_status_report_is_deterministic():
         "- real_midi_provider: " "rytm_randomizer.mido_provider.MidoMidiPortProvider",
         "- interactive_logic_owner: rytm_randomizer.shell",
         "- interactive_logic_converged: True",
+        "Hardware Validation:",
+        "- status: first_end_user_pass",
+        "- date: 2026-05-15",
+        "- validated_device: Elektron Analog Rytm MKII",
+        "- operator: Jose Buzzi",
+        "- collaborator: Eddie",
+        "- installer_wheel: rytm_randomizer-1.34.0-py3-none-any.whl",
+        "- dry_run: passed",
+        "- arm_port_open: passed",
+        "- audible_scene_mutation: confirmed_by_operator",
+        "- anchor_return: confirmed_by_operator",
+        (
+            "- guardrails: profile_prompt_rejected_scn_without_midi, "
+            "scn_command_menu_no_midi, bare_depth_digit_no_midi"
+        ),
+        "- canonical_scene_flow: S1A, S3A, S3B, S4B, S5, Z",
+        "- analog_four_support: absent",
+        "- pads_5_12_support: absent",
         "Safety:",
         "- real_midi: present_behind_arm_flag",
         "- port_opening: present_behind_arm_flag",
@@ -538,6 +595,8 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert parsed["collaborator_review_intake"]["findings_received"] is False
     assert parsed["collaborator_review_triage_template"]["status"] == "accepted"
     assert parsed["collaborator_review_triage_template"]["findings_recorded"] is False
+    assert parsed["hardware_validation"]["status"] == "first_end_user_pass"
+    assert parsed["hardware_validation"]["audible_scene_mutation"] == "confirmed_by_operator"
     assert parsed["safety"]["hardware_required"] is False
     assert parsed["convergence"]["active_execution"] == "present"
     assert parsed["convergence"]["active_execution_gate"] == "--arm flag"

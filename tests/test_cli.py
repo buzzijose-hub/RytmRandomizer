@@ -9,11 +9,19 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
+    "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
+    "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
+    "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
+    "style-intent-report --style <text> [--discovery <0..1>] | "
+    "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
+    "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query> | "
-    "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
+    "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
+    "preview-scene <key> | preview-group-profile <key>"
 )
 
 
@@ -138,6 +146,61 @@ def test_behavior_parity_report_help_exits_zero_and_matches_fixture():
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_behavior_parity_report_help_expected.txt"
     )
+    assert result.stderr == ""
+
+
+def test_analog_four_reference_report_help_exits_zero():
+    result = run_cli("analog-four-reference-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: analog-four-reference-report" in result.stdout
+    assert "Analog Four MKII" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert "no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_report_help_exits_zero():
+    result = run_cli("dual-machine-mock-bridge-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: dual-machine-mock-bridge-report" in result.stdout
+    assert "Rytm + Analog Four" in result.stdout
+    assert "mock sender only" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_sysex_project_report_help_exits_zero():
+    result = run_cli("sysex-project-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: sysex-project-report" in result.stdout
+    assert "whole-project" in result.stdout
+    assert "no live SysEx receive" in result.stdout
+    assert "no SysEx writes" in result.stdout
+    assert result.stderr == ""
+
+
+def test_sysex_kit_snapshot_report_help_exits_zero():
+    result = run_cli("sysex-kit-snapshot-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: sysex-kit-snapshot-report" in result.stdout
+    assert "12-pad snapshot" in result.stdout
+    assert "saved parameter baselines" in result.stdout
+    assert "no live SysEx receive" in result.stdout
+    assert result.stderr == ""
+
+
+def test_sysex_snapshot_mutation_plan_report_help_exits_zero():
+    result = run_cli("sysex-snapshot-mutation-plan-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: sysex-snapshot-mutation-plan-report" in result.stdout
+    assert "bounded deterministic deltas" in result.stdout
+    assert "not load anchors" in result.stdout
+    assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 
@@ -366,6 +429,20 @@ def test_behavior_parity_report_command_exits_zero_and_matches_fixture():
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_behavior_parity_report_expected.txt"
     )
+    assert result.stderr == ""
+
+
+def test_analog_four_reference_report_cli_exits_zero():
+    result = run_cli("analog-four-reference-report")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four MKII Reference Report" in result.stdout
+    assert "Source: https://midi.guide/d/elektron/analog-four-mkii/" in result.stdout
+    assert "Parameter count: 230" in result.stdout
+    assert "Reference-known starter groups:" in result.stdout
+    assert "- filter_pressure:" in result.stdout
+    assert "- real Analog Four MIDI sending" in result.stdout
+    assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 

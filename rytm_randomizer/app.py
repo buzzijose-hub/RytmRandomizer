@@ -33,10 +33,13 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import time
 from collections.abc import Sequence
 
 from .observability.logging import configure_logging as _configure_logging
 from .observability.logging import get_logger as _observability_get_logger
+
+_smoke_sleep = time.sleep
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -63,6 +66,41 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "Run the interactive randomizer logic against the in-memory mock "
             "sender. No hardware, no port opened."
+        ),
+    )
+    parser.add_argument(
+        "--twelve-pad-smoke",
+        action="store_true",
+        help=(
+            "With --dry-run or --arm, run the guarded Pads 5-12 pan/filter "
+            "smoke test and exit. --arm sends real MIDI to the selected Rytm port."
+        ),
+    )
+    parser.add_argument(
+        "--analog-four-smoke",
+        action="store_true",
+        help=(
+            "With --dry-run or --arm, run the guarded Analog Four Track 1-4 "
+            "pan-only smoke test and exit. --arm sends real MIDI to the "
+            "selected Analog Four port."
+        ),
+    )
+    parser.add_argument(
+        "--analog-four-track-smoke",
+        type=int,
+        metavar="TRACK",
+        help=(
+            "With --dry-run or --arm, run the guarded Analog Four pan-only "
+            "smoke test for one track, where TRACK is 1, 2, 3, or 4."
+        ),
+    )
+    parser.add_argument(
+        "--analog-four-track-filter-smoke",
+        type=int,
+        metavar="TRACK",
+        help=(
+            "With --dry-run or --arm, run the guarded Analog Four Filter 1 "
+            "Frequency smoke test for one track, where TRACK is 1, 2, 3, or 4."
         ),
     )
     parser.add_argument(
@@ -115,6 +153,14 @@ def _print_passive_menu() -> None:
             "Active modes (explicit opt-in required):",
             "- --arm       open a real MIDI port and run the interactive " "randomizer",
             "- --dry-run   run the interactive randomizer against the mock " "sender",
+            "- --twelve-pad-smoke   with --arm/--dry-run, test Pads 5-12 "
+            "with Pan CC10 and Filter Frequency CC74",
+            "- --analog-four-smoke  with --arm/--dry-run, test Analog Four "
+            "Tracks 1-4 with Pan CC10 only",
+            "- --analog-four-track-smoke <1-4>  with --arm/--dry-run, test "
+            "one Analog Four track with Pan CC10 only",
+            "- --analog-four-track-filter-smoke <1-4>  with --arm/--dry-run, "
+            "test one Analog Four track with Filter 1 Frequency CC18 only",
             "",
             USAGE,
         ]
@@ -141,7 +187,13 @@ def _preloaded_monolith_hook(attribute: str):
     return hook if callable(hook) else None
 
 
-def _run_arm() -> int:
+def _run_arm(
+    *,
+    twelve_pad_smoke: bool = False,
+    analog_four_smoke: bool = False,
+    analog_four_track_smoke: int | None = None,
+    analog_four_track_filter_smoke: int | None = None,
+) -> int:
     """Construct the real MIDI provider, open a port, run the package shell.
 
     A pre-injected fake monolith with a callable ``main`` is honored as a
@@ -180,7 +232,16 @@ def _run_arm() -> int:
     # package shell against it. The port lifecycle is owned here -- mirroring
     # the monolith's ``with mido.open_output(port_name) as out:`` pattern, but
     # routed through the validated ``real_midi_adapter`` boundary.
-    port_name = _choose_arm_port_name(output_names)
+    device_label = (
+        "Analog Four"
+        if (
+            analog_four_smoke
+            or analog_four_track_smoke is not None
+            or analog_four_track_filter_smoke is not None
+        )
+        else "Analog Rytm"
+    )
+    port_name = _choose_arm_port_name(output_names, device_label=device_label)
     if port_name is None:
         return 1
 
@@ -191,9 +252,71 @@ def _run_arm() -> int:
         sys.stderr.write(f"--arm failed: {exc}\n")
         return 1
 
-    from .shell import build_shell
-
     try:
+        if twelve_pad_smoke:
+            from .twelve_pad_smoke import (
+                format_twelve_pad_smoke_report,
+                run_twelve_pad_smoke_test,
+            )
+
+            result = run_twelve_pad_smoke_test(port, sleep=_smoke_sleep)
+            sys.stdout.write(
+                "\n".join(format_twelve_pad_smoke_report(result, mode="arm"))
+            )
+            sys.stdout.write("\n")
+            return 0
+
+        if analog_four_smoke:
+            from .analog_four_smoke import (
+                format_analog_four_smoke_report,
+                run_analog_four_smoke_test,
+            )
+
+            result = run_analog_four_smoke_test(port, sleep=_smoke_sleep)
+            sys.stdout.write(
+                "\n".join(format_analog_four_smoke_report(result, mode="arm"))
+            )
+            sys.stdout.write("\n")
+            return 0
+
+        if analog_four_track_smoke is not None:
+            from .analog_four_smoke import (
+                format_analog_four_track_smoke_report,
+                run_analog_four_track_smoke_test,
+            )
+
+            result = run_analog_four_track_smoke_test(
+                port,
+                track=analog_four_track_smoke,
+                sleep=_smoke_sleep,
+            )
+            sys.stdout.write(
+                "\n".join(format_analog_four_track_smoke_report(result, mode="arm"))
+            )
+            sys.stdout.write("\n")
+            return 0
+
+        if analog_four_track_filter_smoke is not None:
+            from .analog_four_smoke import (
+                format_analog_four_track_filter_smoke_report,
+                run_analog_four_track_filter_smoke_test,
+            )
+
+            result = run_analog_four_track_filter_smoke_test(
+                port,
+                track=analog_four_track_filter_smoke,
+                sleep=_smoke_sleep,
+            )
+            sys.stdout.write(
+                "\n".join(
+                    format_analog_four_track_filter_smoke_report(result, mode="arm")
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+
+        from .shell import build_shell
+
         shell = build_shell(port)
         return shell.run()
     finally:
@@ -211,8 +334,12 @@ def _run_arm() -> int:
                 _shutdown_logger.debug("port_close_failed_best_effort")
 
 
-def _choose_arm_port_name(output_names: Sequence[str]) -> str | None:
-    """Prompt the user for the Analog Rytm MIDI output, mirroring V1.34.
+def _choose_arm_port_name(
+    output_names: Sequence[str],
+    *,
+    device_label: str = "Analog Rytm",
+) -> str | None:
+    """Prompt the user for a MIDI output, mirroring V1.34.
 
     Returns ``None`` on invalid input or EOF/closed stdin so the caller can
     return a clean exit code instead of crashing with a traceback.
@@ -223,7 +350,8 @@ def _choose_arm_port_name(output_names: Sequence[str]) -> str | None:
         sys.stdout.write(f"{index}: {name}\n")
 
     try:
-        raw = input("\nChoose the Analog Rytm MIDI output number: ").strip()
+        sys.stdout.write(f"\nChoose the {device_label} MIDI output number: ")
+        raw = input().strip()
     except (EOFError, KeyboardInterrupt, OSError):
         sys.stderr.write("--arm failed: no MIDI output choice provided.\n")
         return None
@@ -236,7 +364,13 @@ def _choose_arm_port_name(output_names: Sequence[str]) -> str | None:
         return None
 
 
-def _run_dry_run() -> int:
+def _run_dry_run(
+    *,
+    twelve_pad_smoke: bool = False,
+    analog_four_smoke: bool = False,
+    analog_four_track_smoke: int | None = None,
+    analog_four_track_filter_smoke: int | None = None,
+) -> int:
     """Run the interactive randomizer logic against the in-memory mock.
 
     A pre-injected fake monolith with ``run_with_sender`` is honored as a
@@ -256,6 +390,84 @@ def _run_dry_run() -> int:
     if fake_runner is not None:
         result = fake_runner(sender)
         return result if isinstance(result, int) else 0
+
+    if twelve_pad_smoke:
+        from .twelve_pad_smoke import (
+            format_twelve_pad_smoke_report,
+            run_twelve_pad_smoke_test,
+        )
+
+        result = run_twelve_pad_smoke_test(sender, sleep=lambda _seconds: None)
+        sys.stdout.write(
+            "\n".join(format_twelve_pad_smoke_report(result, mode="dry-run"))
+        )
+        sys.stdout.write("\n")
+        sys.stdout.write(
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
+            "message(s).\n"
+        )
+        return 0
+
+    if analog_four_smoke:
+        from .analog_four_smoke import (
+            format_analog_four_smoke_report,
+            run_analog_four_smoke_test,
+        )
+
+        result = run_analog_four_smoke_test(sender, sleep=lambda _seconds: None)
+        sys.stdout.write(
+            "\n".join(format_analog_four_smoke_report(result, mode="dry-run"))
+        )
+        sys.stdout.write("\n")
+        sys.stdout.write(
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
+            "message(s).\n"
+        )
+        return 0
+
+    if analog_four_track_smoke is not None:
+        from .analog_four_smoke import (
+            format_analog_four_track_smoke_report,
+            run_analog_four_track_smoke_test,
+        )
+
+        result = run_analog_four_track_smoke_test(
+            sender,
+            track=analog_four_track_smoke,
+            sleep=lambda _seconds: None,
+        )
+        sys.stdout.write(
+            "\n".join(format_analog_four_track_smoke_report(result, mode="dry-run"))
+        )
+        sys.stdout.write("\n")
+        sys.stdout.write(
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
+            "message(s).\n"
+        )
+        return 0
+
+    if analog_four_track_filter_smoke is not None:
+        from .analog_four_smoke import (
+            format_analog_four_track_filter_smoke_report,
+            run_analog_four_track_filter_smoke_test,
+        )
+
+        result = run_analog_four_track_filter_smoke_test(
+            sender,
+            track=analog_four_track_filter_smoke,
+            sleep=lambda _seconds: None,
+        )
+        sys.stdout.write(
+            "\n".join(
+                format_analog_four_track_filter_smoke_report(result, mode="dry-run")
+            )
+        )
+        sys.stdout.write("\n")
+        sys.stdout.write(
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
+            "message(s).\n"
+        )
+        return 0
 
     # Production path: run the package shell against the mock sender.
     from .shell import build_shell
@@ -298,10 +510,73 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
     )
 
+    analog_four_track_smoke = args.analog_four_track_smoke
+    analog_four_track_filter_smoke = args.analog_four_track_filter_smoke
+    smoke_flag_count = sum(
+        (
+            bool(args.twelve_pad_smoke),
+            bool(args.analog_four_smoke),
+            analog_four_track_smoke is not None,
+            analog_four_track_filter_smoke is not None,
+        )
+    )
+    if args.twelve_pad_smoke and args.analog_four_smoke and smoke_flag_count == 2:
+        sys.stderr.write("Choose either --twelve-pad-smoke or --analog-four-smoke.\n")
+        return 2
+
+    if smoke_flag_count > 1:
+        sys.stderr.write(
+            "Choose only one smoke-test modifier: --twelve-pad-smoke, "
+            "--analog-four-smoke, --analog-four-track-smoke, or "
+            "--analog-four-track-filter-smoke.\n"
+        )
+        return 2
+
+    if analog_four_track_smoke is not None and analog_four_track_smoke not in range(1, 5):
+        sys.stderr.write("--analog-four-track-smoke track must be 1, 2, 3, or 4.\n")
+        return 2
+
+    if (
+        analog_four_track_filter_smoke is not None
+        and analog_four_track_filter_smoke not in range(1, 5)
+    ):
+        sys.stderr.write(
+            "--analog-four-track-filter-smoke track must be 1, 2, 3, or 4.\n"
+        )
+        return 2
+
+    if args.twelve_pad_smoke and not (args.arm or args.dry_run):
+        sys.stderr.write("--twelve-pad-smoke requires --arm or --dry-run.\n")
+        return 2
+
+    if args.analog_four_smoke and not (args.arm or args.dry_run):
+        sys.stderr.write("--analog-four-smoke requires --arm or --dry-run.\n")
+        return 2
+
+    if analog_four_track_smoke is not None and not (args.arm or args.dry_run):
+        sys.stderr.write("--analog-four-track-smoke requires --arm or --dry-run.\n")
+        return 2
+
+    if analog_four_track_filter_smoke is not None and not (args.arm or args.dry_run):
+        sys.stderr.write(
+            "--analog-four-track-filter-smoke requires --arm or --dry-run.\n"
+        )
+        return 2
+
     if args.arm:
-        return _run_arm()
+        return _run_arm(
+            twelve_pad_smoke=args.twelve_pad_smoke,
+            analog_four_smoke=args.analog_four_smoke,
+            analog_four_track_smoke=analog_four_track_smoke,
+            analog_four_track_filter_smoke=analog_four_track_filter_smoke,
+        )
     if args.dry_run:
-        return _run_dry_run()
+        return _run_dry_run(
+            twelve_pad_smoke=args.twelve_pad_smoke,
+            analog_four_smoke=args.analog_four_smoke,
+            analog_four_track_smoke=analog_four_track_smoke,
+            analog_four_track_filter_smoke=analog_four_track_filter_smoke,
+        )
 
     _print_passive_menu()
     return 0

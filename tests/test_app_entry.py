@@ -38,6 +38,26 @@ def run_python(code: str) -> subprocess.CompletedProcess:
     )
 
 
+class _FakeMessage:
+    def __init__(self, message_type, *, channel, control, value):
+        self.type = message_type
+        self.channel = channel
+        self.control = control
+        self.value = value
+
+
+class _RecordingPort:
+    def __init__(self):
+        self.sent = []
+        self.closed = False
+
+    def send(self, message):
+        self.sent.append(message)
+
+    def close(self):
+        self.closed = True
+
+
 def test_app_module_import_is_side_effect_free_and_silent():
     result = run_python("""
 import sys
@@ -177,6 +197,388 @@ def test_app_main_dry_run_exercises_mock_sender_boundary():
     assert exit_code == 0
     assert isinstance(seen["sender"], MockMidiSender)
     assert len(seen["sender"].sent_messages) == 1
+
+
+def test_app_main_dry_run_twelve_pad_smoke_captures_mock_stream(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--twelve-pad-smoke"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Twelve-Pad Hardware Smoke Report" in captured.out
+    assert "Mode: dry-run" in captured.out
+    assert "Pads tested: 5-12" in captured.out
+    assert "Messages sent: 48" in captured.out
+    assert "Mock sender captured 48 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_dry_run_analog_four_smoke_captures_mock_stream(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--analog-four-smoke"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Analog Four Hardware Smoke Report" in captured.out
+    assert "Mode: dry-run" in captured.out
+    assert "Tracks tested: 1-4" in captured.out
+    assert "Messages sent: 12" in captured.out
+    assert "Mock sender captured 12 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_dry_run_analog_four_track_smoke_captures_mock_stream(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--analog-four-track-smoke", "3"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Analog Four Track Smoke Report" in captured.out
+    assert "Mode: dry-run" in captured.out
+    assert "Track tested: 3" in captured.out
+    assert "Messages sent: 3" in captured.out
+    assert "Track 3 / MIDI channel 3 / wire channel 2" in captured.out
+    assert "Mock sender captured 3 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_dry_run_analog_four_track_filter_smoke_captures_mock_stream(
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--analog-four-track-filter-smoke", "2"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Analog Four Track Filter Smoke Report" in captured.out
+    assert "Mode: dry-run" in captured.out
+    assert "Track tested: 2" in captured.out
+    assert "Messages sent: 3" in captured.out
+    assert "Filter 1 Frequency CC18 only" in captured.out
+    assert "Track 2 / MIDI channel 2 / wire channel 1" in captured.out
+    assert "Mock sender captured 3 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--twelve-pad-smoke"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--twelve-pad-smoke requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_analog_four_smoke_requires_active_mode(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--analog-four-smoke"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--analog-four-smoke requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_analog_four_track_smoke_requires_active_mode(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--analog-four-track-smoke", "2"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--analog-four-track-smoke requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_analog_four_track_filter_smoke_requires_active_mode(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--analog-four-track-filter-smoke", "2"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--analog-four-track-filter-smoke requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_analog_four_track_smoke_rejects_out_of_range_track(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--analog-four-track-smoke", "5"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--analog-four-track-smoke track must be 1, 2, 3, or 4" in captured.err
+
+
+def test_app_main_analog_four_track_filter_smoke_rejects_out_of_range_track(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--analog-four-track-filter-smoke", "5"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--analog-four-track-filter-smoke track must be 1, 2, 3, or 4" in captured.err
+
+
+def test_app_main_smoke_flags_are_mutually_exclusive(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--twelve-pad-smoke", "--analog-four-smoke"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "Choose either --twelve-pad-smoke or --analog-four-smoke" in captured.err
+
+
+def test_app_main_analog_four_smoke_flags_are_mutually_exclusive(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--analog-four-smoke", "--analog-four-track-smoke", "1"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "Choose only one smoke-test modifier" in captured.err
+
+
+def test_app_main_analog_four_filter_smoke_flags_are_mutually_exclusive(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--analog-four-track-smoke",
+            "1",
+            "--analog-four-track-filter-smoke",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "Choose only one smoke-test modifier" in captured.err
+
+
+def test_app_main_arm_twelve_pad_smoke_sends_to_selected_fake_port(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4", "Fake Rytm")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "1")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(["--arm", "--twelve-pad-smoke"])
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == 48
+    assert port.sent[0].channel == 4
+    assert port.sent[-1].channel == 11
+    assert port.closed is True
+    assert "Mode: arm" in captured.out
+    assert "Opening MIDI output: Fake Rytm" in captured.out
+
+
+def test_app_main_arm_analog_four_smoke_sends_to_selected_fake_port(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4", "Fake Rytm")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(["--arm", "--analog-four-smoke"])
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake A4"]
+    assert len(port.sent) == 12
+    assert port.sent[0].channel == 0
+    assert port.sent[-1].channel == 3
+    assert port.closed is True
+    assert "Mode: arm" in captured.out
+    assert "Opening MIDI output: Fake A4" in captured.out
+    assert "Choose the Analog Four MIDI output number" in captured.out
+
+
+def test_app_main_arm_analog_four_track_smoke_sends_to_selected_fake_port(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4", "Fake Rytm")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(["--arm", "--analog-four-track-smoke", "4"])
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake A4"]
+    assert len(port.sent) == 3
+    assert all(message.channel == 3 for message in port.sent)
+    assert [message.value for message in port.sent] == [24, 104, 64]
+    assert port.closed is True
+    assert "Mode: arm" in captured.out
+    assert "Track tested: 4" in captured.out
+    assert "Opening MIDI output: Fake A4" in captured.out
+
+
+def test_app_main_arm_analog_four_track_filter_smoke_sends_to_selected_fake_port(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4", "Fake Rytm")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(["--arm", "--analog-four-track-filter-smoke", "3"])
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake A4"]
+    assert len(port.sent) == 3
+    assert all(message.channel == 2 for message in port.sent)
+    assert [message.control for message in port.sent] == [18, 18, 18]
+    assert [message.value for message in port.sent] == [48, 112, 127]
+    assert port.closed is True
+    assert "Mode: arm" in captured.out
+    assert "Track tested: 3" in captured.out
+    assert "Opening MIDI output: Fake A4" in captured.out
 
 
 def test_app_main_arm_constructs_real_provider_and_requests_ports(capsys):

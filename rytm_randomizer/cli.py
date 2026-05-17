@@ -345,6 +345,45 @@ def format_preview_group_profile_report(profile_key):
     ]
 
 
+def format_sysex_kit_bank_file_error(path, message):
+    """Return deterministic passive SysEx file error lines."""
+
+    return [
+        "RytmRandomizer passive SysEx kit bank report",
+        f"Path: {path}",
+        "Found: False",
+        f"Message: {message}. No MIDI was sent. No command executed.",
+        "Safety:",
+        "- passive/read-only",
+        "- no MIDI sending",
+        "- no port opening",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no SysEx writes",
+        "- no hardware required",
+    ]
+
+
+def format_sysex_project_file_error(path, message):
+    """Return deterministic passive SysEx project file error lines."""
+
+    return [
+        "RytmRandomizer passive SysEx project report",
+        f"Path: {path}",
+        "Found: False",
+        f"Message: {message}. No MIDI was sent. No command executed.",
+        "Safety:",
+        "- passive/read-only",
+        "- no MIDI sending",
+        "- no port opening",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no live SysEx receive",
+        "- no SysEx writes",
+        "- no hardware required",
+    ]
+
+
 def main(argv=None):
     """Run the passive report-only CLI."""
     args = sys.argv[1:] if argv is None else list(argv)
@@ -432,6 +471,372 @@ def main(argv=None):
         from .reports import format_behavior_parity_coverage_report
 
         sys.stdout.write("\n".join(format_behavior_parity_coverage_report()))
+        sys.stdout.write("\n")
+        return 0
+
+    if len(args) == 2 and args[0] == "sysex-kit-bank-report":
+        from .sysex_bank_analyzer import (
+            SysexBankAnalysisError,
+            analyze_sysex_kit_bank_file,
+            format_sysex_kit_bank_report,
+        )
+
+        try:
+            lines = format_sysex_kit_bank_report(analyze_sysex_kit_bank_file(args[1]))
+        except FileNotFoundError:
+            lines = format_sysex_kit_bank_file_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except SysexBankAnalysisError as exc:
+            lines = format_sysex_kit_bank_file_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(lines))
+        sys.stdout.write("\n")
+        return 0
+
+    if len(args) == 2 and args[0] == "sysex-project-report":
+        from .sysex_project_analyzer import (
+            SysexProjectAnalysisError,
+            analyze_sysex_project_file,
+            format_sysex_project_report,
+        )
+
+        try:
+            lines = format_sysex_project_report(analyze_sysex_project_file(args[1]))
+        except FileNotFoundError:
+            lines = format_sysex_project_file_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except SysexProjectAnalysisError as exc:
+            lines = format_sysex_project_file_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(lines))
+        sys.stdout.write("\n")
+        return 0
+
+    if len(args) == 4 and args[0] == "sysex-kit-snapshot-report" and args[2] == "--slot":
+        from .sysex_snapshot_decoder import (
+            SysexSnapshotDecodeError,
+            decode_rytm_kit_snapshot_file,
+            format_rytm_kit_snapshot_error,
+            format_rytm_kit_snapshot_report,
+        )
+
+        try:
+            slot = int(args[3])
+            snapshot = decode_rytm_kit_snapshot_file(args[1], slot=slot)
+        except FileNotFoundError:
+            lines = format_rytm_kit_snapshot_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except SysexSnapshotDecodeError as exc:
+            lines = format_rytm_kit_snapshot_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_rytm_kit_snapshot_error(args[1], "Slot must be an integer")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_rytm_kit_snapshot_report(snapshot)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
+        len(args) == 6
+        and args[0] == "sysex-snapshot-mutation-plan-report"
+        and args[2] == "--slot"
+        and args[4] == "--depth"
+    ):
+        from .snapshot_mutation_planner import (
+            SnapshotMutationPlanError,
+            build_snapshot_mutation_plan_from_file,
+            format_snapshot_mutation_plan_error,
+            format_snapshot_mutation_plan_report,
+        )
+        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+
+        try:
+            slot = int(args[3])
+            plan = build_snapshot_mutation_plan_from_file(
+                args[1],
+                slot=slot,
+                depth=args[5],
+            )
+        except FileNotFoundError:
+            lines = format_snapshot_mutation_plan_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (SnapshotMutationPlanError, SysexSnapshotDecodeError) as exc:
+            lines = format_snapshot_mutation_plan_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_snapshot_mutation_plan_error(args[1], "Slot must be an integer")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_snapshot_mutation_plan_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
+        len(args) == 6
+        and args[0] == "dual-machine-mock-bridge-report"
+        and args[2] == "--slot"
+        and args[4] == "--depth"
+    ):
+        from .dual_machine_mock_bridge import (
+            build_dual_machine_mock_bridge,
+            format_dual_machine_mock_bridge_error,
+            format_dual_machine_mock_bridge_report,
+        )
+        from .snapshot_mutation_planner import SnapshotMutationPlanError
+        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+
+        try:
+            slot = int(args[3])
+        except ValueError:
+            lines = format_dual_machine_mock_bridge_error(args[1], "Slot must be an integer")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        try:
+            bridge = build_dual_machine_mock_bridge(
+                args[1],
+                slot=slot,
+                depth=args[5],
+            )
+        except FileNotFoundError:
+            lines = format_dual_machine_mock_bridge_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (SnapshotMutationPlanError, SysexSnapshotDecodeError, ValueError) as exc:
+            lines = format_dual_machine_mock_bridge_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_dual_machine_mock_bridge_report(bridge)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
+        len(args) == 5
+        and args[0] == "essence-plan-report"
+        and args[1] in {"--tags", "--description"}
+        and args[3] == "--discovery"
+    ):
+        from .essence_plan_report import (
+            format_essence_plan_error,
+            format_essence_plan_report,
+            parse_discovery_value,
+            parse_essence_tags,
+        )
+
+        try:
+            if args[1] == "--description":
+                from .essence_tag_adapter import derive_essence_tags_from_description
+
+                tags = derive_essence_tags_from_description(args[2])
+            else:
+                tags = parse_essence_tags(args[2])
+            discovery = parse_discovery_value(args[4])
+        except ValueError as exc:
+            lines = format_essence_plan_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_essence_plan_report(tags=tags, discovery=discovery)))
+        sys.stdout.write("\n")
+        return 0
+
+    if args and args[0] == "essence-application-readiness-report":
+        from .essence_application import (
+            evaluate_essence_application_readiness,
+            format_essence_application_error,
+            format_essence_application_readiness_report,
+            parse_application_mode,
+            parse_snapshot_state,
+        )
+        from .essence_plan_report import parse_discovery_value, parse_essence_tags
+        from .snapshot_fixtures import get_snapshot_fixture
+
+        if (
+            len(args) < 5
+            or args[1] != "--mode"
+            or args[3]
+            not in {
+                "--description",
+                "--tags",
+                "--style",
+            }
+        ):
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+        tail = args[5:]
+        if len(tail) % 2:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            mode = parse_application_mode(args[2])
+            source_flag = args[3]
+            source_value = args[4]
+            discovery = None
+            snapshot_state = None
+            snapshot_fixture = None
+            for flag, value in zip(tail[0::2], tail[1::2]):
+                if flag == "--discovery":
+                    if discovery is not None:
+                        raise ValueError("Discovery was supplied more than once")
+                    discovery = parse_discovery_value(value)
+                elif flag == "--snapshot":
+                    if snapshot_state is not None or snapshot_fixture is not None:
+                        raise ValueError("Choose either --snapshot or --fixture, not both")
+                    snapshot_state = parse_snapshot_state(value)
+                elif flag == "--fixture":
+                    if snapshot_state is not None or snapshot_fixture is not None:
+                        raise ValueError("Choose either --snapshot or --fixture, not both")
+                    snapshot_fixture = get_snapshot_fixture(value)
+                else:
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+
+            source_label = ""
+            source_prompt = ""
+            matched_profile_labels = ()
+            if source_flag == "--description":
+                from .essence_tag_adapter import derive_essence_tags_from_description
+
+                if discovery is None:
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                tags = derive_essence_tags_from_description(source_value)
+            elif source_flag == "--tags":
+                if discovery is None:
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                tags = parse_essence_tags(source_value)
+            else:
+                from .style_intent_profiles import build_style_intent_request
+
+                request = build_style_intent_request(source_value, discovery=discovery)
+                tags = request.tags
+                discovery = request.discovery
+                source_label = "Style Intent"
+                source_prompt = request.prompt
+                matched_profile_labels = tuple(
+                    profile.label for profile in request.matched_profiles
+                )
+
+            if mode == "live_snapshot" and snapshot_state is None and snapshot_fixture is None:
+                snapshot_state = parse_snapshot_state(None)
+        except ValueError as exc:
+            lines = format_essence_application_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except KeyError as exc:
+            lines = format_essence_application_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        readiness = evaluate_essence_application_readiness(
+            mode=mode,
+            tags=tags,
+            discovery=discovery,
+            snapshot_state=snapshot_state,
+            snapshot_fixture=snapshot_fixture,
+            source_label=source_label,
+            source_prompt=source_prompt,
+            matched_profile_labels=matched_profile_labels,
+        )
+        sys.stdout.write("\n".join(format_essence_application_readiness_report(readiness)))
+        sys.stdout.write("\n")
+        return 0
+
+    if args and args[0] == "style-intent-report":
+        from .essence_plan_report import parse_discovery_value
+        from .style_intent_profiles import (
+            format_style_intent_error,
+            format_style_intent_report,
+        )
+
+        if len(args) not in (3, 5) or args[1] != "--style":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            discovery = None
+            if len(args) == 5:
+                if args[3] != "--discovery":
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                discovery = parse_discovery_value(args[4])
+            lines = format_style_intent_report(args[2], discovery=discovery)
+        except ValueError as exc:
+            lines = format_style_intent_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(lines))
+        sys.stdout.write("\n")
+        return 0
+
+    if args and args[0] == "twelve-pad-mock-runtime-report":
+        from .essence_plan_report import parse_discovery_value
+        from .twelve_pad_mock_runtime import (
+            build_twelve_pad_mock_runtime_plan,
+            format_twelve_pad_mock_runtime_error,
+            format_twelve_pad_mock_runtime_report,
+        )
+
+        if len(args) not in (3, 5) or args[1] != "--style":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            discovery = None
+            if len(args) == 5:
+                if args[3] != "--discovery":
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                discovery = parse_discovery_value(args[4])
+            plan = build_twelve_pad_mock_runtime_plan(args[2], discovery=discovery)
+        except ValueError as exc:
+            lines = format_twelve_pad_mock_runtime_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_twelve_pad_mock_runtime_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
+    if args == ["analog-four-reference-report"]:
+        from .analog_four_reference import format_analog_four_reference_report
+
+        sys.stdout.write("\n".join(format_analog_four_reference_report()))
         sys.stdout.write("\n")
         return 0
 

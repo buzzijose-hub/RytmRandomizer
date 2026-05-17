@@ -155,8 +155,21 @@ direction".
 This is the **influence not replica** rule, lifted unchanged from the
 pre-schema `MusicLibraryGuardrails` skill.
 
+## Future product direction
+
+The future end-user analyzer is expected to expose a Reference/Discovery
+control that lets a user decide how closely mutation guardrails should follow
+the analyzed reference versus how widely they should explore. That product
+direction is captured in `docs/FUTURE_AUDIO_ANALYZER_REFERENCE_DISCOVERY.md`.
+
+That checkpoint is intentionally future-facing. The current product remains
+the V1.34-compatible four-pad Rytm randomizer; Pads 5-12 and polished analyzer
+workflows are not current runtime scope.
+
 ## See also
 
+- `docs/FUTURE_AUDIO_ANALYZER_REFERENCE_DISCOVERY.md` - future
+  Reference/Discovery slider and 12-pad role-map direction.
 - `GUARDRAILS_DESIGN_SPEC.md` - the full four-layer design.
 - `rytm_randomizer/guardrails/schema.py` - the typed Guardrail Profile
   contract (the seam between WS-V and WS-W).

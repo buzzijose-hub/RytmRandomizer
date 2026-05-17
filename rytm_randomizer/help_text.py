@@ -10,11 +10,19 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
+    "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
+    "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
+    "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
+    "style-intent-report --style <text> [--discovery <0..1>] | "
+    "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
+    "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
-    "search-scenes <query> | search-group-profiles <query> | "
-    "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
+    "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
+    "preview-scene <key> | preview-group-profile <key>"
 )
 
 HELP_TEXT = {
@@ -32,6 +40,22 @@ Usage:
   python -m rytm_randomizer.cli mock-runtime-active-bridge-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli sysex-kit-bank-report <path>
+  python -m rytm_randomizer.cli sysex-project-report <path>
+  python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
+  python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --description <text> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode live-snapshot --description <text> --discovery <0..1> --fixture <key>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode live-snapshot --style <text> --fixture <key>
+  python -m rytm_randomizer.cli style-intent-report --style <text>
+  python -m rytm_randomizer.cli style-intent-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
+  python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -62,6 +86,26 @@ Commands:
                      Print the read-only anchor/profile behavior report.
   behavior-parity-report
                      Print the read-only behavior-parity coverage report.
+  sysex-kit-bank-report
+                     Analyze a saved SysEx kit bank file without touching hardware.
+  sysex-project-report
+                     Analyze a saved whole-project SysEx dump without touching hardware.
+  sysex-kit-snapshot-report
+                     Decode a saved Rytm kit slot into a passive 12-pad snapshot.
+  sysex-snapshot-mutation-plan-report
+                     Plan passive captured-value mutations from a saved kit snapshot.
+  dual-machine-mock-bridge-report
+                     Preview a combined Rytm + Analog Four mock performance stream.
+  essence-plan-report
+                     Preview a 12-pad engine plan from essence tags or a description.
+  essence-application-readiness-report
+                     Explain whether an essence plan is apply-ready by mode.
+  style-intent-report
+                     Preview a 12-pad kit plan from broad style/genre intent.
+  twelve-pad-mock-runtime-report
+                     Preview mapped-only 12-pad mock runtime CC messages.
+  analog-four-reference-report
+                     Print the passive Analog Four MKII reference intake report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -85,6 +129,237 @@ Safety:
   no port opening
   no command execution
   no hardware mutation
+  no hardware required""",
+    "sysex-kit-bank-report": """RytmRandomizer passive CLI: sysex-kit-bank-report
+
+Usage:
+  python -m rytm_randomizer.cli sysex-kit-bank-report <path>
+  python -m rytm_randomizer.cli sysex-kit-bank-report --help
+
+Behavior:
+  Reads an existing SysEx kit bank file and prints passive record metadata.
+  It does not request dumps, decode editable parameters, write SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no SysEx writes
+  no hardware required""",
+    "sysex-project-report": """RytmRandomizer passive CLI: sysex-project-report
+
+Usage:
+  python -m rytm_randomizer.cli sysex-project-report <path>
+  python -m rytm_randomizer.cli sysex-project-report --help
+
+Behavior:
+  Reads an existing whole-project SysEx dump and prints passive record groups
+  for kits, sounds, patterns, project settings, and global-like records. It
+  does not request dumps, receive live SysEx, decode editable parameters,
+  write SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "sysex-kit-snapshot-report": """RytmRandomizer passive CLI: sysex-kit-snapshot-report
+
+Usage:
+  python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
+  python -m rytm_randomizer.cli sysex-kit-snapshot-report --help
+
+Behavior:
+  Reads an existing Rytm kit bank or whole-project SysEx file, selects one kit
+  slot, unpacks its saved Elektron 7-bit payload, and prints a 12-pad snapshot
+  inventory with machine IDs and saved parameter baselines where mapped.
+  It does not request dumps, receive live SysEx, send MIDI, write SysEx, or
+  touch hardware.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "sysex-snapshot-mutation-plan-report": """RytmRandomizer passive CLI: sysex-snapshot-mutation-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report --help
+
+Behavior:
+  Reads an existing Rytm kit bank or whole-project SysEx file, decodes one kit
+  slot through the saved snapshot decoder, and prints a passive mutation plan
+  using bounded deterministic deltas from the captured parameter values. It does
+  not load anchors, switch machines, send MIDI, write SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "dual-machine-mock-bridge-report": """RytmRandomizer passive CLI: dual-machine-mock-bridge-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-mock-bridge-report --help
+
+Behavior:
+  Reads an existing Rytm kit bank or whole-project SysEx file and previews a
+  combined Rytm + Analog Four mock sender stream. The Rytm side mutates from
+  saved captured values; the Analog Four side uses the conservative
+  safe-starter CC plan from validated Track 1-4 smoke tests. It does not send
+  MIDI, open ports, request dumps, write SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
+  mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "essence-plan-report": """RytmRandomizer passive CLI: essence-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-plan-report --help
+
+Behavior:
+  Prints a passive 12-pad engine plan preview from essence tags or a written
+  reference description and a Reference/Discovery value. It does not analyze
+  audio files, send MIDI, write SysEx, or mutate hardware.
+
+Safety:
+  passive/read-only
+  no audio file analysis
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no SysEx writes
+  no hardware required""",
+    "essence-application-readiness-report": """RytmRandomizer passive CLI: essence-application-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode <safe-anchors|live-snapshot> --tags <csv> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode <safe-anchors|live-snapshot> --description <text> --discovery <0..1>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode <safe-anchors|live-snapshot> --style <text> [--discovery <0..1>]
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode live-snapshot --description <text> --discovery <0..1> --snapshot <not-requested|capturing|captured|partial|failed>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode live-snapshot --description <text> --discovery <0..1> --fixture <key>
+  python -m rytm_randomizer.cli essence-application-readiness-report --mode live-snapshot --style <text> [--discovery <0..1>] --fixture <key>
+  python -m rytm_randomizer.cli essence-application-readiness-report --help
+
+Behavior:
+  Prints a passive readiness gate for applying a 12-pad essence plan under Safe
+  Anchors or Live Snapshot. It accepts essence tags, written descriptions, or a
+  broad style prompt such as schranz or Birmingham techno. It explains which
+  pads are ready, blocked, or future-only. With --fixture, it uses a passive
+  mock snapshot inventory. It does not capture kits, analyze audio files, send
+  MIDI, write SysEx, or mutate hardware.
+
+Safety:
+  passive/read-only
+  no audio file analysis
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no Pads 5-12 runtime mutation
+  no hardware required""",
+    "style-intent-report": """RytmRandomizer passive CLI: style-intent-report
+
+Usage:
+  python -m rytm_randomizer.cli style-intent-report --style <text>
+  python -m rytm_randomizer.cli style-intent-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli style-intent-report --help
+
+Behavior:
+  Prints a passive 12-pad style kit plan from broad genre/style intent such as
+  broken techno, dark techno, Birmingham techno, schranz, hardcore, classic
+  Detroit techno, driving techno, or peak-time techno. Analog Four appears only
+  as future expansion metadata. It does not analyze audio files, send MIDI,
+  write SysEx, or mutate hardware.
+
+Safety:
+  passive/read-only
+  no audio file analysis
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no Analog Four runtime support
+  no Pads 5-12 runtime mutation
+  no hardware required""",
+    "twelve-pad-mock-runtime-report": """RytmRandomizer passive CLI: twelve-pad-mock-runtime-report
+
+Usage:
+  python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
+  python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --help
+
+Behavior:
+  Builds a mock-only 12-pad runtime contract from broad style intent. It uses
+  currently mapped V1.34 machine profiles, falls back from preferred future
+  engines to mapped candidates, and prints the inert mock CC stream for
+  inspection. It does not send MIDI, open ports, write SysEx, or mutate
+  hardware.
+
+Safety:
+  passive/read-only
+  mock sender only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-reference-report": """RytmRandomizer passive CLI: analog-four-reference-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-reference-report
+  python -m rytm_randomizer.cli analog-four-reference-report --help
+
+Behavior:
+  Prints an attributed passive Analog Four MKII reference intake: source,
+  license, four planning track roles, starter CC/NRPN parameter groups, and
+  blocked next slices. It does not add Analog Four runtime support, send MIDI,
+  open ports, receive SysEx, write SysEx, or mutate hardware.
+
+Safety:
+  passive/read-only
+  reference intake only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
   no hardware required""",
     "report": """RytmRandomizer passive CLI: report
 

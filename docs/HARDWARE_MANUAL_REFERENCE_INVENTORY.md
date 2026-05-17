@@ -146,6 +146,8 @@ Good future manual-backed slices:
 - safe hardware validation checklist refinement
 - first-hardware-candidate research notes
 - Analog Four future-scope inventory
+- Analog Four expansion planning checkpoint:
+  `docs/FUTURE_ANALOG_FOUR_EXPANSION.md`
 
 Each future slice should remain separately scoped and reviewed.
 

@@ -94,6 +94,21 @@ Convergence:
 - real_midi_provider: rytm_randomizer.mido_provider.MidoMidiPortProvider
 - interactive_logic_owner: rytm_randomizer.shell
 - interactive_logic_converged: True
+Hardware Validation:
+- status: first_end_user_pass
+- date: 2026-05-15
+- validated_device: Elektron Analog Rytm MKII
+- operator: Jose Buzzi
+- collaborator: Eddie
+- installer_wheel: rytm_randomizer-1.34.0-py3-none-any.whl
+- dry_run: passed
+- arm_port_open: passed
+- audible_scene_mutation: confirmed_by_operator
+- anchor_return: confirmed_by_operator
+- guardrails: profile_prompt_rejected_scn_without_midi, scn_command_menu_no_midi, bare_depth_digit_no_midi
+- canonical_scene_flow: S1A, S3A, S3B, S4B, S5, Z
+- analog_four_support: absent
+- pads_5_12_support: absent
 Safety:
 - real_midi: present_behind_arm_flag
 - port_opening: present_behind_arm_flag

@@ -155,6 +155,27 @@ CONVERGENCE_STATUS = {
     "interactive_logic_converged": True,
 }
 
+HARDWARE_VALIDATION_STATUS = {
+    "status": "first_end_user_pass",
+    "date": "2026-05-15",
+    "validated_device": "Elektron Analog Rytm MKII",
+    "operator": "Jose Buzzi",
+    "collaborator": "Eddie",
+    "installer_wheel": "rytm_randomizer-1.34.0-py3-none-any.whl",
+    "dry_run": "passed",
+    "arm_port_open": "passed",
+    "audible_scene_mutation": "confirmed_by_operator",
+    "anchor_return": "confirmed_by_operator",
+    "guardrails": (
+        "profile_prompt_rejected_scn_without_midi",
+        "scn_command_menu_no_midi",
+        "bare_depth_digit_no_midi",
+    ),
+    "canonical_scene_flow": ("S1A", "S3A", "S3B", "S4B", "S5", "Z"),
+    "analog_four_support": "absent",
+    "pads_5_12_support": "absent",
+}
+
 PROJECT_STATUS_CHECKS = (
     ("safety.real_midi", "present_behind_arm_flag"),
     ("safety.port_opening", "present_behind_arm_flag"),
@@ -163,6 +184,11 @@ PROJECT_STATUS_CHECKS = (
     ("safety.dispatch", "present_behind_arm_flag"),
     ("safety.default_mode", "passive"),
     ("safety.hardware_required", False),
+    ("hardware_validation.status", "first_end_user_pass"),
+    ("hardware_validation.dry_run", "passed"),
+    ("hardware_validation.arm_port_open", "passed"),
+    ("hardware_validation.audible_scene_mutation", "confirmed_by_operator"),
+    ("hardware_validation.anchor_return", "confirmed_by_operator"),
     ("safety.v134_reference", "untouched"),
     ("safety.package_metadata", "untouched"),
     # Convergence checks (WS-H): the package gained active execution behind --arm.
@@ -236,6 +262,7 @@ def build_project_status_report():
         "collaborator_review_triage_template": (COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS),
         "closeout": CLOSEOUT_STATUS,
         "convergence": CONVERGENCE_STATUS,
+        "hardware_validation": HARDWARE_VALIDATION_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
             "in_memory_only": True,
@@ -296,6 +323,7 @@ def summarize_project_status_report(report=None):
         "active_execution": source_report["safety"]["active_execution"],
         "default_mode": source_report["safety"]["default_mode"],
         "hardware_required": source_report["safety"]["hardware_required"],
+        "hardware_validation": source_report["hardware_validation"]["status"],
         "v134_reference": source_report["safety"]["v134_reference"],
         "active_execution_gate": source_report["convergence"]["active_execution_gate"],
         "active_modes_present": source_report["convergence"]["active_modes_present"],
@@ -333,6 +361,7 @@ def format_project_status_summary(report=None):
         f"- active_modes_present: {summary['active_modes_present']}",
         f"- total_modes: {summary['total_modes']}",
         f"- hardware_required: {summary['hardware_required']}",
+        f"- hardware_validation: {summary['hardware_validation']}",
         f"- v134_reference: {summary['v134_reference']}",
     ]
 
@@ -374,6 +403,7 @@ def format_project_status_report(report=None):
     api = source_report["public_api_hardening"]
     collaborator = source_report["collaborator_review_intake"]
     triage_template = source_report["collaborator_review_triage_template"]
+    hardware_validation = source_report["hardware_validation"]
 
     lines = [
         source_report["title"],
@@ -459,6 +489,12 @@ def format_project_status_report(report=None):
 
     lines.append("Convergence:")
     for key, value in source_report["convergence"].items():
+        if isinstance(value, tuple):
+            value = ", ".join(str(item) for item in value)
+        lines.append(f"- {key}: {value}")
+
+    lines.append("Hardware Validation:")
+    for key, value in hardware_validation.items():
         if isinstance(value, tuple):
             value = ", ".join(str(item) for item in value)
         lines.append(f"- {key}: {value}")
