@@ -15,7 +15,7 @@ USAGE = (
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
-    "analog-four-offset-candidate-report <path> --track <1-4> --limit <n> | "
+    "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -49,6 +49,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
+  python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -274,14 +275,16 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
+  python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report --help
 
 Behavior:
   Reads an existing Analog Four kit bank or whole-project SysEx file, unpacks
-  saved kit payloads, and scans one Track 1-4 block across kit variations for
-  varying CC-like saved words. Reported offsets are candidate_unverified and
-  no parameter names are claimed. It does not request dumps, receive live
-  SysEx, send MIDI, write SysEx, or touch hardware.
+  saved kit payloads, and scans either one Track 1-4 block or all four track
+  blocks across kit variations for varying CC-like saved words. Reported
+  offsets are candidate_unverified and no parameter names are claimed. It does
+  not request dumps, receive live SysEx, send MIDI, write SysEx, or touch
+  hardware.
 
 Safety:
   passive/read-only

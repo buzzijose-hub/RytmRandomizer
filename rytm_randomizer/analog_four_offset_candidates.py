@@ -64,6 +64,16 @@ class AnalogFourOffsetCandidateReport:
     candidates: tuple[AnalogFourOffsetCandidate, ...]
 
 
+@dataclass(frozen=True)
+class AnalogFourAllTrackOffsetCandidateReport:
+    """Passive offset-candidate report for all four A4 tracks."""
+
+    source_path: str | None
+    kit_count: int
+    manufacturer_id: str
+    track_reports: tuple[AnalogFourOffsetCandidateReport, ...]
+
+
 def build_analog_four_offset_candidate_report_from_file(
     path: str | Path,
     *,
@@ -141,6 +151,52 @@ def build_analog_four_offset_candidate_report_from_bytes(
     )
 
 
+def build_analog_four_all_track_offset_candidate_report_from_file(
+    path: str | Path,
+    *,
+    limit: int = DEFAULT_LIMIT,
+) -> AnalogFourAllTrackOffsetCandidateReport:
+    """Build a passive all-track offset-candidate report from a SysEx file."""
+
+    report = build_analog_four_all_track_offset_candidate_report_from_bytes(
+        Path(path).read_bytes(),
+        limit=limit,
+    )
+    return AnalogFourAllTrackOffsetCandidateReport(
+        source_path=str(path),
+        kit_count=report.kit_count,
+        manufacturer_id=report.manufacturer_id,
+        track_reports=report.track_reports,
+    )
+
+
+def build_analog_four_all_track_offset_candidate_report_from_bytes(
+    data: bytes,
+    *,
+    limit: int = DEFAULT_LIMIT,
+) -> AnalogFourAllTrackOffsetCandidateReport:
+    """Build a passive offset-candidate report for A4 Tracks 1-4."""
+
+    if limit < 1:
+        raise AnalogFourOffsetCandidateError("limit must be at least 1")
+
+    track_reports = tuple(
+        build_analog_four_offset_candidate_report_from_bytes(
+            data,
+            track=track,
+            limit=limit,
+        )
+        for track in range(1, 5)
+    )
+    first_report = track_reports[0]
+    return AnalogFourAllTrackOffsetCandidateReport(
+        source_path=None,
+        kit_count=first_report.kit_count,
+        manufacturer_id=first_report.manufacturer_id,
+        track_reports=track_reports,
+    )
+
+
 def format_analog_four_offset_candidate_report(
     report: AnalogFourOffsetCandidateReport,
 ) -> list[str]:
@@ -160,29 +216,38 @@ def format_analog_four_offset_candidate_report(
     if not report.candidates:
         lines.append("- none found")
     for candidate in report.candidates:
-        preview = ", ".join(str(value) for value in candidate.values_preview)
+        lines.append(_format_candidate_line(candidate))
+    lines.extend(_safety_lines())
+    return lines
+
+
+def format_analog_four_all_track_offset_candidate_report(
+    report: AnalogFourAllTrackOffsetCandidateReport,
+) -> list[str]:
+    """Format a deterministic passive all-track A4 offset-candidate report."""
+
+    lines = [
+        "RytmRandomizer passive Analog Four all-track offset candidate report",
+        f"Source path: {report.source_path or '<bytes>'}",
+        "Tracks scanned: 1-4",
+        f"Kit records scanned: {report.kit_count}",
+        f"Manufacturer ID: {report.manufacturer_id}",
+        "Track summaries:",
+    ]
+    for track_report in report.track_reports:
         lines.append(
-            f"- Offset +{candidate.relative_offset} / word {candidate.word_index}: "
-            f"samples {candidate.sample_count}, unique {candidate.unique_value_count}, "
-            f"range {candidate.min_value}-{candidate.max_value}, zeros {candidate.zero_count}, "
-            f"values {preview}, {candidate.mapping_status}"
+            f"Track {track_report.track} / MIDI channel {track_report.midi_channel} "
+            f"/ wire channel {track_report.wire_channel}"
         )
-    lines.extend(
-        [
-            "Safety:",
-            "- passive/read-only",
-            "- candidate offsets only",
-            "- no parameter names claimed",
-            "- no MIDI sending",
-            "- no MIDI receive",
-            "- no port opening",
-            "- no command execution",
-            "- no hardware mutation",
-            "- no live SysEx receive",
-            "- no SysEx writes",
-            "- no hardware required",
-        ]
-    )
+        lines.append(
+            f"Candidates reported: {len(track_report.candidates)} / "
+            f"{track_report.candidate_count}"
+        )
+        if not track_report.candidates:
+            lines.append("- none found")
+        for candidate in track_report.candidates:
+            lines.append(_format_candidate_line(candidate))
+    lines.extend(_safety_lines())
     return lines
 
 
@@ -194,18 +259,7 @@ def format_analog_four_offset_candidate_error(path: str | Path, message: str) ->
         f"Path: {path}",
         "Found: False",
         f"Message: {message}. No MIDI was sent. No command executed.",
-        "Safety:",
-        "- passive/read-only",
-        "- candidate offsets only",
-        "- no parameter names claimed",
-        "- no MIDI sending",
-        "- no MIDI receive",
-        "- no port opening",
-        "- no command execution",
-        "- no hardware mutation",
-        "- no live SysEx receive",
-        "- no SysEx writes",
-        "- no hardware required",
+        *_safety_lines(),
     ]
 
 
@@ -257,12 +311,43 @@ def _candidate_from_values(
     )
 
 
+def _format_candidate_line(candidate: AnalogFourOffsetCandidate) -> str:
+    preview = ", ".join(str(value) for value in candidate.values_preview)
+    return (
+        f"- Offset +{candidate.relative_offset} / word {candidate.word_index}: "
+        f"samples {candidate.sample_count}, unique {candidate.unique_value_count}, "
+        f"range {candidate.min_value}-{candidate.max_value}, zeros {candidate.zero_count}, "
+        f"values {preview}, {candidate.mapping_status}"
+    )
+
+
+def _safety_lines() -> list[str]:
+    return [
+        "Safety:",
+        "- passive/read-only",
+        "- candidate offsets only",
+        "- no parameter names claimed",
+        "- no MIDI sending",
+        "- no MIDI receive",
+        "- no port opening",
+        "- no command execution",
+        "- no hardware mutation",
+        "- no live SysEx receive",
+        "- no SysEx writes",
+        "- no hardware required",
+    ]
+
+
 __all__ = [
+    "AnalogFourAllTrackOffsetCandidateReport",
     "AnalogFourOffsetCandidate",
     "AnalogFourOffsetCandidateError",
     "AnalogFourOffsetCandidateReport",
+    "build_analog_four_all_track_offset_candidate_report_from_bytes",
+    "build_analog_four_all_track_offset_candidate_report_from_file",
     "build_analog_four_offset_candidate_report_from_bytes",
     "build_analog_four_offset_candidate_report_from_file",
+    "format_analog_four_all_track_offset_candidate_report",
     "format_analog_four_offset_candidate_error",
     "format_analog_four_offset_candidate_report",
 ]

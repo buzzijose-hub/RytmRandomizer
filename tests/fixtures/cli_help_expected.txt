@@ -19,6 +19,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
+  python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>

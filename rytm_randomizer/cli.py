@@ -718,6 +718,48 @@ def main(argv=None):
 
     if (
         len(args) == 5
+        and args[0] == "analog-four-offset-candidate-report"
+        and args[2] == "--all-tracks"
+        and args[3] == "--limit"
+    ):
+        from .analog_four_offset_candidates import (
+            AnalogFourOffsetCandidateError,
+            build_analog_four_all_track_offset_candidate_report_from_file,
+            format_analog_four_all_track_offset_candidate_report,
+            format_analog_four_offset_candidate_error,
+        )
+
+        try:
+            limit = int(args[4])
+            report = build_analog_four_all_track_offset_candidate_report_from_file(
+                args[1],
+                limit=limit,
+            )
+        except FileNotFoundError:
+            lines = format_analog_four_offset_candidate_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except AnalogFourOffsetCandidateError as exc:
+            lines = format_analog_four_offset_candidate_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_analog_four_offset_candidate_error(
+                args[1],
+                "Limit must be an integer",
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_analog_four_all_track_offset_candidate_report(report)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
+        len(args) == 5
         and args[0] == "essence-plan-report"
         and args[1] in {"--tags", "--description"}
         and args[3] == "--discovery"

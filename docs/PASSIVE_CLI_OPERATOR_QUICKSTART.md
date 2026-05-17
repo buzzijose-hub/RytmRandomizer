@@ -294,6 +294,12 @@ Scan saved Analog Four kit variations for unverified numeric offset candidates:
 python -m rytm_randomizer.cli analog-four-offset-candidate-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --track 1 --limit 12
 ```
 
+Scan all four Analog Four tracks in one passive run:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-offset-candidate-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --all-tracks --limit 8
+```
+
 This command scans existing saved A4 kit records, extracts one Track 1-4 block
 across all kits, and reports even-aligned CC-like words that vary across saved
 kit variations. These are evidence points for future mapping only. The report

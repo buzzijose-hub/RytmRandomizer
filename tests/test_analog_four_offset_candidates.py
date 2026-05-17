@@ -133,6 +133,83 @@ def test_format_offset_candidate_report_marks_candidates_unverified():
     assert "- no SysEx writes" in output
 
 
+def test_build_all_track_offset_candidate_report_summarizes_four_tracks():
+    from rytm_randomizer.analog_four_offset_candidates import (
+        build_analog_four_all_track_offset_candidate_report_from_bytes,
+    )
+
+    data = b"".join(
+        (
+            make_a4_kit_record(
+                0,
+                "KIT 1",
+                {
+                    1: {20: 10},
+                    2: {22: 30},
+                    3: {24: 50},
+                    4: {26: 70},
+                },
+            ),
+            make_a4_kit_record(
+                1,
+                "KIT 2",
+                {
+                    1: {20: 40},
+                    2: {22: 60},
+                    3: {24: 80},
+                    4: {26: 100},
+                },
+            ),
+        )
+    )
+
+    report = build_analog_four_all_track_offset_candidate_report_from_bytes(
+        data,
+        limit=2,
+    )
+
+    assert report.source_path is None
+    assert report.kit_count == 2
+    assert report.manufacturer_id == "00 20 3C"
+    assert tuple(track_report.track for track_report in report.track_reports) == (1, 2, 3, 4)
+    assert tuple(track_report.candidates[0].relative_offset for track_report in report.track_reports) == (
+        20,
+        22,
+        24,
+        26,
+    )
+    assert all(
+        track_report.candidates[0].mapping_status == "candidate_unverified"
+        for track_report in report.track_reports
+    )
+
+
+def test_format_all_track_offset_candidate_report_marks_all_candidates_unverified():
+    from rytm_randomizer.analog_four_offset_candidates import (
+        build_analog_four_all_track_offset_candidate_report_from_bytes,
+        format_analog_four_all_track_offset_candidate_report,
+    )
+
+    data = b"".join(
+        (
+            make_a4_kit_record(0, "KIT 1", {1: {20: 10}, 2: {22: 30}}),
+            make_a4_kit_record(1, "KIT 2", {1: {20: 40}, 2: {22: 60}}),
+        )
+    )
+    report = build_analog_four_all_track_offset_candidate_report_from_bytes(data, limit=1)
+    output = "\n".join(format_analog_four_all_track_offset_candidate_report(report))
+
+    assert "RytmRandomizer passive Analog Four all-track offset candidate report" in output
+    assert "Tracks scanned: 1-4" in output
+    assert "Track 1 / MIDI channel 1 / wire channel 0" in output
+    assert "Track 2 / MIDI channel 2 / wire channel 1" in output
+    assert "- Offset +20 / word 10: samples 2, unique 2, range 10-40" in output
+    assert "- Offset +22 / word 11: samples 2, unique 2, range 30-60" in output
+    assert "candidate_unverified" in output
+    assert "- no parameter names claimed" in output
+    assert "- no MIDI sending" in output
+
+
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", *args],
@@ -169,5 +246,34 @@ def test_analog_four_offset_candidate_cli_reads_saved_kits_without_hardware(tmp_
     assert "Kit records scanned: 2" in result.stdout
     assert "candidate_unverified" in result.stdout
     assert "- no parameter names claimed" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_offset_candidate_cli_reads_all_tracks_without_hardware(tmp_path):
+    sysex_path = tmp_path / "a4-kits.syx"
+    sysex_path.write_bytes(
+        b"".join(
+            (
+                make_a4_kit_record(0, "KIT 1", {1: {20: 10}, 2: {22: 30}}),
+                make_a4_kit_record(1, "KIT 2", {1: {20: 40}, 2: {22: 60}}),
+            )
+        )
+    )
+
+    result = run_cli(
+        "analog-four-offset-candidate-report",
+        str(sysex_path),
+        "--all-tracks",
+        "--limit",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four all-track offset candidate report" in result.stdout
+    assert "Tracks scanned: 1-4" in result.stdout
+    assert "Track 1 / MIDI channel 1 / wire channel 0" in result.stdout
+    assert "Track 4 / MIDI channel 4 / wire channel 3" in result.stdout
+    assert "candidate_unverified" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

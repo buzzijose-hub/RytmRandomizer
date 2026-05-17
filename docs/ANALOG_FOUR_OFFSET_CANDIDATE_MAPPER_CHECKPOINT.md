@@ -11,6 +11,7 @@ The project can now scan saved Analog Four MKII kit variations and identify save
 - Reads saved `.syx` files from disk
 - Scans Analog Four kit records
 - Selects one Track 1-4 block
+- Can summarize all four track blocks in one passive report
 - Reads CC-like 16-bit words in the `0-127` range
 - Reports varying offsets across saved kits
 - Marks every offset as `candidate_unverified`
