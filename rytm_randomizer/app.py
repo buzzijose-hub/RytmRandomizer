@@ -124,6 +124,16 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--rytm-engine-cycle",
+        action="store_true",
+        help=(
+            "With --dry-run or --arm, build a style-driven Rytm 12-pad "
+            "engine-cycle plan. --dry-run emits to the guarded mock sender; "
+            "--arm requires a selected Rytm port and exact SEND confirmation "
+            "before CC15 machine-select messages are sent."
+        ),
+    )
+    parser.add_argument(
         "--snapshot-path",
         metavar="PATH",
         help="Saved Analog Rytm SysEx kit/project dump path for snapshot planning.",
@@ -156,6 +166,17 @@ def _build_parser() -> argparse.ArgumentParser:
         type=float,
         metavar="AMOUNT",
         help="Optional snapshot essence discovery amount from 0.0 to 1.0.",
+    )
+    parser.add_argument(
+        "--engine-cycle-style",
+        metavar="STYLE",
+        help="Style or genre prompt for Rytm engine-cycle planning.",
+    )
+    parser.add_argument(
+        "--engine-cycle-discovery",
+        type=float,
+        metavar="AMOUNT",
+        help="Optional Rytm engine-cycle discovery amount from 0.0 to 1.0.",
     )
     parser.add_argument(
         "--analog-four-path",
@@ -238,6 +259,8 @@ def _print_passive_menu() -> None:
             "guarded single-target live snapshot mutation plan",
             "- --snapshot-essence-send  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad style/genre snapshot essence plan",
+            "- --rytm-engine-cycle  with --arm/--dry-run, send a guarded "
+            "Rytm 12-pad CC15 engine-cycle plan",
             "",
             USAGE,
         ]
@@ -292,6 +315,17 @@ def _snapshot_essence_send_request_from_args(
     }
 
 
+def _rytm_engine_cycle_request_from_args(
+    args: argparse.Namespace,
+) -> dict[str, object] | None:
+    if not args.rytm_engine_cycle:
+        return None
+    return {
+        "engine_cycle_style": args.engine_cycle_style,
+        "engine_cycle_discovery": args.engine_cycle_discovery,
+    }
+
+
 def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object]):
     """Build the passive dual-machine bridge for an app snapshot-send request."""
 
@@ -334,6 +368,21 @@ def _build_snapshot_essence_send_plan_from_request(request: dict[str, object]):
     )
 
 
+def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
+    """Build the passive Rytm engine-cycle plan for an app request."""
+
+    from .rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+
+    return build_rytm_engine_cycle_plan(
+        str(request["engine_cycle_style"]),
+        discovery=(
+            None
+            if request.get("engine_cycle_discovery") is None
+            else float(request["engine_cycle_discovery"])
+        ),
+    )
+
+
 def _run_arm(
     *,
     twelve_pad_smoke: bool = False,
@@ -342,6 +391,7 @@ def _run_arm(
     analog_four_track_filter_smoke: int | None = None,
     snapshot_send_request: dict[str, object] | None = None,
     snapshot_essence_send_request: dict[str, object] | None = None,
+    rytm_engine_cycle_request: dict[str, object] | None = None,
 ) -> int:
     """Construct the real MIDI provider, open a port, run the package shell.
 
@@ -354,6 +404,8 @@ def _run_arm(
         return _run_arm_dual_machine_snapshot_send(snapshot_send_request)
     if snapshot_essence_send_request is not None:
         return _run_arm_snapshot_essence_send(snapshot_essence_send_request)
+    if rytm_engine_cycle_request is not None:
+        return _run_arm_rytm_engine_cycle(rytm_engine_cycle_request)
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -759,6 +811,91 @@ def _run_arm_snapshot_essence_send(request: dict[str, object]) -> int:
                 _shutdown_logger.debug("port_close_failed_best_effort")
 
 
+def _run_arm_rytm_engine_cycle(request: dict[str, object]) -> int:
+    """Run the guarded Rytm engine-cycle send against real hardware."""
+
+    from .rytm_engine_cycle_hardware_sender import (
+        build_rytm_engine_cycle_hardware_send_refusal,
+        execute_rytm_engine_cycle_hardware_send,
+        format_rytm_engine_cycle_hardware_send_error,
+        format_rytm_engine_cycle_hardware_send_report,
+    )
+
+    try:
+        plan = _build_rytm_engine_cycle_plan_from_request(request)
+    except ValueError as exc:
+        sys.stdout.write("\n".join(format_rytm_engine_cycle_hardware_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    if plan.no_candidate_count:
+        result = build_rytm_engine_cycle_hardware_send_refusal(
+            plan,
+            "plan_has_unresolved_pads",
+            port_name="<not-opened>",
+        )
+        sys.stdout.write("\n".join(format_rytm_engine_cycle_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm failed: no real MIDI output ports available. "
+            "Connect the Analog Rytm and retry.\n"
+        )
+        return 1
+
+    sys.stdout.write(
+        "RytmRandomizer --arm: real MIDI provider ready. "
+        f"Available output ports: {', '.join(output_names)}\n"
+    )
+
+    port_name = _choose_arm_port_name(output_names, device_label="Analog Rytm")
+    if port_name is None:
+        return 1
+
+    if not _confirm_rytm_engine_cycle_send(plan, port_name):
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    try:
+        result = execute_rytm_engine_cycle_hardware_send(
+            plan,
+            port,
+            port_name=port_name,
+            armed=True,
+            operator_confirmed=True,
+            sleep=_smoke_sleep,
+        )
+        sys.stdout.write("\n".join(format_rytm_engine_cycle_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 0 if result.accepted else 1
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("port_close_failed_best_effort")
+
+
 def _close_port_best_effort(port) -> None:
     if port is None:
         return
@@ -819,6 +956,26 @@ def _confirm_snapshot_essence_send(
     sys.stdout.write(
         "\nType SEND to transmit "
         f"{plan.eligible_event_count} snapshot essence CC message(s) to "
+        f"Analog Rytm on {port_name}: "
+    )
+    try:
+        raw = input().strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write("--arm cancelled: SEND confirmation was not provided.\n")
+        return False
+    if raw != "SEND":
+        sys.stderr.write("--arm cancelled: exact SEND confirmation was not provided.\n")
+        return False
+    return True
+
+
+def _confirm_rytm_engine_cycle_send(
+    plan,
+    port_name: str,
+) -> bool:
+    sys.stdout.write(
+        "\nType SEND to transmit "
+        f"{plan.top_candidate_count} Rytm engine-cycle CC15 message(s) to "
         f"Analog Rytm on {port_name}: "
     )
     try:
@@ -929,6 +1086,36 @@ def _run_dry_run_snapshot_essence_send(request: dict[str, object]) -> int:
     return 0 if result.accepted else 1
 
 
+def _run_dry_run_rytm_engine_cycle(request: dict[str, object]) -> int:
+    """Run the guarded Rytm engine-cycle send against the mock sender."""
+
+    from .rytm_engine_cycle_guarded_sender import (
+        build_rytm_engine_cycle_guarded_send_dry_run,
+        format_rytm_engine_cycle_guarded_send_dry_run_report,
+        format_rytm_engine_cycle_guarded_send_error,
+    )
+
+    sys.stdout.write(
+        "RytmRandomizer --dry-run: guarded Rytm engine-cycle send "
+        "(mock-only, no hardware, no port opened).\n"
+    )
+    try:
+        plan = _build_rytm_engine_cycle_plan_from_request(request)
+        result = build_rytm_engine_cycle_guarded_send_dry_run(plan)
+    except ValueError as exc:
+        sys.stdout.write("\n".join(format_rytm_engine_cycle_guarded_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    sys.stdout.write("\n".join(format_rytm_engine_cycle_guarded_send_dry_run_report(result)))
+    sys.stdout.write("\n")
+    sys.stdout.write(
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} "
+        "message(s).\n"
+    )
+    return 0 if result.accepted else 1
+
+
 def _run_dry_run(
     *,
     twelve_pad_smoke: bool = False,
@@ -937,6 +1124,7 @@ def _run_dry_run(
     analog_four_track_filter_smoke: int | None = None,
     snapshot_send_request: dict[str, object] | None = None,
     snapshot_essence_send_request: dict[str, object] | None = None,
+    rytm_engine_cycle_request: dict[str, object] | None = None,
 ) -> int:
     """Run the interactive randomizer logic against the in-memory mock.
 
@@ -949,6 +1137,8 @@ def _run_dry_run(
         return _run_dry_run_dual_machine_snapshot_send(snapshot_send_request)
     if snapshot_essence_send_request is not None:
         return _run_dry_run_snapshot_essence_send(snapshot_essence_send_request)
+    if rytm_engine_cycle_request is not None:
+        return _run_dry_run_rytm_engine_cycle(rytm_engine_cycle_request)
 
     from .mock_midi import MockMidiSender
 
@@ -1086,6 +1276,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     analog_four_track_filter_smoke = args.analog_four_track_filter_smoke
     snapshot_send_request = _snapshot_send_request_from_args(args)
     snapshot_essence_send_request = _snapshot_essence_send_request_from_args(args)
+    rytm_engine_cycle_request = _rytm_engine_cycle_request_from_args(args)
     smoke_flag_count = sum(
         (
             bool(args.twelve_pad_smoke),
@@ -1110,20 +1301,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         (
             bool(args.dual_machine_snapshot_send),
             bool(args.snapshot_essence_send),
+            bool(args.rytm_engine_cycle),
         )
     )
 
     if active_snapshot_modifier_count and smoke_flag_count:
         sys.stderr.write(
             "Choose only one active-mode modifier: smoke tests or "
-            "--dual-machine-snapshot-send/--snapshot-essence-send.\n"
+            "--dual-machine-snapshot-send/--snapshot-essence-send/"
+            "--rytm-engine-cycle.\n"
         )
         return 2
 
     if active_snapshot_modifier_count > 1:
         sys.stderr.write(
             "Choose only one active-mode modifier: "
-            "--dual-machine-snapshot-send or --snapshot-essence-send.\n"
+            "--dual-machine-snapshot-send, --snapshot-essence-send, "
+            "or --rytm-engine-cycle.\n"
         )
         return 2
 
@@ -1164,6 +1358,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.snapshot_essence_send and not (args.arm or args.dry_run):
         sys.stderr.write("--snapshot-essence-send requires --arm or --dry-run.\n")
+        return 2
+
+    if args.rytm_engine_cycle and not (args.arm or args.dry_run):
+        sys.stderr.write("--rytm-engine-cycle requires --arm or --dry-run.\n")
         return 2
 
     if args.dual_machine_snapshot_send:
@@ -1219,6 +1417,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             sys.stderr.write("--snapshot-discovery must be between 0.0 and 1.0.\n")
             return 2
 
+    if args.rytm_engine_cycle:
+        if args.engine_cycle_style is None:
+            sys.stderr.write("--rytm-engine-cycle requires --engine-cycle-style.\n")
+            return 2
+        if (
+            args.engine_cycle_discovery is not None
+            and not 0.0 <= args.engine_cycle_discovery <= 1.0
+        ):
+            sys.stderr.write("--engine-cycle-discovery must be between 0.0 and 1.0.\n")
+            return 2
+
     if args.arm:
         return _run_arm(
             twelve_pad_smoke=args.twelve_pad_smoke,
@@ -1227,6 +1436,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             analog_four_track_filter_smoke=analog_four_track_filter_smoke,
             snapshot_send_request=snapshot_send_request,
             snapshot_essence_send_request=snapshot_essence_send_request,
+            rytm_engine_cycle_request=rytm_engine_cycle_request,
         )
     if args.dry_run:
         return _run_dry_run(
@@ -1236,6 +1446,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             analog_four_track_filter_smoke=analog_four_track_filter_smoke,
             snapshot_send_request=snapshot_send_request,
             snapshot_essence_send_request=snapshot_essence_send_request,
+            rytm_engine_cycle_request=rytm_engine_cycle_request,
         )
 
     _print_passive_menu()

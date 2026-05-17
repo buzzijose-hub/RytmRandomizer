@@ -435,6 +435,33 @@ def test_app_main_dry_run_snapshot_essence_send_uses_guarded_mock_sender(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_rytm_engine_cycle_uses_guarded_mock_sender(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--rytm-engine-cycle",
+            "--engine-cycle-style",
+            "Birmingham dark techno",
+            "--engine-cycle-discovery",
+            "0.35",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Rytm Engine Cycle Guarded Send Dry-Run Report" in captured.out
+    assert "Style prompt: Birmingham dark techno" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 12" in captured.out
+    assert "Pad 5 / ch 5 wire 4 / CC15 -> 17 / CH Metallic" in captured.out
+    assert "Mock sender captured 12 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
@@ -498,6 +525,23 @@ def test_app_main_snapshot_essence_send_requires_active_mode(tmp_path, capsys):
     assert "--snapshot-essence-send requires --arm or --dry-run" in captured.err
 
 
+def test_app_main_rytm_engine_cycle_requires_active_mode(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--rytm-engine-cycle",
+            "--engine-cycle-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--rytm-engine-cycle requires --arm or --dry-run" in captured.err
+
+
 def test_app_main_snapshot_essence_send_rejects_missing_required_args(capsys):
     _seed()
     from rytm_randomizer import app
@@ -509,6 +553,37 @@ def test_app_main_snapshot_essence_send_rejects_missing_required_args(capsys):
     assert "--snapshot-essence-send requires" in captured.err
     assert "--snapshot-path" in captured.err
     assert "--snapshot-style" in captured.err
+
+
+def test_app_main_rytm_engine_cycle_rejects_missing_required_args(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--rytm-engine-cycle"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--rytm-engine-cycle requires --engine-cycle-style" in captured.err
+
+
+def test_app_main_rytm_engine_cycle_rejects_invalid_discovery(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--rytm-engine-cycle",
+            "--engine-cycle-style",
+            "Birmingham dark techno",
+            "--engine-cycle-discovery",
+            "2",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--engine-cycle-discovery must be between 0.0 and 1.0" in captured.err
 
 
 def test_app_main_snapshot_essence_send_rejects_dual_machine_conflict(tmp_path, capsys):
@@ -531,6 +606,36 @@ def test_app_main_snapshot_essence_send_rejects_dual_machine_conflict(tmp_path, 
             "micro",
             "--snapshot-target",
             "rytm",
+            "--snapshot-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "Choose only one active-mode modifier" in captured.err
+
+
+def test_app_main_rytm_engine_cycle_rejects_snapshot_conflict(tmp_path, capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--rytm-engine-cycle",
+            "--snapshot-essence-send",
+            "--engine-cycle-style",
+            "Birmingham dark techno",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
             "--snapshot-style",
             "Birmingham dark techno",
         ]
@@ -1066,6 +1171,74 @@ def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
     assert "Accepted: True" in captured.out
     assert "Emitted real MIDI messages:" in captured.out
     assert "Type SEND to transmit" in captured.out
+
+
+def test_app_main_arm_rytm_engine_cycle_sends_to_selected_fake_port(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--rytm-engine-cycle",
+                "--engine-cycle-style",
+                "Birmingham dark techno",
+                "--engine-cycle-discovery",
+                "0.35",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == 12
+    assert port.sent[0].type == "control_change"
+    assert port.sent[0].channel == 0
+    assert port.sent[0].control == 15
+    assert port.sent[0].value == 0
+    assert port.sent[4].channel == 4
+    assert port.sent[4].value == 17
+    assert port.closed is True
+    assert "Rytm Engine Cycle Hardware Send Report" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 12" in captured.out
+    assert "Type SEND to transmit" in captured.out
+    assert "Choose the Analog Rytm MIDI output number" in captured.out
 
 
 def test_app_main_arm_dual_machine_snapshot_send_refuses_blocked_plan_before_port_open(
