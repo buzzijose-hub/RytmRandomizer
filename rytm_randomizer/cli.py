@@ -1654,6 +1654,66 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "snapshot-essence-guarded-send-dry-run-report":
+        from .essence_plan_report import parse_discovery_value
+        from .observability.errors import DataError
+        from .snapshot_essence_guarded_sender import (
+            build_snapshot_essence_guarded_send_dry_run,
+            format_snapshot_essence_guarded_send_dry_run_report,
+            format_snapshot_essence_guarded_send_error,
+        )
+        from .snapshot_essence_send_plan import build_snapshot_essence_send_plan_from_file
+
+        if (
+            len(args) not in (8, 10)
+            or args[2] != "--slot"
+            or args[4] != "--depth"
+            or args[6] != "--style"
+        ):
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            slot = int(args[3])
+        except ValueError:
+            lines = format_snapshot_essence_guarded_send_error(
+                args[1],
+                "Slot must be an integer",
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        try:
+            discovery = None
+            if len(args) == 10:
+                if args[8] != "--discovery":
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                discovery = parse_discovery_value(args[9])
+            plan = build_snapshot_essence_send_plan_from_file(
+                args[1],
+                slot=slot,
+                depth=args[5],
+                style=args[7],
+                discovery=discovery,
+            )
+            result = build_snapshot_essence_guarded_send_dry_run(plan)
+        except FileNotFoundError:
+            lines = format_snapshot_essence_guarded_send_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (DataError, ValueError) as exc:
+            lines = format_snapshot_essence_guarded_send_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_snapshot_essence_guarded_send_dry_run_report(result)))
+        sys.stdout.write("\n")
+        return 0
+
     if args and args[0] == "twelve-pad-mock-runtime-report":
         from .essence_plan_report import parse_discovery_value
         from .twelve_pad_mock_runtime import (
