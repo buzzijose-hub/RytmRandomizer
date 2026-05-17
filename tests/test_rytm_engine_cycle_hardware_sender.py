@@ -28,6 +28,17 @@ def build_plan():
     return build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
 
 
+def build_starter_plan():
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+    )
+
+    return build_rytm_engine_cycle_starter_plan(
+        build_plan(),
+        profile="birmingham-dark",
+    )
+
+
 def test_importing_rytm_engine_cycle_hardware_sender_is_passive_and_silent():
     result = subprocess.run(
         [
@@ -184,3 +195,47 @@ def test_engine_cycle_hardware_send_report_includes_active_safety_language(monke
     assert "Pad 5 / ch 5 wire 4 / CC15 -> 17 / CH Metallic" in report
     assert "- sends CC15 machine-select events only" in report
     assert "- real MIDI sending happened only after --arm and SEND confirmation" in report
+
+
+def test_engine_cycle_hardware_send_accepts_starter_plan_with_fake_mido(monkeypatch):
+    import types
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = FakeMessage
+    monkeypatch.setitem(sys.modules, "mido", fake_mido)
+
+    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+        execute_rytm_engine_cycle_hardware_send,
+        format_rytm_engine_cycle_hardware_send_report,
+    )
+
+    port = RecordingPort()
+    result = execute_rytm_engine_cycle_hardware_send(
+        build_starter_plan(),
+        port,
+        port_name="Fake Rytm",
+        armed=True,
+        operator_confirmed=True,
+        sleep=lambda _seconds: None,
+    )
+    report = "\n".join(format_rytm_engine_cycle_hardware_send_report(result))
+
+    assert result.accepted is True
+    assert result.reason == "accepted_hardware_send"
+    assert result.starter_profile_key == "birmingham-dark"
+    assert result.starter_profile_label == "Birmingham Dark"
+    assert result.emitted_message_count == 84
+    assert len(port.sent) == 84
+    assert port.sent[28].channel == 4
+    assert port.sent[28].control == 15
+    assert port.sent[28].value == 17
+    assert port.sent[29].channel == 4
+    assert port.sent[29].control == 74
+    assert port.sent[29].value == 108
+    assert result.emitted_messages[29].event_role == "starter_parameter"
+    assert result.emitted_messages[29].parameter_name == "FLT Frequency"
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in report
+    assert "Emitted real MIDI messages: 84" in report
+    assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
+    assert "- sends CC15 machine-select plus common filter/amp starter values" in report

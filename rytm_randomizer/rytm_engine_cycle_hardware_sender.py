@@ -22,8 +22,13 @@ from .rytm_engine_cycle_plan import (
     RytmEngineCyclePadPlan,
     RytmEngineCyclePlan,
 )
+from .rytm_engine_cycle_starter_profiles import (
+    RytmEngineCycleStarterEvent,
+    RytmEngineCycleStarterPlan,
+)
 
 HARDWARE_SEND_NAME = "rytm_engine_cycle_hardware_send"
+RytmEngineCycleSendPlan = RytmEngineCyclePlan | RytmEngineCycleStarterPlan
 
 
 def _freeze_metadata(metadata: Mapping[str, object] | None) -> Mapping[str, object]:
@@ -45,6 +50,8 @@ class RytmEngineCycleHardwareEmission:
     control: int
     value: int
     midi_channel: int
+    event_role: str = "engine_cycle_top_candidate"
+    parameter_name: str = "Machine Select"
 
 
 @dataclass(frozen=True)
@@ -59,6 +66,8 @@ class RytmEngineCycleHardwareSendResult:
     planned_pad_count: int
     no_candidate_count: int
     emitted_messages: tuple[RytmEngineCycleHardwareEmission, ...]
+    starter_profile_key: str | None = None
+    starter_profile_label: str | None = None
     mock_only: bool = False
     sends_real_midi: bool = True
     metadata: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
@@ -73,7 +82,7 @@ class RytmEngineCycleHardwareSendResult:
 
 
 def execute_rytm_engine_cycle_hardware_send(
-    plan: RytmEngineCyclePlan,
+    plan: RytmEngineCycleSendPlan,
     out: Any,
     *,
     port_name: str,
@@ -83,8 +92,8 @@ def execute_rytm_engine_cycle_hardware_send(
 ) -> RytmEngineCycleHardwareSendResult:
     """Execute a Rytm engine-cycle plan through an injected output port."""
 
-    if not isinstance(plan, RytmEngineCyclePlan):
-        raise TypeError("plan must be a RytmEngineCyclePlan")
+    if not _is_send_plan(plan):
+        raise TypeError("plan must be a RytmEngineCyclePlan or RytmEngineCycleStarterPlan")
     if not hasattr(out, "send"):
         raise TypeError("out must expose a send(message) method")
 
@@ -100,16 +109,14 @@ def execute_rytm_engine_cycle_hardware_send(
             "missing_operator_confirmation",
             port_name=port_name,
         )
-    if plan.no_candidate_count:
+    if _no_candidate_count(plan):
         return build_rytm_engine_cycle_hardware_send_refusal(
             plan,
             "plan_has_unresolved_pads",
             port_name=port_name,
         )
 
-    emitted = []
-    for pad in plan.pads:
-        emitted.append(_send_pad(pad, out, sleep=sleep))
+    emitted = _send_plan(plan, out, sleep=sleep)
 
     return RytmEngineCycleHardwareSendResult(
         accepted=True,
@@ -117,23 +124,25 @@ def execute_rytm_engine_cycle_hardware_send(
         style_prompt=plan.style_prompt,
         discovery=plan.discovery,
         port_name=port_name,
-        planned_pad_count=plan.top_candidate_count,
-        no_candidate_count=plan.no_candidate_count,
-        emitted_messages=tuple(emitted),
+        planned_pad_count=_planned_pad_count(plan),
+        no_candidate_count=_no_candidate_count(plan),
+        emitted_messages=emitted,
+        starter_profile_key=_starter_profile_key(plan),
+        starter_profile_label=_starter_profile_label(plan),
         metadata=_result_metadata(plan, "accepted_hardware_send", port_name),
     )
 
 
 def build_rytm_engine_cycle_hardware_send_refusal(
-    plan: RytmEngineCyclePlan,
+    plan: RytmEngineCycleSendPlan,
     reason: str,
     *,
     port_name: str = "<not-opened>",
 ) -> RytmEngineCycleHardwareSendResult:
     """Build a deterministic refusal result without touching a port."""
 
-    if not isinstance(plan, RytmEngineCyclePlan):
-        raise TypeError("plan must be a RytmEngineCyclePlan")
+    if not _is_send_plan(plan):
+        raise TypeError("plan must be a RytmEngineCyclePlan or RytmEngineCycleStarterPlan")
 
     return RytmEngineCycleHardwareSendResult(
         accepted=False,
@@ -141,9 +150,11 @@ def build_rytm_engine_cycle_hardware_send_refusal(
         style_prompt=plan.style_prompt,
         discovery=plan.discovery,
         port_name=port_name,
-        planned_pad_count=plan.top_candidate_count,
-        no_candidate_count=plan.no_candidate_count,
+        planned_pad_count=_planned_pad_count(plan),
+        no_candidate_count=_no_candidate_count(plan),
         emitted_messages=(),
+        starter_profile_key=_starter_profile_key(plan),
+        starter_profile_label=_starter_profile_label(plan),
         metadata=_result_metadata(plan, reason, port_name),
     )
 
@@ -163,8 +174,12 @@ def format_rytm_engine_cycle_hardware_send_report(
         f"Planned pads: {result.planned_pad_count}",
         f"Unresolved pads: {result.no_candidate_count}",
         f"Emitted real MIDI messages: {result.emitted_message_count}",
-        "Hardware emission preview:",
     ]
+    if result.starter_profile_key is not None:
+        lines.append(
+            f"Starter profile: {result.starter_profile_label} / {result.starter_profile_key}"
+        )
+    lines.append("Hardware emission preview:")
     if result.emitted_messages:
         lines.extend(_format_emission_line(message) for message in result.emitted_messages)
     else:
@@ -173,7 +188,7 @@ def format_rytm_engine_cycle_hardware_send_report(
         [
             "Guard policy:",
             "- Rytm engine-cycle hardware send only",
-            "- sends CC15 machine-select events only",
+            *(_emission_policy_lines(result)),
             "- requires --arm",
             "- requires exact SEND confirmation",
             "- real MIDI sending happened only after --arm and SEND confirmation",
@@ -234,8 +249,51 @@ def _send_pad(
     )
 
 
+def _send_plan(
+    plan: RytmEngineCycleSendPlan,
+    out: Any,
+    *,
+    sleep: Callable[[float], Any],
+) -> tuple[RytmEngineCycleHardwareEmission, ...]:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return tuple(
+            _send_starter_event(event, out, sleep=sleep)
+            for pad in plan.pads
+            for event in pad.events
+        )
+    return tuple(_send_pad(pad, out, sleep=sleep) for pad in plan.pads)
+
+
+def _send_starter_event(
+    event: RytmEngineCycleStarterEvent,
+    out: Any,
+    *,
+    sleep: Callable[[float], Any],
+) -> RytmEngineCycleHardwareEmission:
+    send_cc(
+        out,
+        event.cc,
+        event.value,
+        channel=event.wire_channel,
+        sleep=sleep,
+    )
+    return RytmEngineCycleHardwareEmission(
+        pad=event.pad,
+        role_label=event.role_label,
+        machine_key=event.machine_key,
+        machine_label=event.machine_label,
+        support_status=event.support_status,
+        channel=event.wire_channel,
+        control=event.cc,
+        value=event.value,
+        midi_channel=event.midi_channel,
+        event_role=event.event_role,
+        parameter_name=event.parameter_name,
+    )
+
+
 def _result_metadata(
-    plan: RytmEngineCyclePlan,
+    plan: RytmEngineCycleSendPlan,
     reason: str,
     port_name: str,
 ) -> dict[str, object]:
@@ -245,24 +303,73 @@ def _result_metadata(
         "style_prompt": plan.style_prompt,
         "discovery": plan.discovery,
         "port_name": port_name,
-        "planned_pad_count": plan.top_candidate_count,
-        "no_candidate_count": plan.no_candidate_count,
+        "planned_pad_count": _planned_pad_count(plan),
+        "no_candidate_count": _no_candidate_count(plan),
+        "starter_profile_key": _starter_profile_key(plan),
+        "starter_profile_label": _starter_profile_label(plan),
         "mock_only": False,
         "sends_real_midi": True,
     }
 
 
 def _format_emission_line(message: RytmEngineCycleHardwareEmission) -> str:
+    if message.event_role == "starter_parameter":
+        return (
+            f"- Pad {message.pad} / ch {message.midi_channel} wire {message.channel} / "
+            f"starter_parameter / {message.parameter_name} CC{message.control} -> "
+            f"{message.value}"
+        )
+    if message.event_role == "machine_select":
+        return (
+            f"- Pad {message.pad} / ch {message.midi_channel} wire {message.channel} / "
+            f"machine_select / CC{message.control} -> {message.value} / "
+            f"{message.machine_label}"
+        )
     return (
         f"- Pad {message.pad} / ch {message.midi_channel} wire {message.channel} / "
         f"CC{message.control} -> {message.value} / {message.machine_label}"
     )
 
 
+def _emission_policy_lines(result: RytmEngineCycleHardwareSendResult) -> list[str]:
+    if result.starter_profile_key is None:
+        return ["- sends CC15 machine-select events only"]
+    return ["- sends CC15 machine-select plus common filter/amp starter values"]
+
+
+def _is_send_plan(plan: object) -> bool:
+    return isinstance(plan, (RytmEngineCyclePlan, RytmEngineCycleStarterPlan))
+
+
+def _planned_pad_count(plan: RytmEngineCycleSendPlan) -> int:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return plan.pad_count
+    return plan.top_candidate_count
+
+
+def _no_candidate_count(plan: RytmEngineCycleSendPlan) -> int:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return 0
+    return plan.no_candidate_count
+
+
+def _starter_profile_key(plan: RytmEngineCycleSendPlan) -> str | None:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return plan.starter_profile_key
+    return None
+
+
+def _starter_profile_label(plan: RytmEngineCycleSendPlan) -> str | None:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return plan.starter_profile_label
+    return None
+
+
 __all__ = [
     "HARDWARE_SEND_NAME",
     "RytmEngineCycleHardwareEmission",
     "RytmEngineCycleHardwareSendResult",
+    "RytmEngineCycleSendPlan",
     "build_rytm_engine_cycle_hardware_send_refusal",
     "execute_rytm_engine_cycle_hardware_send",
     "format_rytm_engine_cycle_hardware_send_error",

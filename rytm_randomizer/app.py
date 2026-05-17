@@ -179,6 +179,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional Rytm engine-cycle discovery amount from 0.0 to 1.0.",
     )
     parser.add_argument(
+        "--engine-cycle-starter-profile",
+        metavar="PROFILE",
+        help=(
+            "Optional Rytm starter-shaping profile for --rytm-engine-cycle. "
+            "When supplied, the send plan emits CC15 machine select plus "
+            "common filter/amp starter CC values."
+        ),
+    )
+    parser.add_argument(
         "--analog-four-path",
         metavar="PATH",
         help="Optional saved Analog Four SysEx kit/project dump path.",
@@ -261,6 +270,8 @@ def _print_passive_menu() -> None:
             "Rytm 12-pad style/genre snapshot essence plan",
             "- --rytm-engine-cycle  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad CC15 engine-cycle plan",
+            "  optional: --engine-cycle-starter-profile <profile> adds "
+            "common starter shaping",
             "",
             USAGE,
         ]
@@ -323,6 +334,7 @@ def _rytm_engine_cycle_request_from_args(
     return {
         "engine_cycle_style": args.engine_cycle_style,
         "engine_cycle_discovery": args.engine_cycle_discovery,
+        "engine_cycle_starter_profile": args.engine_cycle_starter_profile,
     }
 
 
@@ -373,13 +385,23 @@ def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
 
     from .rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
 
-    return build_rytm_engine_cycle_plan(
+    plan = build_rytm_engine_cycle_plan(
         str(request["engine_cycle_style"]),
         discovery=(
             None
             if request.get("engine_cycle_discovery") is None
             else float(request["engine_cycle_discovery"])
         ),
+    )
+    starter_profile = request.get("engine_cycle_starter_profile")
+    if starter_profile is None:
+        return plan
+
+    from .rytm_engine_cycle_starter_profiles import build_rytm_engine_cycle_starter_plan
+
+    return build_rytm_engine_cycle_starter_plan(
+        plan,
+        profile=str(starter_profile),
     )
 
 
@@ -828,7 +850,7 @@ def _run_arm_rytm_engine_cycle(request: dict[str, object]) -> int:
         sys.stdout.write("\n")
         return 1
 
-    if plan.no_candidate_count:
+    if _rytm_engine_cycle_no_candidate_count(plan):
         result = build_rytm_engine_cycle_hardware_send_refusal(
             plan,
             "plan_has_unresolved_pads",
@@ -975,7 +997,8 @@ def _confirm_rytm_engine_cycle_send(
 ) -> bool:
     sys.stdout.write(
         "\nType SEND to transmit "
-        f"{plan.top_candidate_count} Rytm engine-cycle CC15 message(s) to "
+        f"{_rytm_engine_cycle_message_count(plan)} "
+        f"{_rytm_engine_cycle_message_label(plan)} to "
         f"Analog Rytm on {port_name}: "
     )
     try:
@@ -987,6 +1010,23 @@ def _confirm_rytm_engine_cycle_send(
         sys.stderr.write("--arm cancelled: exact SEND confirmation was not provided.\n")
         return False
     return True
+
+
+def _rytm_engine_cycle_message_count(plan) -> int:
+    event_count = getattr(plan, "event_count", None)
+    if isinstance(event_count, int):
+        return event_count
+    return int(getattr(plan, "top_candidate_count"))
+
+
+def _rytm_engine_cycle_message_label(plan) -> str:
+    if getattr(plan, "starter_profile_key", None) is not None:
+        return "Rytm engine-cycle starter CC message(s)"
+    return "Rytm engine-cycle CC15 message(s)"
+
+
+def _rytm_engine_cycle_no_candidate_count(plan) -> int:
+    return int(getattr(plan, "no_candidate_count", 0))
 
 
 def _choose_arm_port_name(
@@ -1362,6 +1402,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.rytm_engine_cycle and not (args.arm or args.dry_run):
         sys.stderr.write("--rytm-engine-cycle requires --arm or --dry-run.\n")
+        return 2
+
+    if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:
+        sys.stderr.write(
+            "--engine-cycle-starter-profile requires --rytm-engine-cycle.\n"
+        )
         return 2
 
     if args.dual_machine_snapshot_send:

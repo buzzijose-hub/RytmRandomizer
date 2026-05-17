@@ -18,8 +18,13 @@ from .rytm_engine_cycle_plan import (
     RytmEngineCyclePadPlan,
     RytmEngineCyclePlan,
 )
+from .rytm_engine_cycle_starter_profiles import (
+    RytmEngineCycleStarterEvent,
+    RytmEngineCycleStarterPlan,
+)
 
 GUARD_NAME = "rytm_engine_cycle_guarded_send_dry_run"
+RytmEngineCycleSendPlan = RytmEngineCyclePlan | RytmEngineCycleStarterPlan
 
 
 def _freeze_metadata(metadata: Mapping[str, object] | None) -> Mapping[str, object]:
@@ -39,6 +44,8 @@ class RytmEngineCycleGuardedSendResult:
     planned_pad_count: int
     no_candidate_count: int
     emitted_messages: tuple[MidiMessage, ...]
+    starter_profile_key: str | None = None
+    starter_profile_label: str | None = None
     mock_only: bool = True
     sends_real_midi: bool = False
     metadata: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
@@ -53,7 +60,7 @@ class RytmEngineCycleGuardedSendResult:
 
 
 def execute_rytm_engine_cycle_guarded_send(
-    plan: RytmEngineCyclePlan,
+    plan: RytmEngineCycleSendPlan,
     sender: MockMidiSender,
     *,
     armed: bool,
@@ -61,8 +68,8 @@ def execute_rytm_engine_cycle_guarded_send(
 ) -> RytmEngineCycleGuardedSendResult:
     """Execute a resolved engine-cycle plan into an injected mock sender."""
 
-    if not isinstance(plan, RytmEngineCyclePlan):
-        raise TypeError("plan must be a RytmEngineCyclePlan")
+    if not _is_send_plan(plan):
+        raise TypeError("plan must be a RytmEngineCyclePlan or RytmEngineCycleStarterPlan")
     if not isinstance(sender, MockMidiSender):
         raise TypeError("sender must be a MockMidiSender")
 
@@ -70,30 +77,32 @@ def execute_rytm_engine_cycle_guarded_send(
         return _blocked_result(plan, "missing_arming")
     if not dry_run_confirmed:
         return _blocked_result(plan, "missing_dry_run_confirmation")
-    if plan.no_candidate_count:
+    if _no_candidate_count(plan):
         return _blocked_result(plan, "plan_has_unresolved_pads")
 
-    messages = tuple(_message_from_pad(pad, plan) for pad in plan.pads)
+    messages = _messages_from_plan(plan)
     sender.send_many(messages)
     return RytmEngineCycleGuardedSendResult(
         accepted=True,
         reason="accepted_guarded_mock_only",
         style_prompt=plan.style_prompt,
         discovery=plan.discovery,
-        planned_pad_count=plan.top_candidate_count,
-        no_candidate_count=plan.no_candidate_count,
+        planned_pad_count=_planned_pad_count(plan),
+        no_candidate_count=_no_candidate_count(plan),
         emitted_messages=messages,
+        starter_profile_key=_starter_profile_key(plan),
+        starter_profile_label=_starter_profile_label(plan),
         metadata=_result_metadata(plan, "accepted_guarded_mock_only"),
     )
 
 
 def build_rytm_engine_cycle_guarded_send_dry_run(
-    plan: RytmEngineCyclePlan,
+    plan: RytmEngineCycleSendPlan,
 ) -> RytmEngineCycleGuardedSendResult:
     """Execute a Rytm engine-cycle plan into a fresh mock sender."""
 
-    if not isinstance(plan, RytmEngineCyclePlan):
-        raise TypeError("plan must be a RytmEngineCyclePlan")
+    if not _is_send_plan(plan):
+        raise TypeError("plan must be a RytmEngineCyclePlan or RytmEngineCycleStarterPlan")
 
     sender = MockMidiSender()
     return execute_rytm_engine_cycle_guarded_send(
@@ -118,8 +127,12 @@ def format_rytm_engine_cycle_guarded_send_dry_run_report(
         f"Planned pads: {result.planned_pad_count}",
         f"Unresolved pads: {result.no_candidate_count}",
         f"Emitted mock messages: {result.emitted_message_count}",
-        "Mock emission preview:",
     ]
+    if result.starter_profile_key is not None:
+        lines.append(
+            f"Starter profile: {result.starter_profile_label} / {result.starter_profile_key}"
+        )
+    lines.append("Mock emission preview:")
     if result.emitted_messages:
         lines.extend(_format_message_line(message) for message in result.emitted_messages)
     else:
@@ -129,7 +142,7 @@ def format_rytm_engine_cycle_guarded_send_dry_run_report(
             "Guard policy:",
             "- mock-only guarded Rytm engine-cycle send",
             "- requires arming and dry-run confirmation",
-            "- emits top-candidate CC15 machine-select events only",
+            *(_emission_policy_lines(result)),
             "- unresolved plans emit no partial messages",
             "Safety:",
             "- passive/read-only",
@@ -169,7 +182,7 @@ def format_rytm_engine_cycle_guarded_send_error(message: str) -> list[str]:
 
 
 def _blocked_result(
-    plan: RytmEngineCyclePlan,
+    plan: RytmEngineCycleSendPlan,
     reason: str,
 ) -> RytmEngineCycleGuardedSendResult:
     return RytmEngineCycleGuardedSendResult(
@@ -177,24 +190,38 @@ def _blocked_result(
         reason=reason,
         style_prompt=plan.style_prompt,
         discovery=plan.discovery,
-        planned_pad_count=plan.top_candidate_count,
-        no_candidate_count=plan.no_candidate_count,
+        planned_pad_count=_planned_pad_count(plan),
+        no_candidate_count=_no_candidate_count(plan),
         emitted_messages=(),
+        starter_profile_key=_starter_profile_key(plan),
+        starter_profile_label=_starter_profile_label(plan),
         metadata=_result_metadata(plan, reason),
     )
 
 
-def _result_metadata(plan: RytmEngineCyclePlan, reason: str) -> dict[str, object]:
+def _result_metadata(plan: RytmEngineCycleSendPlan, reason: str) -> dict[str, object]:
     return {
         "guard": GUARD_NAME,
         "reason": reason,
         "style_prompt": plan.style_prompt,
         "discovery": plan.discovery,
-        "planned_pad_count": plan.top_candidate_count,
-        "no_candidate_count": plan.no_candidate_count,
+        "planned_pad_count": _planned_pad_count(plan),
+        "no_candidate_count": _no_candidate_count(plan),
+        "starter_profile_key": _starter_profile_key(plan),
+        "starter_profile_label": _starter_profile_label(plan),
         "mock_only": True,
         "sends_real_midi": False,
     }
+
+
+def _messages_from_plan(plan: RytmEngineCycleSendPlan) -> tuple[MidiMessage, ...]:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return tuple(
+            _message_from_starter_event(event, plan)
+            for pad in plan.pads
+            for event in pad.events
+        )
+    return tuple(_message_from_pad(pad, plan) for pad in plan.pads)
 
 
 def _message_from_pad(
@@ -226,9 +253,55 @@ def _message_from_pad(
     )
 
 
+def _message_from_starter_event(
+    event: RytmEngineCycleStarterEvent,
+    plan: RytmEngineCycleStarterPlan,
+) -> MidiMessage:
+    return build_cc_message(
+        channel=event.wire_channel,
+        control=event.cc,
+        value=event.value,
+        metadata={
+            "guard": GUARD_NAME,
+            "source_kind": "rytm_engine_cycle_guarded_send_dry_run",
+            "source": event.source,
+            "device": "Analog Rytm MKII",
+            "style_prompt": plan.style_prompt,
+            "discovery": plan.discovery,
+            "pad": event.pad,
+            "midi_channel": event.midi_channel,
+            "role_key": event.role_key,
+            "role_label": event.role_label,
+            "event_role": event.event_role,
+            "parameter": event.parameter_name,
+            "machine_key": event.machine_key,
+            "machine_label": event.machine_label,
+            "machine_value": event.machine_value,
+            "support_status": event.support_status,
+            "starter_profile_key": plan.starter_profile_key,
+            "starter_profile_label": plan.starter_profile_label,
+            "mock_only": True,
+            "sends_real_midi": False,
+        },
+    )
+
+
 def _format_message_line(message: MidiMessage) -> str:
     metadata = message.metadata
     midi_channel = metadata.get("midi_channel", message.channel + 1)
+    event_role = metadata.get("event_role")
+    if event_role == "starter_parameter":
+        return (
+            f"- Pad {metadata.get('pad')} / ch {midi_channel} wire {message.channel} / "
+            f"starter_parameter / {metadata.get('parameter')} "
+            f"CC{message.control} -> {message.value}"
+        )
+    if event_role == "machine_select":
+        return (
+            f"- Pad {metadata.get('pad')} / ch {midi_channel} wire {message.channel} / "
+            f"machine_select / CC{message.control} -> {message.value} / "
+            f"{metadata.get('machine_label')}"
+        )
     return (
         f"- Pad {metadata.get('pad')} / ch {midi_channel} wire {message.channel} / "
         f"CC{message.control} -> {message.value} / "
@@ -236,9 +309,44 @@ def _format_message_line(message: MidiMessage) -> str:
     )
 
 
+def _emission_policy_lines(result: RytmEngineCycleGuardedSendResult) -> list[str]:
+    if result.starter_profile_key is None:
+        return ["- emits top-candidate CC15 machine-select events only"]
+    return ["- emits CC15 machine-select plus common filter/amp starter values"]
+
+
+def _is_send_plan(plan: object) -> bool:
+    return isinstance(plan, (RytmEngineCyclePlan, RytmEngineCycleStarterPlan))
+
+
+def _planned_pad_count(plan: RytmEngineCycleSendPlan) -> int:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return plan.pad_count
+    return plan.top_candidate_count
+
+
+def _no_candidate_count(plan: RytmEngineCycleSendPlan) -> int:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return 0
+    return plan.no_candidate_count
+
+
+def _starter_profile_key(plan: RytmEngineCycleSendPlan) -> str | None:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return plan.starter_profile_key
+    return None
+
+
+def _starter_profile_label(plan: RytmEngineCycleSendPlan) -> str | None:
+    if isinstance(plan, RytmEngineCycleStarterPlan):
+        return plan.starter_profile_label
+    return None
+
+
 __all__ = [
     "GUARD_NAME",
     "RytmEngineCycleGuardedSendResult",
+    "RytmEngineCycleSendPlan",
     "build_rytm_engine_cycle_guarded_send_dry_run",
     "execute_rytm_engine_cycle_guarded_send",
     "format_rytm_engine_cycle_guarded_send_dry_run_report",

@@ -462,6 +462,37 @@ def test_app_main_dry_run_rytm_engine_cycle_uses_guarded_mock_sender(capsys):
     assert captured.err == ""
 
 
+def test_app_main_dry_run_rytm_engine_cycle_starter_profile_uses_guarded_mock_sender(
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--rytm-engine-cycle",
+            "--engine-cycle-style",
+            "Birmingham dark techno",
+            "--engine-cycle-discovery",
+            "0.35",
+            "--engine-cycle-starter-profile",
+            "birmingham-dark",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Rytm Engine Cycle Guarded Send Dry-Run Report" in captured.out
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 84" in captured.out
+    assert "starter_parameter / FLT Frequency CC74 -> 108" in captured.out
+    assert "Mock sender captured 84 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
@@ -1238,6 +1269,76 @@ def test_app_main_arm_rytm_engine_cycle_sends_to_selected_fake_port(
     assert "Accepted: True" in captured.out
     assert "Emitted real MIDI messages: 12" in captured.out
     assert "Type SEND to transmit" in captured.out
+
+
+def test_app_main_arm_rytm_engine_cycle_starter_profile_sends_to_selected_fake_port(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--rytm-engine-cycle",
+                "--engine-cycle-style",
+                "Birmingham dark techno",
+                "--engine-cycle-discovery",
+                "0.35",
+                "--engine-cycle-starter-profile",
+                "birmingham-dark",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == 84
+    assert port.sent[28].channel == 4
+    assert port.sent[28].control == 15
+    assert port.sent[28].value == 17
+    assert port.sent[29].channel == 4
+    assert port.sent[29].control == 74
+    assert port.sent[29].value == 108
+    assert port.closed is True
+    assert "Rytm Engine Cycle Hardware Send Report" in captured.out
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 84" in captured.out
+    assert "Type SEND to transmit 84 Rytm engine-cycle starter CC message(s)" in captured.out
     assert "Choose the Analog Rytm MIDI output number" in captured.out
 
 

@@ -12,6 +12,17 @@ def build_plan():
     return build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
 
 
+def build_starter_plan():
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+    )
+
+    return build_rytm_engine_cycle_starter_plan(
+        build_plan(),
+        profile="birmingham-dark",
+    )
+
+
 def test_importing_rytm_engine_cycle_guarded_sender_is_passive_and_silent():
     result = subprocess.run(
         [
@@ -145,3 +156,42 @@ def test_guarded_engine_cycle_report_formats_policy_and_preview():
     assert "- mock-only guarded Rytm engine-cycle send" in report
     assert "- emits top-candidate CC15 machine-select events only" in report
     assert "- no MIDI sending" in report
+
+
+def test_guarded_engine_cycle_starter_plan_emits_84_mock_messages():
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+        execute_rytm_engine_cycle_guarded_send,
+        format_rytm_engine_cycle_guarded_send_dry_run_report,
+    )
+
+    sender = MockMidiSender()
+    result = execute_rytm_engine_cycle_guarded_send(
+        build_starter_plan(),
+        sender,
+        armed=True,
+        dry_run_confirmed=True,
+    )
+    report = "\n".join(format_rytm_engine_cycle_guarded_send_dry_run_report(result))
+
+    assert result.accepted is True
+    assert result.reason == "accepted_guarded_mock_only"
+    assert result.starter_profile_key == "birmingham-dark"
+    assert result.starter_profile_label == "Birmingham Dark"
+    assert result.planned_pad_count == 12
+    assert result.emitted_message_count == 84
+    assert sender.sent_messages == result.emitted_messages
+    assert result.emitted_messages[28].channel == 4
+    assert result.emitted_messages[28].control == 15
+    assert result.emitted_messages[28].value == 17
+    assert result.emitted_messages[28].metadata["event_role"] == "machine_select"
+    assert result.emitted_messages[29].channel == 4
+    assert result.emitted_messages[29].control == 74
+    assert result.emitted_messages[29].value == 108
+    assert result.emitted_messages[29].metadata["event_role"] == "starter_parameter"
+    assert result.emitted_messages[29].metadata["parameter"] == "FLT Frequency"
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in report
+    assert "Emitted mock messages: 84" in report
+    assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
+    assert "- emits CC15 machine-select plus common filter/amp starter values" in report
