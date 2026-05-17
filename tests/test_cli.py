@@ -12,6 +12,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
@@ -249,6 +250,17 @@ def test_sysex_snapshot_mutation_plan_report_help_exits_zero():
     assert "RytmRandomizer passive CLI: sysex-snapshot-mutation-plan-report" in result.stdout
     assert "bounded deterministic deltas" in result.stdout
     assert "not load anchors" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_sysex_snapshot_mock_runtime_report_help_exits_zero():
+    result = run_cli("sysex-snapshot-mock-runtime-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: sysex-snapshot-mock-runtime-report" in result.stdout
+    assert "mock sender" in result.stdout
+    assert "captured-value" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

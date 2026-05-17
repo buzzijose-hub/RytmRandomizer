@@ -27,6 +27,12 @@ Whole-project dump:
 python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report "G:\ANALOG RYTM\WHOLE PROJECT DUMP\PROJECTRYTM01.syx" --slot 1 --depth micro
 ```
 
+Mock runtime bridge:
+
+```powershell
+python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report "G:\ANALOG RYTM\WHOLE PROJECT DUMP\PROJECTRYTM01.syx" --slot 1 --depth micro
+```
+
 Performance kit bank:
 
 ```powershell
@@ -43,6 +49,10 @@ Both report:
 - mutation policy: captured-value relative, no anchor loading, no machine
   switching
 
+The mock runtime report additionally proves that the planned changes can be
+captured as inert CC messages in `MockMidiSender`, with 0-based wire channels
+and 1-based operator-facing MIDI channel metadata.
+
 ## Boundary
 
 This is passive/read-only. It does not request dumps, receive live SysEx, open
@@ -54,6 +64,6 @@ which decoded saved parameter moved after one controlled hand tweak. This is the
 passive calibration path for expanding Live Snapshot behavior across all 12
 pads.
 
-The next runtime slice should connect this planner to mock MIDI message capture,
-still without opening a port. After that, the armed Live Snapshot flow can be
-designed around the same plan object.
+The current runtime slice connects this planner to mock MIDI message capture,
+still without opening a port. Next, the armed Live Snapshot flow can be designed
+around the same plan object.

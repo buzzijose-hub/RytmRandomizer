@@ -595,6 +595,49 @@ def main(argv=None):
         return 0
 
     if (
+        len(args) == 6
+        and args[0] == "sysex-snapshot-mock-runtime-report"
+        and args[2] == "--slot"
+        and args[4] == "--depth"
+    ):
+        from .snapshot_mock_runtime import (
+            build_snapshot_mock_runtime_from_file,
+            capture_snapshot_mutation_mock_messages,
+            format_snapshot_mock_runtime_error,
+            format_snapshot_mock_runtime_report,
+        )
+        from .snapshot_mutation_planner import SnapshotMutationPlanError
+        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+
+        try:
+            slot = int(args[3])
+            plan = build_snapshot_mock_runtime_from_file(
+                args[1],
+                slot=slot,
+                depth=args[5],
+            )
+            sender = capture_snapshot_mutation_mock_messages(plan)
+        except FileNotFoundError:
+            lines = format_snapshot_mock_runtime_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (SnapshotMutationPlanError, SysexSnapshotDecodeError) as exc:
+            lines = format_snapshot_mock_runtime_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_snapshot_mock_runtime_error(args[1], "Slot must be an integer")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_snapshot_mock_runtime_report(args[1], plan, sender)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
         len(args) == 9
         and args[0] == "rytm-controlled-diff-report"
         and args[3] == "--slot"

@@ -13,6 +13,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
@@ -48,6 +49,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-project-report <path>
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
@@ -104,6 +106,8 @@ Commands:
                      Decode a saved Rytm kit slot into a passive 12-pad snapshot.
   sysex-snapshot-mutation-plan-report
                      Plan passive captured-value mutations from a saved kit snapshot.
+  sysex-snapshot-mock-runtime-report
+                     Capture snapshot-plan CC moves into an inert mock sender.
   rytm-controlled-diff-report
                      Compare two saved Rytm kit exports for changed pad parameters.
   dual-machine-mock-bridge-report
@@ -224,6 +228,30 @@ Behavior:
 
 Safety:
   passive/read-only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "sysex-snapshot-mock-runtime-report": """RytmRandomizer passive CLI: sysex-snapshot-mock-runtime-report
+
+Usage:
+  python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report --help
+
+Behavior:
+  Reads an existing Rytm kit bank or whole-project SysEx file, builds the
+  captured-value snapshot mutation plan, and captures the planned CC moves into
+  an inert mock sender. It does not open ports, send MIDI, write SysEx, or touch
+  hardware.
+
+Safety:
+  passive/read-only
+  mock sender only
+  captured-value relative
   no MIDI sending
   no MIDI receive
   no port opening
