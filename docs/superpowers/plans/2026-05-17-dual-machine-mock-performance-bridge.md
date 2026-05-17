@@ -4,6 +4,10 @@
 
 **Goal:** Add a passive combined Rytm + Analog Four mock performance bridge report.
 
+**Update:** The Analog Four safe-starter plan was expanded later in
+`2026-05-17-analog-four-richer-safe-starter.md` from two to five mapped CCs per
+track. The count examples below reflect that newer safe-starter contract.
+
 **Architecture:** Create a focused `rytm_randomizer.dual_machine_mock_bridge` module. It will consume the existing Rytm snapshot mutation planner, build a conservative A4 safe-starter plan from validated CCs, capture both streams into `MockMidiSender`, and expose a passive CLI report.
 
 **Tech Stack:** Python dataclasses, existing `MockMidiSender`, existing `snapshot_mutation_planner`, passive CLI dispatch, pytest.
@@ -132,9 +136,9 @@ def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
     assert bridge.rytm_plan.kit_name == "BRIDGE KIT"
     assert bridge.rytm_message_count == 6
     assert bridge.analog_four_track_count == 4
-    assert bridge.analog_four_message_count == 8
-    assert bridge.combined_message_count == 14
-    assert len(sender.sent_messages) == 14
+    assert bridge.analog_four_message_count == 20
+    assert bridge.combined_message_count == 26
+    assert len(sender.sent_messages) == 26
     first = sender.sent_messages[0]
     assert first.channel == 0
     assert first.control == 17
@@ -176,12 +180,20 @@ Required functions:
 - `format_dual_machine_mock_bridge_report(bridge)`
 - `format_dual_machine_mock_bridge_error(path, message)`
 
-The A4 starter plan must produce two CC changes per track:
+The A4 starter plan must produce five mapped CC changes per track:
 
-- Track 1: `Filter 1 Frequency` CC18 -> 112, `Amp Pan` CC10 -> 64
-- Track 2: `Filter 1 Frequency` CC18 -> 104, `Amp Pan` CC10 -> 64
-- Track 3: `Filter 1 Frequency` CC18 -> 96, `Amp Pan` CC10 -> 64
-- Track 4: `Filter 1 Frequency` CC18 -> 88, `Amp Pan` CC10 -> 64
+- Track 1: `Track Level` CC95 -> 104, `OSC1 Level` CC69 -> 96,
+  `OSC2 Level` CC78 -> 72, `Filter 1 Frequency` CC18 -> 112,
+  `Amp Pan` CC10 -> 60
+- Track 2: `Track Level` CC95 -> 100, `OSC1 Waveform` CC70 -> 2,
+  `Filter 1 Frequency` CC18 -> 104, `Amp Env Decay` CC105 -> 54,
+  `Amp Pan` CC10 -> 68
+- Track 3: `Track Level` CC95 -> 92, `OSC1 Level` CC69 -> 82,
+  `OSC2 Level` CC78 -> 88, `Filter 2 Frequency` CC19 -> 74,
+  `Reverb Send` CC93 -> 36
+- Track 4: `Track Level` CC95 -> 88, `Noise Level` CC77 -> 72,
+  `Noise Fade` CC76 -> 68, `Filter 1 Frequency` CC18 -> 88,
+  `Amp Pan` CC10 -> 64
 
 All messages must use wire channel `track - 1` for A4 and `pad - 1` for Rytm.
 
@@ -236,8 +248,8 @@ def test_dual_machine_mock_bridge_cli_reads_saved_kit_without_hardware(tmp_path)
     assert "RytmRandomizer passive Dual-Machine Mock Bridge Report" in result.stdout
     assert "Rytm source: saved-kit snapshot" in result.stdout
     assert "Analog Four source: safe starter CC plan" in result.stdout
-    assert "Combined mock messages: 14" in result.stdout
-    assert "- Analog Four Track 4 / FX / noise / transition: 2 message(s)" in result.stdout
+    assert "Combined mock messages: 26" in result.stdout
+    assert "- Analog Four Track 4 / FX / noise / transition: 5 message(s)" in result.stdout
     assert "- mock sender only" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

@@ -116,11 +116,11 @@ def test_safe_starter_bridge_is_mapping_ready(tmp_path):
 
     assert readiness.ready is True
     assert readiness.reason == "all_active_devices_mapping_ready"
-    assert readiness.combined_message_count == 14
+    assert readiness.combined_message_count == 26
     assert readiness.devices[0].status == "ready_mapped_cc"
     assert readiness.devices[0].mapped_cc_count == 6
     assert readiness.devices[1].status == "ready_safe_starter_cc"
-    assert readiness.devices[1].mapped_cc_count == 8
+    assert readiness.devices[1].mapped_cc_count == 20
     assert readiness.devices[1].candidate_event_count == 0
 
 

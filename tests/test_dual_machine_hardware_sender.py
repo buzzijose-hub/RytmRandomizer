@@ -228,19 +228,19 @@ def test_dual_port_hardware_send_accepts_ready_both_target_plan(tmp_path, monkey
     assert result.accepted is True
     assert result.reason == "accepted_hardware_send"
     assert result.target == "both"
-    assert result.eligible_message_count == 14
+    assert result.eligible_message_count == 26
     assert result.blocked_event_count == 0
-    assert result.emitted_message_count == 14
+    assert result.emitted_message_count == 26
     assert len(rytm_port.sent) == 6
-    assert len(a4_port.sent) == 8
+    assert len(a4_port.sent) == 20
     assert rytm_port.sent[0].type == "control_change"
     assert rytm_port.sent[0].channel == 0
     assert rytm_port.sent[0].control == 17
     assert rytm_port.sent[0].value == 60
     assert a4_port.sent[0].type == "control_change"
     assert a4_port.sent[0].channel == 0
-    assert a4_port.sent[0].control == 18
-    assert a4_port.sent[0].value == 112
+    assert a4_port.sent[0].control == 95
+    assert a4_port.sent[0].value == 104
 
 
 def test_dual_port_hardware_send_refuses_blocked_candidates_before_sending(tmp_path):

@@ -937,17 +937,17 @@ def test_app_main_arm_dual_machine_snapshot_send_both_target_sends_to_two_fake_p
     assert calls["list"] == 1
     assert calls["open"] == ["Fake Rytm", "Fake A4"]
     assert len(rytm_port.sent) == 6
-    assert len(a4_port.sent) == 8
+    assert len(a4_port.sent) == 20
     assert rytm_port.sent[0].channel == 0
     assert rytm_port.sent[0].control == 17
     assert a4_port.sent[0].channel == 0
-    assert a4_port.sent[0].control == 18
+    assert a4_port.sent[0].control == 95
     assert rytm_port.closed is True
     assert a4_port.closed is True
     assert "Hardware Send Report" in captured.out
     assert "Target: both" in captured.out
     assert "Accepted: True" in captured.out
-    assert "Emitted real MIDI messages: 14" in captured.out
+    assert "Emitted real MIDI messages: 26" in captured.out
     assert "Choose the Analog Rytm MIDI output number" in captured.out
     assert "Choose the Analog Four MIDI output number" in captured.out
 

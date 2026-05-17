@@ -116,9 +116,9 @@ def test_safe_starter_bridge_has_only_eligible_mapped_cc_events(tmp_path):
 
     assert plan.ready is True
     assert plan.readiness_reason == "all_active_devices_mapping_ready"
-    assert plan.eligible_message_count == 14
+    assert plan.eligible_message_count == 26
     assert plan.blocked_event_count == 0
-    assert plan.combined_event_count == 14
+    assert plan.combined_event_count == 26
     first = plan.events[0]
     assert first.eligible is True
     assert first.reason == "mapped_cc_message"
@@ -130,9 +130,16 @@ def test_safe_starter_bridge_has_only_eligible_mapped_cc_events(tmp_path):
     assert first.source == "saved-kit snapshot"
     assert "Rytm Pad 1" in first.label
     a4_events = [event for event in plan.events if event.device == "Analog Four MKII"]
-    assert len(a4_events) == 8
+    assert len(a4_events) == 20
     assert all(event.eligible for event in a4_events)
     assert {event.source for event in a4_events} == {"safe starter CC plan"}
+    assert [(event.control, event.value) for event in a4_events[:5]] == [
+        (95, 104),
+        (69, 96),
+        (78, 72),
+        (18, 112),
+        (10, 60),
+    ]
 
 
 def test_a4_saved_snapshot_candidates_are_blocked_but_rytm_ccs_remain_visible(tmp_path):

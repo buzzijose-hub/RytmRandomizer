@@ -108,19 +108,33 @@ def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
     assert bridge.rytm_plan.kit_name == "BRIDGE KIT"
     assert bridge.rytm_message_count == 6
     assert bridge.analog_four_track_count == 4
-    assert bridge.analog_four_message_count == 8
-    assert bridge.combined_message_count == 14
-    assert len(sender.sent_messages) == 14
+    assert bridge.analog_four_message_count == 20
+    assert bridge.combined_message_count == 26
+    assert len(sender.sent_messages) == 26
     first = sender.sent_messages[0]
     assert first.channel == 0
     assert first.control == 17
     assert first.value == 60
     assert first.metadata["device"] == "Analog Rytm MKII"
     assert first.metadata["baseline_value"] == 59
+    a4_messages = [
+        message
+        for message in sender.sent_messages
+        if message.metadata["device"] == "Analog Four MKII"
+    ]
+    assert [(message.control, message.value) for message in a4_messages[:5]] == [
+        (95, 104),
+        (69, 96),
+        (78, 72),
+        (18, 112),
+        (10, 60),
+    ]
     last = sender.sent_messages[-1]
     assert last.channel == 3
     assert last.metadata["device"] == "Analog Four MKII"
     assert last.metadata["track"] == 4
+    assert last.control == 10
+    assert last.value == 64
     assert {message.metadata["device"] for message in sender.sent_messages} == {
         "Analog Rytm MKII",
         "Analog Four MKII",
@@ -221,12 +235,22 @@ def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
     assert bridge.target_plan.canonical_target == "analog-four"
     assert bridge.target_plan.untouched_device_keys == ("analog_rytm",)
     assert bridge.rytm_message_count == 0
-    assert bridge.analog_four_message_count == 8
-    assert bridge.combined_message_count == 8
-    assert len(sender.sent_messages) == 8
+    assert bridge.analog_four_message_count == 20
+    assert bridge.combined_message_count == 20
+    assert len(sender.sent_messages) == 20
     assert {message.metadata["device"] for message in sender.sent_messages} == {
         "Analog Four MKII",
     }
+    track4_messages = [
+        message for message in sender.sent_messages if message.metadata["track"] == 4
+    ]
+    assert [(message.control, message.value) for message in track4_messages] == [
+        (95, 88),
+        (77, 72),
+        (76, 68),
+        (18, 88),
+        (10, 64),
+    ]
 
 
 def run_cli(*args):
@@ -256,8 +280,9 @@ def test_dual_machine_mock_bridge_cli_reads_saved_kit_without_hardware(tmp_path)
     assert "RytmRandomizer passive Dual-Machine Mock Bridge Report" in result.stdout
     assert "Rytm source: saved-kit snapshot" in result.stdout
     assert "Analog Four source: safe starter CC plan" in result.stdout
-    assert "Combined mock messages: 14" in result.stdout
-    assert "- Analog Four Track 4 / FX / noise / transition: 2 message(s)" in result.stdout
+    assert "Combined mock messages: 26" in result.stdout
+    assert "- Analog Four Track 4 / FX / noise / transition: 5 message(s)" in result.stdout
+    assert "Noise Level: CC77 -> 72" in result.stdout
     assert "- mock sender only" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

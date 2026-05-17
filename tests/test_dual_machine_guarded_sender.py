@@ -191,9 +191,9 @@ def test_guarded_send_emits_safe_starter_eligible_ccs_to_mock_sender(tmp_path):
 
     assert result.accepted is True
     assert result.reason == "accepted_guarded_mock_only"
-    assert result.eligible_message_count == 14
+    assert result.eligible_message_count == 26
     assert result.blocked_event_count == 0
-    assert result.emitted_message_count == 14
+    assert result.emitted_message_count == 26
     assert sender.sent_messages == result.emitted_messages
     first = sender.sent_messages[0]
     assert first.type == "cc"
@@ -202,6 +202,14 @@ def test_guarded_send_emits_safe_starter_eligible_ccs_to_mock_sender(tmp_path):
     assert first.value == 60
     assert first.metadata["device"] == "Analog Rytm MKII"
     assert first.metadata["guard"] == "dual_machine_guarded_send_dry_run"
+    a4_messages = [
+        message
+        for message in sender.sent_messages
+        if message.metadata["device"] == "Analog Four MKII"
+    ]
+    assert len(a4_messages) == 20
+    assert a4_messages[0].control == 95
+    assert a4_messages[0].value == 104
 
 
 def test_guarded_send_refuses_combined_a4_snapshot_candidates_without_partial_emit(tmp_path):

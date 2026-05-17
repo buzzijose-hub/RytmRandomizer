@@ -169,42 +169,64 @@ def build_dual_machine_mock_bridge(
 def build_analog_four_safe_starter_plan() -> tuple[AnalogFourTrackPlan, ...]:
     """Build a conservative A4 Track 1-4 CC starter plan."""
 
-    roles = {
-        1: "bass / low tonal anchor",
-        2: "stab / sequence pressure",
-        3: "pad / drone / atmosphere",
-        4: "FX / noise / transition",
-    }
-    filter_values = {
-        1: 112,
-        2: 104,
-        3: 96,
-        4: 88,
+    track_specs = {
+        1: (
+            "bass / low tonal anchor",
+            (
+                ("Track Level", 95, 104),
+                ("OSC1 Level", 69, 96),
+                ("OSC2 Level", 78, 72),
+                ("Filter 1 Frequency", 18, 112),
+                ("Amp Pan", 10, 60),
+            ),
+        ),
+        2: (
+            "stab / sequence pressure",
+            (
+                ("Track Level", 95, 100),
+                ("OSC1 Waveform", 70, 2),
+                ("Filter 1 Frequency", 18, 104),
+                ("Amp Env Decay", 105, 54),
+                ("Amp Pan", 10, 68),
+            ),
+        ),
+        3: (
+            "pad / drone / atmosphere",
+            (
+                ("Track Level", 95, 92),
+                ("OSC1 Level", 69, 82),
+                ("OSC2 Level", 78, 88),
+                ("Filter 2 Frequency", 19, 74),
+                ("Reverb Send", 93, 36),
+            ),
+        ),
+        4: (
+            "FX / noise / transition",
+            (
+                ("Track Level", 95, 88),
+                ("Noise Level", 77, 72),
+                ("Noise Fade", 76, 68),
+                ("Filter 1 Frequency", 18, 88),
+                ("Amp Pan", 10, 64),
+            ),
+        ),
     }
     tracks = []
     for track in range(1, A4_TRACK_COUNT + 1):
         midi_channel = track
         wire_channel = track - 1
-        role_label = roles[track]
-        changes = (
+        role_label, parameter_specs = track_specs[track]
+        changes = tuple(
             AnalogFourStarterChange(
                 track=track,
                 midi_channel=midi_channel,
                 wire_channel=wire_channel,
                 role_label=role_label,
-                parameter_name="Filter 1 Frequency",
-                cc=18,
-                value=filter_values[track],
-            ),
-            AnalogFourStarterChange(
-                track=track,
-                midi_channel=midi_channel,
-                wire_channel=wire_channel,
-                role_label=role_label,
-                parameter_name="Amp Pan",
-                cc=10,
-                value=64,
-            ),
+                parameter_name=parameter_name,
+                cc=cc,
+                value=value,
+            )
+            for parameter_name, cc, value in parameter_specs
         )
         tracks.append(
             AnalogFourTrackPlan(

@@ -32,7 +32,7 @@ assert {m.metadata["device"] for m in sender.sent_messages} == {"Analog Rytm MKI
 bridge = build_dual_machine_mock_bridge(path, slot=1, depth="micro", target="analog-four")
 sender = capture_dual_machine_mock_messages(bridge)
 assert bridge.rytm_message_count == 0
-assert bridge.analog_four_message_count == 8
+assert bridge.analog_four_message_count == 20
 assert {m.metadata["device"] for m in sender.sent_messages} == {"Analog Four MKII"}
 ```
 
