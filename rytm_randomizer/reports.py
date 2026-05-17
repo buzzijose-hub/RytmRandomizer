@@ -1434,5 +1434,3 @@ def format_mock_runtime_active_bridge_report(report=None):
         ]
     )
     return lines
-
-
