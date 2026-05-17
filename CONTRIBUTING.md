@@ -20,17 +20,17 @@ All tests must pass. There is also `Scripts/closeout_check.ps1`, a PowerShell-on
 
 The V1.34 hardware-validated musical behavior is the baseline of truth. It was validated against the actual Analog Rytm MK2. **Any change must preserve parity with that behavior.**
 
-As of Wave 4 / WS-O the modular package owns the interactive runtime end-to-end (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) is retained on disk **only as a frozen byte-parity reference** for the characterization tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`). The monolith file is kept byte-identical to its tagged V1.34 form -- `tests/test_real_midi_import_safety.py::test_v134_reference_has_no_working_tree_diff` enforces this -- and is not invoked by production code paths anymore.
+As of Wave 4 / WS-O the modular package owns the interactive runtime end-to-end (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) has been retired; its byte-for-byte reference behavior is preserved as JSON goldens under `tests/fixtures/v134_parity/` and asserted by the parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`) via `tests/_parity_worker.py`.
 
 Concretely:
 
-- The V1.34 reference file must stay byte-identical. Do not edit `rytm_hybrid_randomizer_v134.py`. New behavior lives in the `rytm_randomizer/` package and is locked against the reference by the parity tests.
+- The committed JSON goldens under `tests/fixtures/v134_parity/` are the authoritative V1.34 reference. New behavior lives in the `rytm_randomizer/` package and is locked against the goldens by the parity tests. Regenerate fixtures with `PARITY_CAPTURE_MODE=1 pytest tests/test_engines_pad*.py tests/test_group_runner.py tests/test_scene_runner.py` only when an intentional reference-output change is being committed.
 - The following are **not allowed** without explicit approval:
   - New MIDI CC mappings.
   - New pad profiles or machines.
   - Pads 5-12 expansion.
   - Parameter range changes.
-  - Command behavior changes (the shell's command alphabet mirrors the V1.34 monolith exactly).
+  - Command behavior changes (the shell's command alphabet mirrors the V1.34 reference exactly).
 - **Allowed:** further refactoring within the package; readability improvements that do not change behavior; new tests; documentation updates.
 - Add tests when you split code. Test after each major split.
 

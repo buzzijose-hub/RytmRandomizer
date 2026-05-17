@@ -1,0 +1,257 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      26
+    ],
+    [
+      "control_change",
+      0,
+      17,
+      59
+    ],
+    [
+      "control_change",
+      0,
+      18,
+      58
+    ],
+    [
+      "control_change",
+      0,
+      19,
+      93
+    ],
+    [
+      "control_change",
+      0,
+      20,
+      81
+    ],
+    [
+      "control_change",
+      0,
+      21,
+      40
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      127
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      1
+    ],
+    [
+      "control_change",
+      0,
+      70,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      71,
+      35
+    ],
+    [
+      "control_change",
+      0,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      73,
+      10
+    ],
+    [
+      "control_change",
+      0,
+      74,
+      23
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      77
+    ],
+    [
+      "control_change",
+      0,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      0,
+      77,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      79,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      80,
+      93
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      22
+    ],
+    [
+      "control_change",
+      0,
+      82,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      83,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      10,
+      64
+    ]
+  ],
+  "state": {
+    "active": "My BD Sharp",
+    "channel": 0,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 22,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 35,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 10,
+      "FLT Resonance": 77,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 58,
+      "SRC Hold Time": 40,
+      "SRC Sweep Depth": 93,
+      "SRC Sweep Time": 81,
+      "SRC Tick Level": 127,
+      "SRC Tune": 59,
+      "SRC Waveform": 1
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 35,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 10,
+        "FLT Resonance": 77,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 58,
+        "SRC Hold Time": 40,
+        "SRC Sweep Depth": 93,
+        "SRC Sweep Time": 81,
+        "SRC Tick Level": 127,
+        "SRC Tune": 59,
+        "SRC Waveform": 1
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 35,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 10,
+        "FLT Resonance": 77,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 58,
+        "SRC Hold Time": 40,
+        "SRC Sweep Depth": 93,
+        "SRC Sweep Time": 81,
+        "SRC Tick Level": 127,
+        "SRC Tune": 59,
+        "SRC Waveform": 1
+      }
+    },
+    "gprev": {
+      "1": null
+    },
+    "layout1": {
+      "depth": "micro",
+      "profile": "1",
+      "role": "Main kick / My BD Sharp",
+      "zone": "full"
+    },
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 22,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 35,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 10,
+      "FLT Resonance": 77,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 58,
+      "SRC Hold Time": 40,
+      "SRC Sweep Depth": 93,
+      "SRC Sweep Time": 81,
+      "SRC Tick Level": 127,
+      "SRC Tune": 59,
+      "SRC Waveform": 1
+    },
+    "target_pad": 1
+  },
+  "stdout": "\nLoading Pad 1 profiled BD engine: My BD Sharp\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Sharp:\n  Machine CC15 -> 26\n\nPad 1 My BD Sharp anchor:\n  SRC Tune: CC17 -> 59\n  SRC Decay: CC18 -> 58\n  SRC Sweep Depth: CC19 -> 93\n  SRC Sweep Time: CC20 -> 81\n  SRC Hold Time: CC21 -> 40\n  SRC Tick Level: CC22 -> 127\n  SRC Waveform: CC23 -> 1\n  FLT Attack: CC70 -> 0\n  FLT Decay: CC71 -> 35\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 10\n  FLT Frequency: CC74 -> 23\n  FLT Resonance: CC75 -> 77\n  FLT Type: CC76 -> 4\n  FLT Env Depth: CC77 -> 64\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 0\n  AMP Decay: CC80 -> 93\n  AMP Overdrive: CC81 -> 22\n  AMP Delay Send: CC82 -> 0\n  AMP Reverb Send: CC83 -> 0\n  AMP Pan: CC10 -> 64\n\nPad 1 is now using My BD Sharp as its profiled kick engine.\n"
+}

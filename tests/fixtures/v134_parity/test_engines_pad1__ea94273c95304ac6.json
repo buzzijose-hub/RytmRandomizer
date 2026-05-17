@@ -1,0 +1,20 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "layout1": {
+      "depth": "micro",
+      "profile": "2",
+      "role": "Main kick / BD Hard default",
+      "zone": "full"
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nUnknown BD engine command: ZZ\n"
+}

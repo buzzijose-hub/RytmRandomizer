@@ -44,12 +44,15 @@ If the change touches any of:
 * `rytm_randomizer/engines/*`
 * `rytm_randomizer/group_runner.py`
 * `rytm_randomizer/scene_runner.py`
-* `rytm_hybrid_randomizer_v134.py` (you should not be here — file is frozen)
+* `tests/fixtures/v134_parity/*.json` (the V1.34 reference goldens)
 
 then it is **parity-touching**. In addition to the architecture gate, the
 characterization tests under `tests/test_engines_pad*.py`,
 `tests/test_group_runner.py`, `tests/test_scene_runner.py` must pass
-byte-for-byte against the monolith. Never edit the monolith.
+byte-for-byte against the V1.34 JSON goldens. Do not regenerate the goldens
+casually -- `PARITY_CAPTURE_MODE=1 pytest ...` rewrites them from the current
+engine output, and that is only appropriate when an intentional
+reference-output change is being committed.
 
 ## Default workflow when starting any change
 

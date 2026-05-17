@@ -31,13 +31,13 @@ on:
 #
 #   architecture (WS-T) — fast ubuntu runner that runs the gated
 #       architecture-conformance tests (tests/architecture/). Triggers
-#       on any rytm_randomizer/ or rytm_hybrid_randomizer_v134.py change.
-#       Gives branch protection a cheap, fast-failing required check.
+#       on any rytm_randomizer/ change. Gives branch protection a cheap,
+#       fast-failing required check.
 #
 #   test (WS-E) — 3-OS matrix running the full pytest suite + branch-
 #       coverage gate (configured in pyproject.toml under
 #       [tool.coverage.report] fail_under). Triggers on any rytm_randomizer/,
-#       tests/, pyproject.toml, or monolith change.
+#       tests/, or pyproject.toml change.
 #
 #   e2e (WS-R) — 3-OS matrix running the end-to-end suite (tests/e2e/),
 #       which drives the real entry point through the V1.34 canonical
@@ -92,11 +92,8 @@ jobs:
           # ANY listed pattern matches a changed file. That is what we want.
           filters: |
             # `code` -- any change that affects runtime / production code.
-            # The byte-frozen monolith counts too: changing it would trigger
-            # the architecture-conformance test and the parity tests.
             code:
               - 'rytm_randomizer/**'
-              - 'rytm_hybrid_randomizer_v134.py'
               - 'Scripts/**'
 
             # `tests` -- any test source change. Note tests/architecture/ is
@@ -110,14 +107,12 @@ jobs:
             # current state of the package on every code-touching PR.
             architecture:
               - 'rytm_randomizer/**'
-              - 'rytm_hybrid_randomizer_v134.py'
               - 'tests/architecture/**'
 
-            # `e2e` -- triggers the (slow) 3-OS e2e matrix. Production code,
-            # the monolith, or anything under tests/e2e/.
+            # `e2e` -- triggers the (slow) 3-OS e2e matrix. Production code
+            # or anything under tests/e2e/.
             e2e:
               - 'rytm_randomizer/**'
-              - 'rytm_hybrid_randomizer_v134.py'
               - 'tests/e2e/**'
               - 'pyproject.toml'
 
@@ -253,8 +248,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          # Architecture tests grep `git diff` for the monolith; we need a
-          # working tree to diff against.
           fetch-depth: 1
 
       - name: Set up Python 3.11
@@ -434,7 +427,8 @@ jobs:
           retention-days: 14
 
       - name: Import smoke test
-        run: python -c "import rytm_hybrid_randomizer_v134; import rytm_randomizer"
+        # The V1.34 monolith was retired; only the package needs to import cleanly.
+        run: python -c "import rytm_randomizer"
 
   e2e:
     # WS-R end-to-end gate: drives the real entry point (rytm-randomizer)

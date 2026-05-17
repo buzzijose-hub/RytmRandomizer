@@ -1,0 +1,15 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "key": "3",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nPad 2 state is not loaded yet. Use O, P2B, P2H, P2C, P2F, or P2R first.\n"
+}

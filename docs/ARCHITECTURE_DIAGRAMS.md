@@ -15,7 +15,7 @@ Current baseline used while creating this document:
 - current HEAD before this documentation slice:
   - `55300be Add bridge report CLI preview progress review`
 - protected reference:
-  - `rytm_hybrid_randomizer_v134.py`
+  - `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as JSON goldens)
 - current package:
   - `rytm_randomizer/`
 - closeout script:
@@ -43,7 +43,7 @@ The diagrams below were derived from these current source groups:
 ```mermaid
 flowchart TB
     User["Operator / developer"]
-    V134["Protected V1.34 reference\nrytm_hybrid_randomizer_v134.py"]
+    V134["V1.34 reference behavior\ntests/fixtures/v134_parity/*.json"]
     Package["Modular package\nrytm_randomizer/"]
     Tests["Tests\ntests/test_*.py + fixtures"]
     Closeout["Closeout script\nScripts/closeout_check.ps1"]
@@ -54,20 +54,22 @@ flowchart TB
 
     Package -->|"validated by"| Tests
     Tests -->|"run by"| Closeout
-    Closeout -->|"checks diff remains empty"| V134
-
-    V134 -.->|"behavior reference only\nnot edited by modular slices"| Package
+    Tests -->|"compares engine output to"| V134
 ```
 
 Current nuance:
 
-- `rytm_hybrid_randomizer_v134.py` is retained as the frozen byte-parity
-  reference. Closeout verifies its working-tree diff stays empty.
+- The V1.34 reference behavior is preserved as JSON goldens under
+  `tests/fixtures/v134_parity/`. The original
+  `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the
+  parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`,
+  `tests/test_scene_runner.py`) compare engine output to those fixtures via
+  `tests/_parity_worker.py`.
 - The modular package now owns the interactive runtime end-to-end:
   `rytm_randomizer.app` exposes the passive menu (default), `--arm` (real
   MIDI), and `--dry-run` (mock sender) modes. The interactive command loop
   lives in `rytm_randomizer.shell.InteractiveShell`.
-- Closeout repeatedly verifies tests and the V1.34 reference diff.
+- Closeout repeatedly verifies tests and the package's import smoke.
 
 ## 2. Package Layer Map
 

@@ -35,8 +35,9 @@ You execute the `code-review` skill (see
    2. House-style compliance (frozen dataclasses, type hints,
       no module-level mutable globals).
    3. Data-not-code (fact tables only under `data/`).
-   4. Parity discipline (V1.34 monolith not edited; parity tests still
-      pass).
+   4. Parity discipline (V1.34 JSON goldens under
+      `tests/fixtures/v134_parity/` not casually regenerated; parity tests
+      still pass).
    5. Side effects + `mido` leakage.
    6. Full suite + coverage ratchet.
 5. Run the architecture gate locally:

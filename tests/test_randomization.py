@@ -1,22 +1,22 @@
-"""Characterization + parity tests for the randomization core.
+"""Characterization tests for the randomization core.
 
-These tests lock in the monolith's CURRENT behavior, then prove the extracted
-``rytm_randomizer.randomization`` module reproduces it byte-identically. All
+These tests lock in the behavior of ``rytm_randomizer.randomization``. All
 randomness is made deterministic via injected ``random.Random`` instances.
 
-Isolation rules match ``tests/test_data_layer.py`` / ``tests/test_midi_io.py``:
+The V1.34 ``rytm_hybrid_randomizer_v134`` monolith that previously served as
+the live byte-for-byte reference (driven through subprocess parity checks for
+each helper) has been retired; its frozen reference behavior now lives as the
+captured-engine-output JSON goldens under ``tests/fixtures/v134_parity/``
+(asserted by the parity test files). The in-process tests below provide
+behavior coverage for every branch of the randomization helpers.
 
-* Anything that imports the monolith (which does ``import mido`` at the top)
-  runs in a *subprocess* so real ``mido`` never lands in this process's
-  ``sys.modules``.
-* In-process package tests that reach ``send_param`` (and therefore
-  ``mido``) inject a *fake* ``mido``; an autouse fixture snapshots and
-  restores ``sys.modules`` so nothing leaks between tests.
+In-process package tests that reach ``send_param`` (and therefore ``mido``)
+inject a *fake* ``mido``; an autouse fixture snapshots and restores
+``sys.modules`` so nothing leaks between tests.
 """
 
 from __future__ import annotations
 
-import json
 import random
 import subprocess
 import sys
@@ -94,50 +94,9 @@ def _sample_profile(key: str = "2") -> dict:
     return profile
 
 
-# Shared subprocess preamble: defines Out, silences sleep, and exposes a
-# `drive(...)` helper. The `PROFILE_SETUP` placeholder is filled per-test.
-_PREAMBLE = (
-    "import json, io, contextlib, random\n"
-    "import rytm_hybrid_randomizer_v134 as m\n"
-    "from rytm_randomizer import midi_io, randomization\n"
-    "midi_io.time.sleep = lambda *_: None\n"
-    "randomization.time.sleep = lambda *_: None\n"
-    "from rytm_randomizer.data import PROFILES\n"
-    "class Out:\n"
-    "    def __init__(self): self.sent = []\n"
-    "    def send(self, msg): self.sent.append(msg)\n"
-)
-
-
 # ===========================================================================
 # get_depth
 # ===========================================================================
-
-
-def test_get_depth_parity_all_branches():
-    """Subprocess parity across every depth-input branch."""
-
-    code = (
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "from rytm_randomizer import randomization\n"
-        "import io, contextlib, builtins\n"
-        "cases = {'1':'micro','2':'groove','3':'strong','x':'groove','':'groove'}\n"
-        "ok = True\n"
-        "for raw, expected in cases.items():\n"
-        "    builtins.input = lambda _p='', _r=raw: _r\n"
-        "    buf_a = io.StringIO()\n"
-        "    with contextlib.redirect_stdout(buf_a):\n"
-        "        ra = m.get_depth()\n"
-        "    buf_b = io.StringIO()\n"
-        "    with contextlib.redirect_stdout(buf_b):\n"
-        "        rb = randomization.get_depth()\n"
-        "    assert ra == rb == expected, (raw, ra, rb)\n"
-        "    assert buf_a.getvalue() == buf_b.getvalue()\n"
-        "print('OK')\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
 
 
 def test_get_depth_in_process_branches(capsys):
@@ -163,94 +122,8 @@ def test_get_depth_default_uses_builtin_input(monkeypatch):
 
 
 # ===========================================================================
-# random_value_around_anchor -- subprocess parity (monolith) + in-process
-# coverage (package only; pure, no mido).
+# random_value_around_anchor -- in-process coverage (pure, no mido).
 # ===========================================================================
-
-
-def _rvaa_parity(profile_repr, anchor_repr, name, depth, seeds):
-    code = (
-        _PREAMBLE
-        + f"profile = {profile_repr}\n"
-        + f"anchor = {anchor_repr}\n"
-        + f"for seed in {seeds!r}:\n"
-        "    m.active_profile = profile\n"
-        "    m.anchor_state = dict(anchor)\n"
-        "    m.random = random.Random(seed)\n"
-        f"    mono = m.random_value_around_anchor({name!r}, {depth!r})\n"
-        f"    pkg = randomization.random_value_around_anchor({name!r}, {depth!r},"
-        "        profile=profile, anchor_state=dict(anchor),"
-        "        rng=random.Random(seed))\n"
-        "    assert mono == pkg, (seed, mono, pkg)\n"
-        "print('OK')\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
-
-
-def test_random_value_around_anchor_parity_normal_branch():
-    profile = _sample_profile()
-    _rvaa_parity(
-        "dict(PROFILES['2'], anchor=dict(PROFILES['2']['anchor']))",
-        repr(dict(profile["anchor"])),
-        "FLT Frequency",
-        "groove",
-        list(range(20)),
-    )
-
-
-def test_random_value_around_anchor_parity_tick_branch():
-    """Profile 1 (BD Sharp) carries SRC Tick Level; drive the downward-only
-    transient branch with a maxed anchor."""
-    profile = _sample_profile("1")
-    assert "SRC Tick Level" in profile["safe"]
-    anchor = dict(profile["anchor"])
-    anchor["SRC Tick Level"] = 120
-    _rvaa_parity(
-        "dict(PROFILES['1'], anchor=dict(PROFILES['1']['anchor']))",
-        repr(anchor),
-        "SRC Tick Level",
-        "groove",
-        list(range(15)),
-    )
-
-
-def test_random_value_around_anchor_parity_src_impact_branch():
-    """Profile 4 (BD Acoustic) carries SRC Impact; drive the transient branch."""
-    profile = _sample_profile("4")
-    assert "SRC Impact" in profile["safe"]
-    anchor = dict(profile["anchor"])
-    anchor["SRC Impact"] = 115
-    _rvaa_parity(
-        "dict(PROFILES['4'], anchor=dict(PROFILES['4']['anchor']))",
-        repr(anchor),
-        "SRC Impact",
-        "groove",
-        list(range(15)),
-    )
-
-
-def test_random_value_around_anchor_parity_amp_hold_branch():
-    """Profile 1 (BD Sharp) carries AMP Hold; drive the upward-only branch."""
-    profile = _sample_profile("1")
-    assert "AMP Hold" in profile["safe"]
-    anchor = dict(profile["anchor"])
-    anchor["AMP Hold"] = 0
-    _rvaa_parity(
-        "dict(PROFILES['1'], anchor=dict(PROFILES['1']['anchor']))",
-        repr(anchor),
-        "AMP Hold",
-        "groove",
-        list(range(15)),
-    )
-
-
-def test_random_value_around_anchor_parity_swap_branch():
-    """A negative delta forces ``low > high`` -> the defensive swap path."""
-    profile = {"safe": {"P": (0, 100)}, "deltas": {"groove": {"P": -10}}}
-    anchor = {"P": 50}
-    _rvaa_parity(repr(profile), repr(anchor), "P", "groove", list(range(8)))
 
 
 def test_random_value_around_anchor_in_process_all_branches():
@@ -318,88 +191,8 @@ def test_random_value_around_anchor_in_process_all_branches():
 
 
 # ===========================================================================
-# random_hp2_filter_pair -- subprocess parity + in-process coverage
+# random_hp2_filter_pair -- in-process coverage
 # ===========================================================================
-
-
-def _hp2_parity(profile_repr, anchor_repr, depth, seeds):
-    code = (
-        _PREAMBLE
-        + f"profile = {profile_repr}\n"
-        + f"anchor = {anchor_repr}\n"
-        + f"for seed in {seeds!r}:\n"
-        "    m.active_profile = profile\n"
-        "    m.anchor_state = dict(anchor)\n"
-        "    m.random = random.Random(seed)\n"
-        f"    mono = m.random_hp2_filter_pair({depth!r})\n"
-        f"    pkg = randomization.random_hp2_filter_pair({depth!r},"
-        "        profile=profile, anchor_state=dict(anchor),"
-        "        rng=random.Random(seed))\n"
-        "    assert mono == pkg, (seed, mono, pkg)\n"
-        "print('OK')\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
-
-
-def _hp2_profile_repr(filter_mode, freq_safe, res_safe, freq_delta=50, res_delta=50):
-    return repr(
-        {
-            "filter_mode": filter_mode,
-            "safe": {"FLT Frequency": freq_safe, "FLT Resonance": res_safe},
-            "deltas": {
-                "groove": {
-                    "FLT Frequency": freq_delta,
-                    "FLT Resonance": res_delta,
-                }
-            },
-        }
-    )
-
-
-def test_random_hp2_filter_pair_parity_every_mode_and_subrange():
-    """Cover every ``filter_mode`` AND every ``freq <= N`` sub-branch."""
-    mode_freq_ranges = {
-        "sharp": [(20, 25), (28, 30), (33, 40)],
-        "hard": [(20, 26), (29, 31), (34, 40)],
-        "classic": [(20, 25), (28, 30), (33, 40)],
-        "fm": [(20, 26), (30, 32), (35, 40)],
-        "acoustic": [(20, 25), (28, 30), (33, 40)],
-    }
-    for mode, ranges in mode_freq_ranges.items():
-        for freq_safe in ranges:
-            profile_repr = _hp2_profile_repr(mode, freq_safe, (0, 100))
-            anchor = {
-                "FLT Frequency": (freq_safe[0] + freq_safe[1]) // 2,
-                "FLT Resonance": 50,
-            }
-            _hp2_parity(profile_repr, repr(anchor), "groove", list(range(10)))
-
-
-def test_random_hp2_filter_pair_parity_freq_swap_branch():
-    """Negative freq delta forces ``freq_low > freq_high`` -> swap path."""
-    profile_repr = _hp2_profile_repr("hard", (0, 100), (0, 100), freq_delta=-10)
-    anchor = {"FLT Frequency": 30, "FLT Resonance": 50}
-    _hp2_parity(profile_repr, repr(anchor), "groove", list(range(8)))
-
-
-def test_random_hp2_filter_pair_parity_res_fallback_branch():
-    """An empty intersected resonance band falls back to the safe limits."""
-    profile_repr = _hp2_profile_repr("classic", (0, 10), (0, 5), res_delta=1)
-    anchor = {"FLT Frequency": 5, "FLT Resonance": 2}
-    _hp2_parity(profile_repr, repr(anchor), "groove", list(range(8)))
-
-
-def test_random_hp2_filter_pair_parity_real_profile_micro_strong():
-    profile = _sample_profile("2")
-    for depth in ("micro", "strong"):
-        _hp2_parity(
-            "dict(PROFILES['2'], anchor=dict(PROFILES['2']['anchor']))",
-            repr(dict(profile["anchor"])),
-            depth,
-            list(range(20)),
-        )
 
 
 def test_random_hp2_filter_pair_in_process_all_branches():
@@ -466,73 +259,17 @@ def test_random_hp2_filter_pair_in_process_all_branches():
 
 
 # ===========================================================================
-# random_waveform -- subprocess parity + in-process coverage
+# random_waveform -- in-process coverage
 # ===========================================================================
 
 
-def _drive_monolith_random_waveform(profile_key, current_repr, seed):
-    code = (
-        _PREAMBLE + f"profile = dict(PROFILES[{profile_key!r}], "
-        f"anchor=dict(PROFILES[{profile_key!r}]['anchor']))\n"
-        "m.active_profile = profile\n"
-        "m.anchor_state = dict(profile['anchor'])\n"
-        f"m.current_state = {current_repr}\n"
-        "m.previous_state = None\n"
-        f"m.random = random.Random({seed})\n"
-        "out = Out(); buf = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf):\n"
-        "    m.random_waveform(out)\n"
-        "print(json.dumps({\n"
-        "    'output': buf.getvalue(),\n"
-        "    'sent': [(x.control, x.value) for x in out.sent],\n"
-        "    'current_state': m.current_state,\n"
-        "    'previous_state': m.previous_state,\n"
-        "}))\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
-
-
-def test_random_waveform_parity_seeded_current(capsys):
+def test_random_waveform_seeds_current_from_anchor_when_empty(capsys):
+    """When current_state is empty it is seeded from anchor_state before the
+    waveform pick is recorded, exactly as the V1.34 reference behaved."""
     _install_fake_mido()
     from rytm_randomizer.randomization import random_waveform
 
     profile = _sample_profile()
-    seeded = {"SRC Waveform": 1}
-
-    for seed in range(8):
-        mono = _drive_monolith_random_waveform("2", repr(dict(seeded)), seed)
-
-        pkg_out = RecordingOut()
-        result = random_waveform(
-            pkg_out,
-            profile=profile,
-            anchor_state=dict(profile["anchor"]),
-            current_state=dict(seeded),
-            previous_state=None,
-            channel=0,
-            sleep=_no_sleep,
-            rng=random.Random(seed),
-        )
-        pkg_output = capsys.readouterr().out
-
-        assert pkg_output == mono["output"]
-        assert result.applied is True
-        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
-        assert result.current_state == mono["current_state"]
-        assert result.previous_state == mono["previous_state"]
-
-
-def test_random_waveform_parity_empty_current(capsys):
-    """When current_state is empty it is seeded from anchor_state."""
-    _install_fake_mido()
-    from rytm_randomizer.randomization import random_waveform
-
-    profile = _sample_profile()
-
-    mono = _drive_monolith_random_waveform("2", "{}", 5)
-
     pkg_out = RecordingOut()
     result = random_waveform(
         pkg_out,
@@ -544,12 +281,40 @@ def test_random_waveform_parity_empty_current(capsys):
         sleep=_no_sleep,
         rng=random.Random(5),
     )
-    pkg_output = capsys.readouterr().out
+    capsys.readouterr()
 
-    assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
-    assert result.current_state == mono["current_state"]
-    assert result.previous_state == mono["previous_state"]
+    assert result.applied is True
+    # The previous_state must reflect the seeded anchor (NOT a {} carry-over),
+    # because the empty current_state was filled before the new value landed.
+    assert "SRC Waveform" in result.previous_state
+    low, high = profile["waveform_range"]
+    assert low <= result.current_state["SRC Waveform"] <= high
+
+
+def test_random_waveform_carries_previous_state(capsys):
+    """A non-empty current_state copies into previous_state when the new
+    waveform is applied."""
+    _install_fake_mido()
+    from rytm_randomizer.randomization import random_waveform
+
+    profile = _sample_profile()
+    seeded = {"SRC Waveform": 1}
+
+    pkg_out = RecordingOut()
+    result = random_waveform(
+        pkg_out,
+        profile=profile,
+        anchor_state=dict(profile["anchor"]),
+        current_state=dict(seeded),
+        previous_state=None,
+        channel=0,
+        sleep=_no_sleep,
+        rng=random.Random(0),
+    )
+    capsys.readouterr()
+
+    assert result.applied is True
+    assert result.previous_state == seeded
 
 
 def test_random_waveform_without_profile(capsys):
@@ -595,130 +360,92 @@ def test_random_waveform_default_rng(capsys):
 
 
 # ===========================================================================
-# mutate_zone -- subprocess parity + in-process coverage
+# mutate_zone -- in-process coverage
 # ===========================================================================
 
 
-def _drive_monolith_mutate_zone(profile_repr, current_repr, zone, depth, seed):
-    code = (
-        _PREAMBLE + f"profile = {profile_repr}\n"
-        "m.active_profile = profile\n"
-        "m.anchor_state = dict(profile['anchor'])\n"
-        f"m.current_state = {current_repr}\n"
-        "m.previous_state = None\n"
-        f"m.random = random.Random({seed})\n"
-        "out = Out(); buf = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf):\n"
-        f"    m.mutate_zone(out, {zone!r}, {depth!r})\n"
-        "print(json.dumps({\n"
-        "    'output': buf.getvalue(),\n"
-        "    'sent': [(x.control, x.value) for x in out.sent],\n"
-        "    'current_state': m.current_state,\n"
-        "    'previous_state': m.previous_state,\n"
-        "}))\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
-
-
-_REAL_PROFILE_2 = "dict(PROFILES['2'], anchor=dict(PROFILES['2']['anchor']))"
-
-
-def test_mutate_zone_parity_filter_zone(capsys):
+def test_mutate_zone_filter_zone_emits_freq_and_resonance(capsys):
     """Filter zone exercises the FLT Frequency/Resonance pair path."""
     _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
-    for seed in range(8):
-        mono = _drive_monolith_mutate_zone(_REAL_PROFILE_2, "{}", "filter", "groove", seed)
+    pkg_out = RecordingOut()
+    result = mutate_zone(
+        pkg_out,
+        "filter",
+        "groove",
+        profile=profile,
+        anchor_state=dict(profile["anchor"]),
+        current_state={},
+        previous_state=None,
+        channel=0,
+        sleep=_no_sleep,
+        rng=random.Random(1),
+    )
+    capsys.readouterr()
 
-        pkg_out = RecordingOut()
-        result = mutate_zone(
-            pkg_out,
-            "filter",
-            "groove",
-            profile=profile,
-            anchor_state=dict(profile["anchor"]),
-            current_state={},
-            previous_state=None,
-            channel=0,
-            sleep=_no_sleep,
-            rng=random.Random(seed),
-        )
-        pkg_output = capsys.readouterr().out
-
-        assert pkg_output == mono["output"]
-        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
-        assert result.applied is True
-        assert result.current_state == mono["current_state"]
-        assert result.previous_state == mono["previous_state"]
+    assert result.applied is True
+    sent_ccs = {m.control for m in pkg_out.sent}
+    assert profile["params"]["FLT Frequency"] in sent_ccs
+    assert profile["params"]["FLT Resonance"] in sent_ccs
 
 
-def test_mutate_zone_parity_full_zone_seeded_current(capsys):
+def test_mutate_zone_full_zone_seeded_current(capsys):
+    """Full-zone mutation copies the seeded current state into previous_state."""
     _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
     seeded = dict(profile["anchor"])
 
-    for seed in range(6):
-        mono = _drive_monolith_mutate_zone(
-            _REAL_PROFILE_2, repr(dict(seeded)), "full", "strong", seed
-        )
+    pkg_out = RecordingOut()
+    result = mutate_zone(
+        pkg_out,
+        "full",
+        "strong",
+        profile=profile,
+        anchor_state=dict(profile["anchor"]),
+        current_state=dict(seeded),
+        previous_state=None,
+        channel=0,
+        sleep=_no_sleep,
+        rng=random.Random(0),
+    )
+    capsys.readouterr()
 
-        pkg_out = RecordingOut()
-        result = mutate_zone(
-            pkg_out,
-            "full",
-            "strong",
-            profile=profile,
-            anchor_state=dict(profile["anchor"]),
-            current_state=dict(seeded),
-            previous_state=None,
-            channel=0,
-            sleep=_no_sleep,
-            rng=random.Random(seed),
-        )
-        pkg_output = capsys.readouterr().out
-
-        assert pkg_output == mono["output"]
-        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
-        assert result.current_state == mono["current_state"]
-        assert result.previous_state == mono["previous_state"]
+    assert result.applied is True
+    assert result.previous_state == seeded
 
 
-def test_mutate_zone_parity_src_zone(capsys):
+def test_mutate_zone_src_zone(capsys):
     """A non-filter zone covers the plain random_value_around_anchor path."""
     _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
-    for seed in range(6):
-        mono = _drive_monolith_mutate_zone(_REAL_PROFILE_2, "{}", "src", "micro", seed)
+    pkg_out = RecordingOut()
+    result = mutate_zone(
+        pkg_out,
+        "src",
+        "micro",
+        profile=profile,
+        anchor_state=dict(profile["anchor"]),
+        current_state={},
+        previous_state=None,
+        channel=0,
+        sleep=_no_sleep,
+        rng=random.Random(0),
+    )
+    capsys.readouterr()
 
-        pkg_out = RecordingOut()
-        result = mutate_zone(
-            pkg_out,
-            "src",
-            "micro",
-            profile=profile,
-            anchor_state=dict(profile["anchor"]),
-            current_state={},
-            previous_state=None,
-            channel=0,
-            sleep=_no_sleep,
-            rng=random.Random(seed),
-        )
-        pkg_output = capsys.readouterr().out
-
-        assert pkg_output == mono["output"]
-        assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
-        assert result.current_state == mono["current_state"]
+    assert result.applied is True
+    for name in profile["zones"]["src"]:
+        if name in profile["deltas"]["micro"]:
+            assert name in result.current_state
 
 
-def test_mutate_zone_parity_skips_param_absent_from_depth_deltas(capsys):
+def test_mutate_zone_skips_param_absent_from_depth_deltas(capsys):
     """A zone param missing from ``deltas[depth]`` is skipped (continue path)."""
     _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
@@ -733,8 +460,6 @@ def test_mutate_zone_parity_skips_param_absent_from_depth_deltas(capsys):
     }
     profile["anchor"] = {"P_IN": 50, "P_OUT": 60}
 
-    mono = _drive_monolith_mutate_zone(repr(profile), "{}", "z", "groove", 9)
-
     pkg_out = RecordingOut()
     result = mutate_zone(
         pkg_out,
@@ -748,13 +473,14 @@ def test_mutate_zone_parity_skips_param_absent_from_depth_deltas(capsys):
         sleep=_no_sleep,
         rng=random.Random(9),
     )
-    pkg_output = capsys.readouterr().out
+    capsys.readouterr()
 
-    assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(p) for p in mono["sent"]]
-    # Only P_IN (cc 10) was sent; P_OUT was skipped.
+    # Only P_IN (cc 10) was sent; P_OUT was skipped because no delta exists.
     assert all(m.control == 10 for m in pkg_out.sent)
-    assert result.current_state == mono["current_state"]
+    assert "P_IN" in result.current_state
+    # P_OUT carries through from the anchor unchanged; only its CC must not have
+    # been emitted (already asserted above).
+    assert result.current_state["P_OUT"] == 60
 
 
 def test_mutate_zone_resonance_after_pair_is_skipped(capsys):

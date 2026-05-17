@@ -106,28 +106,32 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-# Harness run once at warm-worker startup: imports the monolith + package, then
-# defines ``assert_parity(seed, steps)`` which builds a monolith run and an
-# engine run from the same RNG seed, captures stdout + MIDI messages + the
-# relevant state dicts, and asserts byte-parity. The worker loop appended by
-# ``tests/_parity_worker.py`` calls this once per JSON request line.
+# Harness run once at warm-worker startup. It defines the three functions the
+# worker loop expects:
+#
+#   * ``run_engine_only(seed, steps)`` -- run Pad1Engine for one parity request
+#     and return a JSON-serializable ``{"stdout", "midi", "state"}`` dict.
+#   * ``capture_reference(seed, steps)`` -- return the same shape sourced from
+#     the V1.34 monolith. Used once, with ``PARITY_CAPTURE_MODE=1``, to write
+#     the goldens under ``tests/fixtures/v134_parity/``. After the monolith is
+#     deleted this function falls back to the engine itself, so regenerating a
+#     fixture is only meaningful when the engine's reference output is being
+#     intentionally updated.
+#   * ``assert_engine_matches(seed, steps, expected)`` -- run the engine and
+#     compare its output to the ``expected`` dict shipped with the request (the
+#     fixture loaded test-side).
 _HARNESS = '''
 import io, contextlib, random
-import rytm_hybrid_randomizer_v134 as m
 from rytm_randomizer import midi_io, randomization
 from rytm_randomizer.engines.pad1 import Pad1Engine, default_group_layout
 
 midi_io.time.sleep = lambda *_: None
 randomization.time.sleep = lambda *_: None
 
-
-class Out:
-    def __init__(self):
-        self.sent = []
-
-    def send(self, msg):
-        self.sent.append((msg.type, msg.channel, msg.control, msg.value))
-
+try:
+    import rytm_hybrid_randomizer_v134 as m
+except ImportError:  # monolith retired -- capture_reference falls back to engine
+    m = None
 
 # Monolith Pad-1 functions that are pure status/guard helpers and take NO
 # ``out`` argument (the engine versions are likewise argument-free methods).
@@ -141,6 +145,32 @@ _NO_OUT = {
     "require_pad1_bd_plastic_context",
     "require_pad1_bd_silky_context",
 }
+
+
+class Out:
+    def __init__(self):
+        self.sent = []
+
+    def send(self, msg):
+        self.sent.append((msg.type, msg.channel, msg.control, msg.value))
+
+
+def _engine_state(eng):
+    return {
+        "active": eng.active_profile["name"] if eng.active_profile else None,
+        "current": dict(eng.current_state),
+        "previous": (
+            dict(eng.previous_state) if eng.previous_state else eng.previous_state
+        ),
+        "target_pad": eng.target_pad,
+        "channel": eng.channel,
+        "layout1": dict(eng.group_layout[1]),
+        "gcur": {k: dict(v) for k, v in eng.group_current_states.items()},
+        "gprev": {
+            k: (dict(v) if v else v) for k, v in eng.group_previous_states.items()
+        },
+        "ganc": {k: dict(v) for k, v in eng.group_anchor_states.items()},
+    }
 
 
 def _reset_monolith():
@@ -157,19 +187,8 @@ def _reset_monolith():
     m.GROUP_LAYOUT = {pad: dict(cfg) for pad, cfg in default_group_layout().items()}
 
 
-def run_monolith(seed, steps):
-    """Drive a sequence of monolith Pad-1 calls; return (stdout, msgs, state)."""
-    _reset_monolith()
-    out = Out()
-    random.seed(seed)
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        for fn_name, args in steps:
-            if fn_name in _NO_OUT:
-                getattr(m, fn_name)(*args)
-            else:
-                getattr(m, fn_name)(out, *args)
-    state = {
+def _monolith_state():
+    return {
         "active": m.active_profile["name"] if m.active_profile else None,
         "current": dict(m.current_state),
         "previous": dict(m.previous_state) if m.previous_state else m.previous_state,
@@ -182,11 +201,29 @@ def run_monolith(seed, steps):
         },
         "ganc": {k: dict(v) for k, v in m.group_anchor_states.items()},
     }
-    return buf.getvalue(), out.sent, state
 
 
-def run_engine(seed, steps):
-    """Drive the same sequence on a Pad1Engine; return (stdout, msgs, state)."""
+def run_monolith(seed, steps):
+    """Drive a sequence of monolith Pad-1 calls; return engine-shaped result."""
+    _reset_monolith()
+    out = Out()
+    random.seed(seed)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        for fn_name, args in steps:
+            if fn_name in _NO_OUT:
+                getattr(m, fn_name)(*args)
+            else:
+                getattr(m, fn_name)(out, *args)
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(row) for row in out.sent],
+        "state": _monolith_state(),
+    }
+
+
+def run_engine_only(seed, steps):
+    """Drive a sequence of Pad1Engine calls; return the JSON-friendly result."""
     out = Out()
     eng = Pad1Engine(out, sleep=lambda *_: None)
     random.seed(seed)
@@ -194,39 +231,62 @@ def run_engine(seed, steps):
     with contextlib.redirect_stdout(buf):
         for fn_name, args in steps:
             getattr(eng, fn_name)(*args)
-    state = {
-        "active": eng.active_profile["name"] if eng.active_profile else None,
-        "current": dict(eng.current_state),
-        "previous": (
-            dict(eng.previous_state) if eng.previous_state else eng.previous_state
-        ),
-        "target_pad": eng.target_pad,
-        "channel": eng.channel,
-        "layout1": dict(eng.group_layout[1]),
-        "gcur": {k: dict(v) for k, v in eng.group_current_states.items()},
-        "gprev": {
-            k: (dict(v) if v else v) for k, v in eng.group_previous_states.items()
-        },
-        "ganc": {k: dict(v) for k, v in eng.group_anchor_states.items()},
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(msg) for msg in out.sent],
+        "state": _engine_state(eng),
     }
-    return buf.getvalue(), out.sent, state
 
 
-def assert_parity(seed, steps):
-    mo, mm, ms = run_monolith(seed, steps)
-    eo, em, es = run_engine(seed, steps)
-    assert mo == eo, "stdout mismatch:\\n--MONOLITH--\\n" + mo + "\\n--ENGINE--\\n" + eo
-    assert mm == em, "midi mismatch:\\n" + repr(mm) + "\\n" + repr(em)
-    assert ms == es, "state mismatch:\\n" + repr(ms) + "\\n" + repr(es)
+def capture_reference(seed, steps):
+    """Source the V1.34 reference output for one request.
+
+    Prefers the monolith (the original frozen reference). Falls back to the
+    engine after the monolith is deleted, so a future fixture regeneration
+    locks in the engine's then-current output as the new reference.
+    """
+    if m is not None:
+        return run_monolith(seed, steps)
+    return run_engine_only(seed, steps)
+
+
+def _normalize(result):
+    """Round-trip ``result`` through JSON so both sides of the assert match.
+
+    JSON has no tuple type and no int dict keys, so engine output (which
+    contains tuple MIDI rows and int-keyed group state dicts) must travel
+    through the same JSON encoder/decoder the fixtures use before it can
+    compare equal to the loaded fixture.
+    """
+    import json as _json
+    return _json.loads(_json.dumps(result, default=lambda x: list(x)))
+
+
+def assert_engine_matches(seed, steps, expected):
+    got = _normalize(run_engine_only(seed, steps))
+    want = _normalize(expected)
+    assert got["stdout"] == want["stdout"], (
+        "stdout mismatch:\\n--EXPECTED--\\n" + want["stdout"]
+        + "\\n--ENGINE--\\n" + got["stdout"]
+    )
+    assert got["midi"] == want["midi"], (
+        "midi mismatch:\\n--EXPECTED--\\n" + repr(want["midi"])
+        + "\\n--ENGINE--\\n" + repr(got["midi"])
+    )
+    assert got["state"] == want["state"], (
+        "state mismatch:\\n--EXPECTED--\\n" + repr(want["state"])
+        + "\\n--ENGINE--\\n" + repr(got["state"])
+    )
 '''
 
 
 # The warm worker for this file: ``_parity_worker`` is a module-scoped autouse
 # fixture that launches/owns it and tears it down at module teardown;
-# ``_run_parity`` ships one JSON request to it and asserts the parity check
-# passed (a mismatch re-raises the worker's diff as an AssertionError -- same
-# failure semantics as the old "fresh interpreter per call" version).
-_parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
+# ``_run_parity`` ships one JSON request to it. The test-side wrapper resolves
+# the fixture (capturing it first when ``PARITY_CAPTURE_MODE=1``) and asks the
+# worker to compare the engine's output against the fixture -- a mismatch
+# re-raises the worker's diff as an ``AssertionError``.
+_parity_worker, _run_parity = make_parity_subprocess(_HARNESS, __name__)
 
 
 def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:

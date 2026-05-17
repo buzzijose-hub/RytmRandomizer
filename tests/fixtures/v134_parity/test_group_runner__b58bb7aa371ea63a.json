@@ -1,0 +1,44 @@
+{
+  "midi": [],
+  "results": [
+    null
+  ],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "layout": {
+      "1": {
+        "depth": "micro",
+        "profile": "2",
+        "role": "Main kick / BD Hard default",
+        "zone": "full"
+      },
+      "2": {
+        "depth": "groove",
+        "profile": "3",
+        "role": "Secondary kick / rolling low percussion",
+        "zone": "body"
+      },
+      "3": {
+        "depth": "groove",
+        "profile": "5",
+        "role": "SY Raw midrange bass / synth-percussion",
+        "zone": "lfo"
+      },
+      "4": {
+        "depth": "micro",
+        "profile": "4",
+        "role": "Body hit / accent layer",
+        "zone": "body"
+      }
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nGlobal 4-Pad Mutation Tools - V1.34\n  These commands now respect the validated four-lane system.\n\nPerformance lanes:\n  Pad 1 = protected BD Hard kick foundation\n  Pad 2 = secondary percussion / snare lane\n  Pad 3 = SY Raw bass / synth-percussion motion lane\n  Pad 4 = BD Acoustic body / accent pressure lane\n\nCommands:\n  X = balanced four-lane mutation\n  D = deeper four-lane mutation\n  I = intense / controlled chaos four-lane mutation\n  4 = harder / wild discovery four-lane mutation\n  Y = lane-aware SRC/morph mutation, choose depth\n  V = lane-aware filter mutation, choose depth\n  N = lane-aware grit mutation, choose depth\n  Z = return all 4 pads to anchors\n\nBehavior guardrails:\n  X keeps Pad 1 stable and gives movement mostly to Pads 2-4.\n  D pushes Pads 2-4 harder while protecting the kick foundation.\n  I uses Pad 3 as the main chaos/motion carrier.\n  4 is the wildest option but still keeps Pad 1 bounded.\n  Y maps Pad 3 to morph instead of full raw SRC for more musical movement.\n"
+}

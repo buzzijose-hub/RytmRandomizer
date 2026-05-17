@@ -1,0 +1,10 @@
+{
+  "midi": [],
+  "state": {
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "scene": "None"
+  },
+  "stdout": "\nUnknown scene command: S99\n\nScene / Preset Tools - V1.34\n  These are performance shortcuts built from the validated four-lane system.\n  They do not introduce new parameter ranges; they call the existing safe global layer.\n\nScene commands:\n  SCN = show this scene / preset menu\n  S0  = Home / Clean anchors\n  S1  = Rolling scene\n  S1A = Rolling Light\n  S1B = Rolling Push\n  S2  = Deeper scene\n  S2A = Deeper Groove\n  S2B = Deeper Pressure\n  S3  = Intense scene\n  S3A = Intense Motion\n  S3B = Intense Grit\n  S4  = Wild scene\n  S4A = Wild Controlled\n  S4B = Wild Maximum\n  S5  = Back to Clean anchors\n\nScene behavior:\n  SCN only displays this menu/status; it does not send MIDI or load anchors.\n  S0 loads the full four-pad anchor state if needed, or returns all pads to anchors if already loaded.\n  S1-S4 and S1A-S4B now auto-load the four-pad anchors first if needed, then run the scene.\n  S5 returns all four pads to the validated anchors.\n\nCurrent scene:\n  None\n  Four-pad state: not loaded yet. This is normal before O, S0, or the first scene command.\n"
+}

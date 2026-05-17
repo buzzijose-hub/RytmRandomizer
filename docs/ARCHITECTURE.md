@@ -29,7 +29,7 @@ flowchart TD
     mockMidi["mock_midi.py"]
     state["state/* - frozen per-domain state"]
     data["data/* - shared fact tables"]
-    monolith["rytm_hybrid_randomizer_v134.py<br/>(frozen byte-reference, tests only)"]
+    parityGoldens["tests/fixtures/v134_parity/*.json<br/>(frozen V1.34 reference, tests only)"]
 
     app --> shell
     app --> cli
@@ -68,11 +68,11 @@ flowchart TD
     state -.- |stdlib only| state
     data -.- |stdlib only| data
 
-    monolith -. parity tests only .-> monolith
+    parityGoldens -. parity tests only .-> parityGoldens
 
     style data fill:#eef,stroke:#447
     style state fill:#eef,stroke:#447
-    style monolith fill:#fee,stroke:#a44,stroke-dasharray: 5 5
+    style parityGoldens fill:#fee,stroke:#a44,stroke-dasharray: 5 5
     style app fill:#efe,stroke:#474
     style cli fill:#ffe,stroke:#774
     style midoProvider fill:#fef,stroke:#747
@@ -134,7 +134,7 @@ on one line for an existing module, you probably need a new module instead.
 
 | File                                  | Responsibility                                                       |
 | ------------------------------------- | -------------------------------------------------------------------- |
-| `rytm_hybrid_randomizer_v134.py`      | Frozen byte-identical V1.34 reference. Used ONLY by parity tests.    |
+| `tests/fixtures/v134_parity/*.json`   | Frozen V1.34 reference behavior, one golden per parity request. Used ONLY by parity tests via `tests/_parity_worker.py`. (The original `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17.) |
 
 The remaining files (`commands.py`, `profile_lookup.py`, `help_text.py`,
 `validation.py`, `audit.py`, `preview.py`, `registry.py`, etc.) are passive,
@@ -178,10 +178,11 @@ verifies. If you change a rule, change it here first, then update the test.
    `real_midi_adapter`, any `engines/*`, `shell`, `app`, `scene_runner`,
    `group_runner`, `midi_io`, or `randomization`.
 
-8. **The monolith is sealed.**
-   No module inside the `rytm_randomizer` package may import
-   `rytm_hybrid_randomizer_v134`. Only files under `tests/` (parity tests)
-   may import it.
+8. **The retired V1.34 monolith stays buried.**
+   No module inside the `rytm_randomizer` package -- and no test helper --
+   may import `rytm_hybrid_randomizer_v134`. The monolith was retired and
+   the only authoritative source of V1.34 reference behavior is the JSON
+   goldens under `tests/fixtures/v134_parity/`.
 
 9. **`mido` is lazy and behind `--arm`.**
    `mido` must not be imported at module load time anywhere in the package.
@@ -215,7 +216,7 @@ These are verified by `tests/architecture/test_house_style.py` and
   `rytm_randomizer/*` is one of: a `Final`/constant, a frozen dataclass
   instance, a `MappingProxyType`, an immutable tuple/frozenset, a callable
   (function/class), or appears in an explicit allow-list defined by the
-  test. The monolith is exempt (it is the historical mutable code).
+  test.
 
 * **No I/O at import time.** Importing any `rytm_randomizer.*` submodule must
   produce no stdout, must not open any MIDI port, must not call `input()`,
@@ -238,12 +239,14 @@ These are verified by `tests/architecture/test_house_style.py` and
 
 ## 5. Parity discipline (V1.34)
 
-The hardware-validated V1.34 behavior is the baseline of truth. The monolith
-file is frozen as a byte-identical reference and the parity tests run the
-extracted engines/runners against it.
+The hardware-validated V1.34 behavior is the baseline of truth. It is frozen
+as JSON goldens under `tests/fixtures/v134_parity/`, one per parity request,
+and the parity tests run the extracted engines/runners against those goldens.
 
-* Do not edit `rytm_hybrid_randomizer_v134.py`. The test
-  `test_v134_reference_has_no_working_tree_diff` will fail otherwise.
+* Do not regenerate the V1.34 goldens casually. `PARITY_CAPTURE_MODE=1 pytest`
+  rewrites them from the current engine output -- only do this when an
+  intentional reference-output change is being committed, with reviewer
+  sign-off.
 * Do not introduce new MIDI CCs, new profiles, new pads (5-12), new parameter
   ranges, or new command behavior without explicit approval. See
   `CONTRIBUTING.md`.
@@ -274,7 +277,7 @@ The rules above are mechanically enforced by:
 * `tests/architecture/test_house_style.py` (frozen dataclasses, type hints,
   no module-level mutable globals)
 * `tests/architecture/test_layering_structure.py` (the expected module layout
-  exists and the monolith is the frozen reference)
+  exists and the retired V1.34 monolith has not been resurrected)
 * `tests/architecture/test_data_not_code.py` (fact tables live only in
   `data/`; no module re-defines a `data/` name)
 

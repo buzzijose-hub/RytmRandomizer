@@ -7,7 +7,7 @@ Windows, macOS, and Linux (CI and local).
 
 Gate steps:
   1. pytest          -- the full test suite
-  2. import smoke    -- ``import rytm_hybrid_randomizer_v134; import rytm_randomizer``
+  2. import smoke    -- ``import rytm_randomizer`` (the package imports cleanly)
 
 Usage:
     python scripts/closeout_check.py
@@ -39,8 +39,9 @@ def main() -> int:
     if not _run("Test: pytest", [sys.executable, "-m", "pytest"]):
         failures += 1
 
-    # 2. Import smoke test -- monolith + package both import cleanly.
-    smoke = "import rytm_hybrid_randomizer_v134; import rytm_randomizer"
+    # 2. Import smoke test -- the package imports cleanly. The retired V1.34
+    # monolith is no longer part of the import surface.
+    smoke = "import rytm_randomizer"
     if not _run("Import smoke test", [sys.executable, "-c", smoke]):
         failures += 1
 

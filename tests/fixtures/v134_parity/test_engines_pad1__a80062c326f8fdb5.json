@@ -1,0 +1,347 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      32
+    ],
+    [
+      "control_change",
+      0,
+      16,
+      100
+    ],
+    [
+      "control_change",
+      0,
+      17,
+      69
+    ],
+    [
+      "control_change",
+      0,
+      18,
+      23
+    ],
+    [
+      "control_change",
+      0,
+      19,
+      5
+    ],
+    [
+      "control_change",
+      0,
+      20,
+      70
+    ],
+    [
+      "control_change",
+      0,
+      21,
+      5
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      3
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      91
+    ],
+    [
+      "control_change",
+      0,
+      70,
+      12
+    ],
+    [
+      "control_change",
+      0,
+      71,
+      28
+    ],
+    [
+      "control_change",
+      0,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      73,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      74,
+      98
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      76,
+      2
+    ],
+    [
+      "control_change",
+      0,
+      77,
+      55
+    ],
+    [
+      "control_change",
+      0,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      79,
+      9
+    ],
+    [
+      "control_change",
+      0,
+      80,
+      25
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      21
+    ],
+    [
+      "control_change",
+      0,
+      82,
+      5
+    ],
+    [
+      "control_change",
+      0,
+      83,
+      103
+    ],
+    [
+      "control_change",
+      0,
+      10,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      102,
+      96
+    ],
+    [
+      "control_change",
+      0,
+      103,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      104,
+      42
+    ],
+    [
+      "control_change",
+      0,
+      105,
+      30
+    ],
+    [
+      "control_change",
+      0,
+      106,
+      2
+    ],
+    [
+      "control_change",
+      0,
+      107,
+      89
+    ],
+    [
+      "control_change",
+      0,
+      108,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      109,
+      86
+    ]
+  ],
+  "state": {
+    "active": "Pad 3 SY Raw Mid Bass",
+    "channel": 0,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 25,
+      "AMP Delay Send": 5,
+      "AMP Hold": 9,
+      "AMP Overdrive": 21,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 103,
+      "FLT Attack": 12,
+      "FLT Decay": 28,
+      "FLT Env Depth": 55,
+      "FLT Frequency": 98,
+      "FLT Release": 64,
+      "FLT Resonance": 0,
+      "FLT Sustain": 0,
+      "FLT Type": 2,
+      "LFO Depth": 86,
+      "LFO Destination": 30,
+      "LFO Fade": 42,
+      "LFO Multiplier": 0,
+      "LFO Speed": 96,
+      "LFO Start Phase": 89,
+      "LFO Trig Mode": 0,
+      "LFO Waveform": 2,
+      "SRC Balance": 91,
+      "SRC Detune": 23,
+      "SRC Level": 100,
+      "SRC Noise Level": 5,
+      "SRC Osc 1 Wave": 5,
+      "SRC Osc 2 Decay": 70,
+      "SRC Osc 2 Wave": 3,
+      "SRC Tune": 69
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 25,
+        "AMP Delay Send": 5,
+        "AMP Hold": 9,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 103,
+        "FLT Attack": 12,
+        "FLT Decay": 28,
+        "FLT Env Depth": 55,
+        "FLT Frequency": 98,
+        "FLT Release": 64,
+        "FLT Resonance": 0,
+        "FLT Sustain": 0,
+        "FLT Type": 2,
+        "LFO Depth": 86,
+        "LFO Destination": 30,
+        "LFO Fade": 42,
+        "LFO Multiplier": 0,
+        "LFO Speed": 96,
+        "LFO Start Phase": 89,
+        "LFO Trig Mode": 0,
+        "LFO Waveform": 2,
+        "SRC Balance": 91,
+        "SRC Detune": 23,
+        "SRC Level": 100,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 5,
+        "SRC Osc 2 Decay": 70,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 69
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 25,
+        "AMP Delay Send": 5,
+        "AMP Hold": 9,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 103,
+        "FLT Attack": 12,
+        "FLT Decay": 28,
+        "FLT Env Depth": 55,
+        "FLT Frequency": 98,
+        "FLT Release": 64,
+        "FLT Resonance": 0,
+        "FLT Sustain": 0,
+        "FLT Type": 2,
+        "LFO Depth": 86,
+        "LFO Destination": 30,
+        "LFO Fade": 42,
+        "LFO Multiplier": 0,
+        "LFO Speed": 96,
+        "LFO Start Phase": 89,
+        "LFO Trig Mode": 0,
+        "LFO Waveform": 2,
+        "SRC Balance": 91,
+        "SRC Detune": 23,
+        "SRC Level": 100,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 5,
+        "SRC Osc 2 Decay": 70,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 69
+      }
+    },
+    "gprev": {
+      "1": null
+    },
+    "layout1": {
+      "depth": "micro",
+      "profile": "5",
+      "role": "Main kick / Pad 3 SY Raw Mid Bass",
+      "zone": "full"
+    },
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 25,
+      "AMP Delay Send": 5,
+      "AMP Hold": 9,
+      "AMP Overdrive": 21,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 103,
+      "FLT Attack": 12,
+      "FLT Decay": 28,
+      "FLT Env Depth": 55,
+      "FLT Frequency": 98,
+      "FLT Release": 64,
+      "FLT Resonance": 0,
+      "FLT Sustain": 0,
+      "FLT Type": 2,
+      "LFO Depth": 86,
+      "LFO Destination": 30,
+      "LFO Fade": 42,
+      "LFO Multiplier": 0,
+      "LFO Speed": 96,
+      "LFO Start Phase": 89,
+      "LFO Trig Mode": 0,
+      "LFO Waveform": 2,
+      "SRC Balance": 91,
+      "SRC Detune": 23,
+      "SRC Level": 100,
+      "SRC Noise Level": 5,
+      "SRC Osc 1 Wave": 5,
+      "SRC Osc 2 Decay": 70,
+      "SRC Osc 2 Wave": 3,
+      "SRC Tune": 69
+    },
+    "target_pad": 1
+  },
+  "stdout": "\nLoading Pad 1 profiled BD engine: Pad 3 SY Raw Mid Bass\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to Pad 3 SY Raw Mid Bass:\n  Machine CC15 -> 32\n\nPad 1 Pad 3 SY Raw Mid Bass anchor:\n  SRC Level: CC16 -> 100\n  SRC Tune: CC17 -> 69\n  SRC Detune: CC18 -> 23\n  SRC Noise Level: CC19 -> 5\n  SRC Osc 2 Decay: CC20 -> 70\n  SRC Osc 1 Wave: CC21 -> 5\n  SRC Osc 2 Wave: CC22 -> 3\n  SRC Balance: CC23 -> 91\n  FLT Attack: CC70 -> 12\n  FLT Decay: CC71 -> 28\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 64\n  FLT Frequency: CC74 -> 98\n  FLT Resonance: CC75 -> 0\n  FLT Type: CC76 -> 2\n  FLT Env Depth: CC77 -> 55\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 9\n  AMP Decay: CC80 -> 25\n  AMP Overdrive: CC81 -> 21\n  AMP Delay Send: CC82 -> 5\n  AMP Reverb Send: CC83 -> 103\n  AMP Pan: CC10 -> 64\n  LFO Speed: CC102 -> 96\n  LFO Multiplier: CC103 -> 0\n  LFO Fade: CC104 -> 42\n  LFO Destination: CC105 -> 30\n  LFO Waveform: CC106 -> 2\n  LFO Start Phase: CC107 -> 89\n  LFO Trig Mode: CC108 -> 0\n  LFO Depth: CC109 -> 86\n\nPad 1 is now using Pad 3 SY Raw Mid Bass as its profiled kick engine.\n"
+}

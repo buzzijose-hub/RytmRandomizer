@@ -134,20 +134,27 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-# Harness run once at warm-worker startup: imports the monolith + package, then
-# defines ``assert_parity(seed, steps, answers=())`` which builds a monolith run
-# and a runner run from the same RNG seed and the same scripted ``input``
-# answers, captures stdout + MIDI messages + the relevant state, and asserts
-# byte-parity. The worker loop appended by ``tests/_parity_worker.py`` calls it
-# once per JSON request line.
+# Harness run once at warm-worker startup. Same capture/check contract as the
+# Pad engines, with three extras:
+#
+#  * the worker driver also captures the per-call return values (``results``)
+#    because several group-runner methods return a value the parity contract
+#    must preserve;
+#  * the request carries an optional ``answers`` list that scripts ``input()``
+#    inside the runner for each call;
+#  * the state dict includes the full per-pad ``layout`` (not just one pad).
 _HARNESS = '''
 import builtins, io, contextlib, random
-import rytm_hybrid_randomizer_v134 as m
 from rytm_randomizer import midi_io, randomization
 from rytm_randomizer.group_runner import GroupRunner, default_group_layout
 
 midi_io.time.sleep = lambda *_: None
 randomization.time.sleep = lambda *_: None
+
+try:
+    import rytm_hybrid_randomizer_v134 as m
+except ImportError:  # monolith retired -- capture_reference falls back to engine
+    m = None
 
 
 class Out:
@@ -185,7 +192,6 @@ _NO_OUT = {
 
 
 def _reset_monolith():
-    """Restore the monolith globals these functions touch to cold start."""
     m.active_profile = None
     m.anchor_state = {}
     m.current_state = {}
@@ -237,10 +243,15 @@ def run_monolith(seed, steps, answers):
         m.channel, m.isolated_pad, m.GROUP_LAYOUT, m.group_current_states,
         m.group_previous_states, m.group_anchor_states,
     )
-    return buf.getvalue(), out.sent, state, results
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(row) for row in out.sent],
+        "state": state,
+        "results": results,
+    }
 
 
-def run_runner(seed, steps, answers):
+def run_engine_only(seed, steps, answers=()):
     out = Out()
     runner = GroupRunner(
         out, sleep=lambda *_: None, input_func=_Answers(answers)
@@ -257,25 +268,48 @@ def run_runner(seed, steps, answers):
         runner.group_layout, runner.group_current_states,
         runner.group_previous_states, runner.group_anchor_states,
     )
-    return buf.getvalue(), out.sent, state, results
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(row) for row in out.sent],
+        "state": state,
+        "results": results,
+    }
 
 
-def assert_parity(seed, steps, answers=()):
-    mo, mm, ms, mr = run_monolith(seed, steps, answers)
-    eo, em, es, er = run_runner(seed, steps, answers)
-    assert mo == eo, "stdout mismatch:\\n--MONOLITH--\\n" + mo + "\\n--RUNNER--\\n" + eo
-    assert mm == em, "midi mismatch:\\n" + repr(mm) + "\\n" + repr(em)
-    assert ms == es, "state mismatch:\\n" + repr(ms) + "\\n" + repr(es)
-    assert mr == er, "return mismatch:\\n" + repr(mr) + "\\n" + repr(er)
+def capture_reference(seed, steps, answers=()):
+    if m is not None:
+        return run_monolith(seed, steps, answers)
+    return run_engine_only(seed, steps, answers=answers)
+
+
+def _normalize(result):
+    import json as _json
+    return _json.loads(_json.dumps(result, default=lambda x: list(x)))
+
+
+def assert_engine_matches(seed, steps, expected, answers=()):
+    got = _normalize(run_engine_only(seed, steps, answers=answers))
+    want = _normalize(expected)
+    assert got["stdout"] == want["stdout"], (
+        "stdout mismatch:\\n--EXPECTED--\\n" + want["stdout"]
+        + "\\n--ENGINE--\\n" + got["stdout"]
+    )
+    assert got["midi"] == want["midi"], (
+        "midi mismatch:\\n--EXPECTED--\\n" + repr(want["midi"])
+        + "\\n--ENGINE--\\n" + repr(got["midi"])
+    )
+    assert got["state"] == want["state"], (
+        "state mismatch:\\n--EXPECTED--\\n" + repr(want["state"])
+        + "\\n--ENGINE--\\n" + repr(got["state"])
+    )
+    assert got["results"] == want["results"], (
+        "return mismatch:\\n--EXPECTED--\\n" + repr(want["results"])
+        + "\\n--ENGINE--\\n" + repr(got["results"])
+    )
 '''
 
 
-# The warm worker for this file: ``_parity_worker`` is a module-scoped autouse
-# fixture that launches/owns it and tears it down at module teardown;
-# ``_run_parity`` ships one JSON request to it and asserts the parity check
-# passed (a mismatch re-raises the worker's diff as an AssertionError -- same
-# failure semantics as the old "fresh interpreter per call" version).
-_parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
+_parity_worker, _run_parity = make_parity_subprocess(_HARNESS, __name__)
 
 
 def _parity_subprocess(steps_repr: str, answers_repr: str = "()", seed: int = 12345) -> None:

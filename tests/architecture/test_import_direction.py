@@ -294,12 +294,19 @@ def test_cli_is_passive() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Rule 8: no package module imports the monolith
+# Rule 8: no package module imports the retired V1.34 monolith
 # ---------------------------------------------------------------------------
 
 
 def test_no_package_module_imports_monolith() -> None:
-    """The V1.34 monolith is a frozen reference -- only tests may import it."""
+    """The V1.34 monolith has been retired.
+
+    Its reference behavior lives as JSON goldens under
+    ``tests/fixtures/v134_parity/``. No package module may import it (whether
+    the name happens to resolve to a leftover file or not), and no test
+    helper may either -- ``app.py`` is allowed to *look up* the name in
+    ``sys.modules`` as a test seam, but it never imports.
+    """
 
     monolith_name = "rytm_hybrid_randomizer_v134"
     violations: list[str] = []
@@ -308,7 +315,8 @@ def test_no_package_module_imports_monolith() -> None:
             if token == monolith_name or token.startswith(monolith_name + "."):
                 violations.append(
                     f"{path.relative_to(PROJECT_ROOT)} imports {token} "
-                    "(the monolith is frozen; only tests may import it)"
+                    "(the V1.34 monolith was retired; use the JSON goldens "
+                    "under tests/fixtures/v134_parity/)"
                 )
     assert not violations, "\n  " + "\n  ".join(violations)
 

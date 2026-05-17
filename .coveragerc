@@ -5,10 +5,10 @@
 # RATCHETING, PACKAGE-FIRST COVERAGE POLICY
 # -----------------------------------------
 # Coverage is enforced "package-first": the modular `rytm_randomizer/` package
-# is held to 100% BRANCH coverage right now. The legacy monolith
-# (`rytm_hybrid_randomizer_v134.py`) is intentionally NOT in `source` below --
-# it reaches 100% organically as Wave 4 EXTRACTS its logic into the package,
-# not by mock-stuffing tests around the monolith.
+# is held to 100% BRANCH coverage right now. The legacy V1.34 monolith that
+# Wave 4 decomposed has been retired (2026-05-17); its reference behavior is
+# captured as JSON goldens under `tests/fixtures/v134_parity/`. Coverage now
+# only measures the package, which is the single source of runtime truth.
 #
 # The whole-repo coverage floor only ever goes UP (it ratchets): once a wave
 # raises the measured number, that becomes the new minimum. It never regresses.

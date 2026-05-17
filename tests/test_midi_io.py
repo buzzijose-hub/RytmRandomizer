@@ -1,17 +1,15 @@
-"""Characterization + parity tests for MIDI I/O primitives.
+"""Characterization tests for MIDI I/O primitives.
 
-These tests lock in the monolith's CURRENT behavior, then prove the extracted
-``rytm_randomizer.midi_io`` module reproduces it byte-identically.
+These tests lock in the behavior of ``rytm_randomizer.midi_io`` against the
+V1.34 reference. The reference used to be the live ``rytm_hybrid_randomizer_v134``
+monolith driven via subprocess parity; the monolith has been retired and the
+captured per-call goldens for engine/runner behavior now live under
+``tests/fixtures/v134_parity/`` (see ``tests/_parity_worker.py``).
 
-Two isolation rules (matching ``tests/test_data_layer.py``):
-
-* Anything that imports the monolith (which does ``import mido`` at the top)
-  is run in a *subprocess* so real ``mido`` never lands in this test
-  process's ``sys.modules`` -- the package's import-safety tests depend on
-  that staying clean.
-* In-process package tests that exercise ``send_cc`` (which lazily imports
-  ``mido``) inject a *fake* ``mido`` module; an autouse fixture snapshots and
-  restores ``sys.modules`` so nothing leaks between tests.
+Isolation rule still applies: in-process package tests that exercise
+``send_cc`` (which lazily imports ``mido``) inject a *fake* ``mido`` module;
+an autouse fixture snapshots and restores ``sys.modules`` so nothing leaks
+between tests.
 """
 
 from __future__ import annotations
@@ -38,7 +36,7 @@ if str(PROJECT_ROOT) not in sys.path:
 def _restore_sys_modules():
     """Snapshot ``sys.modules`` and restore it after every test.
 
-    Keeps real / fake ``mido`` (and the monolith) from leaking between tests.
+    Keeps real / fake ``mido`` from leaking between tests.
     """
 
     snapshot = dict(sys.modules)
@@ -129,21 +127,6 @@ def test_clamp_pure_values():
     assert clamp(7, 7, 7) == 7
 
 
-def test_clamp_parity_with_monolith():
-    """Subprocess parity: the monolith's clamp == the package's clamp."""
-
-    result = _run_python(
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "from rytm_randomizer.midi_io import clamp\n"
-        "cases = [(5,0,10),(-3,0,10),(99,0,10),(0,0,10),(10,0,10),(7,7,7),"
-        "(50,0,100),(-100,-10,-1)]\n"
-        "assert all(m.clamp(*c) == clamp(*c) for c in cases)\n"
-        "print('OK')\n"
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
-
-
 # ===========================================================================
 # send_cc -- in-process with a FAKE mido, plus subprocess parity vs monolith
 # ===========================================================================
@@ -174,92 +157,6 @@ def test_send_cc_respects_injected_channel():
     send_cc(out, 20, 100, channel=3, sleep=_no_sleep)
 
     assert out.sent[0].channel == 3
-
-
-def test_send_cc_parity_with_monolith():
-    """Subprocess parity: monolith.send_cc and package send_cc agree on the
-    constructed message fields (driven against the real ``mido``)."""
-
-    result = _run_python(
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "from rytm_randomizer import midi_io\n"
-        "midi_io.time.sleep = lambda *_: None\n"
-        "class Out:\n"
-        "    def __init__(self): self.sent = []\n"
-        "    def send(self, msg): self.sent.append(msg)\n"
-        "a, b = Out(), Out()\n"
-        "m.send_cc(a, 15, 64)\n"
-        "midi_io.send_cc(b, 15, 64, channel=0)\n"
-        "ma, mb = a.sent[0], b.sent[0]\n"
-        "assert (ma.type, ma.channel, ma.control, ma.value) == "
-        "(mb.type, mb.channel, mb.control, mb.value) == "
-        "('control_change', 0, 15, 64)\n"
-        "print('OK')\n"
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
-
-
-# ===========================================================================
-# send_machine / send_param -- subprocess parity (need monolith + real mido)
-# ===========================================================================
-
-
-def test_send_machine_parity_with_monolith():
-    result = _run_python(
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "from rytm_randomizer import midi_io\n"
-        "from rytm_randomizer.data import PROFILES\n"
-        "midi_io.time.sleep = lambda *_: None\n"
-        "import io, contextlib\n"
-        "class Out:\n"
-        "    def __init__(self): self.sent = []\n"
-        "    def send(self, msg): self.sent.append(msg)\n"
-        "profile = dict(PROFILES['2']); profile['anchor'] = dict(profile['anchor'])\n"
-        "m.active_profile = profile\n"
-        "a = Out()\n"
-        "buf_a = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf_a):\n"
-        "    m.send_machine(a)\n"
-        "b = Out()\n"
-        "buf_b = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf_b):\n"
-        "    midi_io.send_machine(b, profile, channel=0)\n"
-        "assert buf_a.getvalue() == buf_b.getvalue()\n"
-        "assert [(x.control, x.value) for x in a.sent] == "
-        "[(x.control, x.value) for x in b.sent]\n"
-        "print('OK')\n"
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
-
-
-def test_send_param_parity_with_monolith():
-    result = _run_python(
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "from rytm_randomizer import midi_io\n"
-        "from rytm_randomizer.data import PROFILES\n"
-        "midi_io.time.sleep = lambda *_: None\n"
-        "import io, contextlib\n"
-        "class Out:\n"
-        "    def __init__(self): self.sent = []\n"
-        "    def send(self, msg): self.sent.append(msg)\n"
-        "profile = dict(PROFILES['2']); profile['anchor'] = dict(profile['anchor'])\n"
-        "name = profile['order'][0]\n"
-        "m.active_profile = profile\n"
-        "a = Out(); buf_a = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf_a):\n"
-        "    m.send_param(a, name, 42)\n"
-        "b = Out(); buf_b = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf_b):\n"
-        "    midi_io.send_param(b, profile, name, 42, channel=0)\n"
-        "assert buf_a.getvalue() == buf_b.getvalue()\n"
-        "assert [(x.control, x.value) for x in a.sent] == "
-        "[(x.control, x.value) for x in b.sent]\n"
-        "print('OK')\n"
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
 
 
 # ===========================================================================
@@ -299,56 +196,13 @@ def test_send_param_in_process(capsys):
 # --- apply_state ----------------------------------------------------------
 
 
-def _monolith_apply_state_via_subprocess(state_repr, label, kwargs_repr):
-    """Run the monolith's apply_state in a subprocess and return its result.
-
-    Prints a repr dict the parent parses; keeps real mido out of this process.
-    """
-
-    code = (
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "from rytm_randomizer import midi_io\n"
-        "from rytm_randomizer.data import PROFILES\n"
-        "midi_io.time.sleep = lambda *_: None\n"
-        "import io, contextlib\n"
-        "class Out:\n"
-        "    def __init__(self): self.sent = []\n"
-        "    def send(self, msg): self.sent.append(msg)\n"
-        "profile = dict(PROFILES['2']); profile['anchor'] = dict(profile['anchor'])\n"
-        "m.active_profile = profile\n"
-        "m.anchor_state = dict(profile['anchor'])\n"
-        "m.current_state = {}\n"
-        "m.previous_state = None\n"
-        f"state = {state_repr}\n"
-        "out = Out()\n"
-        "buf = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf):\n"
-        f"    m.apply_state(out, state, {label!r}, **{kwargs_repr})\n"
-        "import json\n"
-        "print(json.dumps({\n"
-        "    'output': buf.getvalue(),\n"
-        "    'sent': [(x.control, x.value) for x in out.sent],\n"
-        "    'anchor_state': m.anchor_state,\n"
-        "    'current_state': m.current_state,\n"
-        "    'previous_state': m.previous_state,\n"
-        "    'profile_anchor': dict(m.active_profile['anchor']),\n"
-        "}))\n"
-    )
-    result = _run_python(code)
-    assert result.returncode == 0, result.stderr
-    import json
-
-    return json.loads(result.stdout)
-
-
-def test_apply_state_parity_basic(capsys):
+def test_apply_state_basic_smoke(capsys):
+    """Cold-state ``apply_state``: every step in the state dict is emitted."""
     _install_fake_mido()
     from rytm_randomizer.midi_io import apply_state
 
     pkg_profile = _sample_profile()
     state = dict.fromkeys(pkg_profile["order"][:3], 10)
-
-    mono = _monolith_apply_state_via_subprocess(repr(state), "Test Apply", "{}")
 
     pkg_out = RecordingOut()
     result = apply_state(
@@ -364,22 +218,23 @@ def test_apply_state_parity_basic(capsys):
     )
     pkg_output = capsys.readouterr().out
 
-    assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(pair) for pair in mono["sent"]]
     assert result.applied is True
-    assert result.current_state == mono["current_state"]
-    assert result.previous_state == mono["previous_state"]
-    assert result.anchor_state == mono["anchor_state"]
+    assert result.current_state == state
+    assert result.previous_state is None
+    # Three params were applied. The label appears as a header in the printed log.
+    assert len(pkg_out.sent) == 3
+    assert "Test Apply:" in pkg_output
+    for name in pkg_profile["order"][:3]:
+        assert f"{name}: CC" in pkg_output
 
 
-def test_apply_state_parity_set_anchor(capsys):
+def test_apply_state_set_anchor(capsys):
+    """``set_anchor=True`` writes the supplied state into the profile anchor."""
     _install_fake_mido()
     from rytm_randomizer.midi_io import apply_state
 
     pkg_profile = _sample_profile()
     state = dict.fromkeys(pkg_profile["order"][:2], 20)
-
-    mono = _monolith_apply_state_via_subprocess(repr(state), "Anchor Apply", "{'set_anchor': True}")
 
     pkg_out = RecordingOut()
     result = apply_state(
@@ -394,23 +249,19 @@ def test_apply_state_parity_set_anchor(capsys):
         channel=0,
         sleep=_no_sleep,
     )
-    pkg_output = capsys.readouterr().out
+    capsys.readouterr()
 
-    assert pkg_output == mono["output"]
-    assert result.anchor_state == mono["anchor_state"] == state
-    assert pkg_profile["anchor"] == mono["profile_anchor"] == state
+    assert result.anchor_state == state
+    assert pkg_profile["anchor"] == state
 
 
-def test_apply_state_parity_switch_machine_first(capsys):
+def test_apply_state_switch_machine_first(capsys):
+    """``switch_machine_first=True`` emits the CC15 machine switch before params."""
     _install_fake_mido()
     from rytm_randomizer.midi_io import apply_state
 
     pkg_profile = _sample_profile()
     state = dict.fromkeys(pkg_profile["order"][:1], 5)
-
-    mono = _monolith_apply_state_via_subprocess(
-        repr(state), "Switch Apply", "{'switch_machine_first': True}"
-    )
 
     pkg_out = RecordingOut()
     result = apply_state(
@@ -425,11 +276,10 @@ def test_apply_state_parity_switch_machine_first(capsys):
         channel=0,
         sleep=_no_sleep,
     )
-    pkg_output = capsys.readouterr().out
+    capsys.readouterr()
 
-    assert pkg_output == mono["output"]
-    assert [(m.control, m.value) for m in pkg_out.sent] == [tuple(pair) for pair in mono["sent"]]
     assert result.applied is True
+    assert pkg_out.sent[0].control == 15
 
 
 def test_apply_state_previous_state_carry(capsys):
@@ -512,27 +362,6 @@ def test_apply_state_set_anchor_with_immutable_profile(capsys):
     assert result.applied is True
     assert result.anchor_state == state
     assert "  Anchor updated." in output
-
-
-def test_monolith_apply_state_without_profile_parity():
-    """The monolith prints the same require-profile message when no profile."""
-
-    result = _run_python(
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "import io, contextlib\n"
-        "class Out:\n"
-        "    def __init__(self): self.sent = []\n"
-        "    def send(self, msg): self.sent.append(msg)\n"
-        "m.active_profile = None\n"
-        "out = Out(); buf = io.StringIO()\n"
-        "with contextlib.redirect_stdout(buf):\n"
-        "    m.apply_state(out, {}, 'No Profile')\n"
-        "assert 'Select a profile first with P.' in buf.getvalue()\n"
-        "assert out.sent == []\n"
-        "print('OK')\n"
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == "OK"
 
 
 # ===========================================================================
