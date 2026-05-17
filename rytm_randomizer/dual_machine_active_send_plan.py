@@ -43,6 +43,8 @@ class DualMachineActiveSendPlan:
     ready: bool
     readiness_reason: str
     events: tuple[DualMachineSendPlanEvent, ...]
+    analog_four_starter_profile_key: str | None = None
+    analog_four_starter_profile_label: str | None = None
 
     @property
     def eligible_message_count(self) -> int:
@@ -76,6 +78,8 @@ def build_dual_machine_active_send_plan(
         ready=ready,
         readiness_reason=_plan_reason(readiness, events, ready),
         events=events,
+        analog_four_starter_profile_key=bridge.analog_four_starter_profile_key,
+        analog_four_starter_profile_label=bridge.analog_four_starter_profile_label,
     )
 
 
@@ -87,6 +91,7 @@ def format_dual_machine_active_send_plan_report(
     lines = [
         "RytmRandomizer passive Dual-Machine Active Send Plan Report",
         f"Target: {plan.target}",
+        *(_analog_four_starter_profile_lines(plan)),
         f"Send plan ready: {plan.ready}",
         f"Readiness reason: {plan.readiness_reason}",
         f"Eligible mapped CC messages: {plan.eligible_message_count}",
@@ -180,6 +185,16 @@ def _plan_reason(
     if any(not event.eligible for event in events):
         return "blocked_by_uneligible_events"
     return readiness.reason
+
+
+def _analog_four_starter_profile_lines(plan: DualMachineActiveSendPlan) -> list[str]:
+    if plan.analog_four_starter_profile_key is None:
+        return []
+    return [
+        "Analog Four starter profile: "
+        f"{plan.analog_four_starter_profile_label} / "
+        f"{plan.analog_four_starter_profile_key}"
+    ]
 
 
 def _message_label(message) -> str:

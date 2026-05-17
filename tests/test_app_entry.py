@@ -364,6 +364,42 @@ def test_app_main_dry_run_dual_machine_snapshot_send_uses_guarded_mock_sender(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_dual_machine_snapshot_send_accepts_a4_profile(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--dual-machine-snapshot-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "analog-four",
+            "--analog-four-profile",
+            "birmingham-dark",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Target: analog-four" in captured.out
+    assert "Analog Four starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Emitted mock messages: 20" in captured.out
+    assert "CC95 -> 106" in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_dry_run_snapshot_essence_send_uses_guarded_mock_sender(
     tmp_path,
     capsys,

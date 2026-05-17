@@ -169,6 +169,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Analog Four kit slot to include when --analog-four-path is supplied.",
     )
     parser.add_argument(
+        "--analog-four-profile",
+        metavar="PROFILE",
+        help=(
+            "Analog Four safe-starter profile for dual-machine snapshot send "
+            "when no Analog Four snapshot path is supplied."
+        ),
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help=(
@@ -266,6 +274,7 @@ def _snapshot_send_request_from_args(args: argparse.Namespace) -> dict[str, obje
         "snapshot_target": args.snapshot_target,
         "analog_four_path": args.analog_four_path,
         "analog_four_slot": args.analog_four_slot,
+        "analog_four_profile": args.analog_four_profile,
     }
 
 
@@ -302,6 +311,7 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
         slot=int(request["snapshot_slot"]),
         depth=str(request["snapshot_depth"]),
         target=str(request["snapshot_target"]),
+        analog_four_profile=str(request.get("analog_four_profile") or "balanced"),
         **kwargs,
     )
 

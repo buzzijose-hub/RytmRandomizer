@@ -212,6 +212,33 @@ def test_guarded_send_emits_safe_starter_eligible_ccs_to_mock_sender(tmp_path):
     assert a4_messages[0].value == 104
 
 
+def test_guarded_send_report_includes_selected_a4_starter_profile(tmp_path):
+    from rytm_randomizer.dual_machine_guarded_sender import (
+        build_dual_machine_guarded_send_dry_run,
+        format_dual_machine_guarded_send_dry_run_report,
+    )
+    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+
+    rytm_path = tmp_path / "rytm-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record())
+    bridge = build_dual_machine_mock_bridge(
+        str(rytm_path),
+        slot=1,
+        depth="micro",
+        target="analog-four",
+        analog_four_profile="birmingham-dark",
+    )
+
+    result = build_dual_machine_guarded_send_dry_run(bridge)
+    report = "\n".join(format_dual_machine_guarded_send_dry_run_report(result))
+
+    assert result.analog_four_starter_profile_key == "birmingham-dark"
+    assert result.analog_four_starter_profile_label == "Birmingham Dark"
+    assert result.emitted_message_count == 20
+    assert "Analog Four starter profile: Birmingham Dark / birmingham-dark" in report
+    assert "- Analog Four MKII / ch 1 wire 0 / CC95 -> 106" in report
+
+
 def test_guarded_send_refuses_combined_a4_snapshot_candidates_without_partial_emit(tmp_path):
     from rytm_randomizer.dual_machine_guarded_sender import (
         execute_dual_machine_guarded_send,

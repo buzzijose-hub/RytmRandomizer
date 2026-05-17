@@ -39,6 +39,8 @@ class DualMachineGuardedSendResult:
     eligible_message_count: int
     blocked_event_count: int
     emitted_messages: tuple[MidiMessage, ...]
+    analog_four_starter_profile_key: str | None = None
+    analog_four_starter_profile_label: str | None = None
     mock_only: bool = True
     sends_real_midi: bool = False
     metadata: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
@@ -83,6 +85,8 @@ def execute_dual_machine_guarded_send(
         eligible_message_count=plan.eligible_message_count,
         blocked_event_count=plan.blocked_event_count,
         emitted_messages=messages,
+        analog_four_starter_profile_key=plan.analog_four_starter_profile_key,
+        analog_four_starter_profile_label=plan.analog_four_starter_profile_label,
         metadata=_result_metadata(plan, "accepted_guarded_mock_only"),
     )
 
@@ -113,6 +117,7 @@ def format_dual_machine_guarded_send_dry_run_report(
     lines = [
         "RytmRandomizer passive Dual-Machine Guarded Send Dry-Run Report",
         f"Target: {result.target}",
+        *(_analog_four_starter_profile_lines(result)),
         f"Accepted: {result.accepted}",
         f"Reason: {result.reason}",
         f"Plan ready: {result.plan_ready}",
@@ -181,6 +186,8 @@ def _blocked_result(
         eligible_message_count=plan.eligible_message_count,
         blocked_event_count=plan.blocked_event_count,
         emitted_messages=(),
+        analog_four_starter_profile_key=plan.analog_four_starter_profile_key,
+        analog_four_starter_profile_label=plan.analog_four_starter_profile_label,
         metadata=_result_metadata(plan, reason),
     )
 
@@ -216,6 +223,16 @@ def _message_from_event(event: DualMachineSendPlanEvent, target: str) -> MidiMes
             "sends_real_midi": False,
         },
     )
+
+
+def _analog_four_starter_profile_lines(result: DualMachineGuardedSendResult) -> list[str]:
+    if result.analog_four_starter_profile_key is None:
+        return []
+    return [
+        "Analog Four starter profile: "
+        f"{result.analog_four_starter_profile_label} / "
+        f"{result.analog_four_starter_profile_key}"
+    ]
 
 
 def _format_message_line(message: MidiMessage) -> str:

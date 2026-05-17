@@ -253,6 +253,67 @@ def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
     ]
 
 
+def test_dual_bridge_accepts_birmingham_analog_four_profile(tmp_path):
+    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+    from rytm_randomizer.dual_machine_mock_bridge import format_dual_machine_mock_bridge_report
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="A4 PROFILE"))
+
+    bridge = build_dual_machine_mock_bridge(
+        str(sysex_path),
+        slot=1,
+        depth="micro",
+        target="analog-four",
+        analog_four_profile="birmingham_dark",
+    )
+    sender = capture_dual_machine_mock_messages(bridge)
+    report = "\n".join(format_dual_machine_mock_bridge_report(bridge))
+
+    assert bridge.analog_four_starter_profile_key == "birmingham-dark"
+    assert bridge.analog_four_starter_profile_label == "Birmingham Dark"
+    assert bridge.analog_four_message_count == 20
+    assert len(sender.sent_messages) == 20
+    assert [(message.control, message.value) for message in sender.sent_messages[:5]] == [
+        (95, 106),
+        (69, 92),
+        (78, 84),
+        (18, 96),
+        (10, 58),
+    ]
+    assert "Analog Four starter profile: Birmingham Dark / birmingham-dark" in report
+    assert "Track Level: CC95 -> 106" in report
+
+
+def test_dual_bridge_rejects_starter_profile_with_a4_snapshot_path(tmp_path):
+    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+
+    rytm_path = tmp_path / "rytm-kits.syx"
+    a4_path = tmp_path / "a4-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="RYTM SNAP"))
+    a4_path.write_bytes(make_a4_kit_record(kit_name="A4 SNAP"))
+
+    try:
+        build_dual_machine_mock_bridge(
+            str(rytm_path),
+            slot=1,
+            depth="micro",
+            analog_four_sysex_path=str(a4_path),
+            analog_four_slot=1,
+            analog_four_profile="birmingham-dark",
+        )
+    except ValueError as exc:
+        message = str(exc)
+    else:
+        raise AssertionError("expected profile/source conflict to fail")
+
+    assert (
+        "Analog Four starter profile cannot be combined with Analog Four snapshot path"
+        in message
+    )
+
+
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", *args],
@@ -352,3 +413,57 @@ def test_dual_machine_mock_bridge_cli_accepts_target_scope(tmp_path):
     assert "Combined mock messages: 6" in result.stdout
     assert "- Analog Four Track" not in result.stdout
     assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_accepts_analog_four_profile(tmp_path):
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="CLI A4 PROFILE"))
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--target",
+        "analog-four",
+        "--analog-four-profile",
+        "birmingham-dark",
+    )
+
+    assert result.returncode == 0
+    assert "Target: analog-four" in result.stdout
+    assert "Analog Four starter profile: Birmingham Dark / birmingham-dark" in result.stdout
+    assert "Combined mock messages: 20" in result.stdout
+    assert "Track Level: CC95 -> 106" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_rejects_a4_snapshot_profile_conflict(tmp_path):
+    rytm_path = tmp_path / "rytm-kits.syx"
+    a4_path = tmp_path / "a4-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="CLI RYTM SNAP"))
+    a4_path.write_bytes(make_a4_kit_record(kit_name="CLI A4 SNAP"))
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        str(rytm_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--analog-four-path",
+        str(a4_path),
+        "--analog-four-slot",
+        "1",
+        "--analog-four-profile",
+        "birmingham-dark",
+    )
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert (
+        "Analog Four starter profile cannot be combined with Analog Four snapshot path"
+        in result.stderr
+    )

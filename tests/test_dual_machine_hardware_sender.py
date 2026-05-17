@@ -85,7 +85,13 @@ def make_a4_kit_record(slot_index=0, kit_name="A4 HW", track_values=None):
     )
 
 
-def build_plan(tmp_path, *, target="rytm", with_a4_snapshot=False):
+def build_plan(
+    tmp_path,
+    *,
+    target="rytm",
+    with_a4_snapshot=False,
+    analog_four_profile="balanced",
+):
     from rytm_randomizer.dual_machine_active_send_plan import (
         build_dual_machine_active_send_plan,
     )
@@ -106,6 +112,7 @@ def build_plan(tmp_path, *, target="rytm", with_a4_snapshot=False):
         slot=1,
         depth="micro",
         target=target,
+        analog_four_profile=analog_four_profile,
         **kwargs,
     )
     return build_dual_machine_active_send_plan(bridge)
@@ -356,3 +363,44 @@ def test_hardware_send_report_includes_active_safety_language(tmp_path, monkeypa
     assert "Port: Fake Rytm" in report
     assert "Emitted real MIDI messages: 6" in report
     assert "- real MIDI sending happened only after --arm and SEND confirmation" in report
+
+
+def test_dual_port_hardware_send_report_includes_selected_a4_starter_profile(
+    tmp_path,
+    monkeypatch,
+):
+    import types
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = FakeMessage
+    monkeypatch.setitem(sys.modules, "mido", fake_mido)
+
+    from rytm_randomizer.dual_machine_hardware_sender import (
+        execute_dual_machine_dual_port_hardware_send,
+        format_dual_machine_hardware_send_report,
+    )
+
+    result = execute_dual_machine_dual_port_hardware_send(
+        build_plan(
+            tmp_path,
+            target="both",
+            analog_four_profile="detroit-classic",
+        ),
+        {
+            "Analog Rytm MKII": RecordingPort(),
+            "Analog Four MKII": RecordingPort(),
+        },
+        port_names_by_device={
+            "Analog Rytm MKII": "Fake Rytm",
+            "Analog Four MKII": "Fake A4",
+        },
+        armed=True,
+        operator_confirmed=True,
+        sleep=lambda _seconds: None,
+    )
+    report = "\n".join(format_dual_machine_hardware_send_report(result))
+
+    assert result.accepted is True
+    assert result.analog_four_starter_profile_key == "detroit-classic"
+    assert result.analog_four_starter_profile_label == "Detroit Classic"
+    assert "Analog Four starter profile: Detroit Classic / detroit-classic" in report

@@ -58,6 +58,8 @@ class DualMachineHardwareSendResult:
     eligible_message_count: int
     blocked_event_count: int
     emitted_messages: tuple[HardwareMidiEmission, ...]
+    analog_four_starter_profile_key: str | None = None
+    analog_four_starter_profile_label: str | None = None
     mock_only: bool = False
     sends_real_midi: bool = True
     metadata: Mapping[str, object] = field(default_factory=lambda: MappingProxyType({}))
@@ -125,6 +127,8 @@ def execute_dual_machine_hardware_send(
         eligible_message_count=plan.eligible_message_count,
         blocked_event_count=plan.blocked_event_count,
         emitted_messages=tuple(emitted),
+        analog_four_starter_profile_key=plan.analog_four_starter_profile_key,
+        analog_four_starter_profile_label=plan.analog_four_starter_profile_label,
         metadata=_result_metadata(plan, "accepted_hardware_send", port_name),
     )
 
@@ -196,6 +200,8 @@ def execute_dual_machine_dual_port_hardware_send(
         eligible_message_count=plan.eligible_message_count,
         blocked_event_count=plan.blocked_event_count,
         emitted_messages=tuple(emitted),
+        analog_four_starter_profile_key=plan.analog_four_starter_profile_key,
+        analog_four_starter_profile_label=plan.analog_four_starter_profile_label,
         metadata=_result_metadata(plan, "accepted_hardware_send", port_name),
     )
 
@@ -220,6 +226,8 @@ def build_dual_machine_hardware_send_refusal(
         eligible_message_count=plan.eligible_message_count,
         blocked_event_count=plan.blocked_event_count,
         emitted_messages=(),
+        analog_four_starter_profile_key=plan.analog_four_starter_profile_key,
+        analog_four_starter_profile_label=plan.analog_four_starter_profile_label,
         metadata=_result_metadata(plan, reason, port_name),
     )
 
@@ -232,6 +240,7 @@ def format_dual_machine_hardware_send_report(
     lines = [
         "RytmRandomizer armed Dual-Machine Hardware Send Report",
         f"Target: {result.target}",
+        *(_analog_four_starter_profile_lines(result)),
         f"Accepted: {result.accepted}",
         f"Reason: {result.reason}",
         f"Plan ready: {result.plan_ready}",
@@ -343,6 +352,16 @@ def _format_dual_port_name(port_names_by_device: Mapping[str, str]) -> str:
     rytm_name = port_names_by_device.get(ANALOG_RYTM_DEVICE, "<missing-rytm>")
     a4_name = port_names_by_device.get(ANALOG_FOUR_DEVICE, "<missing-analog-four>")
     return f"{ANALOG_RYTM_DEVICE}={rytm_name}; {ANALOG_FOUR_DEVICE}={a4_name}"
+
+
+def _analog_four_starter_profile_lines(result: DualMachineHardwareSendResult) -> list[str]:
+    if result.analog_four_starter_profile_key is None:
+        return []
+    return [
+        "Analog Four starter profile: "
+        f"{result.analog_four_starter_profile_label} / "
+        f"{result.analog_four_starter_profile_key}"
+    ]
 
 
 def _format_emission_line(message: HardwareMidiEmission) -> str:

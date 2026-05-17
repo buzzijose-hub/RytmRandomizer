@@ -142,6 +142,33 @@ def test_safe_starter_bridge_has_only_eligible_mapped_cc_events(tmp_path):
     ]
 
 
+def test_active_send_plan_reports_selected_a4_starter_profile(tmp_path):
+    from rytm_randomizer.dual_machine_active_send_plan import (
+        build_dual_machine_active_send_plan,
+        format_dual_machine_active_send_plan_report,
+    )
+    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+
+    rytm_path = tmp_path / "rytm-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record())
+
+    bridge = build_dual_machine_mock_bridge(
+        str(rytm_path),
+        slot=1,
+        depth="micro",
+        target="analog-four",
+        analog_four_profile="peak time",
+    )
+    plan = build_dual_machine_active_send_plan(bridge)
+    report = "\n".join(format_dual_machine_active_send_plan_report(plan))
+
+    assert plan.analog_four_starter_profile_key == "peak-time"
+    assert plan.analog_four_starter_profile_label == "Peak Time"
+    assert plan.eligible_message_count == 20
+    assert "Analog Four starter profile: Peak Time / peak-time" in report
+    assert "- eligible / Analog Four MKII / ch 1 wire 0 / CC95 -> 108" in report
+
+
 def test_a4_saved_snapshot_candidates_are_blocked_but_rytm_ccs_remain_visible(tmp_path):
     from rytm_randomizer.dual_machine_active_send_plan import (
         build_dual_machine_active_send_plan,

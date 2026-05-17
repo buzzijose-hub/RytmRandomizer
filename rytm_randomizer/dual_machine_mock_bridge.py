@@ -12,6 +12,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from .analog_four_starter_profiles import (
+    AnalogFourStarterProfile,
+    get_analog_four_starter_profile,
+)
 from .analog_four_snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
@@ -90,6 +94,8 @@ class DualMachineMockBridge:
     analog_four_slot: int | None = None
     analog_four_kit_name: str | None = None
     analog_four_mapping_status: str | None = None
+    analog_four_starter_profile_key: str | None = None
+    analog_four_starter_profile_label: str | None = None
 
     @property
     def rytm_message_count(self) -> int:
@@ -122,6 +128,7 @@ def build_dual_machine_mock_bridge(
     target: str = "both",
     analog_four_sysex_path: str | Path | None = None,
     analog_four_slot: int | None = None,
+    analog_four_profile: str | None = "balanced",
 ) -> DualMachineMockBridge:
     """Build the passive combined mock bridge from a saved Rytm kit."""
 
@@ -136,11 +143,19 @@ def build_dual_machine_mock_bridge(
         slot=slot,
         depth=depth,
     )
+    starter_profile = get_analog_four_starter_profile(analog_four_profile)
     analog_four_source = "safe starter CC plan"
-    analog_four_tracks = build_analog_four_safe_starter_plan()
+    analog_four_tracks = build_analog_four_safe_starter_plan(starter_profile.key)
     analog_four_kit_name = None
     analog_four_mapping_status = None
+    analog_four_starter_profile_key = starter_profile.key
+    analog_four_starter_profile_label = starter_profile.label
     if analog_four_sysex_path is not None:
+        if starter_profile.key != "balanced":
+            raise ValueError(
+                "Analog Four starter profile cannot be combined with Analog Four "
+                "snapshot path"
+            )
         analog_four_plan = build_analog_four_snapshot_mutation_plan_from_file(
             analog_four_sysex_path,
             slot=analog_four_slot,
@@ -150,6 +165,8 @@ def build_dual_machine_mock_bridge(
         analog_four_tracks = build_analog_four_snapshot_bridge_plan(analog_four_plan)
         analog_four_kit_name = analog_four_plan.kit_name
         analog_four_mapping_status = "candidate_unverified"
+        analog_four_starter_profile_key = None
+        analog_four_starter_profile_label = None
 
     return DualMachineMockBridge(
         rytm_source_path=str(rytm_sysex_path),
@@ -163,77 +180,43 @@ def build_dual_machine_mock_bridge(
         analog_four_slot=analog_four_slot,
         analog_four_kit_name=analog_four_kit_name,
         analog_four_mapping_status=analog_four_mapping_status,
+        analog_four_starter_profile_key=analog_four_starter_profile_key,
+        analog_four_starter_profile_label=analog_four_starter_profile_label,
     )
 
 
-def build_analog_four_safe_starter_plan() -> tuple[AnalogFourTrackPlan, ...]:
+def build_analog_four_safe_starter_plan(
+    profile: str | AnalogFourStarterProfile | None = "balanced",
+) -> tuple[AnalogFourTrackPlan, ...]:
     """Build a conservative A4 Track 1-4 CC starter plan."""
 
-    track_specs = {
-        1: (
-            "bass / low tonal anchor",
-            (
-                ("Track Level", 95, 104),
-                ("OSC1 Level", 69, 96),
-                ("OSC2 Level", 78, 72),
-                ("Filter 1 Frequency", 18, 112),
-                ("Amp Pan", 10, 60),
-            ),
-        ),
-        2: (
-            "stab / sequence pressure",
-            (
-                ("Track Level", 95, 100),
-                ("OSC1 Waveform", 70, 2),
-                ("Filter 1 Frequency", 18, 104),
-                ("Amp Env Decay", 105, 54),
-                ("Amp Pan", 10, 68),
-            ),
-        ),
-        3: (
-            "pad / drone / atmosphere",
-            (
-                ("Track Level", 95, 92),
-                ("OSC1 Level", 69, 82),
-                ("OSC2 Level", 78, 88),
-                ("Filter 2 Frequency", 19, 74),
-                ("Reverb Send", 93, 36),
-            ),
-        ),
-        4: (
-            "FX / noise / transition",
-            (
-                ("Track Level", 95, 88),
-                ("Noise Level", 77, 72),
-                ("Noise Fade", 76, 68),
-                ("Filter 1 Frequency", 18, 88),
-                ("Amp Pan", 10, 64),
-            ),
-        ),
-    }
+    starter_profile = (
+        profile
+        if isinstance(profile, AnalogFourStarterProfile)
+        else get_analog_four_starter_profile(profile)
+    )
     tracks = []
-    for track in range(1, A4_TRACK_COUNT + 1):
-        midi_channel = track
-        wire_channel = track - 1
-        role_label, parameter_specs = track_specs[track]
+    for track_profile in starter_profile.tracks:
+        midi_channel = track_profile.track
+        wire_channel = track_profile.track - 1
         changes = tuple(
             AnalogFourStarterChange(
-                track=track,
+                track=track_profile.track,
                 midi_channel=midi_channel,
                 wire_channel=wire_channel,
-                role_label=role_label,
-                parameter_name=parameter_name,
-                cc=cc,
-                value=value,
+                role_label=track_profile.role_label,
+                parameter_name=parameter.parameter_name,
+                cc=parameter.cc,
+                value=parameter.value,
             )
-            for parameter_name, cc, value in parameter_specs
+            for parameter in track_profile.parameters
         )
         tracks.append(
             AnalogFourTrackPlan(
-                track=track,
+                track=track_profile.track,
                 midi_channel=midi_channel,
                 wire_channel=wire_channel,
-                role_label=role_label,
+                role_label=track_profile.role_label,
                 changes=changes,
             )
         )
@@ -320,6 +303,12 @@ def capture_dual_machine_mock_messages(bridge: DualMachineMockBridge) -> MockMid
                                 "baseline_type": "safe_starter",
                                 "planned_value": change.value,
                                 "source": "safe starter CC plan",
+                                "starter_profile_key": (
+                                    bridge.analog_four_starter_profile_key
+                                ),
+                                "starter_profile_label": (
+                                    bridge.analog_four_starter_profile_label
+                                ),
                             },
                         )
                     )
@@ -342,6 +331,7 @@ def format_dual_machine_mock_bridge_report(bridge: DualMachineMockBridge) -> lis
         f"Rytm planned pads: {_targeted_rytm_planned_pad_count(bridge)} / {PAD_COUNT}",
         f"Rytm mock messages: {bridge.rytm_message_count}",
         f"Analog Four source: {bridge.analog_four_source}",
+        *(_analog_four_starter_profile_lines(bridge)),
         *(_analog_four_snapshot_header_lines(bridge)),
         f"Analog Four tracks: {bridge.analog_four_track_count} / {A4_TRACK_COUNT}",
         f"Analog Four mock messages: {bridge.analog_four_message_count}",
@@ -460,6 +450,16 @@ def _analog_four_snapshot_header_lines(bridge: DualMachineMockBridge) -> list[st
         f"Analog Four slot: {bridge.analog_four_slot}",
         f"Analog Four kit: {bridge.analog_four_kit_name or '<blank>'}",
         f"Analog Four mapping: {bridge.analog_four_mapping_status}",
+    ]
+
+
+def _analog_four_starter_profile_lines(bridge: DualMachineMockBridge) -> list[str]:
+    if bridge.analog_four_starter_profile_key is None:
+        return []
+    return [
+        "Analog Four starter profile: "
+        f"{bridge.analog_four_starter_profile_label} / "
+        f"{bridge.analog_four_starter_profile_key}"
     ]
 
 
