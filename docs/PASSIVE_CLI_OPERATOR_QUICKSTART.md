@@ -286,6 +286,22 @@ until a later mapper proves the saved kit layout.
 It does not open MIDI ports, send MIDI, receive live SysEx, write SysEx, or
 mutate hardware.
 
+## Analog Four Offset Candidate Report
+
+Scan saved Analog Four kit variations for unverified numeric offset candidates:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-offset-candidate-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --track 1 --limit 12
+```
+
+This command scans existing saved A4 kit records, extracts one Track 1-4 block
+across all kits, and reports even-aligned CC-like words that vary across saved
+kit variations. These are evidence points for future mapping only. The report
+uses `candidate_unverified` and does not claim parameter names.
+
+It does not open MIDI ports, send MIDI, receive live SysEx, write SysEx, name
+parameters, or mutate hardware.
+
 ## Essence Application Readiness Report
 
 Check whether an essence plan is apply-ready under Safe Anchors or Live
