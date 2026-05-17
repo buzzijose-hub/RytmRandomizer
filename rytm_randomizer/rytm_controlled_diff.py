@@ -60,6 +60,20 @@ class RytmControlledDiffReport:
     changes: tuple[RytmControlledParameterChange, ...]
 
 
+@dataclass(frozen=True)
+class RytmAllPadControlledDiffReport:
+    """Passive controlled diff report for all 12 Rytm pads."""
+
+    before_path: str | None
+    after_path: str | None
+    slot: int
+    before_kit_name: str
+    after_kit_name: str
+    changed_pad_count: int
+    changed_parameter_count: int
+    pad_reports: tuple[RytmControlledDiffReport, ...]
+
+
 def build_rytm_controlled_diff_report_from_file(
     before_path: str | Path,
     after_path: str | Path,
@@ -94,6 +108,73 @@ def build_rytm_controlled_diff_report_from_file(
     )
 
 
+def build_rytm_all_pad_controlled_diff_report_from_file(
+    before_path: str | Path,
+    after_path: str | Path,
+    *,
+    slot: int,
+    limit: int = DEFAULT_LIMIT,
+) -> RytmAllPadControlledDiffReport:
+    """Build a passive all-pad controlled diff report from SysEx files."""
+
+    report = build_rytm_all_pad_controlled_diff_report_from_bytes(
+        Path(before_path).read_bytes(),
+        Path(after_path).read_bytes(),
+        slot=slot,
+        limit=limit,
+    )
+    return RytmAllPadControlledDiffReport(
+        before_path=str(before_path),
+        after_path=str(after_path),
+        slot=report.slot,
+        before_kit_name=report.before_kit_name,
+        after_kit_name=report.after_kit_name,
+        changed_pad_count=report.changed_pad_count,
+        changed_parameter_count=report.changed_parameter_count,
+        pad_reports=report.pad_reports,
+    )
+
+
+def build_rytm_all_pad_controlled_diff_report_from_bytes(
+    before_data: bytes,
+    after_data: bytes,
+    *,
+    slot: int,
+    limit: int = DEFAULT_LIMIT,
+) -> RytmAllPadControlledDiffReport:
+    """Build a passive controlled diff report for all 12 Rytm pads."""
+
+    if slot not in range(1, 129):
+        raise RytmControlledDiffError("slot must be 1-128")
+    if limit < 1:
+        raise RytmControlledDiffError("limit must be at least 1")
+
+    before_snapshot = _decode_snapshot_from_bytes(before_data, slot=slot)
+    after_snapshot = _decode_snapshot_from_bytes(after_data, slot=slot)
+    pad_reports = tuple(
+        _build_pad_report(
+            before_snapshot,
+            after_snapshot,
+            slot=slot,
+            pad=pad,
+            limit=limit,
+        )
+        for pad in range(1, PAD_COUNT + 1)
+    )
+    return RytmAllPadControlledDiffReport(
+        before_path=None,
+        after_path=None,
+        slot=slot,
+        before_kit_name=before_snapshot.kit_name,
+        after_kit_name=after_snapshot.kit_name,
+        changed_pad_count=sum(1 for pad_report in pad_reports if pad_report.changes),
+        changed_parameter_count=sum(
+            pad_report.changed_parameter_count for pad_report in pad_reports
+        ),
+        pad_reports=pad_reports,
+    )
+
+
 def build_rytm_controlled_diff_report_from_bytes(
     before_data: bytes,
     after_data: bytes,
@@ -113,6 +194,23 @@ def build_rytm_controlled_diff_report_from_bytes(
 
     before_snapshot = _decode_snapshot_from_bytes(before_data, slot=slot)
     after_snapshot = _decode_snapshot_from_bytes(after_data, slot=slot)
+    return _build_pad_report(
+        before_snapshot,
+        after_snapshot,
+        slot=slot,
+        pad=pad,
+        limit=limit,
+    )
+
+
+def _build_pad_report(
+    before_snapshot: RytmKitSnapshot,
+    after_snapshot: RytmKitSnapshot,
+    *,
+    slot: int,
+    pad: int,
+    limit: int,
+) -> RytmControlledDiffReport:
     before_pad = before_snapshot.pads[pad - 1]
     after_pad = after_snapshot.pads[pad - 1]
     changes = tuple(
@@ -162,6 +260,39 @@ def format_rytm_controlled_diff_report(report: RytmControlledDiffReport) -> list
         lines.append("- none found")
     for change in report.changes:
         lines.append(_format_change_line(change))
+    lines.extend(_safety_lines())
+    return lines
+
+
+def format_rytm_all_pad_controlled_diff_report(
+    report: RytmAllPadControlledDiffReport,
+) -> list[str]:
+    """Format a deterministic passive all-pad Rytm controlled diff report."""
+
+    lines = [
+        "RytmRandomizer passive Rytm all-pad controlled diff report",
+        f"Before path: {report.before_path or '<bytes>'}",
+        f"After path: {report.after_path or '<bytes>'}",
+        f"Slot: {report.slot}",
+        "Pads scanned: 1-12",
+        f"Before kit: {report.before_kit_name or '<blank>'}",
+        f"After kit: {report.after_kit_name or '<blank>'}",
+        f"Changed pads: {report.changed_pad_count} / {PAD_COUNT}",
+        f"Changed parameters: {report.changed_parameter_count}",
+        "Pad summaries:",
+    ]
+    for pad_report in report.pad_reports:
+        lines.append(
+            f"Pad {pad_report.pad} / MIDI channel {pad_report.midi_channel}: "
+            f"{pad_report.before_sound_name or '<blank>'} -> "
+            f"{pad_report.after_sound_name or '<blank>'} / "
+            f"{pad_report.before_machine_label} -> {pad_report.after_machine_label} / "
+            f"changes {pad_report.changed_parameter_count}"
+        )
+        if not pad_report.changes:
+            lines.append("- none found")
+        for change in pad_report.changes:
+            lines.append(_format_change_line(change))
     lines.extend(_safety_lines())
     return lines
 
@@ -247,11 +378,15 @@ def _safety_lines() -> list[str]:
 
 
 __all__ = [
+    "RytmAllPadControlledDiffReport",
     "RytmControlledDiffError",
     "RytmControlledDiffReport",
     "RytmControlledParameterChange",
+    "build_rytm_all_pad_controlled_diff_report_from_bytes",
+    "build_rytm_all_pad_controlled_diff_report_from_file",
     "build_rytm_controlled_diff_report_from_bytes",
     "build_rytm_controlled_diff_report_from_file",
+    "format_rytm_all_pad_controlled_diff_report",
     "format_rytm_controlled_diff_error",
     "format_rytm_controlled_diff_report",
 ]

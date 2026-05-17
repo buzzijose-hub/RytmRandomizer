@@ -13,7 +13,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
-    "rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n> | "
+    "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
@@ -49,6 +49,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
+  python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
@@ -235,14 +236,15 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
+  python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
   python -m rytm_randomizer.cli rytm-controlled-diff-report --help
 
 Behavior:
   Reads two existing Rytm kit bank or whole-project SysEx files, selects the
-  same saved kit slot and pad from each file, and reports changed decoded saved
-  parameters. This is for controlled before/after mapping sessions. It does
-  not request dumps, receive live SysEx, send MIDI, write SysEx, or touch
-  hardware.
+  same saved kit slot and either one pad or all 12 pads from each file, and
+  reports changed decoded saved parameters. This is for controlled before/after
+  mapping sessions. It does not request dumps, receive live SysEx, send MIDI,
+  write SysEx, or touch hardware.
 
 Safety:
   passive/read-only

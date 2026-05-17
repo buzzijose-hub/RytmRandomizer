@@ -160,6 +160,78 @@ def test_format_rytm_controlled_diff_report_marks_safety_boundary():
     assert "- no SysEx writes" in output
 
 
+def test_build_rytm_all_pad_controlled_diff_report_summarizes_all_12_pads():
+    from rytm_randomizer.rytm_controlled_diff import (
+        build_rytm_all_pad_controlled_diff_report_from_bytes,
+    )
+
+    before = make_rytm_kit_record(
+        slot_index=0,
+        kit_name="BASE",
+        machine_values=(0, 27, 32) + tuple(27 for _ in range(9)),
+        pad_parameter_values={
+            1: {0x44: 27},
+            3: {0x1E: 69},
+        },
+    )
+    after = make_rytm_kit_record(
+        slot_index=0,
+        kit_name="BASE",
+        machine_values=(0, 27, 32) + tuple(27 for _ in range(9)),
+        pad_parameter_values={
+            1: {0x44: 96},
+            3: {0x1E: 72},
+        },
+    )
+
+    report = build_rytm_all_pad_controlled_diff_report_from_bytes(
+        before,
+        after,
+        slot=1,
+        limit=4,
+    )
+
+    assert report.slot == 1
+    assert report.before_kit_name == "BASE"
+    assert report.after_kit_name == "BASE"
+    assert len(report.pad_reports) == 12
+    assert report.changed_pad_count == 2
+    assert report.changed_parameter_count == 2
+    assert report.pad_reports[0].pad == 1
+    assert report.pad_reports[0].changes[0].name == "FLT Frequency"
+    assert report.pad_reports[2].pad == 3
+    assert report.pad_reports[2].changes[0].name == "SRC Tune"
+
+
+def test_format_rytm_all_pad_controlled_diff_report_marks_all_pads_boundary():
+    from rytm_randomizer.rytm_controlled_diff import (
+        build_rytm_all_pad_controlled_diff_report_from_bytes,
+        format_rytm_all_pad_controlled_diff_report,
+    )
+
+    before = make_rytm_kit_record(
+        slot_index=0,
+        machine_values=(0,) + tuple(27 for _ in range(11)),
+        pad_parameter_values={1: {0x44: 27}},
+    )
+    after = make_rytm_kit_record(
+        slot_index=0,
+        machine_values=(0,) + tuple(27 for _ in range(11)),
+        pad_parameter_values={1: {0x44: 96}},
+    )
+    report = build_rytm_all_pad_controlled_diff_report_from_bytes(before, after, slot=1)
+    output = "\n".join(format_rytm_all_pad_controlled_diff_report(report))
+
+    assert "RytmRandomizer passive Rytm all-pad controlled diff report" in output
+    assert "Pads scanned: 1-12" in output
+    assert "Changed pads: 1 / 12" in output
+    assert "Pad 1 / MIDI channel 1" in output
+    assert "Pad 12 / MIDI channel 12" in output
+    assert "- FLT Frequency / CC74 @0x0044: 27 -> 96 (delta +69), bd_hard_parameters" in output
+    assert "- mapped saved parameters only" in output
+    assert "- no MIDI sending" in output
+
+
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", *args],
@@ -206,6 +278,46 @@ def test_rytm_controlled_diff_cli_reads_two_saved_files_without_hardware(tmp_pat
     assert "After path:" in result.stdout
     assert "Slot: 1" in result.stdout
     assert "Pad: 1" in result.stdout
+    assert "FLT Frequency" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_controlled_diff_cli_reads_all_pads_without_hardware(tmp_path):
+    before_path = tmp_path / "rytm-before.syx"
+    after_path = tmp_path / "rytm-after.syx"
+    before_path.write_bytes(
+        make_rytm_kit_record(
+            slot_index=0,
+            machine_values=(0,) + tuple(27 for _ in range(11)),
+            pad_parameter_values={1: {0x44: 27}},
+        )
+    )
+    after_path.write_bytes(
+        make_rytm_kit_record(
+            slot_index=0,
+            machine_values=(0,) + tuple(27 for _ in range(11)),
+            pad_parameter_values={1: {0x44: 96}},
+        )
+    )
+
+    result = run_cli(
+        "rytm-controlled-diff-report",
+        str(before_path),
+        str(after_path),
+        "--slot",
+        "1",
+        "--all-pads",
+        "--limit",
+        "4",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm all-pad controlled diff report" in result.stdout
+    assert "Pads scanned: 1-12" in result.stdout
+    assert "Changed pads: 1 / 12" in result.stdout
+    assert "Pad 1 / MIDI channel 1" in result.stdout
+    assert "Pad 12 / MIDI channel 12" in result.stdout
     assert "FLT Frequency" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

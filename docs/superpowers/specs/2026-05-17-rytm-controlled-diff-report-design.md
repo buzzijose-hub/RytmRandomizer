@@ -16,6 +16,12 @@ The command shape is:
 python -m rytm_randomizer.cli rytm-controlled-diff-report "G:\ANALOG RYTM\MAPPING\RYTM_BASELINE.syx" "G:\ANALOG RYTM\MAPPING\RYTM_PAD1_FILTER_UP.syx" --slot 1 --pad 1 --limit 16
 ```
 
+The all-pad command shape is:
+
+```powershell
+python -m rytm_randomizer.cli rytm-controlled-diff-report "G:\ANALOG RYTM\MAPPING\RYTM_BASELINE.syx" "G:\ANALOG RYTM\MAPPING\RYTM_AFTER_ONE_CHANGE.syx" --slot 1 --all-pads --limit 8
+```
+
 ## Mapping Workflow
 
 1. Export the baseline kit.
@@ -40,5 +46,6 @@ python -m rytm_randomizer.cli rytm-controlled-diff-report "G:\ANALOG RYTM\MAPPIN
 
 - Synthetic tests prove changed mapped parameters are reported.
 - Unchanged mapped parameters are not reported.
+- All-pad tests prove all 12 pad reports are produced in one passive run.
 - CLI can compare two saved files without hardware.
 - Real Rytm project dump can be parsed in a same-file no-change comparison.
