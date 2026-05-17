@@ -11,7 +11,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 PASSIVE_MODULES = (
     "rytm_randomizer.cli",
-    "rytm_randomizer.registry_report",
     "rytm_randomizer.mock_midi",
     "rytm_randomizer.mock_message_mapper",
     "rytm_randomizer.active_boundary",
@@ -27,7 +26,6 @@ PASSIVE_CLI_COMMANDS = (
 
 PASSIVE_SOURCE_FILES = (
     PROJECT_ROOT / "rytm_randomizer" / "cli.py",
-    PROJECT_ROOT / "rytm_randomizer" / "registry_report.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_midi.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_message_mapper.py",
     PROJECT_ROOT / "rytm_randomizer" / "active_boundary.py",

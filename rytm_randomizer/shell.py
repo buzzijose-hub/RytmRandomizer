@@ -335,23 +335,6 @@ class InteractiveShell:
         return builtins.input(prompt)
 
     # ------------------------------------------------------------------
-    # Shared selected-profile bookkeeping (the monolith's ``main()`` globals)
-    # ------------------------------------------------------------------
-
-    def _sync_channel_from_group_runner(self) -> None:
-        """Mirror the monolith: keep ``channel`` aligned with the active pad.
-
-        The monolith stored ``channel`` as a module global that ``main()``
-        ``c`` command edited and that every send routine read. The package
-        keeps that field on ``self`` so a ``c`` command can update it without
-        any further wiring; the engines/runners each track their own pad-
-        specific channel internally.
-        """
-
-        # No-op anchor: dedicated method so future refactors have a hook.
-        return None
-
-    # ------------------------------------------------------------------
     # Help / commands listing -- mirrors monolith ``print_commands``
     # ------------------------------------------------------------------
 

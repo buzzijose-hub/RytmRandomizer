@@ -6,18 +6,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from rytm_randomizer.constants import OUT_OF_SCOPE_PADS
-from rytm_randomizer.profile_lookup import (
-    describe_group_profile,
-    get_group_profile_machine_value,
-    get_group_profile_pad,
-    list_group_profile_keys,
-)
+from rytm_randomizer.profile_lookup import describe_group_profile
 from rytm_randomizer.profiles import GROUP_PROFILE_METADATA
-
-
-def test_group_profile_keys_are_existing_v134_metadata_only():
-    assert list_group_profile_keys() == ("2", "3", "4", "5")
-    assert set(GROUP_PROFILE_METADATA) == {"2", "3", "4", "5"}
 
 
 def test_describe_group_profile_returns_existing_metadata_values():
@@ -39,29 +29,16 @@ def test_describe_group_profile_returns_existing_metadata_values():
         assert report["metadata"] == GROUP_PROFILE_METADATA[profile_key]
 
 
-def test_group_profile_lookup_helpers_return_existing_values_only():
-    assert get_group_profile_machine_value("2") == 0
-    assert get_group_profile_machine_value("3") == 1
-    assert get_group_profile_machine_value("4") == 30
-    assert get_group_profile_machine_value("5") == 32
-    assert get_group_profile_pad("2") == 1
-    assert get_group_profile_pad("3") == 2
-    assert get_group_profile_pad("4") == 4
-    assert get_group_profile_pad("5") == 3
-
-
 def test_unknown_group_profile_returns_passive_not_found_result():
     assert describe_group_profile("UNKNOWN") == {
         "exists": False,
         "profile_key": "UNKNOWN",
         "metadata": None,
     }
-    assert get_group_profile_machine_value("UNKNOWN") is None
-    assert get_group_profile_pad("UNKNOWN") is None
 
 
 def test_group_profile_lookup_does_not_expose_pads_5_to_12():
-    for profile_key in list_group_profile_keys():
+    for profile_key in GROUP_PROFILE_METADATA:
         report = describe_group_profile(profile_key)
 
         assert report["group_pad"] not in OUT_OF_SCOPE_PADS
@@ -84,9 +61,7 @@ def test_describe_group_profile_returns_metadata_copy():
 
 
 if __name__ == "__main__":
-    test_group_profile_keys_are_existing_v134_metadata_only()
     test_describe_group_profile_returns_existing_metadata_values()
-    test_group_profile_lookup_helpers_return_existing_values_only()
     test_unknown_group_profile_returns_passive_not_found_result()
     test_group_profile_lookup_does_not_expose_pads_5_to_12()
     test_describe_group_profile_returns_metadata_copy()

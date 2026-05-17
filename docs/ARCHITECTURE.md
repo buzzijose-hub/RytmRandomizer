@@ -136,11 +136,11 @@ on one line for an existing module, you probably need a new module instead.
 | ------------------------------------- | -------------------------------------------------------------------- |
 | `rytm_hybrid_randomizer_v134.py`      | Frozen byte-identical V1.34 reference. Used ONLY by parity tests.    |
 
-The remaining files (`commands.py`, `command_lookup.py`, `profile_lookup.py`,
-`scene_lookup.py`, `help_text.py`, `validation.py`, `audit.py`, `preview.py`,
-`registry.py`, etc.) are passive, in-memory, no-I/O metadata helpers that
-follow the same direction rules: they may read from `data/` and `state/` but
-they may not import `engines`, `shell`, `app`, or `cli`.
+The remaining files (`commands.py`, `profile_lookup.py`, `help_text.py`,
+`validation.py`, `audit.py`, `preview.py`, `registry.py`, etc.) are passive,
+in-memory, no-I/O metadata helpers that follow the same direction rules: they
+may read from `data/` and `state/` but they may not import `engines`, `shell`,
+`app`, or `cli`.
 
 ---
 
@@ -280,3 +280,45 @@ The rules above are mechanically enforced by:
 
 These tests are run by `pytest tests/architecture/` and are wired into the
 `test` job of `.github/workflows/test.yml` so a violation fails the build.
+
+---
+
+## 8. V1.34 parity API surface
+
+A handful of symbols in the package have no production callers — they exist
+only because the parity tests need to assert on them, or because they are
+documented public contracts the parity layer gates on, or because they are
+the documented persistence lifecycle for the guardrails workstream.
+
+A naive "no production caller -> dead code" audit will keep flagging them.
+They are NOT dead. This section is the authoritative keep-list; if you are
+running a dead-code audit and you find a symbol below, leave it alone.
+
+Removing any of these requires a parity-layer change (or a guardrails design
+change for the `ProfileStore` entries) and is out of scope for an audit-led
+cleanup.
+
+### Documented passive metadata + V1.34 parity helpers
+
+| Symbol | Module | Why it stays |
+| --- | --- | --- |
+| `FORBIDDEN_ACTIONS` | `rytm_randomizer/commands.py` | Documented V1.34 controlled-mutation roadmap surface. `tests/test_scaffold.py` gates that the package never grows an executable path into one of these forbidden action categories. |
+| `is_guarded_main_prompt_depth()` | `rytm_randomizer/commands.py` | Documented predicate the parity layer uses to assert that the bare main-prompt depth commands ("1", "2", "3") never send MIDI. Removing it would gut the parity assertion. |
+| `DEFAULT_MIDI_CHANNEL`, `OUT_OF_SCOPE_PAD_GUARDRAIL`, `PAD_TO_MIDI_CHANNEL`, `PAD_SELECTION_LABELS` | `rytm_randomizer/constants.py` | The V1.34 channel and Pads-5-12 scope-guardrail constants. The parity layer asserts on these exact values; they are the documented contract between the modular package and the byte-frozen monolith. |
+| `switch_pad1_extra_bd_machine_only()` | `rytm_randomizer/engines/pad1.py` | The V1.34 Pad-1 extra-BD machine-only switch routine. `tests/test_engines_pad1.py` byte-parity tests assert on its exact behaviour (including a parity subprocess invocation). |
+| `mutate_group_with_depth()` | `rytm_randomizer/group_runner.py` | Mirrors the monolith's `mutate_group_with_depth` legacy fallback. Documented in the module docstring; the parity layer asserts byte-for-byte equality against the monolith. |
+| `GroupRuntimeState.loaded` (property) | `rytm_randomizer/state/group.py` | The documented monolith-readiness gate ("all four pads have current state"). Used by parity tests to assert that the group runtime treats partial loads exactly as the monolith did. |
+| `RealMidiSender.send_messages()` | `rytm_randomizer/real_midi_adapter.py` | The public outbound boundary of the real-MIDI adapter. `tests/test_real_midi_adapter_boundary.py` is the boundary contract test that asserts it translates and dispatches messages correctly. Removing it gets rid of the only documented "real-MIDI sender knows how to send" API. |
+| `evaluate_mock_runtime_active_bridge()` | `rytm_randomizer/mock_runtime_active_bridge.py` | The bridge evaluator. The mock-runtime-active-bridge report (`rytm_randomizer/reports.py:BRIDGE_SUMMARY`) names it as a literal string in the report payload ("evaluator": "evaluate_mock_runtime_active_bridge"), so it must keep its exact public name. The CLI source-level test (`tests/test_cli.py`) also asserts that the symbol does not leak into `cli.py`, which means the symbol has to continue to exist to be checked-for. |
+
+### Documented guardrails persistence lifecycle (WS-W)
+
+| Symbol | Module | Why it stays |
+| --- | --- | --- |
+| `ProfileStore.save()` | `rytm_randomizer/guardrails/store.py` | The documented persistence write path for guardrail profiles. Part of the WS-W lifecycle (`save -> load -> list_profiles -> promote`). |
+| `ProfileStore.list_profiles()` | `rytm_randomizer/guardrails/store.py` | The documented profile enumeration step of the WS-W lifecycle. |
+| `ProfileStore.promote()` | `rytm_randomizer/guardrails/store.py` | The documented profile state-machine transition (DRAFT → VALIDATED → STUDIO_TESTED → LIVE_APPROVED → ARCHIVED) of the WS-W lifecycle. Implemented as a classmethod that returns a new immutable profile. |
+
+The WS-W workstream owns these methods. They will gain production callers
+once the guardrails CLI / promotion workflow lands; until then they are kept
+alive by `tests/test_guardrails_store.py` as the documented lifecycle.

@@ -6,7 +6,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from rytm_randomizer.registry import summarize_registry
-from rytm_randomizer.registry_report import (
+from rytm_randomizer.reports import (
     build_registry_report,
     format_registry_report,
     summarize_registry_report,
@@ -140,16 +140,16 @@ def test_registry_report_source_is_in_memory_only():
     }
 
 
-def test_importing_registry_report_has_no_side_effect_output():
+def test_importing_reports_has_no_side_effect_output():
     import importlib
     import io
     from contextlib import redirect_stdout
 
-    import rytm_randomizer.registry_report as registry_report
+    import rytm_randomizer.reports as reports
 
     stream = io.StringIO()
     with redirect_stdout(stream):
-        importlib.reload(registry_report)
+        importlib.reload(reports)
 
     assert stream.getvalue() == ""
 
@@ -164,4 +164,4 @@ if __name__ == "__main__":
     test_registry_report_introduces_no_midi_or_execution_behavior()
     test_registry_report_exposes_no_pads_5_to_12_or_analog_four_support()
     test_registry_report_source_is_in_memory_only()
-    test_importing_registry_report_has_no_side_effect_output()
+    test_importing_reports_has_no_side_effect_output()

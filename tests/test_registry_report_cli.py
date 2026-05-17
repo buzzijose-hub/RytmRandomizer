@@ -12,7 +12,7 @@ def normalize_newlines(text):
 
 def run_registry_report_cli():
     return subprocess.run(
-        [sys.executable, "-m", "rytm_randomizer.registry_report"],
+        [sys.executable, "-m", "rytm_randomizer.cli", "report"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -26,9 +26,9 @@ def expected_report_text():
     )
 
 
-def test_importing_registry_report_prints_nothing():
+def test_importing_reports_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.registry_report"],
+        [sys.executable, "-c", "import rytm_randomizer.reports"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -76,7 +76,7 @@ def test_registry_report_cli_exposes_no_active_behavior_or_support_expansion():
 
 
 if __name__ == "__main__":
-    test_importing_registry_report_prints_nothing()
+    test_importing_reports_prints_nothing()
     test_registry_report_module_execution_exits_zero_and_matches_fixture()
     test_registry_report_module_execution_is_deterministic()
     test_registry_report_cli_exposes_no_active_behavior_or_support_expansion()
