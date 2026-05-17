@@ -104,6 +104,50 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--dual-machine-snapshot-send",
+        action="store_true",
+        help=(
+            "With --dry-run or --arm, build a dual-machine live snapshot send "
+            "plan from saved kit data. --dry-run emits to the guarded mock "
+            "sender; --arm requires one target machine, a selected port, and "
+            "exact SEND confirmation before real MIDI CC messages are sent."
+        ),
+    )
+    parser.add_argument(
+        "--snapshot-path",
+        metavar="PATH",
+        help="Saved Analog Rytm SysEx kit/project dump path for snapshot planning.",
+    )
+    parser.add_argument(
+        "--snapshot-slot",
+        type=int,
+        metavar="SLOT",
+        help="Analog Rytm kit slot to snapshot, 1-128.",
+    )
+    parser.add_argument(
+        "--snapshot-depth",
+        choices=("micro", "groove", "strong"),
+        metavar="DEPTH",
+        help="Snapshot mutation depth: micro, groove, or strong.",
+    )
+    parser.add_argument(
+        "--snapshot-target",
+        choices=("rytm", "analog-four", "both"),
+        metavar="TARGET",
+        help="Snapshot target machine scope: rytm, analog-four, or both.",
+    )
+    parser.add_argument(
+        "--analog-four-path",
+        metavar="PATH",
+        help="Optional saved Analog Four SysEx kit/project dump path.",
+    )
+    parser.add_argument(
+        "--analog-four-slot",
+        type=int,
+        metavar="SLOT",
+        help="Analog Four kit slot to include when --analog-four-path is supplied.",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help=(
@@ -161,6 +205,8 @@ def _print_passive_menu() -> None:
             "one Analog Four track with Pan CC10 only",
             "- --analog-four-track-filter-smoke <1-4>  with --arm/--dry-run, "
             "test one Analog Four track with Filter 1 Frequency CC18 only",
+            "- --dual-machine-snapshot-send  with --arm/--dry-run, send a "
+            "guarded single-target live snapshot mutation plan",
             "",
             USAGE,
         ]
@@ -187,12 +233,49 @@ def _preloaded_monolith_hook(attribute: str):
     return hook if callable(hook) else None
 
 
+def _snapshot_send_request_from_args(args: argparse.Namespace) -> dict[str, object] | None:
+    if not args.dual_machine_snapshot_send:
+        return None
+    return {
+        "snapshot_path": args.snapshot_path,
+        "snapshot_slot": args.snapshot_slot,
+        "snapshot_depth": args.snapshot_depth,
+        "snapshot_target": args.snapshot_target,
+        "analog_four_path": args.analog_four_path,
+        "analog_four_slot": args.analog_four_slot,
+    }
+
+
+def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object]):
+    """Build the passive dual-machine bridge for an app snapshot-send request."""
+
+    from .dual_machine_mock_bridge import build_dual_machine_mock_bridge
+
+    analog_four_path = request.get("analog_four_path")
+    analog_four_slot = request.get("analog_four_slot")
+    kwargs = {}
+    if analog_four_path is not None:
+        kwargs = {
+            "analog_four_sysex_path": str(analog_four_path),
+            "analog_four_slot": int(analog_four_slot),
+        }
+
+    return build_dual_machine_mock_bridge(
+        str(request["snapshot_path"]),
+        slot=int(request["snapshot_slot"]),
+        depth=str(request["snapshot_depth"]),
+        target=str(request["snapshot_target"]),
+        **kwargs,
+    )
+
+
 def _run_arm(
     *,
     twelve_pad_smoke: bool = False,
     analog_four_smoke: bool = False,
     analog_four_track_smoke: int | None = None,
     analog_four_track_filter_smoke: int | None = None,
+    snapshot_send_request: dict[str, object] | None = None,
 ) -> int:
     """Construct the real MIDI provider, open a port, run the package shell.
 
@@ -200,6 +283,9 @@ def _run_arm(
     test seam: if present, it is called instead of the package shell. The
     real monolith is never imported here.
     """
+
+    if snapshot_send_request is not None:
+        return _run_arm_dual_machine_snapshot_send(snapshot_send_request)
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -334,6 +420,124 @@ def _run_arm(
                 _shutdown_logger.debug("port_close_failed_best_effort")
 
 
+def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
+    """Run the guarded dual-machine snapshot send against real hardware."""
+
+    from .dual_machine_active_send_plan import build_dual_machine_active_send_plan
+    from .dual_machine_hardware_sender import (
+        build_dual_machine_hardware_send_refusal,
+        execute_dual_machine_hardware_send,
+        format_dual_machine_hardware_send_error,
+        format_dual_machine_hardware_send_report,
+    )
+
+    try:
+        bridge = _build_dual_machine_snapshot_bridge_from_request(request)
+        plan = build_dual_machine_active_send_plan(bridge)
+    except (OSError, ValueError) as exc:
+        sys.stdout.write("\n".join(format_dual_machine_hardware_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    if plan.target == "both":
+        result = build_dual_machine_hardware_send_refusal(
+            plan,
+            "single_target_required",
+            port_name="<not-opened>",
+        )
+        sys.stdout.write("\n".join(format_dual_machine_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 1
+
+    if not plan.ready:
+        result = build_dual_machine_hardware_send_refusal(
+            plan,
+            plan.readiness_reason,
+            port_name="<not-opened>",
+        )
+        sys.stdout.write("\n".join(format_dual_machine_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm failed: no real MIDI output ports available. "
+            "Connect the target machine and retry.\n"
+        )
+        return 1
+
+    sys.stdout.write(
+        "RytmRandomizer --arm: real MIDI provider ready. "
+        f"Available output ports: {', '.join(output_names)}\n"
+    )
+
+    device_label = "Analog Four" if plan.target == "analog-four" else "Analog Rytm"
+    port_name = _choose_arm_port_name(output_names, device_label=device_label)
+    if port_name is None:
+        return 1
+
+    if not _confirm_dual_machine_snapshot_send(plan, port_name):
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    try:
+        result = execute_dual_machine_hardware_send(
+            plan,
+            port,
+            port_name=port_name,
+            armed=True,
+            operator_confirmed=True,
+            sleep=_smoke_sleep,
+        )
+        sys.stdout.write("\n".join(format_dual_machine_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 0 if result.accepted else 1
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("port_close_failed_best_effort")
+
+
+def _confirm_dual_machine_snapshot_send(
+    plan,
+    port_name: str,
+) -> bool:
+    sys.stdout.write(
+        "\nType SEND to transmit "
+        f"{plan.eligible_message_count} mapped CC message(s) to "
+        f"{plan.target} on {port_name}: "
+    )
+    try:
+        raw = input().strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write("--arm cancelled: SEND confirmation was not provided.\n")
+        return False
+    if raw != "SEND":
+        sys.stderr.write("--arm cancelled: exact SEND confirmation was not provided.\n")
+        return False
+    return True
+
+
 def _choose_arm_port_name(
     output_names: Sequence[str],
     *,
@@ -364,12 +568,43 @@ def _choose_arm_port_name(
         return None
 
 
+def _run_dry_run_dual_machine_snapshot_send(request: dict[str, object]) -> int:
+    """Run the guarded dual-machine snapshot send against the mock sender."""
+
+    from .dual_machine_guarded_sender import (
+        build_dual_machine_guarded_send_dry_run,
+        format_dual_machine_guarded_send_dry_run_report,
+        format_dual_machine_guarded_send_error,
+    )
+
+    sys.stdout.write(
+        "RytmRandomizer --dry-run: guarded dual-machine snapshot send "
+        "(mock-only, no hardware, no port opened).\n"
+    )
+    try:
+        bridge = _build_dual_machine_snapshot_bridge_from_request(request)
+        result = build_dual_machine_guarded_send_dry_run(bridge)
+    except (OSError, ValueError) as exc:
+        sys.stdout.write("\n".join(format_dual_machine_guarded_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    sys.stdout.write("\n".join(format_dual_machine_guarded_send_dry_run_report(result)))
+    sys.stdout.write("\n")
+    sys.stdout.write(
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} "
+        "message(s).\n"
+    )
+    return 0 if result.accepted else 1
+
+
 def _run_dry_run(
     *,
     twelve_pad_smoke: bool = False,
     analog_four_smoke: bool = False,
     analog_four_track_smoke: int | None = None,
     analog_four_track_filter_smoke: int | None = None,
+    snapshot_send_request: dict[str, object] | None = None,
 ) -> int:
     """Run the interactive randomizer logic against the in-memory mock.
 
@@ -377,6 +612,9 @@ def _run_dry_run(
     test seam. The real monolith is never imported here, and no real MIDI
     library is loaded.
     """
+
+    if snapshot_send_request is not None:
+        return _run_dry_run_dual_machine_snapshot_send(snapshot_send_request)
 
     from .mock_midi import MockMidiSender
 
@@ -512,6 +750,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     analog_four_track_smoke = args.analog_four_track_smoke
     analog_four_track_filter_smoke = args.analog_four_track_filter_smoke
+    snapshot_send_request = _snapshot_send_request_from_args(args)
     smoke_flag_count = sum(
         (
             bool(args.twelve_pad_smoke),
@@ -529,6 +768,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             "Choose only one smoke-test modifier: --twelve-pad-smoke, "
             "--analog-four-smoke, --analog-four-track-smoke, or "
             "--analog-four-track-filter-smoke.\n"
+        )
+        return 2
+
+    if args.dual_machine_snapshot_send and smoke_flag_count:
+        sys.stderr.write(
+            "Choose only one active-mode modifier: smoke tests or "
+            "--dual-machine-snapshot-send.\n"
         )
         return 2
 
@@ -563,12 +809,46 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
+    if args.dual_machine_snapshot_send and not (args.arm or args.dry_run):
+        sys.stderr.write("--dual-machine-snapshot-send requires --arm or --dry-run.\n")
+        return 2
+
+    if args.dual_machine_snapshot_send:
+        missing = [
+            flag
+            for flag, value in (
+                ("--snapshot-path", args.snapshot_path),
+                ("--snapshot-slot", args.snapshot_slot),
+                ("--snapshot-depth", args.snapshot_depth),
+                ("--snapshot-target", args.snapshot_target),
+            )
+            if value is None
+        ]
+        if missing:
+            sys.stderr.write(
+                "--dual-machine-snapshot-send requires "
+                f"{', '.join(missing)}.\n"
+            )
+            return 2
+        if args.snapshot_slot not in range(1, 129):
+            sys.stderr.write("--snapshot-slot must be between 1 and 128.\n")
+            return 2
+        if (args.analog_four_path is None) != (args.analog_four_slot is None):
+            sys.stderr.write(
+                "--analog-four-path and --analog-four-slot must be supplied together.\n"
+            )
+            return 2
+        if args.analog_four_slot is not None and args.analog_four_slot not in range(1, 129):
+            sys.stderr.write("--analog-four-slot must be between 1 and 128.\n")
+            return 2
+
     if args.arm:
         return _run_arm(
             twelve_pad_smoke=args.twelve_pad_smoke,
             analog_four_smoke=args.analog_four_smoke,
             analog_four_track_smoke=analog_four_track_smoke,
             analog_four_track_filter_smoke=analog_four_track_filter_smoke,
+            snapshot_send_request=snapshot_send_request,
         )
     if args.dry_run:
         return _run_dry_run(
@@ -576,6 +856,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             analog_four_smoke=args.analog_four_smoke,
             analog_four_track_smoke=analog_four_track_smoke,
             analog_four_track_filter_smoke=analog_four_track_filter_smoke,
+            snapshot_send_request=snapshot_send_request,
         )
 
     _print_passive_menu()

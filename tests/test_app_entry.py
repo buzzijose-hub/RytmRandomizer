@@ -58,6 +58,63 @@ class _RecordingPort:
         self.closed = True
 
 
+def _pack_7bit_payload(payload):
+    packed = bytearray()
+    for index in range(0, len(payload), 7):
+        chunk = payload[index : index + 7]
+        mask = 0
+        data = bytearray()
+        for bit, value in enumerate(chunk):
+            if value & 0x80:
+                mask |= 1 << bit
+            data.append(value & 0x7F)
+        packed.append(mask)
+        packed.extend(data)
+    return bytes(packed)
+
+
+def _make_rytm_kit_record(slot_index=0, kit_name="APP SEND"):
+    values = {
+        1: {
+            0x1E: 59,
+            0x20: 68,
+            0x44: 25,
+            0x46: 14,
+            0x4A: 65,
+            0x50: 121,
+        }
+    }
+    decoded = bytearray(58 + (12 * 162) + 8)
+    decoded[4 : 4 + len(kit_name)] = kit_name.encode("ascii")
+    for pad in range(1, 13):
+        sound_name = f"SOUND {pad}"
+        offset = 58 + ((pad - 1) * 162)
+        track_offset = 46 + ((pad - 1) * 162)
+        decoded[offset : offset + len(sound_name)] = sound_name.encode("ascii")
+        decoded[track_offset + 0x7C] = 0 if pad == 1 else 27
+        for parameter_offset, value in values.get(pad, {}).items():
+            decoded[track_offset + parameter_offset] = value
+    return (
+        bytes([0xF0, 0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, slot_index])
+        + _pack_7bit_payload(decoded)
+        + bytes([0xF7])
+    )
+
+
+def _make_a4_kit_record(slot_index=0, kit_name="APP A4"):
+    decoded = bytearray(2414)
+    decoded[4 : 4 + len(kit_name)] = kit_name.encode("ascii")
+    decoded[44 : 44 + len("BASS LOW")] = b"BASS LOW"
+    for relative_offset, value in {20: 64, 22: 80}.items():
+        decoded[44 + relative_offset] = (value >> 8) & 0xFF
+        decoded[44 + relative_offset + 1] = value & 0xFF
+    return (
+        bytes([0xF0, 0x00, 0x20, 0x3C, 0x06, 0x00, 0x52, 0x01, 0x01, slot_index])
+        + _pack_7bit_payload(decoded)
+        + bytes([0xF7])
+    )
+
+
 def test_app_module_import_is_side_effect_free_and_silent():
     result = run_python("""
 import sys
@@ -272,6 +329,41 @@ def test_app_main_dry_run_analog_four_track_filter_smoke_captures_mock_stream(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_dual_machine_snapshot_send_uses_guarded_mock_sender(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--dual-machine-snapshot-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "rytm",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Guarded Send Dry-Run Report" in captured.out
+    assert "Target: rytm" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 6" in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
@@ -281,6 +373,32 @@ def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
 
     assert exit_code == 2
     assert "--twelve-pad-smoke requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_dual_machine_snapshot_send_requires_active_mode(tmp_path, capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dual-machine-snapshot-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "rytm",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--dual-machine-snapshot-send requires --arm or --dry-run" in captured.err
 
 
 def test_app_main_analog_four_smoke_requires_active_mode(capsys):
@@ -579,6 +697,137 @@ def test_app_main_arm_analog_four_track_filter_smoke_sends_to_selected_fake_port
     assert "Mode: arm" in captured.out
     assert "Track tested: 3" in captured.out
     assert "Opening MIDI output: Fake A4" in captured.out
+
+
+def test_app_main_arm_dual_machine_snapshot_send_sends_to_selected_fake_port(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-path",
+                str(rytm_path),
+                "--snapshot-slot",
+                "1",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "rytm",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == 6
+    assert port.sent[0].type == "control_change"
+    assert port.sent[0].channel == 0
+    assert port.sent[0].control == 17
+    assert port.closed is True
+    assert "Hardware Send Report" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 6" in captured.out
+    assert "Type SEND to transmit" in captured.out
+
+
+def test_app_main_arm_dual_machine_snapshot_send_refuses_blocked_plan_before_port_open(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    rytm_path = tmp_path / "rytm.syx"
+    a4_path = tmp_path / "a4.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+    a4_path.write_bytes(_make_a4_kit_record())
+
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return _RecordingPort()
+
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-path",
+                str(rytm_path),
+                "--snapshot-slot",
+                "1",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "analog-four",
+                "--analog-four-path",
+                str(a4_path),
+                "--analog-four-slot",
+                "1",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert calls["list"] == 0
+    assert calls["open"] == []
+    assert "Accepted: False" in captured.out
+    assert "Reason: blocked_by_unverified_candidates" in captured.out
+    assert "Emitted real MIDI messages: 0" in captured.out
 
 
 def test_app_main_arm_constructs_real_provider_and_requests_ports(capsys):
