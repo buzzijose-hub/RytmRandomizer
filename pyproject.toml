@@ -108,7 +108,12 @@ addopts = "-n auto --durations=20"
 
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310", "py311", "py312", "py313"]
+# CI runs Python 3.11 (matrix lockstep). Black's safety check parses the
+# formatted output through the *running* interpreter's parser, so emitting
+# py312+ syntax (e.g. PEP 695 generics) produces output that Python 3.11
+# cannot parse and the safety check rejects with exit 1. Keep target-version
+# pinned to the matrix to guarantee dev formatting == CI formatting.
+target-version = ["py39", "py310", "py311"]
 
 [tool.isort]
 profile = "black"
