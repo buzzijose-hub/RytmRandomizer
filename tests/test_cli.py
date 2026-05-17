@@ -15,6 +15,7 @@ USAGE = (
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
+    "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
@@ -250,6 +251,21 @@ def test_dual_machine_mock_bridge_report_help_exits_zero():
     assert "--analog-four-slot <1-128>" in result.stdout
     assert "untouched" in result.stdout
     assert "mock sender only" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_live_snapshot_readiness_report_help_exits_zero():
+    result = run_cli("dual-machine-live-snapshot-readiness-report", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "RytmRandomizer passive CLI: dual-machine-live-snapshot-readiness-report"
+        in result.stdout
+    )
+    assert "readiness gate" in result.stdout
+    assert "--analog-four-path <path>" in result.stdout
+    assert "candidate_unverified" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

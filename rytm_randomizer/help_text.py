@@ -16,6 +16,7 @@ USAGE = (
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
+    "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
@@ -58,6 +59,9 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
@@ -121,6 +125,8 @@ Commands:
                      Compare two saved Rytm kit exports for changed pad parameters.
   dual-machine-mock-bridge-report
                      Preview a combined Rytm + Analog Four mock performance stream.
+  dual-machine-live-snapshot-readiness-report
+                     Gate a dual-machine bridge before future live sending.
   analog-four-kit-snapshot-report
                      Decode a saved Analog Four kit into a passive track snapshot.
   analog-four-snapshot-mutation-plan-report
@@ -346,6 +352,33 @@ Safety:
   mock sender only
   optional Analog Four saved-offset candidate events
   no CC mapping claimed for Analog Four snapshot candidates
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "dual-machine-live-snapshot-readiness-report": """RytmRandomizer passive CLI: dual-machine-live-snapshot-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report --help
+
+Behavior:
+  Builds the passive dual-machine mock bridge, then reports a readiness gate
+  for future live snapshot sending. Mapped CC mock messages can be marked ready;
+  Analog Four saved-offset candidate events are blocked as candidate_unverified
+  because no CC mapping is claimed. This command never sends MIDI or opens a
+  port.
+
+Safety:
+  passive/read-only
+  readiness gate only
+  candidate_unverified events block hardware sending
   no MIDI sending
   no MIDI receive
   no port opening
