@@ -98,7 +98,7 @@ def test_discovery_report_marks_future_inventory_candidates():
 
     assert "Candidate mode: mapped engines plus future inventory candidates" in report
     assert any("SY Chip [future]" in line for line in report)
-    assert any("Dual VCO [future]" in line for line in report)
+    assert any("CB Classic [future]" in line for line in report)
     assert "- no Pads 5-12 runtime mutation" in report
 
 

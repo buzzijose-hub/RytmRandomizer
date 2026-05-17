@@ -30,6 +30,7 @@ USAGE = (
     "snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
+    "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -97,6 +98,8 @@ Usage:
   python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text>
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli analog-four-reference-report
@@ -174,6 +177,8 @@ Commands:
                      Preview passive CC events from a saved snapshot and style plan.
   snapshot-essence-guarded-send-dry-run-report
                      Execute snapshot essence send-plan events into a mock sender only.
+  rytm-engine-cycle-plan-report
+                     Preview 12-pad Rytm engine-cycle candidates.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
   analog-four-reference-report
@@ -749,6 +754,31 @@ Behavior:
   sender only. The guard requires arming and dry-run confirmation internally,
   refuses blocked plans without partial emission, and never opens a MIDI port
   or sends hardware MIDI.
+
+Safety:
+  passive/read-only
+  mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "rytm-engine-cycle-plan-report": """RytmRandomizer passive CLI: rytm-engine-cycle-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text>
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --help
+
+Behavior:
+  Builds passive 12-pad Rytm engine-cycle candidates from broad style intent.
+  It includes mutable V1.34 engines and machine_selectable engines with known
+  CC15 machine values, then captures the top candidate per pad into a mock
+  CC15 stream only. machine_selectable means engine switch only; tuned anchors
+  are pending.
 
 Safety:
   passive/read-only

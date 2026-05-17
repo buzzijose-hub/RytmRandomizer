@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-SupportStatus = Literal["mutable_v134", "needs_manual_mapping"]
+SupportStatus = Literal["mutable_v134", "machine_selectable", "needs_manual_mapping"]
 
 
 @dataclass(frozen=True)
@@ -170,8 +170,8 @@ MACHINE_PROFILES: tuple[MachineProfile, ...] = (
         key="sy_chip",
         label="SY Chip",
         family="sy",
-        machine_value=None,
-        support_status="needs_manual_mapping",
+        machine_value=29,
+        support_status="machine_selectable",
         role_tags=("synth", "digital", "metallic", "tonal", "motif"),
         essence_tags=("digital", "bell", "metallic", "repetition"),
         character_tags=("sharp", "pixel", "chirp"),
@@ -180,11 +180,211 @@ MACHINE_PROFILES: tuple[MachineProfile, ...] = (
         key="dual_vco",
         label="Dual VCO",
         family="sy",
-        machine_value=None,
-        support_status="needs_manual_mapping",
+        machine_value=28,
+        support_status="machine_selectable",
         role_tags=("synth", "tonal", "bass", "tension", "motif"),
         essence_tags=("analog", "tuned", "tension", "drone"),
         character_tags=("thick", "alive", "pitched"),
+    ),
+    MachineProfile(
+        key="sd_natural",
+        label="SD Natural",
+        family="sd",
+        machine_value=23,
+        support_status="machine_selectable",
+        role_tags=("snare", "body", "organic", "accent"),
+        essence_tags=("natural", "body", "groove", "pressure"),
+        character_tags=("rounded", "physical", "supporting"),
+    ),
+    MachineProfile(
+        key="sd_acoustic",
+        label="SD Acoustic",
+        family="sd",
+        machine_value=31,
+        support_status="machine_selectable",
+        role_tags=("snare", "acoustic", "body", "accent"),
+        essence_tags=("organic", "body", "snap", "classic"),
+        character_tags=("wide", "human", "physical"),
+    ),
+    MachineProfile(
+        key="rs_hard",
+        label="RS Hard",
+        family="rim",
+        machine_value=4,
+        support_status="machine_selectable",
+        role_tags=("rim", "click", "accent", "texture", "transient"),
+        essence_tags=("click", "transient", "repetition", "minimal", "pressure"),
+        character_tags=("short", "dry", "hard"),
+    ),
+    MachineProfile(
+        key="rs_classic",
+        label="RS Classic",
+        family="rim",
+        machine_value=5,
+        support_status="machine_selectable",
+        role_tags=("rim", "click", "accent", "texture"),
+        essence_tags=("click", "classic", "repetition", "minimal"),
+        character_tags=("short", "dry", "precise"),
+    ),
+    MachineProfile(
+        key="cp_classic",
+        label="CP Classic",
+        family="clap",
+        machine_value=6,
+        support_status="machine_selectable",
+        role_tags=("clap", "snare", "accent", "noise", "width"),
+        essence_tags=("snap", "width", "pressure", "classic"),
+        character_tags=("wide", "noisy", "human"),
+    ),
+    MachineProfile(
+        key="bt_classic",
+        label="BT Classic",
+        family="tom",
+        machine_value=7,
+        support_status="machine_selectable",
+        role_tags=("body", "percussion", "rolling", "accent"),
+        essence_tags=("body", "groove", "round", "classic"),
+        character_tags=("round", "mid", "supporting"),
+    ),
+    MachineProfile(
+        key="xt_classic",
+        label="XT Classic",
+        family="tom",
+        machine_value=8,
+        support_status="machine_selectable",
+        role_tags=("body", "percussion", "rolling", "accent", "high"),
+        essence_tags=("body", "groove", "bright", "classic"),
+        character_tags=("tight", "mid", "supporting"),
+    ),
+    MachineProfile(
+        key="ch_classic",
+        label="CH Classic",
+        family="hat",
+        machine_value=9,
+        support_status="machine_selectable",
+        role_tags=("hat", "pulse", "high", "noise"),
+        essence_tags=("density", "bright", "repetition", "air"),
+        character_tags=("tight", "dry", "classic"),
+    ),
+    MachineProfile(
+        key="ch_metallic",
+        label="CH Metallic",
+        family="hat",
+        machine_value=17,
+        support_status="machine_selectable",
+        role_tags=("hat", "pulse", "high", "metallic", "noise"),
+        essence_tags=("density", "bright", "metallic", "repetition"),
+        character_tags=("sharp", "ringing", "tight"),
+    ),
+    MachineProfile(
+        key="oh_classic",
+        label="OH Classic",
+        family="hat",
+        machine_value=10,
+        support_status="machine_selectable",
+        role_tags=("hat", "noise", "lift", "high", "open"),
+        essence_tags=("bright", "air", "wash", "repetition"),
+        character_tags=("open", "shimmer", "classic"),
+    ),
+    MachineProfile(
+        key="oh_metallic",
+        label="OH Metallic",
+        family="hat",
+        machine_value=18,
+        support_status="machine_selectable",
+        role_tags=("hat", "noise", "lift", "high", "metallic", "open"),
+        essence_tags=("bright", "metallic", "air", "tension"),
+        character_tags=("open", "ringing", "shimmer"),
+    ),
+    MachineProfile(
+        key="hh_basic",
+        label="HH Basic",
+        family="hat",
+        machine_value=24,
+        support_status="machine_selectable",
+        role_tags=("hat", "pulse", "lift", "high", "noise"),
+        essence_tags=("density", "bright", "repetition", "air"),
+        character_tags=("basic", "usable", "tight"),
+    ),
+    MachineProfile(
+        key="hh_lab",
+        label="HH Lab",
+        family="hat",
+        machine_value=33,
+        support_status="machine_selectable",
+        role_tags=("hat", "pulse", "lift", "high", "experimental", "noise"),
+        essence_tags=("density", "bright", "raw", "tension"),
+        character_tags=("modern", "flexible", "edgy"),
+    ),
+    MachineProfile(
+        key="cy_classic",
+        label="CY Classic",
+        family="cymbal",
+        machine_value=11,
+        support_status="machine_selectable",
+        role_tags=("cymbal", "metallic", "noise", "accent", "high"),
+        essence_tags=("metallic", "bright", "wash", "classic"),
+        character_tags=("ringing", "splash", "wide"),
+    ),
+    MachineProfile(
+        key="cy_metallic",
+        label="CY Metallic",
+        family="cymbal",
+        machine_value=19,
+        support_status="machine_selectable",
+        role_tags=("cymbal", "metallic", "noise", "accent", "high"),
+        essence_tags=("metallic", "bright", "wash", "tension"),
+        character_tags=("ringing", "abrasive", "wide"),
+    ),
+    MachineProfile(
+        key="cy_ride",
+        label="CY Ride",
+        family="cymbal",
+        machine_value=25,
+        support_status="machine_selectable",
+        role_tags=("cymbal", "ride", "metallic", "pulse", "high"),
+        essence_tags=("metallic", "repetition", "bright", "tension"),
+        character_tags=("steady", "ringing", "wide"),
+    ),
+    MachineProfile(
+        key="cb_classic",
+        label="CB Classic",
+        family="cowbell",
+        machine_value=12,
+        support_status="machine_selectable",
+        role_tags=("bell", "metallic", "tonal", "accent"),
+        essence_tags=("bell", "classic", "metallic", "repetition"),
+        character_tags=("short", "pitched", "familiar"),
+    ),
+    MachineProfile(
+        key="cb_metallic",
+        label="CB Metallic",
+        family="cowbell",
+        machine_value=20,
+        support_status="machine_selectable",
+        role_tags=("bell", "metallic", "tonal", "accent"),
+        essence_tags=("bell", "metallic", "tension", "bright"),
+        character_tags=("ringing", "pitched", "sharp"),
+    ),
+    MachineProfile(
+        key="ut_noise",
+        label="UT Noise",
+        family="utility",
+        machine_value=15,
+        support_status="machine_selectable",
+        role_tags=("noise", "texture", "air", "experimental"),
+        essence_tags=("noise", "raw", "density", "tension"),
+        character_tags=("noisy", "wide", "unstable"),
+    ),
+    MachineProfile(
+        key="ut_impulse",
+        label="UT Impulse",
+        family="utility",
+        machine_value=16,
+        support_status="machine_selectable",
+        role_tags=("click", "transient", "accent", "experimental"),
+        essence_tags=("click", "minimal", "repetition", "raw"),
+        character_tags=("short", "dry", "sharp"),
     ),
     MachineProfile(
         key="rs_family",
@@ -282,6 +482,7 @@ def rank_machines_for_role(
     *,
     essence_tags: tuple[str, ...] = (),
     include_unmapped: bool = False,
+    include_machine_selectable: bool = False,
 ) -> tuple[MachineCandidate, ...]:
     """Rank machine candidates for a role and reference essence tags."""
 
@@ -290,7 +491,11 @@ def rank_machines_for_role(
     essence = tuple(tag.lower() for tag in essence_tags)
 
     for machine in MACHINE_PROFILES:
-        if machine.support_status != "mutable_v134" and not include_unmapped:
+        if not _include_machine(
+            machine,
+            include_unmapped=include_unmapped,
+            include_machine_selectable=include_machine_selectable,
+        ):
             continue
 
         matched = _matched_tags(role, machine, essence)
@@ -307,17 +512,25 @@ def build_essence_role_plan(
     essence_tags: tuple[str, ...] = (),
     discovery: float = 0.0,
     candidates_per_role: int = 4,
+    include_machine_selectable: bool = False,
+    ensure_mutable_fallback: bool = True,
 ) -> tuple[RoleAssignment, ...]:
     """Build a passive 12-pad role plan from reference essence tags."""
 
     include_unmapped = discovery >= 0.75
     assignments: list[RoleAssignment] = []
     for role in TWELVE_PAD_ROLES:
-        candidates = rank_machines_for_role(
+        ranked = rank_machines_for_role(
             role.key,
             essence_tags=essence_tags,
             include_unmapped=include_unmapped,
-        )[:candidates_per_role]
+            include_machine_selectable=include_machine_selectable,
+        )
+        candidates = _candidate_window(
+            ranked,
+            candidates_per_role=candidates_per_role,
+            ensure_mutable_fallback=ensure_mutable_fallback,
+        )
         assignments.append(RoleAssignment(pad=role.pad, role=role, candidates=candidates))
     return tuple(assignments)
 
@@ -337,11 +550,59 @@ def _matched_tags(
 def _score_machine(role: PadRole, machine: MachineProfile, matched_tags: tuple[str, ...]) -> float:
     role_matches = set(role.desired_tags).intersection(machine.role_tags)
     score = float((len(role_matches) * role.role_weight) + len(matched_tags))
+    if machine.support_status == "machine_selectable":
+        score -= 0.75
     if machine.support_status == "needs_manual_mapping":
         score -= 2.0
     return score
 
 
 def _candidate_sort_key(candidate: MachineCandidate) -> tuple[float, int, str]:
-    mapped_priority = 0 if candidate.machine.support_status == "mutable_v134" else 1
-    return (-candidate.score, mapped_priority, candidate.machine.key)
+    return (-candidate.score, _support_sort_rank(candidate.machine.support_status), candidate.machine.key)
+
+
+def _include_machine(
+    machine: MachineProfile,
+    *,
+    include_unmapped: bool,
+    include_machine_selectable: bool,
+) -> bool:
+    if machine.support_status == "mutable_v134":
+        return True
+    if machine.support_status == "machine_selectable":
+        return include_machine_selectable or include_unmapped
+    return include_unmapped
+
+
+def _support_sort_rank(support_status: SupportStatus) -> int:
+    if support_status == "mutable_v134":
+        return 0
+    if support_status == "machine_selectable":
+        return 1
+    return 2
+
+
+def _candidate_window(
+    candidates: tuple[MachineCandidate, ...],
+    *,
+    candidates_per_role: int,
+    ensure_mutable_fallback: bool,
+) -> tuple[MachineCandidate, ...]:
+    window = tuple(candidates[:candidates_per_role])
+    if not ensure_mutable_fallback:
+        return window
+    if any(candidate.machine.support_status == "mutable_v134" for candidate in window):
+        return window
+    fallback = next(
+        (
+            candidate
+            for candidate in candidates[candidates_per_role:]
+            if candidate.machine.support_status == "mutable_v134"
+        ),
+        None,
+    )
+    if fallback is None:
+        return window
+    if not window:
+        return (fallback,)
+    return window[:-1] + (fallback,)

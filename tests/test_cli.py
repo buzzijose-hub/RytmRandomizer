@@ -29,6 +29,7 @@ USAGE = (
     "snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
+    "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -299,6 +300,19 @@ def test_dual_machine_guarded_send_dry_run_report_help_exits_zero():
     assert "--analog-four-path <path>" in result.stdout
     assert "--analog-four-profile <profile>" in result.stdout
     assert "blocked plans emit no partial messages" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_engine_cycle_plan_report_help_exits_zero():
+    result = run_cli("rytm-engine-cycle-plan-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: rytm-engine-cycle-plan-report" in result.stdout
+    assert "engine-cycle candidates" in result.stdout
+    assert "--style <text>" in result.stdout
+    assert "--discovery <0..1>" in result.stdout
+    assert "machine_selectable means engine switch only" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

@@ -1638,6 +1638,36 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "rytm-engine-cycle-plan-report":
+        from .essence_plan_report import parse_discovery_value
+        from .rytm_engine_cycle_plan import (
+            build_rytm_engine_cycle_plan,
+            format_rytm_engine_cycle_plan_error,
+            format_rytm_engine_cycle_plan_report,
+        )
+
+        if len(args) not in (3, 5) or args[1] != "--style":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            discovery = None
+            if len(args) == 5:
+                if args[3] != "--discovery":
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                discovery = parse_discovery_value(args[4])
+            plan = build_rytm_engine_cycle_plan(args[2], discovery=discovery)
+        except ValueError as exc:
+            lines = format_rytm_engine_cycle_plan_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_rytm_engine_cycle_plan_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
     if args and args[0] == "twelve-pad-mock-runtime-report":
         from .essence_plan_report import parse_discovery_value
         from .twelve_pad_mock_runtime import (

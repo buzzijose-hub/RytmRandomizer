@@ -56,6 +56,8 @@ Usage:
   python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text>
+  python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli analog-four-reference-report
@@ -133,6 +135,8 @@ Commands:
                      Preview passive CC events from a saved snapshot and style plan.
   snapshot-essence-guarded-send-dry-run-report
                      Execute snapshot essence send-plan events into a mock sender only.
+  rytm-engine-cycle-plan-report
+                     Preview 12-pad Rytm engine-cycle candidates.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
   analog-four-reference-report

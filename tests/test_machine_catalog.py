@@ -28,13 +28,13 @@ def test_importing_machine_catalog_is_passive_and_silent():
     assert result.stderr == ""
 
 
-def test_catalog_tracks_v134_mutable_machines_and_future_inventory():
+def test_catalog_tracks_v134_mutable_machines_and_selectable_inventory():
     from rytm_randomizer.machine_catalog import get_machine_profile
     from rytm_randomizer.machine_catalog import list_machine_profiles
 
     profiles = list_machine_profiles()
 
-    assert len(profiles) >= 16
+    assert len(profiles) >= 32
     assert get_machine_profile("bd_hard").machine_value == 0
     assert get_machine_profile("bd_hard").support_status == "mutable_v134"
     assert get_machine_profile("bd_fm").machine_value == 13
@@ -43,10 +43,17 @@ def test_catalog_tracks_v134_mutable_machines_and_future_inventory():
 
     sy_chip = get_machine_profile("sy_chip")
     dual_vco = get_machine_profile("dual_vco")
-    assert sy_chip.machine_value is None
-    assert sy_chip.support_status == "needs_manual_mapping"
-    assert dual_vco.machine_value is None
-    assert dual_vco.support_status == "needs_manual_mapping"
+    assert sy_chip.machine_value == 29
+    assert sy_chip.support_status == "machine_selectable"
+    assert dual_vco.machine_value == 28
+    assert dual_vco.support_status == "machine_selectable"
+
+    ch_classic = get_machine_profile("ch_classic")
+    hh_lab = get_machine_profile("hh_lab")
+    assert ch_classic.machine_value == 9
+    assert ch_classic.support_status == "machine_selectable"
+    assert hh_lab.machine_value == 33
+    assert hh_lab.support_status == "machine_selectable"
 
 
 def test_twelve_pad_role_template_covers_performance_lanes():
@@ -96,6 +103,22 @@ def test_metallic_reference_can_include_future_engines_as_inventory_candidates()
     assert "dual_vco" in keys
 
 
+def test_hat_role_can_include_machine_selectable_real_hat_engines():
+    from rytm_randomizer.machine_catalog import rank_machines_for_role
+
+    ranked = rank_machines_for_role(
+        "closed_hat_pulse",
+        essence_tags=("bright", "repetition", "density"),
+        include_machine_selectable=True,
+    )
+
+    keys = tuple(candidate.machine.key for candidate in ranked[:4])
+
+    assert keys[:2] == ("ch_classic", "ch_metallic")
+    assert "hh_basic" in keys
+    assert all(candidate.machine.machine_value is not None for candidate in ranked[:4])
+
+
 def test_reference_discovery_slider_expands_role_plan_candidates():
     from rytm_randomizer.machine_catalog import build_essence_role_plan
 
@@ -117,7 +140,7 @@ def test_reference_discovery_slider_expands_role_plan_candidates():
         for candidate in assignment.candidates
     )
     assert any(
-        candidate.machine.support_status == "needs_manual_mapping"
+        candidate.machine.support_status == "machine_selectable"
         for assignment in discovery_plan
         for candidate in assignment.candidates
     )
