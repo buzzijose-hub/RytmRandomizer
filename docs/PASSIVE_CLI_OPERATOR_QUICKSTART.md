@@ -308,6 +308,28 @@ uses `candidate_unverified` and does not claim parameter names.
 It does not open MIDI ports, send MIDI, receive live SysEx, write SysEx, name
 parameters, or mutate hardware.
 
+## Analog Four Controlled Diff Report
+
+Compare a baseline Analog Four kit export against a second export made after one controlled parameter change:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-controlled-diff-report "G:\ANALOG FOUR\MAPPING\A4_BASELINE.syx" "G:\ANALOG FOUR\MAPPING\A4_FILTER_FREQ_UP.syx" --slot 1 --track 1 --limit 16
+```
+
+Use this during mapping sessions:
+
+1. Export the baseline kit.
+2. Change one known A4 parameter by hand.
+3. Export the same kit again.
+4. Run this report to find the changed saved-value offset.
+
+The output stays conservative: every changed offset is `candidate_unverified`,
+and no parameter names are claimed until the same controlled change has been
+confirmed.
+
+It does not open MIDI ports, send MIDI, receive live SysEx, write SysEx, name
+parameters, or mutate hardware.
+
 ## Essence Application Readiness Report
 
 Check whether an essence plan is apply-ready under Safe Anchors or Live

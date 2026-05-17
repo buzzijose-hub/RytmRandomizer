@@ -31,4 +31,4 @@ The project can now scan saved Analog Four MKII kit variations and identify save
 
 ## Next Slice
 
-Use controlled exports or known kit variations to promote specific offsets from `candidate_unverified` to named saved-parameter mappings. Analog Four captured-value mutation should wait until those named mappings are proven.
+Use the controlled diff report with baseline/variant exports to promote specific offsets from `candidate_unverified` to named saved-parameter mappings. Analog Four captured-value mutation should wait until those named mappings are proven.

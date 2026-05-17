@@ -759,6 +759,53 @@ def main(argv=None):
         return 0
 
     if (
+        len(args) == 9
+        and args[0] == "analog-four-controlled-diff-report"
+        and args[3] == "--slot"
+        and args[5] == "--track"
+        and args[7] == "--limit"
+    ):
+        from .analog_four_controlled_diff import (
+            AnalogFourControlledDiffError,
+            build_analog_four_controlled_diff_report_from_file,
+            format_analog_four_controlled_diff_error,
+            format_analog_four_controlled_diff_report,
+        )
+
+        try:
+            slot = int(args[4])
+            track = int(args[6])
+            limit = int(args[8])
+            report = build_analog_four_controlled_diff_report_from_file(
+                args[1],
+                args[2],
+                slot=slot,
+                track=track,
+                limit=limit,
+            )
+        except FileNotFoundError:
+            lines = format_analog_four_controlled_diff_error("File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except AnalogFourControlledDiffError as exc:
+            lines = format_analog_four_controlled_diff_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_analog_four_controlled_diff_error(
+                "Slot, track, and limit must be integers"
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_analog_four_controlled_diff_report(report)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
         len(args) == 5
         and args[0] == "essence-plan-report"
         and args[1] in {"--tags", "--description"}

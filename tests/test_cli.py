@@ -15,6 +15,7 @@ USAGE = (
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
+    "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -181,6 +182,17 @@ def test_analog_four_offset_candidate_report_help_exits_zero():
     assert "--all-tracks" in result.stdout
     assert "candidate_unverified" in result.stdout
     assert "no parameter names claimed" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_controlled_diff_report_help_exits_zero():
+    result = run_cli("analog-four-controlled-diff-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: analog-four-controlled-diff-report" in result.stdout
+    assert "controlled comparison only" in result.stdout
+    assert "candidate_unverified" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
