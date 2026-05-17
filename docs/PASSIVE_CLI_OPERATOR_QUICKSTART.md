@@ -270,6 +270,22 @@ This command does not add Analog Four runtime support, open an A4 port, send
 MIDI, receive live SysEx, write SysEx, coordinate Rytm/A4 scenes, or mutate
 hardware.
 
+## Analog Four Kit Snapshot Report
+
+Decode one saved Analog Four kit slot into a passive Track 1-4 inventory:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-kit-snapshot-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --slot 1
+```
+
+This command reads an existing Analog Four kit bank or whole-project dump,
+unpacks the saved kit payload, and reports the kit name plus four track blocks.
+It intentionally marks saved parameter offsets as `saved_parameter_offsets_unmapped`
+until a later mapper proves the saved kit layout.
+
+It does not open MIDI ports, send MIDI, receive live SysEx, write SysEx, or
+mutate hardware.
+
 ## Essence Application Readiness Report
 
 Check whether an essence plan is apply-ready under Safe Anchors or Live

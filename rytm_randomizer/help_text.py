@@ -14,6 +14,7 @@ USAGE = (
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -45,6 +46,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -96,6 +98,8 @@ Commands:
                      Plan passive captured-value mutations from a saved kit snapshot.
   dual-machine-mock-bridge-report
                      Preview a combined Rytm + Analog Four mock performance stream.
+  analog-four-kit-snapshot-report
+                     Decode a saved Analog Four kit into a passive track snapshot.
   essence-plan-report
                      Preview a 12-pad engine plan from essence tags or a description.
   essence-application-readiness-report
@@ -230,6 +234,30 @@ Behavior:
 Safety:
   passive/read-only
   mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-kit-snapshot-report": """RytmRandomizer passive CLI: analog-four-kit-snapshot-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
+  python -m rytm_randomizer.cli analog-four-kit-snapshot-report --help
+
+Behavior:
+  Reads an existing Analog Four kit bank or whole-project SysEx file,
+  selects one kit slot, unpacks its saved Elektron 7-bit payload, and prints a
+  passive kit plus Track 1-4 inventory. Saved parameter offsets are reported as
+  saved_parameter_offsets_unmapped until a later mapper proves the layout. It
+  does not request dumps, receive live SysEx, send MIDI, write SysEx, or touch
+  hardware.
+
+Safety:
+  passive/read-only
   no MIDI sending
   no MIDI receive
   no port opening

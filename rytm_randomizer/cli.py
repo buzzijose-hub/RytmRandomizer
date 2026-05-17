@@ -638,6 +638,41 @@ def main(argv=None):
         return 0
 
     if (
+        len(args) == 4
+        and args[0] == "analog-four-kit-snapshot-report"
+        and args[2] == "--slot"
+    ):
+        from .analog_four_snapshot_decoder import (
+            AnalogFourSnapshotDecodeError,
+            decode_analog_four_kit_snapshot_file,
+            format_analog_four_kit_snapshot_error,
+            format_analog_four_kit_snapshot_report,
+        )
+
+        try:
+            slot = int(args[3])
+            snapshot = decode_analog_four_kit_snapshot_file(args[1], slot=slot)
+        except FileNotFoundError:
+            lines = format_analog_four_kit_snapshot_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except AnalogFourSnapshotDecodeError as exc:
+            lines = format_analog_four_kit_snapshot_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_analog_four_kit_snapshot_error(args[1], "Slot must be an integer")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_analog_four_kit_snapshot_report(snapshot)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
         len(args) == 5
         and args[0] == "essence-plan-report"
         and args[1] in {"--tags", "--description"}

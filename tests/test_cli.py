@@ -13,6 +13,7 @@ USAGE = (
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -157,6 +158,17 @@ def test_analog_four_reference_report_help_exits_zero():
     assert "Analog Four MKII" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert "no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_kit_snapshot_report_help_exits_zero():
+    result = run_cli("analog-four-kit-snapshot-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: analog-four-kit-snapshot-report" in result.stdout
+    assert "Analog Four kit" in result.stdout
+    assert "saved_parameter_offsets_unmapped" in result.stdout
+    assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 
