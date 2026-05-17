@@ -28,8 +28,25 @@ mock planning to captured-kit mutation planning.
 - no SysEx writes
 - no hardware required
 
+## Snapshot Mutation Plan Checkpoint
+
+The first passive Analog Four snapshot mutation planner now exists:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --slot 1 --depth micro
+```
+
+It reads a saved Analog Four kit slot, scans Tracks 1-4 for nonzero CC-like
+saved words, and proposes bounded `captured -> planned` changes relative to the
+saved values.
+
+Important boundary: these are still `candidate_unverified` saved offsets. The
+report does not claim parameter names, CC mapping, or direct sendability. That
+keeps the future hardware path honest until controlled before/after mapping
+proves each offset.
+
 ## Next Slice
 
 The next slice is a saved parameter offset mapper using differential evidence
-from known kit variations or controlled exports. Captured-value A4 mutation
+from known kit variations or controlled exports. Hardware-sendable A4 mutation
 should wait until that mapper is proven.

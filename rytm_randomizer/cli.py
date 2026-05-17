@@ -833,6 +833,49 @@ def main(argv=None):
 
     if (
         len(args) == 6
+        and args[0] == "analog-four-snapshot-mutation-plan-report"
+        and args[2] == "--slot"
+        and args[4] == "--depth"
+    ):
+        from .analog_four_snapshot_mutation_planner import (
+            AnalogFourSnapshotMutationPlanError,
+            build_analog_four_snapshot_mutation_plan_from_file,
+            format_analog_four_snapshot_mutation_plan_error,
+            format_analog_four_snapshot_mutation_plan_report,
+        )
+
+        try:
+            slot = int(args[3])
+            plan = build_analog_four_snapshot_mutation_plan_from_file(
+                args[1],
+                slot=slot,
+                depth=args[5],
+            )
+        except FileNotFoundError:
+            lines = format_analog_four_snapshot_mutation_plan_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except AnalogFourSnapshotMutationPlanError as exc:
+            lines = format_analog_four_snapshot_mutation_plan_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_analog_four_snapshot_mutation_plan_error(
+                args[1],
+                "Slot must be an integer",
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_analog_four_snapshot_mutation_plan_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
+        len(args) == 6
         and args[0] == "analog-four-offset-candidate-report"
         and args[2] == "--track"
         and args[4] == "--limit"
