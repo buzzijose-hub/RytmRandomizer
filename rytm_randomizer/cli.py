@@ -745,21 +745,56 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
-    if (
-        len(args) in (6, 8)
-        and args[0] == "dual-machine-mock-bridge-report"
-        and args[2] == "--slot"
-        and args[4] == "--depth"
-        and (len(args) == 6 or args[6] == "--target")
-    ):
+    if args and args[0] == "dual-machine-mock-bridge-report":
         from .dual_machine_mock_bridge import (
             build_dual_machine_mock_bridge,
             format_dual_machine_mock_bridge_error,
             format_dual_machine_mock_bridge_report,
         )
+        from .analog_four_snapshot_mutation_planner import (
+            AnalogFourSnapshotMutationPlanError,
+        )
         from .performance_snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
         from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+
+        if len(args) not in (6, 8, 10, 12) or args[2] != "--slot" or args[4] != "--depth":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        target = "both"
+        analog_four_path = None
+        analog_four_slot = None
+        tail = args[6:]
+        if tail:
+            if len(tail) >= 2 and tail[0] == "--target":
+                target = tail[1]
+                tail = tail[2:]
+            elif len(tail) >= 4 and tail[0] == "--analog-four-path":
+                analog_four_path = tail[1]
+                if tail[2] != "--analog-four-slot":
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                try:
+                    analog_four_slot = int(tail[3])
+                except ValueError:
+                    lines = format_dual_machine_mock_bridge_error(
+                        args[1],
+                        "Analog Four slot must be an integer",
+                    )
+                    sys.stderr.write("\n".join(lines))
+                    sys.stderr.write("\n")
+                    return 1
+                tail = tail[4:]
+            else:
+                sys.stderr.write(f"{USAGE}\n")
+                return 2
+        if tail:
+            if len(tail) == 2 and tail[0] == "--target":
+                target = tail[1]
+            else:
+                sys.stderr.write(f"{USAGE}\n")
+                return 2
 
         try:
             slot = int(args[3])
@@ -774,7 +809,9 @@ def main(argv=None):
                 args[1],
                 slot=slot,
                 depth=args[5],
-                target=args[7] if len(args) == 8 else "both",
+                target=target,
+                analog_four_sysex_path=analog_four_path,
+                analog_four_slot=analog_four_slot,
             )
         except FileNotFoundError:
             lines = format_dual_machine_mock_bridge_error(args[1], "File not found")
@@ -784,6 +821,7 @@ def main(argv=None):
         except (
             PerformanceSnapshotTargetError,
             SnapshotMutationPlanError,
+            AnalogFourSnapshotMutationPlanError,
             SysexSnapshotDecodeError,
             ValueError,
         ) as exc:
