@@ -114,6 +114,16 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--snapshot-essence-send",
+        action="store_true",
+        help=(
+            "With --dry-run or --arm, build a Rytm 12-pad snapshot essence "
+            "send plan from saved kit data and a style prompt. --dry-run emits "
+            "to the guarded mock sender; --arm requires a selected Rytm port "
+            "and exact SEND confirmation before real MIDI CC messages are sent."
+        ),
+    )
+    parser.add_argument(
         "--snapshot-path",
         metavar="PATH",
         help="Saved Analog Rytm SysEx kit/project dump path for snapshot planning.",
@@ -135,6 +145,17 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=("rytm", "analog-four", "both"),
         metavar="TARGET",
         help="Snapshot target machine scope: rytm, analog-four, or both.",
+    )
+    parser.add_argument(
+        "--snapshot-style",
+        metavar="STYLE",
+        help="Style or genre prompt for snapshot essence planning.",
+    )
+    parser.add_argument(
+        "--snapshot-discovery",
+        type=float,
+        metavar="AMOUNT",
+        help="Optional snapshot essence discovery amount from 0.0 to 1.0.",
     )
     parser.add_argument(
         "--analog-four-path",
@@ -207,6 +228,8 @@ def _print_passive_menu() -> None:
             "test one Analog Four track with Filter 1 Frequency CC18 only",
             "- --dual-machine-snapshot-send  with --arm/--dry-run, send a "
             "guarded single-target live snapshot mutation plan",
+            "- --snapshot-essence-send  with --arm/--dry-run, send a guarded "
+            "Rytm 12-pad style/genre snapshot essence plan",
             "",
             USAGE,
         ]
@@ -246,6 +269,20 @@ def _snapshot_send_request_from_args(args: argparse.Namespace) -> dict[str, obje
     }
 
 
+def _snapshot_essence_send_request_from_args(
+    args: argparse.Namespace,
+) -> dict[str, object] | None:
+    if not args.snapshot_essence_send:
+        return None
+    return {
+        "snapshot_path": args.snapshot_path,
+        "snapshot_slot": args.snapshot_slot,
+        "snapshot_depth": args.snapshot_depth,
+        "snapshot_style": args.snapshot_style,
+        "snapshot_discovery": args.snapshot_discovery,
+    }
+
+
 def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object]):
     """Build the passive dual-machine bridge for an app snapshot-send request."""
 
@@ -269,6 +306,24 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
     )
 
 
+def _build_snapshot_essence_send_plan_from_request(request: dict[str, object]):
+    """Build the passive snapshot essence send plan for an app request."""
+
+    from .snapshot_essence_send_plan import build_snapshot_essence_send_plan_from_file
+
+    return build_snapshot_essence_send_plan_from_file(
+        str(request["snapshot_path"]),
+        slot=int(request["snapshot_slot"]),
+        depth=str(request["snapshot_depth"]),
+        style=str(request["snapshot_style"]),
+        discovery=(
+            None
+            if request.get("snapshot_discovery") is None
+            else float(request["snapshot_discovery"])
+        ),
+    )
+
+
 def _run_arm(
     *,
     twelve_pad_smoke: bool = False,
@@ -276,6 +331,7 @@ def _run_arm(
     analog_four_track_smoke: int | None = None,
     analog_four_track_filter_smoke: int | None = None,
     snapshot_send_request: dict[str, object] | None = None,
+    snapshot_essence_send_request: dict[str, object] | None = None,
 ) -> int:
     """Construct the real MIDI provider, open a port, run the package shell.
 
@@ -286,6 +342,8 @@ def _run_arm(
 
     if snapshot_send_request is not None:
         return _run_arm_dual_machine_snapshot_send(snapshot_send_request)
+    if snapshot_essence_send_request is not None:
+        return _run_arm_snapshot_essence_send(snapshot_essence_send_request)
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -518,6 +576,101 @@ def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
                 _shutdown_logger.debug("port_close_failed_best_effort")
 
 
+def _run_arm_snapshot_essence_send(request: dict[str, object]) -> int:
+    """Run the guarded Rytm snapshot essence send against real hardware."""
+
+    from .snapshot_essence_hardware_sender import (
+        build_snapshot_essence_hardware_send_refusal,
+        execute_snapshot_essence_hardware_send,
+        format_snapshot_essence_hardware_send_error,
+        format_snapshot_essence_hardware_send_report,
+    )
+
+    try:
+        plan = _build_snapshot_essence_send_plan_from_request(request)
+    except (OSError, ValueError) as exc:
+        sys.stdout.write("\n".join(format_snapshot_essence_hardware_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    if not plan.ready:
+        result = build_snapshot_essence_hardware_send_refusal(
+            plan,
+            "plan_not_ready",
+            port_name="<not-opened>",
+        )
+        sys.stdout.write("\n".join(format_snapshot_essence_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 1
+
+    if plan.blocked_event_count:
+        result = build_snapshot_essence_hardware_send_refusal(
+            plan,
+            "blocked_by_ineligible_events",
+            port_name="<not-opened>",
+        )
+        sys.stdout.write("\n".join(format_snapshot_essence_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm failed: no real MIDI output ports available. "
+            "Connect the Analog Rytm and retry.\n"
+        )
+        return 1
+
+    sys.stdout.write(
+        "RytmRandomizer --arm: real MIDI provider ready. "
+        f"Available output ports: {', '.join(output_names)}\n"
+    )
+
+    port_name = _choose_arm_port_name(output_names, device_label="Analog Rytm")
+    if port_name is None:
+        return 1
+
+    if not _confirm_snapshot_essence_send(plan, port_name):
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    try:
+        result = execute_snapshot_essence_hardware_send(
+            plan,
+            port,
+            port_name=port_name,
+            armed=True,
+            operator_confirmed=True,
+            sleep=_smoke_sleep,
+        )
+        sys.stdout.write("\n".join(format_snapshot_essence_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 0 if result.accepted else 1
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("port_close_failed_best_effort")
+
+
 def _confirm_dual_machine_snapshot_send(
     plan,
     port_name: str,
@@ -526,6 +679,26 @@ def _confirm_dual_machine_snapshot_send(
         "\nType SEND to transmit "
         f"{plan.eligible_message_count} mapped CC message(s) to "
         f"{plan.target} on {port_name}: "
+    )
+    try:
+        raw = input().strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write("--arm cancelled: SEND confirmation was not provided.\n")
+        return False
+    if raw != "SEND":
+        sys.stderr.write("--arm cancelled: exact SEND confirmation was not provided.\n")
+        return False
+    return True
+
+
+def _confirm_snapshot_essence_send(
+    plan,
+    port_name: str,
+) -> bool:
+    sys.stdout.write(
+        "\nType SEND to transmit "
+        f"{plan.eligible_event_count} snapshot essence CC message(s) to "
+        f"Analog Rytm on {port_name}: "
     )
     try:
         raw = input().strip()
@@ -598,6 +771,43 @@ def _run_dry_run_dual_machine_snapshot_send(request: dict[str, object]) -> int:
     return 0 if result.accepted else 1
 
 
+def _run_dry_run_snapshot_essence_send(request: dict[str, object]) -> int:
+    """Run the guarded Rytm snapshot essence send against the mock sender."""
+
+    from .snapshot_essence_guarded_sender import (
+        build_snapshot_essence_guarded_send_dry_run,
+        format_snapshot_essence_guarded_send_dry_run_report,
+        format_snapshot_essence_guarded_send_error,
+    )
+
+    sys.stdout.write(
+        "RytmRandomizer --dry-run: guarded snapshot essence send "
+        "(mock-only, no hardware, no port opened).\n"
+    )
+    try:
+        plan = _build_snapshot_essence_send_plan_from_request(request)
+        result = build_snapshot_essence_guarded_send_dry_run(plan)
+    except (OSError, ValueError) as exc:
+        sys.stdout.write(
+            "\n".join(
+                format_snapshot_essence_guarded_send_error(
+                    str(request["snapshot_path"]),
+                    str(exc),
+                )
+            )
+        )
+        sys.stdout.write("\n")
+        return 1
+
+    sys.stdout.write("\n".join(format_snapshot_essence_guarded_send_dry_run_report(result)))
+    sys.stdout.write("\n")
+    sys.stdout.write(
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} "
+        "message(s).\n"
+    )
+    return 0 if result.accepted else 1
+
+
 def _run_dry_run(
     *,
     twelve_pad_smoke: bool = False,
@@ -605,6 +815,7 @@ def _run_dry_run(
     analog_four_track_smoke: int | None = None,
     analog_four_track_filter_smoke: int | None = None,
     snapshot_send_request: dict[str, object] | None = None,
+    snapshot_essence_send_request: dict[str, object] | None = None,
 ) -> int:
     """Run the interactive randomizer logic against the in-memory mock.
 
@@ -615,6 +826,8 @@ def _run_dry_run(
 
     if snapshot_send_request is not None:
         return _run_dry_run_dual_machine_snapshot_send(snapshot_send_request)
+    if snapshot_essence_send_request is not None:
+        return _run_dry_run_snapshot_essence_send(snapshot_essence_send_request)
 
     from .mock_midi import MockMidiSender
 
@@ -751,6 +964,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     analog_four_track_smoke = args.analog_four_track_smoke
     analog_four_track_filter_smoke = args.analog_four_track_filter_smoke
     snapshot_send_request = _snapshot_send_request_from_args(args)
+    snapshot_essence_send_request = _snapshot_essence_send_request_from_args(args)
     smoke_flag_count = sum(
         (
             bool(args.twelve_pad_smoke),
@@ -771,10 +985,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
-    if args.dual_machine_snapshot_send and smoke_flag_count:
+    active_snapshot_modifier_count = sum(
+        (
+            bool(args.dual_machine_snapshot_send),
+            bool(args.snapshot_essence_send),
+        )
+    )
+
+    if active_snapshot_modifier_count and smoke_flag_count:
         sys.stderr.write(
             "Choose only one active-mode modifier: smoke tests or "
-            "--dual-machine-snapshot-send.\n"
+            "--dual-machine-snapshot-send/--snapshot-essence-send.\n"
+        )
+        return 2
+
+    if active_snapshot_modifier_count > 1:
+        sys.stderr.write(
+            "Choose only one active-mode modifier: "
+            "--dual-machine-snapshot-send or --snapshot-essence-send.\n"
         )
         return 2
 
@@ -813,6 +1041,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("--dual-machine-snapshot-send requires --arm or --dry-run.\n")
         return 2
 
+    if args.snapshot_essence_send and not (args.arm or args.dry_run):
+        sys.stderr.write("--snapshot-essence-send requires --arm or --dry-run.\n")
+        return 2
+
     if args.dual_machine_snapshot_send:
         missing = [
             flag
@@ -842,6 +1074,30 @@ def main(argv: Sequence[str] | None = None) -> int:
             sys.stderr.write("--analog-four-slot must be between 1 and 128.\n")
             return 2
 
+    if args.snapshot_essence_send:
+        missing = [
+            flag
+            for flag, value in (
+                ("--snapshot-path", args.snapshot_path),
+                ("--snapshot-slot", args.snapshot_slot),
+                ("--snapshot-depth", args.snapshot_depth),
+                ("--snapshot-style", args.snapshot_style),
+            )
+            if value is None
+        ]
+        if missing:
+            sys.stderr.write(
+                "--snapshot-essence-send requires "
+                f"{', '.join(missing)}.\n"
+            )
+            return 2
+        if args.snapshot_slot not in range(1, 129):
+            sys.stderr.write("--snapshot-slot must be between 1 and 128.\n")
+            return 2
+        if args.snapshot_discovery is not None and not 0.0 <= args.snapshot_discovery <= 1.0:
+            sys.stderr.write("--snapshot-discovery must be between 0.0 and 1.0.\n")
+            return 2
+
     if args.arm:
         return _run_arm(
             twelve_pad_smoke=args.twelve_pad_smoke,
@@ -849,6 +1105,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             analog_four_track_smoke=analog_four_track_smoke,
             analog_four_track_filter_smoke=analog_four_track_filter_smoke,
             snapshot_send_request=snapshot_send_request,
+            snapshot_essence_send_request=snapshot_essence_send_request,
         )
     if args.dry_run:
         return _run_dry_run(
@@ -857,6 +1114,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             analog_four_track_smoke=analog_four_track_smoke,
             analog_four_track_filter_smoke=analog_four_track_filter_smoke,
             snapshot_send_request=snapshot_send_request,
+            snapshot_essence_send_request=snapshot_essence_send_request,
         )
 
     _print_passive_menu()

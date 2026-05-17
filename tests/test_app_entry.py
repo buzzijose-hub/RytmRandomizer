@@ -364,6 +364,41 @@ def test_app_main_dry_run_dual_machine_snapshot_send_uses_guarded_mock_sender(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_snapshot_essence_send_uses_guarded_mock_sender(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--snapshot-essence-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Snapshot Essence Guarded Send Dry-Run Report" in captured.out
+    assert "Style prompt: Birmingham dark techno" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages:" in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
@@ -399,6 +434,75 @@ def test_app_main_dual_machine_snapshot_send_requires_active_mode(tmp_path, caps
 
     assert exit_code == 2
     assert "--dual-machine-snapshot-send requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_snapshot_essence_send_requires_active_mode(tmp_path, capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--snapshot-essence-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--snapshot-essence-send requires --arm or --dry-run" in captured.err
+
+
+def test_app_main_snapshot_essence_send_rejects_missing_required_args(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--snapshot-essence-send"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--snapshot-essence-send requires" in captured.err
+    assert "--snapshot-path" in captured.err
+    assert "--snapshot-style" in captured.err
+
+
+def test_app_main_snapshot_essence_send_rejects_dual_machine_conflict(tmp_path, capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--snapshot-essence-send",
+            "--dual-machine-snapshot-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "rytm",
+            "--snapshot-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "Choose only one active-mode modifier" in captured.err
 
 
 def test_app_main_analog_four_smoke_requires_active_mode(capsys):
@@ -767,6 +871,86 @@ def test_app_main_arm_dual_machine_snapshot_send_sends_to_selected_fake_port(
     assert "Hardware Send Report" in captured.out
     assert "Accepted: True" in captured.out
     assert "Emitted real MIDI messages: 6" in captured.out
+    assert "Type SEND to transmit" in captured.out
+
+
+def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.snapshot_essence_send_plan import (
+        build_snapshot_essence_send_plan_from_file,
+    )
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+    expected_plan = build_snapshot_essence_send_plan_from_file(
+        rytm_path,
+        slot=1,
+        depth="micro",
+        style="Birmingham dark techno",
+    )
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--snapshot-essence-send",
+                "--snapshot-path",
+                str(rytm_path),
+                "--snapshot-slot",
+                "1",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-style",
+                "Birmingham dark techno",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == expected_plan.eligible_event_count
+    assert port.sent[0].type == "control_change"
+    assert port.sent[0].channel == 0
+    assert port.sent[0].control == 17
+    assert port.closed is True
+    assert "Snapshot Essence Hardware Send Report" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages:" in captured.out
     assert "Type SEND to transmit" in captured.out
 
 
