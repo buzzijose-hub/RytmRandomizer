@@ -13,6 +13,7 @@ Last updated: 2026-05-17. This file is a hand-authored snapshot and is meant to 
 - 2026-05-17: coverage on observability/logging.py raised from 57% to 100% via tests/test_observability_logging.py.
 - 2026-05-17: coverage on app.py raised from 69% to 100% via additional tests in tests/test_app_entry.py (covers --arm port-open production path, list_output_names dependency/port errors, _choose_arm_port_name EOF / invalid / out-of-range branches, --dry-run shell EOF swallowing, --arm/--dry-run mutually-exclusive flag conflict, unknown-flag rejection, --debug/--log-json passive boot). No behavior change.
 - 2026-05-17: coverage on cli.py raised from 5% to 100% via tests/test_cli_coverage.py additions. Closes the largest single coverage gap in the package.
+- 2026-05-17: coverage on mido_provider.py raised from 33% to 100% via tests/test_mido_provider.py.
 
 ## Current Version
 
