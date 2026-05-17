@@ -17,6 +17,7 @@ USAGE = (
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
@@ -188,6 +189,19 @@ def test_analog_four_snapshot_mutation_plan_report_help_exits_zero():
     assert "candidate_unverified" in result.stdout
     assert "no parameter names claimed" in result.stdout
     assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_snapshot_mock_runtime_report_help_exits_zero():
+    result = run_cli("analog-four-snapshot-mock-runtime-report", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "RytmRandomizer passive CLI: analog-four-snapshot-mock-runtime-report"
+        in result.stdout
+    )
+    assert "saved-offset candidate" in result.stdout
+    assert "no CC mapping claimed" in result.stdout
     assert result.stderr == ""
 
 

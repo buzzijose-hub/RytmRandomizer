@@ -1,0 +1,156 @@
+"""Passive mock runtime for Analog Four saved-snapshot mutation plans.
+
+This module converts unverified Analog Four saved-offset mutation candidates
+into inert ``MockMidiSender`` events only. These events are not sendable CC
+messages and do not claim a parameter mapping. The module does not import MIDI
+libraries, open ports, send messages, request SysEx, receive live SysEx, write
+SysEx, or mutate hardware.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from .analog_four_snapshot_mutation_planner import (
+    TRACK_COUNT,
+    AnalogFourSnapshotMutationPlan,
+    build_analog_four_snapshot_mutation_plan_from_file,
+    format_analog_four_snapshot_mutation_plan_error,
+)
+from .mock_midi import MidiMessage, MockMidiSender
+
+
+def build_analog_four_snapshot_mock_runtime_from_file(
+    path: str | Path,
+    *,
+    slot: int,
+    depth: str,
+) -> AnalogFourSnapshotMutationPlan:
+    """Build a captured-value A4 mutation plan for mock runtime preview."""
+
+    return build_analog_four_snapshot_mutation_plan_from_file(path, slot=slot, depth=depth)
+
+
+def capture_analog_four_snapshot_mock_messages(
+    plan: AnalogFourSnapshotMutationPlan,
+) -> MockMidiSender:
+    """Capture planned A4 saved-offset candidates into an inert mock sender."""
+
+    if not isinstance(plan, AnalogFourSnapshotMutationPlan):
+        raise TypeError("plan must be an AnalogFourSnapshotMutationPlan")
+
+    sender = MockMidiSender()
+    for track in plan.tracks:
+        for change in track.changes:
+            sender.send(
+                MidiMessage(
+                    message_type="saved_offset_candidate",
+                    channel=change.wire_channel,
+                    control=change.relative_offset,
+                    value=change.planned_value,
+                    metadata={
+                        "source_kind": "analog_four_snapshot_mutation_plan",
+                        "device": "Analog Four MKII",
+                        "track": change.track,
+                        "midi_channel": change.midi_channel,
+                        "wire_channel": change.wire_channel,
+                        "track_name": track.name,
+                        "saved_offset": change.relative_offset,
+                        "word_index": change.word_index,
+                        "baseline_value": change.baseline_value,
+                        "planned_value": change.planned_value,
+                        "delta": change.delta,
+                        "mapping_status": change.mapping_status,
+                        "parameter_source": change.source,
+                        "mock_only": True,
+                        "cc_mapping_claimed": False,
+                        "sends_real_midi": False,
+                    },
+                )
+            )
+    return sender
+
+
+def format_analog_four_snapshot_mock_runtime_report(
+    path: str | Path,
+    plan: AnalogFourSnapshotMutationPlan,
+    sender: MockMidiSender,
+) -> list[str]:
+    """Format a deterministic passive A4 snapshot mock-runtime report."""
+
+    lines = [
+        "RytmRandomizer passive Analog Four Snapshot Mock Runtime Report",
+        f"Source path: {path}",
+        f"Source slot: {plan.slot_number}",
+        f"Kit: {plan.kit_name or '<blank>'}",
+        f"Depth: {plan.depth}",
+        f"Planned tracks: {plan.planned_track_count} / {TRACK_COUNT}",
+        f"Blocked tracks: {plan.blocked_track_count} / {TRACK_COUNT}",
+        f"Planned changes: {plan.planned_change_count}",
+        f"Mock sender captured: {len(sender.sent_messages)} message(s)",
+        "Track plans:",
+    ]
+    for track in plan.tracks:
+        lines.append(
+            f"- Track {track.track} / MIDI channel {track.midi_channel}: "
+            f"{track.name or '<blank>'} / {track.mapping_status} / "
+            f"{len(track.changes)} mock candidate event(s)"
+        )
+
+    if sender.sent_messages:
+        lines.append("Mock saved-offset event stream:")
+        lines.extend(_format_mock_message(message) for message in sender.sent_messages)
+
+    lines.extend(
+        [
+            "Mutation policy:",
+            "- captured-value relative",
+            "- bounded deterministic deltas",
+            "- saved-offset candidate events only",
+            "- candidate_unverified",
+            "- no parameter names claimed",
+            "- no CC mapping claimed",
+            "Safety:",
+            "- passive/read-only",
+            "- mock sender only",
+            "- no MIDI sending",
+            "- no MIDI receive",
+            "- no port opening",
+            "- no command execution",
+            "- no hardware mutation",
+            "- no live SysEx receive",
+            "- no SysEx writes",
+            "- no hardware required",
+        ]
+    )
+    return lines
+
+
+def format_analog_four_snapshot_mock_runtime_error(
+    path: str | Path,
+    message: str,
+) -> list[str]:
+    """Format deterministic passive A4 snapshot mock-runtime errors."""
+
+    lines = format_analog_four_snapshot_mutation_plan_error(path, message)
+    lines[0] = "RytmRandomizer passive Analog Four Snapshot Mock Runtime Report"
+    return lines
+
+
+def _format_mock_message(message: MidiMessage) -> str:
+    metadata = message.metadata
+    return (
+        f"- Track {metadata['track']} ch {metadata['midi_channel']} "
+        f"wire {metadata['wire_channel']} {metadata['track_name'] or '<blank>'} / "
+        f"Offset +{metadata['saved_offset']}: "
+        f"{metadata['baseline_value']} -> {metadata['planned_value']} "
+        f"(delta {metadata['delta']:+d}), {metadata['mapping_status']}"
+    )
+
+
+__all__ = [
+    "build_analog_four_snapshot_mock_runtime_from_file",
+    "capture_analog_four_snapshot_mock_messages",
+    "format_analog_four_snapshot_mock_runtime_error",
+    "format_analog_four_snapshot_mock_runtime_report",
+]

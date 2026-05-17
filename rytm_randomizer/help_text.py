@@ -18,6 +18,7 @@ USAGE = (
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
@@ -58,6 +59,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
@@ -122,6 +124,8 @@ Commands:
                      Decode a saved Analog Four kit into a passive track snapshot.
   analog-four-snapshot-mutation-plan-report
                      Plan passive A4 captured-value saved-offset mutations.
+  analog-four-snapshot-mock-runtime-report
+                     Capture A4 saved-offset candidates into inert mock events.
   analog-four-offset-candidate-report
                      Scan saved Analog Four kits for unverified offset candidates.
   analog-four-controlled-diff-report
@@ -383,6 +387,34 @@ Safety:
   passive/read-only
   candidate offsets only
   no parameter names claimed
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-snapshot-mock-runtime-report": """RytmRandomizer passive CLI: analog-four-snapshot-mock-runtime-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report --help
+
+Behavior:
+  Reads an existing Analog Four kit bank or whole-project SysEx file, builds a
+  captured-value-relative saved-offset candidate plan, and captures that plan
+  into inert mock events. Events are saved-offset candidate records only:
+  candidate_unverified, no parameter names claimed, and no CC mapping claimed.
+  It does not request dumps, receive live SysEx, send MIDI, write SysEx, or
+  touch hardware.
+
+Safety:
+  passive/read-only
+  mock sender only
+  saved-offset candidate events only
+  no parameter names claimed
+  no CC mapping claimed
   no MIDI sending
   no MIDI receive
   no port opening
