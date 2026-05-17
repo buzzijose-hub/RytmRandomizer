@@ -34,7 +34,6 @@ from rytm_randomizer.observability.logging import (
     get_logger,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixture: prevent test-to-test handler leakage on the package root logger.
 # ---------------------------------------------------------------------------
@@ -391,9 +390,9 @@ def test_configure_logging_does_not_double_attach_op_id_filter(
     assert len(package_logger.handlers) == 1
     handler = package_logger.handlers[0]
     op_id_filters = [f for f in handler.filters if isinstance(f, _OpIdFilter)]
-    assert len(op_id_filters) == 1, (
-        "configure_logging must not stack a second _OpIdFilter on a handler that already has one."
-    )
+    assert (
+        len(op_id_filters) == 1
+    ), "configure_logging must not stack a second _OpIdFilter on a handler that already has one."
 
 
 # ---------------------------------------------------------------------------
