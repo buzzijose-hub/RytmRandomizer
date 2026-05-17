@@ -27,6 +27,7 @@ USAGE = (
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
+    "snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -84,6 +85,8 @@ Usage:
   python -m rytm_randomizer.cli essence-application-readiness-report --mode live-snapshot --style <text> --fixture <key>
   python -m rytm_randomizer.cli style-intent-report --style <text>
   python -m rytm_randomizer.cli style-intent-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
+  python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli analog-four-reference-report
@@ -155,6 +158,8 @@ Commands:
                      Explain whether an essence plan is apply-ready by mode.
   style-intent-report
                      Preview a 12-pad kit plan from broad style/genre intent.
+  snapshot-essence-overlay-report
+                     Compare a saved Rytm snapshot to a style-driven 12-pad machine plan.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
   analog-four-reference-report
@@ -658,6 +663,32 @@ Safety:
   no SysEx writes
   no Analog Four runtime support
   no Pads 5-12 runtime mutation
+  no hardware required""",
+    "snapshot-essence-overlay-report": """RytmRandomizer passive CLI: snapshot-essence-overlay-report
+
+Usage:
+  python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
+  python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli snapshot-essence-overlay-report --help
+
+Behavior:
+  Reads an existing Rytm kit bank or whole-project SysEx file, builds the
+  captured-value snapshot mutation plan, resolves a broad style prompt, and
+  compares the captured engine on each of the 12 pads against the selected
+  mapped style engine. It reports same-engine pads, engine-switch-ready pads,
+  blocked pads, and the machine CC15 switches a future guarded active path
+  would need. It does not send MIDI, open ports, write SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
+  snapshot/essence comparison only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
   no hardware required""",
     "twelve-pad-mock-runtime-report": """RytmRandomizer passive CLI: twelve-pad-mock-runtime-report
 
