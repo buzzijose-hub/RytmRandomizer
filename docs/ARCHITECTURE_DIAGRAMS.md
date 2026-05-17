@@ -29,7 +29,7 @@ The diagrams below were derived from these current source groups:
 | --- | --- |
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Lookup, registry, inspection, preview | `rytm_randomizer/command_lookup.py`, `rytm_randomizer/scene_lookup.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/registry.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/preview.py`, `rytm_randomizer/audit.py` |
+| Lookup, registry, inspection, preview | `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/registry.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/preview.py`, `rytm_randomizer/audit.py` |
 | Report surfaces | `rytm_randomizer/registry_report.py`, `rytm_randomizer/mock_mapper_report.py`, `rytm_randomizer/runtime_plan_report.py`, `rytm_randomizer/active_boundary_report.py`, `rytm_randomizer/behavior_anchor_profile_report.py`, `rytm_randomizer/behavior_parity_coverage_report.py`, `rytm_randomizer/mock_runtime_active_bridge_report.py` |
 | Behavior parity evaluators | `rytm_randomizer/behavior_menu_utility.py`, `rytm_randomizer/behavior_anchor_profile.py`, `rytm_randomizer/behavior_mutation_depth.py`, `rytm_randomizer/behavior_scene_group.py`, `rytm_randomizer/behavior_pad1_lane.py`, `rytm_randomizer/behavior_pad2_lane.py`, `rytm_randomizer/behavior_pad3_lane.py`, `rytm_randomizer/behavior_pad4_lane.py`, `rytm_randomizer/behavior_selected_profile.py`, `rytm_randomizer/behavior_selected_isolated_pad.py`, `rytm_randomizer/behavior_undo_commit_state.py` |
 | Runtime-adjacent state | `rytm_randomizer/selected_target_state.py`, `rytm_randomizer/anchor_state.py`, `rytm_randomizer/selected_isolated_pad_runtime_state.py` |
@@ -87,8 +87,6 @@ flowchart TB
 
     subgraph PassiveCore["Passive registry and preview core"]
         Registry["registry.py"]
-        CommandLookup["command_lookup.py"]
-        SceneLookup["scene_lookup.py"]
         ProfileLookup["profile_lookup.py"]
         Inspection["inspection.py"]
         Preview["preview.py"]
@@ -247,9 +245,7 @@ flowchart TB
     Profiles["profiles.py\nGROUP_PROFILE_METADATA\nPAD_PROFILES\nGROUP_LAYOUT"]
 
     Registry["registry.py\nbuild_registry()\nget_registry_section()\nget_registry_item()\nsummarize_registry()"]
-    CommandLookup["command_lookup.py\nlist/describe/get command metadata"]
-    SceneLookup["scene_lookup.py\nlist/describe/get scene metadata"]
-    ProfileLookup["profile_lookup.py\nlist/describe/get group profile metadata"]
+    ProfileLookup["profile_lookup.py\ndescribe_group_profile()"]
     Validation["validation.py\nregistry guardrails\nforbidden execution fields\nPads 5-12 references"]
     Inspection["inspection.py\ninspect_command()"]
     Preview["preview.py\npreview_command()\nSAFETY_SUMMARY"]
@@ -262,8 +258,6 @@ flowchart TB
     Scenes --> Registry
     Profiles --> Registry
 
-    Commands --> CommandLookup
-    Scenes --> SceneLookup
     Profiles --> ProfileLookup
 
     Validation --> Inspection
@@ -479,7 +473,7 @@ flowchart TB
     subgraph PassiveTests["Passive metadata / CLI tests"]
         Scaffold["test_scaffold.py"]
         Validation["test_validation.py"]
-        Lookup["test_command_lookup.py\ntest_scene_lookup.py\ntest_profile_lookup.py"]
+        Lookup["test_profile_lookup.py"]
         RegistryTests["test_registry.py\ntest_registry_report.py\ntest_registry_report_cli.py"]
         CLITests["test_cli.py"]
         InspectionPreviewAudit["test_inspection.py\ntest_preview.py\ntest_audit.py"]

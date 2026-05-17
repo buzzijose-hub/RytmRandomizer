@@ -136,11 +136,11 @@ on one line for an existing module, you probably need a new module instead.
 | ------------------------------------- | -------------------------------------------------------------------- |
 | `rytm_hybrid_randomizer_v134.py`      | Frozen byte-identical V1.34 reference. Used ONLY by parity tests.    |
 
-The remaining files (`commands.py`, `command_lookup.py`, `profile_lookup.py`,
-`scene_lookup.py`, `help_text.py`, `validation.py`, `audit.py`, `preview.py`,
-`registry.py`, etc.) are passive, in-memory, no-I/O metadata helpers that
-follow the same direction rules: they may read from `data/` and `state/` but
-they may not import `engines`, `shell`, `app`, or `cli`.
+The remaining files (`commands.py`, `profile_lookup.py`, `help_text.py`,
+`validation.py`, `audit.py`, `preview.py`, `registry.py`, etc.) are passive,
+in-memory, no-I/O metadata helpers that follow the same direction rules: they
+may read from `data/` and `state/` but they may not import `engines`, `shell`,
+`app`, or `cli`.
 
 ---
 

@@ -91,16 +91,6 @@ Register-CloseoutStepExit "Audit"
 Register-CloseoutStepExit "Profile Lookup"
 
 "" | Add-Content $summary
-"=== Test: Scene Lookup ===" | Add-Content $summary
-& $pythonExe @pythonArgs .\tests\test_scene_lookup.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_scene_lookup.log" | Add-Content $summary
-Register-CloseoutStepExit "Scene Lookup"
-
-"" | Add-Content $summary
-"=== Test: Command Lookup ===" | Add-Content $summary
-& $pythonExe @pythonArgs .\tests\test_command_lookup.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_command_lookup.log" | Add-Content $summary
-Register-CloseoutStepExit "Command Lookup"
-
-"" | Add-Content $summary
 "=== Test: Registry ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_registry.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_registry.log" | Add-Content $summary
 Register-CloseoutStepExit "Registry"
