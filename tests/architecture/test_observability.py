@@ -304,6 +304,7 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "AnalogFourSnapshotDecodeError",
         "AnalogFourOffsetCandidateError",
         "AnalogFourControlledDiffError",
+        "PerformanceSnapshotTargetError",
         # WS-W guardrails: members of the BoundaryError / StateError families
         # surfaced by guardrails/validation.py, guardrails/store.py, and
         # guardrails/resolver.py. Each inherits transitively from

@@ -474,6 +474,26 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if len(args) == 3 and args[0] == "performance-snapshot-target-report" and args[1] == "--target":
+        from .performance_snapshot_target import (
+            PerformanceSnapshotTargetError,
+            build_performance_snapshot_target_plan,
+            format_performance_snapshot_target_error,
+            format_performance_snapshot_target_report,
+        )
+
+        try:
+            plan = build_performance_snapshot_target_plan(args[2])
+        except PerformanceSnapshotTargetError as exc:
+            lines = format_performance_snapshot_target_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_performance_snapshot_target_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
     if len(args) == 2 and args[0] == "sysex-kit-bank-report":
         from .sysex_bank_analyzer import (
             SysexBankAnalysisError,

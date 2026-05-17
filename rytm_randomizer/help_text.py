@@ -10,7 +10,7 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
+    "anchor-profile-report | behavior-parity-report | performance-snapshot-target-report --target <target> | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
@@ -45,6 +45,7 @@ Usage:
   python -m rytm_randomizer.cli mock-runtime-active-bridge-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli performance-snapshot-target-report --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli sysex-kit-bank-report <path>
   python -m rytm_randomizer.cli sysex-project-report <path>
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
@@ -98,6 +99,8 @@ Commands:
                      Print the read-only anchor/profile behavior report.
   behavior-parity-report
                      Print the read-only behavior-parity coverage report.
+  performance-snapshot-target-report
+                     Preview which machine(s) Live Snapshot may touch.
   sysex-kit-bank-report
                      Analyze a saved SysEx kit bank file without touching hardware.
   sysex-project-report
@@ -151,6 +154,28 @@ Safety:
   no port opening
   no command execution
   no hardware mutation
+  no hardware required""",
+    "performance-snapshot-target-report": """RytmRandomizer passive CLI: performance-snapshot-target-report
+
+Usage:
+  python -m rytm_randomizer.cli performance-snapshot-target-report --target <rytm|analog-four|both>
+  python -m rytm_randomizer.cli performance-snapshot-target-report --help
+
+Behavior:
+  Prints a passive Live Snapshot target-scope report. The selected target is
+  active for future capture, mutation, and restore. Machines outside the target
+  are marked untouched and must receive no capture request, no CC messages, no
+  SysEx restore, and no machine changes.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
   no hardware required""",
     "sysex-kit-bank-report": """RytmRandomizer passive CLI: sysex-kit-bank-report
 

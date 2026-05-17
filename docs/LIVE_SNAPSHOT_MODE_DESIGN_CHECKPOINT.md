@@ -32,6 +32,23 @@ Safe Anchors stays option `1` because it is the validated V1.34 alpha path.
 Live Snapshot is option `2` until its capture and return behavior pass real
 hardware validation.
 
+Live Snapshot also needs a target choice before any future hardware path opens
+ports:
+
+```text
+Select Live Snapshot target:
+
+1 = Analog Rytm only
+2 = Analog Four only
+3 = Both machines
+
+Target:
+```
+
+The target choice is a safety boundary. A machine outside the selected target is
+left alone: no capture request, no mutation CCs, no SysEx restore, and no
+machine changes.
+
 ## Safe Anchors Mode
 
 - Uses the existing validated app anchors.
@@ -57,6 +74,8 @@ hardware validation.
 - Later manual knob/pad edits are not tracked continuously. The operator must
   explicitly capture again to create a new baseline.
 - Live Snapshot mode must never surprise-replace the performer's kit.
+- Live Snapshot mode must allow Rytm-only, Analog-Four-only, and both-machines
+  target scopes.
 
 ## Snapshot State Model
 
@@ -191,12 +210,14 @@ and hardware validation before mutation support is enabled.
    whether a 12-pad plan is ready, blocked, or future-only by mode.
 5. Done: add mock 12-pad snapshot fixtures and wire the AM9-inspired fixture
    into Live Snapshot readiness.
-6. Add startup mode-selection design to the shell without changing the
+6. Done: add passive target-scope model for Rytm-only, Analog-Four-only, and
+   both-machines Live Snapshot operation.
+7. Add startup mode-selection design to the shell without changing the
    validated Safe Anchors flow.
-7. Add a manual-backed parser plan for the Rytm kit/sound dump format.
-8. Add read-only capture in a separately armed hardware-validation path.
-9. Add restore-to-snapshot validation.
-10. Add mutation support per machine family only after each parameter map and
+8. Add a manual-backed parser plan for the Rytm kit/sound dump format.
+9. Add read-only capture in a separately armed hardware-validation path.
+10. Add restore-to-snapshot validation.
+11. Add mutation support per machine family only after each parameter map and
    safe range is validated.
 
 ## Current Decision

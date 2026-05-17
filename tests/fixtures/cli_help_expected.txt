@@ -12,6 +12,7 @@ Usage:
   python -m rytm_randomizer.cli mock-runtime-active-bridge-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli performance-snapshot-target-report --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli sysex-kit-bank-report <path>
   python -m rytm_randomizer.cli sysex-project-report <path>
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
@@ -65,6 +66,8 @@ Commands:
                      Print the read-only anchor/profile behavior report.
   behavior-parity-report
                      Print the read-only behavior-parity coverage report.
+  performance-snapshot-target-report
+                     Preview which machine(s) Live Snapshot may touch.
   sysex-kit-bank-report
                      Analyze a saved SysEx kit bank file without touching hardware.
   sysex-project-report

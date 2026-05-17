@@ -9,7 +9,7 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
+    "anchor-profile-report | behavior-parity-report | performance-snapshot-target-report --target <target> | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
@@ -261,6 +261,17 @@ def test_sysex_snapshot_mock_runtime_report_help_exits_zero():
     assert "RytmRandomizer passive CLI: sysex-snapshot-mock-runtime-report" in result.stdout
     assert "mock sender" in result.stdout
     assert "captured-value" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_performance_snapshot_target_report_help_exits_zero():
+    result = run_cli("performance-snapshot-target-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: performance-snapshot-target-report" in result.stdout
+    assert "--target <rytm|analog-four|both>" in result.stdout
+    assert "untouched" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
