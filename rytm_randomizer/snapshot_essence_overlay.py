@@ -59,6 +59,7 @@ class SnapshotEssenceOverlayPad:
     reason: str
     machine_switch_required: bool
     machine_switch_cc: int | None
+    snapshot_pad: SnapshotPadMutationPlan
 
 
 @dataclass(frozen=True)
@@ -283,6 +284,7 @@ def _build_overlay_pad(
         reason=reason,
         machine_switch_required=machine_switch_required,
         machine_switch_cc=MACHINE_CC if machine_switch_required else None,
+        snapshot_pad=snapshot_pad,
     )
 
 
@@ -311,6 +313,7 @@ def _blocked_pad(
         reason="no_mapped_machine_candidate",
         machine_switch_required=False,
         machine_switch_cc=None,
+        snapshot_pad=snapshot_pad,
     )
 
 

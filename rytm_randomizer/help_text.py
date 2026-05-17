@@ -28,6 +28,7 @@ USAGE = (
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
     "snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
+    "snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -87,6 +88,8 @@ Usage:
   python -m rytm_randomizer.cli style-intent-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
   python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
+  python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli analog-four-reference-report
@@ -160,6 +163,8 @@ Commands:
                      Preview a 12-pad kit plan from broad style/genre intent.
   snapshot-essence-overlay-report
                      Compare a saved Rytm snapshot to a style-driven 12-pad machine plan.
+  snapshot-essence-send-plan-report
+                     Preview passive CC events from a saved snapshot and style plan.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
   analog-four-reference-report
@@ -682,6 +687,32 @@ Behavior:
 Safety:
   passive/read-only
   snapshot/essence comparison only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "snapshot-essence-send-plan-report": """RytmRandomizer passive CLI: snapshot-essence-send-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
+  python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli snapshot-essence-send-plan-report --help
+
+Behavior:
+  Reads an existing Rytm kit bank or whole-project SysEx file, builds the
+  snapshot essence overlay, and prints the passive CC send plan needed to make
+  the selected 12-pad style plan audible. Same-engine pads use captured-value
+  mutation events. Engine-switch pads emit machine CC15 first and then selected
+  mapped profile anchor parameters. It does not send MIDI, open ports, write
+  SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
+  mock sender only
   no MIDI sending
   no MIDI receive
   no port opening
