@@ -928,6 +928,96 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "dual-machine-active-send-plan-report":
+        from .analog_four_snapshot_mutation_planner import (
+            AnalogFourSnapshotMutationPlanError,
+        )
+        from .dual_machine_active_send_plan import (
+            build_dual_machine_active_send_plan,
+            format_dual_machine_active_send_plan_error,
+            format_dual_machine_active_send_plan_report,
+        )
+        from .dual_machine_mock_bridge import build_dual_machine_mock_bridge
+        from .performance_snapshot_target import PerformanceSnapshotTargetError
+        from .snapshot_mutation_planner import SnapshotMutationPlanError
+        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+
+        if len(args) not in (6, 8, 10, 12) or args[2] != "--slot" or args[4] != "--depth":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        target = "both"
+        analog_four_path = None
+        analog_four_slot = None
+        tail = args[6:]
+        if tail:
+            if len(tail) >= 2 and tail[0] == "--target":
+                target = tail[1]
+                tail = tail[2:]
+            elif len(tail) >= 4 and tail[0] == "--analog-four-path":
+                analog_four_path = tail[1]
+                if tail[2] != "--analog-four-slot":
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                try:
+                    analog_four_slot = int(tail[3])
+                except ValueError:
+                    lines = format_dual_machine_active_send_plan_error(
+                        "Analog Four slot must be an integer"
+                    )
+                    sys.stderr.write("\n".join(lines))
+                    sys.stderr.write("\n")
+                    return 1
+                tail = tail[4:]
+            else:
+                sys.stderr.write(f"{USAGE}\n")
+                return 2
+        if tail:
+            if len(tail) == 2 and tail[0] == "--target":
+                target = tail[1]
+            else:
+                sys.stderr.write(f"{USAGE}\n")
+                return 2
+
+        try:
+            slot = int(args[3])
+        except ValueError:
+            lines = format_dual_machine_active_send_plan_error("Slot must be an integer")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        try:
+            bridge = build_dual_machine_mock_bridge(
+                args[1],
+                slot=slot,
+                depth=args[5],
+                target=target,
+                analog_four_sysex_path=analog_four_path,
+                analog_four_slot=analog_four_slot,
+            )
+            plan = build_dual_machine_active_send_plan(bridge)
+        except FileNotFoundError:
+            lines = format_dual_machine_active_send_plan_error("File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (
+            PerformanceSnapshotTargetError,
+            SnapshotMutationPlanError,
+            AnalogFourSnapshotMutationPlanError,
+            SysexSnapshotDecodeError,
+            ValueError,
+        ) as exc:
+            lines = format_dual_machine_active_send_plan_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_dual_machine_active_send_plan_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
     if (
         len(args) == 4
         and args[0] == "analog-four-kit-snapshot-report"
