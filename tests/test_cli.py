@@ -14,7 +14,7 @@ USAGE = (
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
-    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
@@ -216,6 +216,8 @@ def test_dual_machine_mock_bridge_report_help_exits_zero():
     assert result.returncode == 0
     assert "RytmRandomizer passive CLI: dual-machine-mock-bridge-report" in result.stdout
     assert "Rytm + Analog Four" in result.stdout
+    assert "--target <rytm|analog-four|both>" in result.stdout
+    assert "untouched" in result.stdout
     assert "mock sender only" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""

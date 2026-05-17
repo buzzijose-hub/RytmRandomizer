@@ -746,16 +746,18 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) == 6
+        len(args) in (6, 8)
         and args[0] == "dual-machine-mock-bridge-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
+        and (len(args) == 6 or args[6] == "--target")
     ):
         from .dual_machine_mock_bridge import (
             build_dual_machine_mock_bridge,
             format_dual_machine_mock_bridge_error,
             format_dual_machine_mock_bridge_report,
         )
+        from .performance_snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
         from .sysex_snapshot_decoder import SysexSnapshotDecodeError
 
@@ -772,13 +774,19 @@ def main(argv=None):
                 args[1],
                 slot=slot,
                 depth=args[5],
+                target=args[7] if len(args) == 8 else "both",
             )
         except FileNotFoundError:
             lines = format_dual_machine_mock_bridge_error(args[1], "File not found")
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
-        except (SnapshotMutationPlanError, SysexSnapshotDecodeError, ValueError) as exc:
+        except (
+            PerformanceSnapshotTargetError,
+            SnapshotMutationPlanError,
+            SysexSnapshotDecodeError,
+            ValueError,
+        ) as exc:
             lines = format_dual_machine_mock_bridge_error(args[1], str(exc))
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")

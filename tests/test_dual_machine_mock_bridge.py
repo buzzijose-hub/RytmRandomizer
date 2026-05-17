@@ -106,6 +106,58 @@ def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
     }
 
 
+def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
+    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="RYTM ONLY"))
+
+    bridge = build_dual_machine_mock_bridge(
+        str(sysex_path),
+        slot=1,
+        depth="micro",
+        target="rytm",
+    )
+    sender = capture_dual_machine_mock_messages(bridge)
+
+    assert bridge.target_plan.canonical_target == "rytm"
+    assert bridge.target_plan.untouched_device_keys == ("analog_four",)
+    assert bridge.rytm_message_count == 6
+    assert bridge.analog_four_message_count == 0
+    assert bridge.combined_message_count == 6
+    assert len(sender.sent_messages) == 6
+    assert {message.metadata["device"] for message in sender.sent_messages} == {
+        "Analog Rytm MKII",
+    }
+
+
+def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
+    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="A4 ONLY"))
+
+    bridge = build_dual_machine_mock_bridge(
+        str(sysex_path),
+        slot=1,
+        depth="micro",
+        target="analog-four",
+    )
+    sender = capture_dual_machine_mock_messages(bridge)
+
+    assert bridge.target_plan.canonical_target == "analog-four"
+    assert bridge.target_plan.untouched_device_keys == ("analog_rytm",)
+    assert bridge.rytm_message_count == 0
+    assert bridge.analog_four_message_count == 8
+    assert bridge.combined_message_count == 8
+    assert len(sender.sent_messages) == 8
+    assert {message.metadata["device"] for message in sender.sent_messages} == {
+        "Analog Four MKII",
+    }
+
+
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", *args],
@@ -137,4 +189,29 @@ def test_dual_machine_mock_bridge_cli_reads_saved_kit_without_hardware(tmp_path)
     assert "- Analog Four Track 4 / FX / noise / transition: 2 message(s)" in result.stdout
     assert "- mock sender only" in result.stdout
     assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_accepts_target_scope(tmp_path):
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="CLI TARGET"))
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--target",
+        "rytm",
+    )
+
+    assert result.returncode == 0
+    assert "Target: rytm" in result.stdout
+    assert "Active devices: Analog Rytm MKII" in result.stdout
+    assert "Untouched devices: Analog Four MKII" in result.stdout
+    assert "Analog Four mock messages: 0" in result.stdout
+    assert "Combined mock messages: 6" in result.stdout
+    assert "- Analog Four Track" not in result.stdout
     assert result.stderr == ""

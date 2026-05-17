@@ -12,6 +12,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .mock_midi import MockMidiSender, build_cc_message
+from .performance_snapshot_target import (
+    PerformanceSnapshotTargetPlan,
+    build_performance_snapshot_target_plan,
+)
 from .snapshot_mutation_planner import (
     SnapshotMutationPlan,
     build_snapshot_mutation_plan_from_file,
@@ -56,17 +60,24 @@ class DualMachineMockBridge:
     depth: str
     rytm_plan: SnapshotMutationPlan
     analog_four_tracks: tuple[AnalogFourTrackPlan, ...]
+    target_plan: PerformanceSnapshotTargetPlan
 
     @property
     def rytm_message_count(self) -> int:
+        if not _is_device_active(self, "analog_rytm"):
+            return 0
         return self.rytm_plan.planned_change_count
 
     @property
     def analog_four_track_count(self) -> int:
+        if not _is_device_active(self, "analog_four"):
+            return 0
         return len(self.analog_four_tracks)
 
     @property
     def analog_four_message_count(self) -> int:
+        if not _is_device_active(self, "analog_four"):
+            return 0
         return sum(len(track.changes) for track in self.analog_four_tracks)
 
     @property
@@ -79,9 +90,11 @@ def build_dual_machine_mock_bridge(
     *,
     slot: int,
     depth: str,
+    target: str = "both",
 ) -> DualMachineMockBridge:
     """Build the passive combined mock bridge from a saved Rytm kit."""
 
+    target_plan = build_performance_snapshot_target_plan(target)
     rytm_plan = build_snapshot_mutation_plan_from_file(
         rytm_sysex_path,
         slot=slot,
@@ -94,6 +107,7 @@ def build_dual_machine_mock_bridge(
         depth=depth,
         rytm_plan=rytm_plan,
         analog_four_tracks=build_analog_four_safe_starter_plan(),
+        target_plan=target_plan,
     )
 
 
@@ -153,45 +167,47 @@ def capture_dual_machine_mock_messages(bridge: DualMachineMockBridge) -> MockMid
     """Capture the combined bridge stream in an inert mock sender."""
 
     sender = MockMidiSender()
-    for pad in bridge.rytm_plan.pads:
-        for change in pad.changes:
-            sender.send(
-                build_cc_message(
-                    channel=change.midi_channel - 1,
-                    control=change.cc,
-                    value=change.planned_value,
-                    metadata={
-                        "device": "Analog Rytm MKII",
-                        "pad": change.pad,
-                        "midi_channel": change.midi_channel,
-                        "machine": change.machine_label,
-                        "parameter": change.parameter_name,
-                        "baseline_value": change.baseline_value,
-                        "planned_value": change.planned_value,
-                        "delta": change.delta,
-                        "source": "saved-kit snapshot",
-                    },
+    if _is_device_active(bridge, "analog_rytm"):
+        for pad in bridge.rytm_plan.pads:
+            for change in pad.changes:
+                sender.send(
+                    build_cc_message(
+                        channel=change.midi_channel - 1,
+                        control=change.cc,
+                        value=change.planned_value,
+                        metadata={
+                            "device": "Analog Rytm MKII",
+                            "pad": change.pad,
+                            "midi_channel": change.midi_channel,
+                            "machine": change.machine_label,
+                            "parameter": change.parameter_name,
+                            "baseline_value": change.baseline_value,
+                            "planned_value": change.planned_value,
+                            "delta": change.delta,
+                            "source": "saved-kit snapshot",
+                        },
+                    )
                 )
-            )
-    for track in bridge.analog_four_tracks:
-        for change in track.changes:
-            sender.send(
-                build_cc_message(
-                    channel=change.wire_channel,
-                    control=change.cc,
-                    value=change.value,
-                    metadata={
-                        "device": "Analog Four MKII",
-                        "track": change.track,
-                        "midi_channel": change.midi_channel,
-                        "role": change.role_label,
-                        "parameter": change.parameter_name,
-                        "baseline_type": "safe_starter",
-                        "planned_value": change.value,
-                        "source": "safe starter CC plan",
-                    },
+    if _is_device_active(bridge, "analog_four"):
+        for track in bridge.analog_four_tracks:
+            for change in track.changes:
+                sender.send(
+                    build_cc_message(
+                        channel=change.wire_channel,
+                        control=change.cc,
+                        value=change.value,
+                        metadata={
+                            "device": "Analog Four MKII",
+                            "track": change.track,
+                            "midi_channel": change.midi_channel,
+                            "role": change.role_label,
+                            "parameter": change.parameter_name,
+                            "baseline_type": "safe_starter",
+                            "planned_value": change.value,
+                            "source": "safe starter CC plan",
+                        },
+                    )
                 )
-            )
     return sender
 
 
@@ -205,7 +221,10 @@ def format_dual_machine_mock_bridge_report(bridge: DualMachineMockBridge) -> lis
         f"Rytm kit: {bridge.rytm_plan.kit_name or '<blank>'}",
         f"Rytm slot: {bridge.rytm_plan.slot_number}",
         f"Depth: {bridge.depth}",
-        f"Rytm planned pads: {bridge.rytm_plan.planned_pad_count} / {PAD_COUNT}",
+        f"Target: {bridge.target_plan.canonical_target}",
+        f"Active devices: {_format_labels(bridge.target_plan.active_device_labels)}",
+        f"Untouched devices: {_format_labels(bridge.target_plan.untouched_device_labels)}",
+        f"Rytm planned pads: {_targeted_rytm_planned_pad_count(bridge)} / {PAD_COUNT}",
         f"Rytm mock messages: {bridge.rytm_message_count}",
         f"Analog Four source: {bridge.analog_four_source}",
         f"Analog Four tracks: {bridge.analog_four_track_count} / {A4_TRACK_COUNT}",
@@ -213,18 +232,22 @@ def format_dual_machine_mock_bridge_report(bridge: DualMachineMockBridge) -> lis
         f"Combined mock messages: {bridge.combined_message_count}",
         "Device plans:",
     ]
-    for pad in bridge.rytm_plan.pads:
-        if not pad.changes:
-            continue
-        lines.append(
-            f"- Rytm Pad {pad.pad} / {pad.machine_label}: "
-            f"{len(pad.changes)} message(s)"
-        )
-    for track in bridge.analog_four_tracks:
-        lines.append(
-            f"- Analog Four Track {track.track} / {track.role_label}: "
-            f"{len(track.changes)} message(s)"
-        )
+    if _is_device_active(bridge, "analog_rytm"):
+        for pad in bridge.rytm_plan.pads:
+            if not pad.changes:
+                continue
+            lines.append(
+                f"- Rytm Pad {pad.pad} / {pad.machine_label}: "
+                f"{len(pad.changes)} message(s)"
+            )
+    if _is_device_active(bridge, "analog_four"):
+        for track in bridge.analog_four_tracks:
+            lines.append(
+                f"- Analog Four Track {track.track} / {track.role_label}: "
+                f"{len(track.changes)} message(s)"
+            )
+    for device in bridge.target_plan.untouched_devices:
+        lines.append(f"- {device.label}: untouched / no mock messages")
     lines.append("Mock message preview:")
     for message in capture_dual_machine_mock_messages(bridge).sent_messages:
         lines.append(_format_message_preview(message))
@@ -265,6 +288,20 @@ def _format_message_preview(message) -> str:
         f"- Analog Four Track {metadata['track']} / {metadata['role']} / "
         f"{metadata['parameter']}: CC{message.control} -> {message.value}"
     )
+
+
+def _is_device_active(bridge: DualMachineMockBridge, device_key: str) -> bool:
+    return device_key in bridge.target_plan.active_device_keys
+
+
+def _targeted_rytm_planned_pad_count(bridge: DualMachineMockBridge) -> int:
+    if not _is_device_active(bridge, "analog_rytm"):
+        return 0
+    return bridge.rytm_plan.planned_pad_count
+
+
+def _format_labels(labels: tuple[str, ...]) -> str:
+    return ", ".join(labels) if labels else "none"
 
 
 __all__ = [

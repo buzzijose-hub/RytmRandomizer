@@ -15,7 +15,7 @@ USAGE = (
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
-    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
@@ -54,6 +54,7 @@ Usage:
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
@@ -315,14 +316,17 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report --help
 
 Behavior:
   Reads an existing Rytm kit bank or whole-project SysEx file and previews a
   combined Rytm + Analog Four mock sender stream. The Rytm side mutates from
   saved captured values; the Analog Four side uses the conservative
-  safe-starter CC plan from validated Track 1-4 smoke tests. It does not send
-  MIDI, open ports, request dumps, write SysEx, or touch hardware.
+  safe-starter CC plan from validated Track 1-4 smoke tests. Optional --target
+  limits the mock stream to Rytm only, Analog Four only, or both; untouched
+  devices produce no mock messages. It does not send MIDI, open ports, request
+  dumps, write SysEx, or touch hardware.
 
 Safety:
   passive/read-only

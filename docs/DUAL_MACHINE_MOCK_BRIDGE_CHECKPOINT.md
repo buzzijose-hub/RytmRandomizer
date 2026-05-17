@@ -22,6 +22,14 @@ Rytm-only:
 python -m rytm_randomizer.cli dual-machine-mock-bridge-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 16 --depth micro
 ```
 
+Target-aware variants:
+
+```powershell
+python -m rytm_randomizer.cli dual-machine-mock-bridge-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 16 --depth micro --target rytm
+python -m rytm_randomizer.cli dual-machine-mock-bridge-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 16 --depth micro --target analog-four
+python -m rytm_randomizer.cli dual-machine-mock-bridge-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 16 --depth micro --target both
+```
+
 ## Current Behavior
 
 The Rytm side reads an existing saved `.syx` kit bank or whole-project dump,
@@ -40,6 +48,13 @@ Each A4 track contributes:
 
 - Filter 1 Frequency CC18
 - Amp Pan CC10
+
+The bridge now honors Live Snapshot target scope:
+
+- `--target rytm` emits only Rytm mock messages and marks Analog Four untouched.
+- `--target analog-four` emits only Analog Four mock messages and marks Rytm
+  untouched.
+- `--target both` is the default combined behavior.
 
 ## Safety Boundary
 
