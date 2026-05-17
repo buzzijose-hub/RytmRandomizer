@@ -1668,6 +1668,49 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "rytm-engine-cycle-starter-plan-report":
+        from .essence_plan_report import parse_discovery_value
+        from .rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+        from .rytm_engine_cycle_starter_profiles import (
+            build_rytm_engine_cycle_starter_plan,
+            format_rytm_engine_cycle_starter_plan_error,
+            format_rytm_engine_cycle_starter_plan_report,
+        )
+
+        if len(args) < 3 or args[1] != "--style" or len(args[3:]) % 2 != 0:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            discovery = None
+            profile = "balanced"
+            index = 3
+            while index < len(args):
+                flag = args[index]
+                value = args[index + 1]
+                if flag == "--discovery":
+                    discovery = parse_discovery_value(value)
+                elif flag == "--profile":
+                    profile = value
+                else:
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                index += 2
+            engine_plan = build_rytm_engine_cycle_plan(args[2], discovery=discovery)
+            starter_plan = build_rytm_engine_cycle_starter_plan(
+                engine_plan,
+                profile=profile,
+            )
+        except ValueError as exc:
+            lines = format_rytm_engine_cycle_starter_plan_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_rytm_engine_cycle_starter_plan_report(starter_plan)))
+        sys.stdout.write("\n")
+        return 0
+
     if args and args[0] == "twelve-pad-mock-runtime-report":
         from .essence_plan_report import parse_discovery_value
         from .twelve_pad_mock_runtime import (

@@ -30,6 +30,7 @@ USAGE = (
     "snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
+    "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -313,6 +314,23 @@ def test_rytm_engine_cycle_plan_report_help_exits_zero():
     assert "--style <text>" in result.stdout
     assert "--discovery <0..1>" in result.stdout
     assert "machine_selectable means engine switch only" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_engine_cycle_starter_plan_report_help_exits_zero():
+    result = run_cli("rytm-engine-cycle-starter-plan-report", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "RytmRandomizer passive CLI: rytm-engine-cycle-starter-plan-report"
+        in result.stdout
+    )
+    assert "starter shaping" in result.stdout
+    assert "--style <text>" in result.stdout
+    assert "--discovery <0..1>" in result.stdout
+    assert "--profile <profile>" in result.stdout
+    assert "common filter/amp starter values only" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

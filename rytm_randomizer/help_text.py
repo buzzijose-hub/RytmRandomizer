@@ -31,6 +31,7 @@ USAGE = (
     "snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> [--discovery <0..1>] | "
     "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
+    "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -100,6 +101,9 @@ Usage:
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text>
   python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text>
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli analog-four-reference-report
@@ -179,6 +183,8 @@ Commands:
                      Execute snapshot essence send-plan events into a mock sender only.
   rytm-engine-cycle-plan-report
                      Preview 12-pad Rytm engine-cycle candidates.
+  rytm-engine-cycle-starter-plan-report
+                     Preview 12-pad Rytm engine-cycle starter shaping.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
   analog-four-reference-report
@@ -779,6 +785,31 @@ Behavior:
   CC15 machine values, then captures the top candidate per pad into a mock
   CC15 stream only. machine_selectable means engine switch only; tuned anchors
   are pending.
+
+Safety:
+  passive/read-only
+  mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "rytm-engine-cycle-starter-plan-report": """RytmRandomizer passive CLI: rytm-engine-cycle-starter-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text>
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text> --profile <profile>
+  python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --help
+
+Behavior:
+  Builds passive 12-pad Rytm engine-cycle candidates, then adds starter shaping
+  from a named Rytm starter profile. The mock stream contains one CC15 machine
+  select event plus common filter/amp starter values only for each pad. It does
+  not change the existing guarded or armed engine-cycle senders.
 
 Safety:
   passive/read-only
