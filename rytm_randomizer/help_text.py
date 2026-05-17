@@ -18,6 +18,7 @@ USAGE = (
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
+    "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
@@ -66,6 +67,9 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
@@ -133,6 +137,8 @@ Commands:
                      Gate a dual-machine bridge before future live sending.
   dual-machine-active-send-plan-report
                      Preview mapped CC events eligible for future active sending.
+  dual-machine-guarded-send-dry-run-report
+                     Execute eligible send-plan events into a mock sender only.
   analog-four-kit-snapshot-report
                      Decode a saved Analog Four kit into a passive track snapshot.
   analog-four-snapshot-mutation-plan-report
@@ -411,6 +417,33 @@ Safety:
   passive/read-only
   active send plan preview only
   saved-offset candidate events are blocked
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "dual-machine-guarded-send-dry-run-report": """RytmRandomizer passive CLI: dual-machine-guarded-send-dry-run-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report --help
+
+Behavior:
+  Builds the passive dual-machine active send plan, then runs the guarded send
+  dry-run into an inert mock sender. Ready target scopes emit mapped CC mock
+  messages. Blocked plans emit no partial messages. This command never sends
+  MIDI or opens a port.
+
+Safety:
+  passive/read-only
+  guarded send dry-run only
+  mock sender only
+  blocked plans emit no partial messages
   no MIDI sending
   no MIDI receive
   no port opening

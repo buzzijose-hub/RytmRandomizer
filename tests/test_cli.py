@@ -17,6 +17,7 @@ USAGE = (
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
+    "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
@@ -279,6 +280,18 @@ def test_dual_machine_active_send_plan_report_help_exits_zero():
     assert "active send plan" in result.stdout
     assert "--analog-four-path <path>" in result.stdout
     assert "saved-offset candidate events are blocked" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_guarded_send_dry_run_report_help_exits_zero():
+    result = run_cli("dual-machine-guarded-send-dry-run-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: dual-machine-guarded-send-dry-run-report" in result.stdout
+    assert "guarded send dry-run" in result.stdout
+    assert "--analog-four-path <path>" in result.stdout
+    assert "blocked plans emit no partial messages" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
