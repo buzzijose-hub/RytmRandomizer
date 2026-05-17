@@ -1,28 +1,23 @@
 """Drift-guard tests for the shared data layer (``rytm_randomizer.data``).
 
 The shared data layer is the single source of truth for every piece of V1.34
-domain data. Both codebases consume it:
-
-* ``rytm_hybrid_randomizer_v134`` (the monolith) imports its data dicts from
-  ``rytm_randomizer.data`` instead of defining them inline.
-* ``rytm_randomizer.profiles`` / ``.scenes`` / ``.constants`` derive their
-  public names from ``rytm_randomizer.data`` instead of hand-re-typing subsets.
+domain data. ``rytm_randomizer.profiles`` / ``.scenes`` / ``.constants`` derive
+their public names from ``rytm_randomizer.data`` instead of hand-re-typing
+subsets.
 
 These tests fail LOUDLY if:
 
-* the monolith and the data layer ever disagree on a value (the C6 drift bug),
 * the package's derived views ever disagree with the data layer,
 * a known-good constant (CC number, scene count, profile key) ever changes.
 
-The monolith imports ``mido`` at module load. To keep this test process free
-of real-MIDI libraries (other suite tests assert ``mido`` is absent from
-``sys.modules``), every monolith comparison runs in a subprocess - the same
-isolation pattern used by ``tests/test_real_midi_import_safety.py``.
+The V1.34 ``rytm_hybrid_randomizer_v134`` monolith that previously consumed
+the same data layer has been retired; its frozen reference behavior now lives
+as JSON goldens under ``tests/fixtures/v134_parity/`` (see
+``tests/_parity_worker.py``).
 """
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
@@ -37,57 +32,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-def _run_python(code: str) -> subprocess.CompletedProcess[str]:
-    """Run a snippet in a fresh interpreter (keeps this process mido-free)."""
-
-    return subprocess.run(
-        [sys.executable, "-c", code],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-
 # ---------------------------------------------------------------------------
-# 1. The monolith and the data layer must agree on EVERY exported name.
-#    Run in a subprocess so the monolith's `import mido` never lands in this
-#    test process's sys.modules.
-# ---------------------------------------------------------------------------
-
-
-def test_monolith_imports_every_data_name_from_shared_layer():
-    """Every name exported by the data layer must exist on the monolith and be
-    the exact same object (the monolith imports them, it does not copy them)."""
-
-    result = _run_python(
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "import rytm_randomizer.data as d\n"
-        "missing = [n for n in d.__all__ if not hasattr(m, n)]\n"
-        "assert not missing, f'monolith missing data names: {missing}'\n"
-        "not_shared = [n for n in d.__all__ "
-        "if getattr(m, n) is not getattr(d, n)]\n"
-        "assert not not_shared, "
-        "f'monolith does not share data-layer objects: {not_shared}'\n"
-        "print('OK', len(d.__all__))\n"
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout.startswith("OK ")
-    # The monolith must still import silently (no prompt, no output).
-    assert result.stdout.strip() == f"OK {len(data.__all__)}"
-
-
-def test_monolith_import_is_still_silent():
-    """Re-pointing the monolith to the data layer must not add any output."""
-
-    result = _run_python("import rytm_hybrid_randomizer_v134")
-    assert result.returncode == 0, result.stderr
-    assert result.stdout == ""
-    assert result.stderr == ""
-
-
-# ---------------------------------------------------------------------------
-# 2. The data layer is internally non-empty.
+# 1. The data layer is internally non-empty.
 # ---------------------------------------------------------------------------
 
 
@@ -223,7 +169,7 @@ _PROFILE_MACHINE_KEYS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"
 
 def test_every_profile_order_name_exists_in_its_param_map():
     """Each profile's ``order`` list must only name params present in its
-    ``params`` CC map - otherwise the monolith would KeyError at runtime."""
+    ``params`` CC map - otherwise the engine would KeyError at runtime."""
 
     for key in _PROFILE_MACHINE_KEYS:
         profile = data.PROFILES[key]
@@ -297,7 +243,6 @@ def test_package_scene_commands_derive_from_scene_presets():
         assert command["name"] == preset["name"]
         assert command["description"] == preset["description"]
         assert command["action"] == preset["action"]
-        # Scaffold-only metadata is added by the package, not the monolith.
         assert command["scope"] == "four_pad_group"
         assert command["executable"] is False
         assert command["v134_reference_command"] is True
@@ -305,8 +250,6 @@ def test_package_scene_commands_derive_from_scene_presets():
 
 
 if __name__ == "__main__":
-    test_monolith_imports_every_data_name_from_shared_layer()
-    test_monolith_import_is_still_silent()
     test_data_layer_exports_are_non_empty()
     test_machine_cc_is_15_everywhere()
     test_profile_registry_has_expected_keys()

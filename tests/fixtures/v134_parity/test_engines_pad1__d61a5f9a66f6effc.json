@@ -1,0 +1,310 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      17,
+      61
+    ],
+    [
+      "control_change",
+      0,
+      18,
+      51
+    ],
+    [
+      "control_change",
+      0,
+      19,
+      52
+    ],
+    [
+      "control_change",
+      0,
+      20,
+      90
+    ],
+    [
+      "control_change",
+      0,
+      21,
+      26
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      88
+    ],
+    [
+      "control_change",
+      0,
+      70,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      71,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      73,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      74,
+      27
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      51
+    ],
+    [
+      "control_change",
+      0,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      0,
+      77,
+      63
+    ],
+    [
+      "control_change",
+      0,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      79,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      80,
+      86
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      22
+    ],
+    [
+      "control_change",
+      0,
+      82,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      83,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      10,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      15,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      21,
+      23
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      83
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      51
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      21
+    ]
+  ],
+  "state": {
+    "active": "My BD Hard",
+    "channel": 0,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 86,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 21,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 27,
+      "FLT Release": 64,
+      "FLT Resonance": 51,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 51,
+      "SRC Hold": 52,
+      "SRC Snap": 23,
+      "SRC Sweep Time": 90,
+      "SRC Transient Tick": 83,
+      "SRC Tune": 61,
+      "SRC Waveform": 0
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 26,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 88,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 23,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 83,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      }
+    },
+    "gprev": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 26,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 88,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      }
+    },
+    "layout1": {
+      "depth": "micro",
+      "profile": "2",
+      "role": "Main kick / My BD Hard",
+      "zone": "full"
+    },
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 86,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 22,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 27,
+      "FLT Release": 64,
+      "FLT Resonance": 51,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 51,
+      "SRC Hold": 52,
+      "SRC Snap": 26,
+      "SRC Sweep Time": 90,
+      "SRC Transient Tick": 88,
+      "SRC Tune": 61,
+      "SRC Waveform": 0
+    },
+    "target_pad": 1
+  },
+  "stdout": "\nLoading Pad 1 profiled BD engine: My BD Hard\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Hard:\n  Machine CC15 -> 0\n\nPad 1 My BD Hard anchor:\n  SRC Tune: CC17 -> 61\n  SRC Decay: CC18 -> 51\n  SRC Hold: CC19 -> 52\n  SRC Sweep Time: CC20 -> 90\n  SRC Snap: CC21 -> 26\n  SRC Waveform: CC22 -> 0\n  SRC Transient Tick: CC23 -> 88\n  FLT Attack: CC70 -> 0\n  FLT Decay: CC71 -> 64\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 64\n  FLT Frequency: CC74 -> 27\n  FLT Resonance: CC75 -> 51\n  FLT Type: CC76 -> 4\n  FLT Env Depth: CC77 -> 63\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 0\n  AMP Decay: CC80 -> 86\n  AMP Overdrive: CC81 -> 22\n  AMP Delay Send: CC82 -> 0\n  AMP Reverb Send: CC83 -> 0\n  AMP Pan: CC10 -> 64\n\nPad 1 is now using My BD Hard as its profiled kick engine.\n\nPad 1 Current BD Engine Mutation - V1.26\n  Current engine: My BD Hard\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Hard:\n  Machine CC15 -> 0\n  Mutation plan: grit / micro\n\nMy BD Hard / GRIT mutation / MICRO depth:\n  Mutating around current anchor.\n  SRC Snap: CC21 -> 23\n  SRC Transient Tick: CC23 -> 83\n  FLT Resonance: CC75 -> 51\n  AMP Overdrive: CC81 -> 21\n\nPad 1 current BD engine mutation complete. Pads 2, 3, and 4 were not touched.\n"
+}

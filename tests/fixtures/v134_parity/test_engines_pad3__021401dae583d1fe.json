@@ -1,0 +1,17 @@
+{
+  "baseline": null,
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "mode_key": "anchor",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nPad 3 SY Raw Discovery - V1.11\n  Target: Pad 3 only\n  Role: midrange bass / synth-percussion\n  Correct mapping: CC19 = SRC Noise Level, CC23 = SRC Balance\n\nDedicated commands:\n  SR = show this SY Raw discovery menu\n  SW = curated Wave + Balance discovery\n  SL = LP1 bassline mode\n  SB = Bandpass mid-bass mode\n  SX = sci-fi motion accent mode\n  SA = return Pad 3 SY Raw to anchor\n\nThese commands do not touch Pads 1, 2, or 4.\n\nCurrent Pad 3 state: not loaded yet. Use O first.\n"
+}

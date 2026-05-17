@@ -62,11 +62,6 @@ Write-Output "=== Project Status Check ==="
 Register-QuickStatusStepExit "Project Status Check"
 
 Write-Output ""
-Write-Output "=== V1.34 Reference Diff ==="
-git diff -- rytm_hybrid_randomizer_v134.py
-Register-QuickStatusStepExit "V1.34 Reference Diff"
-
-Write-Output ""
 Write-Output "=== Git Status ==="
 git status --short
 Register-QuickStatusStepExit "Git Status"

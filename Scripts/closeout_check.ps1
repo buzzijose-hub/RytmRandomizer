@@ -296,10 +296,6 @@ Register-CloseoutStepExit "Mock Runtime Active Bridge"
 Register-CloseoutStepExit "Mock Runtime Active Bridge Report"
 
 "" | Add-Content $summary
-"=== V1.34 Reference Diff ===" | Add-Content $summary
-git diff -- rytm_hybrid_randomizer_v134.py 2>&1 | Tee-Object -FilePath "$logDir\latest_v134_reference_diff.log" | Add-Content $summary
-
-"" | Add-Content $summary
 "=== Git Status ===" | Add-Content $summary
 git status --short 2>&1 | Tee-Object -FilePath "$logDir\latest_git_status.log" | Add-Content $summary
 

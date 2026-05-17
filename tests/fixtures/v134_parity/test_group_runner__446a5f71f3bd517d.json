@@ -1,0 +1,44 @@
+{
+  "midi": [],
+  "results": [
+    null
+  ],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "layout": {
+      "1": {
+        "depth": "micro",
+        "profile": "2",
+        "role": "Main kick / BD Hard default",
+        "zone": "full"
+      },
+      "2": {
+        "depth": "groove",
+        "profile": "3",
+        "role": "Secondary kick / rolling low percussion",
+        "zone": "body"
+      },
+      "3": {
+        "depth": "groove",
+        "profile": "5",
+        "role": "SY Raw midrange bass / synth-percussion",
+        "zone": "lfo"
+      },
+      "4": {
+        "depth": "micro",
+        "profile": "4",
+        "role": "Body hit / accent layer",
+        "zone": "body"
+      }
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nLoad the full 4-pad group first with O.\nThis stores safe anchors for Pads 1-4 before isolated mutation.\n"
+}

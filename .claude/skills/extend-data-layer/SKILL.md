@@ -50,11 +50,13 @@ If none of those fit, add a new module under `data/` and re-export it from
    `tests/test_data_layer.py` that pins the shape or a representative
    value of the new entry. This is what stops a future agent from quietly
    changing it.
-6. **If the new fact must reach the monolith too**, add the import in
-   `rytm_hybrid_randomizer_v134.py`'s import block... actually no, the
-   monolith is frozen. Do not edit it. The new fact will only be visible
-   to the package side until a parity story exists. Flag this in the PR
-   description.
+6. **The V1.34 monolith is retired.** New facts live in the package's
+   `data/` layer and become visible to the engines automatically. The V1.34
+   reference behavior is captured as JSON goldens under
+   `tests/fixtures/v134_parity/`; if a new fact changes engine output, the
+   matching goldens must be regenerated (`PARITY_CAPTURE_MODE=1 pytest
+   tests/test_engines_pad*.py tests/test_group_runner.py
+   tests/test_scene_runner.py`) and the regeneration justified in the PR.
 
 ## Verification gate
 

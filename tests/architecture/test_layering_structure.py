@@ -1,21 +1,22 @@
 """Enforce the expected package layout from ``docs/ARCHITECTURE.md``.
 
 These tests assert that the modules listed in the architecture spec actually
-exist (so a future refactor cannot quietly delete them) and that the V1.34
-monolith is the frozen byte-reference at the repository root (not a thin
-shim inside the package).
+exist (so a future refactor cannot quietly delete them).
+
+The V1.34 ``rytm_hybrid_randomizer_v134.py`` monolith that once lived at the
+repo root has been retired; its reference behavior is now captured as JSON
+goldens under ``tests/fixtures/v134_parity/`` and enforced by the parity tests
+that previously diffed against it.
 """
 
 from __future__ import annotations
 
 import hashlib
-import subprocess
 import sys
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
-MONOLITH_PATH = PROJECT_ROOT / "rytm_hybrid_randomizer_v134.py"
 
 
 # Modules that MUST exist for the architecture to be intact.
@@ -87,52 +88,28 @@ def test_subpackages_have_init_files() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Monolith lives at the repo root, NOT inside the package
+# The retired V1.34 monolith must not have been resurrected inside the package
 # ---------------------------------------------------------------------------
 
 
-def test_monolith_is_at_repo_root_not_inside_package() -> None:
-    """The V1.34 monolith is the frozen reference at the repo root.
+def test_retired_monolith_has_not_been_resurrected() -> None:
+    """The V1.34 monolith was retired in favor of JSON goldens.
 
-    It must not have been moved into ``rytm_randomizer/`` (which would expose
-    it as a package module).
+    Both the original repo-root location and the inside-the-package location
+    must stay missing -- the only authoritative source of V1.34 reference
+    behavior is now ``tests/fixtures/v134_parity/``.
     """
 
-    assert (
-        MONOLITH_PATH.is_file()
-    ), f"Expected the V1.34 monolith at {MONOLITH_PATH}, but it is missing."
-    inside = PACKAGE_ROOT / "rytm_hybrid_randomizer_v134.py"
-    assert not inside.exists(), (
-        f"The V1.34 monolith must remain at the repo root (frozen reference). "
-        f"It must NOT live inside the package at {inside}."
-    )
-
-
-# ---------------------------------------------------------------------------
-# Monolith has no working-tree diff (byte-identical to its tagged form)
-# ---------------------------------------------------------------------------
-
-
-def test_monolith_has_no_working_tree_diff() -> None:
-    """The monolith must remain byte-identical to its committed form.
-
-    This mirrors ``tests/test_real_midi_import_safety.py::
-    test_v134_reference_has_no_working_tree_diff``; we duplicate it under
-    ``tests/architecture/`` so the architecture gate alone catches any drift.
-    """
-
-    result = subprocess.run(
-        ["git", "diff", "--", str(MONOLITH_PATH.relative_to(PROJECT_ROOT))],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr
-    assert result.stdout == "", (
-        "The V1.34 monolith has uncommitted edits. The monolith is a frozen "
-        "byte-parity reference -- do not edit it. Use the package modules "
-        "for new work.\n" + result.stdout
+    forbidden = [
+        PROJECT_ROOT / "rytm_hybrid_randomizer_v134.py",
+        PACKAGE_ROOT / "rytm_hybrid_randomizer_v134.py",
+    ]
+    present = [str(p) for p in forbidden if p.exists()]
+    assert not present, (
+        "The V1.34 monolith has been retired -- the reference behavior is "
+        "captured as JSON goldens under tests/fixtures/v134_parity/. Re-adding "
+        "the monolith resurrects a frozen file that is no longer the source of "
+        f"truth.\n  Found: {present}"
     )
 
 

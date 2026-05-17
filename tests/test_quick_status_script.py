@@ -48,7 +48,8 @@ def test_quick_status_script_exists_and_stays_passive():
     assert "project-status-report --check" in text
     assert "git branch --show-current" in text
     assert "git log --oneline -1" in text
-    assert "git diff -- rytm_hybrid_randomizer_v134.py" in text
+    # V1.34 monolith was retired -- the reference-diff step must be gone too.
+    assert "rytm_hybrid_randomizer_v134" not in text
     assert "git status --short" in text
     assert "$homePath = $HOME" in text
     assert "$codexPython -and (Test-Path $codexPython)" in text
@@ -105,7 +106,6 @@ def test_quick_status_script_runs_passive_status_checks():
     assert "=== Project Status Check ===" in result.stdout
     assert "RytmRandomizer Project Status Check" in result.stdout
     assert "- ok: True" in result.stdout
-    assert "=== V1.34 Reference Diff ===" in result.stdout
     assert "=== Git Status ===" in result.stdout
     assert result.stderr == ""
 

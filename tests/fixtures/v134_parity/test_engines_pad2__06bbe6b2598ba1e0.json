@@ -1,0 +1,15 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "key": "3",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nUnknown Pad 2 profile key: nope\n"
+}

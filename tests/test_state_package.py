@@ -1,20 +1,19 @@
-"""Characterization + parity tests for the rytm_randomizer.state package.
+"""Characterization tests for the rytm_randomizer.state package.
 
-These tests capture the monolith's CURRENT state-transition behavior for the
-~12 mutable module-level globals WS-L extracts, then prove the per-domain
+These tests capture the V1.34 cold-start globals + state-transition behavior
+that the ~12 mutable module-level globals of the original
+``rytm_hybrid_randomizer_v134`` monolith exposed, then prove the per-domain
 frozen-dataclass state objects reproduce the same transitions.
 
-The monolith does ``import mido`` at module scope, and the package's
-import-safety tests assert real ``mido`` is absent from ``sys.modules``. So,
-following the established ``test_midi_io`` pattern, the monolith's cold-start
-globals are captured in a *subprocess* (never importing the monolith into this
-test process) and an autouse fixture restores ``sys.modules`` after every test.
+The monolith itself has been retired. Its cold-start global values are
+frozen in :data:`_V134_GLOBAL_DEFAULTS` below -- the same dict that the old
+out-of-process snapshot returned. The package's initial-state objects must
+still reproduce these values byte-for-byte (asserted by
+``test_package_initial_states_match_v134_defaults``).
 """
 
 from __future__ import annotations
 
-import json
-import subprocess
 import sys
 from pathlib import Path
 from types import MappingProxyType
@@ -29,93 +28,37 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-@pytest.fixture(autouse=True)
-def _restore_sys_modules():
-    """Snapshot ``sys.modules`` and restore it after every test.
-
-    Keeps the monolith (and its real ``mido``) from leaking between tests.
-    """
-
-    snapshot = dict(sys.modules)
-    try:
-        yield
-    finally:
-        for name in list(sys.modules):
-            if name not in snapshot:
-                del sys.modules[name]
-        for name, module in snapshot.items():
-            sys.modules[name] = module
-
-
-def _monolith_global_defaults() -> dict:
-    """Capture the monolith's cold-start globals via a fresh subprocess.
-
-    Importing the monolith here would pull real ``mido`` into this process's
-    ``sys.modules`` and break the package's import-safety tests, so the
-    snapshot is taken out-of-process.
-    """
-
-    code = (
-        "import json\n"
-        "import rytm_hybrid_randomizer_v134 as m\n"
-        "print(json.dumps({\n"
-        "    'active_profile': m.active_profile,\n"
-        "    'anchor_state': m.anchor_state,\n"
-        "    'current_state': m.current_state,\n"
-        "    'previous_state': m.previous_state,\n"
-        "    'group_anchor_states': m.group_anchor_states,\n"
-        "    'group_current_states': m.group_current_states,\n"
-        "    'group_previous_states': m.group_previous_states,\n"
-        "    'target_pad': m.target_pad,\n"
-        "    'channel': m.channel,\n"
-        "    'isolated_pad': m.isolated_pad,\n"
-        "    'current_scene_name': m.current_scene_name,\n"
-        "    'pad2_current_profile_key': m.pad2_current_profile_key,\n"
-        "    'pad3_current_mode_key': m.pad3_current_mode_key,\n"
-        "    'pad4_current_mode_key': m.pad4_current_mode_key,\n"
-        "}))\n"
-    )
-    result = subprocess.run(
-        [sys.executable, "-c", code],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
+# The V1.34 monolith's cold-start globals, frozen from the last
+# ``test_monolith_global_defaults_snapshot`` capture before the monolith was
+# retired. Treat this as the authoritative reference: the package's initial
+# state objects must reproduce these values.
+_V134_GLOBAL_DEFAULTS: dict = {
+    "active_profile": None,
+    "anchor_state": {},
+    "current_state": {},
+    "previous_state": None,
+    "group_anchor_states": {},
+    "group_current_states": {},
+    "group_previous_states": {},
+    "target_pad": 1,
+    "channel": 0,
+    "isolated_pad": 3,
+    "current_scene_name": "None",
+    "pad2_current_profile_key": "3",
+    "pad3_current_mode_key": "anchor",
+    "pad4_current_mode_key": "anchor",
+}
 
 
 # ---------------------------------------------------------------------------
-# Monolith default characterization: snapshot the cold-start global values.
+# Package initial states must reproduce the V1.34 reference defaults.
 # ---------------------------------------------------------------------------
 
 
-def test_monolith_global_defaults_snapshot():
-    """Lock the monolith's documented cold-start globals (captured out-of-process)."""
+def test_package_initial_states_match_v134_defaults():
+    """Each domain's initial state object reproduces the V1.34 reference defaults."""
 
-    defaults = _monolith_global_defaults()
-
-    assert defaults["active_profile"] is None
-    assert defaults["anchor_state"] == {}
-    assert defaults["current_state"] == {}
-    assert defaults["previous_state"] is None
-    assert defaults["group_anchor_states"] == {}
-    assert defaults["group_current_states"] == {}
-    assert defaults["group_previous_states"] == {}
-    assert defaults["target_pad"] == 1
-    assert defaults["channel"] == 0
-    assert defaults["isolated_pad"] == 3
-    assert defaults["current_scene_name"] == "None"
-    assert defaults["pad2_current_profile_key"] == "3"
-    assert defaults["pad3_current_mode_key"] == "anchor"
-    assert defaults["pad4_current_mode_key"] == "anchor"
-
-
-def test_package_initial_states_match_monolith_defaults():
-    """Each domain's initial state object reproduces the monolith defaults."""
-
-    defaults = _monolith_global_defaults()
+    defaults = _V134_GLOBAL_DEFAULTS
 
     a = anchor.initial_anchor_runtime_state()
     assert a.active_profile is defaults["active_profile"]

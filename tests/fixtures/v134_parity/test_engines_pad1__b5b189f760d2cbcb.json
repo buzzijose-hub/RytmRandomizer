@@ -1,0 +1,20 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "layout1": {
+      "depth": "micro",
+      "profile": "2",
+      "role": "Main kick / BD Hard default",
+      "zone": "full"
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nBD Plastic Profiled Discovery - V1.14\n  Target: Pad 1 only\n  Profile: BD Plastic Rubber Kick\n  Machine CC15 value: 21\n\nCommands:\n  BP = load Pad 1 BD Plastic profiled anchor\n  PD = show this BD Plastic menu/status\n  PT = BD Plastic tone/modulation discovery\n  PK = BD Plastic kick/body discovery\n  PX = BD Plastic rubber/experimental discovery\n  PBH = return Pad 1 BD Plastic to anchor\n\nNotes:\n  BD Silky is profiled in V1.15 with BI/SM/ST/SK/SC/SBH\n  Use BH to return Pad 1 to the main BD Hard default.\n\nCurrent Pad 1 state: not loaded yet. Use O or BP first.\n"
+}

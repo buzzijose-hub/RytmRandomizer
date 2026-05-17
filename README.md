@@ -2,7 +2,7 @@
 
 RytmRandomizer is a Python tool for the Elektron Analog Rytm MK2 hardware drum machine. It randomizes and mutates drum-synthesis parameters over MIDI, organized as a four-pad layout, with a layered "scene" system (Rolling / Deeper / Intense / Wild, each with A/B depth variants) and safety guardrails so you do not accidentally send MIDI to the hardware. You drive it from a small text prompt: pick a scene or command, and it sends the corresponding parameter changes to the Rytm.
 
-As of Wave 4 / WS-O the interactive runtime is owned end-to-end by the modular package (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The original V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) is retained on disk only as a frozen byte-parity reference for the test suite.
+As of Wave 4 / WS-O the interactive runtime is owned end-to-end by the modular package (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The original V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) was retired in favor of the package; its reference behavior is captured as JSON goldens under `tests/fixtures/v134_parity/` and asserted by the parity test files.
 
 ---
 
@@ -97,8 +97,8 @@ The full suite is ~1280 tests in roughly five to six minutes (pytest-xdist paral
 | Path | What it is |
 |------|------------|
 | `rytm_randomizer/` | The product package. `app.py` is the entry point; `shell.py` is the interactive command loop; `engines/`, `group_runner.py`, `scene_runner.py` are the orchestration layer; `data/` and `state/` are the canonical data + runtime state. |
-| `rytm_hybrid_randomizer_v134.py` | Frozen V1.34 reference monolith. Kept on disk byte-for-byte as a parity baseline for the engines/runner tests; not invoked by production code paths. |
-| `tests/` | The test suite (~50 test files). Includes byte-parity tests that drive the monolith side-by-side with the extracted engines. |
+| `tests/fixtures/v134_parity/` | Frozen V1.34 reference behavior as JSON goldens, one per parity request. The retired `rytm_hybrid_randomizer_v134.py` monolith used to be the live byte-parity baseline; the goldens are now the authoritative source. |
+| `tests/` | The test suite (~50 test files). Includes parity tests that compare the extracted engines' output to the V1.34 JSON goldens. |
 | `docs/` | Project documentation, status, and process notes. See `docs/STATUS.md` for the current wave state. |
 | `Scripts/` | Helper scripts (e.g. closeout checks, quick status). |
 | `tooling/` | Developer utilities (hardware-capture scripts). Not part of the core product. |

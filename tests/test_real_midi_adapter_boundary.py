@@ -4,7 +4,6 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
-V134_REFERENCE = PROJECT_ROOT / "rytm_hybrid_randomizer_v134.py"
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -291,20 +290,6 @@ def test_closeout_includes_real_midi_adapter_boundary_label():
     assert "test_real_midi_adapter_boundary.py" in closeout_source
 
 
-def test_v134_reference_has_no_working_tree_diff():
-    result = subprocess.run(
-        ["git", "diff", "--", str(V134_REFERENCE.relative_to(PROJECT_ROOT))],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-
-    assert result.returncode == 0
-    assert result.stdout == ""
-    assert result.stderr == ""
-
-
 if __name__ == "__main__":
     test_real_midi_adapter_import_is_side_effect_free()
     test_build_real_midi_sender_requires_explicit_provider()
@@ -318,4 +303,3 @@ if __name__ == "__main__":
     test_passive_sources_do_not_reference_adapter_or_port_affordances()
     test_active_boundary_scope_still_rejects_profiles_3_and_4()
     test_closeout_includes_real_midi_adapter_boundary_label()
-    test_v134_reference_has_no_working_tree_diff()

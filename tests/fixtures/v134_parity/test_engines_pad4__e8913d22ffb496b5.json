@@ -1,0 +1,17 @@
+{
+  "baseline": null,
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "mode_key": "long",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nLoad the full 4-pad group first with O.\nThis stores safe anchors for Pads 1-4 before isolated mutation.\n"
+}
