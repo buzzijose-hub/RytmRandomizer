@@ -197,6 +197,82 @@ def test_hardware_send_rejects_both_target_before_sending(tmp_path):
     assert port.sent == []
 
 
+def test_dual_port_hardware_send_accepts_ready_both_target_plan(tmp_path, monkeypatch):
+    import types
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = FakeMessage
+    monkeypatch.setitem(sys.modules, "mido", fake_mido)
+
+    from rytm_randomizer.dual_machine_hardware_sender import (
+        execute_dual_machine_dual_port_hardware_send,
+    )
+
+    rytm_port = RecordingPort()
+    a4_port = RecordingPort()
+    result = execute_dual_machine_dual_port_hardware_send(
+        build_plan(tmp_path, target="both"),
+        {
+            "Analog Rytm MKII": rytm_port,
+            "Analog Four MKII": a4_port,
+        },
+        port_names_by_device={
+            "Analog Rytm MKII": "Fake Rytm",
+            "Analog Four MKII": "Fake A4",
+        },
+        armed=True,
+        operator_confirmed=True,
+        sleep=lambda _seconds: None,
+    )
+
+    assert result.accepted is True
+    assert result.reason == "accepted_hardware_send"
+    assert result.target == "both"
+    assert result.eligible_message_count == 14
+    assert result.blocked_event_count == 0
+    assert result.emitted_message_count == 14
+    assert len(rytm_port.sent) == 6
+    assert len(a4_port.sent) == 8
+    assert rytm_port.sent[0].type == "control_change"
+    assert rytm_port.sent[0].channel == 0
+    assert rytm_port.sent[0].control == 17
+    assert rytm_port.sent[0].value == 60
+    assert a4_port.sent[0].type == "control_change"
+    assert a4_port.sent[0].channel == 0
+    assert a4_port.sent[0].control == 18
+    assert a4_port.sent[0].value == 112
+
+
+def test_dual_port_hardware_send_refuses_blocked_candidates_before_sending(tmp_path):
+    from rytm_randomizer.dual_machine_hardware_sender import (
+        execute_dual_machine_dual_port_hardware_send,
+    )
+
+    rytm_port = RecordingPort()
+    a4_port = RecordingPort()
+    result = execute_dual_machine_dual_port_hardware_send(
+        build_plan(tmp_path, target="both", with_a4_snapshot=True),
+        {
+            "Analog Rytm MKII": rytm_port,
+            "Analog Four MKII": a4_port,
+        },
+        port_names_by_device={
+            "Analog Rytm MKII": "Fake Rytm",
+            "Analog Four MKII": "Fake A4",
+        },
+        armed=True,
+        operator_confirmed=True,
+        sleep=lambda _seconds: None,
+    )
+
+    assert result.accepted is False
+    assert result.reason == "blocked_by_unverified_candidates"
+    assert result.target == "both"
+    assert result.emitted_message_count == 0
+    assert rytm_port.sent == []
+    assert a4_port.sent == []
+
+
 def test_hardware_send_refuses_blocked_a4_candidates_before_sending(tmp_path):
     from rytm_randomizer.dual_machine_hardware_sender import (
         execute_dual_machine_hardware_send,

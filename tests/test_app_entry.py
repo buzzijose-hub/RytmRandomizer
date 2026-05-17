@@ -874,6 +874,84 @@ def test_app_main_arm_dual_machine_snapshot_send_sends_to_selected_fake_port(
     assert "Type SEND to transmit" in captured.out
 
 
+def test_app_main_arm_dual_machine_snapshot_send_both_target_sends_to_two_fake_ports(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    rytm_port = _RecordingPort()
+    a4_port = _RecordingPort()
+    ports = {"Fake Rytm": rytm_port, "Fake A4": a4_port}
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return ports[port_name]
+
+    scripted_inputs = iter(["0", "1", "SEND"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-path",
+                str(rytm_path),
+                "--snapshot-slot",
+                "1",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "both",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm", "Fake A4"]
+    assert len(rytm_port.sent) == 6
+    assert len(a4_port.sent) == 8
+    assert rytm_port.sent[0].channel == 0
+    assert rytm_port.sent[0].control == 17
+    assert a4_port.sent[0].channel == 0
+    assert a4_port.sent[0].control == 18
+    assert rytm_port.closed is True
+    assert a4_port.closed is True
+    assert "Hardware Send Report" in captured.out
+    assert "Target: both" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 14" in captured.out
+    assert "Choose the Analog Rytm MIDI output number" in captured.out
+    assert "Choose the Analog Four MIDI output number" in captured.out
+
+
 def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
     tmp_path,
     monkeypatch,
@@ -995,6 +1073,66 @@ def test_app_main_arm_dual_machine_snapshot_send_refuses_blocked_plan_before_por
                 "micro",
                 "--snapshot-target",
                 "analog-four",
+                "--analog-four-path",
+                str(a4_path),
+                "--analog-four-slot",
+                "1",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert calls["list"] == 0
+    assert calls["open"] == []
+    assert "Accepted: False" in captured.out
+    assert "Reason: blocked_by_unverified_candidates" in captured.out
+    assert "Emitted real MIDI messages: 0" in captured.out
+
+
+def test_app_main_arm_dual_machine_snapshot_send_both_target_refuses_blocked_candidates_before_port_open(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    rytm_path = tmp_path / "rytm.syx"
+    a4_path = tmp_path / "a4.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+    a4_path.write_bytes(_make_a4_kit_record())
+
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return _RecordingPort()
+
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-path",
+                str(rytm_path),
+                "--snapshot-slot",
+                "1",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "both",
                 "--analog-four-path",
                 str(a4_path),
                 "--analog-four-slot",

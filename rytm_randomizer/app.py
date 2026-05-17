@@ -497,16 +497,6 @@ def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
         sys.stdout.write("\n")
         return 1
 
-    if plan.target == "both":
-        result = build_dual_machine_hardware_send_refusal(
-            plan,
-            "single_target_required",
-            port_name="<not-opened>",
-        )
-        sys.stdout.write("\n".join(format_dual_machine_hardware_send_report(result)))
-        sys.stdout.write("\n")
-        return 1
-
     if not plan.ready:
         result = build_dual_machine_hardware_send_refusal(
             plan,
@@ -516,6 +506,9 @@ def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
         sys.stdout.write("\n".join(format_dual_machine_hardware_send_report(result)))
         sys.stdout.write("\n")
         return 1
+
+    if plan.target == "both":
+        return _run_arm_dual_machine_snapshot_send_both(plan)
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -574,6 +567,91 @@ def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
             except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
                 _shutdown_logger = _observability_get_logger(__name__)
                 _shutdown_logger.debug("port_close_failed_best_effort")
+
+
+def _run_arm_dual_machine_snapshot_send_both(plan) -> int:
+    """Run a ready dual-machine snapshot send against two real MIDI ports."""
+
+    from .dual_machine_hardware_sender import (
+        ANALOG_FOUR_DEVICE,
+        ANALOG_RYTM_DEVICE,
+        execute_dual_machine_dual_port_hardware_send,
+        format_dual_machine_hardware_send_report,
+    )
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm failed: no real MIDI output ports available. "
+            "Connect the target machines and retry.\n"
+        )
+        return 1
+
+    sys.stdout.write(
+        "RytmRandomizer --arm: real MIDI provider ready. "
+        f"Available output ports: {', '.join(output_names)}\n"
+    )
+
+    rytm_port_name = _choose_arm_port_name(output_names, device_label="Analog Rytm")
+    if rytm_port_name is None:
+        return 1
+
+    a4_port_name = _choose_arm_port_name(output_names, device_label="Analog Four")
+    if a4_port_name is None:
+        return 1
+
+    if rytm_port_name == a4_port_name:
+        sys.stderr.write(
+            "--arm failed: choose different MIDI outputs for Analog Rytm and "
+            "Analog Four.\n"
+        )
+        return 1
+
+    if not _confirm_dual_machine_snapshot_send_both(plan, rytm_port_name, a4_port_name):
+        return 1
+
+    rytm_port = None
+    a4_port = None
+    try:
+        sys.stdout.write(f"\nOpening MIDI output: {rytm_port_name}\n")
+        rytm_port = provider.open_output(rytm_port_name)
+        sys.stdout.write(f"Opening MIDI output: {a4_port_name}\n")
+        a4_port = provider.open_output(a4_port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        _close_port_best_effort(rytm_port)
+        _close_port_best_effort(a4_port)
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    try:
+        result = execute_dual_machine_dual_port_hardware_send(
+            plan,
+            {
+                ANALOG_RYTM_DEVICE: rytm_port,
+                ANALOG_FOUR_DEVICE: a4_port,
+            },
+            port_names_by_device={
+                ANALOG_RYTM_DEVICE: rytm_port_name,
+                ANALOG_FOUR_DEVICE: a4_port_name,
+            },
+            armed=True,
+            operator_confirmed=True,
+            sleep=_smoke_sleep,
+        )
+        sys.stdout.write("\n".join(format_dual_machine_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 0 if result.accepted else 1
+    finally:
+        _close_port_best_effort(rytm_port)
+        _close_port_best_effort(a4_port)
 
 
 def _run_arm_snapshot_essence_send(request: dict[str, object]) -> int:
@@ -671,6 +749,18 @@ def _run_arm_snapshot_essence_send(request: dict[str, object]) -> int:
                 _shutdown_logger.debug("port_close_failed_best_effort")
 
 
+def _close_port_best_effort(port) -> None:
+    if port is None:
+        return
+    close = getattr(port, "close", None)
+    if callable(close):
+        try:
+            close()
+        except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+            _shutdown_logger = _observability_get_logger(__name__)
+            _shutdown_logger.debug("port_close_failed_best_effort")
+
+
 def _confirm_dual_machine_snapshot_send(
     plan,
     port_name: str,
@@ -679,6 +769,27 @@ def _confirm_dual_machine_snapshot_send(
         "\nType SEND to transmit "
         f"{plan.eligible_message_count} mapped CC message(s) to "
         f"{plan.target} on {port_name}: "
+    )
+    try:
+        raw = input().strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write("--arm cancelled: SEND confirmation was not provided.\n")
+        return False
+    if raw != "SEND":
+        sys.stderr.write("--arm cancelled: exact SEND confirmation was not provided.\n")
+        return False
+    return True
+
+
+def _confirm_dual_machine_snapshot_send_both(
+    plan,
+    rytm_port_name: str,
+    a4_port_name: str,
+) -> bool:
+    sys.stdout.write(
+        "\nType SEND to transmit "
+        f"{plan.eligible_message_count} mapped CC message(s) to both machines "
+        f"(Analog Rytm on {rytm_port_name}; Analog Four on {a4_port_name}): "
     )
     try:
         raw = input().strip()
