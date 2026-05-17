@@ -12,6 +12,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
@@ -193,6 +194,16 @@ def test_analog_four_controlled_diff_report_help_exits_zero():
     assert "RytmRandomizer passive CLI: analog-four-controlled-diff-report" in result.stdout
     assert "controlled comparison only" in result.stdout
     assert "candidate_unverified" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_controlled_diff_report_help_exits_zero():
+    result = run_cli("rytm-controlled-diff-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: rytm-controlled-diff-report" in result.stdout
+    assert "mapped saved parameters only" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

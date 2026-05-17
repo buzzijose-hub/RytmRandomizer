@@ -595,6 +595,51 @@ def main(argv=None):
         return 0
 
     if (
+        len(args) == 9
+        and args[0] == "rytm-controlled-diff-report"
+        and args[3] == "--slot"
+        and args[5] == "--pad"
+        and args[7] == "--limit"
+    ):
+        from .rytm_controlled_diff import (
+            RytmControlledDiffError,
+            build_rytm_controlled_diff_report_from_file,
+            format_rytm_controlled_diff_error,
+            format_rytm_controlled_diff_report,
+        )
+
+        try:
+            slot = int(args[4])
+            pad = int(args[6])
+            limit = int(args[8])
+            report = build_rytm_controlled_diff_report_from_file(
+                args[1],
+                args[2],
+                slot=slot,
+                pad=pad,
+                limit=limit,
+            )
+        except FileNotFoundError:
+            lines = format_rytm_controlled_diff_error("File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except RytmControlledDiffError as exc:
+            lines = format_rytm_controlled_diff_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError:
+            lines = format_rytm_controlled_diff_error("Slot, pad, and limit must be integers")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_rytm_controlled_diff_report(report)))
+        sys.stdout.write("\n")
+        return 0
+
+    if (
         len(args) == 6
         and args[0] == "dual-machine-mock-bridge-report"
         and args[2] == "--slot"

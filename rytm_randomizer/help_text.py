@@ -13,6 +13,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
@@ -47,6 +48,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-project-report <path>
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
@@ -101,6 +103,8 @@ Commands:
                      Decode a saved Rytm kit slot into a passive 12-pad snapshot.
   sysex-snapshot-mutation-plan-report
                      Plan passive captured-value mutations from a saved kit snapshot.
+  rytm-controlled-diff-report
+                     Compare two saved Rytm kit exports for changed pad parameters.
   dual-machine-mock-bridge-report
                      Preview a combined Rytm + Analog Four mock performance stream.
   analog-four-kit-snapshot-report
@@ -219,6 +223,31 @@ Behavior:
 
 Safety:
   passive/read-only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "rytm-controlled-diff-report": """RytmRandomizer passive CLI: rytm-controlled-diff-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
+  python -m rytm_randomizer.cli rytm-controlled-diff-report --help
+
+Behavior:
+  Reads two existing Rytm kit bank or whole-project SysEx files, selects the
+  same saved kit slot and pad from each file, and reports changed decoded saved
+  parameters. This is for controlled before/after mapping sessions. It does
+  not request dumps, receive live SysEx, send MIDI, write SysEx, or touch
+  hardware.
+
+Safety:
+  passive/read-only
+  controlled comparison only
+  mapped saved parameters only
   no MIDI sending
   no MIDI receive
   no port opening

@@ -16,6 +16,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-project-report <path>
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
@@ -70,6 +71,8 @@ Commands:
                      Decode a saved Rytm kit slot into a passive 12-pad snapshot.
   sysex-snapshot-mutation-plan-report
                      Plan passive captured-value mutations from a saved kit snapshot.
+  rytm-controlled-diff-report
+                     Compare two saved Rytm kit exports for changed pad parameters.
   dual-machine-mock-bridge-report
                      Preview a combined Rytm + Analog Four mock performance stream.
   analog-four-kit-snapshot-report

@@ -180,6 +180,25 @@ proof for Live Snapshot behavior: mutate from the kit that is loaded, not from
 prebaked anchors. It does not send MIDI, open ports, load anchors, switch
 machines, mutate hardware, or write SysEx.
 
+## Rytm Controlled Diff Report
+
+Compare a baseline Rytm kit export against a second export made after one controlled pad parameter change:
+
+```powershell
+python -m rytm_randomizer.cli rytm-controlled-diff-report "G:\ANALOG RYTM\MAPPING\RYTM_BASELINE.syx" "G:\ANALOG RYTM\MAPPING\RYTM_PAD1_FILTER_UP.syx" --slot 1 --pad 1 --limit 16
+```
+
+Use this during 12-pad mapping sessions:
+
+1. Export the baseline kit.
+2. Change one known Rytm pad parameter by hand.
+3. Export the same kit again.
+4. Run this report to see which decoded saved parameter moved.
+
+The output reports mapped saved parameters only, using the current saved-kit
+decoder's known or generic machine maps. It does not open MIDI ports, send
+MIDI, receive live SysEx, write SysEx, switch machines, or mutate hardware.
+
 ## Dual-Machine Mock Bridge Report
 
 Preview a coordinated passive Rytm + Analog Four mock stream:

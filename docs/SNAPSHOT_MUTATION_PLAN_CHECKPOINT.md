@@ -49,6 +49,11 @@ This is passive/read-only. It does not request dumps, receive live SysEx, open
 ports, send MIDI, mutate hardware, restore a kit, switch machines, load anchors,
 or write SysEx.
 
-The next slice should connect this planner to mock MIDI message capture, still
-without opening a port. After that, the armed Live Snapshot flow can be designed
-around the same plan object.
+Use `rytm-controlled-diff-report` with baseline/variant Rytm exports to prove
+which decoded saved parameter moved after one controlled hand tweak. This is the
+passive calibration path for expanding Live Snapshot behavior across all 12
+pads.
+
+The next runtime slice should connect this planner to mock MIDI message capture,
+still without opening a port. After that, the armed Live Snapshot flow can be
+designed around the same plan object.
