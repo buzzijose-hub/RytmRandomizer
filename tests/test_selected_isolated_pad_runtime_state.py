@@ -157,7 +157,9 @@ def test_unsupported_selected_target_fails_safely():
     from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.state.selected_target_validation import build_unsupported_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import (
+        build_unsupported_selected_target_state,
+    )
 
     result = build_selected_isolated_pad_runtime_state(
         selected_target_state=build_unsupported_selected_target_state(5),
@@ -232,7 +234,10 @@ def test_stale_target_and_stale_anchor_fail_safely():
 
 
 def test_invalid_target_and_invalid_anchor_fail_safely():
-    from rytm_randomizer.state.anchor_validation import build_invalid_anchor_state, build_unknown_anchor_state
+    from rytm_randomizer.state.anchor_validation import (
+        build_invalid_anchor_state,
+        build_unknown_anchor_state,
+    )
     from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )

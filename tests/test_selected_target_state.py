@@ -110,7 +110,9 @@ def test_default_selected_target_state_uses_passive_pad_3_context():
 
 
 def test_unsupported_selected_target_fails_safely():
-    from rytm_randomizer.state.selected_target_validation import build_unsupported_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import (
+        build_unsupported_selected_target_state,
+    )
 
     result = build_unsupported_selected_target_state(5)
 
