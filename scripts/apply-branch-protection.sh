@@ -2,9 +2,8 @@
 #
 # apply-branch-protection.sh
 #
-# Applies branch protection to the `main` branch of the RytmRandomizer repo.
-# An admin runs this ONCE after `main` is created as the integration branch.
-# It is NOT run from CI or from a worktree.
+# Applies branch protection to the current default integration branch of the
+# RytmRandomizer repo. It is NOT run from CI.
 #
 # Requires: gh CLI authenticated as a repo admin.
 # See docs/BRANCH_PROTECTION.md for the human-readable description.
@@ -12,7 +11,7 @@
 set -euo pipefail
 
 REPO="${REPO:-buzzijose-hub/RytmRandomizer}"
-BRANCH="${BRANCH:-main}"
+BRANCH="${BRANCH:-modularize-v1.34}"
 
 # Required status checks.
 # This list intentionally requires ONLY the `required-checks` aggregate

@@ -3,12 +3,11 @@
 This document describes the branch-protection ruleset for the RytmRandomizer
 repository and how it is applied.
 
-## Integration branch
+## Protected integration branch
 
-`main` is the integration branch. It does **not** exist yet — it is created as
-a live-repo operation at integration time (not from a worktree). All feature
-workstream branches (e.g. `ws-e-cicd`) branch from `modularize-v1.34` and merge
-into `main` once it exists.
+`modularize-v1.34` is the current GitHub default branch and protected
+integration branch. All feature workstream branches merge into it through pull
+requests after the gated build passes.
 
 ## Applying the ruleset
 
@@ -19,11 +18,10 @@ scripts/apply-branch-protection.sh
 ```
 
 That script issues the exact `gh api` call against
-`/repos/buzzijose-hub/RytmRandomizer/branches/main/protection`. It must be run
-once, after `main` is created, by someone with admin rights on the repo. It is
-**not** run from CI or from a worktree.
+`/repos/buzzijose-hub/RytmRandomizer/branches/modularize-v1.34/protection`. It
+must be run by someone with admin rights on the repo. It is **not** run from CI.
 
-## The ruleset for `main`
+## The ruleset for `modularize-v1.34`
 
 | Setting | Value |
 |---|---|
