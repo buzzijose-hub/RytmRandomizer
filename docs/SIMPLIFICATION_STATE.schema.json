@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/buzzijose-hub/RytmRandomizer/blob/modularize-v1.34/docs/SIMPLIFICATION_STATE.schema.json",
+  "title": "SimplificationState",
+  "description": "On-disk state for the autonomous simplification orchestrator. Per Gate 16 (docs/PLAN_REQUIREMENTS.md) every plan in this repo defines a similar state file so the orchestrator survives context compaction. The orchestrator reads this on every wake-up, reconciles with live PR state via `gh pr list`, and atomically rewrites on each phase transition. Hand-edits by humans are permitted between cron firings but discouraged during active runs.",
+  "type": "object",
+  "required": [
+    "plan",
+    "base_branch",
+    "base_sha_at_kickoff",
+    "kickoff_at",
+    "budget_hours",
+    "deadline_at",
+    "permission_profile",
+    "refuse_list",
+    "workstreams",
+    "phase_progression",
+    "monitors",
+    "merged_count",
+    "blocked_count",
+    "current_orchestrator_action"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Path to this schema file (relative to the state file's location). Tooling uses this for validation."
+    },
+    "plan": {
+      "type": "string",
+      "description": "Filename (relative to docs/) of the plan document this state file tracks.",
+      "examples": ["SIMPLIFICATION_PLAN.md"]
+    },
+    "base_branch": {
+      "type": "string",
+      "description": "The git branch the plan's PRs target.",
+      "examples": ["modularize-v1.34"]
+    },
+    "base_sha_at_kickoff": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Full SHA of the base branch at the moment the orchestrator started. Lets recovery procedures detect rebase drift."
+    },
+    "kickoff_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp when the orchestrator first wrote this state file."
+    },
+    "budget_hours": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Hard wall-clock cap. Beyond `deadline_at` the orchestrator writes BUDGET_EXCEEDED and stops."
+    },
+    "budget_revision_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional: ISO-8601 UTC timestamp when the budget was last revised (e.g. after observing actual cadence)."
+    },
+    "budget_revision_reason": {
+      "type": "string",
+      "description": "Optional: human-readable rationale for the latest budget revision."
+    },
+    "deadline_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "kickoff_at + budget_hours. The orchestrator never operates past this timestamp."
+    },
+    "permission_profile": {
+      "type": "string",
+      "enum": ["acceptEdits", "bypassPermissions"],
+      "description": "Permission mode the orchestrator declares it needs (per Gate 16 mandatory element #13)."
+    },
+    "refuse_list": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "Hard-coded actions the orchestrator must refuse regardless of permission mode (per Gate 16). E.g. 'force-push to <base_branch>', 'close PR #<external collaborator>', etc."
+    },
+    "timing_observations": {
+      "type": "object",
+      "description": "Empirical timing data captured during the run. Used to refine estimates for future runs.",
+      "properties": {
+        "wave1_planning_parallel_walltime_s": {"type": "integer", "minimum": 0},
+        "wave1_planning_sequential_walltime_s": {"type": "integer", "minimum": 0},
+        "parallelism_factor": {"type": "number", "minimum": 1.0},
+        "planner_avg_s": {"type": "integer", "minimum": 0},
+        "planner_p95_s": {"type": "integer", "minimum": 0},
+        "extrapolated_total_walltime_h_estimate": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "workstreams": {
+      "type": "object",
+      "description": "Per-WS state. Keys are WS ids (e.g. 'WS-S1', 'WS-M2'). All values follow the Workstream schema below.",
+      "patternProperties": {
+        "^WS-[A-Z][0-9A-Z]*$": {"$ref": "#/$defs/Workstream"}
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "phase_progression": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 2,
+      "description": "Ordered list of phase names a WS transitions through. The orchestrator validates `WS.phase` against this list."
+    },
+    "monitors": {
+      "type": "object",
+      "description": "IDs of persistent background monitors. null = not currently armed.",
+      "properties": {
+        "ci_pr_state": {"type": ["string", "null"]},
+        "codex_pr_21": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "merged_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of WSes that have reached the 'merged' phase. Updated atomically on each merge."
+    },
+    "blocked_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of WSes in the 'blocked' phase. Non-zero is a soft-fail signal; the orchestrator continues with eligible WSes but logs the block."
+    },
+    "current_orchestrator_action": {
+      "type": "string",
+      "description": "What the orchestrator believes it's currently doing. Updated on every state-file rewrite. Useful for debugging after context compaction.",
+      "examples": ["bootstrap", "dispatching_planners", "awaiting_planner_completion", "implementing_WS-S1", "merge_cascade", "learning_phase", "done"]
+    }
+  },
+  "$defs": {
+    "Workstream": {
+      "type": "object",
+      "required": ["title", "wave", "phase", "depends_on", "owns", "retry_count"],
+      "properties": {
+        "title": {"type": "string", "description": "Short human-readable name."},
+        "wave": {
+          "oneOf": [
+            {"type": "integer", "minimum": 1, "maximum": 4},
+            {"type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$", "description": "Sub-wave designator like '3.1' or '3.5'."}
+          ],
+          "description": "Wave number. Integers for primary waves; strings for sub-waves."
+        },
+        "phase": {
+          "type": "string",
+          "description": "Current phase. Must be one of the values in the parent's `phase_progression` list."
+        },
+        "worktree": {
+          "type": ["string", "null"],
+          "description": "Relative path to the git worktree this WS owns. null is allowed only for WSes that don't produce a code PR (e.g. WS-H opens a GitHub issue, no worktree needed); when null, `branch` MUST also be null and the WS docstring MUST explain why."
+        },
+        "branch": {
+          "type": ["string", "null"],
+          "description": "Git branch name for this WS's PR. null only when worktree is null (see worktree description)."
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^WS-[A-Z][0-9A-Z]*$"},
+          "description": "List of WS ids that must reach 'merged' before this WS leaves 'pending'."
+        },
+        "owns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "File paths (or path patterns) this WS owns. Used by the orchestrator's disjoint-file-ownership check per Gate 16."
+        },
+        "pr_number": {"type": ["integer", "null"], "description": "GitHub PR number after `gh pr create`. null before."},
+        "head_sha": {"type": ["string", "null"], "description": "Current HEAD of the WS's branch. Updated after every push."},
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Retry counter per the orchestrator's deterministic decision rules. Escalation to architect happens at >=2."
+        },
+        "plan_path": {"type": "string", "description": "Optional: relative path to the WS's plan/design doc inside its worktree."},
+        "planning_completed_at": {"type": "string", "format": "date-time"},
+        "planning_duration_s": {"type": "integer", "minimum": 0},
+        "notes": {"type": "string", "description": "Free-form notes about coordination, special cases, etc."}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "description": "If worktree is null, branch must also be null (WS produces no code PR).",
+          "if": {"properties": {"worktree": {"type": "null"}}},
+          "then": {"required": ["notes"], "properties": {"branch": {"type": "null"}}}
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

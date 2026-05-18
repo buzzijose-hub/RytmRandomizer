@@ -26,6 +26,10 @@ from rytm_randomizer.commands import COMMANDS
 from rytm_randomizer.profiles import GROUP_PROFILE_METADATA
 from rytm_randomizer.scenes import SCENE_COMMANDS
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # Known-good registry keys. The CLI normalises command/scene keys to upper
 # case, so we pick already-uppercased keys to avoid surprises in the fixture

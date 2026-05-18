@@ -3,6 +3,10 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 

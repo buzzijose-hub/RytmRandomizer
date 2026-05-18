@@ -5,8 +5,14 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import pytest
+
 from rytm_randomizer.commands import COMMANDS
 from rytm_randomizer.inspection import SAFETY_SUMMARY, audit_command_registry
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 
 def test_real_commands_registry_audit_passes_validation():

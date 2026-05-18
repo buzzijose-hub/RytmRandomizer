@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.fast
+
 from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.style_analysis import FeatureReport
 

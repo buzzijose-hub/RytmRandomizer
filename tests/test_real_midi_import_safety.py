@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -20,7 +26,7 @@ SOURCE_FILES = (
     PROJECT_ROOT / "rytm_randomizer" / "mock_midi.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_message_mapper.py",
     PROJECT_ROOT / "rytm_randomizer" / "active_boundary.py",
-    PROJECT_ROOT / "rytm_randomizer" / "reports.py",
+    PROJECT_ROOT / "rytm_randomizer" / "reports/__init__.py",
 )
 
 FORBIDDEN_REAL_MIDI_TOKENS = (
@@ -65,6 +71,8 @@ def test_passive_and_mock_imports_do_not_import_real_midi_libraries():
     imports = "\n".join(f"import {module}" for module in PASSIVE_AND_MOCK_MODULES)
     code = f"""
 import sys
+import pytest
+
 {imports}
 for module_name in ("mido", "rtmidi", "pythonrtmidi"):
     assert module_name not in sys.modules, module_name

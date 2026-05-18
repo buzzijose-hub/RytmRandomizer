@@ -3,6 +3,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -108,7 +114,7 @@ def test_report_entries_include_read_only_behavior_details():
         "label": "load Pad 1 BD Hard anchor, primary default",
         "behavior_family": "anchor/profile",
         "reason": "supported_anchor_profile_intent",
-        "source_helper": "rytm_randomizer.behavior_anchor_profile",
+        "source_helper": "rytm_randomizer.behavior.anchor_profile",
         "target_pad": 1,
         "target_scope": "",
         "intent_kind": "anchor/profile",
@@ -151,7 +157,7 @@ def test_report_marks_pz_and_profile_4_as_parked_not_supported():
             "kind": "selected_isolated_pad_anchor_return",
             "status": "parked",
             "reason": "deferred_selected_isolated_pad_anchor_return",
-            "source_helper": "rytm_randomizer.behavior_selected_isolated_pad",
+            "source_helper": "rytm_randomizer.behavior.selected_isolated_pad",
             "requires_separate_approval": True,
         },
         {
@@ -310,7 +316,7 @@ def test_passive_cli_visibility_is_formatter_only_and_existing_report_remains_un
 
 
 def test_pz_readiness_and_profile_4_behavior_remain_safe():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
     from rytm_randomizer.mock_message_mapper import (

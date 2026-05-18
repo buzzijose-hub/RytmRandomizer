@@ -47,6 +47,10 @@ from rytm_randomizer.style_analysis import extractor as extractor_module
 from rytm_randomizer.style_analysis import feature_report as feature_report_module
 from rytm_randomizer.style_analysis import library as library_module
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # Builders
 # ---------------------------------------------------------------------------

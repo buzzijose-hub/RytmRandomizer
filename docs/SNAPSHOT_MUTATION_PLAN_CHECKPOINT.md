@@ -2,6 +2,8 @@
 
 Date: 2026-05-17
 
+Requirements reference: `docs/PLAN_REQUIREMENTS.md`
+
 ## Purpose
 
 `sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>`

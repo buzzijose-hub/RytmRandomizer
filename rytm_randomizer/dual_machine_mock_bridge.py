@@ -17,6 +17,7 @@ from .analog_four_snapshot_mutation_planner import (
     build_analog_four_snapshot_mutation_plan_from_file,
 )
 from .analog_four_starter_profiles import (
+    BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY,
     AnalogFourStarterProfile,
     get_analog_four_starter_profile,
 )
@@ -151,7 +152,7 @@ def build_dual_machine_mock_bridge(
     analog_four_starter_profile_key = starter_profile.key
     analog_four_starter_profile_label = starter_profile.label
     if analog_four_sysex_path is not None:
-        if starter_profile.key != "balanced":
+        if starter_profile.key != BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY:
             raise ValueError(
                 "Analog Four starter profile cannot be combined with Analog Four " "snapshot path"
             )

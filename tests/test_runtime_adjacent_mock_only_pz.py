@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -55,10 +61,10 @@ def test_importing_runtime_adjacent_pz_modules_prints_nothing():
             sys.executable,
             "-c",
             (
-                "import rytm_randomizer.behavior_selected_isolated_pad; "
-                "import rytm_randomizer.selected_isolated_pad_runtime_state; "
-                "import rytm_randomizer.selected_target_state; "
-                "import rytm_randomizer.anchor_state; "
+                "import rytm_randomizer.behavior.selected_isolated_pad; "
+                "import rytm_randomizer.state.selected_isolated_pad_validation; "
+                "import rytm_randomizer.state.selected_target_validation; "
+                "import rytm_randomizer.state.anchor_validation; "
                 "import rytm_randomizer.mock_midi"
             ),
         ],
@@ -74,7 +80,7 @@ def test_importing_runtime_adjacent_pz_modules_prints_nothing():
 
 
 def test_default_pz_readiness_fails_safely_without_mock_messages():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -95,16 +101,16 @@ def test_default_pz_readiness_fails_safely_without_mock_messages():
 
 
 def test_missing_target_and_missing_anchor_contexts_fail_safely():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_missing_anchor_runtime_state,
         build_missing_selected_target_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import build_default_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_default_selected_target_state
 
     sender = MockMidiSender()
     cases = (
@@ -135,20 +141,20 @@ def test_missing_target_and_missing_anchor_contexts_fail_safely():
 
 
 def test_unsupported_stale_and_invalid_contexts_fail_safely():
-    from rytm_randomizer.anchor_state import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
+        evaluate_selected_isolated_pad_behavior,
+    )
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.state.anchor_validation import (
         build_invalid_anchor_state,
         build_stale_anchor_state,
         build_unknown_anchor_state,
         build_unsupported_anchor_state,
     )
-    from rytm_randomizer.behavior_selected_isolated_pad import (
-        evaluate_selected_isolated_pad_behavior,
-    )
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
+    from rytm_randomizer.state.selected_target_validation import (
         build_default_selected_target_state,
         build_invalid_selected_target_state,
         build_stale_selected_target_state,
@@ -220,7 +226,7 @@ def test_unsupported_stale_and_invalid_contexts_fail_safely():
 
 
 def test_runtime_adjacent_pz_checks_are_deterministic_and_copy_safe():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -249,9 +255,9 @@ def test_passive_cli_preview_pz_remains_read_only():
 
 
 def test_runtime_adjacent_pz_imports_no_real_midi_and_exposes_no_active_names():
-    import rytm_randomizer.behavior_selected_isolated_pad as selected_behavior
+    import rytm_randomizer.behavior.selected_isolated_pad as selected_behavior
     import rytm_randomizer.mock_midi  # noqa: F401
-    import rytm_randomizer.selected_isolated_pad_runtime_state as runtime_state
+    import rytm_randomizer.state.selected_isolated_pad_validation as runtime_state
 
     exposed_names = set(dir(selected_behavior)) | set(runtime_state.__all__)
 

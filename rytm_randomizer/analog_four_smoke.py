@@ -11,11 +11,10 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from . import midi_io
+from .midi_io import Sender
 
-Sender = Any
 SleepFunc = Callable[[float], object]
 
 

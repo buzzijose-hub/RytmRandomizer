@@ -18,6 +18,13 @@ import sys
 import types
 from pathlib import Path
 
+import pytest
+from conftest import _FakeMessage
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -36,14 +43,6 @@ def run_python(code: str) -> subprocess.CompletedProcess:
         text=True,
         check=False,
     )
-
-
-class _FakeMessage:
-    def __init__(self, message_type, *, channel, control, value):
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
 
 
 class _RecordingPort:

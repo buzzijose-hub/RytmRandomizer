@@ -3,6 +3,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 USAGE = (
@@ -1027,8 +1033,8 @@ def test_importing_cli_does_not_load_behavior_report_modules():
                 "import sys\n"
                 "import rytm_randomizer.cli\n"
                 "assert 'rytm_randomizer.reports' not in sys.modules\n"
-                "assert 'rytm_randomizer.behavior_selected_isolated_pad' not in sys.modules\n"
-                "assert 'rytm_randomizer.selected_isolated_pad_runtime_state' not in sys.modules\n"
+                "assert 'rytm_randomizer.behavior.selected_isolated_pad' not in sys.modules\n"
+                "assert 'rytm_randomizer.state.selected_isolated_pad_validation' not in sys.modules\n"
                 "assert 'rytm_randomizer.mock_midi' not in sys.modules\n"
                 "assert 'mido' not in sys.modules\n"
                 "assert 'rtmidi' not in sys.modules\n"

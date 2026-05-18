@@ -4,6 +4,13 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-18: PR #35 Wave-1 simplification bundle merged into
+  `modularize-v1.34`. The base now includes the `devices/`, `snapshot/`,
+  `behavior/`, and `reports/` subpackages, shared test fixtures, the
+  `MidiSender` / `PadRuntimeState` / `Device` protocol surfaces, the
+  `PassiveReportFormatter`, CLI registry scaffolding, observability metrics,
+  and the new architecture guard tests. The dual-machine branch now builds on
+  that foundation instead of carrying parallel helper code.
 - 2026-05-18: integrated Eddie's `modularize-v1.34` cleanup branch into
   `codex/dual-machine-mock-bridge`, preserving the dual-machine/snapshot
   planning work while accepting the monolith retirement, CI coverage
@@ -206,10 +213,10 @@ Each step is locked against the V1.34 reference by characterization tests.
 ## Reference Docs
 
 - `docs/ARCHITECTURE_DIAGRAMS.md` -- current code-derived architecture maps.
-- `docs/MODULARIZATION_RULES.md`, `docs/CODEX_MODULARIZATION_PROTOCOL.md`, `docs/CODEX_REFACTOR_PROMPT.md` -- modularization constraints and protocol.
+- `docs/MODULARIZATION_RULES.md` -- modularization constraints. Historical CODEX briefs live in `docs/archive/`.
 - `docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md` -- the V1.34 command surface, as preserved by `rytm_randomizer.shell`.
-- `docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md` -- how to run the passive CLI.
-- `docs/HARDWARE_MANUAL_REFERENCE_INVENTORY.md`, `docs/LOCAL_DEV_TOOLING_NOTES.md` -- reference/tooling notes.
+- `docs/archive/PASSIVE_CLI_OPERATOR_QUICKSTART.md` -- historical passive CLI quickstart.
+- `docs/archive/HARDWARE_MANUAL_REFERENCE_INVENTORY.md`, `docs/LOCAL_DEV_TOOLING_NOTES.md` -- reference/tooling notes.
 - `docs/FUTURE_AUDIO_ANALYZER_REFERENCE_DISCOVERY.md` -- future analyzer slider
   and 12-pad role-map direction; not current runtime scope.
 - `docs/FUTURE_ANALOG_FOUR_EXPANSION.md` -- future cross-device Analog Four
@@ -221,4 +228,4 @@ Each step is locked against the V1.34 reference by characterization tests.
   analyzer scope, AM9KITS observation, and Live Snapshot relevance.
 - `docs/MACHINE_CATALOG_ESSENCE_MATCHER_CHECKPOINT.md` -- passive machine
   catalog, 12-pad role template, and future analyzer-to-engine-choice bridge.
-- `docs/TRIAGE_REPORT.md` -- audit record of the `docs/` accuracy triage.
+- `docs/archive/TRIAGE_REPORT.md` -- audit record of the `docs/` accuracy triage.

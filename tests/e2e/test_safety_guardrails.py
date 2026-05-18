@@ -30,6 +30,10 @@ from .conftest import (
     run_canonical_dry_run,
 )
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # -----------------------------------------------------------------------------
 # Bare-depth guardrail: main-prompt 1/2/3 must emit no MIDI by themselves.
 # -----------------------------------------------------------------------------

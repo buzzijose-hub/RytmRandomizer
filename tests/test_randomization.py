@@ -20,10 +20,16 @@ from __future__ import annotations
 import random
 import subprocess
 import sys
-import types
 from pathlib import Path
 
 import pytest
+
+# WS-M4: shared fixture classes from tests/conftest.py
+from conftest import RecordingOut, _no_sleep
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,33 +53,6 @@ def _restore_sys_modules():
                 del sys.modules[name]
         for name, module in snapshot.items():
             sys.modules[name] = module
-
-
-class _FakeMessage:
-    def __init__(self, message_type, *, channel, control, value):
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
-
-
-def _install_fake_mido():
-    fake = types.ModuleType("mido")
-    fake.Message = _FakeMessage  # type: ignore[attr-defined]
-    sys.modules["mido"] = fake
-    return fake
-
-
-class RecordingOut:
-    def __init__(self) -> None:
-        self.sent: list[object] = []
-
-    def send(self, message: object) -> None:
-        self.sent.append(message)
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
 
 
 def _run_python(code: str) -> subprocess.CompletedProcess[str]:
@@ -263,10 +242,9 @@ def test_random_hp2_filter_pair_in_process_all_branches():
 # ===========================================================================
 
 
-def test_random_waveform_seeds_current_from_anchor_when_empty(capsys):
+def test_random_waveform_seeds_current_from_anchor_when_empty(capsys, fake_mido_session):
     """When current_state is empty it is seeded from anchor_state before the
     waveform pick is recorded, exactly as the V1.34 reference behaved."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import random_waveform
 
     profile = _sample_profile()
@@ -291,10 +269,9 @@ def test_random_waveform_seeds_current_from_anchor_when_empty(capsys):
     assert low <= result.current_state["SRC Waveform"] <= high
 
 
-def test_random_waveform_carries_previous_state(capsys):
+def test_random_waveform_carries_previous_state(capsys, fake_mido_session):
     """A non-empty current_state copies into previous_state when the new
     waveform is applied."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import random_waveform
 
     profile = _sample_profile()
@@ -338,9 +315,8 @@ def test_random_waveform_without_profile(capsys):
     assert "Select a profile first with P." in output
 
 
-def test_random_waveform_default_rng(capsys):
+def test_random_waveform_default_rng(capsys, fake_mido_session):
     """Cover the rng=None default-RNG path."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import random_waveform
 
     profile = _sample_profile()
@@ -364,9 +340,8 @@ def test_random_waveform_default_rng(capsys):
 # ===========================================================================
 
 
-def test_mutate_zone_filter_zone_emits_freq_and_resonance(capsys):
+def test_mutate_zone_filter_zone_emits_freq_and_resonance(capsys, fake_mido_session):
     """Filter zone exercises the FLT Frequency/Resonance pair path."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
@@ -391,9 +366,8 @@ def test_mutate_zone_filter_zone_emits_freq_and_resonance(capsys):
     assert profile["params"]["FLT Resonance"] in sent_ccs
 
 
-def test_mutate_zone_full_zone_seeded_current(capsys):
+def test_mutate_zone_full_zone_seeded_current(capsys, fake_mido_session):
     """Full-zone mutation copies the seeded current state into previous_state."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
@@ -418,9 +392,8 @@ def test_mutate_zone_full_zone_seeded_current(capsys):
     assert result.previous_state == seeded
 
 
-def test_mutate_zone_src_zone(capsys):
+def test_mutate_zone_src_zone(capsys, fake_mido_session):
     """A non-filter zone covers the plain random_value_around_anchor path."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
@@ -445,9 +418,8 @@ def test_mutate_zone_src_zone(capsys):
             assert name in result.current_state
 
 
-def test_mutate_zone_skips_param_absent_from_depth_deltas(capsys):
+def test_mutate_zone_skips_param_absent_from_depth_deltas(capsys, fake_mido_session):
     """A zone param missing from ``deltas[depth]`` is skipped (continue path)."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = {
@@ -483,9 +455,8 @@ def test_mutate_zone_skips_param_absent_from_depth_deltas(capsys):
     assert result.current_state["P_OUT"] == 60
 
 
-def test_mutate_zone_resonance_after_pair_is_skipped(capsys):
+def test_mutate_zone_resonance_after_pair_is_skipped(capsys, fake_mido_session):
     """Once the FLT pair is handled, a standalone FLT Resonance is skipped."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()
@@ -533,9 +504,8 @@ def test_mutate_zone_without_profile(capsys):
     assert "Select a profile first with P." in output
 
 
-def test_mutate_zone_default_rng(capsys):
+def test_mutate_zone_default_rng(capsys, fake_mido_session):
     """Cover the rng=None default-RNG path for mutate_zone."""
-    _install_fake_mido()
     from rytm_randomizer.randomization import mutate_zone
 
     profile = _sample_profile()

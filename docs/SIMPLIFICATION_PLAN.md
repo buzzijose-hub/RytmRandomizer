@@ -242,11 +242,11 @@ WAVE 4 (gated on WS-S8) — autonomous learning + hand-off
   WS-H   PR #21 hand-off issue                              auto-generated from final state
 ```
 
-Total: **13 workstreams** (S1-S9 + M1-M4 + WS-S8 sweep + WS-L learning + WS-H handoff = 13 PRs counting S8/L/H as separate from the merge cascade). At peak parallelism, ~8 PRs in flight simultaneously (Wave 1's 4 + M1+M2+M4 + S9 if started early).
+Total: **15 workstreams** — S1-S9 (9 simplification PRs, incl. WS-S8 sweep) + M1-M4 (4 maintainability PRs) + WS-L (learning PR) + WS-H (codex hand-off issue, not a code PR). 14 of the 15 ship as PRs; WS-H opens a GitHub issue against PR #21 (no branch/worktree — see `docs/SIMPLIFICATION_STATE.json` `WS-H.worktree: null`). At peak parallelism, ~8 work-items in flight simultaneously (Wave 1's 4 + M1+M2+M4 + S9 if started early).
 
 Each WS passes through the same 11-phase pipeline (plan → tdd → implement → **coverage gate** → review × 3 in parallel → **docs** → PR open → CI → merge), with mandatory 100% branch coverage on touched files and mandatory `doc-updater` commit before PR opens.
 
-Wall-clock target: **~3–4 days** (vs ~2 weeks sequential), driven by Wave-1 parallelism and the merge cascade pattern proven in PRs #22–#28.
+Wall-clock target: **~12h** (revised down from 72h after Wave-1 planning measured 5x parallelism in 369s wall-clock vs 1855s sequential — see `docs/SIMPLIFICATION_RUN_LOG.md` `wave1.planning.totals` metric and `docs/SIMPLIFICATION_STATE.json:timing_observations`). Sequential equivalent would be ~3-4 days.
 
 ---
 

@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -19,7 +25,7 @@ def run_cli(*args):
 
 
 def test_importing_behavior_pad4_lane_prints_nothing():
-    code = "import rytm_randomizer.behavior_pad_lane"
+    code = "import rytm_randomizer.behavior.pad_lane"
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=PROJECT_ROOT,
@@ -34,7 +40,7 @@ def test_importing_behavior_pad4_lane_prints_nothing():
 
 
 def test_p4a_returns_read_only_pad4_bd_acoustic_home_anchor_intent():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4A")
 
@@ -76,7 +82,7 @@ def test_p4a_returns_read_only_pad4_bd_acoustic_home_anchor_intent():
 
 
 def test_p4a_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4A")
 
@@ -98,7 +104,7 @@ def test_p4a_metadata_contains_expected_passive_sources():
 
 
 def test_p4r_returns_read_only_pad4_bd_acoustic_mode_rotation_intent():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4R")
 
@@ -139,7 +145,7 @@ def test_p4r_returns_read_only_pad4_bd_acoustic_mode_rotation_intent():
 
 
 def test_p4r_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4R")
 
@@ -161,7 +167,7 @@ def test_p4r_metadata_contains_expected_passive_sources():
 
 
 def test_p4x_returns_read_only_pad4_bd_acoustic_current_mode_safe_mutation_intent():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4X")
 
@@ -202,7 +208,7 @@ def test_p4x_returns_read_only_pad4_bd_acoustic_current_mode_safe_mutation_inten
 
 
 def test_p4x_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4X")
 
@@ -227,7 +233,7 @@ def test_p4x_metadata_contains_expected_passive_sources():
 
 
 def test_pad4_lane_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("P4A")
 
@@ -261,7 +267,7 @@ def test_pad4_lane_metadata_is_copied_and_immutable():
 
 
 def test_deferred_packet_8_pad4_lane_keys_fail_safely():
-    from rytm_randomizer.behavior_pad_lane import (
+    from rytm_randomizer.behavior.pad_lane import (
         DEFERRED_PACKET_8_PAD4_LANE_KEYS,
         evaluate_pad4_lane_behavior,
     )
@@ -286,7 +292,7 @@ def test_deferred_packet_8_pad4_lane_keys_fail_safely():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad4_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad4_lane_behavior
 
     result = evaluate_pad4_lane_behavior("NOPE")
 
@@ -300,7 +306,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_packet_1_p4m_menu_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("P4M")
 
@@ -322,7 +328,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_pad_lane  # noqa: F401
+    import rytm_randomizer.behavior.pad_lane  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -337,7 +343,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_pad4_lane_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_pad_lane as behavior_pad4_lane
+    import rytm_randomizer.behavior.pad_lane as behavior_pad4_lane
 
     exposed_names = set(dir(behavior_pad4_lane))
 
@@ -347,7 +353,7 @@ def test_behavior_pad4_lane_exposes_no_active_behavior_names():
 
 
 def test_behavior_pad4_lane_exposes_explicit_public_api():
-    import rytm_randomizer.behavior_pad_lane as behavior_pad_lane
+    import rytm_randomizer.behavior.pad_lane as behavior_pad_lane
 
     # After the WS-G collapse the per-pad shim modules were removed and the
     # Pad 1-4 lane public API now lives on the unified ``behavior_pad_lane``
@@ -367,7 +373,7 @@ def test_behavior_pad4_lane_exposes_explicit_public_api():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_pad_lane as behavior_pad4_lane
+    import rytm_randomizer.behavior.pad_lane as behavior_pad4_lane
 
     module_text = "\n".join(
         [

@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY = "balanced"
+
 
 @dataclass(frozen=True)
 class AnalogFourStarterParameter:
@@ -58,7 +60,7 @@ def _track(
 
 ANALOG_FOUR_STARTER_PROFILES: tuple[AnalogFourStarterProfile, ...] = (
     AnalogFourStarterProfile(
-        key="balanced",
+        key=BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY,
         label="Balanced",
         aliases=("balanced", "default", "safe", "safe-starter"),
         description="Conservative four-track tonal support for dual-machine testing.",
@@ -300,7 +302,7 @@ def get_analog_four_starter_profile(key: str | None) -> AnalogFourStarterProfile
 
 def _normalize_profile_key(key: str | None) -> str:
     if key is None:
-        return "balanced"
+        return BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY
     normalized = str(key).strip().lower()
     normalized = re.sub(r"[\s_]+", "-", normalized)
     return normalized
@@ -308,6 +310,7 @@ def _normalize_profile_key(key: str | None) -> str:
 
 __all__ = [
     "ANALOG_FOUR_STARTER_PROFILES",
+    "BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY",
     "AnalogFourStarterParameter",
     "AnalogFourStarterProfile",
     "AnalogFourStarterTrackProfile",

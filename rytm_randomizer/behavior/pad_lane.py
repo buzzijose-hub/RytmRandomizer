@@ -21,7 +21,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import COMMANDS, PAD1_COMMANDS, PAD2_COMMANDS, PAD3_COMMANDS, PAD4_COMMANDS
+from ..commands import COMMANDS, PAD1_COMMANDS, PAD2_COMMANDS, PAD3_COMMANDS, PAD4_COMMANDS
+from ..data.modes import MUTATION_KINDS
+
+# WS-S8 Gate 10: consume the canonical mutation-kind constants instead of
+# inlining the strings at every dispatch site below.
+_DISCOVERY_KIND, _MUTATION_KIND = MUTATION_KINDS
 
 
 # --------------------------------------------------------------------------
@@ -1171,10 +1176,10 @@ def _pad1_accepted_state_descriptor(
     intent_kind = command.state_intent_kind
     lane_family = command.state_lane_family
     depth_dependency = command.depth_dependency
-    discovery_depth = depth_dependency if intent_kind == "discovery" else ""
-    mutation_depth = depth_dependency if intent_kind == "mutation" else ""
+    discovery_depth = depth_dependency if intent_kind == _DISCOVERY_KIND else ""
+    mutation_depth = depth_dependency if intent_kind == _MUTATION_KIND else ""
     requires_anchor = intent_kind in ("anchor_load", "anchor_return")
-    requires_profiled_engine = intent_kind == "discovery"
+    requires_profiled_engine = intent_kind == _DISCOVERY_KIND
     anchor_key = command.command_key if requires_anchor else ""
     return_key = command.command_key if intent_kind == "anchor_return" else ""
     requires_current_engine = command.command_key in PACKET_5A_PAD1_CURRENT_ENGINE_KEYS

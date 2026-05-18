@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -23,7 +29,7 @@ def test_importing_selected_isolated_pad_runtime_state_prints_nothing():
         [
             sys.executable,
             "-c",
-            "import rytm_randomizer.selected_isolated_pad_runtime_state",
+            "import rytm_randomizer.state.selected_isolated_pad_validation",
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,
@@ -37,7 +43,7 @@ def test_importing_selected_isolated_pad_runtime_state_prints_nothing():
 
 
 def test_uninitialized_runtime_state_is_safe_and_deterministic():
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_uninitialized_selected_isolated_pad_runtime_state,
     )
 
@@ -74,7 +80,7 @@ def test_uninitialized_runtime_state_is_safe_and_deterministic():
 
 
 def test_passive_default_runtime_state_keeps_anchor_unavailable_safely():
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_passive_default_selected_isolated_pad_runtime_state,
     )
 
@@ -107,8 +113,8 @@ def test_passive_default_runtime_state_keeps_anchor_unavailable_safely():
 
 
 def test_missing_selected_target_fails_safely():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_missing_selected_target_runtime_state,
     )
 
@@ -126,10 +132,10 @@ def test_missing_selected_target_fails_safely():
 
 
 def test_missing_anchor_fails_safely():
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_missing_anchor_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import build_default_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_default_selected_target_state
 
     result = build_missing_anchor_runtime_state(
         selected_target_state=build_default_selected_target_state()
@@ -148,11 +154,13 @@ def test_missing_anchor_fails_safely():
 
 
 def test_unsupported_selected_target_fails_safely():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import build_unsupported_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import (
+        build_unsupported_selected_target_state,
+    )
 
     result = build_selected_isolated_pad_runtime_state(
         selected_target_state=build_unsupported_selected_target_state(5),
@@ -170,11 +178,11 @@ def test_unsupported_selected_target_fails_safely():
 
 
 def test_unsupported_anchor_fails_safely():
-    from rytm_randomizer.anchor_state import build_unsupported_anchor_state
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.anchor_validation import build_unsupported_anchor_state
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import build_default_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_default_selected_target_state
 
     result = build_selected_isolated_pad_runtime_state(
         selected_target_state=build_default_selected_target_state(),
@@ -193,11 +201,11 @@ def test_unsupported_anchor_fails_safely():
 
 
 def test_stale_target_and_stale_anchor_fail_safely():
-    from rytm_randomizer.anchor_state import build_stale_anchor_state
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.anchor_validation import build_stale_anchor_state
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
+    from rytm_randomizer.state.selected_target_validation import (
         build_default_selected_target_state,
         build_stale_selected_target_state,
     )
@@ -227,11 +235,14 @@ def test_stale_target_and_stale_anchor_fail_safely():
 
 
 def test_invalid_target_and_invalid_anchor_fail_safely():
-    from rytm_randomizer.anchor_state import build_invalid_anchor_state, build_unknown_anchor_state
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.anchor_validation import (
+        build_invalid_anchor_state,
+        build_unknown_anchor_state,
+    )
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )
-    from rytm_randomizer.selected_target_state import (
+    from rytm_randomizer.state.selected_target_validation import (
         build_default_selected_target_state,
         build_invalid_selected_target_state,
     )
@@ -261,7 +272,7 @@ def test_invalid_target_and_invalid_anchor_fail_safely():
 
 
 def test_runtime_state_metadata_is_copied_and_immutable():
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_uninitialized_selected_isolated_pad_runtime_state,
     )
 
@@ -277,7 +288,7 @@ def test_runtime_state_metadata_is_copied_and_immutable():
 
 
 def test_repeated_runtime_state_evaluations_are_deterministic():
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_passive_default_selected_isolated_pad_runtime_state,
         build_uninitialized_selected_isolated_pad_runtime_state,
     )
@@ -293,7 +304,7 @@ def test_repeated_runtime_state_evaluations_are_deterministic():
 
 
 def test_runtime_state_exposes_no_active_command_names():
-    import rytm_randomizer.selected_isolated_pad_runtime_state as runtime_state
+    import rytm_randomizer.state.selected_isolated_pad_validation as runtime_state
 
     exported_names = set(runtime_state.__all__)
 
@@ -317,7 +328,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.selected_isolated_pad_runtime_state  # noqa: F401
+    import rytm_randomizer.state.selected_isolated_pad_validation  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules

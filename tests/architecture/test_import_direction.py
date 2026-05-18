@@ -15,6 +15,10 @@ from pathlib import Path
 
 import pytest
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
 PACKAGE_NAME = "rytm_randomizer"
@@ -151,12 +155,28 @@ def test_state_layer_imports_only_stdlib() -> None:
         "mido",
         "rtmidi",
     )
+    # WS-M2: the inert-validation modules (anchor_validation,
+    # selected_target_validation, selected_isolated_pad_validation) were
+    # relocated from top-level. They import the passive command-surface
+    # data from ``rytm_randomizer.commands`` -- a frozen, side-effect-free
+    # data module. This is the same import they had before the relocation;
+    # explicitly allow it.
+    allowed_extra: dict[str, frozenset[str]] = {
+        "state/anchor_validation.py": frozenset({f"{PACKAGE_NAME}.commands"}),
+        "state/selected_target_validation.py": frozenset({f"{PACKAGE_NAME}.commands"}),
+        "state/selected_isolated_pad_validation.py": frozenset({f"{PACKAGE_NAME}.commands"}),
+    }
     violations: list[str] = []
     for path in sorted((PACKAGE_ROOT / "state").rglob("*.py")):
+        rel = path.relative_to(PACKAGE_ROOT).as_posix()
+        per_file_allowed = allowed_extra.get(rel, frozenset())
         # Allow ``from . import x`` / ``from .scene import ...`` within state/.
         for lineno, fq in _imported_package_modules(path):
-            if not fq.startswith(f"{PACKAGE_NAME}.state"):
-                violations.append(f"{path.relative_to(PROJECT_ROOT)}:{lineno} imports package {fq}")
+            if fq.startswith(f"{PACKAGE_NAME}.state"):
+                continue
+            if fq in per_file_allowed:
+                continue
+            violations.append(f"{path.relative_to(PROJECT_ROOT)}:{lineno} imports package {fq}")
         for token in _all_top_level_import_tokens(path):
             if any(token == p or token.startswith(p + ".") for p in forbidden_prefixes):
                 violations.append(

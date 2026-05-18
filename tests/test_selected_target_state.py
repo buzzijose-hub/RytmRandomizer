@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -20,7 +26,7 @@ def run_cli(*args):
 
 def test_importing_selected_target_state_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.selected_target_state"],
+        [sys.executable, "-c", "import rytm_randomizer.state.selected_target_validation"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -33,7 +39,7 @@ def test_importing_selected_target_state_prints_nothing():
 
 
 def test_unset_selected_target_state_is_safe_and_deterministic():
-    from rytm_randomizer.selected_target_state import build_unset_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_unset_selected_target_state
 
     result = build_unset_selected_target_state()
 
@@ -65,7 +71,7 @@ def test_unset_selected_target_state_is_safe_and_deterministic():
 
 
 def test_default_selected_target_state_uses_passive_pad_3_context():
-    from rytm_randomizer.selected_target_state import (
+    from rytm_randomizer.state.selected_target_validation import (
         DEFAULT_SELECTED_TARGET_PAD,
         SELECTED_TARGET_DEFAULT_COMMAND_KEY,
         build_default_selected_target_state,
@@ -105,7 +111,9 @@ def test_default_selected_target_state_uses_passive_pad_3_context():
 
 
 def test_unsupported_selected_target_fails_safely():
-    from rytm_randomizer.selected_target_state import build_unsupported_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import (
+        build_unsupported_selected_target_state,
+    )
 
     result = build_unsupported_selected_target_state(5)
 
@@ -126,7 +134,7 @@ def test_unsupported_selected_target_fails_safely():
 
 
 def test_stale_selected_target_fails_safely():
-    from rytm_randomizer.selected_target_state import build_stale_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_stale_selected_target_state
 
     result = build_stale_selected_target_state(target_pad=3, command_key="L")
 
@@ -146,7 +154,7 @@ def test_stale_selected_target_fails_safely():
 
 
 def test_invalid_selected_target_fails_safely():
-    from rytm_randomizer.selected_target_state import build_invalid_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_invalid_selected_target_state
 
     result = build_invalid_selected_target_state(
         target_pad=None,
@@ -167,7 +175,7 @@ def test_invalid_selected_target_fails_safely():
 
 
 def test_selected_target_metadata_is_copied_and_immutable():
-    from rytm_randomizer.selected_target_state import build_default_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_default_selected_target_state
 
     result = build_default_selected_target_state()
 
@@ -181,7 +189,7 @@ def test_selected_target_metadata_is_copied_and_immutable():
 
 
 def test_repeated_selected_target_state_evaluations_are_deterministic():
-    from rytm_randomizer.selected_target_state import (
+    from rytm_randomizer.state.selected_target_validation import (
         build_default_selected_target_state,
         build_unset_selected_target_state,
     )
@@ -191,7 +199,7 @@ def test_repeated_selected_target_state_evaluations_are_deterministic():
 
 
 def test_selected_target_state_exposes_no_active_command_names():
-    import rytm_randomizer.selected_target_state as selected_target_state
+    import rytm_randomizer.state.selected_target_validation as selected_target_state
 
     exported_names = set(selected_target_state.__all__)
 
@@ -212,7 +220,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.selected_target_state  # noqa: F401
+    import rytm_randomizer.state.selected_target_validation  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules

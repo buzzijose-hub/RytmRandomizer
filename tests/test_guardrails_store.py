@@ -38,6 +38,10 @@ from rytm_randomizer.guardrails import (
 )
 from rytm_randomizer.observability.errors import StateError
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # Builders
 # ---------------------------------------------------------------------------

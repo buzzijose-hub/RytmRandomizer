@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -74,8 +80,8 @@ def test_importing_runtime_adjacent_b_modules_prints_nothing():
             sys.executable,
             "-c",
             (
-                "import rytm_randomizer.behavior_undo_commit_state; "
-                "import rytm_randomizer.anchor_state; "
+                "import rytm_randomizer.behavior.undo_commit_state; "
+                "import rytm_randomizer.state.anchor_validation; "
                 "import rytm_randomizer.mock_midi"
             ),
         ],
@@ -91,9 +97,9 @@ def test_importing_runtime_adjacent_b_modules_prints_nothing():
 
 
 def test_b_current_anchor_context_defaults_to_safe_failure_without_mock_messages():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
     from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
 
     sender = MockMidiSender()
     intent = evaluate_undo_commit_state_behavior("B")
@@ -106,13 +112,13 @@ def test_b_current_anchor_context_defaults_to_safe_failure_without_mock_messages
 
 
 def test_unsupported_stale_and_invalid_b_anchor_contexts_fail_safely():
-    from rytm_randomizer.anchor_state import (
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.state.anchor_validation import (
         build_invalid_anchor_state,
         build_stale_anchor_state,
         build_unsupported_anchor_state,
     )
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
-    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     intent = evaluate_undo_commit_state_behavior("B")
@@ -148,8 +154,8 @@ def test_unsupported_stale_and_invalid_b_anchor_contexts_fail_safely():
 
 
 def test_runtime_adjacent_b_checks_are_deterministic_and_copy_safe():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
 
     first = evaluate_undo_commit_state_behavior("B")
     second = evaluate_undo_commit_state_behavior("B")
@@ -186,9 +192,9 @@ def test_passive_cli_preview_b_remains_read_only():
 
 
 def test_runtime_adjacent_b_imports_no_real_midi_and_exposes_no_active_names():
-    import rytm_randomizer.anchor_state as anchor_state
-    import rytm_randomizer.behavior_undo_commit_state as state_behavior
+    import rytm_randomizer.behavior.undo_commit_state as state_behavior
     import rytm_randomizer.mock_midi  # noqa: F401
+    import rytm_randomizer.state.anchor_validation as anchor_state
 
     exposed_names = set(dir(state_behavior)) | set(anchor_state.__all__)
 
