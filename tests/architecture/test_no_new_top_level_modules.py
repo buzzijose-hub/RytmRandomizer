@@ -43,9 +43,6 @@ PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
 _ALLOWED_TOP_LEVEL: Final[frozenset[str]] = frozenset(
     {
         "__init__.py",
-        # Dual-machine feature branch modules that predate the Wave-1 Gate 9
-        # hardening. They are allowlisted for this integration merge; the
-        # follow-up architecture cleanup should migrate them into subpackages.
         "active_boundary.py",
         "app.py",
         "cli.py",

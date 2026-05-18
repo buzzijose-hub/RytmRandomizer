@@ -29,7 +29,7 @@ The repository already has the early pieces for this direction:
   lean core install.
 - `docs/FUTURE_ANALOG_FOUR_EXPANSION.md` captures the later cross-device
   direction for applying the same analyzer and slider ideas to Analog Four.
-- `rytm_randomizer.machine_catalog` now provides the first passive bridge from
+- `rytm_randomizer.essence.machine_catalog` now provides the first passive bridge from
   analyzer-style essence tags to 12-pad Rytm role planning and candidate engine
   ranking.
 - `essence-plan-report --tags <csv> --discovery <0..1>` exposes that bridge as
@@ -97,7 +97,7 @@ Example role families:
 - Spare or user-defined role
 
 The first passive 12-pad planning map now exists as metadata in
-`rytm_randomizer.machine_catalog`. Pads 5-12 remain out of scope for the
+`rytm_randomizer.essence.machine_catalog`. Pads 5-12 remain out of scope for the
 current V1.34-compatible runtime. This checkpoint records product direction and
 the passive planning bridge only.
 

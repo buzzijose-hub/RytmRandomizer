@@ -4,6 +4,11 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-18: moved the dual-machine milestone modules that predated Gate 9
+  into focused subpackages (`analog_four/`, `dual_machine/`, `sysex/`,
+  `performance/`, `essence/`, `rytm/`, and `snapshot/`) and removed the
+  temporary top-level architecture allowlist entries. No CLI behavior, MIDI
+  behavior, hardware send behavior, or snapshot planning behavior changed.
 - 2026-05-18: PR #35 Wave-1 simplification bundle merged into
   `modularize-v1.34`. The base now includes the `devices/`, `snapshot/`,
   `behavior/`, and `reports/` subpackages, shared test fixtures, the
@@ -91,13 +96,13 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
   capture, Pads 5-12 runtime mutation, or Analog Four runtime behavior was
   added.
 - 2026-05-16: added passive mock 12-pad snapshot fixtures for Live Snapshot
-  planning. `rytm_randomizer.snapshot_fixtures` now exposes the AM9-inspired
+  planning. `rytm_randomizer.snapshot.fixtures` now exposes the AM9-inspired
   `am9-slot-01` fixture, and
   `essence-application-readiness-report ... --fixture am9-slot-01` uses that
   captured-machine support mix to block unmapped snapshot pads before any live
   SysEx receive or hardware capture exists.
 - 2026-05-16: added a passive Essence Application Readiness gate.
-  `rytm_randomizer.essence_application` evaluates whether a 12-pad Essence
+  `rytm_randomizer.essence.application` evaluates whether a 12-pad Essence
   Plan is ready, blocked, or future-only under Safe Anchors or Live Snapshot,
   and the CLI now exposes
   `essence-application-readiness-report --mode <mode> ...`. This makes the
@@ -106,7 +111,7 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
   blocked. No MIDI sending, live SysEx receive, hardware mutation, or Pads 5-12
   runtime mutation was added.
 - 2026-05-16: added a passive description-to-essence bridge. The new
-  `rytm_randomizer.essence_tag_adapter` derives broad, non-copying musical
+  `rytm_randomizer.essence.tag_adapter` derives broad, non-copying musical
   tags from written reference language or a passive `FeatureReport`, and
   `essence-plan-report --description <text> --discovery <0..1>` now feeds
   those tags into the existing 12-pad engine plan preview. No audio file
@@ -118,7 +123,7 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
   making the future audio-analyzer-to-engine-choice path visible without audio
   analysis, MIDI, hardware, or Pads 5-12 runtime mutation.
 - 2026-05-16: added the first passive Machine Catalog and Essence Matcher.
-  `rytm_randomizer.machine_catalog` records currently mutable V1.34 machines,
+  `rytm_randomizer.essence.machine_catalog` records currently mutable V1.34 machines,
   future inventory-only engines such as SY Chip and Dual VCO, a 12-pad
   reference-role template, and passive ranking from role/essence tags. This is
   planning metadata for future audio-analyzer-driven engine choice; it does not
@@ -132,7 +137,7 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
   MIDI receive path, parameter decoding, SysEx writes, or hardware capture was
   added.
 - 2026-05-16: added the Live Snapshot mode design checkpoint and the first
-  passive `performance_modes` model. This records startup mode semantics and
+  passive `performance.modes` model. This records startup mode semantics and
   blocks Live Snapshot mutation unless a complete 12-pad snapshot exists. No
   MIDI receive path, hardware capture, or runtime mutation behavior was added.
 - 2026-05-15: completed the first end-user Analog Rytm MKII hardware

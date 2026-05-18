@@ -15,7 +15,7 @@ candidates that can capture the essence of that track.
 
 ## Current Capability
 
-The new passive `rytm_randomizer.machine_catalog` module provides:
+The new passive `rytm_randomizer.essence.machine_catalog` module provides:
 
 - machine-family metadata for the V1.34 mutable machines
 - inventory placeholders for future engines that still need manual mapping
@@ -43,7 +43,7 @@ future inventory candidates like SY Chip, Dual VCO, hat families, and cymbal
 families, but those candidates remain blocked from real mutation until mapped
 and validated.
 
-The description path uses `rytm_randomizer.essence_tag_adapter`. It extracts
+The description path uses `rytm_randomizer.essence.tag_adapter`. It extracts
 coarse musical tags only; it does not preserve artist names, track titles,
 melodies, arrangements, or patch recipes.
 
