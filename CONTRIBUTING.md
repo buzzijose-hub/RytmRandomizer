@@ -16,6 +16,30 @@ pytest
 
 All tests must pass. There is also `Scripts/closeout_check.ps1`, a PowerShell-only closeout check. A cross-platform equivalent is being added; until then, run the PowerShell script on Windows or rely on `pytest` elsewhere.
 
+## Common contributor tasks
+
+For "where do I add X?" answers, the source of truth is
+[`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work).
+The table there maps change types to the right module and the right skill.
+
+Quick links for the most common tasks:
+
+- **Add a new V1.34-equivalent command** — `shell.py` dispatch + relevant
+  runner/engine. Skill: `add-pad-command`.
+- **Add a new fact table** — a new module under `rytm_randomizer/data/` plus
+  the re-export in `__init__.py`. Skill: `extend-data-layer`.
+- **Change MIDI primitives** — `midi_io.py`. Keep `mido` lazy. Requires
+  architecture review.
+- **Add a passive read-only report** — extend `reports/` (the post-WS-S4
+  subpackage) and wire it through `cli.py`. The passive CLI never opens a
+  MIDI port; see `docs/ARCHITECTURE.md` §2.
+
+For the full list of change types, see `docs/ARCHITECTURE.md` §6.
+
+The full plan-time gate list (16 gates) lives in
+[`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md). Every plan PR
+includes a conformance checklist against those gates.
+
 ## Preserve parity with the V1.34 reference
 
 The V1.34 hardware-validated musical behavior is the baseline of truth. It was validated against the actual Analog Rytm MK2. **Any change must preserve parity with that behavior.**

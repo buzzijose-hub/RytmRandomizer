@@ -174,8 +174,8 @@ def test_project_status_report_records_collaborator_review_triage_template():
 
     assert report["collaborator_review_triage_template"] == {
         "status": "accepted",
-        "template_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
-        "review_gate_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+        "template_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+        "review_gate_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
         "findings_recorded": False,
         "requires_text_or_markdown": True,
         "screenshot_only_sufficient": False,
@@ -469,8 +469,8 @@ def test_formatted_project_status_report_is_deterministic():
         "- package_metadata_changes: requires_explicit_approval",
         "Collaborator Review Triage Template:",
         "- status: accepted",
-        "- template_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
-        "- review_gate_path: docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+        "- template_path: docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+        "- review_gate_path: docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
         "- findings_recorded: False",
         "- requires_text_or_markdown: True",
         "- screenshot_only_sufficient: False",

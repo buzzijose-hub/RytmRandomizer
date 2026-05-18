@@ -105,8 +105,8 @@ COLLABORATOR_REVIEW_INTAKE_STATUS = {
 
 COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
     "status": "accepted",
-    "template_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
-    "review_gate_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+    "template_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+    "review_gate_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
     "findings_recorded": False,
     "requires_text_or_markdown": True,
     "screenshot_only_sufficient": False,
