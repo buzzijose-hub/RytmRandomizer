@@ -534,7 +534,7 @@ def main(argv=None):
         return 0
 
     if len(args) == 3 and args[0] == "performance-snapshot-target-report" and args[1] == "--target":
-        from .performance_snapshot_target import (
+        from .performance.snapshot_target import (
             PerformanceSnapshotTargetError,
             build_performance_snapshot_target_plan,
             format_performance_snapshot_target_error,
@@ -808,12 +808,12 @@ def main(argv=None):
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
-        from .dual_machine_mock_bridge import (
+        from .dual_machine.mock_bridge import (
             build_dual_machine_mock_bridge,
             format_dual_machine_mock_bridge_error,
             format_dual_machine_mock_bridge_report,
         )
-        from .performance_snapshot_target import PerformanceSnapshotTargetError
+        from .performance.snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
         from .sysex_snapshot_decoder import SysexSnapshotDecodeError
 
@@ -863,13 +863,13 @@ def main(argv=None):
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
-        from .dual_machine_live_snapshot_readiness import (
+        from .dual_machine.live_snapshot_readiness import (
             evaluate_dual_machine_live_snapshot_readiness,
             format_dual_machine_live_snapshot_readiness_error,
             format_dual_machine_live_snapshot_readiness_report,
         )
-        from .dual_machine_mock_bridge import build_dual_machine_mock_bridge
-        from .performance_snapshot_target import PerformanceSnapshotTargetError
+        from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
+        from .performance.snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
         from .sysex_snapshot_decoder import SysexSnapshotDecodeError
 
@@ -920,13 +920,13 @@ def main(argv=None):
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
-        from .dual_machine_active_send_plan import (
+        from .dual_machine.active_send_plan import (
             build_dual_machine_active_send_plan,
             format_dual_machine_active_send_plan_error,
             format_dual_machine_active_send_plan_report,
         )
-        from .dual_machine_mock_bridge import build_dual_machine_mock_bridge
-        from .performance_snapshot_target import PerformanceSnapshotTargetError
+        from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
+        from .performance.snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
         from .sysex_snapshot_decoder import SysexSnapshotDecodeError
 
@@ -977,13 +977,13 @@ def main(argv=None):
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
-        from .dual_machine_guarded_sender import (
+        from .dual_machine.guarded_sender import (
             build_dual_machine_guarded_send_dry_run,
             format_dual_machine_guarded_send_dry_run_report,
             format_dual_machine_guarded_send_error,
         )
-        from .dual_machine_mock_bridge import build_dual_machine_mock_bridge
-        from .performance_snapshot_target import PerformanceSnapshotTargetError
+        from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
+        from .performance.snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
         from .sysex_snapshot_decoder import SysexSnapshotDecodeError
 

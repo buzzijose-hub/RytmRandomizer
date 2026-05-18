@@ -16,11 +16,11 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
-from .dual_machine_active_send_plan import (
+from ..midi_io import send_cc
+from .active_send_plan import (
     DualMachineActiveSendPlan,
     DualMachineSendPlanEvent,
 )
-from .midi_io import send_cc
 
 HARDWARE_SEND_NAME = "dual_machine_hardware_send"
 ANALOG_RYTM_DEVICE = "Analog Rytm MKII"

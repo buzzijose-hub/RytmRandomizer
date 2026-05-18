@@ -90,7 +90,7 @@ def test_importing_dual_machine_active_send_plan_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.dual_machine_active_send_plan; "
+                "import rytm_randomizer.dual_machine.active_send_plan; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -107,10 +107,10 @@ def test_importing_dual_machine_active_send_plan_is_passive_and_silent():
 
 
 def test_safe_starter_bridge_has_only_eligible_mapped_cc_events(tmp_path):
-    from rytm_randomizer.dual_machine_active_send_plan import (
+    from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     rytm_path.write_bytes(make_rytm_kit_record())
@@ -147,11 +147,11 @@ def test_safe_starter_bridge_has_only_eligible_mapped_cc_events(tmp_path):
 
 
 def test_active_send_plan_reports_selected_a4_starter_profile(tmp_path):
-    from rytm_randomizer.dual_machine_active_send_plan import (
+    from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,
         format_dual_machine_active_send_plan_report,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     rytm_path.write_bytes(make_rytm_kit_record())
@@ -174,10 +174,10 @@ def test_active_send_plan_reports_selected_a4_starter_profile(tmp_path):
 
 
 def test_a4_saved_snapshot_candidates_are_blocked_but_rytm_ccs_remain_visible(tmp_path):
-    from rytm_randomizer.dual_machine_active_send_plan import (
+    from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"
@@ -217,11 +217,11 @@ def test_a4_saved_snapshot_candidates_are_blocked_but_rytm_ccs_remain_visible(tm
 
 
 def test_active_send_plan_report_shows_event_policy_and_safety(tmp_path):
-    from rytm_randomizer.dual_machine_active_send_plan import (
+    from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,
         format_dual_machine_active_send_plan_report,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"

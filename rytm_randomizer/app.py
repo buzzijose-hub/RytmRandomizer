@@ -351,7 +351,7 @@ def _rytm_engine_cycle_request_from_args(
 def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object]):
     """Build the passive dual-machine bridge for an app snapshot-send request."""
 
-    from .dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     analog_four_path = request.get("analog_four_path")
     analog_four_slot = request.get("analog_four_slot")
@@ -568,8 +568,8 @@ def _run_arm(
 def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
     """Run the guarded dual-machine snapshot send against real hardware."""
 
-    from .dual_machine_active_send_plan import build_dual_machine_active_send_plan
-    from .dual_machine_hardware_sender import (
+    from .dual_machine.active_send_plan import build_dual_machine_active_send_plan
+    from .dual_machine.hardware_sender import (
         build_dual_machine_hardware_send_refusal,
         execute_dual_machine_hardware_send,
         format_dual_machine_hardware_send_error,
@@ -659,7 +659,7 @@ def _run_arm_dual_machine_snapshot_send(request: dict[str, object]) -> int:
 def _run_arm_dual_machine_snapshot_send_both(plan) -> int:
     """Run a ready dual-machine snapshot send against two real MIDI ports."""
 
-    from .dual_machine_hardware_sender import (
+    from .dual_machine.hardware_sender import (
         ANALOG_FOUR_DEVICE,
         ANALOG_RYTM_DEVICE,
         execute_dual_machine_dual_port_hardware_send,
@@ -1064,7 +1064,7 @@ def _choose_arm_port_name(
 def _run_dry_run_dual_machine_snapshot_send(request: dict[str, object]) -> int:
     """Run the guarded dual-machine snapshot send against the mock sender."""
 
-    from .dual_machine_guarded_sender import (
+    from .dual_machine.guarded_sender import (
         build_dual_machine_guarded_send_dry_run,
         format_dual_machine_guarded_send_dry_run_report,
         format_dual_machine_guarded_send_error,

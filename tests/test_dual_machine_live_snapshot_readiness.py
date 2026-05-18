@@ -90,7 +90,7 @@ def test_importing_dual_machine_live_snapshot_readiness_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.dual_machine_live_snapshot_readiness; "
+                "import rytm_randomizer.dual_machine.live_snapshot_readiness; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -107,10 +107,10 @@ def test_importing_dual_machine_live_snapshot_readiness_is_passive_and_silent():
 
 
 def test_safe_starter_bridge_is_mapping_ready(tmp_path):
-    from rytm_randomizer.dual_machine_live_snapshot_readiness import (
+    from rytm_randomizer.dual_machine.live_snapshot_readiness import (
         evaluate_dual_machine_live_snapshot_readiness,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     rytm_path.write_bytes(make_rytm_kit_record())
@@ -129,10 +129,10 @@ def test_safe_starter_bridge_is_mapping_ready(tmp_path):
 
 
 def test_a4_snapshot_candidates_block_live_snapshot_readiness(tmp_path):
-    from rytm_randomizer.dual_machine_live_snapshot_readiness import (
+    from rytm_randomizer.dual_machine.live_snapshot_readiness import (
         evaluate_dual_machine_live_snapshot_readiness,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"
@@ -166,11 +166,11 @@ def test_a4_snapshot_candidates_block_live_snapshot_readiness(tmp_path):
 
 
 def test_readiness_report_marks_a4_snapshot_candidates_blocked(tmp_path):
-    from rytm_randomizer.dual_machine_live_snapshot_readiness import (
+    from rytm_randomizer.dual_machine.live_snapshot_readiness import (
         evaluate_dual_machine_live_snapshot_readiness,
         format_dual_machine_live_snapshot_readiness_report,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"

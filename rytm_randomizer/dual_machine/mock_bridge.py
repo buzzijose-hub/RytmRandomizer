@@ -12,21 +12,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .analog_four.snapshot_mutation_planner import (
+from ..analog_four.snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
 )
-from .analog_four.starter_profiles import (
+from ..analog_four.starter_profiles import (
     BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY,
     AnalogFourStarterProfile,
     get_analog_four_starter_profile,
 )
-from .mock_midi import MidiMessage, MockMidiSender, build_cc_message
-from .performance_snapshot_target import (
+from ..mock_midi import MidiMessage, MockMidiSender, build_cc_message
+from ..performance.snapshot_target import (
     PerformanceSnapshotTargetPlan,
     build_performance_snapshot_target_plan,
 )
-from .snapshot_mutation_planner import (
+from ..snapshot_mutation_planner import (
     SnapshotMutationPlan,
     build_snapshot_mutation_plan_from_file,
     format_snapshot_mutation_plan_error,

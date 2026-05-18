@@ -10,7 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .machine_catalog import SupportStatus, get_machine_profile
-from .performance_modes import CaptureStatus, SnapshotState
+from .performance.modes import CaptureStatus, SnapshotState
 
 
 @dataclass(frozen=True)

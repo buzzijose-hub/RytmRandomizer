@@ -81,7 +81,7 @@ def test_importing_dual_machine_bridge_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.dual_machine_mock_bridge; "
+                "import rytm_randomizer.dual_machine.mock_bridge; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -98,7 +98,7 @@ def test_importing_dual_machine_bridge_is_passive_and_silent():
 
 
 def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import (
+    from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
         capture_dual_machine_mock_messages,
     )
@@ -148,7 +148,7 @@ def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
 
 
 def test_dual_bridge_uses_a4_snapshot_when_path_is_supplied(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import (
+    from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
         capture_dual_machine_mock_messages,
     )
@@ -202,7 +202,7 @@ def test_dual_bridge_uses_a4_snapshot_when_path_is_supplied(tmp_path):
 
 
 def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import (
+    from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
         capture_dual_machine_mock_messages,
     )
@@ -230,7 +230,7 @@ def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
 
 
 def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import (
+    from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
         capture_dual_machine_mock_messages,
     )
@@ -268,7 +268,7 @@ def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
 
 
 def test_dual_bridge_accepts_birmingham_analog_four_profile(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import (
+    from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
         capture_dual_machine_mock_messages,
         format_dual_machine_mock_bridge_report,
@@ -303,7 +303,7 @@ def test_dual_bridge_accepts_birmingham_analog_four_profile(tmp_path):
 
 
 def test_dual_bridge_rejects_starter_profile_with_a4_snapshot_path(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"

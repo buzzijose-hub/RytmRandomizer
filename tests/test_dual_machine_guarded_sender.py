@@ -84,10 +84,10 @@ def run_cli(*args):
 
 
 def build_plan(tmp_path, *, target="both", with_a4_snapshot=False):
-    from rytm_randomizer.dual_machine_active_send_plan import (
+    from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     rytm_path.write_bytes(make_rytm_kit_record())
@@ -123,7 +123,7 @@ def test_importing_dual_machine_guarded_sender_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.dual_machine_guarded_sender; "
+                "import rytm_randomizer.dual_machine.guarded_sender; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -140,7 +140,7 @@ def test_importing_dual_machine_guarded_sender_is_passive_and_silent():
 
 
 def test_guarded_send_requires_arming_before_emitting(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         execute_dual_machine_guarded_send,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -160,7 +160,7 @@ def test_guarded_send_requires_arming_before_emitting(tmp_path):
 
 
 def test_guarded_send_requires_dry_run_confirmation_before_emitting(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         execute_dual_machine_guarded_send,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -180,7 +180,7 @@ def test_guarded_send_requires_dry_run_confirmation_before_emitting(tmp_path):
 
 
 def test_guarded_send_emits_safe_starter_eligible_ccs_to_mock_sender(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         execute_dual_machine_guarded_send,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -217,11 +217,11 @@ def test_guarded_send_emits_safe_starter_eligible_ccs_to_mock_sender(tmp_path):
 
 
 def test_guarded_send_report_includes_selected_a4_starter_profile(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         build_dual_machine_guarded_send_dry_run,
         format_dual_machine_guarded_send_dry_run_report,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm-kits.syx"
     rytm_path.write_bytes(make_rytm_kit_record())
@@ -244,7 +244,7 @@ def test_guarded_send_report_includes_selected_a4_starter_profile(tmp_path):
 
 
 def test_guarded_send_refuses_combined_a4_snapshot_candidates_without_partial_emit(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         execute_dual_machine_guarded_send,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -267,7 +267,7 @@ def test_guarded_send_refuses_combined_a4_snapshot_candidates_without_partial_em
 
 
 def test_guarded_send_target_rytm_ignores_a4_snapshot_candidates_and_emits_rytm_only(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         execute_dual_machine_guarded_send,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -291,7 +291,7 @@ def test_guarded_send_target_rytm_ignores_a4_snapshot_candidates_and_emits_rytm_
 
 
 def test_guarded_send_report_formats_refusal_policy(tmp_path):
-    from rytm_randomizer.dual_machine_guarded_sender import (
+    from rytm_randomizer.dual_machine.guarded_sender import (
         execute_dual_machine_guarded_send,
         format_dual_machine_guarded_send_dry_run_report,
     )

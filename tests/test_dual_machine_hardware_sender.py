@@ -96,10 +96,10 @@ def build_plan(
     with_a4_snapshot=False,
     analog_four_profile="balanced",
 ):
-    from rytm_randomizer.dual_machine_active_send_plan import (
+    from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,
     )
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
     rytm_path = tmp_path / "rytm.syx"
     rytm_path.write_bytes(make_rytm_kit_record())
@@ -129,7 +129,7 @@ def test_importing_dual_machine_hardware_sender_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.dual_machine_hardware_sender; "
+                "import rytm_randomizer.dual_machine.hardware_sender; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -146,7 +146,7 @@ def test_importing_dual_machine_hardware_sender_is_passive_and_silent():
 
 
 def test_hardware_send_requires_arming(tmp_path):
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_hardware_send,
     )
 
@@ -167,7 +167,7 @@ def test_hardware_send_requires_arming(tmp_path):
 
 
 def test_hardware_send_requires_operator_confirmation(tmp_path):
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_hardware_send,
     )
 
@@ -188,7 +188,7 @@ def test_hardware_send_requires_operator_confirmation(tmp_path):
 
 
 def test_hardware_send_rejects_both_target_before_sending(tmp_path):
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_hardware_send,
     )
 
@@ -215,7 +215,7 @@ def test_dual_port_hardware_send_accepts_ready_both_target_plan(tmp_path, monkey
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_dual_port_hardware_send,
     )
 
@@ -255,7 +255,7 @@ def test_dual_port_hardware_send_accepts_ready_both_target_plan(tmp_path, monkey
 
 
 def test_dual_port_hardware_send_refuses_blocked_candidates_before_sending(tmp_path):
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_dual_port_hardware_send,
     )
 
@@ -285,7 +285,7 @@ def test_dual_port_hardware_send_refuses_blocked_candidates_before_sending(tmp_p
 
 
 def test_hardware_send_refuses_blocked_a4_candidates_before_sending(tmp_path):
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_hardware_send,
     )
 
@@ -313,7 +313,7 @@ def test_hardware_send_accepts_ready_rytm_plan_with_fake_mido(tmp_path, monkeypa
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_hardware_send,
     )
 
@@ -347,7 +347,7 @@ def test_hardware_send_report_includes_active_safety_language(tmp_path, monkeypa
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_hardware_send,
         format_dual_machine_hardware_send_report,
     )
@@ -379,7 +379,7 @@ def test_dual_port_hardware_send_report_includes_selected_a4_starter_profile(
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.dual_machine_hardware_sender import (
+    from rytm_randomizer.dual_machine.hardware_sender import (
         execute_dual_machine_dual_port_hardware_send,
         format_dual_machine_hardware_send_report,
     )

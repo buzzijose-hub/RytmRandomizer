@@ -16,7 +16,7 @@ def test_importing_performance_modes_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.performance_modes; "
+                "import rytm_randomizer.performance.modes; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -33,7 +33,7 @@ def test_importing_performance_modes_is_passive_and_silent():
 
 
 def test_performance_modes_keep_safe_anchors_first_and_live_snapshot_second():
-    from rytm_randomizer.performance_modes import list_performance_modes
+    from rytm_randomizer.performance.modes import list_performance_modes
 
     safe_anchors, live_snapshot = list_performance_modes()
 
@@ -56,7 +56,7 @@ def test_performance_modes_keep_safe_anchors_first_and_live_snapshot_second():
 
 
 def test_performance_mode_prompt_matches_checkpoint_design():
-    from rytm_randomizer.performance_modes import format_performance_mode_prompt
+    from rytm_randomizer.performance.modes import format_performance_mode_prompt
 
     assert format_performance_mode_prompt() == [
         "Select performance mode:",
@@ -72,7 +72,7 @@ def test_performance_mode_prompt_matches_checkpoint_design():
 
 
 def test_live_snapshot_blocks_mutation_until_full_snapshot_is_captured():
-    from rytm_randomizer.performance_modes import (
+    from rytm_randomizer.performance.modes import (
         SnapshotState,
         evaluate_mutation_readiness,
     )
@@ -113,7 +113,7 @@ def test_live_snapshot_blocks_mutation_until_full_snapshot_is_captured():
 
 
 def test_safe_anchors_mode_is_ready_without_hardware_capture():
-    from rytm_randomizer.performance_modes import (
+    from rytm_randomizer.performance.modes import (
         SnapshotState,
         evaluate_mutation_readiness,
     )

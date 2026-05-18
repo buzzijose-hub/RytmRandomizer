@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .dual_machine_mock_bridge import (
+from .mock_bridge import (
     DualMachineMockBridge,
     capture_dual_machine_mock_messages,
 )

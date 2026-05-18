@@ -26,7 +26,7 @@ def test_importing_performance_snapshot_target_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.performance_snapshot_target; "
+                "import rytm_randomizer.performance.snapshot_target; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -43,7 +43,7 @@ def test_importing_performance_snapshot_target_is_passive_and_silent():
 
 
 def test_rytm_target_leaves_analog_four_untouched():
-    from rytm_randomizer.performance_snapshot_target import (
+    from rytm_randomizer.performance.snapshot_target import (
         build_performance_snapshot_target_plan,
     )
 
@@ -59,7 +59,7 @@ def test_rytm_target_leaves_analog_four_untouched():
 
 
 def test_analog_four_target_leaves_rytm_untouched():
-    from rytm_randomizer.performance_snapshot_target import (
+    from rytm_randomizer.performance.snapshot_target import (
         build_performance_snapshot_target_plan,
     )
 
@@ -73,7 +73,7 @@ def test_analog_four_target_leaves_rytm_untouched():
 
 
 def test_both_target_arms_both_devices_and_leaves_none_untouched():
-    from rytm_randomizer.performance_snapshot_target import (
+    from rytm_randomizer.performance.snapshot_target import (
         build_performance_snapshot_target_plan,
     )
 
@@ -87,7 +87,7 @@ def test_both_target_arms_both_devices_and_leaves_none_untouched():
 
 
 def test_target_scope_rejects_unknown_target():
-    from rytm_randomizer.performance_snapshot_target import (
+    from rytm_randomizer.performance.snapshot_target import (
         PerformanceSnapshotTargetError,
         build_performance_snapshot_target_plan,
     )
@@ -100,7 +100,7 @@ def test_target_scope_rejects_unknown_target():
 
 
 def test_target_scope_report_marks_untouched_devices():
-    from rytm_randomizer.performance_snapshot_target import (
+    from rytm_randomizer.performance.snapshot_target import (
         build_performance_snapshot_target_plan,
         format_performance_snapshot_target_report,
     )

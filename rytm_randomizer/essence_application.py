@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .machine_catalog import RoleAssignment, build_essence_role_plan
-from .performance_modes import SnapshotState, evaluate_mutation_readiness
+from .performance.modes import SnapshotState, evaluate_mutation_readiness
 from .snapshot_fixtures import SnapshotFixture, SnapshotPadFixture, snapshot_state_from_fixture
 
 PadApplicationStatus = Literal["ready", "blocked", "future_only"]

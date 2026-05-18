@@ -11,13 +11,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .dual_machine_active_send_plan import (
+from ..mock_midi import MidiMessage, MockMidiSender, build_cc_message
+from .active_send_plan import (
     DualMachineActiveSendPlan,
     DualMachineSendPlanEvent,
     build_dual_machine_active_send_plan,
 )
-from .dual_machine_mock_bridge import DualMachineMockBridge
-from .mock_midi import MidiMessage, MockMidiSender, build_cc_message
+from .mock_bridge import DualMachineMockBridge
 
 GUARD_NAME = "dual_machine_guarded_send_dry_run"
 

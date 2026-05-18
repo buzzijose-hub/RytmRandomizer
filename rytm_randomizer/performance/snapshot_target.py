@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .observability.errors import DataError
+from ..observability.errors import DataError
 
 
 class PerformanceSnapshotTargetError(DataError, ValueError):
