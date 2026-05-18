@@ -4,6 +4,7 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-18: WS-M1 — docs curation pass. 19 process-exhaust files moved to `docs/archive/` via `git mv` (codex briefs, collaborator-review intake / triage / status checkpoints, public-API hardening checkpoints, project-identity rename parking, hardware-manual inventory, passive CLI quickstart, triage report). New `docs/README.md` index classifies the 11 active onboarding files + 4 ops references + orchestrator state files. New `docs/archive/README.md` documents the historical buckets. Reference-rot fix: `rytm_randomizer/project_status_report.py` constants + matching test/fixture updated to point at the new archive paths. Active onboarding count: 11 ≤ 12 cap.
 - 2026-05-18: WS-S4 — extracted PassiveReportFormatter. New `rytm_randomizer/reports/formatter.py` holds the canonical "Safety:" header literal, "Source: rytm_randomizer.{module}" trailer template, "In-memory only: True" memory line, and `PassiveReportHeader` frozen dataclass + `safety_section_lines` / `passive_footer_lines` / `render_passive_report` / `passive_report_lines` helpers. Converted `reports.py` → `reports/__init__.py` subpackage per Gate 9 (subpackage by default). Migrated 4 trailing-footer call sites (registry, mock_mapper, runtime_plan, mock_runtime_active_bridge) and 2 safety-iterate call sites (anchor_profile, project_status). All 109 golden-fixture tests byte-identical; 685/685 parity fixtures green. Eliminates 6 sites of duplicated `"Source:"` + `"In-memory only: True"` literals.
 - 2026-05-18: WS-S1 — introduced `MidiSender(Protocol)` in `midi_io.py`; retired 6 `Sender = Any` escape hatches across `shell.py`, `group_runner.py`, `engines/pad{1-4}.py` (founding instance of Gate 6 type-system hygiene). Flattened the redundant `__class__.__name__` string-sniff in `send_cc`. 685/685 parity tests green; 9 new Protocol-conformance tests added.
 - 2026-05-17: resolved the test-only API audit. Removed 4 dead modules/blocks (~219 LOC of production code + ~452 LOC of tests/closeout invocations): the `command_lookup.py` + `scene_lookup.py` modules, the 3 unused getters in `profile_lookup.py`, the `_sync_channel_from_group_runner()` no-op stub in `shell.py`, the unused `REPORT_KEYS`/`build_report`/`format_report`/`summarize_report` dispatcher in `reports.py`, and the `registry_report.py` shim (re-homed into `python -m rytm_randomizer.cli report`). Documented 12 kept items as the "V1.34 parity API surface" in docs/ARCHITECTURE.md so future dead-code audits stop re-flagging them.
@@ -52,8 +53,6 @@ Each step is locked against the V1.34 reference by characterization tests.
 ## Reference Docs
 
 - `docs/ARCHITECTURE_DIAGRAMS.md` -- current code-derived architecture maps.
-- `docs/MODULARIZATION_RULES.md`, `docs/CODEX_MODULARIZATION_PROTOCOL.md`, `docs/CODEX_REFACTOR_PROMPT.md` -- modularization constraints and protocol.
+- `docs/MODULARIZATION_RULES.md` -- modularization constraints. (Historical CODEX briefs moved to `docs/archive/`.)
 - `docs/V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md` -- the V1.34 command surface, as preserved by `rytm_randomizer.shell`.
-- `docs/PASSIVE_CLI_OPERATOR_QUICKSTART.md` -- how to run the passive CLI.
-- `docs/HARDWARE_MANUAL_REFERENCE_INVENTORY.md`, `docs/LOCAL_DEV_TOOLING_NOTES.md` -- reference/tooling notes.
-- `docs/TRIAGE_REPORT.md` -- audit record of the `docs/` accuracy triage.
+- `docs/LOCAL_DEV_TOOLING_NOTES.md` -- tooling notes. (Historical operator quickstarts + manual inventory + 2026-05-14 docs accuracy triage moved to `docs/archive/`.)
