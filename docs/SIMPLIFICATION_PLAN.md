@@ -24,7 +24,11 @@ Two things came together:
 
 ## Gated requirements (apply to every WS — no exceptions)
 
-These three gates are baked into every workstream's acceptance criteria and into the orchestrator's state machine. A WS does **not** transition from `reviewing` → `pr_open` until all three gates pass locally; if any gate fails in CI after PR open, the orchestrator auto-reverts that WS's last commit and re-enters `implementing`.
+**Authoritative source:** [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md). That file is the canonical contract for every plan in this repo. The rules below are the subset relevant to this plan; for the full set (currently 9 gates including type-system hygiene, observability adoption, test hygiene, module-organization hygiene), see `PLAN_REQUIREMENTS.md`.
+
+This plan **complies with all 9 gates**. The plan-requirements conformance checklist (per the format in `PLAN_REQUIREMENTS.md`) is at the bottom of this document.
+
+These gates are baked into every workstream's acceptance criteria and into the orchestrator's state machine. A WS does **not** transition from `reviewing` → `pr_open` until all gates pass locally; if any gate fails in CI after PR open, the orchestrator auto-reverts that WS's last commit and re-enters `implementing`.
 
 | Gate | Threshold | Enforcement |
 |---|---|---|
@@ -100,6 +104,11 @@ After WS-S7 merges, before Wave 4 (learning) starts, **WS-S8 runs a full-package
 - `.coveragerc` `fail_under` ratchets from 87 → 100.
 - Every `# pragma: no cover` has a justification comment.
 - `docs/ARCHITECTURE.md` §8 parity-API table is exactly the live set — no extras, no missing.
+- **Architecture tests added** (enforce the permanent gates from `docs/PLAN_REQUIREMENTS.md`):
+  - `tests/architecture/test_no_any_escape_hatches.py` — fails if any module has `^\s*\w+\s*=\s*Any\s*$` outside an allowlist.
+  - `tests/architecture/test_observability_adoption.py` — fails if any hot-path module lacks `_logger = get_logger(__name__)` + per-decision log.
+  - `tests/architecture/test_plan_requirements_referenced.py` — fails if any `docs/*PLAN*.md` exists without the string `Per docs/PLAN_REQUIREMENTS.md` (the conformance checklist marker). Self-enforcing: future plans must cite the requirements file.
+  - `tests/architecture/test_no_new_top_level_modules.py` — fails if `rytm_randomizer/` (top level only, not subpackages) grew beyond the post-Wave-3 baseline without an `# allowlist:` entry citing an architect decision.
 
 **WS-S8 risk profile:** medium. The whole-package 100% gate is the biggest single push of the plan — it's where stragglers fall out. Mitigation: WS-S8 runs in a worktree just like every other WS, and if 100% is unreachable (a documented edge case), it's the only WS allowed to argue for a `pragma: no cover` instead, with the architect agent approving each one.
 
@@ -201,9 +210,14 @@ WAVE 2 (2 streams, parallel after Wave 1)
 WAVE 3 (1 stream, gated)
   WS-S7  CLI command registry        needs: WS-S4, WS-S6
 
-WAVE 3.5 (1 stream, gated on all of S1..S7 merged) — full-package dead-code sweep
+WAVE 3.1 (1 stream, parallel with Wave 3 — separate concern)
+  WS-S9  Observability hot-path adoption + metrics    needs: WS-S2 (recommended, not blocking)
+          adds get_logger + per-decision logs + @trace + MidiMetrics counter
+
+WAVE 3.5 (1 stream, gated on all of S1..S7+S9 merged) — full-package dead-code sweep
   WS-S8  Whole-package dead-code + 100% coverage ratchet (87 → 100)
-          + pattern enforcement audit (uses findings from "Pattern review" section)
+          + pattern enforcement audit
+          + architecture-test enforcement (test_no_any_escape_hatches, test_observability_adoption, test_plan_requirements_referenced)
 
 WAVE 4 (gated on WS-S8) — autonomous learning + hand-off
   WS-L   Learning extraction + in-repo handoff package      saves to .claude/, docs/
@@ -456,6 +470,49 @@ Plus `register_device` / `get_device` / `all_devices`. `AnalogRytmDevice` wraps 
 **Acceptance:** PR #24's 55 golden tests pass unchanged; `cli.py` is a thin dispatcher; new commands added without touching `cli.py`.
 
 **Risk:** medium. User-facing surface. Golden tests are the safety net.
+
+---
+
+## WS-S9 — Observability hot-path adoption + metrics
+
+**Worktree:** `RytmRandomizer-worktrees/ws-s9-observability-adoption`
+**Branch:** `refactor/observability-hot-path-adoption`
+**Owns:** new `rytm_randomizer/observability/metrics.py` (~80 LOC); small edits in `engines/_runtime.py`, `engines/pad{1-4}.py`, `randomization.py`, `scene_runner.py`, `group_runner.py`, `behavior_*.py`, `shell.py`, `midi_io.py`.
+**Depends on:** none structurally — can run in parallel with Wave 1. **Recommended:** runs after WS-S2 (`PadRuntime` Protocol) lands so the new logger calls reference the typed state, not the duck-typed mixin.
+
+**Today (per pattern review):** the `observability/` *library* is world-class — stdlib `logging` with `extra={...}` payloads, `NullHandler` attached, JSON formatter, `ContextVar`-propagated `op_id`, a real `@trace` decorator, full error taxonomy with multi-inheritance re-homing. But **adoption on the hot path is uneven**: only 15 modules call `get_logger()`. `engines/pad{1-4}`, `randomization`, `behavior_*`, `scene_runner`, `shell` — the modules where decisions actually happen — are silent. Blocked-by-guardrail sends (`engines/_runtime._send_param` line 144, when `clamped is None`) are completely invisible: no log, no metric, no trace.
+
+**Adds (~300 LOC, mostly additions):**
+
+1. **`observability/metrics.py`** — a single `MidiMetrics` dataclass backed by `collections.Counter`. Increments from `midi_io.send_cc` (every send) and from `engines/_runtime._send_param` (every guardrail block). Dumps a one-line summary at `shell.run()` exit. Counters: `cc_sent_by_channel`, `cc_blocked_by_guardrail_by_pad`, `errors_by_kind`.
+
+2. **Per-decision structured logs** on the hot path:
+   - `engines/_runtime.py`: `_logger.debug("guardrail_block", extra={"pad": ..., "param": ..., "requested": ..., "allowed_range": ...})` in the `clamped is None` branch.
+   - `engines/pad{1-4}.py`: `_logger.debug("pad_engine_decision", extra={"engine": "pad1", "method": ..., "inputs": ...})` per public mutation method.
+   - `randomization.py`: `_logger.debug("mutate_zone", extra={...})` per call.
+   - `scene_runner.py` / `group_runner.py`: `_logger.info("scene_start"/"group_mutation"/...)` per top-level operation.
+   - `behavior_*.py`: `_logger.debug("behavior_result", extra={"family": ..., "result": ...})` per result built.
+
+3. **`@trace` additions:** `midi_io.apply_state` (so each "send 14 CCs to channel 1" block has timing) and `midi_io.send_machine`.
+
+4. **Operational-visibility promotions:** port-open, profile-load, scene-start logged at INFO so default `--arm` shows a minimal stderr operational log without needing `--debug`.
+
+5. **Top-level error catch** in `shell.run()`: `try/except RytmRandomizerError as exc: _logger.exception(...); raise` so JSON-log mode captures every operator-visible error.
+
+6. **Architecture test:** `tests/architecture/test_observability_adoption.py` walks `rytm_randomizer/engines/`, `randomization.py`, `scene_runner.py`, `group_runner.py`, `behavior_*.py`, `guardrails/` and fails if any module performs a decision-shaped operation without `_logger = get_logger(__name__)` and a per-decision log line.
+
+7. **E2E test:** `--dry-run --debug --log-json | jq` produces parseable lines including at least one `midi_send` and one `guardrail_block` event for a representative scene run.
+
+**Agent crew:** standard 11-phase pipeline. `architect` (45-min blocking) for the metrics surface design — `MidiMetrics` is a load-bearing decision because it must work for both `--dry-run` and `--arm` paths without sniffing the sender type. `tdd-guide` writes the architecture test + E2E test first.
+
+**Acceptance:**
+- All 9 gates from `PLAN_REQUIREMENTS.md` pass.
+- 505 parity fixtures byte-identical (logging is stderr; parity asserts stdout — should be a no-op).
+- Architecture test green (every hot-path module has `get_logger` + per-decision log).
+- E2E test green (JSON log mode produces parseable events including `guardrail_block`).
+- `MidiMetrics` summary line present at shell exit; counter values match `MockMidiSender.sent_messages` length for `--dry-run`.
+
+**Risk:** Low. Logging is side-effect-free for parity (stderr, `NullHandler` default keeps it silent unless `--debug`/`--log-json`); metrics are in-memory counters. The biggest risk is log volume at DEBUG; mitigated by INFO being the default and `--debug` being opt-in.
 
 ---
 
@@ -742,3 +799,21 @@ The orchestrator is resumable because all state is on disk:
 4. Continue from the next eligible action.
 
 The run log is the audit trail — every state transition is a one-line append. After-the-fact debugging never requires "what was the orchestrator thinking" — just `cat docs/SIMPLIFICATION_RUN_LOG.md`.
+
+---
+
+## Plan-requirements conformance
+
+Per [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md), this plan commits to:
+
+- [x] **Gate 1** (100% branch coverage on touched files) — baked into pipeline phase 4 (`coverage_gate`) as a first-class blocking state. Re-spawns `tdd-guide` on gap; max 2 retries.
+- [x] **Gate 2** (V1.34 parity fixtures byte-identical) — every WS runs `tests/test_engines_pad*.py tests/test_group_runner.py tests/test_scene_runner.py` locally before push; CI re-runs on the matrix.
+- [x] **Gate 3** (lint/format/type clean) — `ruff` + `black --target-version=py311` + `isort --profile black` + `pyright --strict <touched>` per WS. Systemic black pin from PR #28 prevents the py313-drift recurrence.
+- [x] **Gate 4** (dead-code purge) — pipeline phase 3.5 per WS (vulture + ruff F401/F811/F841/ARG/ERA), plus dedicated whole-package sweep WS-S8 at maximum strictness post-Wave-3.
+- [x] **Gate 5** (docs updated before PR open) — pipeline phase 9, mandatory and blocking. `STATUS.md`, `ARCHITECTURE.md`, and `CODEMAPS/` per applicability. Cross-link validation in Wave-4 fresh-clone test.
+- [x] **Gate 6** (type-system hygiene) — WS-S1 (`MidiSender` Protocol) and WS-S2 (`PadRuntime` Protocol) are the primary mechanisms. Every new boundary in Waves 2-3 (`Device`, `SnapshotDecoder[T]`, `MutationPlanner[T]`, `CliCommand`) is a Protocol or frozen dataclass. Zero new `Sender = Any` aliases; zero new `Mapping[str, Any]` DTOs at module boundaries. `B904` always on.
+- [x] **Gate 7** (observability adoption) — **WS-S9 (Observability hot-path adoption + metrics) is added to the plan** to bring hot-path modules to gate-7 compliance. See WS-S9 section. Until WS-S9 lands, new code in S1-S8 must add `get_logger(__name__)` + structured log on every decision; the architecture test in WS-S9 enforces this retroactively.
+- [x] **Gate 8** (test hygiene) — Wave 1 WSes audit and centralize the duplicated `RecordingOut`/`_FakeMessage`/`_install_fake_mido` fixtures into `tests/conftest.py`; subsequent WSes consume the shared fixtures.
+- [x] **Gate 9** (module-organization hygiene) — WS-S5 (`devices/`), WS-S6 (`snapshot/`), WS-S7 (`cli/`, `reports/`) create new subpackages instead of growing the top-level. WS-S8 sweeps any leftover top-level files into appropriate subpackages.
+
+Exceptions: none. The plan satisfies the full set without carve-outs.
