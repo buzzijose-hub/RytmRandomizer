@@ -86,7 +86,7 @@ def test_importing_runtime_adjacent_l_modules_prints_nothing():
             sys.executable,
             "-c",
             (
-                "import rytm_randomizer.behavior_selected_isolated_pad; "
+                "import rytm_randomizer.behavior.selected_isolated_pad; "
                 "import rytm_randomizer.selected_target_state; "
                 "import rytm_randomizer.selected_isolated_pad_runtime_state; "
                 "import rytm_randomizer.mock_midi"
@@ -104,7 +104,7 @@ def test_importing_runtime_adjacent_l_modules_prints_nothing():
 
 
 def test_l_target_intent_defaults_to_pad_3_without_switching_pads():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
@@ -120,7 +120,7 @@ def test_l_target_intent_defaults_to_pad_3_without_switching_pads():
 
 def test_unset_unsupported_stale_and_invalid_l_target_contexts_fail_safely():
     from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.selected_target_state import (
+    from rytm_randomizer.state.selected_target_validation import (
         build_invalid_selected_target_state,
         build_stale_selected_target_state,
         build_unset_selected_target_state,
@@ -154,10 +154,10 @@ def test_unset_unsupported_stale_and_invalid_l_target_contexts_fail_safely():
 
 
 def test_runtime_adjacent_l_checks_are_deterministic_and_copy_safe():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
-    from rytm_randomizer.selected_target_state import build_default_selected_target_state
+    from rytm_randomizer.state.selected_target_validation import build_default_selected_target_state
 
     first = evaluate_selected_isolated_pad_behavior("L")
     second = evaluate_selected_isolated_pad_behavior("L")
@@ -194,9 +194,9 @@ def test_passive_cli_preview_l_remains_read_only():
 
 
 def test_runtime_adjacent_l_imports_no_real_midi_and_exposes_no_active_names():
-    import rytm_randomizer.behavior_selected_isolated_pad as selected_behavior
+    import rytm_randomizer.behavior.selected_isolated_pad as selected_behavior
     import rytm_randomizer.mock_midi  # noqa: F401
-    import rytm_randomizer.selected_target_state as selected_target_state
+    import rytm_randomizer.state.selected_target_validation as selected_target_state
 
     exposed_names = set(dir(selected_behavior)) | set(selected_target_state.__all__)
 

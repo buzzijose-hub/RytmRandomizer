@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import ISOLATED_PAD_UTILITY_COMMANDS
+from ..commands import ISOLATED_PAD_UTILITY_COMMANDS
 
 SELECTED_TARGET_DEFAULT_COMMAND_KEY = "L"
 DEFAULT_SELECTED_TARGET_PAD = int(

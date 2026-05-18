@@ -25,7 +25,7 @@ def run_cli(*args):
 
 def test_importing_behavior_selected_isolated_pad_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.behavior_selected_isolated_pad"],
+        [sys.executable, "-c", "import rytm_randomizer.behavior.selected_isolated_pad"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -38,7 +38,7 @@ def test_importing_behavior_selected_isolated_pad_prints_nothing():
 
 
 def test_l_returns_read_only_selected_isolated_pad_target_intent():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         DEFERRED_PACKET_11_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
@@ -100,7 +100,7 @@ def test_l_returns_read_only_selected_isolated_pad_target_intent():
 
 
 def test_l_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -129,7 +129,7 @@ def test_l_metadata_contains_expected_passive_sources():
 
 
 def test_selected_isolated_pad_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -145,7 +145,7 @@ def test_selected_isolated_pad_metadata_is_copied_and_immutable():
 
 
 def test_repeated_selected_isolated_pad_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -158,7 +158,7 @@ def test_repeated_selected_isolated_pad_evaluations_are_deterministic():
 
 
 def test_pz_reports_read_only_anchor_return_readiness_for_default_context():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -207,11 +207,11 @@ def test_pz_reports_read_only_anchor_return_readiness_for_default_context():
 
 
 def test_pz_consumes_injected_runtime_state_without_mutating_it():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
-    from rytm_randomizer.selected_isolated_pad_runtime_state import (
+    from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_missing_selected_target_runtime_state,
     )
 
@@ -240,7 +240,7 @@ def test_pz_consumes_injected_runtime_state_without_mutating_it():
 
 
 def test_pz_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -256,7 +256,7 @@ def test_pz_metadata_is_copied_and_immutable():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
 
@@ -272,7 +272,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_packet_1_selected_pad_status_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("PR")
 
@@ -285,7 +285,7 @@ def test_packet_1_selected_pad_status_behavior_remains_unchanged():
 
 
 def test_packet_3_selected_isolated_pad_mutation_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
+    from rytm_randomizer.behavior.mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("PM")
 
@@ -307,7 +307,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_selected_isolated_pad  # noqa: F401
+    import rytm_randomizer.behavior.selected_isolated_pad  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -322,7 +322,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_selected_isolated_pad_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_selected_isolated_pad as behavior_selected_isolated_pad
+    import rytm_randomizer.behavior.selected_isolated_pad as behavior_selected_isolated_pad
 
     exposed_names = set(dir(behavior_selected_isolated_pad))
 
@@ -332,7 +332,7 @@ def test_behavior_selected_isolated_pad_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_selected_isolated_pad as behavior_selected_isolated_pad
+    import rytm_randomizer.behavior.selected_isolated_pad as behavior_selected_isolated_pad
 
     module_text = "\n".join(
         [

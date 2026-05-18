@@ -10,8 +10,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
-from .selected_isolated_pad_runtime_state import (
+from ..commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
+from ..selected_isolated_pad_runtime_state import (
     build_passive_default_selected_isolated_pad_runtime_state,
 )
 

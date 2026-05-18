@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import COMMANDS, STATE_UTILITY_COMMANDS
+from ..commands import COMMANDS, STATE_UTILITY_COMMANDS
 
 PACKET_9A_UNDO_COMMIT_STATE_KEYS = ("B",)
 PACKET_9B_UNDO_COMMIT_STATE_KEYS = ("E",)

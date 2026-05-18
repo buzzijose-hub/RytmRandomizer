@@ -24,7 +24,7 @@ def run_cli(*args):
 
 
 def test_importing_behavior_undo_commit_state_prints_nothing():
-    code = "import rytm_randomizer.behavior_undo_commit_state"
+    code = "import rytm_randomizer.behavior.undo_commit_state"
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=PROJECT_ROOT,
@@ -39,7 +39,7 @@ def test_importing_behavior_undo_commit_state_prints_nothing():
 
 
 def test_b_returns_read_only_current_anchor_return_intent():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -79,7 +79,7 @@ def test_b_returns_read_only_current_anchor_return_intent():
 
 
 def test_b_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -100,7 +100,7 @@ def test_b_metadata_contains_expected_passive_sources():
 
 
 def test_e_returns_read_only_current_state_anchor_commit_intent():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("E")
 
@@ -143,7 +143,7 @@ def test_e_returns_read_only_current_state_anchor_commit_intent():
 
 
 def test_e_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("E")
 
@@ -165,7 +165,7 @@ def test_e_metadata_contains_expected_passive_sources():
 
 
 def test_w_returns_read_only_waveform_exploration_intent():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("W")
 
@@ -209,7 +209,7 @@ def test_w_returns_read_only_waveform_exploration_intent():
 
 
 def test_w_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("W")
 
@@ -232,7 +232,7 @@ def test_w_metadata_contains_expected_passive_sources():
 
 
 def test_u_returns_read_only_state_history_undo_intent():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("U")
 
@@ -277,7 +277,7 @@ def test_u_returns_read_only_state_history_undo_intent():
 
 
 def test_u_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("U")
 
@@ -300,7 +300,7 @@ def test_u_metadata_contains_expected_passive_sources():
 
 
 def test_undo_commit_state_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -314,7 +314,7 @@ def test_undo_commit_state_metadata_is_copied_and_immutable():
 
 
 def test_deferred_packet_9_undo_commit_state_keys_fail_safely():
-    from rytm_randomizer.behavior_undo_commit_state import (
+    from rytm_randomizer.behavior.undo_commit_state import (
         DEFERRED_PACKET_9_UNDO_COMMIT_STATE_KEYS,
         PACKET_9B_UNDO_COMMIT_STATE_KEYS,
         PACKET_9C_UNDO_COMMIT_STATE_KEYS,
@@ -345,7 +345,7 @@ def test_deferred_packet_9_undo_commit_state_keys_fail_safely():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("NOPE")
 
@@ -359,7 +359,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_packet_1_h_and_r_menu_behavior_remain_unchanged():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     h_result = evaluate_menu_utility_behavior("H")
     r_result = evaluate_menu_utility_behavior("R")
@@ -389,7 +389,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_undo_commit_state  # noqa: F401
+    import rytm_randomizer.behavior.undo_commit_state  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -404,7 +404,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_undo_commit_state_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_undo_commit_state as behavior_undo_commit_state
+    import rytm_randomizer.behavior.undo_commit_state as behavior_undo_commit_state
 
     exposed_names = set(dir(behavior_undo_commit_state))
 
@@ -414,7 +414,7 @@ def test_behavior_undo_commit_state_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_undo_commit_state as behavior_undo_commit_state
+    import rytm_randomizer.behavior.undo_commit_state as behavior_undo_commit_state
 
     module_text = "\n".join(
         [

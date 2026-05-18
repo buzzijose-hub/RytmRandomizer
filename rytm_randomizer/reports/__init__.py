@@ -664,7 +664,7 @@ ANCHOR_PROFILE_PARKED_SECTIONS = (
         "kind": "selected_isolated_pad_anchor_return",
         "status": "parked",
         "reason": "deferred_selected_isolated_pad_anchor_return",
-        "source_helper": "rytm_randomizer.behavior_selected_isolated_pad",
+        "source_helper": "rytm_randomizer.behavior.selected_isolated_pad",
         "requires_separate_approval": True,
     },
     {
@@ -679,23 +679,23 @@ ANCHOR_PROFILE_PARKED_SECTIONS = (
 
 
 def _anchor_profile_section_specs():
-    from ..behavior_anchor_profile import evaluate_anchor_profile_behavior
-    from ..behavior_pad_lane import (
+    from ..behavior.anchor_profile import evaluate_anchor_profile_behavior
+    from ..behavior.pad_lane import (
         evaluate_pad1_lane_behavior,
         evaluate_pad2_lane_behavior,
         evaluate_pad3_lane_behavior,
         evaluate_pad4_lane_behavior,
     )
-    from ..behavior_scene_group import evaluate_scene_group_behavior
-    from ..behavior_selected_isolated_pad import evaluate_selected_isolated_pad_behavior
-    from ..behavior_selected_profile import evaluate_selected_profile_behavior
-    from ..behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from ..behavior.scene_group import evaluate_scene_group_behavior
+    from ..behavior.selected_isolated_pad import evaluate_selected_isolated_pad_behavior
+    from ..behavior.selected_profile import evaluate_selected_profile_behavior
+    from ..behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     return (
         (
             "direct_packet_2_anchor_profile",
             "Direct Packet 2 Anchor/Profile",
-            "rytm_randomizer.behavior_anchor_profile",
+            "rytm_randomizer.behavior.anchor_profile",
             evaluate_anchor_profile_behavior,
             ("BH", "BC", "BS", "BF"),
             {"intent_kind": "anchor/profile"},
@@ -703,7 +703,7 @@ def _anchor_profile_section_specs():
         (
             "pad1_lane_anchor_profile",
             "Pad 1 Lane Anchor/Profile",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad1_lane_behavior,
             ("FZ", "BP", "PBH", "BI", "SBH", "BA"),
             {},
@@ -711,7 +711,7 @@ def _anchor_profile_section_specs():
         (
             "pad2_lane_anchor_profile",
             "Pad 2 Lane Anchor/Profile",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad2_lane_behavior,
             ("P2B", "P2H", "P2C", "P2F", "P2Z"),
             {
@@ -726,7 +726,7 @@ def _anchor_profile_section_specs():
         (
             "pad3_anchor",
             "Pad 3 Anchor",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad3_lane_behavior,
             ("P3A", "SA"),
             {},
@@ -734,7 +734,7 @@ def _anchor_profile_section_specs():
         (
             "pad4_anchor",
             "Pad 4 Anchor",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad4_lane_behavior,
             ("P4A",),
             {},
@@ -742,7 +742,7 @@ def _anchor_profile_section_specs():
         (
             "group_anchor",
             "Group Anchor",
-            "rytm_randomizer.behavior_scene_group",
+            "rytm_randomizer.behavior.scene_group",
             evaluate_scene_group_behavior,
             ("O", "Z"),
             {
@@ -755,7 +755,7 @@ def _anchor_profile_section_specs():
         (
             "current_anchor_state",
             "Current Anchor State",
-            "rytm_randomizer.behavior_undo_commit_state",
+            "rytm_randomizer.behavior.undo_commit_state",
             evaluate_undo_commit_state_behavior,
             ("B", "E"),
             {},
@@ -763,7 +763,7 @@ def _anchor_profile_section_specs():
         (
             "selected_profile_workflow",
             "Selected Profile Workflow",
-            "rytm_randomizer.behavior_selected_profile",
+            "rytm_randomizer.behavior.selected_profile",
             evaluate_selected_profile_behavior,
             ("P", "M"),
             {
@@ -775,7 +775,7 @@ def _anchor_profile_section_specs():
         (
             "selected_isolated_pad_target",
             "Selected Isolated Pad Target",
-            "rytm_randomizer.behavior_selected_isolated_pad",
+            "rytm_randomizer.behavior.selected_isolated_pad",
             evaluate_selected_isolated_pad_behavior,
             ("L",),
             {},
@@ -1025,7 +1025,7 @@ PARITY_REPORT_BOUNDARY = {
 
 
 def _selected_isolated_pad_packet_coverage():
-    from ..behavior_selected_isolated_pad import (
+    from ..behavior.selected_isolated_pad import (
         PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
     )
@@ -1045,7 +1045,7 @@ def _selected_isolated_pad_packet_coverage():
 
 
 def _pad_lane_packet_coverage():
-    from ..behavior_pad_lane import (
+    from ..behavior.pad_lane import (
         DEFERRED_PACKET_5_PAD1_LANE_KEYS,
         DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         DEFERRED_PACKET_7_PAD3_LANE_KEYS,

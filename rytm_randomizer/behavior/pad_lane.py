@@ -21,7 +21,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import COMMANDS, PAD1_COMMANDS, PAD2_COMMANDS, PAD3_COMMANDS, PAD4_COMMANDS
+from ..commands import COMMANDS, PAD1_COMMANDS, PAD2_COMMANDS, PAD3_COMMANDS, PAD4_COMMANDS
 
 
 # --------------------------------------------------------------------------

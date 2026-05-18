@@ -492,7 +492,7 @@ def run_cli(*args):
 
 def test_importing_behavior_pad1_lane_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.behavior_pad_lane"],
+        [sys.executable, "-c", "import rytm_randomizer.behavior.pad_lane"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -505,7 +505,7 @@ def test_importing_behavior_pad1_lane_prints_nothing():
 
 
 def test_br_and_bm_return_read_only_pad1_lane_intents():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for (
         command_key,
@@ -541,7 +541,7 @@ def test_br_and_bm_return_read_only_pad1_lane_intents():
 
 
 def test_br_and_bm_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     expected = {
         "BR": {
@@ -586,7 +586,7 @@ def test_br_and_bm_metadata_contains_expected_passive_sources():
 
 
 def test_ft_fk_fg_and_fz_return_read_only_bd_fm_lane_intents():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for (
         command_key,
@@ -625,7 +625,7 @@ def test_ft_fk_fg_and_fz_return_read_only_bd_fm_lane_intents():
 
 
 def test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     expected = {
         "FT": {
@@ -680,7 +680,7 @@ def test_ft_fk_fg_and_fz_metadata_contains_expected_passive_sources():
 
 
 def test_bp_pt_pk_px_and_pbh_return_read_only_bd_plastic_lane_intents():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for (
         command_key,
@@ -719,7 +719,7 @@ def test_bp_pt_pk_px_and_pbh_return_read_only_bd_plastic_lane_intents():
 
 
 def test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     expected = {
         "BP": {
@@ -781,7 +781,7 @@ def test_bp_pt_pk_px_and_pbh_metadata_contains_expected_passive_sources():
 
 
 def test_bi_st_sk_sc_and_sbh_return_read_only_bd_silky_lane_intents():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for (
         command_key,
@@ -820,7 +820,7 @@ def test_bi_st_sk_sc_and_sbh_return_read_only_bd_silky_lane_intents():
 
 
 def test_bi_st_sk_sc_and_sbh_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     expected = {
         "BI": {
@@ -882,7 +882,7 @@ def test_bi_st_sk_sc_and_sbh_metadata_contains_expected_passive_sources():
 
 
 def test_ba_returns_read_only_bd_acoustic_anchor_intent():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for (
         command_key,
@@ -921,7 +921,7 @@ def test_ba_returns_read_only_bd_acoustic_anchor_intent():
 
 
 def test_ba_metadata_contains_expected_passive_source_without_profile_4_or_pad_4():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     result = evaluate_pad1_lane_behavior("BA")
 
@@ -955,7 +955,7 @@ def test_ba_metadata_contains_expected_passive_source_without_profile_4_or_pad_4
 
 
 def test_pad1_lane_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_pad_lane import Pad1LaneBehaviorResult
+    from rytm_randomizer.behavior.pad_lane import Pad1LaneBehaviorResult
 
     metadata = {"source": "test"}
     result = Pad1LaneBehaviorResult(command_key="BR", metadata=metadata)
@@ -973,7 +973,7 @@ def test_pad1_lane_metadata_is_copied_and_immutable():
 
 
 def test_repeated_pad1_lane_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     assert evaluate_pad1_lane_behavior("BR") == evaluate_pad1_lane_behavior("BR")
     assert evaluate_pad1_lane_behavior("BM") == evaluate_pad1_lane_behavior("BM")
@@ -995,7 +995,7 @@ def test_repeated_pad1_lane_evaluations_are_deterministic():
 
 
 def test_deferred_packet_5_pad1_lane_keys_fail_safely():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for command_key in DEFERRED_PAD1_LANE_KEYS:
         result = evaluate_pad1_lane_behavior(command_key)
@@ -1016,7 +1016,7 @@ def test_deferred_packet_5_pad1_lane_keys_fail_safely():
 
 
 def test_already_covered_pad1_context_keys_are_not_reimplemented():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     for command_key in ALREADY_COVERED_PAD1_CONTEXT_KEYS:
         result = evaluate_pad1_lane_behavior(command_key)
@@ -1030,7 +1030,7 @@ def test_already_covered_pad1_context_keys_are_not_reimplemented():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_pad_lane import evaluate_pad1_lane_behavior
+    from rytm_randomizer.behavior.pad_lane import evaluate_pad1_lane_behavior
 
     result = evaluate_pad1_lane_behavior("DOES_NOT_EXIST")
 
@@ -1054,7 +1054,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_packet_1_menu_utility_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("BD")
 
@@ -1065,7 +1065,7 @@ def test_packet_1_menu_utility_behavior_remains_unchanged():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
+    from rytm_randomizer.behavior.anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 
@@ -1087,7 +1087,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_pad_lane  # noqa: F401
+    import rytm_randomizer.behavior.pad_lane  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -1102,7 +1102,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_pad1_lane_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_pad_lane as behavior_pad1_lane
+    import rytm_randomizer.behavior.pad_lane as behavior_pad1_lane
 
     exposed_names = set(dir(behavior_pad1_lane))
 
@@ -1112,7 +1112,7 @@ def test_behavior_pad1_lane_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_pad_lane as behavior_pad1_lane
+    import rytm_randomizer.behavior.pad_lane as behavior_pad1_lane
 
     module_text = "\n".join(
         [
@@ -1126,7 +1126,7 @@ def test_no_out_of_scope_support_is_exposed():
 
 
 def test_describe_pad1_lane_state_maps_accepted_keys_to_static_lane_families():
-    from rytm_randomizer.behavior_pad_lane import (
+    from rytm_randomizer.behavior.pad_lane import (
         describe_pad1_lane_state,
         evaluate_pad1_lane_behavior,
     )
@@ -1169,7 +1169,7 @@ def test_describe_pad1_lane_state_maps_accepted_keys_to_static_lane_families():
 
 
 def test_describe_pad1_lane_state_records_static_dependency_flags():
-    from rytm_randomizer.behavior_pad_lane import describe_pad1_lane_state
+    from rytm_randomizer.behavior.pad_lane import describe_pad1_lane_state
 
     current_engine = describe_pad1_lane_state("BM")
     assert current_engine.requires_current_engine is True
@@ -1203,7 +1203,7 @@ def test_describe_pad1_lane_state_records_static_dependency_flags():
 
 
 def test_describe_pad1_lane_state_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_pad_lane import describe_pad1_lane_state
+    from rytm_randomizer.behavior.pad_lane import describe_pad1_lane_state
 
     descriptor = describe_pad1_lane_state("BA")
 
@@ -1223,7 +1223,7 @@ def test_describe_pad1_lane_state_metadata_is_copied_and_immutable():
 
 
 def test_describe_pad1_lane_state_unknown_and_unsupported_keys_fail_safely():
-    from rytm_randomizer.behavior_pad_lane import describe_pad1_lane_state
+    from rytm_randomizer.behavior.pad_lane import describe_pad1_lane_state
 
     unsupported = describe_pad1_lane_state("BD")
     assert unsupported.supported is False
@@ -1250,7 +1250,7 @@ def test_describe_pad1_lane_state_unknown_and_unsupported_keys_fail_safely():
 
 
 def test_describe_pad1_lane_state_exposes_no_runtime_or_hardware_behavior():
-    from rytm_randomizer.behavior_pad_lane import describe_pad1_lane_state
+    from rytm_randomizer.behavior.pad_lane import describe_pad1_lane_state
 
     for command_key in ("BR", "BM", "FT", "FZ", "BP", "PBH", "BI", "SBH", "BA"):
         descriptor = describe_pad1_lane_state(command_key)
