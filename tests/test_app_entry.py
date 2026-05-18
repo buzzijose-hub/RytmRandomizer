@@ -540,6 +540,38 @@ def test_app_main_dry_run_rytm_engine_cycle_source_starters(capsys):
     assert captured.err == ""
 
 
+def test_app_main_dry_run_twelve_pad_rytm_runtime_alias_uses_guarded_mock_sender(
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--twelve-pad-rytm-runtime",
+            "--runtime-style",
+            "Birmingham dark techno",
+            "--runtime-discovery",
+            "0.35",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "guarded Twelve Pad Rytm Runtime send" in captured.out
+    assert "reusing Rytm engine-cycle guarded sender" in captured.out
+    assert "Style prompt: Birmingham dark techno" in captured.out
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 132" in captured.out
+    assert "engine_source_parameter / SRC Slot 1 CC16 -> 100" in captured.out
+    assert "Mock sender captured 132 message(s)." in captured.out
+    assert "no port opened" in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
@@ -620,6 +652,23 @@ def test_app_main_rytm_engine_cycle_requires_active_mode(capsys):
     assert "--rytm-engine-cycle requires --arm or --dry-run" in captured.err
 
 
+def test_app_main_twelve_pad_rytm_runtime_alias_requires_active_mode(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--twelve-pad-rytm-runtime",
+            "--runtime-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--twelve-pad-rytm-runtime requires --arm or --dry-run" in captured.err
+
+
 def test_app_main_snapshot_essence_send_rejects_missing_required_args(capsys):
     _seed()
     from rytm_randomizer import app
@@ -644,6 +693,19 @@ def test_app_main_rytm_engine_cycle_rejects_missing_required_args(capsys):
     assert "--rytm-engine-cycle requires --engine-cycle-style" in captured.err
 
 
+def test_app_main_twelve_pad_rytm_runtime_alias_rejects_missing_runtime_style(
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--twelve-pad-rytm-runtime"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--twelve-pad-rytm-runtime requires --runtime-style" in captured.err
+
+
 def test_app_main_rytm_engine_cycle_rejects_invalid_discovery(capsys):
     _seed()
     from rytm_randomizer import app
@@ -662,6 +724,28 @@ def test_app_main_rytm_engine_cycle_rejects_invalid_discovery(capsys):
 
     assert exit_code == 2
     assert "--engine-cycle-discovery must be between 0.0 and 1.0" in captured.err
+
+
+def test_app_main_twelve_pad_rytm_runtime_alias_rejects_invalid_runtime_discovery(
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--twelve-pad-rytm-runtime",
+            "--runtime-style",
+            "Birmingham dark techno",
+            "--runtime-discovery",
+            "2",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--runtime-discovery must be between 0.0 and 1.0" in captured.err
 
 
 def test_app_main_snapshot_essence_send_rejects_dual_machine_conflict(tmp_path, capsys):
@@ -715,6 +799,27 @@ def test_app_main_rytm_engine_cycle_rejects_snapshot_conflict(tmp_path, capsys):
             "--snapshot-depth",
             "micro",
             "--snapshot-style",
+            "Birmingham dark techno",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "Choose only one active-mode modifier" in captured.err
+
+
+def test_app_main_twelve_pad_rytm_runtime_alias_rejects_engine_cycle_conflict(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--twelve-pad-rytm-runtime",
+            "--runtime-style",
+            "Birmingham dark techno",
+            "--rytm-engine-cycle",
+            "--engine-cycle-style",
             "Birmingham dark techno",
         ]
     )
@@ -1386,6 +1491,81 @@ def test_app_main_arm_rytm_engine_cycle_starter_profile_sends_to_selected_fake_p
     assert "Accepted: True" in captured.out
     assert "Emitted real MIDI messages: 84" in captured.out
     assert "Type SEND to transmit 84 Rytm engine-cycle starter CC message(s)" in captured.out
+    assert "Choose the Analog Rytm MIDI output number" in captured.out
+
+
+def test_app_main_arm_twelve_pad_rytm_runtime_alias_sends_source_starters_to_selected_fake_port(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--twelve-pad-rytm-runtime",
+                "--runtime-style",
+                "Birmingham dark techno",
+                "--runtime-discovery",
+                "0.35",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == 132
+    assert any(
+        message.channel == 4 and message.control == 15 and message.value == 17
+        for message in port.sent
+    )
+    assert any(
+        message.channel == 4 and message.control == 16 and message.value == 100
+        for message in port.sent
+    )
+    assert port.closed is True
+    assert "guarded Twelve Pad Rytm Runtime send" in captured.out
+    assert "Rytm Engine Cycle Hardware Send Report" in captured.out
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 132" in captured.out
+    assert "engine_source_parameter / SRC Slot 1 CC16 -> 100" in captured.out
+    assert (
+        "Type SEND to transmit 132 Rytm twelve-pad runtime starter/source " "CC message(s)"
+    ) in captured.out
     assert "Choose the Analog Rytm MIDI output number" in captured.out
 
 

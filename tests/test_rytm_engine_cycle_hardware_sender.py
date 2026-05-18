@@ -32,7 +32,7 @@ def build_plan():
     return build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
 
 
-def build_starter_plan():
+def build_starter_plan(*, include_engine_source_starters=False):
     from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
@@ -40,6 +40,7 @@ def build_starter_plan():
     return build_rytm_engine_cycle_starter_plan(
         build_plan(),
         profile="birmingham-dark",
+        include_engine_source_starters=include_engine_source_starters,
     )
 
 
@@ -243,3 +244,51 @@ def test_engine_cycle_hardware_send_accepts_starter_plan_with_fake_mido(monkeypa
     assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
     assert "Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- sends CC15 machine-select plus common filter/amp starter values" in report
+
+
+def test_engine_cycle_hardware_send_accepts_source_starter_plan_with_fake_mido(
+    monkeypatch,
+):
+    import types
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = FakeMessage
+    monkeypatch.setitem(sys.modules, "mido", fake_mido)
+
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
+        execute_rytm_engine_cycle_hardware_send,
+        format_rytm_engine_cycle_hardware_send_report,
+    )
+
+    port = RecordingPort()
+    result = execute_rytm_engine_cycle_hardware_send(
+        build_starter_plan(include_engine_source_starters=True),
+        port,
+        port_name="Fake Rytm",
+        armed=True,
+        operator_confirmed=True,
+        sleep=lambda _seconds: None,
+    )
+    report = "\n".join(format_rytm_engine_cycle_hardware_send_report(result))
+    event_roles = [message.event_role for message in result.emitted_messages]
+
+    assert result.accepted is True
+    assert result.reason == "accepted_hardware_send"
+    assert result.emitted_message_count == 132
+    assert len(port.sent) == 132
+    assert event_roles.count("machine_select") == 12
+    assert event_roles.count("engine_source_parameter") == 48
+    assert event_roles.count("starter_parameter") == 72
+    pad5_source_index = next(
+        index
+        for index, message in enumerate(result.emitted_messages)
+        if message.pad == 5
+        and message.event_role == "engine_source_parameter"
+        and message.parameter_name == "SRC Slot 1"
+    )
+    assert port.sent[pad5_source_index].channel == 4
+    assert port.sent[pad5_source_index].control == 16
+    assert port.sent[pad5_source_index].value == 100
+    assert "Emitted real MIDI messages: 132" in report
+    assert "engine_source_parameter / SRC Slot 1 CC16 -> 100" in report
+    assert "- includes engine-source SRC starter values" in report

@@ -117,6 +117,55 @@ def test_twelve_pad_rytm_runtime_mock_capture_has_metadata_and_full_stream():
     assert pad5_source.value == 100
 
 
+def test_twelve_pad_rytm_runtime_mock_capture_matches_guarded_source_starter_stream():
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
+        build_rytm_engine_cycle_guarded_send_dry_run,
+    )
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+    )
+    from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
+        build_twelve_pad_rytm_runtime_plan,
+        capture_twelve_pad_rytm_runtime_mock_messages,
+    )
+
+    runtime_sender = capture_twelve_pad_rytm_runtime_mock_messages(
+        build_twelve_pad_rytm_runtime_plan(
+            "Birmingham dark techno",
+            discovery=0.35,
+        )
+    )
+    starter_plan = build_rytm_engine_cycle_starter_plan(
+        build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35),
+        profile="auto",
+        include_engine_source_starters=True,
+    )
+    guarded_result = build_rytm_engine_cycle_guarded_send_dry_run(starter_plan)
+
+    runtime_stream = [
+        (
+            message.channel,
+            message.control,
+            message.value,
+            message.metadata["event_role"],
+        )
+        for message in runtime_sender.sent_messages
+    ]
+    guarded_stream = [
+        (
+            message.channel,
+            message.control,
+            message.value,
+            message.metadata["event_role"],
+        )
+        for message in guarded_result.emitted_messages
+    ]
+
+    assert len(runtime_stream) == 132
+    assert runtime_stream == guarded_stream
+
+
 def test_twelve_pad_rytm_runtime_report_explains_counts_stream_and_safety():
     from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
         build_twelve_pad_rytm_runtime_plan,
@@ -135,8 +184,7 @@ def test_twelve_pad_rytm_runtime_report_explains_counts_stream_and_safety():
     assert "Source-starter covered pads: 12" in report
     assert "Source-starter skipped pads: 0" in report
     assert (
-        "- Pad 5 / Closed hat pulse / CH Metallic: "
-        "11 message(s), source starters covered"
+        "- Pad 5 / Closed hat pulse / CH Metallic: " "11 message(s), source starters covered"
     ) in report
     assert "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
     assert "- Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100" in report

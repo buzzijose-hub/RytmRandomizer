@@ -134,6 +134,15 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--twelve-pad-rytm-runtime",
+        action="store_true",
+        help=(
+            "With --dry-run or --arm, use the guarded Rytm engine-cycle sender "
+            "as a 12-pad runtime path with auto starter profile and "
+            "engine-source starters enabled."
+        ),
+    )
+    parser.add_argument(
         "--snapshot-path",
         metavar="PATH",
         help="Saved Analog Rytm SysEx kit/project dump path for snapshot planning.",
@@ -177,6 +186,17 @@ def _build_parser() -> argparse.ArgumentParser:
         type=float,
         metavar="AMOUNT",
         help="Optional Rytm engine-cycle discovery amount from 0.0 to 1.0.",
+    )
+    parser.add_argument(
+        "--runtime-style",
+        metavar="STYLE",
+        help="Style or genre prompt for --twelve-pad-rytm-runtime planning.",
+    )
+    parser.add_argument(
+        "--runtime-discovery",
+        type=float,
+        metavar="AMOUNT",
+        help="Optional twelve-pad Rytm runtime discovery amount from 0.0 to 1.0.",
     )
     parser.add_argument(
         "--engine-cycle-starter-profile",
@@ -281,6 +301,9 @@ def _print_passive_menu() -> None:
             "Rytm 12-pad CC15 engine-cycle plan",
             "  optional: --engine-cycle-starter-profile <profile> adds " "common starter shaping",
             "  optional: --engine-cycle-source-starters adds SRC-slot source " "starter values",
+            "- --twelve-pad-rytm-runtime  with --arm/--dry-run, send a guarded "
+            "Rytm 12-pad runtime plan with auto starter/source values",
+            "  required: --runtime-style <style>; optional: --runtime-discovery <0..1>",
             "",
             USAGE,
         ]
@@ -338,9 +361,18 @@ def _snapshot_essence_send_request_from_args(
 def _rytm_engine_cycle_request_from_args(
     args: argparse.Namespace,
 ) -> dict[str, object] | None:
+    if args.twelve_pad_rytm_runtime:
+        return {
+            "engine_cycle_surface": "twelve_pad_rytm_runtime",
+            "engine_cycle_style": args.runtime_style,
+            "engine_cycle_discovery": args.runtime_discovery,
+            "engine_cycle_starter_profile": "auto",
+            "engine_cycle_source_starters": True,
+        }
     if not args.rytm_engine_cycle:
         return None
     return {
+        "engine_cycle_surface": "engine_cycle",
         "engine_cycle_style": args.engine_cycle_style,
         "engine_cycle_discovery": args.engine_cycle_discovery,
         "engine_cycle_starter_profile": args.engine_cycle_starter_profile,
@@ -888,9 +920,18 @@ def _run_arm_rytm_engine_cycle(request: dict[str, object]) -> int:
     if port_name is None:
         return 1
 
-    if not _confirm_rytm_engine_cycle_send(plan, port_name):
+    if not _confirm_rytm_engine_cycle_send(
+        plan,
+        port_name,
+        runtime_alias=_is_twelve_pad_rytm_runtime_request(request),
+    ):
         return 1
 
+    if _is_twelve_pad_rytm_runtime_request(request):
+        sys.stdout.write(
+            "RytmRandomizer --arm: guarded Twelve Pad Rytm Runtime send "
+            "(reusing Rytm engine-cycle guarded sender).\n"
+        )
     sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
     try:
         port = provider.open_output(port_name)
@@ -996,11 +1037,13 @@ def _confirm_snapshot_essence_send(
 def _confirm_rytm_engine_cycle_send(
     plan,
     port_name: str,
+    *,
+    runtime_alias: bool = False,
 ) -> bool:
     sys.stdout.write(
         "\nType SEND to transmit "
         f"{_rytm_engine_cycle_message_count(plan)} "
-        f"{_rytm_engine_cycle_message_label(plan)} to "
+        f"{_rytm_engine_cycle_message_label(plan, runtime_alias=runtime_alias)} to "
         f"Analog Rytm on {port_name}: "
     )
     try:
@@ -1021,10 +1064,16 @@ def _rytm_engine_cycle_message_count(plan) -> int:
     return int(plan.top_candidate_count)
 
 
-def _rytm_engine_cycle_message_label(plan) -> str:
+def _rytm_engine_cycle_message_label(plan, *, runtime_alias: bool = False) -> str:
+    if runtime_alias:
+        return "Rytm twelve-pad runtime starter/source CC message(s)"
     if getattr(plan, "starter_profile_key", None) is not None:
         return "Rytm engine-cycle starter CC message(s)"
     return "Rytm engine-cycle CC15 message(s)"
+
+
+def _is_twelve_pad_rytm_runtime_request(request: dict[str, object]) -> bool:
+    return request.get("engine_cycle_surface") == "twelve_pad_rytm_runtime"
 
 
 def _rytm_engine_cycle_no_candidate_count(plan) -> int:
@@ -1135,10 +1184,17 @@ def _run_dry_run_rytm_engine_cycle(request: dict[str, object]) -> int:
         format_rytm_engine_cycle_guarded_send_error,
     )
 
-    sys.stdout.write(
-        "RytmRandomizer --dry-run: guarded Rytm engine-cycle send "
-        "(mock-only, no hardware, no port opened).\n"
-    )
+    if _is_twelve_pad_rytm_runtime_request(request):
+        sys.stdout.write(
+            "RytmRandomizer --dry-run: guarded Twelve Pad Rytm Runtime send "
+            "(mock-only, no hardware, no port opened; "
+            "reusing Rytm engine-cycle guarded sender).\n"
+        )
+    else:
+        sys.stdout.write(
+            "RytmRandomizer --dry-run: guarded Rytm engine-cycle send "
+            "(mock-only, no hardware, no port opened).\n"
+        )
     try:
         plan = _build_rytm_engine_cycle_plan_from_request(request)
         result = build_rytm_engine_cycle_guarded_send_dry_run(plan)
@@ -1329,6 +1385,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             bool(args.dual_machine_snapshot_send),
             bool(args.snapshot_essence_send),
             bool(args.rytm_engine_cycle),
+            bool(args.twelve_pad_rytm_runtime),
         )
     )
 
@@ -1336,7 +1393,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write(
             "Choose only one active-mode modifier: smoke tests or "
             "--dual-machine-snapshot-send/--snapshot-essence-send/"
-            "--rytm-engine-cycle.\n"
+            "--rytm-engine-cycle/--twelve-pad-rytm-runtime.\n"
         )
         return 2
 
@@ -1344,7 +1401,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write(
             "Choose only one active-mode modifier: "
             "--dual-machine-snapshot-send, --snapshot-essence-send, "
-            "or --rytm-engine-cycle.\n"
+            "--rytm-engine-cycle, or --twelve-pad-rytm-runtime.\n"
         )
         return 2
 
@@ -1386,6 +1443,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("--rytm-engine-cycle requires --arm or --dry-run.\n")
         return 2
 
+    if args.twelve_pad_rytm_runtime and not (args.arm or args.dry_run):
+        sys.stderr.write("--twelve-pad-rytm-runtime requires --arm or --dry-run.\n")
+        return 2
+
     if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:
         sys.stderr.write("--engine-cycle-starter-profile requires --rytm-engine-cycle.\n")
         return 2
@@ -1394,6 +1455,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write(
             "--engine-cycle-source-starters requires --engine-cycle-starter-profile.\n"
         )
+        return 2
+
+    if args.runtime_style is not None and not args.twelve_pad_rytm_runtime:
+        sys.stderr.write("--runtime-style requires --twelve-pad-rytm-runtime.\n")
+        return 2
+
+    if args.runtime_discovery is not None and not args.twelve_pad_rytm_runtime:
+        sys.stderr.write("--runtime-discovery requires --twelve-pad-rytm-runtime.\n")
         return 2
 
     if args.dual_machine_snapshot_send:
@@ -1452,6 +1521,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             and not 0.0 <= args.engine_cycle_discovery <= 1.0
         ):
             sys.stderr.write("--engine-cycle-discovery must be between 0.0 and 1.0.\n")
+            return 2
+
+    if args.twelve_pad_rytm_runtime:
+        if args.runtime_style is None:
+            sys.stderr.write("--twelve-pad-rytm-runtime requires --runtime-style.\n")
+            return 2
+        if args.runtime_discovery is not None and not 0.0 <= args.runtime_discovery <= 1.0:
+            sys.stderr.write("--runtime-discovery must be between 0.0 and 1.0.\n")
             return 2
 
     if args.arm:

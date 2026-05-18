@@ -103,9 +103,7 @@ class TwelvePadRytmRuntimePlan:
         return self._count_role("starter_parameter")
 
     def _count_role(self, event_role: str) -> int:
-        return sum(
-            1 for pad in self.pads for event in pad.events if event.event_role == event_role
-        )
+        return sum(1 for pad in self.pads for event in pad.events if event.event_role == event_role)
 
 
 def build_twelve_pad_rytm_runtime_plan(
