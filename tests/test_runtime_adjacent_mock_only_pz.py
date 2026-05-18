@@ -61,9 +61,9 @@ def test_importing_runtime_adjacent_pz_modules_prints_nothing():
             "-c",
             (
                 "import rytm_randomizer.behavior.selected_isolated_pad; "
-                "import rytm_randomizer.selected_isolated_pad_runtime_state; "
-                "import rytm_randomizer.selected_target_state; "
-                "import rytm_randomizer.anchor_state; "
+                "import rytm_randomizer.state.selected_isolated_pad_validation; "
+                "import rytm_randomizer.state.selected_target_validation; "
+                "import rytm_randomizer.state.anchor_validation; "
                 "import rytm_randomizer.mock_midi"
             ),
         ],

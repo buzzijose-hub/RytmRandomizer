@@ -743,7 +743,13 @@ class InteractiveShell:
                 return True
             # Defensive fallthrough -- pyright proves this unreachable given
             # the literal kinds in _SPECIAL's construction site.
-            raise RuntimeError(f"unhandled DispatchEntry kind: {kind!r}")  # pragma: no cover
+            # AssertionError is allowed by the observability raises-taxonomy
+            # (alongside TypeError / ValueError / KeyError / SystemExit /
+            # StopIteration / NotImplementedError). pyright proves this
+            # unreachable given _SPECIAL's literal kind values.
+            raise AssertionError(  # pragma: no cover - unreachable per kind invariant; noqa: S101
+                f"unhandled DispatchEntry kind: {kind!r}"
+            )
 
         # ----- Uniform table dispatch (84 of 92 arms) -----
         entry = _DISPATCH.get(cmd)

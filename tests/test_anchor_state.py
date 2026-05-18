@@ -25,7 +25,7 @@ def run_cli(*args):
 
 def test_importing_anchor_state_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.anchor_state"],
+        [sys.executable, "-c", "import rytm_randomizer.state.anchor_validation"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,

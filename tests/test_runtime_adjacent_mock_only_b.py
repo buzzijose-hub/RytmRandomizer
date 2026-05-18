@@ -80,7 +80,7 @@ def test_importing_runtime_adjacent_b_modules_prints_nothing():
             "-c",
             (
                 "import rytm_randomizer.behavior.undo_commit_state; "
-                "import rytm_randomizer.anchor_state; "
+                "import rytm_randomizer.state.anchor_validation; "
                 "import rytm_randomizer.mock_midi"
             ),
         ],

@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from ..commands import COMMANDS, ISOLATED_PAD_UTILITY_COMMANDS
-from ..selected_isolated_pad_runtime_state import (
+from ..state.selected_isolated_pad_validation import (
     build_passive_default_selected_isolated_pad_runtime_state,
 )
 

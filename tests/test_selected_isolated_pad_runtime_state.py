@@ -28,7 +28,7 @@ def test_importing_selected_isolated_pad_runtime_state_prints_nothing():
         [
             sys.executable,
             "-c",
-            "import rytm_randomizer.selected_isolated_pad_runtime_state",
+            "import rytm_randomizer.state.selected_isolated_pad_validation",
         ],
         cwd=PROJECT_ROOT,
         capture_output=True,
