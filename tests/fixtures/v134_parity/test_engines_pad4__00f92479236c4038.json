@@ -1,0 +1,17 @@
+{
+  "baseline": null,
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "mode_key": "anchor",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nPad 4 state is not loaded yet. Use O first.\n"
+}

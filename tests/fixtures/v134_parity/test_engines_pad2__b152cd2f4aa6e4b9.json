@@ -1,0 +1,15 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "key": "3",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nProfile 2 is not assigned to the Pad 2 foundation lane.\n"
+}

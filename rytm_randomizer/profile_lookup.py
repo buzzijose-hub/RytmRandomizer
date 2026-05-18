@@ -5,11 +5,6 @@ from copy import deepcopy
 from .profiles import GROUP_PROFILE_METADATA
 
 
-def list_group_profile_keys(group_profiles=GROUP_PROFILE_METADATA):
-    """Return the existing group profile keys without modifying metadata."""
-    return tuple(group_profiles.keys())
-
-
 def describe_group_profile(profile_key, group_profiles=GROUP_PROFILE_METADATA):
     """Return a passive copied description for a known group profile key."""
     normalized_key = str(profile_key)
@@ -31,19 +26,3 @@ def describe_group_profile(profile_key, group_profiles=GROUP_PROFILE_METADATA):
         "group_pad": metadata_copy["group_pad"],
         "metadata": metadata_copy,
     }
-
-
-def get_group_profile_machine_value(profile_key, group_profiles=GROUP_PROFILE_METADATA):
-    """Return the machine value for a known group profile key, or None."""
-    description = describe_group_profile(profile_key, group_profiles)
-    if not description["exists"]:
-        return None
-    return description["machine_value"]
-
-
-def get_group_profile_pad(profile_key, group_profiles=GROUP_PROFILE_METADATA):
-    """Return the group pad for a known group profile key, or None."""
-    description = describe_group_profile(profile_key, group_profiles)
-    if not description["exists"]:
-        return None
-    return description["group_pad"]

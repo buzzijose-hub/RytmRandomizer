@@ -1,9 +1,27 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-16. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-18: integrated Eddie's `modularize-v1.34` cleanup branch into
+  `codex/dual-machine-mock-bridge`, preserving the dual-machine/snapshot
+  planning work while accepting the monolith retirement, CI coverage
+  hardening, and parity-fixture baseline.
+- 2026-05-17: added optional Rytm engine-cycle source starters. When
+  `--engine-cycle-source-starters` is paired with an engine-cycle starter
+  profile, the guarded plan sends 132 messages: 12 machine selects, 48 mapped
+  SRC-slot starter values, and 72 common filter/amp starter values.
+- 2026-05-17: resolved the test-only API audit. Removed dead lookup/report
+  shims and documented the kept V1.34 parity API surface in
+  `docs/ARCHITECTURE.md` so future dead-code audits have a clear boundary.
+- 2026-05-17: retired the V1.34 `rytm_hybrid_randomizer_v134.py` monolith.
+  Its behavior is now frozen as JSON goldens under
+  `tests/fixtures/v134_parity/`, and parity tests compare package output to
+  those fixtures instead of running the monolith.
+- 2026-05-17: raised coverage on `app.py`, `cli.py`,
+  `observability/logging.py`, and `mido_provider.py`; CI/Black settings were
+  tightened to match the supported Python matrix.
 - 2026-05-17: added the first passive saved-kit snapshot decoder and
   `sysex-kit-snapshot-report <path> --slot <1-128>`. The decoder unpacks the
   Rytm kit record's Elektron 7-bit payload and exposes all 12 pad sound blocks
@@ -128,6 +146,12 @@ Last updated: 2026-05-16. This file is a hand-authored snapshot and is meant to 
 - 2026-05-15: extracted PadRuntimeMixin (engines/_runtime.py) consolidating ~150 LOC duplicated across 5 engines/runners. No behavior change.
 - 2026-05-15: dead-code audit removed three trivially-unused symbols (`_lazy_rehome_imports` in `observability/errors.py`, `log_extra` in `observability/logging.py`, the unused `self._provider` bookkeeping in `RealMidiSender.__init__`). No behavior change; 197 tests still green.
 - 2026-05-15: extracted scene_menu_lines() data-driven generator; dedupes scene menu strings across shell.py + scene_runner.py + SCENE_PRESETS. No output change.
+- 2026-05-16: shell.dispatch converted from a 92-arm if/elif chain (~396 LOC) to a module-level `_DISPATCH` table where each uniform arm is a one-line closure. Special-shaped arms (quit, target/profile re-selection that updates `self.channel`, scene preset lookup, depth-guardrail 1/2/3 message, depth-prompting zone mutations, unknown-command fallback) stay inline. shell.py net ~186 LOC reduction. Behavior byte-identical: full parity suite green.
+- 2026-05-16: small-gap coverage tests added in tests/test_coverage_small_gaps.py — plugs single-branch holes in active_boundary, mock_midi, inspection, and validation (8 tests total). Bumps pure-branch coverage per the ratchet.
+- 2026-05-17: coverage on observability/logging.py raised from 57% to 100% via tests/test_observability_logging.py.
+- 2026-05-17: coverage on app.py raised from 69% to 100% via additional tests in tests/test_app_entry.py (covers --arm port-open production path, list_output_names dependency/port errors, _choose_arm_port_name EOF / invalid / out-of-range branches, --dry-run shell EOF swallowing, --arm/--dry-run mutually-exclusive flag conflict, unknown-flag rejection, --debug/--log-json passive boot). No behavior change.
+- 2026-05-17: coverage on cli.py raised from 5% to 100% via tests/test_cli_coverage.py additions. Closes the largest single coverage gap in the package.
+- 2026-05-17: coverage on mido_provider.py raised from 33% to 100% via tests/test_mido_provider.py.
 
 ## Current Version
 
@@ -152,7 +176,7 @@ Last updated: 2026-05-16. This file is a hand-authored snapshot and is meant to 
   `--analog-four-track-filter-smoke <1-4>` modifier runs Filter 1 Frequency
   CC18 low/open/open-return for one selected A4 track.
 - Pad coverage is complete relative to V1.34: BD engine anchors/discovery (Pad 1), snare/secondary percussion (Pad 2), SY Raw bass (Pad 3), BD Acoustic (Pad 4), a four-pad group layer, scenes (S0-S5 plus variants), isolated single-pad mutation, legacy single-profile mutation, and the full command surface.
-- The V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) is retained on disk byte-for-byte as a frozen reference for the byte-parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`). It is not invoked by any production code path.
+- The V1.34 reference behavior is preserved as JSON goldens under `tests/fixtures/v134_parity/`. The original `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`) now compare engine output to those fixtures via `tests/_parity_worker.py`.
 
 ## Decomposition Complete
 

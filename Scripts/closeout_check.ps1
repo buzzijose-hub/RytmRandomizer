@@ -91,16 +91,6 @@ Register-CloseoutStepExit "Audit"
 Register-CloseoutStepExit "Profile Lookup"
 
 "" | Add-Content $summary
-"=== Test: Scene Lookup ===" | Add-Content $summary
-& $pythonExe @pythonArgs .\tests\test_scene_lookup.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_scene_lookup.log" | Add-Content $summary
-Register-CloseoutStepExit "Scene Lookup"
-
-"" | Add-Content $summary
-"=== Test: Command Lookup ===" | Add-Content $summary
-& $pythonExe @pythonArgs .\tests\test_command_lookup.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_command_lookup.log" | Add-Content $summary
-Register-CloseoutStepExit "Command Lookup"
-
-"" | Add-Content $summary
 "=== Test: Registry ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_registry.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_registry.log" | Add-Content $summary
 Register-CloseoutStepExit "Registry"
@@ -304,10 +294,6 @@ Register-CloseoutStepExit "Mock Runtime Active Bridge"
 "=== Test: Mock Runtime Active Bridge Report ===" | Add-Content $summary
 & $pythonExe @pythonArgs .\tests\test_mock_runtime_active_bridge_report.py 2>&1 | Tee-Object -FilePath "$logDir\latest_test_mock_runtime_active_bridge_report.log" | Add-Content $summary
 Register-CloseoutStepExit "Mock Runtime Active Bridge Report"
-
-"" | Add-Content $summary
-"=== V1.34 Reference Diff ===" | Add-Content $summary
-git diff -- rytm_hybrid_randomizer_v134.py 2>&1 | Tee-Object -FilePath "$logDir\latest_v134_reference_diff.log" | Add-Content $summary
 
 "" | Add-Content $summary
 "=== Git Status ===" | Add-Content $summary

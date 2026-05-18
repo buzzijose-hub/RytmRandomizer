@@ -1,0 +1,1220 @@
+{
+  "baseline": {
+    "active": "My BD Acoustic",
+    "channel": 3,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 81,
+      "AMP Delay Send": 0,
+      "AMP Hold": 103,
+      "AMP Overdrive": 17,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 64,
+      "FLT Resonance": 27,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 94,
+      "SRC Hold": 91,
+      "SRC Impact": 110,
+      "SRC Sweep Depth": 90,
+      "SRC Sweep Time": 95,
+      "SRC Tune": 52,
+      "SRC Waveform": 0
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 26,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 88,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      },
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      },
+      "3": {
+        "AMP Attack": 0,
+        "AMP Decay": 25,
+        "AMP Delay Send": 5,
+        "AMP Hold": 9,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 103,
+        "FLT Attack": 12,
+        "FLT Decay": 28,
+        "FLT Env Depth": 55,
+        "FLT Frequency": 98,
+        "FLT Release": 64,
+        "FLT Resonance": 0,
+        "FLT Sustain": 0,
+        "FLT Type": 2,
+        "LFO Depth": 86,
+        "LFO Destination": 30,
+        "LFO Fade": 42,
+        "LFO Multiplier": 0,
+        "LFO Speed": 96,
+        "LFO Start Phase": 89,
+        "LFO Trig Mode": 0,
+        "LFO Waveform": 2,
+        "SRC Balance": 91,
+        "SRC Detune": 23,
+        "SRC Level": 100,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 5,
+        "SRC Osc 2 Decay": 70,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 69
+      },
+      "4": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 27,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 110,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 26,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 88,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      },
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      },
+      "3": {
+        "AMP Attack": 0,
+        "AMP Decay": 25,
+        "AMP Delay Send": 5,
+        "AMP Hold": 9,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 103,
+        "FLT Attack": 12,
+        "FLT Decay": 28,
+        "FLT Env Depth": 55,
+        "FLT Frequency": 98,
+        "FLT Release": 64,
+        "FLT Resonance": 0,
+        "FLT Sustain": 0,
+        "FLT Type": 2,
+        "LFO Depth": 86,
+        "LFO Destination": 30,
+        "LFO Fade": 42,
+        "LFO Multiplier": 0,
+        "LFO Speed": 96,
+        "LFO Start Phase": 89,
+        "LFO Trig Mode": 0,
+        "LFO Waveform": 2,
+        "SRC Balance": 91,
+        "SRC Detune": 23,
+        "SRC Level": 100,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 5,
+        "SRC Osc 2 Decay": 70,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 69
+      },
+      "4": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 27,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 110,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "gprev": {
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null
+    },
+    "isolated_pad": 3,
+    "mode_key": "anchor",
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 81,
+      "AMP Delay Send": 0,
+      "AMP Hold": 103,
+      "AMP Overdrive": 17,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 64,
+      "FLT Resonance": 27,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 94,
+      "SRC Hold": 91,
+      "SRC Impact": 110,
+      "SRC Sweep Depth": 90,
+      "SRC Sweep Time": 95,
+      "SRC Tune": 52,
+      "SRC Waveform": 0
+    },
+    "target_pad": 4
+  },
+  "midi": [
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      52
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      82
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      88
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      100
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      71
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      94
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      32
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      23
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      63
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      89
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      68
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      22
+    ],
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      49
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      96
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      88
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      105
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      103
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      102
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      25
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      24
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      68
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      113
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      82
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      23
+    ],
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      49
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      106
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      106
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      110
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      91
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      118
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      28
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      23
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      63
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      101
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      90
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      16
+    ],
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      51
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      95
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      82
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      95
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      79
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      112
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      38
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      70
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      89
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      73
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      25
+    ],
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      53
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      106
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      94
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      97
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      85
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      127
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      25
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      37
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      62
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      105
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      78
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      29
+    ],
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      52
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      94
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      90
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      95
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      91
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      110
+    ],
+    [
+      "control_change",
+      3,
+      23,
+      0
+    ],
+    [
+      "control_change",
+      3,
+      70,
+      0
+    ],
+    [
+      "control_change",
+      3,
+      71,
+      64
+    ],
+    [
+      "control_change",
+      3,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      3,
+      73,
+      64
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      23
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      27
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      64
+    ],
+    [
+      "control_change",
+      3,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      103
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      81
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      17
+    ],
+    [
+      "control_change",
+      3,
+      82,
+      0
+    ],
+    [
+      "control_change",
+      3,
+      83,
+      0
+    ],
+    [
+      "control_change",
+      3,
+      10,
+      64
+    ],
+    [
+      "control_change",
+      3,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      3,
+      17,
+      53
+    ],
+    [
+      "control_change",
+      3,
+      18,
+      95
+    ],
+    [
+      "control_change",
+      3,
+      19,
+      102
+    ],
+    [
+      "control_change",
+      3,
+      20,
+      88
+    ],
+    [
+      "control_change",
+      3,
+      21,
+      90
+    ],
+    [
+      "control_change",
+      3,
+      22,
+      112
+    ],
+    [
+      "control_change",
+      3,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      3,
+      74,
+      33
+    ],
+    [
+      "control_change",
+      3,
+      75,
+      35
+    ],
+    [
+      "control_change",
+      3,
+      77,
+      64
+    ],
+    [
+      "control_change",
+      3,
+      79,
+      91
+    ],
+    [
+      "control_change",
+      3,
+      80,
+      75
+    ],
+    [
+      "control_change",
+      3,
+      81,
+      19
+    ]
+  ],
+  "state": {
+    "active": "My BD Acoustic",
+    "channel": 3,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 75,
+      "AMP Delay Send": 0,
+      "AMP Hold": 91,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 33,
+      "FLT Release": 64,
+      "FLT Resonance": 35,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 95,
+      "SRC Hold": 90,
+      "SRC Impact": 112,
+      "SRC Sweep Depth": 102,
+      "SRC Sweep Time": 88,
+      "SRC Tune": 53,
+      "SRC Waveform": 0
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 26,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 88,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      },
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      },
+      "3": {
+        "AMP Attack": 0,
+        "AMP Decay": 25,
+        "AMP Delay Send": 5,
+        "AMP Hold": 9,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 103,
+        "FLT Attack": 12,
+        "FLT Decay": 28,
+        "FLT Env Depth": 55,
+        "FLT Frequency": 98,
+        "FLT Release": 64,
+        "FLT Resonance": 0,
+        "FLT Sustain": 0,
+        "FLT Type": 2,
+        "LFO Depth": 86,
+        "LFO Destination": 30,
+        "LFO Fade": 42,
+        "LFO Multiplier": 0,
+        "LFO Speed": 96,
+        "LFO Start Phase": 89,
+        "LFO Trig Mode": 0,
+        "LFO Waveform": 2,
+        "SRC Balance": 91,
+        "SRC Detune": 23,
+        "SRC Level": 100,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 5,
+        "SRC Osc 2 Decay": 70,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 69
+      },
+      "4": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 27,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 110,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 22,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 27,
+        "FLT Release": 64,
+        "FLT Resonance": 51,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 51,
+        "SRC Hold": 52,
+        "SRC Snap": 26,
+        "SRC Sweep Time": 90,
+        "SRC Transient Tick": 88,
+        "SRC Tune": 61,
+        "SRC Waveform": 0
+      },
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      },
+      "3": {
+        "AMP Attack": 0,
+        "AMP Decay": 25,
+        "AMP Delay Send": 5,
+        "AMP Hold": 9,
+        "AMP Overdrive": 21,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 103,
+        "FLT Attack": 12,
+        "FLT Decay": 28,
+        "FLT Env Depth": 55,
+        "FLT Frequency": 98,
+        "FLT Release": 64,
+        "FLT Resonance": 0,
+        "FLT Sustain": 0,
+        "FLT Type": 2,
+        "LFO Depth": 86,
+        "LFO Destination": 30,
+        "LFO Fade": 42,
+        "LFO Multiplier": 0,
+        "LFO Speed": 96,
+        "LFO Start Phase": 89,
+        "LFO Trig Mode": 0,
+        "LFO Waveform": 2,
+        "SRC Balance": 91,
+        "SRC Detune": 23,
+        "SRC Level": 100,
+        "SRC Noise Level": 5,
+        "SRC Osc 1 Wave": 5,
+        "SRC Osc 2 Decay": 70,
+        "SRC Osc 2 Wave": 3,
+        "SRC Tune": 69
+      },
+      "4": {
+        "AMP Attack": 0,
+        "AMP Decay": 75,
+        "AMP Delay Send": 0,
+        "AMP Hold": 91,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 33,
+        "FLT Release": 64,
+        "FLT Resonance": 35,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 95,
+        "SRC Hold": 90,
+        "SRC Impact": 112,
+        "SRC Sweep Depth": 102,
+        "SRC Sweep Time": 88,
+        "SRC Tune": 53,
+        "SRC Waveform": 0
+      }
+    },
+    "gprev": {
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 27,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 110,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "isolated_pad": 3,
+    "mode_key": "filter",
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 81,
+      "AMP Delay Send": 0,
+      "AMP Hold": 103,
+      "AMP Overdrive": 17,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 64,
+      "FLT Resonance": 27,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 94,
+      "SRC Hold": 91,
+      "SRC Impact": 110,
+      "SRC Sweep Depth": 90,
+      "SRC Sweep Time": 95,
+      "SRC Tune": 52,
+      "SRC Waveform": 0
+    },
+    "target_pad": 4
+  },
+  "stdout": "\nPad 4 BD Acoustic Body / Accent Tools - V1.34\n  Target: Pad 4 only\n  Safety: Pads 1, 2, and 3 are not touched by P4 commands\n  Machine: BD Acoustic / machine CC15 value 30\n  Role: body hit / accent layer\n\nBehavior modes:\n  P4A = return Pad 4 to BD Acoustic body/accent anchor / home\n  P4R = rotate Pad 4 through BD Acoustic behavior modes\n  P4X = safely mutate the currently loaded Pad 4 mode\n  P4M = show this Pad 4 menu/status\n\nRotation order:\n  1. BD Acoustic body/accent anchor / home < current\n  2. BD Acoustic tight body hit\n  3. BD Acoustic long boom accent\n  4. BD Acoustic filtered punch accent\n  5. BD Acoustic impact/grit accent\n\nCurrent Pad 4 mode:\n  BD Acoustic body/accent anchor / home\n\nCurrent Pad 4 state snapshot:\n  SRC Tune: 52\n  SRC Decay: 94\n  SRC Sweep Depth: 90\n  SRC Sweep Time: 95\n  SRC Hold: 91\n  SRC Impact: 110\n  SRC Waveform: 0\n  FLT Frequency: 23\n  FLT Resonance: 27\n  FLT Type: 4 / HP2\n  FLT Env Depth: 64\n  AMP Hold: 103\n  AMP Decay: 81\n  AMP Overdrive: 17\n  AMP Delay Send: 0\n  AMP Reverb Send: 0\n\nPad 4 BD Acoustic Discovery - Tight Body Hit\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  SRC Tune: CC17 -> 52\n  SRC Decay: CC18 -> 82\n  SRC Sweep Depth: CC19 -> 88\n  SRC Sweep Time: CC20 -> 100\n  SRC Hold: CC21 -> 71\n  SRC Impact: CC22 -> 94\n  FLT Type: CC76 -> 4\n  FLT Frequency: CC74 -> 32\n  FLT Resonance: CC75 -> 23\n  FLT Env Depth: CC77 -> 63\n  AMP Hold: CC79 -> 89\n  AMP Decay: CC80 -> 68\n  AMP Overdrive: CC81 -> 22\n\nPad 4 BD Acoustic discovery command complete. Other group pads were not touched.\n\nPad 4 BD Acoustic Discovery - Long Boom Accent\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  SRC Tune: CC17 -> 49\n  SRC Decay: CC18 -> 96\n  SRC Sweep Depth: CC19 -> 88\n  SRC Sweep Time: CC20 -> 105\n  SRC Hold: CC21 -> 103\n  SRC Impact: CC22 -> 102\n  FLT Type: CC76 -> 4\n  FLT Frequency: CC74 -> 25\n  FLT Resonance: CC75 -> 24\n  FLT Env Depth: CC77 -> 68\n  AMP Hold: CC79 -> 113\n  AMP Decay: CC80 -> 82\n  AMP Overdrive: CC81 -> 23\n\nPad 4 BD Acoustic discovery command complete. Other group pads were not touched.\n\nPad 4 Current BD Acoustic Mode Mutation - V1.26\n  Current mode: BD Acoustic long boom accent\n  Pad 4 only. Pads 1, 2, and 3 are not touched.\n\nPad 4 BD Acoustic Discovery - Long Boom Accent\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  SRC Tune: CC17 -> 49\n  SRC Decay: CC18 -> 106\n  SRC Sweep Depth: CC19 -> 106\n  SRC Sweep Time: CC20 -> 110\n  SRC Hold: CC21 -> 91\n  SRC Impact: CC22 -> 118\n  FLT Type: CC76 -> 4\n  FLT Frequency: CC74 -> 28\n  FLT Resonance: CC75 -> 23\n  FLT Env Depth: CC77 -> 63\n  AMP Hold: CC79 -> 101\n  AMP Decay: CC80 -> 90\n  AMP Overdrive: CC81 -> 16\n\nPad 4 BD Acoustic discovery command complete. Other group pads were not touched.\n\nPad 4 BD Acoustic Mode Rotation:\n  Current: BD Acoustic long boom accent\n  Next:    BD Acoustic filtered punch accent\n  Pad 4 only. Pads 1, 2, and 3 are not touched.\n\nLoading Pad 4 BD Acoustic behavior mode:\n  Mode: BD Acoustic filtered punch accent\n  Pad 4 only. Pads 1, 2, and 3 are not touched.\n\nPad 4 BD Acoustic Discovery - Filtered Punch Accent\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  SRC Tune: CC17 -> 51\n  SRC Decay: CC18 -> 95\n  SRC Sweep Depth: CC19 -> 82\n  SRC Sweep Time: CC20 -> 95\n  SRC Hold: CC21 -> 79\n  SRC Impact: CC22 -> 112\n  FLT Type: CC76 -> 4\n  FLT Frequency: CC74 -> 30\n  FLT Resonance: CC75 -> 38\n  FLT Env Depth: CC77 -> 70\n  AMP Hold: CC79 -> 89\n  AMP Decay: CC80 -> 73\n  AMP Overdrive: CC81 -> 25\n\nPad 4 BD Acoustic discovery command complete. Other group pads were not touched.\n\nPad 4 BD Acoustic Discovery - Impact / Grit Accent\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  SRC Tune: CC17 -> 53\n  SRC Decay: CC18 -> 106\n  SRC Sweep Depth: CC19 -> 94\n  SRC Sweep Time: CC20 -> 97\n  SRC Hold: CC21 -> 85\n  SRC Impact: CC22 -> 127\n  FLT Type: CC76 -> 4\n  FLT Frequency: CC74 -> 25\n  FLT Resonance: CC75 -> 37\n  FLT Env Depth: CC77 -> 62\n  AMP Hold: CC79 -> 105\n  AMP Decay: CC80 -> 78\n  AMP Overdrive: CC81 -> 29\n\nPad 4 BD Acoustic discovery command complete. Other group pads were not touched.\n\nReturning Pad 4 to BD Acoustic body/accent anchor / home:\n  Pad 4 only. Pads 1, 2, and 3 are not touched.\n\nReturning isolated pad to anchor:\n  Pad 4: Body hit / accent layer / My BD Acoustic\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n\nPad 4 isolated back to anchor:\n  SRC Tune: CC17 -> 52\n  SRC Decay: CC18 -> 94\n  SRC Sweep Depth: CC19 -> 90\n  SRC Sweep Time: CC20 -> 95\n  SRC Hold: CC21 -> 91\n  SRC Impact: CC22 -> 110\n  SRC Waveform: CC23 -> 0\n  FLT Attack: CC70 -> 0\n  FLT Decay: CC71 -> 64\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 64\n  FLT Frequency: CC74 -> 23\n  FLT Resonance: CC75 -> 27\n  FLT Type: CC76 -> 4\n  FLT Env Depth: CC77 -> 64\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 103\n  AMP Decay: CC80 -> 81\n  AMP Overdrive: CC81 -> 17\n  AMP Delay Send: CC82 -> 0\n  AMP Reverb Send: CC83 -> 0\n  AMP Pan: CC10 -> 64\n\nPad 4 returned to anchor. Other group pads were not touched.\n\nPad 4 Current BD Acoustic Mode Mutation - V1.26\n  Current mode: BD Acoustic body/accent anchor / home\n  Pad 4 only. Pads 1, 2, and 3 are not touched.\n\nPad 4 BD Acoustic Discovery - Filtered Punch Accent\n  Pads not touched: 1, 2, 3\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  SRC Tune: CC17 -> 53\n  SRC Decay: CC18 -> 95\n  SRC Sweep Depth: CC19 -> 102\n  SRC Sweep Time: CC20 -> 88\n  SRC Hold: CC21 -> 90\n  SRC Impact: CC22 -> 112\n  FLT Type: CC76 -> 4\n  FLT Frequency: CC74 -> 33\n  FLT Resonance: CC75 -> 35\n  FLT Env Depth: CC77 -> 64\n  AMP Hold: CC79 -> 91\n  AMP Decay: CC80 -> 75\n  AMP Overdrive: CC81 -> 19\n\nPad 4 BD Acoustic discovery command complete. Other group pads were not touched.\n"
+}

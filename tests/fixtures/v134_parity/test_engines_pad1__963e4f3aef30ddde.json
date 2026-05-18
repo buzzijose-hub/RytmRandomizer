@@ -1,0 +1,363 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      13
+    ],
+    [
+      "control_change",
+      0,
+      16,
+      100
+    ],
+    [
+      "control_change",
+      0,
+      17,
+      60
+    ],
+    [
+      "control_change",
+      0,
+      18,
+      82
+    ],
+    [
+      "control_change",
+      0,
+      19,
+      38
+    ],
+    [
+      "control_change",
+      0,
+      20,
+      56
+    ],
+    [
+      "control_change",
+      0,
+      21,
+      68
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      44
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      88
+    ],
+    [
+      "control_change",
+      0,
+      70,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      71,
+      58
+    ],
+    [
+      "control_change",
+      0,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      73,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      74,
+      28
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      58
+    ],
+    [
+      "control_change",
+      0,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      0,
+      77,
+      63
+    ],
+    [
+      "control_change",
+      0,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      79,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      80,
+      86
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      24
+    ],
+    [
+      "control_change",
+      0,
+      82,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      83,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      10,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      15,
+      13
+    ],
+    [
+      "control_change",
+      0,
+      17,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      18,
+      88
+    ],
+    [
+      "control_change",
+      0,
+      19,
+      50
+    ],
+    [
+      "control_change",
+      0,
+      20,
+      54
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      33
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      94
+    ],
+    [
+      "control_change",
+      0,
+      74,
+      31
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      66
+    ],
+    [
+      "control_change",
+      0,
+      79,
+      4
+    ],
+    [
+      "control_change",
+      0,
+      80,
+      101
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      23
+    ]
+  ],
+  "state": {
+    "active": "BD FM Metallic Kick",
+    "channel": 0,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 101,
+      "AMP Delay Send": 0,
+      "AMP Hold": 4,
+      "AMP Overdrive": 23,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 58,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 31,
+      "FLT Release": 64,
+      "FLT Resonance": 66,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 54,
+      "SRC FM Amount": 33,
+      "SRC FM Decay": 50,
+      "SRC FM Tune": 68,
+      "SRC Level": 100,
+      "SRC Sweep Time": 88,
+      "SRC Tick Level": 94,
+      "SRC Tune": 64
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 24,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 58,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 28,
+        "FLT Release": 64,
+        "FLT Resonance": 58,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 56,
+        "SRC FM Amount": 44,
+        "SRC FM Decay": 38,
+        "SRC FM Tune": 68,
+        "SRC Level": 100,
+        "SRC Sweep Time": 82,
+        "SRC Tick Level": 88,
+        "SRC Tune": 60
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 101,
+        "AMP Delay Send": 0,
+        "AMP Hold": 4,
+        "AMP Overdrive": 23,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 58,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 31,
+        "FLT Release": 64,
+        "FLT Resonance": 66,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 54,
+        "SRC FM Amount": 33,
+        "SRC FM Decay": 50,
+        "SRC FM Tune": 68,
+        "SRC Level": 100,
+        "SRC Sweep Time": 88,
+        "SRC Tick Level": 94,
+        "SRC Tune": 64
+      }
+    },
+    "gprev": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 86,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 24,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 58,
+        "FLT Env Depth": 63,
+        "FLT Frequency": 28,
+        "FLT Release": 64,
+        "FLT Resonance": 58,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 56,
+        "SRC FM Amount": 44,
+        "SRC FM Decay": 38,
+        "SRC FM Tune": 68,
+        "SRC Level": 100,
+        "SRC Sweep Time": 82,
+        "SRC Tick Level": 88,
+        "SRC Tune": 60
+      }
+    },
+    "layout1": {
+      "depth": "micro",
+      "profile": "6",
+      "role": "Main kick / BD FM Metallic Kick",
+      "zone": "full"
+    },
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 86,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 24,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 58,
+      "FLT Env Depth": 63,
+      "FLT Frequency": 28,
+      "FLT Release": 64,
+      "FLT Resonance": 58,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 56,
+      "SRC FM Amount": 44,
+      "SRC FM Decay": 38,
+      "SRC FM Tune": 68,
+      "SRC Level": 100,
+      "SRC Sweep Time": 82,
+      "SRC Tick Level": 88,
+      "SRC Tune": 60
+    },
+    "target_pad": 1
+  },
+  "stdout": "\nLoading Pad 1 profiled BD engine: BD FM Metallic Kick\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to BD FM Metallic Kick:\n  Machine CC15 -> 13\n\nPad 1 BD FM Metallic Kick anchor:\n  SRC Level: CC16 -> 100\n  SRC Tune: CC17 -> 60\n  SRC Sweep Time: CC18 -> 82\n  SRC FM Decay: CC19 -> 38\n  SRC Decay: CC20 -> 56\n  SRC FM Tune: CC21 -> 68\n  SRC FM Amount: CC22 -> 44\n  SRC Tick Level: CC23 -> 88\n  FLT Attack: CC70 -> 0\n  FLT Decay: CC71 -> 58\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 64\n  FLT Frequency: CC74 -> 28\n  FLT Resonance: CC75 -> 58\n  FLT Type: CC76 -> 4\n  FLT Env Depth: CC77 -> 63\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 0\n  AMP Decay: CC80 -> 86\n  AMP Overdrive: CC81 -> 24\n  AMP Delay Send: CC82 -> 0\n  AMP Reverb Send: CC83 -> 0\n  AMP Pan: CC10 -> 64\n\nPad 1 is now using BD FM Metallic Kick as its profiled kick engine.\n\nPad 1 Current BD Engine Mutation - V1.26\n  Current engine: BD FM Metallic Kick\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nPad 1 BD FM Discovery - Kick / Body\n  Pads not touched: 2, 3, 4\n\nSwitching Rytm machine to BD FM Metallic Kick:\n  Machine CC15 -> 13\n  SRC Tune: CC17 -> 64\n  SRC Sweep Time: CC18 -> 88\n  SRC FM Decay: CC19 -> 50\n  SRC Decay: CC20 -> 54\n  SRC FM Amount: CC22 -> 33\n  SRC Tick Level: CC23 -> 94\n  FLT Frequency: CC74 -> 31\n  FLT Resonance: CC75 -> 66\n  AMP Hold: CC79 -> 4\n  AMP Decay: CC80 -> 101\n  AMP Overdrive: CC81 -> 23\n\nPad 1 BD FM discovery command complete. Pads 2, 3, and 4 were not touched.\n"
+}

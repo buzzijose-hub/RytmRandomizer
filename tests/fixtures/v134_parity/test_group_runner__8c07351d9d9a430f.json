@@ -1,0 +1,51 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      26
+    ]
+  ],
+  "results": [
+    true
+  ],
+  "state": {
+    "active": "My BD Sharp",
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "layout": {
+      "1": {
+        "depth": "micro",
+        "profile": "2",
+        "role": "Main kick / BD Hard default",
+        "zone": "full"
+      },
+      "2": {
+        "depth": "groove",
+        "profile": "3",
+        "role": "Secondary kick / rolling low percussion",
+        "zone": "body"
+      },
+      "3": {
+        "depth": "groove",
+        "profile": "5",
+        "role": "SY Raw midrange bass / synth-percussion",
+        "zone": "lfo"
+      },
+      "4": {
+        "depth": "micro",
+        "profile": "4",
+        "role": "Body hit / accent layer",
+        "zone": "body"
+      }
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nSelect profile:\n1 = My BD Hard     / machine CC15 value 0  [PRIMARY DEFAULT]\n2 = My BD Sharp    / machine CC15 value 26\n3 = My BD Classic  / machine CC15 value 1\n4 = My BD Acoustic / machine CC15 value 30\n5 = BD FM Metallic Kick / machine CC15 value 13\n6 = BD Plastic Rubber Kick / machine CC15 value 21\n7 = BD Silky Deep Kick / machine CC15 value 22\n8 = Pad 3 SY Raw Mid Bass / machine CC15 value 32\n9 = Pad 2 SD Hard Pressure Snare / machine CC15 value 2\n10 = Pad 2 SD Classic Rolling Snare / machine CC15 value 3\n11 = Pad 2 SD FM Metallic Snare / machine CC15 value 14\n\nSelected profile: My BD Sharp\n\nSwitching Rytm machine to My BD Sharp:\n  Machine CC15 -> 26\nUse M to load the selected single-profile anchor values.\nFor the four-pad system, use O or S0. In V1.34, scene/global commands auto-load anchors if needed.\nAt the main Command prompt, do not type bare 1/2/3 for depth; type Y/V/N first, then answer the depth prompt.\n"
+}

@@ -1,0 +1,304 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      0,
+      17,
+      52
+    ],
+    [
+      "control_change",
+      0,
+      18,
+      94
+    ],
+    [
+      "control_change",
+      0,
+      19,
+      90
+    ],
+    [
+      "control_change",
+      0,
+      20,
+      95
+    ],
+    [
+      "control_change",
+      0,
+      21,
+      91
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      110
+    ],
+    [
+      "control_change",
+      0,
+      23,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      70,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      71,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      73,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      74,
+      23
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      27
+    ],
+    [
+      "control_change",
+      0,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      0,
+      77,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      79,
+      103
+    ],
+    [
+      "control_change",
+      0,
+      80,
+      81
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      17
+    ],
+    [
+      "control_change",
+      0,
+      82,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      83,
+      0
+    ],
+    [
+      "control_change",
+      0,
+      10,
+      64
+    ],
+    [
+      "control_change",
+      0,
+      15,
+      30
+    ],
+    [
+      "control_change",
+      0,
+      22,
+      107
+    ],
+    [
+      "control_change",
+      0,
+      75,
+      29
+    ],
+    [
+      "control_change",
+      0,
+      81,
+      17
+    ]
+  ],
+  "state": {
+    "active": "My BD Acoustic",
+    "channel": 0,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 81,
+      "AMP Delay Send": 0,
+      "AMP Hold": 103,
+      "AMP Overdrive": 17,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 64,
+      "FLT Resonance": 29,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 94,
+      "SRC Hold": 91,
+      "SRC Impact": 107,
+      "SRC Sweep Depth": 90,
+      "SRC Sweep Time": 95,
+      "SRC Tune": 52,
+      "SRC Waveform": 0
+    },
+    "ganc": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 27,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 110,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "gcur": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 29,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 107,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "gprev": {
+      "1": {
+        "AMP Attack": 0,
+        "AMP Decay": 81,
+        "AMP Delay Send": 0,
+        "AMP Hold": 103,
+        "AMP Overdrive": 17,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 23,
+        "FLT Release": 64,
+        "FLT Resonance": 27,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 94,
+        "SRC Hold": 91,
+        "SRC Impact": 110,
+        "SRC Sweep Depth": 90,
+        "SRC Sweep Time": 95,
+        "SRC Tune": 52,
+        "SRC Waveform": 0
+      }
+    },
+    "layout1": {
+      "depth": "micro",
+      "profile": "4",
+      "role": "Main kick / My BD Acoustic",
+      "zone": "full"
+    },
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 81,
+      "AMP Delay Send": 0,
+      "AMP Hold": 103,
+      "AMP Overdrive": 17,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 23,
+      "FLT Release": 64,
+      "FLT Resonance": 27,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 94,
+      "SRC Hold": 91,
+      "SRC Impact": 110,
+      "SRC Sweep Depth": 90,
+      "SRC Sweep Time": 95,
+      "SRC Tune": 52,
+      "SRC Waveform": 0
+    },
+    "target_pad": 1
+  },
+  "stdout": "\nLoading Pad 1 profiled BD engine: My BD Acoustic\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n\nPad 1 My BD Acoustic anchor:\n  SRC Tune: CC17 -> 52\n  SRC Decay: CC18 -> 94\n  SRC Sweep Depth: CC19 -> 90\n  SRC Sweep Time: CC20 -> 95\n  SRC Hold: CC21 -> 91\n  SRC Impact: CC22 -> 110\n  SRC Waveform: CC23 -> 0\n  FLT Attack: CC70 -> 0\n  FLT Decay: CC71 -> 64\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 64\n  FLT Frequency: CC74 -> 23\n  FLT Resonance: CC75 -> 27\n  FLT Type: CC76 -> 4\n  FLT Env Depth: CC77 -> 64\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 103\n  AMP Decay: CC80 -> 81\n  AMP Overdrive: CC81 -> 17\n  AMP Delay Send: CC82 -> 0\n  AMP Reverb Send: CC83 -> 0\n  AMP Pan: CC10 -> 64\n\nPad 1 is now using My BD Acoustic as its profiled kick engine.\n\nPad 1 Current BD Engine Mutation - V1.26\n  Current engine: My BD Acoustic\n  Pad 1 only. Pads 2, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Acoustic:\n  Machine CC15 -> 30\n  Mutation plan: grit / micro\n\nMy BD Acoustic / GRIT mutation / MICRO depth:\n  Mutating around current anchor.\n  SRC Impact: CC22 -> 107\n  FLT Resonance: CC75 -> 29\n  AMP Overdrive: CC81 -> 17\n\nPad 1 current BD engine mutation complete. Pads 2, 3, and 4 were not touched.\n"
+}

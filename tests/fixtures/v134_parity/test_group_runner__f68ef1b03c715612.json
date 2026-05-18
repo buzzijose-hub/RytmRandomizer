@@ -1,0 +1,54 @@
+{
+  "midi": [
+    [
+      "control_change",
+      0,
+      15,
+      0
+    ]
+  ],
+  "results": [
+    true,
+    null,
+    null,
+    null
+  ],
+  "state": {
+    "active": "My BD Hard",
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "layout": {
+      "1": {
+        "depth": "micro",
+        "profile": "2",
+        "role": "Main kick / BD Hard default",
+        "zone": "full"
+      },
+      "2": {
+        "depth": "groove",
+        "profile": "3",
+        "role": "Secondary kick / rolling low percussion",
+        "zone": "body"
+      },
+      "3": {
+        "depth": "groove",
+        "profile": "5",
+        "role": "SY Raw midrange bass / synth-percussion",
+        "zone": "lfo"
+      },
+      "4": {
+        "depth": "micro",
+        "profile": "4",
+        "role": "Body hit / accent layer",
+        "zone": "body"
+      }
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nSelect profile:\n1 = My BD Hard     / machine CC15 value 0  [PRIMARY DEFAULT]\n2 = My BD Sharp    / machine CC15 value 26\n3 = My BD Classic  / machine CC15 value 1\n4 = My BD Acoustic / machine CC15 value 30\n5 = BD FM Metallic Kick / machine CC15 value 13\n6 = BD Plastic Rubber Kick / machine CC15 value 21\n7 = BD Silky Deep Kick / machine CC15 value 22\n8 = Pad 3 SY Raw Mid Bass / machine CC15 value 32\n9 = Pad 2 SD Hard Pressure Snare / machine CC15 value 2\n10 = Pad 2 SD Classic Rolling Snare / machine CC15 value 3\n11 = Pad 2 SD FM Metallic Snare / machine CC15 value 14\n\nSelected profile: My BD Hard\n\nSwitching Rytm machine to My BD Hard:\n  Machine CC15 -> 0\nUse M to load the selected single-profile anchor values.\nFor the four-pad system, use O or S0. In V1.34, scene/global commands auto-load anchors if needed.\nAt the main Command prompt, do not type bare 1/2/3 for depth; type Y/V/N first, then answer the depth prompt.\n\nCurrent anchor: My BD Hard\n  SRC Tune: 61\n  SRC Decay: 51\n  SRC Hold: 52\n  SRC Sweep Time: 90\n  SRC Snap: 26\n  SRC Waveform: 0\n  SRC Transient Tick: 88\n  FLT Attack: 0\n  FLT Decay: 64\n  FLT Sustain: 0\n  FLT Release: 64\n  FLT Frequency: 27\n  FLT Resonance: 51\n  FLT Type: 4\n  FLT Env Depth: 63\n  AMP Attack: 0\n  AMP Hold: 0\n  AMP Decay: 86\n  AMP Overdrive: 22\n  AMP Delay Send: 0\n  AMP Reverb Send: 0\n  AMP Pan: 64\n\nCurrent script state: My BD Hard\n  No current state yet. Use M first.\n\nNo current state to commit. Use M or mutate first.\n"
+}

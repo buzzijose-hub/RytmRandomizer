@@ -1,0 +1,154 @@
+{
+  "midi": [
+    [
+      "control_change",
+      1,
+      15,
+      1
+    ],
+    [
+      "control_change",
+      1,
+      17,
+      57
+    ],
+    [
+      "control_change",
+      1,
+      18,
+      55
+    ],
+    [
+      "control_change",
+      1,
+      19,
+      26
+    ],
+    [
+      "control_change",
+      1,
+      20,
+      67
+    ],
+    [
+      "control_change",
+      1,
+      21,
+      37
+    ],
+    [
+      "control_change",
+      1,
+      23,
+      31
+    ]
+  ],
+  "state": {
+    "active": "My BD Classic",
+    "channel": 1,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 25,
+      "FLT Release": 64,
+      "FLT Resonance": 26,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 55,
+      "SRC Hold": 37,
+      "SRC Sweep Depth": 26,
+      "SRC Sweep Time": 67,
+      "SRC Transient": 31,
+      "SRC Tune": 57,
+      "SRC Waveform": 1
+    },
+    "ganc": {},
+    "gcur": {
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 55,
+        "SRC Hold": 37,
+        "SRC Sweep Depth": 26,
+        "SRC Sweep Time": 67,
+        "SRC Transient": 31,
+        "SRC Tune": 57,
+        "SRC Waveform": 1
+      }
+    },
+    "gprev": {
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      }
+    },
+    "key": "3",
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 25,
+      "FLT Release": 64,
+      "FLT Resonance": 26,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 53,
+      "SRC Hold": 42,
+      "SRC Sweep Depth": 32,
+      "SRC Sweep Time": 68,
+      "SRC Transient": 24,
+      "SRC Tune": 58,
+      "SRC Waveform": 1
+    },
+    "target_pad": 2
+  },
+  "stdout": "\nPad 2 Tone / Snap Discovery\n  Current profile: My BD Classic\n  Pad 2 only. Pads 1, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Classic:\n  Machine CC15 -> 1\n  Mutation plan: src / groove\n\nMy BD Classic / SRC mutation / GROOVE depth:\n  Mutating around current anchor.\n  SRC Tune: CC17 -> 57\n  SRC Decay: CC18 -> 55\n  SRC Sweep Depth: CC19 -> 26\n  SRC Sweep Time: CC20 -> 67\n  SRC Hold: CC21 -> 37\n  SRC Transient: CC23 -> 31\n\nPad 2 discovery command complete. Pads 1, 3, and 4 were not touched.\n"
+}

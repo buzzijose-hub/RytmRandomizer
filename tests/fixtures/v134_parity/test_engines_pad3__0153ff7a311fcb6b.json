@@ -1,0 +1,17 @@
+{
+  "baseline": null,
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "mode_key": "anchor",
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nPad 3 SY Raw Bass / Synth-Percussion Tools - V1.34\n  Target: Pad 3 only\n  Safety: Pads 1, 2, and 4 are not touched by P3 commands\n  Machine: SY Raw / machine CC15 value 32\n  Correct mapping: CC19 = SRC Noise Level, CC23 = SRC Balance\n\nProfiles / behavior modes:\n  P3A = return Pad 3 to SY Raw Mid Bass anchor / home\n  SL  = direct LP1 bassline mode\n  SB  = direct Bandpass mid-bass mode\n  SW  = direct Wave/Balance variation\n  SX  = direct sci-fi motion accent\n\nRotation / performance helpers:\n  P3R = rotate Pad 3 through SY Raw behavior modes\n  P3X = safely mutate the currently loaded Pad 3 mode\n  P3M = show this Pad 3 menu/status\n\nRotation order:\n  1. SY Raw Mid Bass anchor / home < current\n  2. SY Raw LP1 bassline mode\n  3. SY Raw Bandpass mid-bass mode\n  4. SY Raw Wave/Balance variation\n  5. SY Raw sci-fi motion accent\n\nCurrent Pad 3 mode:\n  SY Raw Mid Bass anchor / home\n\nCurrent Pad 3 state: not loaded yet. Use O first.\n"
+}

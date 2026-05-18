@@ -36,7 +36,9 @@ a side-branch off `data/` consumed by `cli.py` and the shell.
    `validation`, metadata lookups, and `mock_midi`. It MUST NOT import
    `mido`, `mido_provider`, `real_midi_adapter`, any `engines/*`, `shell`,
    `app`, `scene_runner`, `group_runner`, `midi_io`, or `randomization`.
-8. No package module imports `rytm_hybrid_randomizer_v134`. Only tests may.
+8. The retired V1.34 monolith stays buried. No package module -- and no test
+   helper -- may import `rytm_hybrid_randomizer_v134`. The V1.34 reference
+   behavior is now the JSON goldens under `tests/fixtures/v134_parity/`.
 9. No `import mido` / `from mido` at module top level anywhere in the
    package. `mido` must be lazy, inside the methods that need it.
 
@@ -55,7 +57,11 @@ a side-branch off `data/` consumed by `cli.py` and the shell.
 
 ## Parity discipline
 
-* `rytm_hybrid_randomizer_v134.py` is byte-frozen. Do not edit.
+* The V1.34 reference behavior lives as JSON goldens under
+  `tests/fixtures/v134_parity/`. Do not regenerate them casually; running
+  with `PARITY_CAPTURE_MODE=1` rewrites every golden from the current engine
+  output, which is only appropriate when an intentional reference-output
+  change is being committed.
 * No new MIDI CCs, profiles, pads (5-12), parameter ranges, or command
   behaviors without explicit approval. See `CONTRIBUTING.md` and
   `docs/ARCHITECTURE.md` section 5.
@@ -67,7 +73,9 @@ a side-branch off `data/` consumed by `cli.py` and the shell.
 * Do not redefine a name that already exists in `data/`.
 * Do not introduce a mutable module-level dict / list / set in the package.
 * Do not let a lower-layer module import from a higher layer.
-* Do not edit the monolith.
+* Do not resurrect `rytm_hybrid_randomizer_v134.py`. The monolith was
+  retired; the JSON goldens under `tests/fixtures/v134_parity/` are the
+  reference now.
 
 ## Before merging architectural changes
 

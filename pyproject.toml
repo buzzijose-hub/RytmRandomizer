@@ -15,10 +15,10 @@ dependencies = [
     # OS port. Changing either could shift byte-level encoding of CC /
     # SysEx / NRPN sequences, which would break hardware compatibility
     # silently (the Rytm would accept malformed packets and quietly
-    # misbehave). These exact versions are what the byte-frozen V1.34
-    # monolith and the E2E canonical-flow golden file were validated
-    # against. Any future bump goes through a hardware re-verification
-    # workstream -- do not widen these pins casually.
+    # misbehave). These exact versions are what the V1.34 reference and
+    # the E2E canonical-flow golden file were validated against (see
+    # tests/fixtures/v134_parity/). Any future bump goes through a hardware
+    # re-verification workstream -- do not widen these pins casually.
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
 ]
@@ -108,26 +108,20 @@ addopts = "-n auto --durations=20"
 
 [tool.black]
 line-length = 100
-target-version = ["py39", "py310", "py311", "py312", "py313"]
-# Keep the byte-frozen V1.34 monolith out of the formatter -- the
-# architecture conformance test enforces it has zero working-tree diff,
-# so reformatting it would break the gate.
-extend-exclude = "rytm_hybrid_randomizer_v134.py"
+# CI runs Python 3.11 (matrix lockstep). Black's safety check parses the
+# formatted output through the *running* interpreter's parser, so emitting
+# py312+ syntax (e.g. PEP 695 generics) produces output that Python 3.11
+# cannot parse and the safety check rejects with exit 1. Keep target-version
+# pinned to the matrix to guarantee dev formatting == CI formatting.
+target-version = ["py39", "py310", "py311"]
 
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = ["rytm_hybrid_randomizer_v134.py"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py39"
-# The byte-frozen V1.34 monolith is the hardware-validated reference. The
-# architecture conformance tests enforce it has zero working-tree diff vs.
-# the committed version. Linting it would either be a no-op (because we
-# cannot fix anything) or would fail the conformance test on auto-fix --
-# either way, it is not a useful gate. Excluded.
-extend-exclude = ["rytm_hybrid_randomizer_v134.py"]
 
 [tool.ruff.lint]
 select = ["E", "F", "B", "S", "SIM", "UP", "C4"]

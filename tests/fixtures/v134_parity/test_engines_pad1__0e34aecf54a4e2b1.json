@@ -1,0 +1,20 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "layout1": {
+      "depth": "micro",
+      "profile": "2",
+      "role": "Main kick / BD Hard default",
+      "zone": "full"
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nBD Silky Profiled Discovery - V1.15\n  Target: Pad 1 only\n  Profile: BD Silky Deep Kick\n  Machine CC15 value: 22\n\nCommands:\n  BI  = load Pad 1 BD Silky profiled anchor\n  SM  = show this BD Silky menu/status\n  ST  = BD Silky smooth tone discovery\n  SK  = BD Silky kick/body discovery\n  SC  = BD Silky click/dust discovery\n  SBH = return Pad 1 BD Silky to anchor\n\nNotes:\n  Use BH to return Pad 1 to the main BD Hard default.\n\nCurrent Pad 1 state: not loaded yet. Use O or BI first.\n"
+}

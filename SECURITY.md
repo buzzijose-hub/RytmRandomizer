@@ -47,8 +47,9 @@ maintained — please upgrade to the latest release before reporting.
 
 In scope:
 
-- The `rytm_randomizer/` package and the `rytm_hybrid_randomizer_v134.py`
-  entry point.
+- The `rytm_randomizer/` package (the only runtime entry point; the V1.34
+  `rytm_hybrid_randomizer_v134.py` monolith was retired and its reference
+  behavior is now JSON goldens under `tests/fixtures/v134_parity/`).
 - Handling of user-supplied files (kit/pattern/SysEx dumps) and any code paths
   that parse external input.
 

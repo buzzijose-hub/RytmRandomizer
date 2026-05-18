@@ -1,0 +1,44 @@
+{
+  "midi": [],
+  "results": [
+    true
+  ],
+  "state": {
+    "active": null,
+    "channel": 2,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "isolated_pad": 3,
+    "layout": {
+      "1": {
+        "depth": "micro",
+        "profile": "2",
+        "role": "Main kick / BD Hard default",
+        "zone": "full"
+      },
+      "2": {
+        "depth": "groove",
+        "profile": "3",
+        "role": "Secondary kick / rolling low percussion",
+        "zone": "body"
+      },
+      "3": {
+        "depth": "groove",
+        "profile": "5",
+        "role": "SY Raw midrange bass / synth-percussion",
+        "zone": "lfo"
+      },
+      "4": {
+        "depth": "micro",
+        "profile": "4",
+        "role": "Body hit / accent layer",
+        "zone": "body"
+      }
+    },
+    "previous": null,
+    "target_pad": 3
+  },
+  "stdout": "\nSelect target pad:\n1 = Pad 1 / BD slot\n2 = Pad 2 / SD slot, flexible BD/SD/SY/UT pool\n3 = Pad 3 / RS slot, flexible BD/SD/RS/CP/SY/UT pool\n4 = Pad 4 / CP slot, flexible BD/SD/RS/CP/SY/UT pool\n\nTargeting Pad 3 / MIDI Channel 3\nNote: Pads 3 and 4 are in a shared/choke voice area. Listen for interaction if both are active.\n"
+}

@@ -1594,6 +1594,346 @@ assert "mido" not in sys.modules, "mido imported by provider construction"
     assert result.stderr == ""
 
 
+# ---------------------------------------------------------------------------
+# Additional coverage for ``rytm_randomizer.app`` (--arm port-open path,
+# ``_choose_arm_port_name`` defensive branches, --dry-run EOF/Ctrl-C
+# swallowing, and argparse-level flag conflicts).
+# ---------------------------------------------------------------------------
+
+
+class _FakeOutputPort:
+    """Duck-types a ``mido`` output port with ``send`` + ``close``."""
+
+    def __init__(self) -> None:
+        self.sent: list = []
+        self.closed = False
+
+    def send(self, message) -> None:
+        self.sent.append(message)
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def _restore_provider_methods(saved):
+    """Helper to restore previously monkey-patched provider class attributes."""
+
+    from rytm_randomizer import mido_provider
+
+    for name, value in saved.items():
+        setattr(mido_provider.MidoMidiPortProvider, name, value)
+
+
+def test_app_main_arm_list_output_names_dependency_error_exits_one(capsys):
+    """``--arm`` must exit cleanly with code 1 if list_output_names raises
+    ``RealMidiDependencyError`` (covers the early ``except`` arm)."""
+
+    _seed()
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.real_midi_adapter import RealMidiDependencyError
+
+    saved = {"list_output_names": mido_provider.MidoMidiPortProvider.list_output_names}
+
+    def raise_dep(self):
+        raise RealMidiDependencyError("mido_not_installed")
+
+    mido_provider.MidoMidiPortProvider.list_output_names = raise_dep
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "--arm failed" in captured.err
+    assert "mido_not_installed" in captured.err
+
+
+def test_app_main_arm_list_output_names_port_error_exits_one(capsys):
+    """``--arm`` must exit cleanly with code 1 if list_output_names raises
+    ``RealMidiPortError`` (covers the second branch of the same except)."""
+
+    _seed()
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    saved = {"list_output_names": mido_provider.MidoMidiPortProvider.list_output_names}
+
+    def raise_port(self):
+        raise RealMidiPortError("midi_output_discovery_failed")
+
+    mido_provider.MidoMidiPortProvider.list_output_names = raise_port
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "--arm failed" in captured.err
+    assert "midi_output_discovery_failed" in captured.err
+
+
+def test_app_main_arm_production_path_opens_port_and_runs_shell(monkeypatch, capsys):
+    """``--arm`` production path: choose a port, open it, run the package
+    shell, then close the port in the ``finally`` block. No real MIDI
+    library, no real ``input()`` -- the provider methods and ``build_shell``
+    are both faked at the boundary."""
+
+    _seed()
+    # Guarantee no test fake monolith lingers, so the production hook fires.
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer import shell as shellmod
+
+    saved = {
+        "list_output_names": mido_provider.MidoMidiPortProvider.list_output_names,
+        "open_output": mido_provider.MidoMidiPortProvider.open_output,
+    }
+
+    fake_port = _FakeOutputPort()
+    opened: dict = {}
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    def fake_open(self, port_name):
+        opened["port_name"] = port_name
+        return fake_port
+
+    class _StubShell:
+        def __init__(self, port) -> None:
+            self.port = port
+
+        def run(self) -> int:
+            # The shell would normally drive the menu; emulate a clean quit.
+            return 0
+
+    def fake_build_shell(port, **_kwargs):
+        return _StubShell(port)
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    # The arm path prompts for an output index via ``input``.
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    monkeypatch.setattr(shellmod, "build_shell", fake_build_shell)
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert opened["port_name"] == "Fake Rytm Out"
+    # The fake port was passed through ``finally`` and closed best-effort.
+    assert fake_port.closed is True
+    assert "real MIDI provider ready" in captured.out
+    assert "Opening MIDI output: Fake Rytm Out" in captured.out
+
+
+def test_app_main_arm_open_output_failure_exits_one(monkeypatch, capsys):
+    """If ``open_output`` raises ``RealMidiPortError`` after a valid choice,
+    ``--arm`` must exit with code 1 and print the failure to stderr."""
+
+    _seed()
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    saved = {
+        "list_output_names": mido_provider.MidoMidiPortProvider.list_output_names,
+        "open_output": mido_provider.MidoMidiPortProvider.open_output,
+    }
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    def fake_open(self, port_name):
+        raise RealMidiPortError(f"unavailable_midi_output_port: {port_name}")
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "--arm failed" in captured.err
+    assert "unavailable_midi_output_port" in captured.err
+
+
+def test_app_main_arm_port_choice_eof_returns_one(monkeypatch, capsys):
+    """``_choose_arm_port_name`` must catch EOFError on stdin and return None
+    so ``--arm`` exits with code 1 instead of crashing."""
+
+    _seed()
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+
+    saved = {"list_output_names": mido_provider.MidoMidiPortProvider.list_output_names}
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    def fake_input(_prompt=""):
+        raise EOFError
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    monkeypatch.setattr("builtins.input", fake_input)
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "no MIDI output choice provided" in captured.err
+    # The available outputs list must still have printed before the prompt.
+    assert "0: Fake Rytm Out" in captured.out
+
+
+def test_app_main_arm_port_choice_invalid_input_returns_one(monkeypatch, capsys):
+    """``_choose_arm_port_name`` must catch ValueError on non-numeric input
+    and return None so ``--arm`` exits with code 1."""
+
+    _seed()
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+
+    saved = {"list_output_names": mido_provider.MidoMidiPortProvider.list_output_names}
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "not-a-number")
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "invalid MIDI output choice" in captured.err
+
+
+def test_app_main_arm_port_choice_out_of_range_returns_one(monkeypatch, capsys):
+    """``_choose_arm_port_name`` must catch IndexError when the chosen
+    number is past the end of the output names list."""
+
+    _seed()
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+
+    saved = {"list_output_names": mido_provider.MidoMidiPortProvider.list_output_names}
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "42")
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "invalid MIDI output choice" in captured.err
+
+
+def test_app_main_dry_run_swallows_eof_from_shell(monkeypatch, capsys):
+    """If the shell's input raises EOFError after the dry-run boot, the
+    --dry-run handler must swallow it and report a clean exit with the
+    final ``Dry-run complete.`` summary line. Covers the EOF/KeyboardInterrupt
+    arm of ``_run_dry_run``."""
+
+    _seed()
+    # Defensive: make sure no test fake monolith intercepts the path.
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app
+    from rytm_randomizer import shell as shellmod
+
+    class _RaisingShell:
+        def __init__(self, sender) -> None:
+            self.sender = sender
+
+        def run(self) -> int:
+            raise EOFError
+
+    def fake_build_shell(sender, **_kwargs):
+        return _RaisingShell(sender)
+
+    monkeypatch.setattr(shellmod, "build_shell", fake_build_shell)
+
+    exit_code = app.main(["--dry-run"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Dry-run complete." in captured.out
+    assert "0 message(s)" in captured.out
+
+
+def test_app_main_arm_and_dry_run_are_mutually_exclusive(capsys):
+    """argparse must reject ``--arm --dry-run`` with SystemExit code 2."""
+
+    import pytest
+
+    from rytm_randomizer import app
+
+    with pytest.raises(SystemExit) as exc_info:
+        app.main(["--arm", "--dry-run"])
+
+    assert exc_info.value.code == 2
+    captured = capsys.readouterr()
+    # argparse writes its conflict message to stderr.
+    assert "not allowed with argument" in captured.err or "--dry-run" in captured.err
+
+
+def test_app_main_unknown_flag_is_rejected_by_argparse(capsys):
+    """Unknown CLI flags trigger argparse's normal error exit (code 2)."""
+
+    import pytest
+
+    from rytm_randomizer import app
+
+    with pytest.raises(SystemExit) as exc_info:
+        app.main(["--nope"])
+
+    assert exc_info.value.code == 2
+    captured = capsys.readouterr()
+    assert "unrecognized arguments" in captured.err or "--nope" in captured.err
+
+
+def test_app_main_passive_with_debug_and_log_json_flags(capsys):
+    """``--debug --log-json`` must be accepted in the default/passive mode
+    and configure the logger without crashing. The user-visible passive
+    menu still prints to stdout."""
+
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--debug", "--log-json"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "passive menu" in captured.out
+
+
 if __name__ == "__main__":
     test_app_module_import_is_side_effect_free_and_silent()
     test_app_main_no_flag_imports_no_real_midi_library()

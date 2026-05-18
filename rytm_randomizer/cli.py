@@ -456,7 +456,7 @@ def main(argv=None):
         return 0
 
     if args == ["report"]:
-        from .registry_report import format_registry_report
+        from .reports import format_registry_report
 
         sys.stdout.write("\n".join(format_registry_report()))
         sys.stdout.write("\n")

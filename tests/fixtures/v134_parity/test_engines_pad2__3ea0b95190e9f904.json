@@ -1,0 +1,329 @@
+{
+  "midi": [
+    [
+      "control_change",
+      1,
+      15,
+      1
+    ],
+    [
+      "control_change",
+      1,
+      17,
+      58
+    ],
+    [
+      "control_change",
+      1,
+      18,
+      53
+    ],
+    [
+      "control_change",
+      1,
+      19,
+      32
+    ],
+    [
+      "control_change",
+      1,
+      20,
+      68
+    ],
+    [
+      "control_change",
+      1,
+      21,
+      42
+    ],
+    [
+      "control_change",
+      1,
+      22,
+      1
+    ],
+    [
+      "control_change",
+      1,
+      23,
+      24
+    ],
+    [
+      "control_change",
+      1,
+      70,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      71,
+      64
+    ],
+    [
+      "control_change",
+      1,
+      72,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      73,
+      64
+    ],
+    [
+      "control_change",
+      1,
+      74,
+      25
+    ],
+    [
+      "control_change",
+      1,
+      75,
+      26
+    ],
+    [
+      "control_change",
+      1,
+      76,
+      4
+    ],
+    [
+      "control_change",
+      1,
+      77,
+      64
+    ],
+    [
+      "control_change",
+      1,
+      78,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      79,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      80,
+      93
+    ],
+    [
+      "control_change",
+      1,
+      81,
+      19
+    ],
+    [
+      "control_change",
+      1,
+      82,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      83,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      10,
+      64
+    ],
+    [
+      "control_change",
+      1,
+      15,
+      1
+    ],
+    [
+      "control_change",
+      1,
+      17,
+      56
+    ],
+    [
+      "control_change",
+      1,
+      18,
+      46
+    ],
+    [
+      "control_change",
+      1,
+      19,
+      32
+    ],
+    [
+      "control_change",
+      1,
+      20,
+      66
+    ],
+    [
+      "control_change",
+      1,
+      21,
+      39
+    ],
+    [
+      "control_change",
+      1,
+      74,
+      24
+    ],
+    [
+      "control_change",
+      1,
+      79,
+      0
+    ],
+    [
+      "control_change",
+      1,
+      80,
+      87
+    ]
+  ],
+  "state": {
+    "active": "My BD Classic",
+    "channel": 1,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 87,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 24,
+      "FLT Release": 64,
+      "FLT Resonance": 26,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 46,
+      "SRC Hold": 39,
+      "SRC Sweep Depth": 32,
+      "SRC Sweep Time": 66,
+      "SRC Transient": 24,
+      "SRC Tune": 56,
+      "SRC Waveform": 1
+    },
+    "ganc": {
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      }
+    },
+    "gcur": {
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 87,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 24,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 46,
+        "SRC Hold": 39,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 66,
+        "SRC Transient": 24,
+        "SRC Tune": 56,
+        "SRC Waveform": 1
+      }
+    },
+    "gprev": {
+      "2": {
+        "AMP Attack": 0,
+        "AMP Decay": 93,
+        "AMP Delay Send": 0,
+        "AMP Hold": 0,
+        "AMP Overdrive": 19,
+        "AMP Pan": 64,
+        "AMP Reverb Send": 0,
+        "FLT Attack": 0,
+        "FLT Decay": 64,
+        "FLT Env Depth": 64,
+        "FLT Frequency": 25,
+        "FLT Release": 64,
+        "FLT Resonance": 26,
+        "FLT Sustain": 0,
+        "FLT Type": 4,
+        "SRC Decay": 53,
+        "SRC Hold": 42,
+        "SRC Sweep Depth": 32,
+        "SRC Sweep Time": 68,
+        "SRC Transient": 24,
+        "SRC Tune": 58,
+        "SRC Waveform": 1
+      }
+    },
+    "key": "3",
+    "previous": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 25,
+      "FLT Release": 64,
+      "FLT Resonance": 26,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 53,
+      "SRC Hold": 42,
+      "SRC Sweep Depth": 32,
+      "SRC Sweep Time": 68,
+      "SRC Transient": 24,
+      "SRC Tune": 58,
+      "SRC Waveform": 1
+    },
+    "target_pad": 2
+  },
+  "stdout": "\nLoading Pad 2 profiled engine: My BD Classic\n  Pad 2 only. Pads 1, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Classic:\n  Machine CC15 -> 1\n\nPad 2 My BD Classic anchor:\n  SRC Tune: CC17 -> 58\n  SRC Decay: CC18 -> 53\n  SRC Sweep Depth: CC19 -> 32\n  SRC Sweep Time: CC20 -> 68\n  SRC Hold: CC21 -> 42\n  SRC Waveform: CC22 -> 1\n  SRC Transient: CC23 -> 24\n  FLT Attack: CC70 -> 0\n  FLT Decay: CC71 -> 64\n  FLT Sustain: CC72 -> 0\n  FLT Release: CC73 -> 64\n  FLT Frequency: CC74 -> 25\n  FLT Resonance: CC75 -> 26\n  FLT Type: CC76 -> 4\n  FLT Env Depth: CC77 -> 64\n  AMP Attack: CC78 -> 0\n  AMP Hold: CC79 -> 0\n  AMP Decay: CC80 -> 93\n  AMP Overdrive: CC81 -> 19\n  AMP Delay Send: CC82 -> 0\n  AMP Reverb Send: CC83 -> 0\n  AMP Pan: CC10 -> 64\n\nPad 2 is now using My BD Classic as its profiled secondary lane.\n\nPad 2 Pressure / Body Discovery\n  Current profile: My BD Classic\n  Pad 2 only. Pads 1, 3, and 4 are not touched.\n\nSwitching Rytm machine to My BD Classic:\n  Machine CC15 -> 1\n  Mutation plan: body / groove\n\nMy BD Classic / BODY mutation / GROOVE depth:\n  Mutating around current anchor.\n  SRC Tune: CC17 -> 56\n  SRC Decay: CC18 -> 46\n  SRC Sweep Depth: CC19 -> 32\n  SRC Sweep Time: CC20 -> 66\n  SRC Hold: CC21 -> 39\n  FLT Frequency: CC74 -> 24\n  AMP Hold: CC79 -> 0\n  AMP Decay: CC80 -> 87\n\nPad 2 discovery command complete. Pads 1, 3, and 4 were not touched.\n"
+}

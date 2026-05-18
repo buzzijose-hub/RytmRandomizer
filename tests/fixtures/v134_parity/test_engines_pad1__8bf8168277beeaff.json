@@ -1,0 +1,20 @@
+{
+  "midi": [],
+  "state": {
+    "active": null,
+    "channel": 0,
+    "current": {},
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "layout1": {
+      "depth": "micro",
+      "profile": "2",
+      "role": "Main kick / BD Hard default",
+      "zone": "full"
+    },
+    "previous": null,
+    "target_pad": 1
+  },
+  "stdout": "\nBD FM Profiled Discovery - V1.13\n  Target: Pad 1 only\n  Profile: BD FM Metallic Kick\n  Machine CC15 value: 13\n\nCommands:\n  BF = load Pad 1 BD FM profiled anchor\n  FM = show this BD FM menu/status\n  FT = BD FM tone/FM discovery\n  FK = BD FM kick/body discovery\n  FG = BD FM grit discovery\n  FZ = return Pad 1 BD FM to anchor\n\nNotes:\n  BD Plastic is profiled in V1.14 with BP/PD/PT/PK/PX/PBH. BD Silky is profiled in V1.15 with BI/SM/ST/SK/SC/SBH\n  Use BH to return Pad 1 to the main BD Hard default.\n\nCurrent Pad 1 state: not loaded yet. Use O or BF first.\n"
+}

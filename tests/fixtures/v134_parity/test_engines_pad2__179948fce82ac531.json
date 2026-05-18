@@ -1,0 +1,38 @@
+{
+  "midi": [],
+  "state": {
+    "active": "My BD Classic",
+    "channel": 1,
+    "current": {
+      "AMP Attack": 0,
+      "AMP Decay": 93,
+      "AMP Delay Send": 0,
+      "AMP Hold": 0,
+      "AMP Overdrive": 19,
+      "AMP Pan": 64,
+      "AMP Reverb Send": 0,
+      "FLT Attack": 0,
+      "FLT Decay": 64,
+      "FLT Env Depth": 64,
+      "FLT Frequency": 25,
+      "FLT Release": 64,
+      "FLT Resonance": 26,
+      "FLT Sustain": 0,
+      "FLT Type": 4,
+      "SRC Decay": 53,
+      "SRC Hold": 42,
+      "SRC Sweep Depth": 32,
+      "SRC Sweep Time": 68,
+      "SRC Transient": 24,
+      "SRC Tune": 58,
+      "SRC Waveform": 1
+    },
+    "ganc": {},
+    "gcur": {},
+    "gprev": {},
+    "key": "3",
+    "previous": null,
+    "target_pad": 2
+  },
+  "stdout": "\nPad 2 profile My BD Classic does not support zone: not-a-zone\n"
+}

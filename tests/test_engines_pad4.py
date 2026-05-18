@@ -114,18 +114,13 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-# Harness run once at warm-worker startup: imports the monolith + package, then
-# defines ``assert_parity(seed, steps)`` which builds a monolith run and an
-# engine run from the same RNG seed, captures stdout + MIDI messages + the
-# relevant state dicts, and asserts byte-parity. ``steps`` is a list of
-# (fn_name, args) tuples; if the first element is the literal string "load",
-# the monolith's ``load_group_anchors`` runs first (and the engine is seeded
-# from the exact group dicts it produced) so the 4-pad-group guard is satisfied
-# identically. The worker loop appended by ``tests/_parity_worker.py`` calls
-# ``assert_parity`` once per JSON request line.
-_HARNESS = '''
+# Harness run once at warm-worker startup. Same capture/check contract as
+# ``test_engines_pad3.py``: a ``"load"`` sentinel at the head of ``steps``
+# triggers an out-of-band ``load_group_anchors`` setup before the Pad-4 calls,
+# and the post-load globals snapshot is stored under ``baseline`` in the
+# fixture so check-mode can re-seed the engine without a monolith.
+_HARNESS = """
 import io, contextlib, random
-import rytm_hybrid_randomizer_v134 as m
 from rytm_randomizer import midi_io, randomization
 from rytm_randomizer.data import PROFILES
 from rytm_randomizer.engines.pad4 import Pad4Engine
@@ -133,14 +128,10 @@ from rytm_randomizer.engines.pad4 import Pad4Engine
 midi_io.time.sleep = lambda *_: None
 randomization.time.sleep = lambda *_: None
 
-
-class Out:
-    def __init__(self):
-        self.sent = []
-
-    def send(self, msg):
-        self.sent.append((msg.type, msg.channel, msg.control, msg.value))
-
+try:
+    import rytm_hybrid_randomizer_v134 as m
+except ImportError:  # monolith retired -- capture_reference falls back to engine
+    m = None
 
 # Monolith Pad-4 functions that are pure status/guard helpers and take NO
 # ``out`` argument (the engine versions are likewise argument-free methods).
@@ -150,41 +141,12 @@ _NO_OUT = {
 }
 
 
-def _reset_monolith():
-    """Restore the monolith globals the Pad-4 functions touch to cold start."""
-    m.active_profile = None
-    m.anchor_state = {}
-    m.current_state = {}
-    m.previous_state = None
-    m.target_pad = 1
-    m.channel = 0
-    m.group_anchor_states = {}
-    m.group_current_states = {}
-    m.group_previous_states = {}
-    m.isolated_pad = 3
-    m.pad4_current_mode_key = "anchor"
+class Out:
+    def __init__(self):
+        self.sent = []
 
-
-def _make_engine(out):
-    """Cold-start Pad4Engine: matches the freshly imported monolith."""
-    return Pad4Engine(out, sleep=lambda *_: None)
-
-
-def _snapshot_monolith():
-    return {
-        "active": m.active_profile["name"] if m.active_profile else None,
-        "current": dict(m.current_state),
-        "previous": dict(m.previous_state) if m.previous_state else m.previous_state,
-        "target_pad": m.target_pad,
-        "channel": m.channel,
-        "isolated_pad": m.isolated_pad,
-        "mode_key": m.pad4_current_mode_key,
-        "gcur": {k: dict(v) for k, v in m.group_current_states.items()},
-        "gprev": {
-            k: (dict(v) if v else v) for k, v in m.group_previous_states.items()
-        },
-        "ganc": {k: dict(v) for k, v in m.group_anchor_states.items()},
-    }
+    def send(self, msg):
+        self.sent.append((msg.type, msg.channel, msg.control, msg.value))
 
 
 def _snapshot_engine(eng):
@@ -206,30 +168,105 @@ def _snapshot_engine(eng):
     }
 
 
+def _reset_monolith():
+    m.active_profile = None
+    m.anchor_state = {}
+    m.current_state = {}
+    m.previous_state = None
+    m.target_pad = 1
+    m.channel = 0
+    m.group_anchor_states = {}
+    m.group_current_states = {}
+    m.group_previous_states = {}
+    m.isolated_pad = 3
+    m.pad4_current_mode_key = "anchor"
+
+
+def _snapshot_monolith():
+    return {
+        "active": m.active_profile["name"] if m.active_profile else None,
+        "current": dict(m.current_state),
+        "previous": dict(m.previous_state) if m.previous_state else m.previous_state,
+        "target_pad": m.target_pad,
+        "channel": m.channel,
+        "isolated_pad": m.isolated_pad,
+        "mode_key": m.pad4_current_mode_key,
+        "gcur": {k: dict(v) for k, v in m.group_current_states.items()},
+        "gprev": {
+            k: (dict(v) if v else v) for k, v in m.group_previous_states.items()
+        },
+        "ganc": {k: dict(v) for k, v in m.group_anchor_states.items()},
+    }
+
+
+def _build_loaded_engine(out, baseline):
+    eng = Pad4Engine(
+        out,
+        sleep=lambda *_: None,
+        target_pad=baseline["target_pad"],
+        channel=baseline["channel"],
+        isolated_pad=baseline["isolated_pad"],
+        pad4_current_mode_key=baseline["mode_key"],
+        current_state=dict(baseline["current"]),
+        previous_state=(
+            dict(baseline["previous"])
+            if baseline["previous"]
+            else baseline["previous"]
+        ),
+        group_anchor_states={
+            int(k): dict(v) for k, v in baseline["ganc"].items()
+        },
+        group_current_states={
+            int(k): dict(v) for k, v in baseline["gcur"].items()
+        },
+        group_previous_states={
+            int(k): (dict(v) if v else v)
+            for k, v in baseline["gprev"].items()
+        },
+    )
+    if baseline["active"] is not None:
+        for prof in PROFILES.values():
+            if prof["name"] == baseline["active"]:
+                eng.active_profile = prof
+                break
+    eng.anchor_state = dict(baseline["current"])
+    return eng
+
+
+def run_engine_only(seed, steps, baseline=None):
+    out = Out()
+    do_load = bool(steps) and steps[0] == "load"
+    real_steps = steps[1:] if do_load else steps
+    if do_load:
+        if baseline is None:
+            raise RuntimeError(
+                "Pad-4 'load' step requires a baseline; fixture missing or out of date"
+            )
+        eng = _build_loaded_engine(out, baseline)
+    else:
+        eng = Pad4Engine(out, sleep=lambda *_: None)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        random.seed(seed)
+        for fn_name, args in real_steps:
+            getattr(eng, fn_name)(*args)
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(row) for row in out.sent],
+        "state": _snapshot_engine(eng),
+    }
+
+
 def run_monolith(seed, steps):
-    """Drive a sequence of monolith Pad-4 calls.
-
-    Returns ``(stdout, msgs, state, baseline)``. The optional ``load`` setup
-    step (``load_group_anchors``) runs *before* stdout/MIDI capture starts --
-    its output is group-level plumbing, not Pad-4 behavior, and the engine has
-    no equivalent method. Only the Pad-4 calls themselves are captured and
-    compared for parity.
-
-    ``baseline`` is a snapshot of the monolith's globals taken immediately
-    *after* the load step but *before* any Pad-4 call mutates them -- so the
-    engine run can be seeded from a pristine, identical starting point (the
-    monolith run itself goes on to mutate ``m.group_*`` in place).
-    """
     _reset_monolith()
     out = Out()
     do_load = bool(steps) and steps[0] == "load"
     real_steps = steps[1:] if do_load else steps
     if do_load:
-        # Uncaptured: seeds m.group_* so the 4-pad-group guard passes.
         with contextlib.redirect_stdout(io.StringIO()):
             m.load_group_anchors(out)
         out.sent.clear()
-    baseline = _snapshot_monolith()
+    baseline = _snapshot_monolith() if do_load else None
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         random.seed(seed)
@@ -238,84 +275,55 @@ def run_monolith(seed, steps):
                 getattr(m, fn_name)(*args)
             else:
                 getattr(m, fn_name)(out, *args)
-    return buf.getvalue(), out.sent, _snapshot_monolith(), baseline
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(row) for row in out.sent],
+        "state": _snapshot_monolith(),
+        "baseline": baseline,
+    }
 
 
-def run_engine(seed, steps, baseline):
-    """Drive the same sequence on a Pad4Engine; return (stdout, msgs, state).
-
-    When the run uses the ``load`` setup step the engine cannot call
-    ``load_group_anchors`` itself (that is a group-level function, not a Pad-4
-    function), so it is constructed seeded from ``baseline`` -- the pristine
-    post-load snapshot of the monolith globals captured before any Pad-4 call
-    ran. This mirrors the monolith's uncaptured setup step: no output, no MIDI,
-    just identical starting state.
-    """
-    out = Out()
+def capture_reference(seed, steps):
+    if m is not None:
+        return run_monolith(seed, steps)
     do_load = bool(steps) and steps[0] == "load"
-    real_steps = steps[1:] if do_load else steps
     if do_load:
-        eng = Pad4Engine(
-            out,
-            sleep=lambda *_: None,
-            target_pad=baseline["target_pad"],
-            channel=baseline["channel"],
-            isolated_pad=baseline["isolated_pad"],
-            pad4_current_mode_key=baseline["mode_key"],
-            current_state=dict(baseline["current"]),
-            previous_state=(
-                dict(baseline["previous"])
-                if baseline["previous"]
-                else baseline["previous"]
-            ),
-            group_anchor_states={
-                k: dict(v) for k, v in baseline["ganc"].items()
-            },
-            group_current_states={
-                k: dict(v) for k, v in baseline["gcur"].items()
-            },
-            group_previous_states={
-                k: (dict(v) if v else v)
-                for k, v in baseline["gprev"].items()
-            },
+        raise RuntimeError(
+            "cannot recapture Pad-4 'load' fixtures without the monolith; "
+            "edit the existing fixture or restore the monolith for one run"
         )
-        # The monolith's post-load active_profile points at the last pad; mirror
-        # it by name lookup so the engine baseline matches without re-importing
-        # the monolith's profile object.
-        if baseline["active"] is not None:
-            for prof in PROFILES.values():
-                if prof["name"] == baseline["active"]:
-                    eng.active_profile = prof
-                    break
-        eng.anchor_state = dict(baseline["current"])
-    else:
-        eng = _make_engine(out)
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        random.seed(seed)
-        for fn_name, args in real_steps:
-            getattr(eng, fn_name)(*args)
-    return buf.getvalue(), out.sent, _snapshot_engine(eng)
+    captured = run_engine_only(seed, steps, baseline=None)
+    captured["baseline"] = None
+    return captured
 
 
-def assert_parity(seed, steps):
-    # The monolith run happens first; it captures a pristine post-load baseline
-    # *before* its own Pad-4 calls mutate m.group_* in place, and that baseline
-    # seeds the engine run for an honest, identical starting point.
-    mo, mm, ms, baseline = run_monolith(seed, steps)
-    eo, em, es = run_engine(seed, steps, baseline)
-    assert mo == eo, "stdout mismatch:\\n--MONOLITH--\\n" + mo + "\\n--ENGINE--\\n" + eo
-    assert mm == em, "midi mismatch:\\n" + repr(mm) + "\\n" + repr(em)
-    assert ms == es, "state mismatch:\\n" + repr(ms) + "\\n" + repr(es)
-'''
+def _normalize(result):
+    import json as _json
+    return _json.loads(_json.dumps(result, default=lambda x: list(x)))
 
 
-# The warm worker for this file: ``_parity_worker`` is a module-scoped autouse
-# fixture that launches/owns it and tears it down at module teardown;
-# ``_run_parity`` ships one JSON request to it and asserts the parity check
-# passed (a mismatch re-raises the worker's diff as an AssertionError -- same
-# failure semantics as the old "fresh interpreter per call" version).
-_parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
+def assert_engine_matches(seed, steps, expected):
+    baseline = expected.get("baseline")
+    raw = run_engine_only(seed, steps, baseline=baseline)
+    raw["baseline"] = baseline
+    got = _normalize(raw)
+    want = _normalize(expected)
+    assert got["stdout"] == want["stdout"], (
+        "stdout mismatch:\\n--EXPECTED--\\n" + want["stdout"]
+        + "\\n--ENGINE--\\n" + got["stdout"]
+    )
+    assert got["midi"] == want["midi"], (
+        "midi mismatch:\\n--EXPECTED--\\n" + repr(want["midi"])
+        + "\\n--ENGINE--\\n" + repr(got["midi"])
+    )
+    assert got["state"] == want["state"], (
+        "state mismatch:\\n--EXPECTED--\\n" + repr(want["state"])
+        + "\\n--ENGINE--\\n" + repr(got["state"])
+    )
+"""
+
+
+_parity_worker, _run_parity = make_parity_subprocess(_HARNESS, __name__)
 
 
 def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:

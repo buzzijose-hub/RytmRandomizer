@@ -14,7 +14,32 @@ full version-bump and tagging flow.
 
 ### Added
 
+- `tests/fixtures/v134_parity/` — JSON goldens capturing the V1.34 reference
+  output for every parity request the engine/runner suite asserts against.
+  Generated via `PARITY_CAPTURE_MODE=1 pytest`, then committed.
+- Capture/check modes in `tests/_parity_worker.py`. The parity worker now
+  routes each request through either `capture_reference()` (writes a fixture)
+  or `assert_engine_matches()` (compares engine output to the fixture).
+
 ### Changed
+
+- Parity tests under `tests/test_engines_pad*.py`, `tests/test_group_runner.py`
+  and `tests/test_scene_runner.py` no longer drive the V1.34 monolith
+  side-by-side with the package; they compare engine output to the committed
+  JSON goldens. Same byte-for-byte contract, no live monolith required.
+
+### Removed
+
+- `rytm_hybrid_randomizer_v134.py` (2,950 LOC). The retired monolith's
+  reference behavior is preserved as the JSON goldens noted above.
+- Subprocess-vs-monolith parity tests in `tests/test_midi_io.py`,
+  `tests/test_randomization.py`, `tests/test_data_layer.py` and
+  `tests/test_state_package.py`. Replaced by in-process branch coverage and a
+  frozen `_V134_GLOBAL_DEFAULTS` constant where the monolith's cold-start
+  globals were previously snapshotted out-of-process.
+- Architecture tests that verified the monolith file existed and had a clean
+  working-tree diff. Replaced by a guard ensuring the monolith is not
+  resurrected at either of its historic locations.
 
 ### Fixed
 

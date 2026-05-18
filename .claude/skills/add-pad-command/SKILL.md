@@ -5,8 +5,9 @@ description: |
   (a pad command, a scene command, an isolated-pad command, etc.). Use when
   the user asks to "add a command", "wire up a new shell command", "add a
   pad command", "extend the interactive menu", or to surface an existing
-  monolith command in the package shell. Walks through the files to touch,
-  the imports allowed at each layer, and the tests that must be added.
+  V1.34 reference command in the package shell. Walks through the files to
+  touch, the imports allowed at each layer, and the tests that must be
+  added.
 ---
 
 # Add a pad / shell command
@@ -45,8 +46,11 @@ the layer rules from `docs/ARCHITECTURE.md`.
 6. **Add tests.** Minimum required:
    * Unit test for the new function (in the corresponding engine / runner
      test file).
-   * Parity test if the command exists in the V1.34 monolith (compare the
-     emitted MIDI message sequence byte-for-byte against the reference).
+   * Parity test if the command exists in the V1.34 reference (add a request
+     to the relevant parity test file under `tests/test_engines_pad*.py`,
+     `tests/test_group_runner.py`, or `tests/test_scene_runner.py`; capture
+     the golden with `PARITY_CAPTURE_MODE=1`, then commit the new
+     `tests/fixtures/v134_parity/*.json`).
    * Shell dispatch test in `tests/test_state_package.py` or a new
      `tests/test_shell_*` file.
 

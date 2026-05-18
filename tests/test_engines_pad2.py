@@ -105,19 +105,27 @@ def _no_sleep(_seconds: float) -> None:
     return None
 
 
-# Harness run once at warm-worker startup: imports the monolith + package, then
-# defines ``assert_parity(seed, steps)`` which builds a monolith run and an
-# engine run from the same RNG seed, captures stdout + MIDI messages + the
-# relevant state dicts, and asserts byte-parity. The worker loop appended by
-# ``tests/_parity_worker.py`` calls this once per JSON request line.
-_HARNESS = '''
+# Harness run once at warm-worker startup. See ``test_engines_pad1.py`` for the
+# capture-vs-check contract -- ``capture_reference`` sources the V1.34
+# reference output from the monolith (or falls back to the engine after the
+# monolith is retired) and ``assert_engine_matches`` compares the engine
+# against the ``expected`` fixture payload shipped with the request.
+_HARNESS = """
 import io, contextlib, random
-import rytm_hybrid_randomizer_v134 as m
 from rytm_randomizer import midi_io, randomization
 from rytm_randomizer.engines.pad2 import Pad2Engine, DEFAULT_PAD2_PROFILE_KEY
 
 midi_io.time.sleep = lambda *_: None
 randomization.time.sleep = lambda *_: None
+
+try:
+    import rytm_hybrid_randomizer_v134 as m
+except ImportError:  # monolith retired -- capture_reference falls back to engine
+    m = None
+
+# Monolith Pad-2 functions that are pure status helpers and take NO ``out``
+# argument (the engine versions are likewise argument-free methods).
+_NO_OUT = {"show_pad2_tools"}
 
 
 class Out:
@@ -128,63 +136,8 @@ class Out:
         self.sent.append((msg.type, msg.channel, msg.control, msg.value))
 
 
-# Monolith Pad-2 functions that are pure status helpers and take NO ``out``
-# argument (the engine versions are likewise argument-free methods).
-_NO_OUT = {"show_pad2_tools"}
-
-
-def _reset_monolith():
-    """Restore the monolith globals the Pad-2 functions touch to cold start."""
-    m.active_profile = None
-    m.anchor_state = {}
-    m.current_state = {}
-    m.previous_state = None
-    m.target_pad = 1
-    m.channel = 0
-    m.group_anchor_states = {}
-    m.group_current_states = {}
-    m.group_previous_states = {}
-    m.pad2_current_profile_key = DEFAULT_PAD2_PROFILE_KEY
-
-
-def run_monolith(seed, steps):
-    """Drive a sequence of monolith Pad-2 calls; return (stdout, msgs, state)."""
-    _reset_monolith()
-    out = Out()
-    random.seed(seed)
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        for fn_name, args in steps:
-            if fn_name in _NO_OUT:
-                getattr(m, fn_name)(*args)
-            else:
-                getattr(m, fn_name)(out, *args)
-    state = {
-        "active": m.active_profile["name"] if m.active_profile else None,
-        "current": dict(m.current_state),
-        "previous": dict(m.previous_state) if m.previous_state else m.previous_state,
-        "target_pad": m.target_pad,
-        "channel": m.channel,
-        "key": m.pad2_current_profile_key,
-        "gcur": {k: dict(v) for k, v in m.group_current_states.items()},
-        "gprev": {
-            k: (dict(v) if v else v) for k, v in m.group_previous_states.items()
-        },
-        "ganc": {k: dict(v) for k, v in m.group_anchor_states.items()},
-    }
-    return buf.getvalue(), out.sent, state
-
-
-def run_engine(seed, steps):
-    """Drive the same sequence on a Pad2Engine; return (stdout, msgs, state)."""
-    out = Out()
-    eng = Pad2Engine(out, sleep=lambda *_: None)
-    random.seed(seed)
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        for fn_name, args in steps:
-            getattr(eng, fn_name)(*args)
-    state = {
+def _engine_state(eng):
+    return {
         "active": eng.active_profile["name"] if eng.active_profile else None,
         "current": dict(eng.current_state),
         "previous": (
@@ -199,24 +152,100 @@ def run_engine(seed, steps):
         },
         "ganc": {k: dict(v) for k, v in eng.group_anchor_states.items()},
     }
-    return buf.getvalue(), out.sent, state
 
 
-def assert_parity(seed, steps):
-    mo, mm, ms = run_monolith(seed, steps)
-    eo, em, es = run_engine(seed, steps)
-    assert mo == eo, "stdout mismatch:\\n--MONOLITH--\\n" + mo + "\\n--ENGINE--\\n" + eo
-    assert mm == em, "midi mismatch:\\n" + repr(mm) + "\\n" + repr(em)
-    assert ms == es, "state mismatch:\\n" + repr(ms) + "\\n" + repr(es)
-'''
+def _reset_monolith():
+    m.active_profile = None
+    m.anchor_state = {}
+    m.current_state = {}
+    m.previous_state = None
+    m.target_pad = 1
+    m.channel = 0
+    m.group_anchor_states = {}
+    m.group_current_states = {}
+    m.group_previous_states = {}
+    m.pad2_current_profile_key = DEFAULT_PAD2_PROFILE_KEY
 
 
-# The warm worker for this file: ``_parity_worker`` is a module-scoped autouse
-# fixture that launches/owns it and tears it down at module teardown;
-# ``_run_parity`` ships one JSON request to it and asserts the parity check
-# passed (a mismatch re-raises the worker's diff as an AssertionError -- same
-# failure semantics as the old "fresh interpreter per call" version).
-_parity_worker, _run_parity = make_parity_subprocess(_HARNESS)
+def _monolith_state():
+    return {
+        "active": m.active_profile["name"] if m.active_profile else None,
+        "current": dict(m.current_state),
+        "previous": dict(m.previous_state) if m.previous_state else m.previous_state,
+        "target_pad": m.target_pad,
+        "channel": m.channel,
+        "key": m.pad2_current_profile_key,
+        "gcur": {k: dict(v) for k, v in m.group_current_states.items()},
+        "gprev": {
+            k: (dict(v) if v else v) for k, v in m.group_previous_states.items()
+        },
+        "ganc": {k: dict(v) for k, v in m.group_anchor_states.items()},
+    }
+
+
+def run_monolith(seed, steps):
+    _reset_monolith()
+    out = Out()
+    random.seed(seed)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        for fn_name, args in steps:
+            if fn_name in _NO_OUT:
+                getattr(m, fn_name)(*args)
+            else:
+                getattr(m, fn_name)(out, *args)
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(row) for row in out.sent],
+        "state": _monolith_state(),
+    }
+
+
+def run_engine_only(seed, steps):
+    out = Out()
+    eng = Pad2Engine(out, sleep=lambda *_: None)
+    random.seed(seed)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        for fn_name, args in steps:
+            getattr(eng, fn_name)(*args)
+    return {
+        "stdout": buf.getvalue(),
+        "midi": [list(msg) for msg in out.sent],
+        "state": _engine_state(eng),
+    }
+
+
+def capture_reference(seed, steps):
+    if m is not None:
+        return run_monolith(seed, steps)
+    return run_engine_only(seed, steps)
+
+
+def _normalize(result):
+    import json as _json
+    return _json.loads(_json.dumps(result, default=lambda x: list(x)))
+
+
+def assert_engine_matches(seed, steps, expected):
+    got = _normalize(run_engine_only(seed, steps))
+    want = _normalize(expected)
+    assert got["stdout"] == want["stdout"], (
+        "stdout mismatch:\\n--EXPECTED--\\n" + want["stdout"]
+        + "\\n--ENGINE--\\n" + got["stdout"]
+    )
+    assert got["midi"] == want["midi"], (
+        "midi mismatch:\\n--EXPECTED--\\n" + repr(want["midi"])
+        + "\\n--ENGINE--\\n" + repr(got["midi"])
+    )
+    assert got["state"] == want["state"], (
+        "state mismatch:\\n--EXPECTED--\\n" + repr(want["state"])
+        + "\\n--ENGINE--\\n" + repr(got["state"])
+    )
+"""
+
+
+_parity_worker, _run_parity = make_parity_subprocess(_HARNESS, __name__)
 
 
 def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:

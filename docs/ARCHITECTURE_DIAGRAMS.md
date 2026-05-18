@@ -15,7 +15,7 @@ Current baseline used while creating this document:
 - current HEAD before this documentation slice:
   - `55300be Add bridge report CLI preview progress review`
 - protected reference:
-  - `rytm_hybrid_randomizer_v134.py`
+  - `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as JSON goldens)
 - current package:
   - `rytm_randomizer/`
 - closeout script:
@@ -29,8 +29,8 @@ The diagrams below were derived from these current source groups:
 | --- | --- |
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Lookup, registry, inspection, preview | `rytm_randomizer/command_lookup.py`, `rytm_randomizer/scene_lookup.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/registry.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/preview.py`, `rytm_randomizer/audit.py` |
-| Report surfaces | `rytm_randomizer/registry_report.py`, `rytm_randomizer/mock_mapper_report.py`, `rytm_randomizer/runtime_plan_report.py`, `rytm_randomizer/active_boundary_report.py`, `rytm_randomizer/behavior_anchor_profile_report.py`, `rytm_randomizer/behavior_parity_coverage_report.py`, `rytm_randomizer/mock_runtime_active_bridge_report.py` |
+| Lookup, registry, inspection, preview | `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/registry.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/preview.py`, `rytm_randomizer/audit.py` |
+| Report surfaces | `rytm_randomizer/reports.py` (consolidated registry, mock-mapper, runtime-plan, active-boundary, anchor-profile, behavior-parity-coverage, mock-runtime-active-bridge report builders, formatters, and summarizers) |
 | Behavior parity evaluators | `rytm_randomizer/behavior_menu_utility.py`, `rytm_randomizer/behavior_anchor_profile.py`, `rytm_randomizer/behavior_mutation_depth.py`, `rytm_randomizer/behavior_scene_group.py`, `rytm_randomizer/behavior_pad1_lane.py`, `rytm_randomizer/behavior_pad2_lane.py`, `rytm_randomizer/behavior_pad3_lane.py`, `rytm_randomizer/behavior_pad4_lane.py`, `rytm_randomizer/behavior_selected_profile.py`, `rytm_randomizer/behavior_selected_isolated_pad.py`, `rytm_randomizer/behavior_undo_commit_state.py` |
 | Runtime-adjacent state | `rytm_randomizer/selected_target_state.py`, `rytm_randomizer/anchor_state.py`, `rytm_randomizer/selected_isolated_pad_runtime_state.py` |
 | Mock MIDI and mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
@@ -43,7 +43,7 @@ The diagrams below were derived from these current source groups:
 ```mermaid
 flowchart TB
     User["Operator / developer"]
-    V134["Protected V1.34 reference\nrytm_hybrid_randomizer_v134.py"]
+    V134["V1.34 reference behavior\ntests/fixtures/v134_parity/*.json"]
     Package["Modular package\nrytm_randomizer/"]
     Tests["Tests\ntests/test_*.py + fixtures"]
     Closeout["Closeout script\nScripts/closeout_check.ps1"]
@@ -54,20 +54,22 @@ flowchart TB
 
     Package -->|"validated by"| Tests
     Tests -->|"run by"| Closeout
-    Closeout -->|"checks diff remains empty"| V134
-
-    V134 -.->|"behavior reference only\nnot edited by modular slices"| Package
+    Tests -->|"compares engine output to"| V134
 ```
 
 Current nuance:
 
-- `rytm_hybrid_randomizer_v134.py` is retained as the frozen byte-parity
-  reference. Closeout verifies its working-tree diff stays empty.
+- The V1.34 reference behavior is preserved as JSON goldens under
+  `tests/fixtures/v134_parity/`. The original
+  `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the
+  parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`,
+  `tests/test_scene_runner.py`) compare engine output to those fixtures via
+  `tests/_parity_worker.py`.
 - The modular package now owns the interactive runtime end-to-end:
   `rytm_randomizer.app` exposes the passive menu (default), `--arm` (real
   MIDI), and `--dry-run` (mock sender) modes. The interactive command loop
   lives in `rytm_randomizer.shell.InteractiveShell`.
-- Closeout repeatedly verifies tests and the V1.34 reference diff.
+- Closeout repeatedly verifies tests and the package's import smoke.
 
 ## 2. Package Layer Map
 
@@ -87,8 +89,6 @@ flowchart TB
 
     subgraph PassiveCore["Passive registry and preview core"]
         Registry["registry.py"]
-        CommandLookup["command_lookup.py"]
-        SceneLookup["scene_lookup.py"]
         ProfileLookup["profile_lookup.py"]
         Inspection["inspection.py"]
         Preview["preview.py"]
@@ -110,14 +110,14 @@ flowchart TB
         RuntimeState["selected_target_state.py\nanchor_state.py\nselected_isolated_pad_runtime_state.py"]
     end
 
-    subgraph Reports["Read-only report surfaces"]
-        RegistryReport["registry_report.py"]
-        MockMapperReport["mock_mapper_report.py"]
-        RuntimePlanReport["runtime_plan_report.py"]
-        ActiveBoundaryReport["active_boundary_report.py"]
-        AnchorProfileReport["behavior_anchor_profile_report.py"]
-        CoverageReport["behavior_parity_coverage_report.py"]
-        BridgeReport["mock_runtime_active_bridge_report.py"]
+    subgraph Reports["Read-only report surfaces (reports.py)"]
+        RegistryReport["build/format/summarize_registry_report"]
+        MockMapperReport["build/format/summarize_mock_mapper_report"]
+        RuntimePlanReport["build/format/summarize_runtime_plan_report"]
+        ActiveBoundaryReport["build/format/summarize_active_boundary_report"]
+        AnchorProfileReport["build/format/summarize_anchor_profile_report"]
+        CoverageReport["build/format/summarize_behavior_parity_coverage_report"]
+        BridgeReport["build/format/summarize_mock_runtime_active_bridge_report"]
     end
 
     subgraph RuntimeMock["Runtime / active mock boundary"]
@@ -211,13 +211,13 @@ flowchart LR
     CLI --> DirectReportCommands
     CLI --> RegistryCommands
 
-    Report --> RegistryReport["registry_report.py"]
-    MockMapper --> MockMapperReport["mock_mapper_report.py"]
-    RuntimePlan --> RuntimePlanReport["runtime_plan_report.py"]
-    ActiveBoundary --> ActiveBoundaryReport["active_boundary_report.py"]
-    Bridge --> BridgeReport["mock_runtime_active_bridge_report.py"]
-    AnchorProfile --> AnchorProfileReport["behavior_anchor_profile_report.py"]
-    Coverage --> CoverageReport["behavior_parity_coverage_report.py"]
+    Report --> RegistryReport["reports.format_registry_report"]
+    MockMapper --> MockMapperReport["reports.format_mock_mapper_report"]
+    RuntimePlan --> RuntimePlanReport["reports.format_runtime_plan_report"]
+    ActiveBoundary --> ActiveBoundaryReport["reports.format_active_boundary_report"]
+    Bridge --> BridgeReport["reports.format_mock_runtime_active_bridge_report"]
+    AnchorProfile --> AnchorProfileReport["reports.format_anchor_profile_report"]
+    Coverage --> CoverageReport["reports.format_behavior_parity_coverage_report"]
 
     List --> Registry["registry.py"]
     Search --> Registry
@@ -247,9 +247,7 @@ flowchart TB
     Profiles["profiles.py\nGROUP_PROFILE_METADATA\nPAD_PROFILES\nGROUP_LAYOUT"]
 
     Registry["registry.py\nbuild_registry()\nget_registry_section()\nget_registry_item()\nsummarize_registry()"]
-    CommandLookup["command_lookup.py\nlist/describe/get command metadata"]
-    SceneLookup["scene_lookup.py\nlist/describe/get scene metadata"]
-    ProfileLookup["profile_lookup.py\nlist/describe/get group profile metadata"]
+    ProfileLookup["profile_lookup.py\ndescribe_group_profile()"]
     Validation["validation.py\nregistry guardrails\nforbidden execution fields\nPads 5-12 references"]
     Inspection["inspection.py\ninspect_command()"]
     Preview["preview.py\npreview_command()\nSAFETY_SUMMARY"]
@@ -262,8 +260,6 @@ flowchart TB
     Scenes --> Registry
     Profiles --> Registry
 
-    Commands --> CommandLookup
-    Scenes --> SceneLookup
     Profiles --> ProfileLookup
 
     Validation --> Inspection
@@ -430,14 +426,14 @@ Current nuance:
 
 ```mermaid
 flowchart TB
-    subgraph Reports["Formatter/report modules"]
-        RegistryReport["registry_report.py"]
-        MockMapperReport["mock_mapper_report.py"]
-        RuntimePlanReport["runtime_plan_report.py"]
-        ActiveBoundaryReport["active_boundary_report.py"]
-        AnchorProfileReport["behavior_anchor_profile_report.py"]
-        CoverageReport["behavior_parity_coverage_report.py"]
-        BridgeReport["mock_runtime_active_bridge_report.py"]
+    subgraph Reports["Formatter/report modules (consolidated in reports.py)"]
+        RegistryReport["build/format/summarize_registry_report"]
+        MockMapperReport["build/format/summarize_mock_mapper_report"]
+        RuntimePlanReport["build/format/summarize_runtime_plan_report"]
+        ActiveBoundaryReport["build/format/summarize_active_boundary_report"]
+        AnchorProfileReport["build/format/summarize_anchor_profile_report"]
+        CoverageReport["build/format/summarize_behavior_parity_coverage_report"]
+        BridgeReport["build/format/summarize_mock_runtime_active_bridge_report"]
     end
 
     subgraph CLICommands["CLI report commands"]
@@ -479,7 +475,7 @@ flowchart TB
     subgraph PassiveTests["Passive metadata / CLI tests"]
         Scaffold["test_scaffold.py"]
         Validation["test_validation.py"]
-        Lookup["test_command_lookup.py\ntest_scene_lookup.py\ntest_profile_lookup.py"]
+        Lookup["test_profile_lookup.py"]
         RegistryTests["test_registry.py\ntest_registry_report.py\ntest_registry_report_cli.py"]
         CLITests["test_cli.py"]
         InspectionPreviewAudit["test_inspection.py\ntest_preview.py\ntest_audit.py"]
