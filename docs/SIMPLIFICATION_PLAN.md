@@ -49,6 +49,75 @@ If `--cov-fail-under=100` fails, the `tdd-guide` agent is re-dispatched with the
 
 ---
 
+## Dead-code purge (no leftover code — anywhere)
+
+**Goal:** future contributors see only live, exercised patterns. Every unused code path, every unreachable branch, every unimported symbol, every commented-out block, every `# TODO: remove` marker — gone. If a contributor opens any file in this package six months from now, every line they read is executed by at least one test.
+
+### Per-WS purge step (Phase 3.5, between implement and coverage_gate)
+
+Right after the orchestrator writes the implementation and **before** the coverage gate runs, the orchestrator runs the dead-code sweep on touched files only. This catches duplicated helpers, dead imports left over from the refactor, and unreachable branches introduced by Protocol substitution.
+
+```powershell
+# 1. Vulture for dead-symbol detection (per-touched-file)
+$touched = git diff --name-only origin/modularize-v1.34...HEAD -- 'rytm_randomizer/*.py'
+python -m vulture $touched --min-confidence 80
+
+# 2. Ruff dead-code rules at strict thresholds
+python -m ruff check --select F401,F811,F841,ARG001,ARG002,ERA001,PLR0913 $touched
+
+# 3. Coverage-driven dead-branch detection (the coverage_gate sees this in Phase 4)
+python -m pytest --cov-branch --cov-report=term-missing --cov-fail-under=100 $touched
+```
+
+| Tool | Detects | Action |
+|---|---|---|
+| `vulture --min-confidence 80` | Unused functions, classes, variables, imports, attributes | Remove. Re-run with `--min-confidence 60` for borderline cases; document the keep with a `# vulture: ignore` + parity-API §8 reference if it's a documented surface. |
+| `ruff F401` | Unused imports | Remove. |
+| `ruff F811` | Re-defined names | Remove or rename. |
+| `ruff F841` | Assigned-but-unused locals | Remove or rename to `_`. |
+| `ruff ARG001/ARG002` | Unused function/method args | Remove or rename to `_<name>`. |
+| `ruff ERA001` | Commented-out code | Remove. No "might need later" comments survive — that's what git history is for. |
+| `ruff PLR0913` | Too many args (>5 default) | Refactor into dataclass or kwargs. Triggers an `architect` re-spawn if not trivially fixable. |
+| `pytest --cov-branch --cov-fail-under=100` | Unexecuted branches | The `tdd-guide` agent re-spawns to write the gap-closing test. If a branch genuinely cannot be triggered (defensive `pragma: no cover` with documented reason), it gets the pragma + a `# parity-API §8` reference or it's deleted. |
+
+**Hard rule:** no `# pragma: no cover` survives without a one-line justification comment immediately above pointing to either `docs/ARCHITECTURE.md` §8 (parity API) or a specific incident in `docs/SIMPLIFICATION_RUN_LOG.md`.
+
+### Final sweep: WS-S8 (post-Wave-3, dedicated purge workstream)
+
+After WS-S7 merges, before Wave 4 (learning) starts, **WS-S8 runs a full-package sweep** with the same tools but at maximum strictness across the *entire* package — not just touched files. The goal: catch anything the per-WS sweeps missed (especially cross-WS interactions like "WS-S5 made WS-S2's helper redundant").
+
+**WS-S8 scope:**
+- `python -m vulture rytm_randomizer/ tests/ Scripts/ scripts/ --min-confidence 70`
+- `python -m ruff check --select F,B,SIM,UP,C4,PLR,ERA,ARG --statistics rytm_randomizer/ tests/`
+- `python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-fail-under=100` (whole-package 100%, ratcheted up from current 87%)
+- Cross-check `docs/ARCHITECTURE.md` §8 parity-API surface — any symbol listed there but no longer needed (because the abstraction now obsoletes it) gets removed from both the doc and the code; any symbol used but not listed gets added to the doc.
+- Search for `// TODO`, `// FIXME`, `# XXX`, `# HACK`, `# TEMP`: each is either resolved or converted to a tracked GitHub issue with the comment replaced by `# see issue #NNN`.
+
+**WS-S8 acceptance:**
+- Vulture clean at `--min-confidence 70`.
+- Whole-package branch coverage `100%`.
+- Zero unresolved `TODO`/`FIXME`/`XXX`/`HACK` in `rytm_randomizer/` or `tests/`.
+- `.coveragerc` `fail_under` ratchets from 87 → 100.
+- Every `# pragma: no cover` has a justification comment.
+- `docs/ARCHITECTURE.md` §8 parity-API table is exactly the live set — no extras, no missing.
+
+**WS-S8 risk profile:** medium. The whole-package 100% gate is the biggest single push of the plan — it's where stragglers fall out. Mitigation: WS-S8 runs in a worktree just like every other WS, and if 100% is unreachable (a documented edge case), it's the only WS allowed to argue for a `pragma: no cover` instead, with the architect agent approving each one.
+
+### What "no leftover code" means in practice
+
+After WS-S8 lands, a contributor running this command sees the truth:
+
+```powershell
+# These should all return empty (or only matches inside docs/, tests/fixtures/, .git/)
+Select-String -Path rytm_randomizer\*.py -Pattern '# TODO|# FIXME|# XXX|# HACK|# TEMP'
+Select-String -Path rytm_randomizer\*.py -Pattern '^\s*#.*\b(def|class|if|for|while)\b'  # commented code
+python -m vulture rytm_randomizer/ --min-confidence 70
+```
+
+If any of those return output, the orchestrator considers WS-S8 not done and re-enters `implementing`.
+
+---
+
 ## What's already DRY (don't touch)
 
 - **Domain data** is single-source in `rytm_randomizer/data/`. Top-level `profiles.py`/`scenes.py`/`constants.py` derive from it. Nothing to do.
@@ -132,9 +201,13 @@ WAVE 2 (2 streams, parallel after Wave 1)
 WAVE 3 (1 stream, gated)
   WS-S7  CLI command registry        needs: WS-S4, WS-S6
 
-WAVE 4 (1 stream, gated on all 7 merged) — autonomous learning + hand-off
-  WS-L   Learning extraction + run report      saves to .claude/skills, .claude/rules
-  WS-H   PR #21 hand-off issue                 auto-generated from final state
+WAVE 3.5 (1 stream, gated on all of S1..S7 merged) — full-package dead-code sweep
+  WS-S8  Whole-package dead-code + 100% coverage ratchet (87 → 100)
+          + pattern enforcement audit (uses findings from "Pattern review" section)
+
+WAVE 4 (gated on WS-S8) — autonomous learning + hand-off
+  WS-L   Learning extraction + in-repo handoff package      saves to .claude/, docs/
+  WS-H   PR #21 hand-off issue                              auto-generated from final state
 ```
 
 Each WS passes through the same 11-phase pipeline (plan → tdd → implement → **coverage gate** → review × 3 in parallel → **docs** → PR open → CI → merge), with mandatory 100% branch coverage on touched files and mandatory `doc-updater` commit before PR opens.
@@ -153,6 +226,7 @@ Every workstream uses the same crew shape — the only difference is which plugi
 | 1. Plan | `planner` | `everything-claude-code` | Reads the WS spec from this doc, produces a step-by-step plan with file list and acceptance criteria. |
 | 2. Test-first | `tdd-guide` | `everything-claude-code` | Writes the failing tests for the new Protocol/registry/formatter from the plan. RED. |
 | 3. Implement | (orchestrator) | — | Writes the minimum code to turn the new tests GREEN while keeping the 505 V1.34 parity fixtures green. |
+| 3.5. **Dead-code purge** | `refactor-cleaner` + (orchestrator) | `everything-claude-code` | Runs `vulture --min-confidence 80` + `ruff F401,F811,F841,ARG001,ARG002,ERA001` on touched files. Removes every unused symbol, dead import, commented-out block. **Hard gate — see Dead-code purge section.** |
 | 4. **Branch-coverage gate** | (orchestrator) + `tdd-guide` if gap | — | Runs `pytest --cov=<touched paths> --cov-branch --cov-fail-under=100`. If gaps exist, re-dispatches `tdd-guide` with the missing-branch report. Loops up to 2× before escalating to `architect`. **Hard gate — no PR opens until 100%.** |
 | 5. Type/style check | `python-reviewer` | `everything-claude-code` | Confirms PEP 8, type annotations, Pythonic idioms, immutability where appropriate. |
 | 6. Code review | `code-reviewer` | `everything-claude-code` | Catches CRITICAL/HIGH issues. |
@@ -397,7 +471,9 @@ pending ─┬─ (Wave 1: always) ──> planning
 
 planning      ──(planner|architect agent returns plan)──>       tdd
 tdd           ──(tdd-guide writes failing tests, local RED)──>  implementing
-implementing  ──(orchestrator codes + local pytest GREEN)──>    coverage_gate
+implementing  ──(orchestrator codes + local pytest GREEN)──>    dead_code_purge
+dead_code_purge ──(vulture + ruff F401/F811/F841/ARG/ERA clean on touched)──> coverage_gate
+                └─(violations)──> implementing (auto-remove, max 2 retries)
 coverage_gate ──(100% branch on touched files)──>               reviewing
               └─(gap)──> tdd (re-dispatch tdd-guide w/ gap report; max 2 retries)
 reviewing     ──(reviewer agents return ≤ MEDIUM issues)──>     docs
