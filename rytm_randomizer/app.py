@@ -504,7 +504,7 @@ def _run_arm(
             return 0
 
         if analog_four_smoke:
-            from .analog_four_smoke import (
+            from .analog_four.smoke import (
                 format_analog_four_smoke_report,
                 run_analog_four_smoke_test,
             )
@@ -515,7 +515,7 @@ def _run_arm(
             return 0
 
         if analog_four_track_smoke is not None:
-            from .analog_four_smoke import (
+            from .analog_four.smoke import (
                 format_analog_four_track_smoke_report,
                 run_analog_four_track_smoke_test,
             )
@@ -530,7 +530,7 @@ def _run_arm(
             return 0
 
         if analog_four_track_filter_smoke is not None:
-            from .analog_four_smoke import (
+            from .analog_four.smoke import (
                 format_analog_four_track_filter_smoke_report,
                 run_analog_four_track_filter_smoke_test,
             )
@@ -1207,7 +1207,7 @@ def _run_dry_run(
         return 0
 
     if analog_four_smoke:
-        from .analog_four_smoke import (
+        from .analog_four.smoke import (
             format_analog_four_smoke_report,
             run_analog_four_smoke_test,
         )
@@ -1221,7 +1221,7 @@ def _run_dry_run(
         return 0
 
     if analog_four_track_smoke is not None:
-        from .analog_four_smoke import (
+        from .analog_four.smoke import (
             format_analog_four_track_smoke_report,
             run_analog_four_track_smoke_test,
         )
@@ -1239,7 +1239,7 @@ def _run_dry_run(
         return 0
 
     if analog_four_track_filter_smoke is not None:
-        from .analog_four_smoke import (
+        from .analog_four.smoke import (
             format_analog_four_track_filter_smoke_report,
             run_analog_four_track_filter_smoke_test,
         )

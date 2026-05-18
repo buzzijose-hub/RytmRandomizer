@@ -52,7 +52,7 @@ def test_importing_analog_four_offset_candidates_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_offset_candidates; "
+                "import rytm_randomizer.analog_four.offset_candidates; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -69,7 +69,7 @@ def test_importing_analog_four_offset_candidates_is_passive_and_silent():
 
 
 def test_build_offset_candidate_report_finds_varying_track_words():
-    from rytm_randomizer.analog_four_offset_candidates import (
+    from rytm_randomizer.analog_four.offset_candidates import (
         build_analog_four_offset_candidate_report_from_bytes,
     )
 
@@ -102,7 +102,7 @@ def test_build_offset_candidate_report_finds_varying_track_words():
 
 
 def test_build_offset_candidate_report_rejects_invalid_track():
-    from rytm_randomizer.analog_four_offset_candidates import (
+    from rytm_randomizer.analog_four.offset_candidates import (
         AnalogFourOffsetCandidateError,
         build_analog_four_offset_candidate_report_from_bytes,
     )
@@ -112,7 +112,7 @@ def test_build_offset_candidate_report_rejects_invalid_track():
 
 
 def test_format_offset_candidate_report_marks_candidates_unverified():
-    from rytm_randomizer.analog_four_offset_candidates import (
+    from rytm_randomizer.analog_four.offset_candidates import (
         build_analog_four_offset_candidate_report_from_bytes,
         format_analog_four_offset_candidate_report,
     )
@@ -136,7 +136,7 @@ def test_format_offset_candidate_report_marks_candidates_unverified():
 
 
 def test_build_all_track_offset_candidate_report_summarizes_four_tracks():
-    from rytm_randomizer.analog_four_offset_candidates import (
+    from rytm_randomizer.analog_four.offset_candidates import (
         build_analog_four_all_track_offset_candidate_report_from_bytes,
     )
 
@@ -189,7 +189,7 @@ def test_build_all_track_offset_candidate_report_summarizes_four_tracks():
 
 
 def test_format_all_track_offset_candidate_report_marks_all_candidates_unverified():
-    from rytm_randomizer.analog_four_offset_candidates import (
+    from rytm_randomizer.analog_four.offset_candidates import (
         build_analog_four_all_track_offset_candidate_report_from_bytes,
         format_analog_four_all_track_offset_candidate_report,
     )

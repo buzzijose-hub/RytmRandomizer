@@ -26,10 +26,10 @@ protocol in ``rytm_randomizer.midi_io``. Devices do not own the MIDI
 boundary; they describe a translation.
 
 PR #21 forward-compat: codex's planned Analog Four engine collapses from
-8 hand-rolled top-level files into one module that registers a single
-``AnalogFourDevice`` instance against this protocol. The hand-rolled
-``analog_four_snapshot_decoder.py`` / ``_mutation_planner.py`` /
-``_mock_runtime.py`` triple becomes the body of ``AnalogFourDevice``'s
+the hand-rolled ``analog_four`` helper package into one module that registers
+a single ``AnalogFourDevice`` instance against this protocol. The
+``analog_four.snapshot_decoder`` / ``snapshot_mutation_planner`` /
+``snapshot_mock_runtime`` triple becomes the body of ``AnalogFourDevice``'s
 ``decode_snapshot`` / ``plan_mutation`` / ``to_mock_messages`` methods.
 """
 

@@ -62,7 +62,7 @@ def test_importing_analog_four_snapshot_mock_runtime_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_snapshot_mock_runtime; "
+                "import rytm_randomizer.analog_four.snapshot_mock_runtime; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -79,10 +79,10 @@ def test_importing_analog_four_snapshot_mock_runtime_is_passive_and_silent():
 
 
 def test_analog_four_snapshot_mock_runtime_captures_saved_offset_candidates():
-    from rytm_randomizer.analog_four_snapshot_mock_runtime import (
+    from rytm_randomizer.analog_four.snapshot_mock_runtime import (
         capture_analog_four_snapshot_mock_messages,
     )
-    from rytm_randomizer.analog_four_snapshot_mutation_planner import (
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
         build_analog_four_snapshot_mutation_plan_from_bytes,
     )
 

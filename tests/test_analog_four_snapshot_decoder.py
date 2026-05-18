@@ -44,7 +44,7 @@ def test_importing_analog_four_snapshot_decoder_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_snapshot_decoder; "
+                "import rytm_randomizer.analog_four.snapshot_decoder; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -61,7 +61,7 @@ def test_importing_analog_four_snapshot_decoder_is_passive_and_silent():
 
 
 def test_decode_analog_four_kit_snapshot_reads_kit_and_four_track_blocks():
-    from rytm_randomizer.analog_four_snapshot_decoder import (
+    from rytm_randomizer.analog_four.snapshot_decoder import (
         decode_analog_four_kit_snapshot_bytes,
     )
 
@@ -91,7 +91,7 @@ def test_decode_analog_four_kit_snapshot_reads_kit_and_four_track_blocks():
 
 
 def test_decode_analog_four_kit_snapshot_rejects_invalid_slot():
-    from rytm_randomizer.analog_four_snapshot_decoder import (
+    from rytm_randomizer.analog_four.snapshot_decoder import (
         AnalogFourSnapshotDecodeError,
         decode_analog_four_kit_snapshot_bytes,
     )
@@ -101,7 +101,7 @@ def test_decode_analog_four_kit_snapshot_rejects_invalid_slot():
 
 
 def test_decode_analog_four_kit_snapshot_rejects_non_a4_kit_record():
-    from rytm_randomizer.analog_four_snapshot_decoder import (
+    from rytm_randomizer.analog_four.snapshot_decoder import (
         AnalogFourSnapshotDecodeError,
         decode_analog_four_kit_snapshot_bytes,
     )
@@ -111,7 +111,7 @@ def test_decode_analog_four_kit_snapshot_rejects_non_a4_kit_record():
 
 
 def test_format_analog_four_kit_snapshot_report_states_unmapped_offsets():
-    from rytm_randomizer.analog_four_snapshot_decoder import (
+    from rytm_randomizer.analog_four.snapshot_decoder import (
         decode_analog_four_kit_snapshot_bytes,
         format_analog_four_kit_snapshot_report,
     )

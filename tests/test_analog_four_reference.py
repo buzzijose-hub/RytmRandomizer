@@ -16,7 +16,7 @@ def test_importing_analog_four_reference_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_reference; "
+                "import rytm_randomizer.analog_four.reference; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -33,7 +33,7 @@ def test_importing_analog_four_reference_is_passive_and_silent():
 
 
 def test_reference_source_records_midi_guide_attribution():
-    from rytm_randomizer.analog_four_reference import get_analog_four_reference_source
+    from rytm_randomizer.analog_four.reference import get_analog_four_reference_source
 
     source = get_analog_four_reference_source()
 
@@ -46,7 +46,7 @@ def test_reference_source_records_midi_guide_attribution():
 
 
 def test_track_roles_cover_four_a4_tracks_without_runtime_claims():
-    from rytm_randomizer.analog_four_reference import list_analog_four_track_roles
+    from rytm_randomizer.analog_four.reference import list_analog_four_track_roles
 
     roles = list_analog_four_track_roles()
 
@@ -61,7 +61,7 @@ def test_track_roles_cover_four_a4_tracks_without_runtime_claims():
 
 
 def test_reference_known_parameter_groups_capture_first_mutation_surface():
-    from rytm_randomizer.analog_four_reference import list_analog_four_parameter_groups
+    from rytm_randomizer.analog_four.reference import list_analog_four_parameter_groups
 
     groups = {group.key: group for group in list_analog_four_parameter_groups()}
 
@@ -91,7 +91,7 @@ def test_reference_known_parameter_groups_capture_first_mutation_surface():
 
 
 def test_format_analog_four_reference_report_is_passive_and_actionable():
-    from rytm_randomizer.analog_four_reference import format_analog_four_reference_report
+    from rytm_randomizer.analog_four.reference import format_analog_four_reference_report
 
     report = format_analog_four_reference_report()
 

@@ -12,11 +12,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .analog_four_snapshot_mutation_planner import (
+from .analog_four.snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
 )
-from .analog_four_starter_profiles import (
+from .analog_four.starter_profiles import (
     BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY,
     AnalogFourStarterProfile,
     get_analog_four_starter_profile,

@@ -16,7 +16,7 @@ def test_importing_analog_four_smoke_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_smoke; "
+                "import rytm_randomizer.analog_four.smoke; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -33,7 +33,7 @@ def test_importing_analog_four_smoke_is_passive_and_silent():
 
 
 def test_build_analog_four_smoke_steps_targets_tracks_1_to_4():
-    from rytm_randomizer.analog_four_smoke import build_analog_four_smoke_steps
+    from rytm_randomizer.analog_four.smoke import build_analog_four_smoke_steps
 
     steps = build_analog_four_smoke_steps()
 
@@ -52,7 +52,7 @@ def test_build_analog_four_smoke_steps_targets_tracks_1_to_4():
 
 
 def test_build_analog_four_track_smoke_steps_targets_one_track():
-    from rytm_randomizer.analog_four_smoke import build_analog_four_track_smoke_steps
+    from rytm_randomizer.analog_four.smoke import build_analog_four_track_smoke_steps
 
     steps = build_analog_four_track_smoke_steps(3)
 
@@ -66,7 +66,7 @@ def test_build_analog_four_track_smoke_steps_targets_one_track():
 
 
 def test_build_analog_four_track_smoke_steps_rejects_invalid_track():
-    from rytm_randomizer.analog_four_smoke import build_analog_four_track_smoke_steps
+    from rytm_randomizer.analog_four.smoke import build_analog_four_track_smoke_steps
 
     for track in (0, 5):
         try:
@@ -78,7 +78,7 @@ def test_build_analog_four_track_smoke_steps_rejects_invalid_track():
 
 
 def test_build_analog_four_track_filter_smoke_steps_targets_one_track_filter_1():
-    from rytm_randomizer.analog_four_smoke import (
+    from rytm_randomizer.analog_four.smoke import (
         build_analog_four_track_filter_smoke_steps,
     )
 
@@ -98,7 +98,7 @@ def test_build_analog_four_track_filter_smoke_steps_targets_one_track_filter_1()
 
 
 def test_build_analog_four_track_filter_smoke_steps_rejects_invalid_track():
-    from rytm_randomizer.analog_four_smoke import (
+    from rytm_randomizer.analog_four.smoke import (
         build_analog_four_track_filter_smoke_steps,
     )
 
@@ -112,7 +112,7 @@ def test_build_analog_four_track_filter_smoke_steps_rejects_invalid_track():
 
 
 def test_run_analog_four_smoke_test_captures_mock_stream_without_sleeping():
-    from rytm_randomizer.analog_four_smoke import run_analog_four_smoke_test
+    from rytm_randomizer.analog_four.smoke import run_analog_four_smoke_test
     from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
@@ -134,7 +134,7 @@ def test_run_analog_four_smoke_test_captures_mock_stream_without_sleeping():
 
 
 def test_format_analog_four_smoke_report_includes_safety_and_summary():
-    from rytm_randomizer.analog_four_smoke import (
+    from rytm_randomizer.analog_four.smoke import (
         format_analog_four_smoke_report,
         run_analog_four_smoke_test,
     )
@@ -155,7 +155,7 @@ def test_format_analog_four_smoke_report_includes_safety_and_summary():
 
 
 def test_format_analog_four_track_filter_smoke_report_includes_single_track_summary():
-    from rytm_randomizer.analog_four_smoke import (
+    from rytm_randomizer.analog_four.smoke import (
         format_analog_four_track_filter_smoke_report,
         run_analog_four_track_filter_smoke_test,
     )
@@ -181,7 +181,7 @@ def test_format_analog_four_track_filter_smoke_report_includes_single_track_summ
 
 
 def test_format_analog_four_track_smoke_report_includes_single_track_summary():
-    from rytm_randomizer.analog_four_smoke import (
+    from rytm_randomizer.analog_four.smoke import (
         format_analog_four_track_smoke_report,
         run_analog_four_track_smoke_test,
     )

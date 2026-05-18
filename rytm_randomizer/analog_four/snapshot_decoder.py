@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
-from .observability.errors import DataError
+from ..observability.errors import DataError
 
 A4_DEVICE_FAMILY = 0x06
 KIT_OBJECT_TYPE = 0x52

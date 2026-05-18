@@ -10,7 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .analog_four_snapshot_decoder import (
+from ..observability.errors import DataError
+from .snapshot_decoder import (
     A4_DEVICE_FAMILY,
     KIT_HEADER_LENGTH,
     KIT_OBJECT_TYPE,
@@ -22,7 +23,6 @@ from .analog_four_snapshot_decoder import (
     _split_complete_sysex_messages,
     _unpack_elektron_7bit,
 )
-from .observability.errors import DataError
 
 CANDIDATE_STATUS = "candidate_unverified"
 VALUE_MIN = 0

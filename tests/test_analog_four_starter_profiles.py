@@ -16,7 +16,7 @@ def test_importing_analog_four_starter_profiles_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_starter_profiles; "
+                "import rytm_randomizer.analog_four.starter_profiles; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -33,7 +33,7 @@ def test_importing_analog_four_starter_profiles_is_passive_and_silent():
 
 
 def test_analog_four_starter_profile_lookup_accepts_aliases():
-    from rytm_randomizer.analog_four_starter_profiles import (
+    from rytm_randomizer.analog_four.starter_profiles import (
         get_analog_four_starter_profile,
         list_analog_four_starter_profiles,
     )
@@ -55,7 +55,7 @@ def test_analog_four_starter_profile_lookup_accepts_aliases():
 
 
 def test_unknown_analog_four_starter_profile_lists_valid_choices():
-    from rytm_randomizer.analog_four_starter_profiles import get_analog_four_starter_profile
+    from rytm_randomizer.analog_four.starter_profiles import get_analog_four_starter_profile
 
     try:
         get_analog_four_starter_profile("ambient-clouds")

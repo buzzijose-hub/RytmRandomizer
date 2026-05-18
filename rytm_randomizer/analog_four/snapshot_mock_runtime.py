@@ -11,13 +11,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .analog_four_snapshot_mutation_planner import (
+from ..mock_midi import MidiMessage, MockMidiSender
+from .snapshot_mutation_planner import (
     TRACK_COUNT,
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
     format_analog_four_snapshot_mutation_plan_error,
 )
-from .mock_midi import MidiMessage, MockMidiSender
 
 
 def build_analog_four_snapshot_mock_runtime_from_file(

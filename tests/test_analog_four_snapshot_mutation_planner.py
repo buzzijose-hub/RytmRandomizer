@@ -62,7 +62,7 @@ def test_importing_analog_four_snapshot_mutation_planner_is_passive_and_silent()
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_snapshot_mutation_planner; "
+                "import rytm_randomizer.analog_four.snapshot_mutation_planner; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -79,7 +79,7 @@ def test_importing_analog_four_snapshot_mutation_planner_is_passive_and_silent()
 
 
 def test_analog_four_snapshot_mutation_plan_uses_captured_values_not_starters():
-    from rytm_randomizer.analog_four_snapshot_mutation_planner import (
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
         build_analog_four_snapshot_mutation_plan_from_bytes,
     )
 
@@ -120,7 +120,7 @@ def test_analog_four_snapshot_mutation_plan_uses_captured_values_not_starters():
 
 
 def test_analog_four_snapshot_mutation_plan_rejects_unknown_depth():
-    from rytm_randomizer.analog_four_snapshot_mutation_planner import (
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
         AnalogFourSnapshotMutationPlanError,
         build_analog_four_snapshot_mutation_plan_from_bytes,
     )
@@ -137,7 +137,7 @@ def test_analog_four_snapshot_mutation_plan_rejects_unknown_depth():
 
 
 def test_format_analog_four_snapshot_mutation_plan_report_marks_unverified_boundary():
-    from rytm_randomizer.analog_four_snapshot_mutation_planner import (
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
         build_analog_four_snapshot_mutation_plan_from_bytes,
         format_analog_four_snapshot_mutation_plan_report,
     )

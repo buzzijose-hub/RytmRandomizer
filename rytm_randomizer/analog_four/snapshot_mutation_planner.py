@@ -12,8 +12,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .analog_four_offset_candidates import CANDIDATE_STATUS, VALUE_MAX, VALUE_MIN
-from .analog_four_snapshot_decoder import (
+from ..observability.errors import DataError
+from .offset_candidates import CANDIDATE_STATUS, VALUE_MAX, VALUE_MIN
+from .snapshot_decoder import (
     KIT_HEADER_LENGTH,
     KIT_NAME_LENGTH,
     KIT_NAME_OFFSET,
@@ -27,7 +28,6 @@ from .analog_four_snapshot_decoder import (
     _unpack_elektron_7bit,
     _validate_a4_kit_record,
 )
-from .observability.errors import DataError
 
 TRACK_COUNT = 4
 MAX_CHANGES_PER_TRACK = 6

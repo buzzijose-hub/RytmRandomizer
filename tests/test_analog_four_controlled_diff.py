@@ -52,7 +52,7 @@ def test_importing_analog_four_controlled_diff_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.analog_four_controlled_diff; "
+                "import rytm_randomizer.analog_four.controlled_diff; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -69,7 +69,7 @@ def test_importing_analog_four_controlled_diff_is_passive_and_silent():
 
 
 def test_build_controlled_diff_report_finds_changed_track_words_only():
-    from rytm_randomizer.analog_four_controlled_diff import (
+    from rytm_randomizer.analog_four.controlled_diff import (
         build_analog_four_controlled_diff_report_from_bytes,
     )
 
@@ -107,7 +107,7 @@ def test_build_controlled_diff_report_finds_changed_track_words_only():
 
 
 def test_build_controlled_diff_report_rejects_invalid_slot():
-    from rytm_randomizer.analog_four_controlled_diff import (
+    from rytm_randomizer.analog_four.controlled_diff import (
         AnalogFourControlledDiffError,
         build_analog_four_controlled_diff_report_from_bytes,
     )
@@ -122,7 +122,7 @@ def test_build_controlled_diff_report_rejects_invalid_slot():
 
 
 def test_format_controlled_diff_report_marks_offsets_unverified():
-    from rytm_randomizer.analog_four_controlled_diff import (
+    from rytm_randomizer.analog_four.controlled_diff import (
         build_analog_four_controlled_diff_report_from_bytes,
         format_analog_four_controlled_diff_report,
     )

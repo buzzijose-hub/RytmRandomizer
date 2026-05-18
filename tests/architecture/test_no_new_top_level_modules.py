@@ -47,14 +47,6 @@ _ALLOWED_TOP_LEVEL: Final[frozenset[str]] = frozenset(
         # hardening. They are allowlisted for this integration merge; the
         # follow-up architecture cleanup should migrate them into subpackages.
         "active_boundary.py",
-        "analog_four_controlled_diff.py",
-        "analog_four_offset_candidates.py",
-        "analog_four_reference.py",
-        "analog_four_smoke.py",
-        "analog_four_snapshot_decoder.py",
-        "analog_four_snapshot_mock_runtime.py",
-        "analog_four_snapshot_mutation_planner.py",
-        "analog_four_starter_profiles.py",
         "app.py",
         "cli.py",
         "cli_registry.py",

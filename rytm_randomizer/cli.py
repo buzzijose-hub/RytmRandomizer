@@ -805,7 +805,7 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "dual-machine-mock-bridge-report":
-        from .analog_four_snapshot_mutation_planner import (
+        from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
         from .dual_machine_mock_bridge import (
@@ -860,7 +860,7 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "dual-machine-live-snapshot-readiness-report":
-        from .analog_four_snapshot_mutation_planner import (
+        from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
         from .dual_machine_live_snapshot_readiness import (
@@ -917,7 +917,7 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "dual-machine-active-send-plan-report":
-        from .analog_four_snapshot_mutation_planner import (
+        from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
         from .dual_machine_active_send_plan import (
@@ -974,7 +974,7 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "dual-machine-guarded-send-dry-run-report":
-        from .analog_four_snapshot_mutation_planner import (
+        from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
         from .dual_machine_guarded_sender import (
@@ -1031,7 +1031,7 @@ def main(argv=None):
         return 0
 
     if len(args) == 4 and args[0] == "analog-four-kit-snapshot-report" and args[2] == "--slot":
-        from .analog_four_snapshot_decoder import (
+        from .analog_four.snapshot_decoder import (
             AnalogFourSnapshotDecodeError,
             decode_analog_four_kit_snapshot_file,
             format_analog_four_kit_snapshot_error,
@@ -1067,7 +1067,7 @@ def main(argv=None):
         and args[2] == "--slot"
         and args[4] == "--depth"
     ):
-        from .analog_four_snapshot_mutation_planner import (
+        from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
             build_analog_four_snapshot_mutation_plan_from_file,
             format_analog_four_snapshot_mutation_plan_error,
@@ -1110,13 +1110,13 @@ def main(argv=None):
         and args[2] == "--slot"
         and args[4] == "--depth"
     ):
-        from .analog_four_snapshot_mock_runtime import (
+        from .analog_four.snapshot_mock_runtime import (
             build_analog_four_snapshot_mock_runtime_from_file,
             capture_analog_four_snapshot_mock_messages,
             format_analog_four_snapshot_mock_runtime_error,
             format_analog_four_snapshot_mock_runtime_report,
         )
-        from .analog_four_snapshot_mutation_planner import (
+        from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
         )
 
@@ -1159,7 +1159,7 @@ def main(argv=None):
         and args[2] == "--track"
         and args[4] == "--limit"
     ):
-        from .analog_four_offset_candidates import (
+        from .analog_four.offset_candidates import (
             AnalogFourOffsetCandidateError,
             build_analog_four_offset_candidate_report_from_file,
             format_analog_four_offset_candidate_error,
@@ -1203,7 +1203,7 @@ def main(argv=None):
         and args[2] == "--all-tracks"
         and args[3] == "--limit"
     ):
-        from .analog_four_offset_candidates import (
+        from .analog_four.offset_candidates import (
             AnalogFourOffsetCandidateError,
             build_analog_four_all_track_offset_candidate_report_from_file,
             format_analog_four_all_track_offset_candidate_report,
@@ -1246,7 +1246,7 @@ def main(argv=None):
         and args[5] == "--track"
         and args[7] == "--limit"
     ):
-        from .analog_four_controlled_diff import (
+        from .analog_four.controlled_diff import (
             AnalogFourControlledDiffError,
             build_analog_four_controlled_diff_report_from_file,
             format_analog_four_controlled_diff_error,
@@ -1734,7 +1734,7 @@ def main(argv=None):
         return 0
 
     if args == ["analog-four-reference-report"]:
-        from .analog_four_reference import format_analog_four_reference_report
+        from .analog_four.reference import format_analog_four_reference_report
 
         sys.stdout.write("\n".join(format_analog_four_reference_report()))
         sys.stdout.write("\n")
