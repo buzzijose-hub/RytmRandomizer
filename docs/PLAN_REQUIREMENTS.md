@@ -115,8 +115,94 @@ The `observability/` library itself (`logging.py`, `tracing.py`, `errors.py`, fu
 ### Gate 9 — Module-organization hygiene
 
 - **New top-level modules require architect sign-off.** Default home for a new concept is a subpackage. The PR #21 lesson: 33 new top-level files is not a refactor, it's a flood.
-- Subpackages that exist and should grow when relevant: `data/`, `engines/`, `guardrails/`, `observability/`, `state/`, `style_analysis/`. New subpackages need a one-line `__init__.py` docstring stating their purpose.
+- Subpackages that exist and should grow when relevant: `data/`, `engines/`, `guardrails/`, `observability/`, `state/`, `style_analysis/`, `behavior/` (when WS-M2 lands).
+- New subpackages need a one-line `__init__.py` docstring stating their purpose.
 - If a plan adds more than 3 new top-level modules, it must justify each in the plan body or relocate them into a subpackage.
+- Imports inside subpackages must be **relative** (`from ..data import ...`), never absolute (`from rytm_randomizer.data import ...`). Existing absolute-import violators in `style_analysis/` are tracked for WS-S8 cleanup.
+
+### Gate 10 — String-literal dispatch hygiene (Maintainability-Review-WS-M3 findings)
+
+No new string-equality dispatch on mode / intensity / page / mutation-kind values. Every such value lives in `rytm_randomizer/data/modes.py` (introduced by WS-M3) as a `Literal[...]` type or `Final` constant or `StrEnum` member.
+
+Today's load-bearing strings to retire (and not re-introduce):
+
+| Concept | Strings | Current dispatch sites |
+|---|---|---|
+| Intensity | `"balanced"`, `"deeper"`, `"intense"`, `"harder"` | `shell.py`, `group_runner.py`, `behavior_scene_group.py` |
+| Page | `"src"`, `"filter"`, `"amp"`, `"lfo"`, `"morph"`, `"body"`, `"grit"` | `shell.py`, `group_runner.py` |
+| Mutation kind | `"discovery"`, `"mutation"` | `behavior_pad_lane.py` (~20 sites) |
+| Pad-1 machine | `"sharp"`, `"hard"`, `"classic"`, `"fm"` | `randomization.py` |
+
+Enforcement: `tests/architecture/test_no_string_literal_mode_dispatch.py` greps for any of the above strings appearing inside an `==` comparison in any `rytm_randomizer/*.py` other than `data/modes.py`. Existing PR-frozen parity callers may be allowlisted with a `# parity-string` comment + ARCHITECTURE.md §8 reference.
+
+### Gate 11 — Shared test fixtures
+
+Test fixtures used in >1 test file live in `tests/conftest.py` (or a `tests/<subpackage>/conftest.py` for subpackage-scoped fixtures). Duplicating a fixture body across test files is rejected at code review.
+
+Known fixtures to centralize when WS-M4 lands: `recording_out`, `fake_mido_session`, `no_sleep`. Today these are inlined in `tests/test_engines_pad{1,2,3,4}.py` and similar.
+
+Enforcement: code review by `code-reviewer`. Optional architecture test (post-WS-M4): `tests/architecture/test_no_duplicate_fixtures.py` greps for `class RecordingOut|class _FakeMessage|def _install_fake_mido|def _no_sleep` and fails if found in >1 location.
+
+### Gate 12 — Module-level constants use `Final` (or frozen dataclass)
+
+Every new module-level constant must be annotated with `typing.Final[T]` (or be a `@dataclass(frozen=True)` instance for grouped constants). Extends the existing house-style rule in `docs/ARCHITECTURE.md` §4.
+
+Bare assignments at module level (`X = 5`) that look like constants but lack `Final` are flagged by `python-reviewer` in code review.
+
+### Gate 13 — Env vars require docs + safe default
+
+Any new environment variable:
+1. Must be documented in `CONTRIBUTING.md` AND `docs/LOCAL_DEV_TOOLING_NOTES.md`.
+2. Must have a safe default — running without setting it must work.
+3. Existing example to mirror: `PARITY_CAPTURE_MODE` (unset = check mode; set = capture mode). Default is safe; capture mode is opt-in.
+
+### Gate 14 — Maintainability review (every plan, every wave)
+
+Every plan must include an explicit **maintainability audit** before the first WS opens its PR, AND a re-audit after the final code WS merges (before the learning phase starts). The audit's findings become inputs to the plan; the re-audit confirms the plan delivered on them.
+
+**Pre-plan audit** must answer (in the plan body or a sibling `docs/<plan>_MAINTAINABILITY_AUDIT.md`):
+
+1. **Onboarding curve** — can a new contributor answer "where do I add X?" using only the repo, in <30 min?
+2. **Naming hygiene** — are top-level modules and symbols self-explanatory? Are abbreviations consistent?
+3. **Coupling / module boundaries** — any cross-module cycles? Does the architecture diagram match reality?
+4. **Magic numbers / strings** — is string-equality dispatch enumerated (Gate 10)? Are constants `Final` (Gate 12)?
+5. **Configuration vs convention** — are runtime choices (channels, env vars) configurable or hardcoded?
+6. **Test maintainability** — shared fixtures (Gate 11)? Intent-named tests (Gate 8)? Fast-iteration loop documented?
+7. **Build / dev loop friction** — clean install + test runtime under what threshold? Pre-commit hooks? Single verify-before-commit script?
+8. **Error messages** — does a failure point at the source of truth or at a derived check?
+9. **Versioning / release** — single source of truth for version? Documented release script?
+10. **Future-proofing** — for the next plausible extension after this plan, how many files does a contributor touch?
+
+**Post-plan re-audit** scores each of the 10 against the pre-plan baseline and lands as `docs/<plan>_MAINTAINABILITY_REPORT.md` alongside the learning report. Net-negative deltas (regressions) are blockers — the plan must add a corrective WS before WS-L (learning) can start.
+
+Enforcement: the WS-S8 sweep includes `tests/architecture/test_maintainability_review_present.py` which fails if a plan referenced in `docs/*PLAN*.md` doesn't have a paired `docs/*MAINTAINABILITY_AUDIT.md` (pre) and `docs/*MAINTAINABILITY_REPORT.md` (post).
+
+The simplification plan's pre-plan audit is the report produced by the agent run on 2026-05-18 (folded into `SIMPLIFICATION_PLAN.md` as WS-M1..WS-M4). The post-plan re-audit runs as part of WS-S8 sweep before Wave 4 starts.
+
+### Gate 15 — Learning phase (every plan, every run)
+
+Every plan must terminate with a **learning extraction phase** that captures non-obvious patterns into the repo, not user-home or session memory. Without this, lessons evaporate and the next plan re-learns them.
+
+**Required outputs (all committed to the repo):**
+
+| Artifact | Path | Purpose |
+|---|---|---|
+| Reusable agent skills | `.claude/skills/learned/<name>/SKILL.md` | Auto-loaded by future agents; uses `everything-claude-code:learn-eval` rubric (≥3/5 on all dimensions). |
+| Project rules | `.claude/rules/<topic>.md` | E.g. `parity-fixture-discipline`, `coverage-gate-100pct`, `cascade-merge-pattern`. |
+| Project agent guidance | `.claude/CLAUDE.md` or repo-root `CLAUDE.md` | Appendix linking new skills + rules. |
+| Run report | `docs/<plan>_RUN_REPORT.md` | Human-readable: timeline, escalations, lessons, LOC impact. |
+| Run log (preserved) | `docs/<plan>_RUN_LOG.md` | Append-only event log from the run. **Not** gitignored. |
+| Architecture diff | `docs/<plan>_ARCHITECTURE_BEFORE_AFTER.md` | Side-by-side: module list / new Protocols / deleted-renamed mapping. |
+| Replay playbook | `docs/AUTONOMOUS_RUN_PLAYBOOK.md` (or per-plan equivalent) | "How to run the next autonomous multi-PR refactor in this repo." |
+| State-file schema | `docs/<plan>_STATE.schema.json` | JSON Schema for the orchestrator state file. |
+
+**Fresh-clone test:** before opening the learning PR, the orchestrator simulates a fresh clone and must answer 5 onboarding questions about what the plan did using only in-repo files. Any gap triggers `doc-updater` and re-validates.
+
+**Forward-port rule:** if the plan extracted user-home `.claude/skills/learned/*` during the run, those skills MUST be forward-ported into the repo-scoped `.claude/skills/learned/` as part of the learning PR. The repo is the canonical home; user-home is convenience-only.
+
+**Codex / collaborator handoff:** if the plan involves an external collaborator's open PR (codex's PR #21 is the current example), the learning phase generates an **in-repo** migration guide (`docs/<plan>_<collaborator>_REBASE_GUIDE.md`), not just a GitHub issue. Issues can be closed; the repo is forever.
+
+Enforcement: `tests/architecture/test_learning_phase_complete.py` (post-WS-S8) fails if a closed plan PR lacks the artifacts above, OR if `.claude/skills/learned/` has user-home skills referenced by the run log but not present in the repo.
 
 ---
 
@@ -136,8 +222,14 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 5 (docs updated before PR open) — `doc-updater` is mandatory phase 9.
 - [x] Gate 6 (type-system hygiene) — Protocols + frozen dataclasses, no `Any`.
 - [x] Gate 7 (observability adoption) — every hot-path module logs + traces.
-- [x] Gate 8 (test hygiene) — shared fixtures, intent-named tests.
-- [x] Gate 9 (module-organization hygiene) — subpackages by default.
+- [x] Gate 8 (test hygiene) — intent-named tests; mirrors source structure.
+- [x] Gate 9 (module-organization hygiene) — subpackages by default; relative imports inside subpackages.
+- [x] Gate 10 (string-literal dispatch hygiene) — no new mode/intensity/page strings; use `data/modes.py`.
+- [x] Gate 11 (shared test fixtures) — multi-file fixtures live in `tests/conftest.py`.
+- [x] Gate 12 (module-level constants use `Final`) — extends house-style rule.
+- [x] Gate 13 (env vars: docs + safe default) — every new env var documented and opt-in.
+- [x] Gate 14 (maintainability review) — pre-plan audit + post-plan re-audit; regressions block learning phase.
+- [x] Gate 15 (learning phase) — every plan ends with learning extraction to repo (skills + rules + reports + handoff guides).
 
 Exceptions (with rationale):
 - (none, or list with one-line rationale each)

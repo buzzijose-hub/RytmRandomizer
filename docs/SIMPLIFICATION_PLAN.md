@@ -109,6 +109,11 @@ After WS-S7 merges, before Wave 4 (learning) starts, **WS-S8 runs a full-package
   - `tests/architecture/test_observability_adoption.py` — fails if any hot-path module lacks `_logger = get_logger(__name__)` + per-decision log.
   - `tests/architecture/test_plan_requirements_referenced.py` — fails if any `docs/*PLAN*.md` exists without the string `Per docs/PLAN_REQUIREMENTS.md` (the conformance checklist marker). Self-enforcing: future plans must cite the requirements file.
   - `tests/architecture/test_no_new_top_level_modules.py` — fails if `rytm_randomizer/` (top level only, not subpackages) grew beyond the post-Wave-3 baseline without an `# allowlist:` entry citing an architect decision.
+  - `tests/architecture/test_no_string_literal_mode_dispatch.py` — Gate 10 enforcement (mode/intensity/page strings).
+  - `tests/architecture/test_no_duplicate_fixtures.py` — Gate 11 enforcement (shared test fixtures).
+  - `tests/architecture/test_maintainability_review_present.py` — Gate 14 enforcement (every plan has paired audit + report docs).
+  - `tests/architecture/test_learning_phase_complete.py` — Gate 15 enforcement (every plan ends with the full handoff package in-repo).
+- **Maintainability re-audit** (Gate 14 deliverable): produces `docs/SIMPLIFICATION_MAINTAINABILITY_REPORT.md` scoring the 10 dimensions against the 2026-05-18 pre-plan baseline. Net-negative deltas (regressions) block WS-L until a corrective WS lands.
 
 **WS-S8 risk profile:** medium. The whole-package 100% gate is the biggest single push of the plan — it's where stragglers fall out. Mitigation: WS-S8 runs in a worktree just like every other WS, and if 100% is unreachable (a documented edge case), it's the only WS allowed to argue for a `pragma: no cover` instead, with the architect agent approving each one.
 
@@ -214,15 +219,29 @@ WAVE 3.1 (1 stream, parallel with Wave 3 — separate concern)
   WS-S9  Observability hot-path adoption + metrics    needs: WS-S2 (recommended, not blocking)
           adds get_logger + per-decision logs + @trace + MidiMetrics counter
 
-WAVE 3.5 (1 stream, gated on all of S1..S7+S9 merged) — full-package dead-code sweep
+MAINTAINABILITY TRACK (M-family, runs in parallel from day one alongside S-family)
+  WS-M1  Docs curation pass             no deps         (parallel w/ Wave 1)
+  WS-M2  behavior/ subpackage relocation no deps         (parallel w/ Wave 1; coords w/ WS-S3)
+  WS-M3  Mode/intensity Literal/Enum    recommended after WS-M2 (paths stable)
+  WS-M4  Test ergonomics (conftest +     no deps         (parallel w/ Wave 1)
+         parity-fixture index)
+
+WAVE 3.5 (1 stream, gated on all of S1..S7+S9 + M1..M4 merged) — full-package sweep
   WS-S8  Whole-package dead-code + 100% coverage ratchet (87 → 100)
           + pattern enforcement audit
-          + architecture-test enforcement (test_no_any_escape_hatches, test_observability_adoption, test_plan_requirements_referenced)
+          + architecture-test enforcement (test_no_any_escape_hatches, test_observability_adoption,
+            test_plan_requirements_referenced, test_no_new_top_level_modules,
+            test_no_string_literal_mode_dispatch, test_no_duplicate_fixtures)
+          + style_analysis/ relative-import fix
+          + briefcase version sync check
+          + dev-loop polish (Makefile/justfile if scoped)
 
 WAVE 4 (gated on WS-S8) — autonomous learning + hand-off
   WS-L   Learning extraction + in-repo handoff package      saves to .claude/, docs/
   WS-H   PR #21 hand-off issue                              auto-generated from final state
 ```
+
+Total: **13 workstreams** (S1-S9 + M1-M4 + WS-S8 sweep + WS-L learning + WS-H handoff = 13 PRs counting S8/L/H as separate from the merge cascade). At peak parallelism, ~8 PRs in flight simultaneously (Wave 1's 4 + M1+M2+M4 + S9 if started early).
 
 Each WS passes through the same 11-phase pipeline (plan → tdd → implement → **coverage gate** → review × 3 in parallel → **docs** → PR open → CI → merge), with mandatory 100% branch coverage on touched files and mandatory `doc-updater` commit before PR opens.
 
@@ -513,6 +532,105 @@ Plus `register_device` / `get_device` / `all_devices`. `AnalogRytmDevice` wraps 
 - `MidiMetrics` summary line present at shell exit; counter values match `MockMidiSender.sent_messages` length for `--dry-run`.
 
 **Risk:** Low. Logging is side-effect-free for parity (stderr, `NullHandler` default keeps it silent unless `--debug`/`--log-json`); metrics are in-memory counters. The biggest risk is log volume at DEBUG; mitigated by INFO being the default and `--debug` being opt-in.
+
+---
+
+## Maintainability workstreams (WS-M family — independent of S1..S9)
+
+Lifted from the holistic maintainability audit (2026-05-18). These are pure-mechanical or near-pure-mechanical and run **in parallel with the S workstreams** since they touch mostly disjoint files. Per `docs/PLAN_REQUIREMENTS.md` the gates apply identically.
+
+### WS-M1 — Docs curation pass
+
+**Worktree:** `RytmRandomizer-worktrees/ws-m1-docs-curation`
+**Branch:** `refactor/docs-curation`
+**Owns:** `docs/*.md`, `docs/archive/` (new), `CONTRIBUTING.md` (small edits).
+**Depends on:** none — fully parallel with Wave 1.
+
+**Today:** `docs/` has 35 markdown files; ~6 are canonical references a contributor needs (`ARCHITECTURE.md`, `STATUS.md`, `V134_OPERATOR_COMMAND_SURFACE_REFERENCE.md`, `COVERAGE_POLICY.md`, `MODULARIZATION_RULES.md`, `OBSERVABILITY.md`). The other ~29 are process exhaust: `COLLABORATOR_REVIEW_*` (8 files), `CODEX_*` (2), `PROJECT_IDENTITY_*` (2), `*_CHECKPOINT.md`, `*_PUBLIC_API_EXPORTS_*`.
+
+**Adds:**
+- `docs/README.md` — index classifying each doc as **Active (read these)** vs **Historical (skip)**. Active list is the canonical onboarding set.
+- `docs/archive/` — move `COLLABORATOR_REVIEW_*` and `*_CHECKPOINT.md` into here so a `ls docs/*.md` returns only the active set.
+- `CONTRIBUTING.md` "Common contributor tasks" section linking to `ARCHITECTURE.md` §6 for "where do I add X?" answers.
+
+**Acceptance:** `docs/README.md` exists and lists every active doc; `ls docs/*.md | wc -l` ≤ 12; no broken cross-links (run the same link-check used in Wave 4 fresh-clone test).
+
+**Risk:** very low. Pure doc reorg.
+
+---
+
+### WS-M2 — `behavior/` subpackage relocation
+
+**Worktree:** `RytmRandomizer-worktrees/ws-m2-behavior-subpackage`
+**Branch:** `refactor/behavior-subpackage`
+**Owns:** the 8 `rytm_randomizer/behavior_*.py` files → `rytm_randomizer/behavior/*.py` (drop prefix); also `*_runtime_state.py` top-level files → `state/` if they overlap.
+**Depends on:** none — fully parallel with Wave 1. **Coordinates with:** WS-S3 (shell.py dispatch) — both touch `shell.py` imports; merge WS-M2 first or WS-M2 cherry-picks against WS-S3's HEAD.
+
+**Today:** 8 `behavior_*.py` files at top level totaling ~3,500 LOC. Names are verbose (`behavior_selected_isolated_pad.py` 272 LOC) and the family is structurally a subpackage that wasn't built. Two `*_state.py` modules at top level overlap with `state/` (`anchor_state.py` ↔ `state/anchor.py`).
+
+**Adds:**
+- `rytm_randomizer/behavior/__init__.py` with one-line purpose docstring.
+- Move + rename: `behavior_pad_lane.py` → `behavior/pad_lane.py`, etc.
+- Reconcile the two state surfaces (top-level `anchor_state.py` vs `state/anchor.py`) — the pattern-review agent flagged these as duplicate; consolidate into `state/` and update consumers.
+- Update all imports across the package and tests.
+
+**Acceptance:** zero `behavior_*.py` at top level; zero top-level `*_state.py`; parity green (this is a pure-move, no behavior change); coverage unchanged.
+
+**Risk:** low. Mechanical relocations + import updates. Captured by parity fixtures.
+
+---
+
+### WS-M3 — Mode/intensity Literal/Enum migration
+
+**Worktree:** `RytmRandomizer-worktrees/ws-m3-mode-literals`
+**Branch:** `refactor/mode-literals`
+**Owns:** new `rytm_randomizer/data/modes.py`; small edits in `shell.py`, `group_runner.py`, `randomization.py`, `behavior_scene_group.py`, `behavior_pad_lane.py` (or their `behavior/` post-WS-M2 paths).
+**Depends on:** none structurally; **recommended:** runs after WS-M2 so paths are stable.
+
+**Today:** load-bearing string equality on `"balanced"|"deeper"|"intense"|"harder"`, `"src"|"filter"|"amp"|...`, `"discovery"|"mutation"`, `"sharp"|"hard"|"classic"|"fm"` — duplicated across 6 sites with no central definition. A typo in one site silently fails the equality.
+
+**Adds:**
+```python
+# rytm_randomizer/data/modes.py
+from typing import Literal, Final
+
+IntensityMode = Literal["balanced", "deeper", "intense", "harder"]
+PageMode = Literal["src", "filter", "amp", "lfo", "morph", "body", "grit"]
+MutationKind = Literal["discovery", "mutation"]
+Pad1Mode = Literal["sharp", "hard", "classic", "fm"]
+
+INTENSITY_MODES: Final[tuple[IntensityMode, ...]] = ("balanced", "deeper", "intense", "harder")
+PAGE_MODES: Final[tuple[PageMode, ...]] = ("src", "filter", "amp", "lfo", "morph", "body", "grit")
+MUTATION_KINDS: Final[tuple[MutationKind, ...]] = ("discovery", "mutation")
+PAD1_MODES: Final[tuple[Pad1Mode, ...]] = ("sharp", "hard", "classic", "fm")
+```
+
+Then refactor each dispatch site to import from `data.modes` and accept the `Literal` types.
+
+**Acceptance:** `grep -E '"(balanced|deeper|intense|harder|discovery|mutation)"' rytm_randomizer/*.py rytm_randomizer/**/*.py` returns only `data/modes.py`; parity green; `pyright --strict` accepts every dispatch as exhaustive over the `Literal`; PLAN_REQUIREMENTS Gate 10 architecture test green.
+
+**Risk:** medium. Touches several hot-path files. Parity fixtures are the safety net.
+
+---
+
+### WS-M4 — Test ergonomics (shared conftest + parity-fixture index)
+
+**Worktree:** `RytmRandomizer-worktrees/ws-m4-test-ergonomics`
+**Branch:** `refactor/test-ergonomics`
+**Owns:** new `tests/conftest.py`; edits in `tests/_parity_worker.py` and `tests/test_engines_pad{1..4}.py`; small `CONTRIBUTING.md` addition.
+**Depends on:** none — fully parallel with Wave 1.
+
+**Today:** `RecordingOut`, `_FakeMessage`, `_install_fake_mido`, `_no_sleep` are duplicated at the top of each `tests/test_engines_pad{1..4}.py` (~40 LOC × 4 = 160 LOC of duplication). The 505 parity fixtures have opaque hashed names with no on-disk lookup — only `_parity_worker.py:184` knows the digest function. No fast-iteration test marker.
+
+**Adds:**
+- `tests/conftest.py` exposing `recording_out`, `fake_mido_session`, `no_sleep` as fixtures.
+- Delete duplications from `test_engines_pad{1..4}.py`.
+- Parity-fixture `_INDEX.json` generator: when `PARITY_CAPTURE_MODE=1` runs, also write `tests/fixtures/v134_parity/_INDEX.json` mapping `{digest: {module, seed, steps}}` for reverse lookup.
+- `pytest.ini` / `pyproject.toml` marker: `@pytest.mark.fast` for non-parity tests; document `pytest -m fast` in `CONTRIBUTING.md` as the fast-iteration loop (<60s, skips the 505 parity fixtures).
+
+**Acceptance:** `RecordingOut`/`_FakeMessage` defined exactly once; `tests/fixtures/v134_parity/_INDEX.json` exists; `pytest -m fast` runs in <60s; PLAN_REQUIREMENTS Gate 11 architecture test green.
+
+**Risk:** low. Test-only changes; parity behavior unchanged.
 
 ---
 
@@ -813,7 +931,33 @@ Per [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md), this plan commits to:
 - [x] **Gate 5** (docs updated before PR open) — pipeline phase 9, mandatory and blocking. `STATUS.md`, `ARCHITECTURE.md`, and `CODEMAPS/` per applicability. Cross-link validation in Wave-4 fresh-clone test.
 - [x] **Gate 6** (type-system hygiene) — WS-S1 (`MidiSender` Protocol) and WS-S2 (`PadRuntime` Protocol) are the primary mechanisms. Every new boundary in Waves 2-3 (`Device`, `SnapshotDecoder[T]`, `MutationPlanner[T]`, `CliCommand`) is a Protocol or frozen dataclass. Zero new `Sender = Any` aliases; zero new `Mapping[str, Any]` DTOs at module boundaries. `B904` always on.
 - [x] **Gate 7** (observability adoption) — **WS-S9 (Observability hot-path adoption + metrics) is added to the plan** to bring hot-path modules to gate-7 compliance. See WS-S9 section. Until WS-S9 lands, new code in S1-S8 must add `get_logger(__name__)` + structured log on every decision; the architecture test in WS-S9 enforces this retroactively.
-- [x] **Gate 8** (test hygiene) — Wave 1 WSes audit and centralize the duplicated `RecordingOut`/`_FakeMessage`/`_install_fake_mido` fixtures into `tests/conftest.py`; subsequent WSes consume the shared fixtures.
-- [x] **Gate 9** (module-organization hygiene) — WS-S5 (`devices/`), WS-S6 (`snapshot/`), WS-S7 (`cli/`, `reports/`) create new subpackages instead of growing the top-level. WS-S8 sweeps any leftover top-level files into appropriate subpackages.
+- [x] **Gate 8** (test hygiene) — **WS-M4** (Test ergonomics) centralizes the duplicated `RecordingOut`/`_FakeMessage`/`_install_fake_mido` fixtures into `tests/conftest.py`; subsequent WSes consume the shared fixtures.
+- [x] **Gate 9** (module-organization hygiene) — **WS-M2** (`behavior/` subpackage) collapses the 8 flat `behavior_*.py` files into a subpackage and consolidates the duplicate top-level `*_state.py` modules into `state/`. WS-S5 (`devices/`), WS-S6 (`snapshot/`), WS-S7 (`cli/`, `reports/`) create the new subpackages. WS-S8 enforces with `test_no_new_top_level_modules`.
+- [x] **Gate 10** (string-literal dispatch hygiene) — **WS-M3** (mode Literal/Enum migration) introduces `data/modes.py` and migrates the 6 dispatch sites. WS-S8 enforces with `test_no_string_literal_mode_dispatch`.
+- [x] **Gate 11** (shared test fixtures) — **WS-M4** centralizes; WS-S8 enforces with `test_no_duplicate_fixtures`.
+- [x] **Gate 12** (module-level constants use `Final`) — every new constant in WS-M3 (`INTENSITY_MODES`, `PAGE_MODES`, etc.) and every new constant introduced by S5/S6/S7/S9 uses `Final` per the gate.
+- [x] **Gate 13** (env vars: docs + safe default) — no plan WS introduces a new env var. If a future WS does, the per-WS PR must update `CONTRIBUTING.md` + `LOCAL_DEV_TOOLING_NOTES.md` and provide a safe default.
+- [x] **Gate 14** (maintainability review) — pre-plan audit is the 2026-05-18 agent report; folded in as WS-M1..WS-M4. Post-plan re-audit runs as part of WS-S8 sweep and lands as `docs/SIMPLIFICATION_MAINTAINABILITY_REPORT.md` before WS-L (learning) starts. Any net-negative delta from pre-plan baseline blocks WS-L until a corrective WS lands.
+- [x] **Gate 15** (learning phase) — WS-L is explicit, mandatory, and produces the full repo-committed handoff package (skills, rules, reports, BEFORE_AFTER doc, AUTONOMOUS_RUN_PLAYBOOK, codex rebase guide). Fresh-clone test enforces in-repo completeness. Forward-port rule applies to any user-home `.claude/skills/learned/*` touched during the run.
 
-Exceptions: none. The plan satisfies the full set without carve-outs.
+Exceptions: none. The plan satisfies all 15 gates without carve-outs.
+
+## Workstream summary
+
+| WS | Purpose | Owner | Depends on | Parallel with |
+|---|---|---|---|---|
+| WS-S1 | `MidiSender` Protocol | S-family | — | Wave 1 |
+| WS-S2 | `PadRuntime` Protocol | S-family | — | Wave 1 |
+| WS-S3 | Close `shell.dispatch` tail | S-family | — | Wave 1 (coords WS-M2) |
+| WS-S4 | `PassiveReportFormatter` | S-family | — | Wave 1 |
+| WS-S5 | `Device` Protocol + registry | S-family | WS-S1 | Wave 2 |
+| WS-S6 | Generic Elektron SysEx | S-family | WS-S5 | Wave 2 |
+| WS-S7 | CLI command registry | S-family | WS-S4, WS-S6 | Wave 3 |
+| WS-S9 | Observability hot-path adoption | S-family | WS-S2 (recommended) | Wave 3.1 |
+| WS-M1 | Docs curation pass | M-family | — | Wave 1+ |
+| WS-M2 | `behavior/` subpackage relocation | M-family | — | Wave 1+ (coords WS-S3) |
+| WS-M3 | Mode/intensity Literal/Enum | M-family | WS-M2 recommended | After M2 |
+| WS-M4 | Test ergonomics | M-family | — | Wave 1+ |
+| WS-S8 | Whole-package sweep + 100% ratchet | S-family | all of above | Wave 3.5 |
+| WS-L | Learning extraction + handoff package | Wave 4 | WS-S8 | — |
+| WS-H | PR #21 hand-off issue | Wave 4 | WS-L | — |
