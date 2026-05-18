@@ -10,8 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .observability.errors import DataError
-from .sysex_snapshot_decoder import (
+from ..observability.errors import DataError
+from ..snapshot.rytm_decoder import (
     PAD_COUNT,
     RytmKitSnapshot,
     RytmSnapshotPad,

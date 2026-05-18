@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
-from .data import param_maps
-from .observability.errors import DataError
+from ..data import param_maps
+from ..observability.errors import DataError
 
 RYTM_DEVICE_FAMILY = 0x07
 KIT_OBJECT_TYPE = 0x52

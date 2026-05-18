@@ -60,7 +60,7 @@ def test_importing_rytm_controlled_diff_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.rytm_controlled_diff; "
+                "import rytm_randomizer.rytm.controlled_diff; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -77,7 +77,7 @@ def test_importing_rytm_controlled_diff_is_passive_and_silent():
 
 
 def test_build_rytm_controlled_diff_report_finds_changed_mapped_parameters_only():
-    from rytm_randomizer.rytm_controlled_diff import (
+    from rytm_randomizer.rytm.controlled_diff import (
         build_rytm_controlled_diff_report_from_bytes,
     )
 
@@ -120,7 +120,7 @@ def test_build_rytm_controlled_diff_report_finds_changed_mapped_parameters_only(
 
 
 def test_build_rytm_controlled_diff_report_rejects_invalid_pad():
-    from rytm_randomizer.rytm_controlled_diff import (
+    from rytm_randomizer.rytm.controlled_diff import (
         RytmControlledDiffError,
         build_rytm_controlled_diff_report_from_bytes,
     )
@@ -135,7 +135,7 @@ def test_build_rytm_controlled_diff_report_rejects_invalid_pad():
 
 
 def test_format_rytm_controlled_diff_report_marks_safety_boundary():
-    from rytm_randomizer.rytm_controlled_diff import (
+    from rytm_randomizer.rytm.controlled_diff import (
         build_rytm_controlled_diff_report_from_bytes,
         format_rytm_controlled_diff_report,
     )
@@ -163,7 +163,7 @@ def test_format_rytm_controlled_diff_report_marks_safety_boundary():
 
 
 def test_build_rytm_all_pad_controlled_diff_report_summarizes_all_12_pads():
-    from rytm_randomizer.rytm_controlled_diff import (
+    from rytm_randomizer.rytm.controlled_diff import (
         build_rytm_all_pad_controlled_diff_report_from_bytes,
     )
 
@@ -206,7 +206,7 @@ def test_build_rytm_all_pad_controlled_diff_report_summarizes_all_12_pads():
 
 
 def test_format_rytm_all_pad_controlled_diff_report_marks_all_pads_boundary():
-    from rytm_randomizer.rytm_controlled_diff import (
+    from rytm_randomizer.rytm.controlled_diff import (
         build_rytm_all_pad_controlled_diff_report_from_bytes,
         format_rytm_all_pad_controlled_diff_report,
     )

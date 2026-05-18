@@ -66,7 +66,7 @@ def test_importing_snapshot_mock_runtime_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_mock_runtime; "
+                "import rytm_randomizer.snapshot.rytm_mock_runtime; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -83,9 +83,9 @@ def test_importing_snapshot_mock_runtime_is_passive_and_silent():
 
 
 def test_snapshot_mock_runtime_captures_planned_changes_as_inert_cc_messages():
-    from rytm_randomizer.snapshot_mock_runtime import capture_snapshot_mutation_mock_messages
-    from rytm_randomizer.snapshot_mutation_planner import build_snapshot_mutation_plan
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mock_runtime import capture_snapshot_mutation_mock_messages
+    from rytm_randomizer.snapshot.rytm_mutation_planner import build_snapshot_mutation_plan
 
     snapshot = decode_rytm_kit_snapshot_record(
         make_rytm_kit_record(

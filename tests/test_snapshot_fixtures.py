@@ -16,7 +16,7 @@ def test_importing_snapshot_fixtures_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_fixtures; "
+                "import rytm_randomizer.snapshot.fixtures; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -34,7 +34,7 @@ def test_importing_snapshot_fixtures_is_passive_and_silent():
 
 
 def test_am9_mock_snapshot_fixture_has_twelve_pads_and_support_mix():
-    from rytm_randomizer.snapshot_fixtures import get_snapshot_fixture
+    from rytm_randomizer.snapshot.fixtures import get_snapshot_fixture
 
     fixture = get_snapshot_fixture("am9-slot-01")
 
@@ -55,14 +55,14 @@ def test_am9_mock_snapshot_fixture_has_twelve_pads_and_support_mix():
 
 
 def test_snapshot_fixture_lookup_fails_loudly_for_unknown_key():
-    from rytm_randomizer.snapshot_fixtures import get_snapshot_fixture
+    from rytm_randomizer.snapshot.fixtures import get_snapshot_fixture
 
     with pytest.raises(KeyError, match="unknown snapshot fixture"):
         get_snapshot_fixture("missing")
 
 
 def test_snapshot_state_from_fixture_reports_complete_capture():
-    from rytm_randomizer.snapshot_fixtures import (
+    from rytm_randomizer.snapshot.fixtures import (
         get_snapshot_fixture,
         snapshot_state_from_fixture,
     )
@@ -76,7 +76,7 @@ def test_snapshot_state_from_fixture_reports_complete_capture():
 
 
 def test_format_snapshot_fixture_report_is_passive_and_deterministic():
-    from rytm_randomizer.snapshot_fixtures import (
+    from rytm_randomizer.snapshot.fixtures import (
         format_snapshot_fixture_report,
         get_snapshot_fixture,
     )

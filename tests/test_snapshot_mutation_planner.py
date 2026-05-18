@@ -66,7 +66,7 @@ def test_importing_snapshot_mutation_planner_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_mutation_planner; "
+                "import rytm_randomizer.snapshot.rytm_mutation_planner; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -83,8 +83,8 @@ def test_importing_snapshot_mutation_planner_is_passive_and_silent():
 
 
 def test_snapshot_mutation_plan_uses_captured_values_not_anchors():
-    from rytm_randomizer.snapshot_mutation_planner import build_snapshot_mutation_plan
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mutation_planner import build_snapshot_mutation_plan
 
     snapshot = decode_rytm_kit_snapshot_record(
         make_rytm_kit_record(
@@ -141,11 +141,11 @@ def test_snapshot_mutation_plan_uses_captured_values_not_anchors():
 
 
 def test_snapshot_mutation_plan_rejects_unknown_depth():
-    from rytm_randomizer.snapshot_mutation_planner import (
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mutation_planner import (
         SnapshotMutationPlanError,
         build_snapshot_mutation_plan,
     )
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
 
     snapshot = decode_rytm_kit_snapshot_record(
         make_rytm_kit_record(machine_values=(0,) + tuple(27 for _ in range(11)))

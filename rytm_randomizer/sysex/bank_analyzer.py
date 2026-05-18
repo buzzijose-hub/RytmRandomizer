@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
-from .observability.errors import DataError
+from ..observability.errors import DataError
 
 KIT_NAME_OFFSET = 15
 KIT_NAME_LENGTH = 16

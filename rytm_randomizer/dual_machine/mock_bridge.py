@@ -26,7 +26,7 @@ from ..performance.snapshot_target import (
     PerformanceSnapshotTargetPlan,
     build_performance_snapshot_target_plan,
 )
-from ..snapshot_mutation_planner import (
+from ..snapshot.rytm_mutation_planner import (
     SnapshotMutationPlan,
     build_snapshot_mutation_plan_from_file,
     format_snapshot_mutation_plan_error,

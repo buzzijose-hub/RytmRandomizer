@@ -144,7 +144,7 @@ def test_future_inventory_candidate_blocks_application_after_snapshot_capture():
 
 def test_live_snapshot_fixture_blocks_unmapped_captured_machines():
     from rytm_randomizer.essence_application import evaluate_essence_application_readiness
-    from rytm_randomizer.snapshot_fixtures import get_snapshot_fixture
+    from rytm_randomizer.snapshot.fixtures import get_snapshot_fixture
 
     readiness = evaluate_essence_application_readiness(
         mode="live_snapshot",

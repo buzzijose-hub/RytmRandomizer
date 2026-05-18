@@ -13,7 +13,7 @@ from pathlib import Path
 from .data import MACHINE_CC
 from .machine_catalog import MachineCandidate, RoleAssignment, build_essence_role_plan
 from .observability.errors import DataError
-from .snapshot_mutation_planner import (
+from .snapshot.rytm_mutation_planner import (
     SnapshotMutationPlan,
     SnapshotMutationPlanError,
     SnapshotPadMutationPlan,

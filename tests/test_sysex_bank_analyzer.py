@@ -41,7 +41,7 @@ def test_importing_sysex_bank_analyzer_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.sysex_bank_analyzer; "
+                "import rytm_randomizer.sysex.bank_analyzer; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -58,7 +58,7 @@ def test_importing_sysex_bank_analyzer_is_passive_and_silent():
 
 
 def test_analyzer_splits_fixed_length_bank_and_extracts_slot_metadata():
-    from rytm_randomizer.sysex_bank_analyzer import analyze_sysex_kit_bank_bytes
+    from rytm_randomizer.sysex.bank_analyzer import analyze_sysex_kit_bank_bytes
 
     bank = b"".join(
         [
@@ -97,7 +97,7 @@ def test_analyzer_splits_fixed_length_bank_and_extracts_slot_metadata():
 
 
 def test_analyzer_rejects_bytes_without_complete_sysex_messages():
-    from rytm_randomizer.sysex_bank_analyzer import (
+    from rytm_randomizer.sysex.bank_analyzer import (
         SysexBankAnalysisError,
         analyze_sysex_kit_bank_bytes,
     )
@@ -107,7 +107,7 @@ def test_analyzer_rejects_bytes_without_complete_sysex_messages():
 
 
 def test_report_formatter_keeps_live_snapshot_boundaries_explicit():
-    from rytm_randomizer.sysex_bank_analyzer import (
+    from rytm_randomizer.sysex.bank_analyzer import (
         analyze_sysex_kit_bank_bytes,
         format_sysex_kit_bank_report,
     )

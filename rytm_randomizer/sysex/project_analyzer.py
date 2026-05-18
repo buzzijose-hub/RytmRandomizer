@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
 
-from .observability.errors import DataError
+from ..observability.errors import DataError
 
 DEVICE_FAMILY_OFFSET = 4
 OBJECT_TYPE_OFFSET = 6

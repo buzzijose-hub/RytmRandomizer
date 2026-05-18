@@ -77,7 +77,7 @@ def test_importing_sysex_snapshot_decoder_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.sysex_snapshot_decoder; "
+                "import rytm_randomizer.snapshot.rytm_decoder; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -94,7 +94,7 @@ def test_importing_sysex_snapshot_decoder_is_passive_and_silent():
 
 
 def test_decoder_builds_twelve_pad_snapshot_from_packed_rytm_kit_record():
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
 
     record = make_rytm_kit_record(
         slot_index=4,
@@ -160,7 +160,7 @@ def test_decoder_builds_twelve_pad_snapshot_from_packed_rytm_kit_record():
 
 
 def test_decoder_uses_existing_param_maps_for_sy_raw_snapshot():
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
 
     record = make_rytm_kit_record(
         kit_name="SY RAW KIT",
@@ -214,7 +214,7 @@ def test_decoder_uses_existing_param_maps_for_sy_raw_snapshot():
 
 
 def test_decoder_uses_generic_saved_slots_for_identified_unmapped_machine():
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
 
     record = make_rytm_kit_record(
         kit_name="GENERIC KIT",
@@ -269,7 +269,7 @@ def test_decoder_uses_generic_saved_slots_for_identified_unmapped_machine():
 
 
 def test_decoder_rejects_non_rytm_kit_record():
-    from rytm_randomizer.sysex_snapshot_decoder import (
+    from rytm_randomizer.snapshot.rytm_decoder import (
         SysexSnapshotDecodeError,
         decode_rytm_kit_snapshot_record,
     )
@@ -282,7 +282,7 @@ def test_decoder_rejects_non_rytm_kit_record():
 
 
 def test_report_formatter_marks_parameter_decode_boundary():
-    from rytm_randomizer.sysex_snapshot_decoder import (
+    from rytm_randomizer.snapshot.rytm_decoder import (
         decode_rytm_kit_snapshot_record,
         format_rytm_kit_snapshot_report,
     )

@@ -50,7 +50,7 @@ def test_importing_sysex_project_analyzer_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.sysex_project_analyzer; "
+                "import rytm_randomizer.sysex.project_analyzer; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -67,7 +67,7 @@ def test_importing_sysex_project_analyzer_is_passive_and_silent():
 
 
 def test_analyzer_groups_whole_project_records_by_device_type_length_and_slots():
-    from rytm_randomizer.sysex_project_analyzer import analyze_sysex_project_bytes
+    from rytm_randomizer.sysex.project_analyzer import analyze_sysex_project_bytes
 
     project = b"".join(
         [
@@ -102,7 +102,7 @@ def test_analyzer_groups_whole_project_records_by_device_type_length_and_slots()
 
 
 def test_analyzer_rejects_bytes_without_complete_sysex_messages():
-    from rytm_randomizer.sysex_project_analyzer import (
+    from rytm_randomizer.sysex.project_analyzer import (
         SysexProjectAnalysisError,
         analyze_sysex_project_bytes,
     )
@@ -112,7 +112,7 @@ def test_analyzer_rejects_bytes_without_complete_sysex_messages():
 
 
 def test_report_formatter_keeps_snapshot_relevance_and_safety_explicit():
-    from rytm_randomizer.sysex_project_analyzer import (
+    from rytm_randomizer.sysex.project_analyzer import (
         analyze_sysex_project_bytes,
         format_sysex_project_report,
     )

@@ -554,7 +554,7 @@ def main(argv=None):
         return 0
 
     if len(args) == 2 and args[0] == "sysex-kit-bank-report":
-        from .sysex_bank_analyzer import (
+        from .sysex.bank_analyzer import (
             SysexBankAnalysisError,
             analyze_sysex_kit_bank_file,
             format_sysex_kit_bank_report,
@@ -578,7 +578,7 @@ def main(argv=None):
         return 0
 
     if len(args) == 2 and args[0] == "sysex-project-report":
-        from .sysex_project_analyzer import (
+        from .sysex.project_analyzer import (
             SysexProjectAnalysisError,
             analyze_sysex_project_file,
             format_sysex_project_report,
@@ -602,7 +602,7 @@ def main(argv=None):
         return 0
 
     if len(args) == 4 and args[0] == "sysex-kit-snapshot-report" and args[2] == "--slot":
-        from .sysex_snapshot_decoder import (
+        from .snapshot.rytm_decoder import (
             SysexSnapshotDecodeError,
             decode_rytm_kit_snapshot_file,
             format_rytm_kit_snapshot_error,
@@ -638,13 +638,13 @@ def main(argv=None):
         and args[2] == "--slot"
         and args[4] == "--depth"
     ):
-        from .snapshot_mutation_planner import (
+        from .snapshot.rytm_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mutation_planner import (
             SnapshotMutationPlanError,
             build_snapshot_mutation_plan_from_file,
             format_snapshot_mutation_plan_error,
             format_snapshot_mutation_plan_report,
         )
-        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
 
         try:
             slot = int(args[3])
@@ -679,14 +679,14 @@ def main(argv=None):
         and args[2] == "--slot"
         and args[4] == "--depth"
     ):
-        from .snapshot_mock_runtime import (
+        from .snapshot.rytm_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mock_runtime import (
             build_snapshot_mock_runtime_from_file,
             capture_snapshot_mutation_mock_messages,
             format_snapshot_mock_runtime_error,
             format_snapshot_mock_runtime_report,
         )
-        from .snapshot_mutation_planner import SnapshotMutationPlanError
-        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
 
         try:
             slot = int(args[3])
@@ -723,7 +723,7 @@ def main(argv=None):
         and args[5] == "--pad"
         and args[7] == "--limit"
     ):
-        from .rytm_controlled_diff import (
+        from .rytm.controlled_diff import (
             RytmControlledDiffError,
             build_rytm_controlled_diff_report_from_file,
             format_rytm_controlled_diff_error,
@@ -768,7 +768,7 @@ def main(argv=None):
         and args[5] == "--all-pads"
         and args[6] == "--limit"
     ):
-        from .rytm_controlled_diff import (
+        from .rytm.controlled_diff import (
             RytmControlledDiffError,
             build_rytm_all_pad_controlled_diff_report_from_file,
             format_rytm_all_pad_controlled_diff_report,
@@ -814,8 +814,8 @@ def main(argv=None):
             format_dual_machine_mock_bridge_report,
         )
         from .performance.snapshot_target import PerformanceSnapshotTargetError
-        from .snapshot_mutation_planner import SnapshotMutationPlanError
-        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
 
         try:
             parsed = _parse_dual_machine_bridge_cli_args(args)
@@ -870,8 +870,8 @@ def main(argv=None):
         )
         from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
         from .performance.snapshot_target import PerformanceSnapshotTargetError
-        from .snapshot_mutation_planner import SnapshotMutationPlanError
-        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
 
         try:
             parsed = _parse_dual_machine_bridge_cli_args(args)
@@ -927,8 +927,8 @@ def main(argv=None):
         )
         from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
         from .performance.snapshot_target import PerformanceSnapshotTargetError
-        from .snapshot_mutation_planner import SnapshotMutationPlanError
-        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
 
         try:
             parsed = _parse_dual_machine_bridge_cli_args(args)
@@ -984,8 +984,8 @@ def main(argv=None):
         )
         from .dual_machine.mock_bridge import build_dual_machine_mock_bridge
         from .performance.snapshot_target import PerformanceSnapshotTargetError
-        from .snapshot_mutation_planner import SnapshotMutationPlanError
-        from .sysex_snapshot_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_decoder import SysexSnapshotDecodeError
+        from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
 
         try:
             parsed = _parse_dual_machine_bridge_cli_args(args)
@@ -1326,7 +1326,7 @@ def main(argv=None):
             parse_snapshot_state,
         )
         from .essence_plan_report import parse_discovery_value, parse_essence_tags
-        from .snapshot_fixtures import get_snapshot_fixture
+        from .snapshot.fixtures import get_snapshot_fixture
 
         if (
             len(args) < 5
