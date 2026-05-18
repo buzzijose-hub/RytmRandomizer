@@ -1178,7 +1178,7 @@ def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
 ):
     _seed()
     from rytm_randomizer import app, mido_provider
-    from rytm_randomizer.snapshot_essence_send_plan import (
+    from rytm_randomizer.essence.snapshot_send_plan import (
         build_snapshot_essence_send_plan_from_file,
     )
 

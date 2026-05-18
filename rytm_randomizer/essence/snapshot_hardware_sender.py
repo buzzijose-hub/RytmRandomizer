@@ -16,8 +16,8 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
-from .midi_io import send_cc
-from .snapshot_essence_send_plan import (
+from ..midi_io import send_cc
+from .snapshot_send_plan import (
     SnapshotEssenceSendPlan,
     SnapshotEssenceSendPlanEvent,
 )

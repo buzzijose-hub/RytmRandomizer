@@ -16,7 +16,7 @@ def test_importing_machine_catalog_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.machine_catalog; "
+                "import rytm_randomizer.essence.machine_catalog; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -33,7 +33,7 @@ def test_importing_machine_catalog_is_passive_and_silent():
 
 
 def test_catalog_tracks_v134_mutable_machines_and_selectable_inventory():
-    from rytm_randomizer.machine_catalog import get_machine_profile, list_machine_profiles
+    from rytm_randomizer.essence.machine_catalog import get_machine_profile, list_machine_profiles
 
     profiles = list_machine_profiles()
 
@@ -60,7 +60,7 @@ def test_catalog_tracks_v134_mutable_machines_and_selectable_inventory():
 
 
 def test_twelve_pad_role_template_covers_performance_lanes():
-    from rytm_randomizer.machine_catalog import list_twelve_pad_roles
+    from rytm_randomizer.essence.machine_catalog import list_twelve_pad_roles
 
     roles = list_twelve_pad_roles()
 
@@ -74,7 +74,7 @@ def test_twelve_pad_role_template_covers_performance_lanes():
 
 
 def test_metallic_reference_ranks_mapped_metallic_engines_first_by_default():
-    from rytm_randomizer.machine_catalog import rank_machines_for_role
+    from rytm_randomizer.essence.machine_catalog import rank_machines_for_role
 
     ranked = rank_machines_for_role(
         "metallic_motif",
@@ -90,7 +90,7 @@ def test_metallic_reference_ranks_mapped_metallic_engines_first_by_default():
 
 
 def test_metallic_reference_can_include_future_engines_as_inventory_candidates():
-    from rytm_randomizer.machine_catalog import rank_machines_for_role
+    from rytm_randomizer.essence.machine_catalog import rank_machines_for_role
 
     ranked = rank_machines_for_role(
         "metallic_motif",
@@ -107,7 +107,7 @@ def test_metallic_reference_can_include_future_engines_as_inventory_candidates()
 
 
 def test_hat_role_can_include_machine_selectable_real_hat_engines():
-    from rytm_randomizer.machine_catalog import rank_machines_for_role
+    from rytm_randomizer.essence.machine_catalog import rank_machines_for_role
 
     ranked = rank_machines_for_role(
         "closed_hat_pulse",
@@ -123,7 +123,7 @@ def test_hat_role_can_include_machine_selectable_real_hat_engines():
 
 
 def test_reference_discovery_slider_expands_role_plan_candidates():
-    from rytm_randomizer.machine_catalog import build_essence_role_plan
+    from rytm_randomizer.essence.machine_catalog import build_essence_role_plan
 
     reference_plan = build_essence_role_plan(
         essence_tags=("metallic", "bell", "driving", "repetition"),

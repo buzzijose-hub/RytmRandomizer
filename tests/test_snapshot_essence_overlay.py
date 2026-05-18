@@ -92,7 +92,7 @@ def test_importing_snapshot_essence_overlay_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_essence_overlay; "
+                "import rytm_randomizer.essence.snapshot_overlay; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -110,7 +110,7 @@ def test_importing_snapshot_essence_overlay_is_passive_and_silent():
 
 
 def test_snapshot_essence_overlay_separates_same_engine_and_switch_ready_pads(tmp_path):
-    from rytm_randomizer.snapshot_essence_overlay import (
+    from rytm_randomizer.essence.snapshot_overlay import (
         build_snapshot_essence_overlay_plan_from_file,
     )
 

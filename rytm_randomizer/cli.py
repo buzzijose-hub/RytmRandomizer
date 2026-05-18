@@ -1292,7 +1292,7 @@ def main(argv=None):
         and args[1] in {"--tags", "--description"}
         and args[3] == "--discovery"
     ):
-        from .essence_plan_report import (
+        from .essence.plan_report import (
             format_essence_plan_error,
             format_essence_plan_report,
             parse_discovery_value,
@@ -1301,7 +1301,7 @@ def main(argv=None):
 
         try:
             if args[1] == "--description":
-                from .essence_tag_adapter import derive_essence_tags_from_description
+                from .essence.tag_adapter import derive_essence_tags_from_description
 
                 tags = derive_essence_tags_from_description(args[2])
             else:
@@ -1318,14 +1318,14 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "essence-application-readiness-report":
-        from .essence_application import (
+        from .essence.application import (
             evaluate_essence_application_readiness,
             format_essence_application_error,
             format_essence_application_readiness_report,
             parse_application_mode,
             parse_snapshot_state,
         )
-        from .essence_plan_report import parse_discovery_value, parse_essence_tags
+        from .essence.plan_report import parse_discovery_value, parse_essence_tags
         from .snapshot.fixtures import get_snapshot_fixture
 
         if (
@@ -1373,7 +1373,7 @@ def main(argv=None):
             source_prompt = ""
             matched_profile_labels = ()
             if source_flag == "--description":
-                from .essence_tag_adapter import derive_essence_tags_from_description
+                from .essence.tag_adapter import derive_essence_tags_from_description
 
                 if discovery is None:
                     sys.stderr.write(f"{USAGE}\n")
@@ -1385,7 +1385,7 @@ def main(argv=None):
                     return 2
                 tags = parse_essence_tags(source_value)
             else:
-                from .style_intent_profiles import build_style_intent_request
+                from .essence.style_intent_profiles import build_style_intent_request
 
                 request = build_style_intent_request(source_value, discovery=discovery)
                 tags = request.tags
@@ -1424,8 +1424,8 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "style-intent-report":
-        from .essence_plan_report import parse_discovery_value
-        from .style_intent_profiles import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.style_intent_profiles import (
             format_style_intent_error,
             format_style_intent_report,
         )
@@ -1453,13 +1453,13 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "snapshot-essence-overlay-report":
-        from .essence_plan_report import parse_discovery_value
-        from .observability.errors import DataError
-        from .snapshot_essence_overlay import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.snapshot_overlay import (
             build_snapshot_essence_overlay_plan_from_file,
             format_snapshot_essence_overlay_error,
             format_snapshot_essence_overlay_report,
         )
+        from .observability.errors import DataError
 
         if (
             len(args) not in (8, 10)
@@ -1511,14 +1511,14 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "snapshot-essence-send-plan-report":
-        from .essence_plan_report import parse_discovery_value
-        from .observability.errors import DataError
-        from .snapshot_essence_send_plan import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.snapshot_send_plan import (
             build_snapshot_essence_send_plan_from_file,
             capture_snapshot_essence_send_mock_messages,
             format_snapshot_essence_send_plan_error,
             format_snapshot_essence_send_plan_report,
         )
+        from .observability.errors import DataError
 
         if (
             len(args) not in (8, 10)
@@ -1571,14 +1571,14 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "snapshot-essence-guarded-send-dry-run-report":
-        from .essence_plan_report import parse_discovery_value
-        from .observability.errors import DataError
-        from .snapshot_essence_guarded_sender import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.snapshot_guarded_sender import (
             build_snapshot_essence_guarded_send_dry_run,
             format_snapshot_essence_guarded_send_dry_run_report,
             format_snapshot_essence_guarded_send_error,
         )
-        from .snapshot_essence_send_plan import build_snapshot_essence_send_plan_from_file
+        from .essence.snapshot_send_plan import build_snapshot_essence_send_plan_from_file
+        from .observability.errors import DataError
 
         if (
             len(args) not in (8, 10)
@@ -1631,8 +1631,8 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "rytm-engine-cycle-plan-report":
-        from .essence_plan_report import parse_discovery_value
-        from .rytm_engine_cycle_plan import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.rytm_engine_cycle_plan import (
             build_rytm_engine_cycle_plan,
             format_rytm_engine_cycle_plan_error,
             format_rytm_engine_cycle_plan_report,
@@ -1661,9 +1661,9 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "rytm-engine-cycle-starter-plan-report":
-        from .essence_plan_report import parse_discovery_value
-        from .rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-        from .rytm_engine_cycle_starter_profiles import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+        from .essence.rytm_engine_cycle_starter_profiles import (
             build_rytm_engine_cycle_starter_plan,
             format_rytm_engine_cycle_starter_plan_error,
             format_rytm_engine_cycle_starter_plan_report,
@@ -1704,8 +1704,8 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "twelve-pad-mock-runtime-report":
-        from .essence_plan_report import parse_discovery_value
-        from .twelve_pad_mock_runtime import (
+        from .essence.plan_report import parse_discovery_value
+        from .essence.twelve_pad_mock_runtime import (
             build_twelve_pad_mock_runtime_plan,
             format_twelve_pad_mock_runtime_error,
             format_twelve_pad_mock_runtime_report,

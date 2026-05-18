@@ -77,7 +77,7 @@ def write_guard_fixture(path):
 
 
 def build_ready_plan(tmp_path):
-    from rytm_randomizer.snapshot_essence_send_plan import (
+    from rytm_randomizer.essence.snapshot_send_plan import (
         build_snapshot_essence_send_plan_from_file,
     )
 
@@ -109,7 +109,7 @@ def test_importing_snapshot_essence_guarded_sender_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_essence_guarded_sender; "
+                "import rytm_randomizer.essence.snapshot_guarded_sender; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -127,10 +127,10 @@ def test_importing_snapshot_essence_guarded_sender_is_passive_and_silent():
 
 
 def test_guarded_send_requires_arming_before_emitting(tmp_path):
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.snapshot_essence_guarded_sender import (
+    from rytm_randomizer.essence.snapshot_guarded_sender import (
         execute_snapshot_essence_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_snapshot_essence_guarded_send(
@@ -147,10 +147,10 @@ def test_guarded_send_requires_arming_before_emitting(tmp_path):
 
 
 def test_guarded_send_requires_dry_run_confirmation_before_emitting(tmp_path):
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.snapshot_essence_guarded_sender import (
+    from rytm_randomizer.essence.snapshot_guarded_sender import (
         execute_snapshot_essence_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_snapshot_essence_guarded_send(
@@ -167,10 +167,10 @@ def test_guarded_send_requires_dry_run_confirmation_before_emitting(tmp_path):
 
 
 def test_guarded_send_refuses_blocked_plan_without_partial_emit(tmp_path):
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.snapshot_essence_guarded_sender import (
+    from rytm_randomizer.essence.snapshot_guarded_sender import (
         execute_snapshot_essence_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     plan = replace(build_ready_plan(tmp_path), blocked_pad_count=1)
     sender = MockMidiSender()
@@ -189,10 +189,10 @@ def test_guarded_send_refuses_blocked_plan_without_partial_emit(tmp_path):
 
 
 def test_guarded_send_emits_ready_plan_to_mock_sender(tmp_path):
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.snapshot_essence_guarded_sender import (
+    from rytm_randomizer.essence.snapshot_guarded_sender import (
         execute_snapshot_essence_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     plan = build_ready_plan(tmp_path)
     sender = MockMidiSender()
@@ -221,11 +221,11 @@ def test_guarded_send_emits_ready_plan_to_mock_sender(tmp_path):
 
 
 def test_guarded_send_report_formats_policy_and_preview(tmp_path):
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.snapshot_essence_guarded_sender import (
+    from rytm_randomizer.essence.snapshot_guarded_sender import (
         execute_snapshot_essence_guarded_send,
         format_snapshot_essence_guarded_send_dry_run_report,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     result = execute_snapshot_essence_guarded_send(
         build_ready_plan(tmp_path),

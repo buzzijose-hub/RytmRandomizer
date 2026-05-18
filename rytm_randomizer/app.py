@@ -375,7 +375,7 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
 def _build_snapshot_essence_send_plan_from_request(request: dict[str, object]):
     """Build the passive snapshot essence send plan for an app request."""
 
-    from .snapshot_essence_send_plan import build_snapshot_essence_send_plan_from_file
+    from .essence.snapshot_send_plan import build_snapshot_essence_send_plan_from_file
 
     return build_snapshot_essence_send_plan_from_file(
         str(request["snapshot_path"]),
@@ -393,7 +393,7 @@ def _build_snapshot_essence_send_plan_from_request(request: dict[str, object]):
 def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
     """Build the passive Rytm engine-cycle plan for an app request."""
 
-    from .rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from .essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
 
     plan = build_rytm_engine_cycle_plan(
         str(request["engine_cycle_style"]),
@@ -407,7 +407,7 @@ def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
     if starter_profile is None:
         return plan
 
-    from .rytm_engine_cycle_starter_profiles import build_rytm_engine_cycle_starter_plan
+    from .essence.rytm_engine_cycle_starter_profiles import build_rytm_engine_cycle_starter_plan
 
     return build_rytm_engine_cycle_starter_plan(
         plan,
@@ -493,7 +493,7 @@ def _run_arm(
 
     try:
         if twelve_pad_smoke:
-            from .twelve_pad_smoke import (
+            from .rytm.twelve_pad_smoke import (
                 format_twelve_pad_smoke_report,
                 run_twelve_pad_smoke_test,
             )
@@ -743,7 +743,7 @@ def _run_arm_dual_machine_snapshot_send_both(plan) -> int:
 def _run_arm_snapshot_essence_send(request: dict[str, object]) -> int:
     """Run the guarded Rytm snapshot essence send against real hardware."""
 
-    from .snapshot_essence_hardware_sender import (
+    from .essence.snapshot_hardware_sender import (
         build_snapshot_essence_hardware_send_refusal,
         execute_snapshot_essence_hardware_send,
         format_snapshot_essence_hardware_send_error,
@@ -838,7 +838,7 @@ def _run_arm_snapshot_essence_send(request: dict[str, object]) -> int:
 def _run_arm_rytm_engine_cycle(request: dict[str, object]) -> int:
     """Run the guarded Rytm engine-cycle send against real hardware."""
 
-    from .rytm_engine_cycle_hardware_sender import (
+    from .essence.rytm_engine_cycle_hardware_sender import (
         build_rytm_engine_cycle_hardware_send_refusal,
         execute_rytm_engine_cycle_hardware_send,
         format_rytm_engine_cycle_hardware_send_error,
@@ -1093,7 +1093,7 @@ def _run_dry_run_dual_machine_snapshot_send(request: dict[str, object]) -> int:
 def _run_dry_run_snapshot_essence_send(request: dict[str, object]) -> int:
     """Run the guarded Rytm snapshot essence send against the mock sender."""
 
-    from .snapshot_essence_guarded_sender import (
+    from .essence.snapshot_guarded_sender import (
         build_snapshot_essence_guarded_send_dry_run,
         format_snapshot_essence_guarded_send_dry_run_report,
         format_snapshot_essence_guarded_send_error,
@@ -1129,7 +1129,7 @@ def _run_dry_run_snapshot_essence_send(request: dict[str, object]) -> int:
 def _run_dry_run_rytm_engine_cycle(request: dict[str, object]) -> int:
     """Run the guarded Rytm engine-cycle send against the mock sender."""
 
-    from .rytm_engine_cycle_guarded_sender import (
+    from .essence.rytm_engine_cycle_guarded_sender import (
         build_rytm_engine_cycle_guarded_send_dry_run,
         format_rytm_engine_cycle_guarded_send_dry_run_report,
         format_rytm_engine_cycle_guarded_send_error,
@@ -1193,7 +1193,7 @@ def _run_dry_run(
         return result if isinstance(result, int) else 0
 
     if twelve_pad_smoke:
-        from .twelve_pad_smoke import (
+        from .rytm.twelve_pad_smoke import (
             format_twelve_pad_smoke_report,
             run_twelve_pad_smoke_test,
         )

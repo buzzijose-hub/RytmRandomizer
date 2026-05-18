@@ -26,7 +26,7 @@ def test_importing_twelve_pad_mock_runtime_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.twelve_pad_mock_runtime; "
+                "import rytm_randomizer.essence.twelve_pad_mock_runtime; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -43,7 +43,7 @@ def test_importing_twelve_pad_mock_runtime_is_passive_and_silent():
 
 
 def test_birmingham_dark_techno_mock_plan_covers_all_12_pads_with_mapped_engines():
-    from rytm_randomizer.twelve_pad_mock_runtime import build_twelve_pad_mock_runtime_plan
+    from rytm_randomizer.essence.twelve_pad_mock_runtime import build_twelve_pad_mock_runtime_plan
 
     plan = build_twelve_pad_mock_runtime_plan("Birmingham dark techno")
 
@@ -63,7 +63,7 @@ def test_birmingham_dark_techno_mock_plan_covers_all_12_pads_with_mapped_engines
 
 
 def test_schranz_mock_plan_falls_back_from_future_preference_to_mapped_engines():
-    from rytm_randomizer.twelve_pad_mock_runtime import build_twelve_pad_mock_runtime_plan
+    from rytm_randomizer.essence.twelve_pad_mock_runtime import build_twelve_pad_mock_runtime_plan
 
     plan = build_twelve_pad_mock_runtime_plan("schranz")
 
@@ -81,7 +81,7 @@ def test_schranz_mock_plan_falls_back_from_future_preference_to_mapped_engines()
 
 
 def test_mock_sender_captures_machine_and_anchor_messages_with_pad_metadata():
-    from rytm_randomizer.twelve_pad_mock_runtime import (
+    from rytm_randomizer.essence.twelve_pad_mock_runtime import (
         build_twelve_pad_mock_runtime_plan,
         capture_twelve_pad_mock_messages,
     )
@@ -105,7 +105,7 @@ def test_mock_sender_captures_machine_and_anchor_messages_with_pad_metadata():
 
 
 def test_format_twelve_pad_mock_runtime_report_includes_safety_and_stream():
-    from rytm_randomizer.twelve_pad_mock_runtime import (
+    from rytm_randomizer.essence.twelve_pad_mock_runtime import (
         build_twelve_pad_mock_runtime_plan,
         format_twelve_pad_mock_runtime_report,
     )

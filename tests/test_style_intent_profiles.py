@@ -30,7 +30,7 @@ def test_importing_style_intent_profiles_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.style_intent_profiles; "
+                "import rytm_randomizer.essence.style_intent_profiles; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -48,7 +48,7 @@ def test_importing_style_intent_profiles_is_passive_and_silent():
 
 
 def test_style_intent_alias_lookup_handles_birmingham_and_schranz():
-    from rytm_randomizer.style_intent_profiles import match_style_intent_profiles
+    from rytm_randomizer.essence.style_intent_profiles import match_style_intent_profiles
 
     birmingham = match_style_intent_profiles("Birmingham style dark techno")
     schranz = match_style_intent_profiles("hardcore schranz")
@@ -61,7 +61,7 @@ def test_style_intent_alias_lookup_handles_birmingham_and_schranz():
 
 
 def test_style_intent_derives_ordered_essence_tags():
-    from rytm_randomizer.style_intent_profiles import derive_style_intent_tags
+    from rytm_randomizer.essence.style_intent_profiles import derive_style_intent_tags
 
     tags = derive_style_intent_tags("broken techno Birmingham dark techno")
 
@@ -82,7 +82,7 @@ def test_style_intent_derives_ordered_essence_tags():
 
 
 def test_build_style_intent_request_uses_profile_discovery_hint():
-    from rytm_randomizer.style_intent_profiles import build_style_intent_request
+    from rytm_randomizer.essence.style_intent_profiles import build_style_intent_request
 
     request = build_style_intent_request("classic Detroit techno")
 
@@ -101,7 +101,7 @@ def test_build_style_intent_request_uses_profile_discovery_hint():
 
 
 def test_build_style_intent_request_accepts_discovery_override():
-    from rytm_randomizer.style_intent_profiles import build_style_intent_request
+    from rytm_randomizer.essence.style_intent_profiles import build_style_intent_request
 
     request = build_style_intent_request("peak time techno", discovery=0.9)
 
@@ -110,7 +110,7 @@ def test_build_style_intent_request_accepts_discovery_override():
 
 
 def test_format_style_intent_report_includes_analog_four_future_note_and_plan():
-    from rytm_randomizer.style_intent_profiles import format_style_intent_report
+    from rytm_randomizer.essence.style_intent_profiles import format_style_intent_report
 
     report = format_style_intent_report("Birmingham dark techno")
 

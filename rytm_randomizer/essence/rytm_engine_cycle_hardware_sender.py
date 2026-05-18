@@ -16,8 +16,8 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Any
 
-from .data import MACHINE_CC
-from .midi_io import send_cc
+from ..data import MACHINE_CC
+from ..midi_io import send_cc
 from .rytm_engine_cycle_plan import (
     RytmEngineCyclePadPlan,
     RytmEngineCyclePlan,

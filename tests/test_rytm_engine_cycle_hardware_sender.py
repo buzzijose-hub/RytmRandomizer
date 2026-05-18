@@ -27,13 +27,13 @@ class RecordingPort:
 
 
 def build_plan():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
 
     return build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
 
 
 def build_starter_plan():
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
 
@@ -50,7 +50,7 @@ def test_importing_rytm_engine_cycle_hardware_sender_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.rytm_engine_cycle_hardware_sender; "
+                "import rytm_randomizer.essence.rytm_engine_cycle_hardware_sender; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -67,7 +67,7 @@ def test_importing_rytm_engine_cycle_hardware_sender_is_passive_and_silent():
 
 
 def test_engine_cycle_hardware_send_requires_arming():
-    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
         execute_rytm_engine_cycle_hardware_send,
     )
 
@@ -88,7 +88,7 @@ def test_engine_cycle_hardware_send_requires_arming():
 
 
 def test_engine_cycle_hardware_send_requires_operator_confirmation():
-    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
         execute_rytm_engine_cycle_hardware_send,
     )
 
@@ -109,7 +109,7 @@ def test_engine_cycle_hardware_send_requires_operator_confirmation():
 
 
 def test_engine_cycle_hardware_send_refuses_unresolved_pad_before_sending():
-    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
         execute_rytm_engine_cycle_hardware_send,
     )
 
@@ -141,7 +141,7 @@ def test_engine_cycle_hardware_send_accepts_ready_plan_with_fake_mido(monkeypatc
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
         execute_rytm_engine_cycle_hardware_send,
     )
 
@@ -177,7 +177,7 @@ def test_engine_cycle_hardware_send_report_includes_active_safety_language(monke
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
         execute_rytm_engine_cycle_hardware_send,
         format_rytm_engine_cycle_hardware_send_report,
     )
@@ -208,7 +208,7 @@ def test_engine_cycle_hardware_send_accepts_starter_plan_with_fake_mido(monkeypa
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.rytm_engine_cycle_hardware_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_hardware_sender import (
         execute_rytm_engine_cycle_hardware_send,
         format_rytm_engine_cycle_hardware_send_report,
     )

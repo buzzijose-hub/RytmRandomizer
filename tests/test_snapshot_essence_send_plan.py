@@ -92,7 +92,7 @@ def test_importing_snapshot_essence_send_plan_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_essence_send_plan; "
+                "import rytm_randomizer.essence.snapshot_send_plan; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -110,7 +110,7 @@ def test_importing_snapshot_essence_send_plan_is_passive_and_silent():
 
 
 def test_snapshot_essence_send_plan_orders_switches_anchors_and_snapshot_changes(tmp_path):
-    from rytm_randomizer.snapshot_essence_send_plan import (
+    from rytm_randomizer.essence.snapshot_send_plan import (
         build_snapshot_essence_send_plan_from_file,
     )
 
@@ -152,7 +152,7 @@ def test_snapshot_essence_send_plan_orders_switches_anchors_and_snapshot_changes
 
 
 def test_snapshot_essence_send_plan_mock_capture_matches_eligible_events(tmp_path):
-    from rytm_randomizer.snapshot_essence_send_plan import (
+    from rytm_randomizer.essence.snapshot_send_plan import (
         build_snapshot_essence_send_plan_from_file,
         capture_snapshot_essence_send_mock_messages,
     )

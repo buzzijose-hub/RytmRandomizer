@@ -10,9 +10,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .essence_plan_report import parse_discovery_value
-from .essence_tag_adapter import ESSENCE_TAG_ORDER, derive_essence_tags_from_description
 from .machine_catalog import MachineCandidate, build_essence_role_plan
+from .plan_report import parse_discovery_value
+from .tag_adapter import ESSENCE_TAG_ORDER, derive_essence_tags_from_description
 
 
 @dataclass(frozen=True)

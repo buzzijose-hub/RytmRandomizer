@@ -26,7 +26,7 @@ def test_importing_rytm_engine_cycle_starter_profiles_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.rytm_engine_cycle_starter_profiles; "
+                "import rytm_randomizer.essence.rytm_engine_cycle_starter_profiles; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -43,7 +43,7 @@ def test_importing_rytm_engine_cycle_starter_profiles_is_passive_and_silent():
 
 
 def test_rytm_starter_profile_lookup_accepts_aliases():
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         get_rytm_starter_profile,
         list_rytm_starter_profiles,
     )
@@ -65,7 +65,7 @@ def test_rytm_starter_profile_lookup_accepts_aliases():
 
 
 def test_unknown_rytm_starter_profile_lists_valid_choices():
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import get_rytm_starter_profile
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import get_rytm_starter_profile
 
     try:
         get_rytm_starter_profile("ambient-clouds")
@@ -79,7 +79,7 @@ def test_unknown_rytm_starter_profile_lists_valid_choices():
 
 
 def test_rytm_starter_profile_auto_selects_from_style_prompt():
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         choose_rytm_starter_profile_for_style,
     )
 
@@ -90,8 +90,8 @@ def test_rytm_starter_profile_auto_selects_from_style_prompt():
 
 
 def test_engine_cycle_starter_plan_accepts_auto_profile():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
 
@@ -104,8 +104,8 @@ def test_engine_cycle_starter_plan_accepts_auto_profile():
 
 
 def test_engine_cycle_starter_plan_adds_common_safe_shaping_to_all_12_pads():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
 
@@ -143,8 +143,8 @@ def test_engine_cycle_starter_plan_adds_common_safe_shaping_to_all_12_pads():
 
 
 def test_engine_cycle_starter_plan_can_include_engine_source_starters():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
 
@@ -176,8 +176,8 @@ def test_engine_cycle_starter_plan_can_include_engine_source_starters():
 
 
 def test_engine_cycle_starter_mock_capture_emits_machine_select_then_shaping():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
         capture_rytm_engine_cycle_starter_mock_messages,
     )
@@ -205,8 +205,8 @@ def test_engine_cycle_starter_mock_capture_emits_machine_select_then_shaping():
 
 
 def test_engine_cycle_starter_report_includes_profile_preview_and_safety():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
         format_rytm_engine_cycle_starter_plan_report,
     )
@@ -228,8 +228,8 @@ def test_engine_cycle_starter_report_includes_profile_preview_and_safety():
 
 
 def test_engine_cycle_starter_report_includes_engine_source_preview_when_enabled():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
         format_rytm_engine_cycle_starter_plan_report,
     )

@@ -26,7 +26,7 @@ def test_importing_rytm_engine_cycle_plan_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.rytm_engine_cycle_plan; "
+                "import rytm_randomizer.essence.rytm_engine_cycle_plan; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -43,7 +43,7 @@ def test_importing_rytm_engine_cycle_plan_is_passive_and_silent():
 
 
 def test_birmingham_engine_cycle_plan_prefers_real_hat_and_metallic_engines():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
 
     plan = build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
 
@@ -67,7 +67,7 @@ def test_birmingham_engine_cycle_plan_prefers_real_hat_and_metallic_engines():
 
 
 def test_engine_cycle_mock_capture_sends_top_candidate_cc15_per_pad():
-    from rytm_randomizer.rytm_engine_cycle_plan import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import (
         build_rytm_engine_cycle_plan,
         capture_rytm_engine_cycle_mock_messages,
     )
@@ -88,7 +88,7 @@ def test_engine_cycle_mock_capture_sends_top_candidate_cc15_per_pad():
 
 
 def test_engine_cycle_report_includes_support_boundaries_and_mock_stream():
-    from rytm_randomizer.rytm_engine_cycle_plan import (
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import (
         build_rytm_engine_cycle_plan,
         format_rytm_engine_cycle_plan_report,
     )

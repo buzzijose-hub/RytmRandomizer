@@ -30,7 +30,7 @@ def test_importing_essence_plan_report_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.essence_plan_report; "
+                "import rytm_randomizer.essence.plan_report; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -47,7 +47,7 @@ def test_importing_essence_plan_report_is_passive_and_silent():
 
 
 def test_parse_essence_tags_normalizes_comma_separated_input():
-    from rytm_randomizer.essence_plan_report import parse_essence_tags
+    from rytm_randomizer.essence.plan_report import parse_essence_tags
 
     assert parse_essence_tags(" Metallic, bell, Driving ,, repetition ") == (
         "metallic",
@@ -58,7 +58,7 @@ def test_parse_essence_tags_normalizes_comma_separated_input():
 
 
 def test_invalid_discovery_value_fails_safely():
-    from rytm_randomizer.essence_plan_report import parse_discovery_value
+    from rytm_randomizer.essence.plan_report import parse_discovery_value
 
     with pytest.raises(ValueError, match="Discovery must be between 0.0 and 1.0"):
         parse_discovery_value("1.5")
@@ -68,7 +68,7 @@ def test_invalid_discovery_value_fails_safely():
 
 
 def test_format_essence_plan_report_shows_12_pad_plan():
-    from rytm_randomizer.essence_plan_report import format_essence_plan_report
+    from rytm_randomizer.essence.plan_report import format_essence_plan_report
 
     report = format_essence_plan_report(
         tags=("metallic", "bell", "driving", "repetition"),
@@ -91,7 +91,7 @@ def test_format_essence_plan_report_shows_12_pad_plan():
 
 
 def test_discovery_report_marks_future_inventory_candidates():
-    from rytm_randomizer.essence_plan_report import format_essence_plan_report
+    from rytm_randomizer.essence.plan_report import format_essence_plan_report
 
     report = format_essence_plan_report(
         tags=("metallic", "bell", "digital", "repetition"),

@@ -11,8 +11,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .mock_midi import MidiMessage, MockMidiSender, build_cc_message
-from .snapshot_essence_send_plan import (
+from ..mock_midi import MidiMessage, MockMidiSender, build_cc_message
+from .snapshot_send_plan import (
     SnapshotEssenceSendPlan,
     SnapshotEssenceSendPlanEvent,
 )

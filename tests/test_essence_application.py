@@ -30,7 +30,7 @@ def test_importing_essence_application_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.essence_application; "
+                "import rytm_randomizer.essence.application; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -48,7 +48,7 @@ def test_importing_essence_application_is_passive_and_silent():
 
 
 def test_safe_anchors_marks_only_current_four_pad_runtime_as_ready():
-    from rytm_randomizer.essence_application import evaluate_essence_application_readiness
+    from rytm_randomizer.essence.application import evaluate_essence_application_readiness
 
     readiness = evaluate_essence_application_readiness(
         mode="safe_anchors",
@@ -70,7 +70,7 @@ def test_safe_anchors_marks_only_current_four_pad_runtime_as_ready():
 
 
 def test_live_snapshot_blocks_all_pads_until_snapshot_is_captured():
-    from rytm_randomizer.essence_application import evaluate_essence_application_readiness
+    from rytm_randomizer.essence.application import evaluate_essence_application_readiness
     from rytm_randomizer.performance.modes import SnapshotState
 
     readiness = evaluate_essence_application_readiness(
@@ -93,7 +93,7 @@ def test_live_snapshot_blocks_all_pads_until_snapshot_is_captured():
 
 
 def test_live_snapshot_with_complete_snapshot_and_mapped_candidates_is_ready():
-    from rytm_randomizer.essence_application import evaluate_essence_application_readiness
+    from rytm_randomizer.essence.application import evaluate_essence_application_readiness
     from rytm_randomizer.performance.modes import SnapshotState
 
     readiness = evaluate_essence_application_readiness(
@@ -117,7 +117,7 @@ def test_live_snapshot_with_complete_snapshot_and_mapped_candidates_is_ready():
 
 
 def test_future_inventory_candidate_blocks_application_after_snapshot_capture():
-    from rytm_randomizer.essence_application import evaluate_essence_application_readiness
+    from rytm_randomizer.essence.application import evaluate_essence_application_readiness
     from rytm_randomizer.performance.modes import SnapshotState
 
     readiness = evaluate_essence_application_readiness(
@@ -143,7 +143,7 @@ def test_future_inventory_candidate_blocks_application_after_snapshot_capture():
 
 
 def test_live_snapshot_fixture_blocks_unmapped_captured_machines():
-    from rytm_randomizer.essence_application import evaluate_essence_application_readiness
+    from rytm_randomizer.essence.application import evaluate_essence_application_readiness
     from rytm_randomizer.snapshot.fixtures import get_snapshot_fixture
 
     readiness = evaluate_essence_application_readiness(
@@ -165,7 +165,7 @@ def test_live_snapshot_fixture_blocks_unmapped_captured_machines():
 
 
 def test_format_essence_application_readiness_report():
-    from rytm_randomizer.essence_application import (
+    from rytm_randomizer.essence.application import (
         evaluate_essence_application_readiness,
         format_essence_application_readiness_report,
     )

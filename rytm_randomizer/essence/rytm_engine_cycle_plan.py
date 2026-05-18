@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .data import MACHINE_CC
+from ..data import MACHINE_CC
+from ..mock_midi import MockMidiSender, build_cc_message
 from .machine_catalog import MachineCandidate, build_essence_role_plan
-from .mock_midi import MockMidiSender, build_cc_message
 from .style_intent_profiles import build_style_intent_request
 
 MAX_CANDIDATES_PER_PAD = 4

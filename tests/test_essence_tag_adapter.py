@@ -38,7 +38,7 @@ def test_importing_essence_tag_adapter_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.essence_tag_adapter; "
+                "import rytm_randomizer.essence.tag_adapter; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -56,7 +56,7 @@ def test_importing_essence_tag_adapter_is_passive_and_silent():
 
 
 def test_description_derives_broad_essence_tags_without_copying_names():
-    from rytm_randomizer.essence_tag_adapter import derive_essence_tags_from_description
+    from rytm_randomizer.essence.tag_adapter import derive_essence_tags_from_description
 
     tags = derive_essence_tags_from_description(
         "The Bells by Jeff Mills: metallic bell pressure, driving repetition, Detroit techno."
@@ -76,7 +76,7 @@ def test_description_derives_broad_essence_tags_without_copying_names():
 
 
 def test_description_derivation_is_deterministic_and_deduplicated():
-    from rytm_randomizer.essence_tag_adapter import derive_essence_tags_from_description
+    from rytm_randomizer.essence.tag_adapter import derive_essence_tags_from_description
 
     first = derive_essence_tags_from_description("bell bells metallic metal bell")
     second = derive_essence_tags_from_description("metal bell metallic bells")
@@ -86,14 +86,14 @@ def test_description_derivation_is_deterministic_and_deduplicated():
 
 
 def test_description_derivation_rejects_non_string_input():
-    from rytm_randomizer.essence_tag_adapter import derive_essence_tags_from_description
+    from rytm_randomizer.essence.tag_adapter import derive_essence_tags_from_description
 
     with pytest.raises(TypeError):
         derive_essence_tags_from_description(123)  # type: ignore[arg-type]
 
 
 def test_feature_report_derives_essence_tags_from_measurements():
-    from rytm_randomizer.essence_tag_adapter import derive_essence_tags_from_feature_report
+    from rytm_randomizer.essence.tag_adapter import derive_essence_tags_from_feature_report
 
     tags = derive_essence_tags_from_feature_report(_feature_report())
 
@@ -108,7 +108,7 @@ def test_feature_report_derives_essence_tags_from_measurements():
 
 
 def test_feature_report_and_description_tags_merge_in_stable_order():
-    from rytm_randomizer.essence_tag_adapter import derive_essence_tags_from_feature_report
+    from rytm_randomizer.essence.tag_adapter import derive_essence_tags_from_feature_report
 
     tags = derive_essence_tags_from_feature_report(
         _feature_report(spectral_brightness=0.2, texture_noise=0.1),
@@ -128,7 +128,7 @@ def test_feature_report_and_description_tags_merge_in_stable_order():
 
 
 def test_feature_report_derivation_rejects_non_report_input():
-    from rytm_randomizer.essence_tag_adapter import derive_essence_tags_from_feature_report
+    from rytm_randomizer.essence.tag_adapter import derive_essence_tags_from_feature_report
 
     with pytest.raises(TypeError):
         derive_essence_tags_from_feature_report(object())  # type: ignore[arg-type]

@@ -93,7 +93,7 @@ def write_hardware_fixture(path):
 
 
 def build_ready_plan(tmp_path):
-    from rytm_randomizer.snapshot_essence_send_plan import (
+    from rytm_randomizer.essence.snapshot_send_plan import (
         build_snapshot_essence_send_plan_from_file,
     )
 
@@ -115,7 +115,7 @@ def test_importing_snapshot_essence_hardware_sender_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.snapshot_essence_hardware_sender; "
+                "import rytm_randomizer.essence.snapshot_hardware_sender; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules; "
                 "assert 'librosa' not in sys.modules"
@@ -133,7 +133,7 @@ def test_importing_snapshot_essence_hardware_sender_is_passive_and_silent():
 
 
 def test_hardware_send_requires_arming_before_sending(tmp_path):
-    from rytm_randomizer.snapshot_essence_hardware_sender import (
+    from rytm_randomizer.essence.snapshot_hardware_sender import (
         execute_snapshot_essence_hardware_send,
     )
 
@@ -154,7 +154,7 @@ def test_hardware_send_requires_arming_before_sending(tmp_path):
 
 
 def test_hardware_send_requires_operator_confirmation_before_sending(tmp_path):
-    from rytm_randomizer.snapshot_essence_hardware_sender import (
+    from rytm_randomizer.essence.snapshot_hardware_sender import (
         execute_snapshot_essence_hardware_send,
     )
 
@@ -175,7 +175,7 @@ def test_hardware_send_requires_operator_confirmation_before_sending(tmp_path):
 
 
 def test_hardware_send_refuses_blocked_plan_before_sending(tmp_path):
-    from rytm_randomizer.snapshot_essence_hardware_sender import (
+    from rytm_randomizer.essence.snapshot_hardware_sender import (
         execute_snapshot_essence_hardware_send,
     )
 
@@ -198,7 +198,7 @@ def test_hardware_send_refuses_blocked_plan_before_sending(tmp_path):
 
 
 def test_hardware_send_refuses_ineligible_events_before_sending(tmp_path):
-    from rytm_randomizer.snapshot_essence_hardware_sender import (
+    from rytm_randomizer.essence.snapshot_hardware_sender import (
         execute_snapshot_essence_hardware_send,
     )
 
@@ -230,7 +230,7 @@ def test_hardware_send_accepts_ready_plan_with_fake_mido(tmp_path, monkeypatch):
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.snapshot_essence_hardware_sender import (
+    from rytm_randomizer.essence.snapshot_hardware_sender import (
         execute_snapshot_essence_hardware_send,
     )
 
@@ -267,7 +267,7 @@ def test_hardware_send_report_includes_active_safety_language(tmp_path, monkeypa
     fake_mido.Message = FakeMessage
     monkeypatch.setitem(sys.modules, "mido", fake_mido)
 
-    from rytm_randomizer.snapshot_essence_hardware_sender import (
+    from rytm_randomizer.essence.snapshot_hardware_sender import (
         execute_snapshot_essence_hardware_send,
         format_snapshot_essence_hardware_send_report,
     )

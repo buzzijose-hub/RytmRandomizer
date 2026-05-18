@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .data import MACHINE_CC, PROFILES
+from ..data import MACHINE_CC, PROFILES
+from ..mock_midi import MockMidiSender, build_cc_message
 from .machine_catalog import MachineCandidate, RoleAssignment, build_essence_role_plan
-from .mock_midi import MockMidiSender, build_cc_message
 from .style_intent_profiles import StyleIntentRequest, build_style_intent_request
 
 

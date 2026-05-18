@@ -10,15 +10,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .data import MACHINE_CC
-from .machine_catalog import MachineCandidate, RoleAssignment, build_essence_role_plan
-from .observability.errors import DataError
-from .snapshot.rytm_mutation_planner import (
+from ..data import MACHINE_CC
+from ..observability.errors import DataError
+from ..snapshot.rytm_mutation_planner import (
     SnapshotMutationPlan,
     SnapshotMutationPlanError,
     SnapshotPadMutationPlan,
     build_snapshot_mutation_plan_from_file,
 )
+from .machine_catalog import MachineCandidate, RoleAssignment, build_essence_role_plan
 from .style_intent_profiles import build_style_intent_request
 
 MACHINE_PROFILE_KEYS: dict[str, str] = {

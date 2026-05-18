@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-from .style_analysis import FeatureReport
+from ..style_analysis import FeatureReport
 
 ESSENCE_TAG_ORDER: tuple[str, ...] = (
     "metallic",

@@ -12,8 +12,8 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from . import midi_io
-from .midi_io import Sender
+from .. import midi_io
+from ..midi_io import Sender
 
 SleepFunc = Callable[[float], object]
 
@@ -177,7 +177,7 @@ def format_twelve_pad_smoke_report(
 
 def _send_smoke_step(out: Sender, step: TwelvePadSmokeStep) -> None:
     if out.__class__.__name__ == "MockMidiSender":
-        from .mock_midi import MockMidiSender, build_cc_message
+        from ..mock_midi import MockMidiSender, build_cc_message
 
         if isinstance(out, MockMidiSender):
             out.send(

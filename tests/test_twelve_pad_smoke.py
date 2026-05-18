@@ -16,7 +16,7 @@ def test_importing_twelve_pad_smoke_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.twelve_pad_smoke; "
+                "import rytm_randomizer.rytm.twelve_pad_smoke; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -33,7 +33,7 @@ def test_importing_twelve_pad_smoke_is_passive_and_silent():
 
 
 def test_build_twelve_pad_smoke_steps_targets_pads_5_to_12():
-    from rytm_randomizer.twelve_pad_smoke import build_twelve_pad_smoke_steps
+    from rytm_randomizer.rytm.twelve_pad_smoke import build_twelve_pad_smoke_steps
 
     steps = build_twelve_pad_smoke_steps()
 
@@ -53,7 +53,7 @@ def test_build_twelve_pad_smoke_steps_targets_pads_5_to_12():
 
 def test_run_twelve_pad_smoke_test_captures_mock_stream_without_sleeping():
     from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.twelve_pad_smoke import run_twelve_pad_smoke_test
+    from rytm_randomizer.rytm.twelve_pad_smoke import run_twelve_pad_smoke_test
 
     sender = MockMidiSender()
     sleeps = []
@@ -75,7 +75,7 @@ def test_run_twelve_pad_smoke_test_captures_mock_stream_without_sleeping():
 
 def test_format_twelve_pad_smoke_report_includes_safety_and_summary():
     from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.twelve_pad_smoke import (
+    from rytm_randomizer.rytm.twelve_pad_smoke import (
         format_twelve_pad_smoke_report,
         run_twelve_pad_smoke_test,
     )

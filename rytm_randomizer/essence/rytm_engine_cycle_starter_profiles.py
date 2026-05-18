@@ -11,8 +11,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from .data import MACHINE_CC
-from .mock_midi import MockMidiSender, build_cc_message
+from ..data import MACHINE_CC
+from ..mock_midi import MockMidiSender, build_cc_message
 from .rytm_engine_cycle_plan import RytmEngineCyclePlan
 
 COMMON_STARTER_PARAMETER_CCS: tuple[tuple[str, int], ...] = (

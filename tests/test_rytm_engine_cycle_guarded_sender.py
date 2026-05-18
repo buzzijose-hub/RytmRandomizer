@@ -11,13 +11,13 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def build_plan():
-    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
 
     return build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
 
 
 def build_starter_plan():
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
 
@@ -28,7 +28,7 @@ def build_starter_plan():
 
 
 def build_source_starter_plan():
-    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
         build_rytm_engine_cycle_starter_plan,
     )
 
@@ -46,7 +46,7 @@ def test_importing_rytm_engine_cycle_guarded_sender_is_passive_and_silent():
             "-c",
             (
                 "import sys; "
-                "import rytm_randomizer.rytm_engine_cycle_guarded_sender; "
+                "import rytm_randomizer.essence.rytm_engine_cycle_guarded_sender; "
                 "assert 'mido' not in sys.modules; "
                 "assert 'rtmidi' not in sys.modules"
             ),
@@ -63,10 +63,10 @@ def test_importing_rytm_engine_cycle_guarded_sender_is_passive_and_silent():
 
 
 def test_guarded_engine_cycle_requires_arming_before_mock_emit():
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         execute_rytm_engine_cycle_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_rytm_engine_cycle_guarded_send(
@@ -83,10 +83,10 @@ def test_guarded_engine_cycle_requires_arming_before_mock_emit():
 
 
 def test_guarded_engine_cycle_requires_dry_run_confirmation_before_mock_emit():
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         execute_rytm_engine_cycle_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_rytm_engine_cycle_guarded_send(
@@ -103,10 +103,10 @@ def test_guarded_engine_cycle_requires_dry_run_confirmation_before_mock_emit():
 
 
 def test_guarded_engine_cycle_refuses_unresolved_pad_without_partial_emit():
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         execute_rytm_engine_cycle_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     plan = build_plan()
     unresolved_pad = replace(plan.pads[0], candidates=())
@@ -128,10 +128,10 @@ def test_guarded_engine_cycle_refuses_unresolved_pad_without_partial_emit():
 
 
 def test_guarded_engine_cycle_emits_12_cc15_messages_to_mock_sender():
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         execute_rytm_engine_cycle_guarded_send,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_rytm_engine_cycle_guarded_send(
@@ -157,7 +157,7 @@ def test_guarded_engine_cycle_emits_12_cc15_messages_to_mock_sender():
 
 
 def test_guarded_engine_cycle_report_formats_policy_and_preview():
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         build_rytm_engine_cycle_guarded_send_dry_run,
         format_rytm_engine_cycle_guarded_send_dry_run_report,
     )
@@ -175,11 +175,11 @@ def test_guarded_engine_cycle_report_formats_policy_and_preview():
 
 
 def test_guarded_engine_cycle_starter_plan_emits_84_mock_messages():
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         execute_rytm_engine_cycle_guarded_send,
         format_rytm_engine_cycle_guarded_send_dry_run_report,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_rytm_engine_cycle_guarded_send(
@@ -214,11 +214,11 @@ def test_guarded_engine_cycle_starter_plan_emits_84_mock_messages():
 
 
 def test_guarded_engine_cycle_source_starter_plan_emits_132_mock_messages():
-    from rytm_randomizer.mock_midi import MockMidiSender
-    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+    from rytm_randomizer.essence.rytm_engine_cycle_guarded_sender import (
         execute_rytm_engine_cycle_guarded_send,
         format_rytm_engine_cycle_guarded_send_dry_run_report,
     )
+    from rytm_randomizer.mock_midi import MockMidiSender
 
     sender = MockMidiSender()
     result = execute_rytm_engine_cycle_guarded_send(
