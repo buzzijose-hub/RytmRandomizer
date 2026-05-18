@@ -54,8 +54,9 @@ from .scene_runner import SceneRunner
 
 __all__ = ["InteractiveShell", "ShellDependencies", "build_shell"]
 
-# A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
-Sender = Any
+# A MIDI sender: see :class:`rytm_randomizer.midi_io.MidiSender`.
+from .midi_io import Sender  # noqa: E402, PLC0415 - canonical re-export per WS-S1
+
 # A sleep callable: takes a duration in seconds, returns nothing.
 SleepFunc = Callable[[float], Any]
 # An input callable: takes a prompt string, returns the typed line.
