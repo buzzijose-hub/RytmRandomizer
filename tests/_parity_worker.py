@@ -537,8 +537,16 @@ def make_parity_subprocess(harness: str, module_id: str):
             if captured is None:  # pragma: no cover - defensive
                 raise ParityWorkerError(f"capture mode returned no payload for {fixture_path.name}")
             _save_fixture(fixture_path, captured)
-            # WS-M4: maintain _INDEX.json in capture mode only.
-            _update_index(module_id, fixture_path, payload)
+            # WS-M4 + security-review MED finding: maintain _INDEX.json in
+            # capture mode only AND skip when running under pytest-xdist
+            # (the default ``-n auto`` mode). Multiple xdist workers would
+            # otherwise race on the read-modify-write cycle of _INDEX.json
+            # and silently lose entries (last write wins). Capture-mode
+            # regeneration of the full index is a single-worker operation
+            # by convention; if a contributor needs it, they invoke
+            # ``PARITY_CAPTURE_MODE=1 pytest -n0 ...`` explicitly.
+            if not os.environ.get("PYTEST_XDIST_WORKER"):
+                _update_index(module_id, fixture_path, payload)
 
         if not fixture_path.exists():
             raise FixtureMissingError(

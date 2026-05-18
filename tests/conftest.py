@@ -107,8 +107,23 @@ def _install_fake_mido() -> types.ModuleType:
 
     Module-level helper (not a fixture) so legacy call-site usage in
     ``tests/test_engines_pad{1..4}.py`` and friends continues to work
-    after WS-M4 dedupe. New tests should prefer the ``fake_mido_session``
-    pytest fixture which handles teardown.
+    after WS-M4 dedupe.
+
+    .. warning::
+
+        LEGACY COMPATIBILITY ONLY. This helper modifies ``sys.modules``
+        in place and does **not** restore the prior ``mido`` entry on
+        teardown. Tests that call it directly leak the fake into every
+        subsequent test in the same pytest worker. **Prefer the
+        :func:`fake_mido_session` pytest fixture below** -- it installs
+        the same fake but restores ``sys.modules`` on test exit.
+
+        This helper exists only because removing it would require a
+        sweep of the ~5 remaining call sites in ``test_engines_pad*.py``
+        and the existing ``_restore_sys_modules`` autouse fixtures in
+        those files happen to clean up the leak by side effect. New
+        tests should not add new calls; flagged as a follow-up sweep
+        in the WS-M4 plan.
     """
 
     fake = types.ModuleType("mido")

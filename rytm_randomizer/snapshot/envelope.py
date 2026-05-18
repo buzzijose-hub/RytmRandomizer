@@ -80,6 +80,25 @@ def unpack_elektron_7bit(packed: bytes) -> bytes:
         cursor += 1
         # A group is up to 7 data bytes; trailing groups may be shorter.
         group_end = min(cursor + 7, length)
+        # Security-review LOW finding: reject a lone trailing header byte
+        # (a buffer with length % 8 == 1) explicitly instead of silently
+        # discarding it. Real Elektron firmware does not emit lone headers;
+        # if we see one, the upstream framing is corrupted and the caller
+        # should know rather than receive a quietly-truncated payload.
+        if cursor == group_end and cursor < length + 1 and header != 0:
+            # cursor == group_end means zero data bytes follow the header;
+            # this is malformed (a header with no payload is meaningless).
+            # When cursor < length the while-loop would just iterate again
+            # treating header as data — but cursor == group_end == length
+            # is the terminal case we want to reject when header != 0
+            # (a zero header trailing is harmless padding).
+            if cursor == length and header != 0:
+                raise ValueError(
+                    f"unpack_elektron_7bit: trailing group at offset "
+                    f"{cursor - 1} has a header byte (0x{header:02x}) "
+                    "but no data bytes; this is malformed input -- check "
+                    "the SysEx envelope framing before unpacking."
+                )
         for bit_index, data_index in enumerate(range(cursor, group_end)):
             high_bit = (header >> bit_index) & 0x01
             out.append((high_bit << 7) | packed[data_index])
@@ -127,6 +146,19 @@ def find_kit_record(raw: bytes, slot: int, kit_type_byte: int) -> bytes:
     # The scan locates the *first* occurrence of ``kit_type_byte`` after
     # the manufacturer-id prefix; a real decoder uses ``slot`` to pick
     # the N-th occurrence or a fixed offset.
+    #
+    # Security-review LOW finding: ``slot`` is intentionally unused in
+    # this stub. Per-device decoders supply the correct offset table.
+    # Reject ``slot > 0`` here so a caller cannot silently receive the
+    # wrong kit; force the caller to either pass slot=0 (first
+    # occurrence) or wait for per-device decoders to land.
+    if slot > 0:
+        raise NotImplementedError(
+            f"find_kit_record: slot-indexed lookup not yet implemented "
+            f"(requested slot={slot}). The per-device decoders supply "
+            "an offset table; until they land (PR #21 onward), only "
+            "slot=0 (first occurrence) is supported."
+        )
     payload_start = len(ELEKTRON_MFR_ID)
     try:
         type_pos = raw.index(kit_type_byte, payload_start)
