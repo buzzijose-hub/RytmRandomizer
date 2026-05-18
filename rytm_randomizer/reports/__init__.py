@@ -16,7 +16,6 @@ does not pull in MIDI libraries, bridge modules, or behavior evaluators.
 
 from __future__ import annotations
 
-import sys
 from copy import deepcopy
 
 from .formatter import passive_footer_lines, safety_section_lines
@@ -121,14 +120,6 @@ def format_registry_report(report=None):
 
     lines.extend(passive_footer_lines("registry"))
     return lines
-
-
-def registry_report_main(argv=None):
-    """Print the passive registry report for explicit module execution."""
-    _ = [] if argv is None else list(argv)
-    sys.stdout.write("\n".join(format_registry_report()))
-    sys.stdout.write("\n")
-    return 0
 
 
 # ---------------------------------------------------------------------------

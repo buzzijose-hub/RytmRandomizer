@@ -354,3 +354,48 @@ def test_base_mock_runtime_forwards_messages_from_device_to_outbox() -> None:
     assert returned == expected
     assert outbox.sent == expected
     assert runtime.outbox is outbox
+
+
+# ---------------------------------------------------------------------------
+# Coverage: defensive None guards on the four helpers.
+#
+# Each helper has a ``# type: ignore[unreachable]`` defensive ``None``
+# check; static typing forbids the call but we want runtime confirmation
+# the message is what the caller will see, and the branch is exercised.
+# ---------------------------------------------------------------------------
+
+
+def test_unpack_elektron_7bit_raises_on_none_input() -> None:
+    from typing import cast
+
+    from rytm_randomizer.snapshot import unpack_elektron_7bit
+
+    with pytest.raises(ValueError, match="packed payload is None"):
+        unpack_elektron_7bit(cast(bytes, None))
+
+
+def test_find_kit_record_raises_on_none_raw() -> None:
+    from typing import cast
+
+    from rytm_randomizer.snapshot import find_kit_record
+
+    with pytest.raises(ValueError, match="raw payload is None"):
+        find_kit_record(cast(bytes, None), slot=0, kit_type_byte=0x00)
+
+
+def test_read_ascii_name_raises_on_none_record() -> None:
+    from typing import cast
+
+    from rytm_randomizer.snapshot import read_ascii_name
+
+    with pytest.raises(ValueError, match="record is None"):
+        read_ascii_name(cast(bytes, None), offset=0, length=4)
+
+
+def test_format_manufacturer_id_raises_on_none() -> None:
+    from typing import cast
+
+    from rytm_randomizer.snapshot import format_manufacturer_id
+
+    with pytest.raises(ValueError, match="raw is None"):
+        format_manufacturer_id(cast(bytes, None))
