@@ -25,6 +25,148 @@ COMMON_STARTER_PARAMETER_CCS: tuple[tuple[str, int], ...] = (
 )
 
 
+ENGINE_SOURCE_STARTERS: dict[str, tuple[tuple[str, int, int], ...]] = {
+    "bd_hard": (
+        ("SRC Tune", 17, 61),
+        ("SRC Decay", 18, 51),
+        ("SRC Snap", 21, 26),
+        ("SRC Transient Tick", 23, 88),
+    ),
+    "bd_classic": (
+        ("SRC Tune", 17, 58),
+        ("SRC Decay", 18, 53),
+        ("SRC Sweep Depth", 19, 32),
+        ("SRC Transient", 23, 24),
+    ),
+    "bd_acoustic": (
+        ("SRC Tune", 17, 52),
+        ("SRC Decay", 18, 94),
+        ("SRC Impact", 22, 110),
+        ("SRC Waveform", 23, 0),
+    ),
+    "sy_chip": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 72),
+        ("SRC Slot 3", 18, 52),
+        ("SRC Slot 8", 23, 92),
+    ),
+    "dual_vco": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 60),
+        ("SRC Slot 3", 18, 64),
+        ("SRC Slot 8", 23, 82),
+    ),
+    "rs_hard": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 72),
+        ("SRC Slot 3", 18, 30),
+        ("SRC Slot 8", 23, 86),
+    ),
+    "rs_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 66),
+        ("SRC Slot 3", 18, 34),
+        ("SRC Slot 8", 23, 78),
+    ),
+    "cp_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 64),
+        ("SRC Slot 3", 18, 58),
+        ("SRC Slot 8", 23, 90),
+    ),
+    "bt_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 56),
+        ("SRC Slot 3", 18, 68),
+        ("SRC Slot 8", 23, 72),
+    ),
+    "xt_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 62),
+        ("SRC Slot 3", 18, 60),
+        ("SRC Slot 8", 23, 76),
+    ),
+    "ch_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 70),
+        ("SRC Slot 3", 18, 30),
+        ("SRC Slot 8", 23, 84),
+    ),
+    "ch_metallic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 74),
+        ("SRC Slot 3", 18, 32),
+        ("SRC Slot 8", 23, 92),
+    ),
+    "oh_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 72),
+        ("SRC Slot 3", 18, 66),
+        ("SRC Slot 8", 23, 88),
+    ),
+    "oh_metallic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 78),
+        ("SRC Slot 3", 18, 64),
+        ("SRC Slot 8", 23, 96),
+    ),
+    "hh_basic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 72),
+        ("SRC Slot 3", 18, 48),
+        ("SRC Slot 8", 23, 82),
+    ),
+    "hh_lab": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 80),
+        ("SRC Slot 3", 18, 66),
+        ("SRC Slot 8", 23, 94),
+    ),
+    "cy_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 70),
+        ("SRC Slot 3", 18, 76),
+        ("SRC Slot 8", 23, 90),
+    ),
+    "cy_metallic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 78),
+        ("SRC Slot 3", 18, 74),
+        ("SRC Slot 8", 23, 98),
+    ),
+    "cy_ride": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 74),
+        ("SRC Slot 3", 18, 84),
+        ("SRC Slot 8", 23, 96),
+    ),
+    "cb_classic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 72),
+        ("SRC Slot 3", 18, 78),
+        ("SRC Slot 8", 23, 96),
+    ),
+    "cb_metallic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 78),
+        ("SRC Slot 3", 18, 82),
+        ("SRC Slot 8", 23, 104),
+    ),
+    "ut_noise": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 90),
+        ("SRC Slot 3", 18, 80),
+        ("SRC Slot 8", 23, 110),
+    ),
+    "ut_impulse": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 76),
+        ("SRC Slot 3", 18, 22),
+        ("SRC Slot 8", 23, 100),
+    ),
+}
+
+
 @dataclass(frozen=True)
 class RytmStarterParameter:
     """One common mapped CC/value pair for a Rytm starter profile."""
@@ -127,6 +269,15 @@ class RytmEngineCycleStarterPlan:
             for pad in self.pads
             for event in pad.events
             if event.event_role == "starter_parameter"
+        )
+
+    @property
+    def engine_source_event_count(self) -> int:
+        return sum(
+            1
+            for pad in self.pads
+            for event in pad.events
+            if event.event_role == "engine_source_parameter"
         )
 
 
@@ -323,6 +474,7 @@ def build_rytm_engine_cycle_starter_plan(
     engine_plan: RytmEngineCyclePlan,
     *,
     profile: str | RytmStarterProfile | None = "balanced",
+    include_engine_source_starters: bool = False,
 ) -> RytmEngineCycleStarterPlan:
     """Add common starter-shaping CC events to an engine-cycle plan."""
 
@@ -358,6 +510,11 @@ def build_rytm_engine_cycle_starter_plan(
                 source="engine cycle top candidate",
             )
         ]
+        if include_engine_source_starters:
+            events.extend(
+                _build_engine_source_event(pad_plan, candidate, parameter)
+                for parameter in _engine_source_parameters(candidate.machine_key)
+            )
         events.extend(
             RytmEngineCycleStarterEvent(
                 pad=pad_plan.pad,
@@ -462,6 +619,7 @@ def format_rytm_engine_cycle_starter_plan_report(
         f"Profile behavior: {plan.starter_profile_description}",
         f"Planned pads: {plan.pad_count}",
         f"Machine-select messages: {plan.machine_select_event_count}",
+        f"Engine-source parameter messages: {plan.engine_source_event_count}",
         f"Starter parameter messages: {plan.starter_parameter_event_count}",
         f"Starter messages: {len(sender.sent_messages)}",
         "Pad starter plans:",
@@ -481,8 +639,9 @@ def format_rytm_engine_cycle_starter_plan_report(
         [
             "Starter policy:",
             "- machine select first, starter shaping second",
+            "- engine-source starters use mapped SRC slots only",
             "- common filter/amp starter values only",
-            "- no engine-specific SRC tuning claimed yet",
+            "- generic SRC Slot labels are used where official source names are pending",
             "- existing guarded and armed engine-cycle senders are unchanged",
             "Safety:",
             "- passive/read-only",
@@ -526,8 +685,10 @@ def _format_message_preview(message) -> str:
     role = str(metadata["event_role"])
     if role == "machine_select":
         detail = f"CC{message.control} -> {message.value} / {metadata['machine_label']}"
-    else:
+    elif role in {"starter_parameter", "engine_source_parameter"}:
         detail = f"{metadata['parameter']} CC{message.control} -> {message.value}"
+    else:
+        detail = f"CC{message.control} -> {message.value}"
     return (
         f"- Pad {metadata['pad']} / ch {metadata['midi_channel']} "
         f"wire {message.channel} / {role} / {detail}"
@@ -536,6 +697,36 @@ def _format_message_preview(message) -> str:
 
 def _format_labels(labels: tuple[str, ...]) -> str:
     return ", ".join(labels) if labels else "none"
+
+
+def _engine_source_parameters(machine_key: str) -> tuple[RytmStarterParameter, ...]:
+    return tuple(
+        _parameter(name, cc, value)
+        for name, cc, value in ENGINE_SOURCE_STARTERS.get(machine_key, ())
+    )
+
+
+def _build_engine_source_event(
+    pad_plan,
+    candidate,
+    parameter: RytmStarterParameter,
+) -> RytmEngineCycleStarterEvent:
+    return RytmEngineCycleStarterEvent(
+        pad=pad_plan.pad,
+        midi_channel=pad_plan.midi_channel,
+        wire_channel=pad_plan.wire_channel,
+        role_key=pad_plan.role_key,
+        role_label=pad_plan.role_label,
+        machine_key=candidate.machine_key,
+        machine_label=candidate.machine_label,
+        machine_value=candidate.machine_value,
+        support_status=candidate.support_status,
+        event_role="engine_source_parameter",
+        parameter_name=parameter.parameter_name,
+        cc=parameter.cc,
+        value=parameter.value,
+        source="Rytm engine source starter",
+    )
 
 
 def _resolve_starter_profile(
@@ -565,6 +756,7 @@ def _normalize_style_prompt(style_prompt: str) -> str:
 
 __all__ = [
     "COMMON_STARTER_PARAMETER_CCS",
+    "ENGINE_SOURCE_STARTERS",
     "RYTM_STARTER_PROFILES",
     "RytmEngineCycleStarterEvent",
     "RytmEngineCycleStarterPadPlan",

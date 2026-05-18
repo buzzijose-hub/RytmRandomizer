@@ -313,10 +313,10 @@ def _result_metadata(
 
 
 def _format_emission_line(message: RytmEngineCycleHardwareEmission) -> str:
-    if message.event_role == "starter_parameter":
+    if message.event_role in {"starter_parameter", "engine_source_parameter"}:
         return (
             f"- Pad {message.pad} / ch {message.midi_channel} wire {message.channel} / "
-            f"starter_parameter / {message.parameter_name} CC{message.control} -> "
+            f"{message.event_role} / {message.parameter_name} CC{message.control} -> "
             f"{message.value}"
         )
     if message.event_role == "machine_select":
@@ -334,7 +334,17 @@ def _format_emission_line(message: RytmEngineCycleHardwareEmission) -> str:
 def _emission_policy_lines(result: RytmEngineCycleHardwareSendResult) -> list[str]:
     if result.starter_profile_key is None:
         return ["- sends CC15 machine-select events only"]
-    return ["- sends CC15 machine-select plus common filter/amp starter values"]
+    lines = ["- sends CC15 machine-select plus common filter/amp starter values"]
+    if _has_engine_source_events(result):
+        lines.append("- includes engine-source SRC starter values")
+    return lines
+
+
+def _has_engine_source_events(result: RytmEngineCycleHardwareSendResult) -> bool:
+    return any(
+        message.event_role == "engine_source_parameter"
+        for message in result.emitted_messages
+    )
 
 
 def _is_send_plan(plan: object) -> bool:

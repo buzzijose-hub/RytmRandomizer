@@ -189,6 +189,14 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--engine-cycle-source-starters",
+        action="store_true",
+        help=(
+            "With --engine-cycle-starter-profile, add four machine-specific "
+            "SRC-slot starter CC values per selected Rytm engine."
+        ),
+    )
+    parser.add_argument(
         "--analog-four-path",
         metavar="PATH",
         help="Optional saved Analog Four SysEx kit/project dump path.",
@@ -273,6 +281,8 @@ def _print_passive_menu() -> None:
             "Rytm 12-pad CC15 engine-cycle plan",
             "  optional: --engine-cycle-starter-profile <profile> adds "
             "common starter shaping",
+            "  optional: --engine-cycle-source-starters adds SRC-slot source "
+            "starter values",
             "",
             USAGE,
         ]
@@ -336,6 +346,7 @@ def _rytm_engine_cycle_request_from_args(
         "engine_cycle_style": args.engine_cycle_style,
         "engine_cycle_discovery": args.engine_cycle_discovery,
         "engine_cycle_starter_profile": args.engine_cycle_starter_profile,
+        "engine_cycle_source_starters": args.engine_cycle_source_starters,
     }
 
 
@@ -403,6 +414,7 @@ def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
     return build_rytm_engine_cycle_starter_plan(
         plan,
         profile=str(starter_profile),
+        include_engine_source_starters=bool(request.get("engine_cycle_source_starters")),
     )
 
 
@@ -1408,6 +1420,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:
         sys.stderr.write(
             "--engine-cycle-starter-profile requires --rytm-engine-cycle.\n"
+        )
+        return 2
+
+    if args.engine_cycle_source_starters and args.engine_cycle_starter_profile is None:
+        sys.stderr.write(
+            "--engine-cycle-source-starters requires --engine-cycle-starter-profile.\n"
         )
         return 2
 

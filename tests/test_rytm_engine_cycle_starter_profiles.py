@@ -144,6 +144,39 @@ def test_engine_cycle_starter_plan_adds_common_safe_shaping_to_all_12_pads():
     assert starter_events["AMP Pan"].value == 58
 
 
+def test_engine_cycle_starter_plan_can_include_engine_source_starters():
+    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+    )
+
+    engine_plan = build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
+    starter_plan = build_rytm_engine_cycle_starter_plan(
+        engine_plan,
+        profile="birmingham-dark",
+        include_engine_source_starters=True,
+    )
+
+    assert starter_plan.event_count == 132
+    assert starter_plan.engine_source_event_count == 48
+    assert starter_plan.starter_parameter_event_count == 72
+
+    pad5 = starter_plan.pads[4]
+    assert len(pad5.events) == 11
+    assert pad5.events[0].event_role == "machine_select"
+    assert pad5.events[1].event_role == "engine_source_parameter"
+    assert pad5.events[1].parameter_name == "SRC Slot 1"
+    assert pad5.events[1].cc == 16
+    assert pad5.events[1].value == 100
+    assert pad5.events[4].parameter_name == "SRC Slot 8"
+    assert pad5.events[4].cc == 23
+    assert pad5.events[4].value == 92
+    assert pad5.events[5].event_role == "starter_parameter"
+    assert pad5.events[5].parameter_name == "FLT Frequency"
+    assert pad5.events[5].cc == 74
+    assert pad5.events[5].value == 108
+
+
 def test_engine_cycle_starter_mock_capture_emits_machine_select_then_shaping():
     from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
     from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
@@ -200,6 +233,31 @@ def test_engine_cycle_starter_report_includes_profile_preview_and_safety():
     )
     assert "- common filter/amp starter values only" in report
     assert "- no MIDI sending" in report
+
+
+def test_engine_cycle_starter_report_includes_engine_source_preview_when_enabled():
+    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+        format_rytm_engine_cycle_starter_plan_report,
+    )
+
+    engine_plan = build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
+    starter_plan = build_rytm_engine_cycle_starter_plan(
+        engine_plan,
+        profile="birmingham-dark",
+        include_engine_source_starters=True,
+    )
+    report = format_rytm_engine_cycle_starter_plan_report(starter_plan)
+
+    assert "Engine-source parameter messages: 48" in report
+    assert "Starter messages: 132" in report
+    assert "- Pad 5 / Closed hat pulse / CH Metallic: 11 message(s)" in report
+    assert (
+        "- Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100"
+        in report
+    )
+    assert "- engine-source starters use mapped SRC slots only" in report
 
 
 def test_rytm_engine_cycle_starter_plan_report_cli_accepts_style_and_profile():

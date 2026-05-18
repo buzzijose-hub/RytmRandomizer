@@ -23,6 +23,18 @@ def build_starter_plan():
     )
 
 
+def build_source_starter_plan():
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+    )
+
+    return build_rytm_engine_cycle_starter_plan(
+        build_plan(),
+        profile="birmingham-dark",
+        include_engine_source_starters=True,
+    )
+
+
 def test_importing_rytm_engine_cycle_guarded_sender_is_passive_and_silent():
     result = subprocess.run(
         [
@@ -195,3 +207,35 @@ def test_guarded_engine_cycle_starter_plan_emits_84_mock_messages():
     assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
     assert "Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- emits CC15 machine-select plus common filter/amp starter values" in report
+
+
+def test_guarded_engine_cycle_source_starter_plan_emits_132_mock_messages():
+    from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.rytm_engine_cycle_guarded_sender import (
+        execute_rytm_engine_cycle_guarded_send,
+        format_rytm_engine_cycle_guarded_send_dry_run_report,
+    )
+
+    sender = MockMidiSender()
+    result = execute_rytm_engine_cycle_guarded_send(
+        build_source_starter_plan(),
+        sender,
+        armed=True,
+        dry_run_confirmed=True,
+    )
+    report = "\n".join(format_rytm_engine_cycle_guarded_send_dry_run_report(result))
+
+    assert result.accepted is True
+    assert result.emitted_message_count == 132
+    pad5_source = result.emitted_messages[45]
+    assert pad5_source.metadata["pad"] == 5
+    assert pad5_source.metadata["event_role"] == "engine_source_parameter"
+    assert pad5_source.metadata["parameter"] == "SRC Slot 1"
+    assert pad5_source.control == 16
+    assert pad5_source.value == 100
+    assert "Emitted mock messages: 132" in report
+    assert (
+        "Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100"
+        in report
+    )
+    assert "- includes engine-source SRC starter values" in report

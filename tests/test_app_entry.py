@@ -516,6 +516,31 @@ def test_app_main_dry_run_rytm_engine_cycle_auto_starter_profile(capsys):
     assert captured.err == ""
 
 
+def test_app_main_dry_run_rytm_engine_cycle_source_starters(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--rytm-engine-cycle",
+            "--engine-cycle-style",
+            "Birmingham dark techno",
+            "--engine-cycle-starter-profile",
+            "auto",
+            "--engine-cycle-source-starters",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Emitted mock messages: 132" in captured.out
+    assert "engine_source_parameter / SRC Slot 1 CC16 -> 100" in captured.out
+    assert "Mock sender captured 132 message(s)." in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
