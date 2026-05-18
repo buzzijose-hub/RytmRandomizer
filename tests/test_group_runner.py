@@ -26,7 +26,6 @@ Isolation rules (matching ``tests/test_engines_pad1.py``):
 from __future__ import annotations
 
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -40,6 +39,9 @@ if str(PROJECT_ROOT) not in sys.path:
 # mode, no ``tests/__init__.py``), so the shared helper imports as a top-level
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
+
+# WS-M4: shared fixture classes from tests/conftest.py
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -85,53 +87,6 @@ def _restore_shared_profile_data():
         for pad, cfg in layout_snapshot.items():
             GROUP_LAYOUT[pad].clear()
             GROUP_LAYOUT[pad].update(cfg)
-
-
-class _FakeMessage:
-    """Records the same fields a ``mido.Message`` would expose."""
-
-    def __init__(self, message_type, *, channel, control, value):
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
-
-    def __eq__(self, other):
-        return isinstance(other, _FakeMessage) and (
-            self.type,
-            self.channel,
-            self.control,
-            self.value,
-        ) == (other.type, other.channel, other.control, other.value)
-
-    def __repr__(self):  # pragma: no cover - debugging aid only
-        return (
-            f"_FakeMessage({self.type!r}, channel={self.channel}, "
-            f"control={self.control}, value={self.value})"
-        )
-
-
-def _install_fake_mido():
-    """Install an inert fake ``mido`` so ``send_cc`` builds no real message."""
-
-    fake = types.ModuleType("mido")
-    fake.Message = _FakeMessage  # type: ignore[attr-defined]
-    sys.modules["mido"] = fake
-    return fake
-
-
-class RecordingOut:
-    """Minimal stand-in for a mido output port; records sent messages."""
-
-    def __init__(self) -> None:
-        self.sent: list[object] = []
-
-    def send(self, message: object) -> None:
-        self.sent.append(message)
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
 
 
 # Harness run once at warm-worker startup. Same capture/check contract as the
@@ -352,8 +307,7 @@ def test_import_is_silent_and_mido_free(capsys):
     assert "mido" not in sys.modules
 
 
-def test_runner_constructs_with_monolith_cold_start_defaults():
-    _install_fake_mido()
+def test_runner_constructs_with_monolith_cold_start_defaults(fake_mido_session):
     from rytm_randomizer.group_runner import GroupRunner, default_group_layout
 
     runner = GroupRunner(RecordingOut(), sleep=_no_sleep)
@@ -368,8 +322,7 @@ def test_runner_constructs_with_monolith_cold_start_defaults():
     assert runner.group_layout == default_group_layout()
 
 
-def test_default_group_layout_is_a_fresh_mutable_copy():
-    _install_fake_mido()
+def test_default_group_layout_is_a_fresh_mutable_copy(fake_mido_session):
     from rytm_randomizer.group_runner import default_group_layout
 
     a = default_group_layout()
@@ -384,7 +337,6 @@ def test_default_group_layout_is_a_fresh_mutable_copy():
 
 
 def _runner(**kwargs):
-    _install_fake_mido()
     from rytm_randomizer.group_runner import GroupRunner
 
     return GroupRunner(RecordingOut(), sleep=_no_sleep, **kwargs)
@@ -751,10 +703,9 @@ def test_mutate_group_intensity_label_fallback(capsys):
     assert "ROLLING_LIGHT" in out
 
 
-def test_mutate_group_intensity_skips_unavailable_zone(capsys, monkeypatch):
+def test_mutate_group_intensity_skips_unavailable_zone(capsys, monkeypatch, fake_mido_session):
     """An intensity plan referencing an unavailable zone hits the skip branch."""
 
-    _install_fake_mido()
     import rytm_randomizer.group_runner as gr
 
     runner = gr.GroupRunner(RecordingOut(), sleep=_no_sleep)
@@ -788,8 +739,7 @@ def test_mutate_global_page_plan_known(capsys):
     assert "lane-aware SRC mutation complete." in out
 
 
-def test_mutate_global_page_plan_skips_unavailable_zone(capsys, monkeypatch):
-    _install_fake_mido()
+def test_mutate_global_page_plan_skips_unavailable_zone(capsys, monkeypatch, fake_mido_session):
     import rytm_randomizer.group_runner as gr
 
     runner = gr.GroupRunner(RecordingOut(), sleep=_no_sleep, input_func=lambda _p: "1")

@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import COMMANDS, PROFILE_WORKFLOW_COMMANDS
+from ..commands import COMMANDS, PROFILE_WORKFLOW_COMMANDS
 
 PACKET_10A_SELECTED_PROFILE_KEYS = ("P",)
 PACKET_10B_SELECTED_PROFILE_KEYS = ("M",)

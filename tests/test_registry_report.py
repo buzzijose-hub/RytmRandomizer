@@ -5,12 +5,18 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import pytest
+
 from rytm_randomizer.registry import summarize_registry
 from rytm_randomizer.reports import (
     build_registry_report,
     format_registry_report,
     summarize_registry_report,
 )
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 UNSUPPORTED_TEXT = (

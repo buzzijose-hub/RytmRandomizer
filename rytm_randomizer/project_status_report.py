@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 
+from .reports.formatter import safety_section_lines
+
 PASSIVE_CLI_COMMANDS = (
     "report",
     "project-status-report",
@@ -105,8 +107,8 @@ COLLABORATOR_REVIEW_INTAKE_STATUS = {
 
 COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
     "status": "accepted",
-    "template_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
-    "review_gate_path": "docs/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
+    "template_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
+    "review_gate_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
     "findings_recorded": False,
     "requires_text_or_markdown": True,
     "screenshot_only_sufficient": False,
@@ -463,9 +465,7 @@ def format_project_status_report(report=None):
             value = ", ".join(str(item) for item in value)
         lines.append(f"- {key}: {value}")
 
-    lines.append("Safety:")
-    for key, value in source_report["safety"].items():
-        lines.append(f"- {key}: {value}")
+    lines.extend(safety_section_lines(source_report["safety"]))
 
     lines.extend(
         [

@@ -24,13 +24,15 @@ from __future__ import annotations
 import time
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Protocol, runtime_checkable
 
 from .data import MACHINE_CC
 from .observability.logging import get_logger
 
 __all__ = [
     "ApplyStateResult",
+    "MidiSender",
+    "Sender",
     "apply_state",
     "clamp",
     "send_cc",
@@ -46,8 +48,47 @@ __all__ = [
 # docs/OBSERVABILITY.md for the structured format and the --debug flag.
 _logger = get_logger(__name__)
 
-# A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
-Sender = Any
+
+@runtime_checkable
+class MidiSender(Protocol):
+    """The minimum sender contract: anything with ``send(message)`` works.
+
+    Satisfied structurally by:
+
+    * :class:`mido.ports.BaseOutput` (hardware path via the lazy ``import mido``),
+    * :class:`rytm_randomizer.mock_midi.MockMidiSender` (in-process tests).
+
+    NOT satisfied (by design):
+
+    * :class:`rytm_randomizer.real_midi_adapter.RealMidiSender` — exposes
+      ``send_messages(Sequence[MidiMessage])`` instead of bare ``send(message)``.
+      RealMidiSender is the parity-API wrapper documented in
+      ``docs/ARCHITECTURE.md`` §8; it lives at a different layer (it consumes
+      a port provider, not a raw out-port) and is not in the engine ->
+      ``midi_io.send_cc(out, ...)`` -> ``out.send`` critical path.
+
+    Runtime-checkable because :func:`send_cc` switches on
+    ``isinstance(out, MockMidiSender)`` to record an inert
+    :class:`~rytm_randomizer.mock_midi.MidiMessage` instead of constructing a
+    real ``mido.Message``. A ``Protocol`` (not an ABC) is the right shape here
+    because the V1.34 codebase never owned the ``mido.ports.BaseOutput`` class
+    definition; structural typing is the only way to admit all three
+    implementations without monkey-patching.
+
+    The Protocol's surface is deliberately the minimum that callers need
+    (``send(message)``). The actual validation of the message shape happens
+    inside :meth:`rytm_randomizer.real_midi_adapter.RealMidiSender.send_messages`
+    via :class:`RealMidiSendError`; the runtime-checkable nature here only
+    decides which of the two branches in :func:`send_cc` to take.
+    """
+
+    def send(self, message: object) -> None: ...
+
+
+# Canonical re-export. Every consumer (engines/, group_runner, shell,
+# randomization) imports `Sender` from this module. Prior to WS-S1 each
+# consumer had its own `Sender = Any` line; that escape hatch is gone.
+Sender = MidiSender
 # A sleep callable: takes a duration in seconds, returns nothing.
 SleepFunc = Callable[[float], Any]
 # A profile is the canonical V1.34 profile dict from ``rytm_randomizer.data``.
@@ -93,20 +134,28 @@ def send_cc(
         },
     )
 
-    if out.__class__.__name__ == "MockMidiSender":
-        from .mock_midi import MidiMessage, MockMidiSender
+    from .observability.metrics import (  # noqa: PLC0415 - lazy import — keep midi_io/engines import-surface clean
+        get_metrics,
+    )
 
-        if isinstance(out, MockMidiSender):
-            out.send(
-                MidiMessage(
-                    message_type="control_change",
-                    channel=channel,
-                    control=cc,
-                    value=value,
-                )
+    get_metrics().record_cc_sent(channel)
+
+    from .mock_midi import (  # noqa: PLC0415 - lazy import keeps midi_io import-safe; mock_midi has no mido dependency.
+        MidiMessage,
+        MockMidiSender,
+    )
+
+    if isinstance(out, MockMidiSender):
+        out.send(
+            MidiMessage(
+                message_type="control_change",
+                channel=channel,
+                control=cc,
+                value=value,
             )
-            sleep(0.02)
-            return
+        )
+        sleep(0.02)
+        return
 
     import mido  # noqa: PLC0415 - intentional lazy import for import-safety
 

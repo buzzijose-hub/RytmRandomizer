@@ -15,6 +15,10 @@ from __future__ import annotations
 
 import pytest
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # active_boundary.py:42 -- _freeze_metadata(None) early-return branch.
 # ---------------------------------------------------------------------------

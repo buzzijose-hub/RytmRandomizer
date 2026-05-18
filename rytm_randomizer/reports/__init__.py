@@ -16,8 +16,9 @@ does not pull in MIDI libraries, bridge modules, or behavior evaluators.
 
 from __future__ import annotations
 
-import sys
 from copy import deepcopy
+
+from .formatter import passive_footer_lines, safety_section_lines
 
 # ---------------------------------------------------------------------------
 # Registry report
@@ -61,7 +62,7 @@ ACTIVE_BEHAVIOR_STATUS = {
 
 def build_registry_report():
     """Return a copied, in-memory report for passive registry inspection."""
-    from .registry import build_registry, list_registry_sections, summarize_registry
+    from ..registry import build_registry, list_registry_sections, summarize_registry
 
     registry_summary = summarize_registry()
     return {
@@ -117,17 +118,8 @@ def format_registry_report(report=None):
     for key in sorted(source_report["active_behavior"]):
         lines.append(f"- {key}: {source_report['active_behavior'][key]}")
 
-    lines.append("Source: rytm_randomizer.registry")
-    lines.append("In-memory only: True")
+    lines.extend(passive_footer_lines("registry"))
     return lines
-
-
-def registry_report_main(argv=None):
-    """Print the passive registry report for explicit module execution."""
-    _ = [] if argv is None else list(argv)
-    sys.stdout.write("\n".join(format_registry_report()))
-    sys.stdout.write("\n")
-    return 0
 
 
 # ---------------------------------------------------------------------------
@@ -142,7 +134,7 @@ def _target_concept(profile):
 
 
 def _profile_summary(profile_key):
-    from .profile_lookup import describe_group_profile
+    from ..profile_lookup import describe_group_profile
 
     profile = describe_group_profile(profile_key)
     if not profile["exists"]:
@@ -227,7 +219,7 @@ def _unsupported_profile_summary(profile_key):
 
 def build_active_boundary_report():
     """Return copied, in-memory data about current active boundary support."""
-    from .active_boundary import (
+    from ..active_boundary import (
         ACTIVE_BOUNDARY_NAME,
         SUPPORTED_CANDIDATE,
         SUPPORTED_SOURCE_KEY,
@@ -365,7 +357,7 @@ def _unsupported_safe_profile_summary(profile_key):
 
 def build_mock_mapper_report():
     """Return copied, in-memory data about current mock mapper support."""
-    from .mock_message_mapper import SUPPORTED_GROUP_PROFILE_KEYS
+    from ..mock_message_mapper import SUPPORTED_GROUP_PROFILE_KEYS
 
     supported_profiles = tuple(
         _profile_summary(profile_key) for profile_key in SUPPORTED_GROUP_PROFILE_KEYS
@@ -437,8 +429,7 @@ def format_mock_mapper_report(report=None):
             f"- hardware_required: {source_report['hardware_required']}",
             f"- analog_four_support: {source_report['analog_four_support']}",
             f"- pads_5_12_support: {source_report['pads_5_12_support']}",
-            "Source: rytm_randomizer.mock_message_mapper",
-            "In-memory only: True",
+            *passive_footer_lines("mock_message_mapper"),
         ]
     )
     return lines
@@ -500,7 +491,7 @@ RUNTIME_PLAN_REPORT_BOUNDARY = {
 
 
 def _runtime_preview_summary(report_input):
-    from .runtime_plan import RuntimeIntent, validate_runtime_intent_scope
+    from ..runtime_plan import RuntimeIntent, validate_runtime_intent_scope
 
     intent = RuntimeIntent(
         source_kind=report_input["source_kind"],
@@ -621,8 +612,7 @@ def format_runtime_plan_report(report=None):
             f"- runtime_execution: {source_report['runtime_execution']}",
             f"- cli_execution_wiring: {source_report['cli_execution_wiring']}",
             f"- dispatch: {source_report['dispatch']}",
-            "Source: rytm_randomizer.runtime_plan",
-            "In-memory only: True",
+            *passive_footer_lines("runtime_plan"),
         ]
     )
     return lines
@@ -665,7 +655,7 @@ ANCHOR_PROFILE_PARKED_SECTIONS = (
         "kind": "selected_isolated_pad_anchor_return",
         "status": "parked",
         "reason": "deferred_selected_isolated_pad_anchor_return",
-        "source_helper": "rytm_randomizer.behavior_selected_isolated_pad",
+        "source_helper": "rytm_randomizer.behavior.selected_isolated_pad",
         "requires_separate_approval": True,
     },
     {
@@ -680,23 +670,23 @@ ANCHOR_PROFILE_PARKED_SECTIONS = (
 
 
 def _anchor_profile_section_specs():
-    from .behavior_anchor_profile import evaluate_anchor_profile_behavior
-    from .behavior_pad_lane import (
+    from ..behavior.anchor_profile import evaluate_anchor_profile_behavior
+    from ..behavior.pad_lane import (
         evaluate_pad1_lane_behavior,
         evaluate_pad2_lane_behavior,
         evaluate_pad3_lane_behavior,
         evaluate_pad4_lane_behavior,
     )
-    from .behavior_scene_group import evaluate_scene_group_behavior
-    from .behavior_selected_isolated_pad import evaluate_selected_isolated_pad_behavior
-    from .behavior_selected_profile import evaluate_selected_profile_behavior
-    from .behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from ..behavior.scene_group import evaluate_scene_group_behavior
+    from ..behavior.selected_isolated_pad import evaluate_selected_isolated_pad_behavior
+    from ..behavior.selected_profile import evaluate_selected_profile_behavior
+    from ..behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     return (
         (
             "direct_packet_2_anchor_profile",
             "Direct Packet 2 Anchor/Profile",
-            "rytm_randomizer.behavior_anchor_profile",
+            "rytm_randomizer.behavior.anchor_profile",
             evaluate_anchor_profile_behavior,
             ("BH", "BC", "BS", "BF"),
             {"intent_kind": "anchor/profile"},
@@ -704,7 +694,7 @@ def _anchor_profile_section_specs():
         (
             "pad1_lane_anchor_profile",
             "Pad 1 Lane Anchor/Profile",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad1_lane_behavior,
             ("FZ", "BP", "PBH", "BI", "SBH", "BA"),
             {},
@@ -712,7 +702,7 @@ def _anchor_profile_section_specs():
         (
             "pad2_lane_anchor_profile",
             "Pad 2 Lane Anchor/Profile",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad2_lane_behavior,
             ("P2B", "P2H", "P2C", "P2F", "P2Z"),
             {
@@ -727,7 +717,7 @@ def _anchor_profile_section_specs():
         (
             "pad3_anchor",
             "Pad 3 Anchor",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad3_lane_behavior,
             ("P3A", "SA"),
             {},
@@ -735,7 +725,7 @@ def _anchor_profile_section_specs():
         (
             "pad4_anchor",
             "Pad 4 Anchor",
-            "rytm_randomizer.behavior_pad_lane",
+            "rytm_randomizer.behavior.pad_lane",
             evaluate_pad4_lane_behavior,
             ("P4A",),
             {},
@@ -743,7 +733,7 @@ def _anchor_profile_section_specs():
         (
             "group_anchor",
             "Group Anchor",
-            "rytm_randomizer.behavior_scene_group",
+            "rytm_randomizer.behavior.scene_group",
             evaluate_scene_group_behavior,
             ("O", "Z"),
             {
@@ -756,7 +746,7 @@ def _anchor_profile_section_specs():
         (
             "current_anchor_state",
             "Current Anchor State",
-            "rytm_randomizer.behavior_undo_commit_state",
+            "rytm_randomizer.behavior.undo_commit_state",
             evaluate_undo_commit_state_behavior,
             ("B", "E"),
             {},
@@ -764,7 +754,7 @@ def _anchor_profile_section_specs():
         (
             "selected_profile_workflow",
             "Selected Profile Workflow",
-            "rytm_randomizer.behavior_selected_profile",
+            "rytm_randomizer.behavior.selected_profile",
             evaluate_selected_profile_behavior,
             ("P", "M"),
             {
@@ -776,7 +766,7 @@ def _anchor_profile_section_specs():
         (
             "selected_isolated_pad_target",
             "Selected Isolated Pad Target",
-            "rytm_randomizer.behavior_selected_isolated_pad",
+            "rytm_randomizer.behavior.selected_isolated_pad",
             evaluate_selected_isolated_pad_behavior,
             ("L",),
             {},
@@ -929,9 +919,7 @@ def format_anchor_profile_report(report=None):
     for parked in source_report["parked_sections"]:
         lines.append(f"- {parked['key']}: {parked['kind']} - {parked['reason']}")
 
-    lines.append("Safety:")
-    for key, value in source_report["safety"].items():
-        lines.append(f"- {key}: {value}")
+    lines.extend(safety_section_lines(source_report["safety"]))
 
     lines.append(f"Recommended Next Branch: {source_report['recommended_next_branch']}")
     return lines
@@ -1028,7 +1016,7 @@ PARITY_REPORT_BOUNDARY = {
 
 
 def _selected_isolated_pad_packet_coverage():
-    from .behavior_selected_isolated_pad import (
+    from ..behavior.selected_isolated_pad import (
         PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
     )
@@ -1048,7 +1036,7 @@ def _selected_isolated_pad_packet_coverage():
 
 
 def _pad_lane_packet_coverage():
-    from .behavior_pad_lane import (
+    from ..behavior.pad_lane import (
         DEFERRED_PACKET_5_PAD1_LANE_KEYS,
         DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         DEFERRED_PACKET_7_PAD3_LANE_KEYS,
@@ -1429,8 +1417,7 @@ def format_mock_runtime_active_bridge_report(report=None):
             f"- dispatch: {source_report['safety']['dispatch']}",
             f"- active_behavior: {source_report['safety']['active_behavior']}",
             f"- hardware_behavior: {source_report['safety']['hardware_behavior']}",
-            "Source: rytm_randomizer.mock_runtime_active_bridge",
-            "In-memory only: True",
+            *passive_footer_lines("mock_runtime_active_bridge"),
         ]
     )
     return lines

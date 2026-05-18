@@ -9,8 +9,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import GROUP_COMMANDS
-from .scenes import SCENE_COMMANDS
+from ..commands import GROUP_COMMANDS
+from ..scenes import SCENE_COMMANDS
 
 PACKET_4A_SCENE_INTENT_KEYS = tuple(SCENE_COMMANDS)
 PACKET_4B_GROUP_MUTATION_INTENT_KEYS = ("X", "D", "I", "4")

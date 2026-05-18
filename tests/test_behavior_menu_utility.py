@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -38,7 +44,7 @@ def run_cli(*args):
 
 def test_importing_behavior_menu_utility_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.behavior_menu_utility"],
+        [sys.executable, "-c", "import rytm_randomizer.behavior.menu_utility"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -51,7 +57,7 @@ def test_importing_behavior_menu_utility_prints_nothing():
 
 
 def test_packet_1a_supported_keys_return_read_only_results():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     for command_key in PACKET_1A_KEYS:
         result = evaluate_menu_utility_behavior(command_key)
@@ -69,7 +75,7 @@ def test_packet_1a_supported_keys_return_read_only_results():
 
 
 def test_bd_returns_menu_status_behavior_result():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("BD")
 
@@ -87,7 +93,7 @@ def test_bd_returns_menu_status_behavior_result():
 
 
 def test_j_returns_group_layout_display_without_group_mutation():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("J")
 
@@ -99,7 +105,7 @@ def test_j_returns_group_layout_display_without_group_mutation():
 
 
 def test_scn_returns_scene_menu_without_scene_execution():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("SCN")
 
@@ -111,7 +117,7 @@ def test_scn_returns_scene_menu_without_scene_execution():
 
 
 def test_h_and_r_report_state_intent_without_runtime_state_mutation():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     expected_scopes = {
         "H": "current_anchor_report",
@@ -128,7 +134,7 @@ def test_h_and_r_report_state_intent_without_runtime_state_mutation():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("DOES_NOT_EXIST")
 
@@ -144,7 +150,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_t_c_and_q_return_utility_session_intent_and_remain_safe():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     for command_key in ("T", "C", "Q"):
         result = evaluate_menu_utility_behavior(command_key)
@@ -161,7 +167,7 @@ def test_t_c_and_q_return_utility_session_intent_and_remain_safe():
 
 
 def test_t_returns_target_selection_intent_without_prompt_or_state_change():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("T")
 
@@ -183,7 +189,7 @@ def test_t_returns_target_selection_intent_without_prompt_or_state_change():
 
 
 def test_c_returns_channel_selection_intent_without_ports_or_state_change():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("C")
 
@@ -206,7 +212,7 @@ def test_c_returns_channel_selection_intent_without_ports_or_state_change():
 
 
 def test_q_returns_session_exit_intent_without_process_exit():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("Q")
 
@@ -229,7 +235,7 @@ def test_q_returns_session_exit_intent_without_process_exit():
 
 
 def test_result_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_menu_utility import MenuUtilityBehaviorResult
+    from rytm_randomizer.behavior.menu_utility import MenuUtilityBehaviorResult
 
     metadata = {"source": "test"}
     result = MenuUtilityBehaviorResult(command_key="X", metadata=metadata)
@@ -256,14 +262,14 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_menu_utility  # noqa: F401
+    import rytm_randomizer.behavior.menu_utility  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
 
 
 def test_behavior_menu_utility_exposes_no_active_command_names():
-    import rytm_randomizer.behavior_menu_utility as behavior_menu_utility
+    import rytm_randomizer.behavior.menu_utility as behavior_menu_utility
 
     exposed_names = set(dir(behavior_menu_utility))
 

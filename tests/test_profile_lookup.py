@@ -5,9 +5,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+import pytest
+
 from rytm_randomizer.constants import OUT_OF_SCOPE_PADS
 from rytm_randomizer.profile_lookup import describe_group_profile
 from rytm_randomizer.profiles import GROUP_PROFILE_METADATA
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 
 def test_describe_group_profile_returns_existing_metadata_values():

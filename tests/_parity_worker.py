@@ -66,10 +66,18 @@ from typing import Any
 # parse is never confused with arbitrary code execution.
 _parse_python_literal = ast.literal_eval
 
+from typing import Final
+
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "v134_parity"
+
+# WS-M4: digest->request reverse-lookup index, maintained only in
+# PARITY_CAPTURE_MODE=1 runs (per Gate 13 safe default). Never touched on a
+# check-mode run.
+_INDEX_FILENAME: Final[str] = "_INDEX.json"
+_INDEX_SCHEMA_VERSION: Final[int] = 1
 
 # Hard caps mirroring the original ``timeout=120`` backstop. ``STARTUP_TIMEOUT``
 # covers the one-time cold import of the package; ``REQUEST_TIMEOUT`` bounds
@@ -412,6 +420,66 @@ def _save_fixture(path: Path, payload: dict[str, Any]) -> None:
         fh.write("\n")
 
 
+def _index_path() -> Path:
+    """Absolute path to the parity-fixture digest-to-request index."""
+
+    return FIXTURE_ROOT / _INDEX_FILENAME
+
+
+def _update_index(
+    module_id: str,
+    fixture_path: Path,
+    payload: dict[str, Any],
+) -> None:
+    """Insert/update one ``(digest -> request)`` entry in ``_INDEX.json``.
+
+    Only invoked from the capture path (``PARITY_CAPTURE_MODE=1``). On a
+    check run this function is never called, so the index file is not
+    touched -- preserving Gate 13's safe-default discipline.
+
+    Idempotent: rewrites the entire JSON file with sorted keys so subsequent
+    captures produce stable diffs. ``_meta.generated_at`` is the only
+    non-deterministic field; tooling can ignore it in diff review.
+
+    The schema is documented in ``docs/SIMPLIFICATION_PLAN.md`` (WS-M4
+    section 4.3). Schema version 1 captures: ``module`` (short test module
+    name), ``module_id`` (``__name__`` of the importing test module),
+    ``seed`` (the parity request's seed), ``steps`` (the
+    ``(fn_name, args)`` sequence the request executed).
+    """
+
+    from datetime import datetime, timezone
+
+    index_path = _index_path()
+    if index_path.exists():
+        with index_path.open("r", encoding="utf-8") as fh:
+            index = json.load(fh)
+        if not isinstance(index, dict):  # pragma: no cover - defensive
+            index = {}
+    else:
+        index = {}
+
+    key = fixture_path.stem  # e.g. "test_engines_pad1__008f...e3"
+    index[key] = {
+        "module": fixture_path.stem.rsplit("__", 1)[0],
+        "module_id": module_id,
+        "seed": payload.get("seed"),
+        "steps": payload.get("steps"),
+    }
+
+    fixture_keys = [k for k in index if k != "_meta"]
+    index["_meta"] = {
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "generator": "tests/_parity_worker.py::_update_index",
+        "schema_version": _INDEX_SCHEMA_VERSION,
+        "fixture_count": len(fixture_keys),
+    }
+
+    with index_path.open("w", encoding="utf-8") as fh:
+        json.dump(index, fh, indent=2, sort_keys=True, default=_json_default)
+        fh.write("\n")
+
+
 def make_parity_subprocess(harness: str, module_id: str):
     """Return ``(autouse_fixture, parity_subprocess)`` for a parity test file.
 
@@ -469,6 +537,16 @@ def make_parity_subprocess(harness: str, module_id: str):
             if captured is None:  # pragma: no cover - defensive
                 raise ParityWorkerError(f"capture mode returned no payload for {fixture_path.name}")
             _save_fixture(fixture_path, captured)
+            # WS-M4 + security-review MED finding: maintain _INDEX.json in
+            # capture mode only AND skip when running under pytest-xdist
+            # (the default ``-n auto`` mode). Multiple xdist workers would
+            # otherwise race on the read-modify-write cycle of _INDEX.json
+            # and silently lose entries (last write wins). Capture-mode
+            # regeneration of the full index is a single-worker operation
+            # by convention; if a contributor needs it, they invoke
+            # ``PARITY_CAPTURE_MODE=1 pytest -n0 ...`` explicitly.
+            if not os.environ.get("PYTEST_XDIST_WORKER"):
+                _update_index(module_id, fixture_path, payload)
 
         if not fixture_path.exists():
             raise FixtureMissingError(

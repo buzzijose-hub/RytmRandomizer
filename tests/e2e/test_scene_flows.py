@@ -22,6 +22,10 @@ from rytm_randomizer.data import SCENE_PRESETS
 
 from .conftest import CapturedMessage, run_canonical_dry_run
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 
 def _final_state_by_channel_control(
     messages: tuple[CapturedMessage, ...],

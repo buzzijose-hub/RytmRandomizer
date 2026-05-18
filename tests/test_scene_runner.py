@@ -22,7 +22,6 @@ then services one parity request per stdin line. In-process tests use a fake
 from __future__ import annotations
 
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -36,6 +35,9 @@ if str(PROJECT_ROOT) not in sys.path:
 # mode, no ``tests/__init__.py``), so the shared helper imports as a top-level
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
+
+# WS-M4: shared fixture classes from tests/conftest.py
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -78,53 +80,6 @@ def _restore_shared_profile_data():
         for pad, cfg in layout_snapshot.items():
             GROUP_LAYOUT[pad].clear()
             GROUP_LAYOUT[pad].update(cfg)
-
-
-class _FakeMessage:
-    """Records the same fields a ``mido.Message`` would expose."""
-
-    def __init__(self, message_type, *, channel, control, value):
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
-
-    def __eq__(self, other):
-        return isinstance(other, _FakeMessage) and (
-            self.type,
-            self.channel,
-            self.control,
-            self.value,
-        ) == (other.type, other.channel, other.control, other.value)
-
-    def __repr__(self):  # pragma: no cover - debugging aid only
-        return (
-            f"_FakeMessage({self.type!r}, channel={self.channel}, "
-            f"control={self.control}, value={self.value})"
-        )
-
-
-def _install_fake_mido():
-    """Install an inert fake ``mido`` so ``send_cc`` builds no real message."""
-
-    fake = types.ModuleType("mido")
-    fake.Message = _FakeMessage  # type: ignore[attr-defined]
-    sys.modules["mido"] = fake
-    return fake
-
-
-class RecordingOut:
-    """Minimal stand-in for a mido output port; records sent messages."""
-
-    def __init__(self) -> None:
-        self.sent: list[object] = []
-
-    def send(self, message: object) -> None:
-        self.sent.append(message)
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
 
 
 # Harness run once at warm-worker startup. Drives ``SceneRunner``/``GroupRunner``
@@ -278,7 +233,7 @@ def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
 # ===========================================================================
 
 
-def test_import_is_silent_and_mido_free(capsys):
+def test_import_is_silent_and_mido_free(capsys, fake_mido_session):
     """Importing the scene runner module opens no ports and pulls in no mido."""
 
     sys.modules.pop("rytm_randomizer.scene_runner", None)
@@ -292,7 +247,6 @@ def test_import_is_silent_and_mido_free(capsys):
 
 
 def _scene_runner(**group_kwargs):
-    _install_fake_mido()
     from rytm_randomizer.group_runner import GroupRunner
     from rytm_randomizer.scene_runner import SceneRunner
 
@@ -305,8 +259,7 @@ def test_scene_runner_constructs_with_default_scene_name():
     assert runner.current_scene_name == "None"
 
 
-def test_scene_runner_accepts_explicit_scene_name():
-    _install_fake_mido()
+def test_scene_runner_accepts_explicit_scene_name(fake_mido_session):
     from rytm_randomizer.group_runner import GroupRunner
     from rytm_randomizer.scene_runner import SceneRunner
 

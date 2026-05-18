@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -19,7 +25,7 @@ def run_cli(*args):
 
 
 def test_importing_behavior_selected_profile_prints_nothing():
-    code = "import rytm_randomizer.behavior_selected_profile"
+    code = "import rytm_randomizer.behavior.selected_profile"
     result = subprocess.run(
         [sys.executable, "-c", code],
         cwd=PROJECT_ROOT,
@@ -34,7 +40,7 @@ def test_importing_behavior_selected_profile_prints_nothing():
 
 
 def test_p_returns_read_only_profile_selection_machine_change_intent():
-    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
+    from rytm_randomizer.behavior.selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("P")
 
@@ -84,7 +90,7 @@ def test_p_returns_read_only_profile_selection_machine_change_intent():
 
 
 def test_p_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
+    from rytm_randomizer.behavior.selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("P")
 
@@ -110,7 +116,7 @@ def test_p_metadata_contains_expected_passive_sources():
 
 
 def test_selected_profile_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
+    from rytm_randomizer.behavior.selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("P")
 
@@ -124,7 +130,7 @@ def test_selected_profile_metadata_is_copied_and_immutable():
 
 
 def test_m_returns_read_only_selected_profile_anchor_load_intent():
-    from rytm_randomizer.behavior_selected_profile import (
+    from rytm_randomizer.behavior.selected_profile import (
         DEFERRED_PACKET_10_SELECTED_PROFILE_KEYS,
         PACKET_10A_SELECTED_PROFILE_KEYS,
         PACKET_10B_SELECTED_PROFILE_KEYS,
@@ -186,7 +192,7 @@ def test_m_returns_read_only_selected_profile_anchor_load_intent():
 
 
 def test_m_metadata_contains_expected_passive_sources():
-    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
+    from rytm_randomizer.behavior.selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("M")
 
@@ -217,7 +223,7 @@ def test_m_metadata_contains_expected_passive_sources():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_selected_profile import evaluate_selected_profile_behavior
+    from rytm_randomizer.behavior.selected_profile import evaluate_selected_profile_behavior
 
     result = evaluate_selected_profile_behavior("NOPE")
 
@@ -231,7 +237,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
+    from rytm_randomizer.behavior.anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 
@@ -245,7 +251,7 @@ def test_packet_2_anchor_profile_behavior_remains_unchanged():
 
 
 def test_packet_3_legacy_single_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
+    from rytm_randomizer.behavior.mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("M1")
 
@@ -259,7 +265,7 @@ def test_packet_3_legacy_single_profile_behavior_remains_unchanged():
 
 
 def test_packet_9_undo_commit_state_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_undo_commit_state import evaluate_undo_commit_state_behavior
+    from rytm_randomizer.behavior.undo_commit_state import evaluate_undo_commit_state_behavior
 
     result = evaluate_undo_commit_state_behavior("B")
 
@@ -280,7 +286,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_selected_profile  # noqa: F401
+    import rytm_randomizer.behavior.selected_profile  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -295,7 +301,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_selected_profile_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_selected_profile as behavior_selected_profile
+    import rytm_randomizer.behavior.selected_profile as behavior_selected_profile
 
     exposed_names = set(dir(behavior_selected_profile))
 
@@ -305,7 +311,7 @@ def test_behavior_selected_profile_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_selected_profile as behavior_selected_profile
+    import rytm_randomizer.behavior.selected_profile as behavior_selected_profile
 
     module_text = "\n".join(
         [

@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
 
@@ -65,7 +71,7 @@ def test_report_summarizes_packet_coverage_and_runtime_adjacent_surfaces():
 
 
 def test_report_records_structured_selected_isolated_pad_packet_coverage():
-    from rytm_randomizer.behavior_selected_isolated_pad import (
+    from rytm_randomizer.behavior.selected_isolated_pad import (
         PACKET_11A_SELECTED_ISOLATED_PAD_KEYS,
         PACKET_11B_SELECTED_ISOLATED_PAD_KEYS,
     )
@@ -88,7 +94,7 @@ def test_report_records_structured_selected_isolated_pad_packet_coverage():
 
 
 def test_report_records_structured_pad_lane_packet_coverage():
-    from rytm_randomizer.behavior_pad_lane import (
+    from rytm_randomizer.behavior.pad_lane import (
         DEFERRED_PACKET_5_PAD1_LANE_KEYS,
         DEFERRED_PACKET_6_PAD2_LANE_KEYS,
         DEFERRED_PACKET_7_PAD3_LANE_KEYS,

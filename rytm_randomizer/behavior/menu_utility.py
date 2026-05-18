@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 
-from .commands import MENU_COMMANDS, UTILITY_COMMANDS
+from ..commands import MENU_COMMANDS, UTILITY_COMMANDS
 
 PACKET_1A_MENU_STATUS_KEYS = (
     "BD",

@@ -44,6 +44,10 @@ from rytm_randomizer.guardrails import (
     resolve,
 )
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # Fake mido so importing the engine inside the test process stays inert.
 # ---------------------------------------------------------------------------
@@ -94,9 +98,8 @@ class _Out:
         self.sent.append(msg)
 
 
-def _no_sleep(_seconds: float) -> None:
-    return None
-
+# _no_sleep lives in tests/conftest.py per Gate 11 + WS-M4.
+from conftest import _no_sleep  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Profile builders -- two different musical "characters" against Pad 1

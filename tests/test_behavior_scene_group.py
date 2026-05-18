@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -91,7 +97,7 @@ def run_cli(*args):
 
 def test_importing_behavior_scene_group_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.behavior_scene_group"],
+        [sys.executable, "-c", "import rytm_randomizer.behavior.scene_group"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -104,7 +110,7 @@ def test_importing_behavior_scene_group_prints_nothing():
 
 
 def test_scene_intent_keys_return_read_only_results():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key in SCENE_INTENT_KEYS:
         result = evaluate_scene_group_behavior(command_key)
@@ -127,7 +133,7 @@ def test_scene_intent_keys_return_read_only_results():
 
 
 def test_s0_returns_home_clean_scene_intent_without_anchor_loading():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     result = evaluate_scene_group_behavior("S0")
 
@@ -157,7 +163,7 @@ def test_s0_returns_home_clean_scene_intent_without_anchor_loading():
 
 
 def test_s1a_returns_rolling_light_scene_intent_without_scene_execution():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     result = evaluate_scene_group_behavior("S1A")
 
@@ -173,7 +179,7 @@ def test_s1a_returns_rolling_light_scene_intent_without_scene_execution():
 
 
 def test_s4b_returns_wild_maximum_scene_intent_with_early_hardware_guardrail():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     result = evaluate_scene_group_behavior("S4B")
 
@@ -187,7 +193,7 @@ def test_s4b_returns_wild_maximum_scene_intent_with_early_hardware_guardrail():
 
 
 def test_s5_returns_back_to_clean_scene_intent_without_anchor_loading():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     result = evaluate_scene_group_behavior("S5")
 
@@ -201,7 +207,7 @@ def test_s5_returns_back_to_clean_scene_intent_without_anchor_loading():
 
 
 def test_scene_group_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_scene_group import SceneGroupBehaviorResult
+    from rytm_randomizer.behavior.scene_group import SceneGroupBehaviorResult
 
     metadata = {"source": "test"}
     result = SceneGroupBehaviorResult(command_key="S0", metadata=metadata)
@@ -219,7 +225,7 @@ def test_scene_group_metadata_is_copied_and_immutable():
 
 
 def test_repeated_scene_group_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key in SCENE_INTENT_KEYS:
         assert evaluate_scene_group_behavior(command_key) == (
@@ -228,7 +234,7 @@ def test_repeated_scene_group_evaluations_are_deterministic():
 
 
 def test_unknown_keys_fail_safely():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     result = evaluate_scene_group_behavior("DOES_NOT_EXIST")
 
@@ -247,7 +253,7 @@ def test_unknown_keys_fail_safely():
 
 
 def test_group_mutation_keys_return_read_only_intent_results():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key, expectation in GROUP_MUTATION_INTENT_EXPECTATIONS.items():
         result = evaluate_scene_group_behavior(command_key)
@@ -289,7 +295,7 @@ def test_group_mutation_keys_return_read_only_intent_results():
 
 
 def test_harder_wild_group_mutation_records_early_hardware_guardrail():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     result = evaluate_scene_group_behavior("4")
 
@@ -299,7 +305,7 @@ def test_harder_wild_group_mutation_records_early_hardware_guardrail():
 
 
 def test_group_mutation_metadata_is_copied_and_immutable():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
     from rytm_randomizer.commands import GROUP_COMMANDS
 
     result = evaluate_scene_group_behavior("X")
@@ -321,7 +327,7 @@ def test_group_mutation_metadata_is_copied_and_immutable():
 
 
 def test_repeated_group_mutation_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key in GROUP_MUTATION_INTENT_EXPECTATIONS:
         assert evaluate_scene_group_behavior(command_key) == (
@@ -330,7 +336,7 @@ def test_repeated_group_mutation_evaluations_are_deterministic():
 
 
 def test_lane_aware_group_mutation_keys_return_read_only_intent_results():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key, expectation in LANE_AWARE_GROUP_MUTATION_INTENT_EXPECTATIONS.items():
         result = evaluate_scene_group_behavior(command_key)
@@ -373,7 +379,7 @@ def test_lane_aware_group_mutation_keys_return_read_only_intent_results():
 
 
 def test_repeated_lane_aware_group_mutation_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key in LANE_AWARE_GROUP_MUTATION_INTENT_EXPECTATIONS:
         assert evaluate_scene_group_behavior(command_key) == (
@@ -382,7 +388,7 @@ def test_repeated_lane_aware_group_mutation_evaluations_are_deterministic():
 
 
 def test_group_anchor_keys_return_read_only_intent_results():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key, expectation in GROUP_ANCHOR_INTENT_EXPECTATIONS.items():
         result = evaluate_scene_group_behavior(command_key)
@@ -429,7 +435,7 @@ def test_group_anchor_keys_return_read_only_intent_results():
 
 
 def test_repeated_group_anchor_evaluations_are_deterministic():
-    from rytm_randomizer.behavior_scene_group import evaluate_scene_group_behavior
+    from rytm_randomizer.behavior.scene_group import evaluate_scene_group_behavior
 
     for command_key in GROUP_ANCHOR_INTENT_EXPECTATIONS:
         assert evaluate_scene_group_behavior(command_key) == (
@@ -438,7 +444,7 @@ def test_repeated_group_anchor_evaluations_are_deterministic():
 
 
 def test_packet_1_menu_utility_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_menu_utility import evaluate_menu_utility_behavior
+    from rytm_randomizer.behavior.menu_utility import evaluate_menu_utility_behavior
 
     result = evaluate_menu_utility_behavior("SCN")
 
@@ -450,7 +456,7 @@ def test_packet_1_menu_utility_behavior_remains_unchanged():
 
 
 def test_packet_2_anchor_profile_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_anchor_profile import evaluate_anchor_profile_behavior
+    from rytm_randomizer.behavior.anchor_profile import evaluate_anchor_profile_behavior
 
     result = evaluate_anchor_profile_behavior("BH")
 
@@ -463,7 +469,7 @@ def test_packet_2_anchor_profile_behavior_remains_unchanged():
 
 
 def test_packet_3_mutation_depth_behavior_remains_unchanged():
-    from rytm_randomizer.behavior_mutation_depth import evaluate_mutation_depth_behavior
+    from rytm_randomizer.behavior.mutation_depth import evaluate_mutation_depth_behavior
 
     result = evaluate_mutation_depth_behavior("PM")
 
@@ -483,7 +489,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.behavior_scene_group  # noqa: F401
+    import rytm_randomizer.behavior.scene_group  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
@@ -498,7 +504,7 @@ def test_packaging_uses_pyproject_not_legacy_setup():
 
 
 def test_behavior_scene_group_exposes_no_active_behavior_names():
-    import rytm_randomizer.behavior_scene_group as behavior_scene_group
+    import rytm_randomizer.behavior.scene_group as behavior_scene_group
 
     exposed_names = set(dir(behavior_scene_group))
 
@@ -508,7 +514,7 @@ def test_behavior_scene_group_exposes_no_active_behavior_names():
 
 
 def test_no_out_of_scope_support_is_exposed():
-    import rytm_randomizer.behavior_scene_group as behavior_scene_group
+    import rytm_randomizer.behavior.scene_group as behavior_scene_group
 
     module_text = "\n".join(
         [

@@ -2,6 +2,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
@@ -20,7 +26,7 @@ def run_cli(*args):
 
 def test_importing_anchor_state_prints_nothing():
     result = subprocess.run(
-        [sys.executable, "-c", "import rytm_randomizer.anchor_state"],
+        [sys.executable, "-c", "import rytm_randomizer.state.anchor_validation"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
@@ -33,7 +39,7 @@ def test_importing_anchor_state_prints_nothing():
 
 
 def test_unknown_anchor_state_is_safe_and_deterministic():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
 
     result = build_unknown_anchor_state()
 
@@ -73,7 +79,7 @@ def test_unknown_anchor_state_is_safe_and_deterministic():
 
 
 def test_unsupported_anchor_state_fails_safely():
-    from rytm_randomizer.anchor_state import build_unsupported_anchor_state
+    from rytm_randomizer.state.anchor_validation import build_unsupported_anchor_state
 
     result = build_unsupported_anchor_state(
         anchor_pad=5,
@@ -104,7 +110,7 @@ def test_unsupported_anchor_state_fails_safely():
 
 
 def test_stale_anchor_state_fails_safely():
-    from rytm_randomizer.anchor_state import build_stale_anchor_state
+    from rytm_randomizer.state.anchor_validation import build_stale_anchor_state
 
     result = build_stale_anchor_state(
         anchor_pad=3,
@@ -131,7 +137,7 @@ def test_stale_anchor_state_fails_safely():
 
 
 def test_invalid_anchor_state_fails_safely():
-    from rytm_randomizer.anchor_state import build_invalid_anchor_state
+    from rytm_randomizer.state.anchor_validation import build_invalid_anchor_state
 
     result = build_invalid_anchor_state(
         anchor_pad=None,
@@ -154,7 +160,7 @@ def test_invalid_anchor_state_fails_safely():
 
 
 def test_anchor_state_metadata_is_copied_and_immutable():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
 
     result = build_unknown_anchor_state()
 
@@ -168,7 +174,7 @@ def test_anchor_state_metadata_is_copied_and_immutable():
 
 
 def test_repeated_anchor_state_evaluations_are_deterministic():
-    from rytm_randomizer.anchor_state import (
+    from rytm_randomizer.state.anchor_validation import (
         build_invalid_anchor_state,
         build_stale_anchor_state,
         build_unknown_anchor_state,
@@ -182,7 +188,7 @@ def test_repeated_anchor_state_evaluations_are_deterministic():
 
 
 def test_anchor_state_exposes_no_selected_target_or_runtime_state_objects():
-    from rytm_randomizer.anchor_state import build_unknown_anchor_state
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
 
     result = build_unknown_anchor_state()
 
@@ -193,7 +199,7 @@ def test_anchor_state_exposes_no_selected_target_or_runtime_state_objects():
 
 
 def test_anchor_state_exposes_no_active_command_names():
-    import rytm_randomizer.anchor_state as anchor_state
+    import rytm_randomizer.state.anchor_validation as anchor_state
 
     exported_names = set(anchor_state.__all__)
 
@@ -216,7 +222,7 @@ def test_passive_cli_behavior_remains_unchanged():
 
 
 def test_no_real_midi_library_is_imported():
-    import rytm_randomizer.anchor_state  # noqa: F401
+    import rytm_randomizer.state.anchor_validation  # noqa: F401
 
     assert "mido" not in sys.modules
     assert "rtmidi" not in sys.modules
