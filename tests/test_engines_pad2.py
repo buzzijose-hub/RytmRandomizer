@@ -38,7 +38,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 # WS-M4: shared fixture classes from tests/conftest.py
-from conftest import RecordingOut, _install_fake_mido, _no_sleep
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -235,8 +235,7 @@ def test_import_is_silent_and_mido_free(capsys):
     assert "mido" not in sys.modules
 
 
-def test_engine_constructs_with_monolith_cold_start_defaults():
-    _install_fake_mido()
+def test_engine_constructs_with_monolith_cold_start_defaults(fake_mido_session):
     from rytm_randomizer.engines.pad2 import DEFAULT_PAD2_PROFILE_KEY, Pad2Engine
 
     out = RecordingOut()
@@ -258,8 +257,7 @@ def test_engine_constructs_with_monolith_cold_start_defaults():
 # ===========================================================================
 
 
-def test_load_pad2_profile_unknown_key(capsys):
-    _install_fake_mido()
+def test_load_pad2_profile_unknown_key(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep)
@@ -270,10 +268,9 @@ def test_load_pad2_profile_unknown_key(capsys):
     assert eng.active_profile is None
 
 
-def test_load_pad2_profile_unassigned_key(capsys):
+def test_load_pad2_profile_unassigned_key(capsys, fake_mido_session):
     """A real profile that is not in the Pad 2 foundation lane is rejected."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep)
@@ -286,8 +283,9 @@ def test_load_pad2_profile_unassigned_key(capsys):
 
 
 @pytest.mark.parametrize("profile_key", ["3", "9", "10", "11"])
-def test_load_pad2_profile_loads_anchor_and_records_group_state(profile_key, capsys):
-    _install_fake_mido()
+def test_load_pad2_profile_loads_anchor_and_records_group_state(
+    profile_key, capsys, fake_mido_session
+):
     from rytm_randomizer.data import PROFILES
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
@@ -307,8 +305,7 @@ def test_load_pad2_profile_loads_anchor_and_records_group_state(profile_key, cap
     assert any(msg.control == 15 for msg in out.sent)
 
 
-def test_show_pad2_tools_cold(capsys):
-    _install_fake_mido()
+def test_show_pad2_tools_cold(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep)
@@ -320,8 +317,7 @@ def test_show_pad2_tools_cold(capsys):
     assert "not loaded yet" in text  # group_current_states is empty
 
 
-def test_show_pad2_tools_loaded_snapshot(capsys):
-    _install_fake_mido()
+def test_show_pad2_tools_loaded_snapshot(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep)
@@ -333,11 +329,10 @@ def test_show_pad2_tools_loaded_snapshot(capsys):
     assert "Current Pad 2 state snapshot:" in text
 
 
-def test_show_pad2_tools_unknown_key(capsys):
+def test_show_pad2_tools_unknown_key(capsys, fake_mido_session):
     """When ``pad2_current_profile_key`` is not a real profile, the
     'Unknown' branch of the current-profile block runs."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope")
@@ -347,11 +342,10 @@ def test_show_pad2_tools_unknown_key(capsys):
     assert "Unknown. Use P2B, P2H, P2C, or P2F." in text
 
 
-def test_show_pad2_tools_loaded_partial_state_skips_absent(capsys):
+def test_show_pad2_tools_loaded_partial_state_skips_absent(capsys, fake_mido_session):
     """When ``group_current_states[2]`` lacks some ordered names, the snapshot
     loop skips them (the absent-name branch of ``if name in state``)."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(
@@ -367,8 +361,7 @@ def test_show_pad2_tools_loaded_partial_state_skips_absent(capsys):
     assert "SRC Tune: 60" in text
 
 
-def test_mutate_current_pad2_profile_no_valid_profile(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad2_profile_no_valid_profile(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -380,8 +373,7 @@ def test_mutate_current_pad2_profile_no_valid_profile(capsys):
     assert out.sent == []
 
 
-def test_mutate_current_pad2_profile_unsupported_zone(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad2_profile_unsupported_zone(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -393,8 +385,7 @@ def test_mutate_current_pad2_profile_unsupported_zone(capsys):
     assert out.sent == []
 
 
-def test_mutate_current_pad2_profile_runs_and_records_state(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad2_profile_runs_and_records_state(capsys, fake_mido_session):
     import random
 
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -415,10 +406,9 @@ def test_mutate_current_pad2_profile_runs_and_records_state(capsys):
     assert eng.group_current_states[2] == eng.current_state
 
 
-def test_mutate_current_pad2_profile_grit_triggers_floor(capsys):
+def test_mutate_current_pad2_profile_grit_triggers_floor(capsys, fake_mido_session):
     """The grit zone path runs ``enforce_pad2_grit_floor`` after mutation."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -442,8 +432,7 @@ def test_mutate_current_pad2_profile_grit_triggers_floor(capsys):
     assert "discovery command complete" in text
 
 
-def test_enforce_pad2_grit_floor_no_active_profile():
-    _install_fake_mido()
+def test_enforce_pad2_grit_floor_no_active_profile(fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -453,8 +442,7 @@ def test_enforce_pad2_grit_floor_no_active_profile():
     assert out.sent == []
 
 
-def test_enforce_pad2_grit_floor_param_not_in_params():
-    _install_fake_mido()
+def test_enforce_pad2_grit_floor_param_not_in_params(fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -465,8 +453,7 @@ def test_enforce_pad2_grit_floor_param_not_in_params():
     assert out.sent == []
 
 
-def test_enforce_pad2_grit_floor_param_not_in_anchor():
-    _install_fake_mido()
+def test_enforce_pad2_grit_floor_param_not_in_anchor(fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -481,8 +468,7 @@ def test_enforce_pad2_grit_floor_param_not_in_anchor():
     assert out.sent == []
 
 
-def test_enforce_pad2_grit_floor_current_at_or_above_anchor():
-    _install_fake_mido()
+def test_enforce_pad2_grit_floor_current_at_or_above_anchor(fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -498,8 +484,7 @@ def test_enforce_pad2_grit_floor_current_at_or_above_anchor():
     assert out.sent == []
 
 
-def test_enforce_pad2_grit_floor_corrects_below_anchor():
-    _install_fake_mido()
+def test_enforce_pad2_grit_floor_corrects_below_anchor(fake_mido_session):
     import random
 
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -520,11 +505,10 @@ def test_enforce_pad2_grit_floor_corrects_below_anchor():
     assert eng.current_state["AMP Overdrive"] >= 40
 
 
-def test_enforce_pad2_grit_floor_current_param_absent_uses_anchor():
+def test_enforce_pad2_grit_floor_current_param_absent_uses_anchor(fake_mido_session):
     """When ``current_state`` has no overdrive value it defaults to the anchor,
     so ``current_od >= anchor_od`` holds and nothing is sent."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -539,8 +523,7 @@ def test_enforce_pad2_grit_floor_current_param_absent_uses_anchor():
     assert out.sent == []
 
 
-def test_rotate_pad2_profile_from_unprofiled_returns_home(capsys):
-    _install_fake_mido()
+def test_rotate_pad2_profile_from_unprofiled_returns_home(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="5")
@@ -551,8 +534,7 @@ def test_rotate_pad2_profile_from_unprofiled_returns_home(capsys):
     assert eng.pad2_current_profile_key == "3"
 
 
-def test_rotate_pad2_profile_advances(capsys):
-    _install_fake_mido()
+def test_rotate_pad2_profile_advances(capsys, fake_mido_session):
     from rytm_randomizer.data import PAD2_PROFILE_KEYS
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
@@ -563,8 +545,7 @@ def test_rotate_pad2_profile_advances(capsys):
     assert eng.pad2_current_profile_key == PAD2_PROFILE_KEYS[1]
 
 
-def test_rotate_pad2_profile_wraps(capsys):
-    _install_fake_mido()
+def test_rotate_pad2_profile_wraps(capsys, fake_mido_session):
     from rytm_randomizer.data import PAD2_PROFILE_KEYS
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
@@ -575,8 +556,7 @@ def test_rotate_pad2_profile_wraps(capsys):
     assert eng.pad2_current_profile_key == PAD2_PROFILE_KEYS[0]
 
 
-def test_mutate_current_pad2_rotation_profile_no_valid_profile(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad2_rotation_profile_no_valid_profile(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope")
@@ -584,10 +564,9 @@ def test_mutate_current_pad2_rotation_profile_no_valid_profile(capsys):
     assert "No valid Pad 2 profile selected" in capsys.readouterr().out
 
 
-def test_mutate_current_pad2_rotation_profile_no_plan(capsys):
+def test_mutate_current_pad2_rotation_profile_no_plan(capsys, fake_mido_session):
     """A real profile with no PAD2_MUTATION_PLANS entry hits the no-plan branch."""
 
-    _install_fake_mido()
     from rytm_randomizer.data import PAD2_MUTATION_PLANS, PROFILES
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
@@ -598,8 +577,7 @@ def test_mutate_current_pad2_rotation_profile_no_plan(capsys):
     assert "does not have a P2X mutation plan yet" in capsys.readouterr().out
 
 
-def test_mutate_current_pad2_rotation_profile_not_loaded(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad2_rotation_profile_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="3")
@@ -608,8 +586,7 @@ def test_mutate_current_pad2_rotation_profile_not_loaded(capsys):
     assert "Pad 2 state is not loaded yet" in capsys.readouterr().out
 
 
-def test_mutate_current_pad2_rotation_profile_runs(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad2_rotation_profile_runs(capsys, fake_mido_session):
     import random
 
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -635,8 +612,7 @@ def test_mutate_current_pad2_rotation_profile_runs(capsys):
         "pad2_grit_noise_discovery",
     ],
 )
-def test_discovery_helpers_run(discovery_method, capsys):
-    _install_fake_mido()
+def test_discovery_helpers_run(discovery_method, capsys, fake_mido_session):
     import random
 
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -654,11 +630,10 @@ def test_discovery_helpers_run(discovery_method, capsys):
     assert out.sent
 
 
-def test_pad2_tone_discovery_falls_back_to_src_zone(capsys):
+def test_pad2_tone_discovery_falls_back_to_src_zone(capsys, fake_mido_session):
     """When the current profile has no ``snap`` zone, tone discovery uses
     the ``src`` zone instead."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.data import PROFILES
@@ -677,8 +652,7 @@ def test_pad2_tone_discovery_falls_back_to_src_zone(capsys):
     assert "Mutation plan: src / groove" in text
 
 
-def test_return_pad2_to_current_anchor_no_valid_profile(capsys):
-    _install_fake_mido()
+def test_return_pad2_to_current_anchor_no_valid_profile(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep, pad2_current_profile_key="nope")
@@ -686,8 +660,7 @@ def test_return_pad2_to_current_anchor_no_valid_profile(capsys):
     assert "No valid Pad 2 profile selected" in capsys.readouterr().out
 
 
-def test_return_pad2_to_current_anchor_runs(capsys):
-    _install_fake_mido()
+def test_return_pad2_to_current_anchor_runs(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     out = RecordingOut()
@@ -705,11 +678,10 @@ def test_return_pad2_to_current_anchor_runs(capsys):
     assert any(msg.control == 15 for msg in out.sent)
 
 
-def test_mutate_records_none_previous_when_falsy(capsys):
+def test_mutate_records_none_previous_when_falsy(capsys, fake_mido_session):
     """``mutate_current_pad2_profile`` stores ``None`` when previous_state is
     falsy (the ``else`` arm of the previous-state write-back)."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.engines.pad2 import Pad2Engine
@@ -726,11 +698,10 @@ def test_mutate_records_none_previous_when_falsy(capsys):
     assert 2 in eng.group_previous_states
 
 
-def test_apply_state_shim_noop_when_no_profile(capsys):
+def test_apply_state_shim_noop_when_no_profile(capsys, fake_mido_session):
     """Defensive parity branch: ``_apply_state`` with no active profile is a
     no-op write-back (mirrors the monolith ``require_profile`` guard)."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep)
@@ -746,11 +717,10 @@ def test_apply_state_shim_noop_when_no_profile(capsys):
     capsys.readouterr()
 
 
-def test_mutate_zone_shim_noop_when_no_profile(capsys):
+def test_mutate_zone_shim_noop_when_no_profile(capsys, fake_mido_session):
     """Defensive parity branch: ``_mutate_zone`` with no active profile leaves
     current/previous state untouched."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad2 import Pad2Engine
 
     eng = Pad2Engine(RecordingOut(), sleep=_no_sleep)

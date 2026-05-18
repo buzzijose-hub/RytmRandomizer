@@ -1,6 +1,7 @@
 import subprocess
 import sys
 from pathlib import Path
+
 import pytest
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
@@ -207,10 +208,10 @@ def test_pz_reports_read_only_anchor_return_readiness_for_default_context():
 
 
 def test_pz_consumes_injected_runtime_state_without_mutating_it():
-    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
     from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
     from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_missing_selected_target_runtime_state,
     )

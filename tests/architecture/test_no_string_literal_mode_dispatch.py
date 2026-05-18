@@ -91,20 +91,7 @@ _GUARDED_STRINGS: Final[frozenset[str]] = frozenset(
 # instead of comparing against the inline string. Adding a NEW entry requires
 # explicit reviewer approval; the test stays green only if no new dispatch
 # sites are introduced.
-_KNOWN_LEGACY_SITES: Final[frozenset[str]] = frozenset(
-    {
-        "behavior/pad_lane.py:1174:discovery",
-        "behavior/pad_lane.py:1175:mutation",
-        "behavior/pad_lane.py:1177:discovery",
-        "engines/pad2.py:235:grit",
-        "engines/pad4.py:364:filter",
-        "engines/pad4.py:412:filter",
-        "randomization.py:156:sharp",
-        "randomization.py:167:hard",
-        "randomization.py:178:classic",
-        "randomization.py:189:fm",
-    }
-)
+_KNOWN_LEGACY_SITES: Final[frozenset[str]] = frozenset()
 
 
 def _all_package_files() -> list[Path]:

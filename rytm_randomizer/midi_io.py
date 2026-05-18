@@ -134,6 +134,12 @@ def send_cc(
         },
     )
 
+    from .observability.metrics import (  # noqa: PLC0415 - lazy import — keep midi_io/engines import-surface clean
+        get_metrics,
+    )
+
+    get_metrics().record_cc_sent(channel)
+
     from .mock_midi import (  # noqa: PLC0415 - lazy import keeps midi_io import-safe; mock_midi has no mido dependency.
         MidiMessage,
         MockMidiSender,

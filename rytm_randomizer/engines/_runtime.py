@@ -255,6 +255,11 @@ class PadRuntimeMixin:
                 # profile says this parameter must not mutate. Skip the
                 # outgoing CC entirely. ``send_param`` would otherwise
                 # echo the value to stdout in V1.34-parity format.
+                from ..observability.metrics import (  # noqa: PLC0415 - lazy import — keep midi_io/engines import-surface clean
+                    get_metrics,
+                )
+
+                get_metrics().record_guardrail_block(self.target_pad)
                 return
             value = clamped
         _midi_io.send_param(

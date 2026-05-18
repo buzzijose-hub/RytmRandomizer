@@ -15,6 +15,7 @@ mask insufficient branch testing.
 
 import importlib.util
 from pathlib import Path
+
 import pytest
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505

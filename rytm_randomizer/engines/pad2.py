@@ -32,6 +32,7 @@ from typing import Any, Callable
 
 from .. import midi_io as _midi_io
 from ..data import PAD2_MUTATION_PLANS, PAD2_PROFILE_KEYS, PAD2_PROFILE_LABELS, PROFILES
+from ..data.modes import ZONE_NAMES
 from ..guardrails.resolver import ResolvedBounds
 from ..observability.logging import get_logger
 from ..observability.tracing import trace
@@ -47,6 +48,10 @@ from ..midi_io import Sender  # noqa: E402, PLC0415 - canonical re-export per WS
 # A sleep callable: takes a duration in seconds, returns nothing.
 SleepFunc = Callable[[float], Any]
 State = MutableMapping[str, int]
+
+# WS-S8 Gate 10: consume the canonical zone-name constant instead of inlining
+# the "grit" literal at the dispatch site below.
+_GRIT_ZONE = ZONE_NAMES[3]
 
 # The monolith's cold-start ``pad2_current_profile_key``: BD Classic rolling
 # low percussion -- Pad 2's home/foundation profile.
@@ -232,7 +237,7 @@ class Pad2Engine(PadRuntimeMixin):
         print(f"  Mutation plan: {zone_name} / {depth_name}")
         self._mutate_zone(zone_name, depth_name)
 
-        if zone_name == "grit":
+        if zone_name == _GRIT_ZONE:
             self.enforce_pad2_grit_floor()
 
         self.group_current_states[2] = dict(self.current_state)

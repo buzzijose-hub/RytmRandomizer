@@ -113,8 +113,8 @@ def test_register_device_rejects_duplicate_id() -> None:
 
 
 def test_analog_rytm_decode_snapshot_returns_internal_snapshot_shape() -> None:
-    from rytm_randomizer.devices.analog_rytm import _RytmSnapshot
     from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.analog_rytm import _RytmSnapshot
 
     rytm = get_device("analog_rytm_mk2")
     snap = rytm.decode_snapshot(b"\x00\x20\x3c\xff", slot=3)
@@ -125,8 +125,8 @@ def test_analog_rytm_decode_snapshot_returns_internal_snapshot_shape() -> None:
 
 
 def test_analog_rytm_plan_mutation_returns_plan_with_depth() -> None:
-    from rytm_randomizer.devices.analog_rytm import _RytmMutationPlan
     from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.analog_rytm import _RytmMutationPlan
 
     rytm = get_device("analog_rytm_mk2")
     snap = rytm.decode_snapshot(b"\x00\x20\x3c", slot=1)
@@ -145,31 +145,48 @@ def test_analog_rytm_plan_mutation_rejects_wrong_snapshot_type() -> None:
         rytm.plan_mutation("not a snapshot", depth=1)
 
 
-def test_analog_rytm_to_mock_messages_returns_list() -> None:
+def test_analog_rytm_to_mock_messages_raises_not_implemented() -> None:
+    """The renderer is not wired yet; raise loudly rather than silently emit ``[]``.
+
+    Codex review P1: a silently-empty render is a false positive (tests
+    could pass while the machine would not move). The live mutation path
+    goes through ``engines/pad*.py``; this snapshot-facing renderer raises
+    until the snapshot decoder is wired.
+    """
     from rytm_randomizer.devices import get_device
 
     rytm = get_device("analog_rytm_mk2")
     snap = rytm.decode_snapshot(b"\x00", slot=0)
     plan = rytm.plan_mutation(snap, depth=1)
 
-    msgs = rytm.to_mock_messages(plan)
+    with pytest.raises(NotImplementedError, match="snapshot-to-mock rendering"):
+        rytm.to_mock_messages(plan)
 
-    assert isinstance(msgs, list)
 
+def test_analog_rytm_to_cc_messages_raises_not_implemented() -> None:
+    """The renderer is not wired yet; raise loudly rather than silently emit ``()``.
 
-def test_analog_rytm_to_cc_messages_returns_iterable() -> None:
-    from collections.abc import Iterable
-
+    Codex review P1: same rationale as ``to_mock_messages`` above.
+    """
     from rytm_randomizer.devices import get_device
 
     rytm = get_device("analog_rytm_mk2")
     snap = rytm.decode_snapshot(b"\x00", slot=0)
     plan = rytm.plan_mutation(snap, depth=1)
 
-    triples = rytm.to_cc_messages(plan)
-    assert isinstance(triples, Iterable)
-    # Drainable; stub returns empty
-    assert list(triples) == []
+    with pytest.raises(NotImplementedError, match="snapshot-to-CC rendering"):
+        rytm.to_cc_messages(plan)
+
+
+def test_analog_rytm_renderers_still_type_check_plan_first() -> None:
+    """Wrong-type guards must precede the NotImplementedError raise."""
+    from rytm_randomizer.devices import get_device
+
+    rytm = get_device("analog_rytm_mk2")
+    with pytest.raises(TypeError, match="_RytmMutationPlan"):
+        rytm.to_mock_messages("not a plan")
+    with pytest.raises(TypeError, match="_RytmMutationPlan"):
+        rytm.to_cc_messages("not a plan")
 
 
 # ---------------------------------------------------------------------------

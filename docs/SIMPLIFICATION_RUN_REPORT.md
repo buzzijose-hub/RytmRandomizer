@@ -3,7 +3,7 @@
 **Plan:** `docs/SIMPLIFICATION_PLAN.md`
 **Run start:** 2026-05-18T13:28:15Z
 **Base:** `modularize-v1.34` @ `0bd46aa64f5ca1c37420ef1e5063b2cd0532515d` (PR #29 merged).
-**Bundle PR:** [#35](https://github.com/SLO+Edward.Rosado/RytmRandomizer/pull/35) — `refactor/wave1-bundled` → `modularize-v1.34`, ready for review.
+**Bundle PR:** [#35](https://github.com/buzzijose-hub/RytmRandomizer/pull/35) — `refactor/wave1-bundled` → `modularize-v1.34`, ready for review.
 **Outcome:** Wave 1 bundle prepared, security-reviewed, architecture-tested, learning-extracted. Awaiting human approval to merge.
 
 ---

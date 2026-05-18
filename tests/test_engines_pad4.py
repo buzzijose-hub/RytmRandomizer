@@ -47,7 +47,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 # WS-M4: shared fixture classes from tests/conftest.py
-from conftest import RecordingOut, _install_fake_mido, _no_sleep
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -322,7 +322,6 @@ def _loaded_group_dicts():
 
 
 def _make_loaded_engine(out, **kwargs):
-    _install_fake_mido()
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     ganc, gcur, gprev = _loaded_group_dicts()
@@ -354,8 +353,7 @@ def test_import_is_silent_and_mido_free(capsys):
     assert "mido" not in sys.modules
 
 
-def test_engine_constructs_with_monolith_cold_start_defaults():
-    _install_fake_mido()
+def test_engine_constructs_with_monolith_cold_start_defaults(fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -375,8 +373,7 @@ def test_engine_constructs_with_monolith_cold_start_defaults():
 # ===========================================================================
 
 
-def test_require_context_blocks_when_group_not_loaded(capsys):
-    _install_fake_mido()
+def test_require_context_blocks_when_group_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -393,8 +390,7 @@ def test_require_context_passes_when_group_loaded(capsys):
     capsys.readouterr()
 
 
-def test_show_pad4_tools_not_loaded(capsys):
-    _install_fake_mido()
+def test_show_pad4_tools_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -423,11 +419,10 @@ def test_show_pad4_tools_unknown_mode_key(capsys):
     assert "Unknown" in text
 
 
-def test_show_pad4_tools_partial_state_skips_absent(capsys):
+def test_show_pad4_tools_partial_state_skips_absent(capsys, fake_mido_session):
     """A sparse group_current_states[4] exercises the snapshot loop's
     absent-name skip branch in ``show_pad4_tools``."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     ganc, gcur, gprev = _loaded_group_dicts()
@@ -445,8 +440,7 @@ def test_show_pad4_tools_partial_state_skips_absent(capsys):
     assert "FLT Type:" not in text
 
 
-def test_apply_partial_blocked_when_group_not_loaded(capsys):
-    _install_fake_mido()
+def test_apply_partial_blocked_when_group_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     out = RecordingOut()
@@ -456,10 +450,9 @@ def test_apply_partial_blocked_when_group_not_loaded(capsys):
     assert "discovery command complete" not in capsys.readouterr().out
 
 
-def test_apply_partial_pad4_state_absent_branch(capsys):
+def test_apply_partial_pad4_state_absent_branch(capsys, fake_mido_session):
     """Group has 4 pads but pad 4 is absent: hits the second guard branch."""
 
-    _install_fake_mido()
     from rytm_randomizer.data import PROFILES
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
@@ -531,11 +524,12 @@ def test_discovery_methods_send_params_and_set_mode(discovery_method, expected_m
         "pad4_impact_grit_accent_mode",
     ],
 )
-def test_discovery_methods_blocked_when_group_not_loaded(discovery_method, capsys):
+def test_discovery_methods_blocked_when_group_not_loaded(
+    discovery_method, capsys, fake_mido_session
+):
     """The discovery modes set the mode key, then go via the guarded
     ``apply_pad4_bd_acoustic_partial`` which blocks when the group is absent."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     out = RecordingOut()
@@ -557,8 +551,7 @@ def test_return_pad4_bd_acoustic_to_anchor_restores_isolated_pad(capsys):
     assert eng.group_previous_states[4] is None
 
 
-def test_return_pad4_bd_acoustic_to_anchor_blocked_when_group_not_loaded(capsys):
-    _install_fake_mido()
+def test_return_pad4_bd_acoustic_to_anchor_blocked_when_group_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep, isolated_pad=4)
@@ -576,8 +569,7 @@ def test_return_pad4_bd_acoustic_to_anchor_blocked_when_group_not_loaded(capsys)
 # ---------------------------------------------------------------------------
 
 
-def test_apply_state_shim_noop_when_no_profile(capsys):
-    _install_fake_mido()
+def test_apply_state_shim_noop_when_no_profile(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -593,8 +585,7 @@ def test_apply_state_shim_noop_when_no_profile(capsys):
     capsys.readouterr()
 
 
-def test_mutate_zone_shim_noop_when_no_profile(capsys):
-    _install_fake_mido()
+def test_mutate_zone_shim_noop_when_no_profile(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -608,11 +599,10 @@ def test_mutate_zone_shim_noop_when_no_profile(capsys):
     capsys.readouterr()
 
 
-def test_set_group_context_falls_back_to_profile_anchor(capsys):
+def test_set_group_context_falls_back_to_profile_anchor(capsys, fake_mido_session):
     """``_set_group_context`` for a pad absent from group_anchor_states /
     group_current_states falls back to the profile anchor (the else branches)."""
 
-    _install_fake_mido()
     from rytm_randomizer.data import PROFILES
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
@@ -627,8 +617,7 @@ def test_set_group_context_falls_back_to_profile_anchor(capsys):
     capsys.readouterr()
 
 
-def test_load_pad4_mode_unknown_key(capsys):
-    _install_fake_mido()
+def test_load_pad4_mode_unknown_key(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -636,8 +625,7 @@ def test_load_pad4_mode_unknown_key(capsys):
     assert "Unknown Pad 4 mode: does-not-exist" in capsys.readouterr().out
 
 
-def test_load_pad4_mode_non_anchor_when_not_loaded(capsys):
-    _install_fake_mido()
+def test_load_pad4_mode_non_anchor_when_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep)
@@ -691,8 +679,7 @@ def test_mutate_current_pad4_mode_unknown_mode(capsys):
     assert "does not have a P4X mutation plan" in capsys.readouterr().out
 
 
-def test_mutate_current_pad4_mode_state_not_loaded(capsys):
-    _install_fake_mido()
+def test_mutate_current_pad4_mode_state_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad4 import Pad4Engine
 
     eng = Pad4Engine(RecordingOut(), sleep=_no_sleep, pad4_current_mode_key="tight")

@@ -1,5 +1,8 @@
 {
   "$schema": "./SIMPLIFICATION_STATE.schema.json",
+  "_status": "HISTORICAL_BOOTSTRAP_SNAPSHOT",
+  "_authoritative_state_is": "git log on refactor/wave1-bundled + PR #35 description",
+  "_codex_review_p1_note": "Codex PR #35 review (2026-05-18) flagged this file as stale relative to docs/SIMPLIFICATION_RUN_LOG.md. The orchestrator stopped updating per-WS fields once the bundled-PR strategy was chosen (one PR instead of cascade); see commits 51c592b, d10079a, b77d561, e20dd66 for the real per-WS history. Do NOT use this file to resume or recover -- read git log + PR #35 instead. Workstream entries below remain as a kickoff record only.",
   "plan": "SIMPLIFICATION_PLAN.md",
   "base_branch": "modularize-v1.34",
   "base_sha_at_kickoff": "0bd46aa64f5ca1c37420ef1e5063b2cd0532515d",
@@ -239,5 +242,12 @@
   },
   "merged_count": 0,
   "blocked_count": 0,
-  "current_orchestrator_action": "bootstrap"
+  "current_orchestrator_action": "bootstrap",
+  "_final_state_summary": {
+    "wave1_bundled_pr": 35,
+    "wave1_bundled_branch": "refactor/wave1-bundled",
+    "wave1_workstreams_landed": ["WS-0", "WS-S1", "WS-S2", "WS-S3", "WS-S4", "WS-S5", "WS-S6", "WS-S7", "WS-S8", "WS-S9", "WS-M1", "WS-M2", "WS-M3", "WS-M4", "WS-L", "WS-H"],
+    "wave1_completed_at": "2026-05-18T14:30:00Z",
+    "wave1_status": "awaiting human merge approval (CI iteration in progress per codex review)"
+  }
 }

@@ -41,7 +41,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 # WS-M4: shared fixture classes from tests/conftest.py
-from conftest import RecordingOut, _install_fake_mido, _no_sleep
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -307,8 +307,7 @@ def test_import_is_silent_and_mido_free(capsys):
     assert "mido" not in sys.modules
 
 
-def test_runner_constructs_with_monolith_cold_start_defaults():
-    _install_fake_mido()
+def test_runner_constructs_with_monolith_cold_start_defaults(fake_mido_session):
     from rytm_randomizer.group_runner import GroupRunner, default_group_layout
 
     runner = GroupRunner(RecordingOut(), sleep=_no_sleep)
@@ -323,8 +322,7 @@ def test_runner_constructs_with_monolith_cold_start_defaults():
     assert runner.group_layout == default_group_layout()
 
 
-def test_default_group_layout_is_a_fresh_mutable_copy():
-    _install_fake_mido()
+def test_default_group_layout_is_a_fresh_mutable_copy(fake_mido_session):
     from rytm_randomizer.group_runner import default_group_layout
 
     a = default_group_layout()
@@ -339,7 +337,6 @@ def test_default_group_layout_is_a_fresh_mutable_copy():
 
 
 def _runner(**kwargs):
-    _install_fake_mido()
     from rytm_randomizer.group_runner import GroupRunner
 
     return GroupRunner(RecordingOut(), sleep=_no_sleep, **kwargs)
@@ -706,10 +703,9 @@ def test_mutate_group_intensity_label_fallback(capsys):
     assert "ROLLING_LIGHT" in out
 
 
-def test_mutate_group_intensity_skips_unavailable_zone(capsys, monkeypatch):
+def test_mutate_group_intensity_skips_unavailable_zone(capsys, monkeypatch, fake_mido_session):
     """An intensity plan referencing an unavailable zone hits the skip branch."""
 
-    _install_fake_mido()
     import rytm_randomizer.group_runner as gr
 
     runner = gr.GroupRunner(RecordingOut(), sleep=_no_sleep)
@@ -743,8 +739,7 @@ def test_mutate_global_page_plan_known(capsys):
     assert "lane-aware SRC mutation complete." in out
 
 
-def test_mutate_global_page_plan_skips_unavailable_zone(capsys, monkeypatch):
-    _install_fake_mido()
+def test_mutate_global_page_plan_skips_unavailable_zone(capsys, monkeypatch, fake_mido_session):
     import rytm_randomizer.group_runner as gr
 
     runner = gr.GroupRunner(RecordingOut(), sleep=_no_sleep, input_func=lambda _p: "1")

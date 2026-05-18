@@ -27,7 +27,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Callable
 
+from .data.modes import PAD1_MODES
 from .midi_io import Profile, Sender, SleepFunc, clamp, send_param
+
+# WS-S8 Gate 10: consume the canonical Pad-1 machine constants instead of
+# inlining the filter-mode string literals in the HP2 dispatch below.
+_PAD1_SHARP, _PAD1_HARD, _PAD1_CLASSIC, _PAD1_FM = PAD1_MODES
 
 __all__ = [
     "MutationResult",
@@ -153,7 +158,7 @@ def random_hp2_filter_pair(
 
     mode = profile["filter_mode"]
 
-    if mode == "sharp":
+    if mode == _PAD1_SHARP:
         if freq <= 25:
             pair_res_low = 72
             pair_res_high = 85
@@ -164,7 +169,7 @@ def random_hp2_filter_pair(
             pair_res_low = 64
             pair_res_high = 82
 
-    elif mode == "hard":
+    elif mode == _PAD1_HARD:
         if freq <= 26:
             pair_res_low = 45
             pair_res_high = 62
@@ -175,7 +180,7 @@ def random_hp2_filter_pair(
             pair_res_low = 40
             pair_res_high = 64
 
-    elif mode == "classic":
+    elif mode == _PAD1_CLASSIC:
         if freq <= 25:
             pair_res_low = 22
             pair_res_high = 36
@@ -186,7 +191,7 @@ def random_hp2_filter_pair(
             pair_res_low = 18
             pair_res_high = 38
 
-    elif mode == "fm":
+    elif mode == _PAD1_FM:
         # BD FM can handle more resonance than Classic/Acoustic because its
         # metallic character benefits from the sharper HP2 contour. Still keep
         # it bounded.

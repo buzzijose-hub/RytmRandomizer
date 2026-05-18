@@ -92,28 +92,48 @@ class AnalogRytmDevice:
     def to_mock_messages(self, plan: Any) -> list[Any]:
         """Render the plan into inert ``MidiMessage`` instances.
 
-        Stub: returns an empty list. The renderer lands when the snapshot
-        path is wired; today the live Rytm path captures into a
-        ``MockMidiSender`` via the engine code, not via this surface.
+        Not yet implemented. The renderer lands when the snapshot path is
+        wired; today the live Rytm path captures into a ``MockMidiSender``
+        via the engine code (``engines/pad{1-4}.py``), not via this surface.
+
+        Codex review P1: this previously returned ``[]``, which let a caller
+        successfully ``plan -> render`` and silently emit zero messages -- a
+        false positive (tests could pass while the machine would not move).
+        Raising ``NotImplementedError`` makes the unfinished state loud so
+        the caller can route to the engines for now, or wait for the wiring.
         """
         if not isinstance(plan, _RytmMutationPlan):
             raise TypeError(
                 f"AnalogRytmDevice.to_mock_messages expected _RytmMutationPlan, got {type(plan).__name__}"
             )
-        return []
+        raise NotImplementedError(
+            "AnalogRytmDevice.to_mock_messages: snapshot-to-mock rendering is "
+            "not yet wired. The live mutation path goes through engines/pad*.py "
+            "and captures via MockMidiSender directly; use that surface, or "
+            "wait until the snapshot-decoder lands to populate this renderer."
+        )
 
     def to_cc_messages(self, plan: Any) -> Iterable[tuple[int, int, int]]:
         """Render the plan into ``(channel, control, value)`` triples.
 
-        Stub: returns an empty iterable. The renderer lands when the
-        snapshot path is wired; today the live Rytm path sends CCs via
-        ``midi_io.send_cc`` directly from the engines.
+        Not yet implemented. The renderer lands when the snapshot path is
+        wired; today the live Rytm path sends CCs via ``midi_io.send_cc``
+        directly from the engines.
+
+        Codex review P1: previously returned ``()``; see ``to_mock_messages``
+        above for the same rationale on why a silent empty return masks an
+        unfinished implementation. Raising surfaces the gap.
         """
         if not isinstance(plan, _RytmMutationPlan):
             raise TypeError(
                 f"AnalogRytmDevice.to_cc_messages expected _RytmMutationPlan, got {type(plan).__name__}"
             )
-        return ()
+        raise NotImplementedError(
+            "AnalogRytmDevice.to_cc_messages: snapshot-to-CC rendering is "
+            "not yet wired. The live mutation path emits CCs via "
+            "midi_io.send_cc from engines/pad*.py; use that surface, or "
+            "wait until the snapshot-decoder lands to populate this renderer."
+        )
 
 
 # Register at import time so consumers see a non-empty registry.

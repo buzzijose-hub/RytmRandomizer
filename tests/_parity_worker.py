@@ -66,9 +66,9 @@ from typing import Any
 # parse is never confused with arbitrary code execution.
 _parse_python_literal = ast.literal_eval
 
-import pytest
-
 from typing import Final
+
+import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURE_ROOT = PROJECT_ROOT / "tests" / "fixtures" / "v134_parity"

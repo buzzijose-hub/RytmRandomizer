@@ -66,6 +66,11 @@ State = MutableMapping[str, int]
 # The monolith's cold-start ``pad4_current_mode_key``: the BD Acoustic
 # body/accent anchor / home behavior mode -- Pad 4's foundation.
 DEFAULT_PAD4_MODE_KEY = "anchor"
+# WS-S8 Gate 10: PAD4_MODE_ORDER is ``["anchor", "tight", "long", "filter",
+# "impact"]``; alias the "filter" mode key here so the dispatch sites below
+# don't need to compare against the inline literal. (This is the Pad-4 mode
+# named "filter", not a ``data/modes.py::PageMode``.)
+_PAD4_FILTER_MODE_KEY = PAD4_MODE_ORDER[3]
 # The monolith's cold-start ``isolated_pad`` is 3.
 DEFAULT_ISOLATED_PAD = 3
 # Pad 4 always runs the BD Acoustic machine: profile key "4".
@@ -361,7 +366,7 @@ class Pad4Engine(PadRuntimeMixin, IsolatedPadMixin):
             self.pad4_tight_body_hit_mode()
         elif mode_key == "long":
             self.pad4_long_boom_accent_mode()
-        elif mode_key == "filter":
+        elif mode_key == _PAD4_FILTER_MODE_KEY:
             self.pad4_filtered_punch_accent_mode()
         else:
             # ``mode_key`` is guaranteed to be in ``PAD4_MODE_ORDER`` by the
@@ -409,7 +414,7 @@ class Pad4Engine(PadRuntimeMixin, IsolatedPadMixin):
             self.pad4_tight_body_hit_mode()
         elif action == "long":
             self.pad4_long_boom_accent_mode()
-        elif action == "filter":
+        elif action == _PAD4_FILTER_MODE_KEY:
             self.pad4_filtered_punch_accent_mode()
         elif action == "impact":
             self.pad4_impact_grit_accent_mode()

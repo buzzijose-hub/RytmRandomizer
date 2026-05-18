@@ -137,6 +137,31 @@ def test_unpack_elektron_7bit_raises_on_non_seven_bit_byte() -> None:
         unpack_elektron_7bit(bytes([0x00, 0x80]))
 
 
+def test_unpack_elektron_7bit_rejects_lone_nonzero_trailing_header() -> None:
+    """A buffer ending on a nonzero header with no following data bytes is malformed."""
+
+    from rytm_randomizer.snapshot import unpack_elektron_7bit
+
+    with pytest.raises(ValueError, match="no data bytes"):
+        unpack_elektron_7bit(bytes([0x55]))
+
+
+def test_unpack_elektron_7bit_rejects_lone_zero_trailing_header() -> None:
+    """A lone zero header has no data bytes and is still malformed framing.
+
+    Codex review P2: the prior implementation silently returned ``b""`` for
+    ``bytes([0])`` because of a ``header != 0`` carve-out. The spec treats the
+    framing the same regardless of header value -- a header with no payload is
+    meaningless, and the caller deserves an error rather than a quietly-empty
+    decode.
+    """
+
+    from rytm_randomizer.snapshot import unpack_elektron_7bit
+
+    with pytest.raises(ValueError, match="no data bytes"):
+        unpack_elektron_7bit(bytes([0]))
+
+
 # ---------------------------------------------------------------------------
 # 4. find_kit_record
 # ---------------------------------------------------------------------------

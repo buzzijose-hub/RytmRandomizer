@@ -21,11 +21,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 import rytm_randomizer.constants as pkg_constants
 import rytm_randomizer.data as data
 import rytm_randomizer.profiles as pkg_profiles
 import rytm_randomizer.scenes as pkg_scenes
-import pytest
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.

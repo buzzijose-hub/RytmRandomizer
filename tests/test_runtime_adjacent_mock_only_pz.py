@@ -1,6 +1,7 @@
 import subprocess
 import sys
 from pathlib import Path
+
 import pytest
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
@@ -100,11 +101,11 @@ def test_default_pz_readiness_fails_safely_without_mock_messages():
 
 
 def test_missing_target_and_missing_anchor_contexts_fail_safely():
-    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
     from rytm_randomizer.behavior.selected_isolated_pad import (
         evaluate_selected_isolated_pad_behavior,
     )
     from rytm_randomizer.mock_midi import MockMidiSender
+    from rytm_randomizer.state.anchor_validation import build_unknown_anchor_state
     from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_missing_anchor_runtime_state,
         build_missing_selected_target_runtime_state,
@@ -140,16 +141,16 @@ def test_missing_target_and_missing_anchor_contexts_fail_safely():
 
 
 def test_unsupported_stale_and_invalid_contexts_fail_safely():
+    from rytm_randomizer.behavior.selected_isolated_pad import (
+        evaluate_selected_isolated_pad_behavior,
+    )
+    from rytm_randomizer.mock_midi import MockMidiSender
     from rytm_randomizer.state.anchor_validation import (
         build_invalid_anchor_state,
         build_stale_anchor_state,
         build_unknown_anchor_state,
         build_unsupported_anchor_state,
     )
-    from rytm_randomizer.behavior.selected_isolated_pad import (
-        evaluate_selected_isolated_pad_behavior,
-    )
-    from rytm_randomizer.mock_midi import MockMidiSender
     from rytm_randomizer.state.selected_isolated_pad_validation import (
         build_selected_isolated_pad_runtime_state,
     )

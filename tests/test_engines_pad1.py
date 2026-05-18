@@ -39,7 +39,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 # WS-M4: shared fixture classes from tests/conftest.py
-from conftest import RecordingOut, _install_fake_mido, _no_sleep
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -276,8 +276,7 @@ def test_import_is_silent_and_mido_free(capsys):
     assert "mido" not in sys.modules
 
 
-def test_engine_constructs_with_monolith_cold_start_defaults():
-    _install_fake_mido()
+def test_engine_constructs_with_monolith_cold_start_defaults(fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine, default_group_layout
 
     out = RecordingOut()
@@ -294,8 +293,7 @@ def test_engine_constructs_with_monolith_cold_start_defaults():
     assert eng.group_layout[1]["profile"] == "2"
 
 
-def test_default_group_layout_is_a_fresh_mutable_copy():
-    _install_fake_mido()
+def test_default_group_layout_is_a_fresh_mutable_copy(fake_mido_session):
     from rytm_randomizer.engines.pad1 import default_group_layout
 
     a = default_group_layout()
@@ -309,8 +307,7 @@ def test_default_group_layout_is_a_fresh_mutable_copy():
 # ===========================================================================
 
 
-def test_load_pad1_bd_profile_unknown_key(capsys):
-    _install_fake_mido()
+def test_load_pad1_bd_profile_unknown_key(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -321,8 +318,7 @@ def test_load_pad1_bd_profile_unknown_key(capsys):
     assert eng.active_profile is None
 
 
-def test_load_pad1_bd_profile_loads_anchor_and_records_group_state(capsys):
-    _install_fake_mido()
+def test_load_pad1_bd_profile_loads_anchor_and_records_group_state(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     out = RecordingOut()
@@ -344,8 +340,7 @@ def test_load_pad1_bd_profile_loads_anchor_and_records_group_state(capsys):
     assert any(msg.control == 15 for msg in out.sent)
 
 
-def test_switch_pad1_extra_bd_machine_only_unknown_command(capsys):
-    _install_fake_mido()
+def test_switch_pad1_extra_bd_machine_only_unknown_command(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     out = RecordingOut()
@@ -358,10 +353,9 @@ def test_switch_pad1_extra_bd_machine_only_unknown_command(capsys):
     assert out.sent == []
 
 
-def test_switch_pad1_extra_bd_machine_only_known_command(capsys):
+def test_switch_pad1_extra_bd_machine_only_known_command(capsys, fake_mido_session):
     """Cover the populated branch by injecting a fake BD_EXTRA_MACHINES entry."""
 
-    _install_fake_mido()
     from rytm_randomizer.data import BD_EXTRA_MACHINES
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
@@ -384,8 +378,7 @@ def test_switch_pad1_extra_bd_machine_only_known_command(capsys):
     assert out.sent[0].value == 99
 
 
-def test_show_bd_engine_tools_runs(capsys):
-    _install_fake_mido()
+def test_show_bd_engine_tools_runs(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -396,8 +389,7 @@ def test_show_bd_engine_tools_runs(capsys):
     assert "Pad 1 BD Engine Rotation - V1.34" in text  # show_bd_rotation_status
 
 
-def test_show_bd_rotation_status_not_loaded_vs_loaded(capsys):
-    _install_fake_mido()
+def test_show_bd_rotation_status_not_loaded_vs_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -416,8 +408,7 @@ def test_show_bd_rotation_status_not_loaded_vs_loaded(capsys):
     "show_method",
     ["show_bd_fm_tools", "show_bd_plastic_tools", "show_bd_silky_tools"],
 )
-def test_show_tools_not_loaded_branch(show_method, capsys):
-    _install_fake_mido()
+def test_show_tools_not_loaded_branch(show_method, capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -433,8 +424,9 @@ def test_show_tools_not_loaded_branch(show_method, capsys):
         ("8", "show_bd_silky_tools", "SRC VCO Click"),
     ],
 )
-def test_show_tools_loaded_snapshot_branch(profile_key, show_method, snapshot_marker, capsys):
-    _install_fake_mido()
+def test_show_tools_loaded_snapshot_branch(
+    profile_key, show_method, snapshot_marker, capsys, fake_mido_session
+):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -449,11 +441,12 @@ def test_show_tools_loaded_snapshot_branch(profile_key, show_method, snapshot_ma
     "show_method",
     ["show_bd_fm_tools", "show_bd_plastic_tools", "show_bd_silky_tools"],
 )
-def test_show_tools_loaded_with_partial_state_skips_absent_names(show_method, capsys):
+def test_show_tools_loaded_with_partial_state_skips_absent_names(
+    show_method, capsys, fake_mido_session
+):
     """When ``group_current_states[1]`` is missing some snapshot names, the
     snapshot loop skips them (the absent-name branch of ``if name in current``)."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     # Seed Pad 1 as "loaded" but with a deliberately sparse state dict so most
@@ -480,8 +473,7 @@ def test_show_tools_loaded_with_partial_state_skips_absent_names(show_method, ca
         "require_pad1_bd_silky_context",
     ],
 )
-def test_require_context_not_loaded(require_method, capsys):
-    _install_fake_mido()
+def test_require_context_not_loaded(require_method, capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -497,8 +489,9 @@ def test_require_context_not_loaded(require_method, capsys):
         ("2", "require_pad1_bd_silky_context", "not currently using BD Silky"),
     ],
 )
-def test_require_context_wrong_profile(loaded_key, require_method, wrong_msg, capsys):
-    _install_fake_mido()
+def test_require_context_wrong_profile(
+    loaded_key, require_method, wrong_msg, capsys, fake_mido_session
+):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -516,8 +509,7 @@ def test_require_context_wrong_profile(loaded_key, require_method, wrong_msg, ca
         ("8", "require_pad1_bd_silky_context"),
     ],
 )
-def test_require_context_correct_profile(profile_key, require_method, capsys):
-    _install_fake_mido()
+def test_require_context_correct_profile(profile_key, require_method, capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -534,8 +526,9 @@ def test_require_context_correct_profile(profile_key, require_method, capsys):
         ("8", "apply_pad1_bd_silky_partial"),
     ],
 )
-def test_apply_partial_guard_blocks_when_not_loaded(profile_key, apply_method, capsys):
-    _install_fake_mido()
+def test_apply_partial_guard_blocks_when_not_loaded(
+    profile_key, apply_method, capsys, fake_mido_session
+):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     out = RecordingOut()
@@ -554,8 +547,9 @@ def test_apply_partial_guard_blocks_when_not_loaded(profile_key, apply_method, c
         ("8", "apply_pad1_bd_silky_partial"),
     ],
 )
-def test_apply_partial_skips_unknown_parameter(profile_key, apply_method, capsys):
-    _install_fake_mido()
+def test_apply_partial_skips_unknown_parameter(
+    profile_key, apply_method, capsys, fake_mido_session
+):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     out = RecordingOut()
@@ -576,8 +570,9 @@ def test_apply_partial_skips_unknown_parameter(profile_key, apply_method, capsys
         ("8", "apply_pad1_bd_silky_partial"),
     ],
 )
-def test_apply_partial_ensure_machine_false_branch(profile_key, apply_method, capsys):
-    _install_fake_mido()
+def test_apply_partial_ensure_machine_false_branch(
+    profile_key, apply_method, capsys, fake_mido_session
+):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     out = RecordingOut()
@@ -605,10 +600,11 @@ def test_apply_partial_ensure_machine_false_branch(profile_key, apply_method, ca
         ("8", "bd_silky_click_dust_discovery"),
     ],
 )
-def test_discovery_method_sends_params_and_records_state(profile_key, discovery_method, capsys):
+def test_discovery_method_sends_params_and_records_state(
+    profile_key, discovery_method, capsys, fake_mido_session
+):
     """Each discovery helper, called directly, mutates state and emits CCs."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.engines.pad1 import Pad1Engine
@@ -630,8 +626,7 @@ def test_discovery_method_sends_params_and_records_state(profile_key, discovery_
     assert eng.group_previous_states[1] == eng.previous_state
 
 
-def test_return_helpers_reload_their_profiles(capsys):
-    _install_fake_mido()
+def test_return_helpers_reload_their_profiles(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -644,8 +639,7 @@ def test_return_helpers_reload_their_profiles(capsys):
     capsys.readouterr()
 
 
-def test_rotate_from_unprofiled_returns_to_bd_hard(capsys):
-    _install_fake_mido()
+def test_rotate_from_unprofiled_returns_to_bd_hard(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -657,8 +651,7 @@ def test_rotate_from_unprofiled_returns_to_bd_hard(capsys):
     assert eng.group_layout[1]["profile"] == "2"  # BD Hard
 
 
-def test_rotate_advances_through_rotation_order(capsys):
-    _install_fake_mido()
+def test_rotate_advances_through_rotation_order(capsys, fake_mido_session):
     from rytm_randomizer.data import PAD1_BD_ROTATION_ORDER
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
@@ -670,8 +663,7 @@ def test_rotate_advances_through_rotation_order(capsys):
     assert eng.group_layout[1]["profile"] == expected
 
 
-def test_rotate_wraps_at_end_of_rotation_order(capsys):
-    _install_fake_mido()
+def test_rotate_wraps_at_end_of_rotation_order(capsys, fake_mido_session):
     from rytm_randomizer.data import PAD1_BD_ROTATION_ORDER
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
@@ -682,8 +674,7 @@ def test_rotate_wraps_at_end_of_rotation_order(capsys):
     assert eng.group_layout[1]["profile"] == PAD1_BD_ROTATION_ORDER[0]
 
 
-def test_mutate_current_engine_not_loaded(capsys):
-    _install_fake_mido()
+def test_mutate_current_engine_not_loaded(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -691,8 +682,7 @@ def test_mutate_current_engine_not_loaded(capsys):
     assert "not loaded yet" in capsys.readouterr().out
 
 
-def test_mutate_current_engine_unprofiled_key(capsys):
-    _install_fake_mido()
+def test_mutate_current_engine_unprofiled_key(capsys, fake_mido_session):
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -705,10 +695,9 @@ def test_mutate_current_engine_unprofiled_key(capsys):
 
 
 @pytest.mark.parametrize("profile_key", ["6", "7", "8"])
-def test_mutate_current_engine_discovery_branches(profile_key, capsys):
+def test_mutate_current_engine_discovery_branches(profile_key, capsys, fake_mido_session):
     """profile keys 6/7/8 route into the dedicated discovery sub-mode picker."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.engines.pad1 import Pad1Engine
@@ -726,10 +715,9 @@ def test_mutate_current_engine_discovery_branches(profile_key, capsys):
 
 
 @pytest.mark.parametrize("profile_key", ["2", "1", "3", "4"])
-def test_mutate_current_engine_generic_branch(profile_key, capsys):
+def test_mutate_current_engine_generic_branch(profile_key, capsys, fake_mido_session):
     """Older profiled engines (2/1/3/4) take the generic mutate_zone path."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.engines.pad1 import Pad1Engine
@@ -747,10 +735,9 @@ def test_mutate_current_engine_generic_branch(profile_key, capsys):
     assert 1 in eng.group_current_states
 
 
-def test_mutate_generic_branch_records_none_previous_when_falsy(capsys):
+def test_mutate_generic_branch_records_none_previous_when_falsy(capsys, fake_mido_session):
     """When previous_state is falsy, group_previous_states[1] is set to None."""
 
-    _install_fake_mido()
     import random
 
     from rytm_randomizer.engines.pad1 import Pad1Engine
@@ -769,11 +756,10 @@ def test_mutate_generic_branch_records_none_previous_when_falsy(capsys):
     assert 1 in eng.group_previous_states
 
 
-def test_apply_state_shim_noop_when_no_profile(capsys):
+def test_apply_state_shim_noop_when_no_profile(capsys, fake_mido_session):
     """Defensive parity branch: ``_apply_state`` with no active profile is a
     no-op write-back (mirrors the monolith ``require_profile`` guard)."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)
@@ -789,11 +775,10 @@ def test_apply_state_shim_noop_when_no_profile(capsys):
     assert "Select a profile first" in capsys.readouterr().out
 
 
-def test_mutate_zone_shim_noop_when_no_profile(capsys):
+def test_mutate_zone_shim_noop_when_no_profile(capsys, fake_mido_session):
     """Defensive parity branch: ``_mutate_zone`` with no active profile leaves
     current/previous state untouched."""
 
-    _install_fake_mido()
     from rytm_randomizer.engines.pad1 import Pad1Engine
 
     eng = Pad1Engine(RecordingOut(), sleep=_no_sleep)

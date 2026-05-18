@@ -80,25 +80,20 @@ def unpack_elektron_7bit(packed: bytes) -> bytes:
         cursor += 1
         # A group is up to 7 data bytes; trailing groups may be shorter.
         group_end = min(cursor + 7, length)
-        # Security-review LOW finding: reject a lone trailing header byte
-        # (a buffer with length % 8 == 1) explicitly instead of silently
-        # discarding it. Real Elektron firmware does not emit lone headers;
-        # if we see one, the upstream framing is corrupted and the caller
-        # should know rather than receive a quietly-truncated payload.
-        if cursor == group_end and cursor < length + 1 and header != 0:
-            # cursor == group_end means zero data bytes follow the header;
-            # this is malformed (a header with no payload is meaningless).
-            # When cursor < length the while-loop would just iterate again
-            # treating header as data — but cursor == group_end == length
-            # is the terminal case we want to reject when header != 0
-            # (a zero header trailing is harmless padding).
-            if cursor == length and header != 0:
-                raise ValueError(
-                    f"unpack_elektron_7bit: trailing group at offset "
-                    f"{cursor - 1} has a header byte (0x{header:02x}) "
-                    "but no data bytes; this is malformed input -- check "
-                    "the SysEx envelope framing before unpacking."
-                )
+        # Reject any lone trailing header byte (a buffer with length % 8 == 1),
+        # whether or not the header is zero. A header with no following data
+        # bytes is meaningless framing; real Elektron firmware does not emit
+        # one, so surfacing the error tells the caller their upstream is
+        # corrupted rather than handing back a quietly-truncated payload.
+        # (Codex review P2: the earlier ``header != 0`` carve-out treated a
+        # lone ``b"\x00"`` as harmless padding -- the spec says it is not.)
+        if cursor == length and cursor == group_end:
+            raise ValueError(
+                f"unpack_elektron_7bit: trailing group at offset "
+                f"{cursor - 1} has a header byte (0x{header:02x}) "
+                "but no data bytes; this is malformed input -- check "
+                "the SysEx envelope framing before unpacking."
+            )
         for bit_index, data_index in enumerate(range(cursor, group_end)):
             high_bit = (header >> bit_index) & 0x01
             out.append((high_bit << 7) | packed[data_index])

@@ -37,7 +37,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
 
 # WS-M4: shared fixture classes from tests/conftest.py
-from conftest import RecordingOut, _install_fake_mido, _no_sleep
+from conftest import RecordingOut, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -233,7 +233,7 @@ def _parity_subprocess(steps_repr: str, seed: int = 12345) -> None:
 # ===========================================================================
 
 
-def test_import_is_silent_and_mido_free(capsys):
+def test_import_is_silent_and_mido_free(capsys, fake_mido_session):
     """Importing the scene runner module opens no ports and pulls in no mido."""
 
     sys.modules.pop("rytm_randomizer.scene_runner", None)
@@ -247,7 +247,6 @@ def test_import_is_silent_and_mido_free(capsys):
 
 
 def _scene_runner(**group_kwargs):
-    _install_fake_mido()
     from rytm_randomizer.group_runner import GroupRunner
     from rytm_randomizer.scene_runner import SceneRunner
 
@@ -260,8 +259,7 @@ def test_scene_runner_constructs_with_default_scene_name():
     assert runner.current_scene_name == "None"
 
 
-def test_scene_runner_accepts_explicit_scene_name():
-    _install_fake_mido()
+def test_scene_runner_accepts_explicit_scene_name(fake_mido_session):
     from rytm_randomizer.group_runner import GroupRunner
     from rytm_randomizer.scene_runner import SceneRunner
 
