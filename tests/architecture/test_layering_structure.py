@@ -14,6 +14,11 @@ from __future__ import annotations
 import hashlib
 import sys
 from pathlib import Path
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
@@ -32,7 +37,8 @@ _REQUIRED_PACKAGE_MODULES: tuple[str, ...] = (
     "rytm_randomizer/mido_provider.py",
     "rytm_randomizer/scene_runner.py",
     "rytm_randomizer/group_runner.py",
-    "rytm_randomizer/reports.py",
+    "rytm_randomizer/reports/__init__.py",
+    "rytm_randomizer/reports/formatter.py",
     "rytm_randomizer/inspection.py",
     # data/ sub-package
     "rytm_randomizer/data/__init__.py",

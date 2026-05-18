@@ -75,6 +75,13 @@ timeout_method = "thread"
 #                    default -- so future work on test speed has measured
 #                    targets, not guesses.
 addopts = "-n auto --durations=20"
+# WS-M4: fast-iteration marker. Tests not in the warm-worker / cross-process
+# parity suite carry @pytest.mark.fast (typically at module scope via
+# ``pytestmark = pytest.mark.fast``). Run ``pytest -m fast`` for a <60s loop
+# that skips the 505 V1.34 parity fixtures.
+markers = [
+    "fast: lightweight, in-process tests; safe to run under -m fast for fast iteration (<60s wall-clock).",
+]
 
 # Coverage configuration is in `.coveragerc` (not duplicated here). That
 # file is the single source of truth: branch=True, source=rytm_randomizer,

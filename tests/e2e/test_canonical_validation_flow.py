@@ -34,6 +34,10 @@ from .conftest import (
     save_golden,
 )
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 GOLDEN_NAME = "canonical_validation_flow"
 
 

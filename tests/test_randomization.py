@@ -20,10 +20,16 @@ from __future__ import annotations
 import random
 import subprocess
 import sys
-import types
 from pathlib import Path
 
 import pytest
+
+# WS-M4: shared fixture classes from tests/conftest.py
+from conftest import RecordingOut, _install_fake_mido, _no_sleep
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,33 +53,6 @@ def _restore_sys_modules():
                 del sys.modules[name]
         for name, module in snapshot.items():
             sys.modules[name] = module
-
-
-class _FakeMessage:
-    def __init__(self, message_type, *, channel, control, value):
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
-
-
-def _install_fake_mido():
-    fake = types.ModuleType("mido")
-    fake.Message = _FakeMessage  # type: ignore[attr-defined]
-    sys.modules["mido"] = fake
-    return fake
-
-
-class RecordingOut:
-    def __init__(self) -> None:
-        self.sent: list[object] = []
-
-    def send(self, message: object) -> None:
-        self.sent.append(message)
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
 
 
 def _run_python(code: str) -> subprocess.CompletedProcess[str]:

@@ -17,6 +17,11 @@ import subprocess
 import sys
 import types
 from pathlib import Path
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -250,6 +255,7 @@ def test_mido_provider_imports_mido_lazily_not_at_module_load():
     result = run_python("""
 import sys
 import rytm_randomizer.mido_provider as mp
+
 
 assert "mido" not in sys.modules, "mido imported at module load time"
 provider = mp.build_mido_midi_port_provider()

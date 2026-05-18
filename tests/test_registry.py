@@ -15,6 +15,11 @@ from rytm_randomizer.registry import (
     summarize_registry,
 )
 from rytm_randomizer.scenes import SCENE_COMMANDS
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 FORBIDDEN_EXECUTION_FIELDS = {"handler", "callable", "execute", "function", "callback"}
 OUT_OF_SCOPE_PAD_TEXT = (

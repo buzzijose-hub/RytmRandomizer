@@ -9,10 +9,13 @@ Test naming: test_<unit>_<behavior>_when_<condition> per Gate 8.
 from __future__ import annotations
 
 import sys
-import types
 from pathlib import Path
 
 import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,9 +23,11 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
-# ---------------------------------------------------------------------------
-# Isolation helpers (inline — tests/conftest.py is added in WS-M4)
-# ---------------------------------------------------------------------------
+# Shared fixtures (_FakeMessage, _install_fake_mido, _no_sleep) live in
+# tests/conftest.py per Gate 11 + WS-M4. The sys.modules autouse snapshot
+# stays local because it is test-class-scoped behavior, not a fixture
+# (other test files don't need it).
+from conftest import _FakeMessage, _install_fake_mido, _no_sleep  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
@@ -38,29 +43,6 @@ def _restore_sys_modules():
                 del sys.modules[name]
         for name, module in snapshot.items():
             sys.modules[name] = module
-
-
-class _FakeMessage:
-    """Records the same fields a mido.Message would expose."""
-
-    def __init__(self, message_type: str, *, channel: int, control: int, value: int) -> None:
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
-
-
-def _install_fake_mido() -> types.ModuleType:
-    """Install an inert fake mido so send_cc constructs no real message."""
-
-    fake = types.ModuleType("mido")
-    fake.Message = _FakeMessage  # type: ignore[attr-defined]
-    sys.modules["mido"] = fake
-    return fake
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
 
 
 # ---------------------------------------------------------------------------

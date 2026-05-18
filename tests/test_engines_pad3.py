@@ -32,7 +32,6 @@ Isolation rules (matching ``tests/test_engines_pad1.py``):
 from __future__ import annotations
 
 import sys
-import types
 from pathlib import Path
 
 import pytest
@@ -46,6 +45,9 @@ if str(PROJECT_ROOT) not in sys.path:
 # mode, no ``tests/__init__.py``), so the shared helper imports as a top-level
 # module without needing a package.
 from _parity_worker import make_parity_subprocess, parse_steps  # noqa: E402
+
+# WS-M4: shared fixture classes from tests/conftest.py
+from conftest import RecordingOut, _install_fake_mido, _no_sleep
 
 # ---------------------------------------------------------------------------
 # Isolation helpers
@@ -65,53 +67,6 @@ def _restore_sys_modules():
                 del sys.modules[name]
         for name, module in snapshot.items():
             sys.modules[name] = module
-
-
-class _FakeMessage:
-    """Records the same fields a ``mido.Message`` would expose."""
-
-    def __init__(self, message_type, *, channel, control, value):
-        self.type = message_type
-        self.channel = channel
-        self.control = control
-        self.value = value
-
-    def __eq__(self, other):
-        return isinstance(other, _FakeMessage) and (
-            self.type,
-            self.channel,
-            self.control,
-            self.value,
-        ) == (other.type, other.channel, other.control, other.value)
-
-    def __repr__(self):  # pragma: no cover - debugging aid only
-        return (
-            f"_FakeMessage({self.type!r}, channel={self.channel}, "
-            f"control={self.control}, value={self.value})"
-        )
-
-
-def _install_fake_mido():
-    """Install an inert fake ``mido`` so ``send_cc`` builds no real message."""
-
-    fake = types.ModuleType("mido")
-    fake.Message = _FakeMessage  # type: ignore[attr-defined]
-    sys.modules["mido"] = fake
-    return fake
-
-
-class RecordingOut:
-    """Minimal stand-in for a mido output port; records sent messages."""
-
-    def __init__(self) -> None:
-        self.sent: list[object] = []
-
-    def send(self, message: object) -> None:
-        self.sent.append(message)
-
-
-def _no_sleep(_seconds: float) -> None:
-    return None
 
 
 # Harness run once at warm-worker startup. The capture/check contract works the

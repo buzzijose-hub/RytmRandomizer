@@ -34,6 +34,10 @@ from rytm_randomizer.observability.logging import (
     get_logger,
 )
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # Fixture: prevent test-to-test handler leakage on the package root logger.
 # ---------------------------------------------------------------------------

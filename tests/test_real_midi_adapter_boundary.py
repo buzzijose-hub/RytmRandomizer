@@ -1,6 +1,11 @@
 import subprocess
 import sys
 from pathlib import Path
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
@@ -28,7 +33,7 @@ PASSIVE_SOURCE_FILES = (
     PROJECT_ROOT / "rytm_randomizer" / "mock_midi.py",
     PROJECT_ROOT / "rytm_randomizer" / "mock_message_mapper.py",
     PROJECT_ROOT / "rytm_randomizer" / "active_boundary.py",
-    PROJECT_ROOT / "rytm_randomizer" / "reports.py",
+    PROJECT_ROOT / "rytm_randomizer" / "reports/__init__.py",
 )
 
 FORBIDDEN_SOURCE_TOKENS = (
@@ -225,6 +230,8 @@ def test_passive_cli_commands_do_not_load_adapter_or_real_midi_modules():
     result = run_python(f"""
 import sys
 from rytm_randomizer import cli
+import pytest
+
 commands = {PASSIVE_CLI_COMMANDS!r}
 for command in commands:
     exit_code = cli.main(list(command))

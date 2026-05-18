@@ -14,6 +14,10 @@ import types
 
 import pytest
 
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
+
 # ---------------------------------------------------------------------------
 # Helper: import target (must fail until formatter.py exists)
 # ---------------------------------------------------------------------------

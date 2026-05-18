@@ -7,6 +7,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from rytm_randomizer.commands import COMMANDS
 from rytm_randomizer.inspection import inspect_command
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 
 def test_known_scene_command_returns_passive_report():

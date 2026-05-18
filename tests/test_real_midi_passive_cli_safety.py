@@ -1,6 +1,11 @@
 import subprocess
 import sys
 from pathlib import Path
+import pytest
+
+# WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
+# warm-worker V1.34 parity fixtures and runs in <60s.
+pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 CLI_SOURCE = PROJECT_ROOT / "rytm_randomizer" / "cli.py"
@@ -101,6 +106,8 @@ def run_cli_in_process_and_check_no_real_midi_or_adapter_modules(*args):
     code = f"""
 import sys
 from rytm_randomizer import cli
+import pytest
+
 exit_code = cli.main({list(args)!r})
 assert exit_code == 0, exit_code
 for module_name in {FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES!r}:
