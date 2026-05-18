@@ -88,7 +88,10 @@ def test_analyzer_groups_whole_project_records_by_device_type_length_and_slots()
     assert analysis.manufacturer_id == "00 20 3C"
     assert analysis.device_family_byte == 0x07
     assert analysis.device_label == "Analog Rytm MKII"
-    assert [(group.label, group.count, group.record_length, group.slot_numbers) for group in analysis.record_groups] == [
+    assert [
+        (group.label, group.count, group.record_length, group.slot_numbers)
+        for group in analysis.record_groups
+    ] == [
         ("kits", 2, 64, (1, 2)),
         ("sounds", 1, 48, (1,)),
         ("patterns", 2, 72, (1, 2)),
@@ -97,8 +100,10 @@ def test_analyzer_groups_whole_project_records_by_device_type_length_and_slots()
 
 
 def test_analyzer_rejects_bytes_without_complete_sysex_messages():
-    from rytm_randomizer.sysex_project_analyzer import SysexProjectAnalysisError
-    from rytm_randomizer.sysex_project_analyzer import analyze_sysex_project_bytes
+    from rytm_randomizer.sysex_project_analyzer import (
+        SysexProjectAnalysisError,
+        analyze_sysex_project_bytes,
+    )
 
     with pytest.raises(SysexProjectAnalysisError, match="no complete SysEx messages"):
         analyze_sysex_project_bytes(b"not a project dump")

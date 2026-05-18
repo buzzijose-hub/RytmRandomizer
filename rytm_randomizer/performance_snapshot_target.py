@@ -115,9 +115,7 @@ def format_performance_snapshot_target_report(
             "restore target captured snapshot"
         )
     for device in plan.untouched_devices:
-        lines.append(
-            f"- {device.label}: untouched / no capture / no mutation / no restore"
-        )
+        lines.append(f"- {device.label}: untouched / no capture / no mutation / no restore")
     lines.extend(
         [
             "Target policy:",
@@ -164,9 +162,7 @@ def _normalize_target(target: str) -> str:
     try:
         return TARGET_ALIASES[normalized]
     except KeyError as exc:
-        raise PerformanceSnapshotTargetError(
-            "target must be rytm, analog-four, or both"
-        ) from exc
+        raise PerformanceSnapshotTargetError("target must be rytm, analog-four, or both") from exc
 
 
 def _active_device(key: str) -> PerformanceSnapshotDeviceScope:

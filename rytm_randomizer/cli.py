@@ -805,13 +805,13 @@ def main(argv=None):
         return 0
 
     if args and args[0] == "dual-machine-mock-bridge-report":
+        from .analog_four_snapshot_mutation_planner import (
+            AnalogFourSnapshotMutationPlanError,
+        )
         from .dual_machine_mock_bridge import (
             build_dual_machine_mock_bridge,
             format_dual_machine_mock_bridge_error,
             format_dual_machine_mock_bridge_report,
-        )
-        from .analog_four_snapshot_mutation_planner import (
-            AnalogFourSnapshotMutationPlanError,
         )
         from .performance_snapshot_target import PerformanceSnapshotTargetError
         from .snapshot_mutation_planner import SnapshotMutationPlanError
@@ -912,9 +912,7 @@ def main(argv=None):
             sys.stderr.write("\n")
             return 1
 
-        sys.stdout.write(
-            "\n".join(format_dual_machine_live_snapshot_readiness_report(readiness))
-        )
+        sys.stdout.write("\n".join(format_dual_machine_live_snapshot_readiness_report(readiness)))
         sys.stdout.write("\n")
         return 0
 
@@ -1028,17 +1026,11 @@ def main(argv=None):
             sys.stderr.write("\n")
             return 1
 
-        sys.stdout.write(
-            "\n".join(format_dual_machine_guarded_send_dry_run_report(result))
-        )
+        sys.stdout.write("\n".join(format_dual_machine_guarded_send_dry_run_report(result)))
         sys.stdout.write("\n")
         return 0
 
-    if (
-        len(args) == 4
-        and args[0] == "analog-four-kit-snapshot-report"
-        and args[2] == "--slot"
-    ):
+    if len(args) == 4 and args[0] == "analog-four-kit-snapshot-report" and args[2] == "--slot":
         from .analog_four_snapshot_decoder import (
             AnalogFourSnapshotDecodeError,
             decode_analog_four_kit_snapshot_file,

@@ -19,7 +19,7 @@ from .snapshot_mutation_planner import (
     SnapshotPadMutationPlan,
     build_snapshot_mutation_plan_from_file,
 )
-from .style_intent_profiles import StyleIntentRequest, build_style_intent_request
+from .style_intent_profiles import build_style_intent_request
 
 MACHINE_PROFILE_KEYS: dict[str, str] = {
     "bd_sharp": "1",

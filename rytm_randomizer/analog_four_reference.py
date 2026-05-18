@@ -71,8 +71,7 @@ REFERENCE_SOURCE = AnalogFourReferenceSource(
     device="Elektron Analog Four MKII",
     url="https://midi.guide/d/elektron/analog-four-mkii/",
     csv_history_url=(
-        "https://github.com/pencilresearch/midi/commits/main/"
-        "Elektron/Analog%20Four%20MKII.csv"
+        "https://github.com/pencilresearch/midi/commits/main/" "Elektron/Analog%20Four%20MKII.csv"
     ),
     license="Creative Commons Attribution Share Alike 4.0 International",
     last_update="2026-03-26",
@@ -143,11 +142,19 @@ PARAMETER_GROUPS: tuple[AnalogFourParameterGroup, ...] = (
         validation_status="reference_known_mock_only",
         parameters=(
             AnalogFourParameter("OSC1: Waveform", "Synth: OSC1", 70, None, 1, 5, "0-7", "0-based"),
-            AnalogFourParameter("OSC1: Sub Oscillator", "Synth: OSC1", 71, None, 1, 6, "0-4", "0-based"),
-            AnalogFourParameter("OSC1: Pulsewidth", "Synth: OSC1", 72, None, 1, 7, "0-127", "centered"),
+            AnalogFourParameter(
+                "OSC1: Sub Oscillator", "Synth: OSC1", 71, None, 1, 6, "0-4", "0-based"
+            ),
+            AnalogFourParameter(
+                "OSC1: Pulsewidth", "Synth: OSC1", 72, None, 1, 7, "0-127", "centered"
+            ),
             AnalogFourParameter("OSC2: Waveform", "Synth: OSC2", 79, None, 1, 25, "0-7", "0-based"),
-            AnalogFourParameter("OSC2: Sub Oscillator", "Synth: OSC2", 80, None, 1, 26, "0-4", "0-based"),
-            AnalogFourParameter("OSC2: Pulsewidth", "Synth: OSC2", 81, None, 1, 27, "0-127", "centered"),
+            AnalogFourParameter(
+                "OSC2: Sub Oscillator", "Synth: OSC2", 80, None, 1, 26, "0-4", "0-based"
+            ),
+            AnalogFourParameter(
+                "OSC2: Pulsewidth", "Synth: OSC2", 81, None, 1, 27, "0-127", "centered"
+            ),
         ),
     ),
     AnalogFourParameterGroup(
@@ -158,7 +165,9 @@ PARAMETER_GROUPS: tuple[AnalogFourParameterGroup, ...] = (
         parameters=(
             AnalogFourParameter("Noise: S&H", "Synth: Noise", 75, None, 1, 10, "0-127", "0-based"),
             AnalogFourParameter("Noise: Fade", "Synth: Noise", 76, None, 1, 12, "0-127", "0-based"),
-            AnalogFourParameter("Noise: Level", "Synth: Noise", 77, None, 1, 14, "0-127", "0-based"),
+            AnalogFourParameter(
+                "Noise: Level", "Synth: Noise", 77, None, 1, 14, "0-127", "0-based"
+            ),
         ),
     ),
     AnalogFourParameterGroup(
@@ -167,12 +176,24 @@ PARAMETER_GROUPS: tuple[AnalogFourParameterGroup, ...] = (
         purpose="shape brightness and pressure, likely the first musical A4 mutation lane",
         validation_status="reference_known_mock_only",
         parameters=(
-            AnalogFourParameter("Filter 1: Frequency", "Filters", 18, 50, 1, 40, "0-127", "0-based"),
-            AnalogFourParameter("Filter 1: Resonance", "Filters", 89, None, 1, 41, "0-127", "0-based"),
-            AnalogFourParameter("Filter 1: Envelope Depth", "Filters", 102, None, 1, 44, "0-127", "centered"),
-            AnalogFourParameter("Filter 2: Frequency", "Filters", 19, 51, 1, 45, "0-127", "0-based"),
-            AnalogFourParameter("Filter 2: Resonance", "Filters", 90, None, 1, 46, "0-127", "0-based"),
-            AnalogFourParameter("Filter 2: Envelope Depth", "Filters", 103, None, 1, 49, "0-127", "centered"),
+            AnalogFourParameter(
+                "Filter 1: Frequency", "Filters", 18, 50, 1, 40, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter 1: Resonance", "Filters", 89, None, 1, 41, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter 1: Envelope Depth", "Filters", 102, None, 1, 44, "0-127", "centered"
+            ),
+            AnalogFourParameter(
+                "Filter 2: Frequency", "Filters", 19, 51, 1, 45, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter 2: Resonance", "Filters", 90, None, 1, 46, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter 2: Envelope Depth", "Filters", 103, None, 1, 49, "0-127", "centered"
+            ),
         ),
     ),
     AnalogFourParameterGroup(
@@ -181,10 +202,18 @@ PARAMETER_GROUPS: tuple[AnalogFourParameterGroup, ...] = (
         purpose="shape plucks, stabs, drones, and transition tails",
         validation_status="reference_known_mock_only",
         parameters=(
-            AnalogFourParameter("Amp Env: Attack", "Envelopes", 104, None, 1, 50, "0-127", "0-based"),
-            AnalogFourParameter("Amp Env: Decay", "Envelopes", 105, None, 1, 51, "0-127", "0-based"),
-            AnalogFourParameter("Amp Env: Sustain", "Envelopes", 106, None, 1, 52, "0-127", "0-based"),
-            AnalogFourParameter("Amp Env: Release", "Envelopes", 107, None, 1, 53, "0-127", "0-based"),
+            AnalogFourParameter(
+                "Amp Env: Attack", "Envelopes", 104, None, 1, 50, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Amp Env: Decay", "Envelopes", 105, None, 1, 51, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Amp Env: Sustain", "Envelopes", 106, None, 1, 52, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Amp Env: Release", "Envelopes", 107, None, 1, 53, "0-127", "0-based"
+            ),
         ),
     ),
     AnalogFourParameterGroup(
@@ -193,12 +222,24 @@ PARAMETER_GROUPS: tuple[AnalogFourParameterGroup, ...] = (
         purpose="move brightness over time without selecting modulation destinations yet",
         validation_status="reference_known_mock_only",
         parameters=(
-            AnalogFourParameter("Filter Env: Attack", "Envelopes", 108, None, 1, 60, "0-127", "0-based"),
-            AnalogFourParameter("Filter Env: Decay", "Envelopes", 109, None, 1, 61, "0-127", "0-based"),
-            AnalogFourParameter("Filter Env: Sustain", "Envelopes", 110, None, 1, 62, "0-127", "0-based"),
-            AnalogFourParameter("Filter Env: Release", "Envelopes", 111, None, 1, 63, "0-127", "0-based"),
-            AnalogFourParameter("Filter Env: Depth A", "Envelopes", 20, 52, 1, 67, "0-127", "centered"),
-            AnalogFourParameter("Filter Env: Depth B", "Envelopes", 21, 53, 1, 69, "0-127", "centered"),
+            AnalogFourParameter(
+                "Filter Env: Attack", "Envelopes", 108, None, 1, 60, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter Env: Decay", "Envelopes", 109, None, 1, 61, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter Env: Sustain", "Envelopes", 110, None, 1, 62, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter Env: Release", "Envelopes", 111, None, 1, 63, "0-127", "0-based"
+            ),
+            AnalogFourParameter(
+                "Filter Env: Depth A", "Envelopes", 20, 52, 1, 67, "0-127", "centered"
+            ),
+            AnalogFourParameter(
+                "Filter Env: Depth B", "Envelopes", 21, 53, 1, 69, "0-127", "centered"
+            ),
         ),
     ),
     AnalogFourParameterGroup(
@@ -284,9 +325,7 @@ def format_analog_four_reference_report() -> list[str]:
     lines.extend(["", "Reference-known starter groups:"])
     for group in PARAMETER_GROUPS:
         controls = ", ".join(_format_parameter_control(parameter) for parameter in group.parameters)
-        lines.append(
-            f"- {group.key}: {group.label} / {group.validation_status} / {controls}"
-        )
+        lines.append(f"- {group.key}: {group.label} / {group.validation_status} / {controls}")
 
     lines.extend(["", "Blocked until next slices:"])
     lines.extend(f"- {item}" for item in BLOCKED_UNTIL_NEXT_SLICES)

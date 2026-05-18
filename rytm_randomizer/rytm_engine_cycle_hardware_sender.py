@@ -342,8 +342,7 @@ def _emission_policy_lines(result: RytmEngineCycleHardwareSendResult) -> list[st
 
 def _has_engine_source_events(result: RytmEngineCycleHardwareSendResult) -> bool:
     return any(
-        message.event_role == "engine_source_parameter"
-        for message in result.emitted_messages
+        message.event_role == "engine_source_parameter" for message in result.emitted_messages
     )
 
 

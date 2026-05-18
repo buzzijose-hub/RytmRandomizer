@@ -206,9 +206,7 @@ def _message_label(message) -> str:
             f"{metadata.get('machine')} / {metadata.get('parameter')}"
         )
     if message.type == "saved_offset_candidate":
-        return (
-            f"Track {metadata.get('track')} / {metadata.get('role')}"
-        )
+        return f"Track {metadata.get('track')} / {metadata.get('role')}"
     if device == "Analog Four MKII":
         return (
             f"Track {metadata.get('track')} / "

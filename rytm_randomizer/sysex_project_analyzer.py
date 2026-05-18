@@ -185,12 +185,8 @@ def _split_complete_sysex_messages(data: bytes) -> tuple[tuple[int, int, bytes],
     return tuple(messages)
 
 
-def _record_from_message(
-    record_number: int, offset: int, message: bytes
-) -> SysexProjectRecord:
-    device_family = (
-        message[DEVICE_FAMILY_OFFSET] if len(message) > DEVICE_FAMILY_OFFSET else None
-    )
+def _record_from_message(record_number: int, offset: int, message: bytes) -> SysexProjectRecord:
+    device_family = message[DEVICE_FAMILY_OFFSET] if len(message) > DEVICE_FAMILY_OFFSET else None
     object_type = message[OBJECT_TYPE_OFFSET] if len(message) > OBJECT_TYPE_OFFSET else None
     header_slot_index = message[SLOT_INDEX_OFFSET] if len(message) > SLOT_INDEX_OFFSET else None
     return SysexProjectRecord(
@@ -226,9 +222,7 @@ def _group_records(
                 count=len(group_records),
                 record_length=first.length,
                 slot_numbers=tuple(
-                    record.slot_number
-                    for record in group_records
-                    if record.slot_number is not None
+                    record.slot_number for record in group_records if record.slot_number is not None
                 ),
                 first_offset=first.offset,
                 last_offset=group_records[-1].offset,

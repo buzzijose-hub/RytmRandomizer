@@ -139,8 +139,10 @@ def test_snapshot_mutation_plan_uses_captured_values_not_anchors():
 
 
 def test_snapshot_mutation_plan_rejects_unknown_depth():
-    from rytm_randomizer.snapshot_mutation_planner import SnapshotMutationPlanError
-    from rytm_randomizer.snapshot_mutation_planner import build_snapshot_mutation_plan
+    from rytm_randomizer.snapshot_mutation_planner import (
+        SnapshotMutationPlanError,
+        build_snapshot_mutation_plan,
+    )
     from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
 
     snapshot = decode_rytm_kit_snapshot_record(

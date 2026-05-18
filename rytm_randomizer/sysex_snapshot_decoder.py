@@ -224,10 +224,7 @@ def decode_rytm_kit_snapshot_record(message: bytes) -> RytmKitSnapshot:
     decoded_payload = unpack_elektron_7bit_payload(message[KIT_HEADER_LENGTH:-1])
     _require_sound_blocks(decoded_payload)
     slot_index = message[9]
-    pads = tuple(
-        _decode_pad(decoded_payload, pad)
-        for pad in range(1, PAD_COUNT + 1)
-    )
+    pads = tuple(_decode_pad(decoded_payload, pad) for pad in range(1, PAD_COUNT + 1))
     mapped_parameter_statuses = {pad.parameter_map_status for pad in pads if pad.parameters}
 
     return RytmKitSnapshot(
@@ -340,9 +337,7 @@ def _decode_pad(decoded_payload: bytes, pad: int) -> RytmSnapshotPad:
         midi_channel=pad,
         sound_name=(
             _decode_ascii_field(
-                track_block[
-                    TRACK_BLOCK_NAME_OFFSET : TRACK_BLOCK_NAME_OFFSET + KIT_NAME_LENGTH
-                ]
+                track_block[TRACK_BLOCK_NAME_OFFSET : TRACK_BLOCK_NAME_OFFSET + KIT_NAME_LENGTH]
             )
             or _decode_ascii_field(block[:KIT_NAME_LENGTH])
         ),

@@ -94,8 +94,10 @@ def test_importing_dual_machine_bridge_is_passive_and_silent():
 
 
 def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
-    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+    from rytm_randomizer.dual_machine_mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+    )
 
     sysex_path = tmp_path / "kits.syx"
     sysex_path.write_bytes(make_rytm_kit_record(kit_name="BRIDGE KIT"))
@@ -142,8 +144,10 @@ def test_dual_bridge_combines_rytm_snapshot_and_a4_safe_starter(tmp_path):
 
 
 def test_dual_bridge_uses_a4_snapshot_when_path_is_supplied(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
-    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+    from rytm_randomizer.dual_machine_mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+    )
 
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"
@@ -176,7 +180,9 @@ def test_dual_bridge_uses_a4_snapshot_when_path_is_supplied(tmp_path):
     assert bridge.combined_message_count == 11
     assert len(sender.sent_messages) == 11
     first_a4 = next(
-        message for message in sender.sent_messages if message.metadata["device"] == "Analog Four MKII"
+        message
+        for message in sender.sent_messages
+        if message.metadata["device"] == "Analog Four MKII"
     )
     assert first_a4.type == "saved_offset_candidate"
     assert first_a4.channel == 0
@@ -192,8 +198,10 @@ def test_dual_bridge_uses_a4_snapshot_when_path_is_supplied(tmp_path):
 
 
 def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
-    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+    from rytm_randomizer.dual_machine_mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+    )
 
     sysex_path = tmp_path / "kits.syx"
     sysex_path.write_bytes(make_rytm_kit_record(kit_name="RYTM ONLY"))
@@ -218,8 +226,10 @@ def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
 
 
 def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
-    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
+    from rytm_randomizer.dual_machine_mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+    )
 
     sysex_path = tmp_path / "kits.syx"
     sysex_path.write_bytes(make_rytm_kit_record(kit_name="A4 ONLY"))
@@ -254,9 +264,11 @@ def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
 
 
 def test_dual_bridge_accepts_birmingham_analog_four_profile(tmp_path):
-    from rytm_randomizer.dual_machine_mock_bridge import build_dual_machine_mock_bridge
-    from rytm_randomizer.dual_machine_mock_bridge import capture_dual_machine_mock_messages
-    from rytm_randomizer.dual_machine_mock_bridge import format_dual_machine_mock_bridge_report
+    from rytm_randomizer.dual_machine_mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+        format_dual_machine_mock_bridge_report,
+    )
 
     sysex_path = tmp_path / "kits.syx"
     sysex_path.write_bytes(make_rytm_kit_record(kit_name="A4 PROFILE"))
@@ -309,8 +321,7 @@ def test_dual_bridge_rejects_starter_profile_with_a4_snapshot_path(tmp_path):
         raise AssertionError("expected profile/source conflict to fail")
 
     assert (
-        "Analog Four starter profile cannot be combined with Analog Four snapshot path"
-        in message
+        "Analog Four starter profile cannot be combined with Analog Four snapshot path" in message
     )
 
 

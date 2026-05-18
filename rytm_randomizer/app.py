@@ -279,10 +279,8 @@ def _print_passive_menu() -> None:
             "Rytm 12-pad style/genre snapshot essence plan",
             "- --rytm-engine-cycle  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad CC15 engine-cycle plan",
-            "  optional: --engine-cycle-starter-profile <profile> adds "
-            "common starter shaping",
-            "  optional: --engine-cycle-source-starters adds SRC-slot source "
-            "starter values",
+            "  optional: --engine-cycle-starter-profile <profile> adds " "common starter shaping",
+            "  optional: --engine-cycle-source-starters adds SRC-slot source " "starter values",
             "",
             USAGE,
         ]
@@ -501,9 +499,7 @@ def _run_arm(
             )
 
             result = run_twelve_pad_smoke_test(port, sleep=_smoke_sleep)
-            sys.stdout.write(
-                "\n".join(format_twelve_pad_smoke_report(result, mode="arm"))
-            )
+            sys.stdout.write("\n".join(format_twelve_pad_smoke_report(result, mode="arm")))
             sys.stdout.write("\n")
             return 0
 
@@ -514,9 +510,7 @@ def _run_arm(
             )
 
             result = run_analog_four_smoke_test(port, sleep=_smoke_sleep)
-            sys.stdout.write(
-                "\n".join(format_analog_four_smoke_report(result, mode="arm"))
-            )
+            sys.stdout.write("\n".join(format_analog_four_smoke_report(result, mode="arm")))
             sys.stdout.write("\n")
             return 0
 
@@ -531,9 +525,7 @@ def _run_arm(
                 track=analog_four_track_smoke,
                 sleep=_smoke_sleep,
             )
-            sys.stdout.write(
-                "\n".join(format_analog_four_track_smoke_report(result, mode="arm"))
-            )
+            sys.stdout.write("\n".join(format_analog_four_track_smoke_report(result, mode="arm")))
             sys.stdout.write("\n")
             return 0
 
@@ -549,9 +541,7 @@ def _run_arm(
                 sleep=_smoke_sleep,
             )
             sys.stdout.write(
-                "\n".join(
-                    format_analog_four_track_filter_smoke_report(result, mode="arm")
-                )
+                "\n".join(format_analog_four_track_filter_smoke_report(result, mode="arm"))
             )
             sys.stdout.write("\n")
             return 0
@@ -707,8 +697,7 @@ def _run_arm_dual_machine_snapshot_send_both(plan) -> int:
 
     if rytm_port_name == a4_port_name:
         sys.stderr.write(
-            "--arm failed: choose different MIDI outputs for Analog Rytm and "
-            "Analog Four.\n"
+            "--arm failed: choose different MIDI outputs for Analog Rytm and " "Analog Four.\n"
         )
         return 1
 
@@ -1029,7 +1018,7 @@ def _rytm_engine_cycle_message_count(plan) -> int:
     event_count = getattr(plan, "event_count", None)
     if isinstance(event_count, int):
         return event_count
-    return int(getattr(plan, "top_candidate_count"))
+    return int(plan.top_candidate_count)
 
 
 def _rytm_engine_cycle_message_label(plan) -> str:
@@ -1096,8 +1085,7 @@ def _run_dry_run_dual_machine_snapshot_send(request: dict[str, object]) -> int:
     sys.stdout.write("\n".join(format_dual_machine_guarded_send_dry_run_report(result)))
     sys.stdout.write("\n")
     sys.stdout.write(
-        f"Dry-run complete. Mock sender captured {result.emitted_message_count} "
-        "message(s).\n"
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} " "message(s).\n"
     )
     return 0 if result.accepted else 1
 
@@ -1133,8 +1121,7 @@ def _run_dry_run_snapshot_essence_send(request: dict[str, object]) -> int:
     sys.stdout.write("\n".join(format_snapshot_essence_guarded_send_dry_run_report(result)))
     sys.stdout.write("\n")
     sys.stdout.write(
-        f"Dry-run complete. Mock sender captured {result.emitted_message_count} "
-        "message(s).\n"
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} " "message(s).\n"
     )
     return 0 if result.accepted else 1
 
@@ -1163,8 +1150,7 @@ def _run_dry_run_rytm_engine_cycle(request: dict[str, object]) -> int:
     sys.stdout.write("\n".join(format_rytm_engine_cycle_guarded_send_dry_run_report(result)))
     sys.stdout.write("\n")
     sys.stdout.write(
-        f"Dry-run complete. Mock sender captured {result.emitted_message_count} "
-        "message(s).\n"
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} " "message(s).\n"
     )
     return 0 if result.accepted else 1
 
@@ -1213,13 +1199,10 @@ def _run_dry_run(
         )
 
         result = run_twelve_pad_smoke_test(sender, sleep=lambda _seconds: None)
-        sys.stdout.write(
-            "\n".join(format_twelve_pad_smoke_report(result, mode="dry-run"))
-        )
+        sys.stdout.write("\n".join(format_twelve_pad_smoke_report(result, mode="dry-run")))
         sys.stdout.write("\n")
         sys.stdout.write(
-            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
-            "message(s).\n"
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} " "message(s).\n"
         )
         return 0
 
@@ -1230,13 +1213,10 @@ def _run_dry_run(
         )
 
         result = run_analog_four_smoke_test(sender, sleep=lambda _seconds: None)
-        sys.stdout.write(
-            "\n".join(format_analog_four_smoke_report(result, mode="dry-run"))
-        )
+        sys.stdout.write("\n".join(format_analog_four_smoke_report(result, mode="dry-run")))
         sys.stdout.write("\n")
         sys.stdout.write(
-            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
-            "message(s).\n"
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} " "message(s).\n"
         )
         return 0
 
@@ -1251,13 +1231,10 @@ def _run_dry_run(
             track=analog_four_track_smoke,
             sleep=lambda _seconds: None,
         )
-        sys.stdout.write(
-            "\n".join(format_analog_four_track_smoke_report(result, mode="dry-run"))
-        )
+        sys.stdout.write("\n".join(format_analog_four_track_smoke_report(result, mode="dry-run")))
         sys.stdout.write("\n")
         sys.stdout.write(
-            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
-            "message(s).\n"
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} " "message(s).\n"
         )
         return 0
 
@@ -1273,14 +1250,11 @@ def _run_dry_run(
             sleep=lambda _seconds: None,
         )
         sys.stdout.write(
-            "\n".join(
-                format_analog_four_track_filter_smoke_report(result, mode="dry-run")
-            )
+            "\n".join(format_analog_four_track_filter_smoke_report(result, mode="dry-run"))
         )
         sys.stdout.write("\n")
         sys.stdout.write(
-            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} "
-            "message(s).\n"
+            f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} " "message(s).\n"
         )
         return 0
 
@@ -1378,13 +1352,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("--analog-four-track-smoke track must be 1, 2, 3, or 4.\n")
         return 2
 
-    if (
-        analog_four_track_filter_smoke is not None
-        and analog_four_track_filter_smoke not in range(1, 5)
+    if analog_four_track_filter_smoke is not None and analog_four_track_filter_smoke not in range(
+        1, 5
     ):
-        sys.stderr.write(
-            "--analog-four-track-filter-smoke track must be 1, 2, 3, or 4.\n"
-        )
+        sys.stderr.write("--analog-four-track-filter-smoke track must be 1, 2, 3, or 4.\n")
         return 2
 
     if args.twelve_pad_smoke and not (args.arm or args.dry_run):
@@ -1400,9 +1371,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     if analog_four_track_filter_smoke is not None and not (args.arm or args.dry_run):
-        sys.stderr.write(
-            "--analog-four-track-filter-smoke requires --arm or --dry-run.\n"
-        )
+        sys.stderr.write("--analog-four-track-filter-smoke requires --arm or --dry-run.\n")
         return 2
 
     if args.dual_machine_snapshot_send and not (args.arm or args.dry_run):
@@ -1418,9 +1387,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:
-        sys.stderr.write(
-            "--engine-cycle-starter-profile requires --rytm-engine-cycle.\n"
-        )
+        sys.stderr.write("--engine-cycle-starter-profile requires --rytm-engine-cycle.\n")
         return 2
 
     if args.engine_cycle_source_starters and args.engine_cycle_starter_profile is None:
@@ -1441,10 +1408,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if value is None
         ]
         if missing:
-            sys.stderr.write(
-                "--dual-machine-snapshot-send requires "
-                f"{', '.join(missing)}.\n"
-            )
+            sys.stderr.write("--dual-machine-snapshot-send requires " f"{', '.join(missing)}.\n")
             return 2
         if args.snapshot_slot not in range(1, 129):
             sys.stderr.write("--snapshot-slot must be between 1 and 128.\n")
@@ -1470,10 +1434,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if value is None
         ]
         if missing:
-            sys.stderr.write(
-                "--snapshot-essence-send requires "
-                f"{', '.join(missing)}.\n"
-            )
+            sys.stderr.write("--snapshot-essence-send requires " f"{', '.join(missing)}.\n")
             return 2
         if args.snapshot_slot not in range(1, 129):
             sys.stderr.write("--snapshot-slot must be between 1 and 128.\n")

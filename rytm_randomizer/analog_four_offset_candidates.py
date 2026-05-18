@@ -19,7 +19,6 @@ from .analog_four_snapshot_decoder import (
     TRACK_BLOCK_OFFSETS,
     TRACK_NAME_LENGTH,
     _format_manufacturer_id,
-    _read_ascii_name,
     _split_complete_sysex_messages,
     _unpack_elektron_7bit,
 )

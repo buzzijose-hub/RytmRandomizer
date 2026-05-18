@@ -234,8 +234,5 @@ def test_guarded_engine_cycle_source_starter_plan_emits_132_mock_messages():
     assert pad5_source.control == 16
     assert pad5_source.value == 100
     assert "Emitted mock messages: 132" in report
-    assert (
-        "Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100"
-        in report
-    )
+    assert "Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100" in report
     assert "- includes engine-source SRC starter values" in report

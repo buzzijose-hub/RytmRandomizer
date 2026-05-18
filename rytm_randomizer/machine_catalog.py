@@ -558,7 +558,11 @@ def _score_machine(role: PadRole, machine: MachineProfile, matched_tags: tuple[s
 
 
 def _candidate_sort_key(candidate: MachineCandidate) -> tuple[float, int, str]:
-    return (-candidate.score, _support_sort_rank(candidate.machine.support_status), candidate.machine.key)
+    return (
+        -candidate.score,
+        _support_sort_rank(candidate.machine.support_status),
+        candidate.machine.key,
+    )
 
 
 def _include_machine(

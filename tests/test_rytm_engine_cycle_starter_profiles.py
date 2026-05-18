@@ -79,14 +79,8 @@ def test_rytm_starter_profile_auto_selects_from_style_prompt():
         choose_rytm_starter_profile_for_style,
     )
 
-    assert (
-        choose_rytm_starter_profile_for_style("Birmingham dark techno").key
-        == "birmingham-dark"
-    )
-    assert (
-        choose_rytm_starter_profile_for_style("classic Detroit techno").key
-        == "detroit-classic"
-    )
+    assert choose_rytm_starter_profile_for_style("Birmingham dark techno").key == "birmingham-dark"
+    assert choose_rytm_starter_profile_for_style("classic Detroit techno").key == "detroit-classic"
     assert choose_rytm_starter_profile_for_style("schranz peak time").key == "peak-time"
     assert choose_rytm_starter_profile_for_style("broken electro sketches").key == "balanced"
 
@@ -223,14 +217,8 @@ def test_engine_cycle_starter_report_includes_profile_preview_and_safety():
     assert "Planned pads: 12" in report
     assert "Starter messages: 84" in report
     assert "- Pad 5 / Closed hat pulse / CH Metallic: 7 message(s)" in report
-    assert (
-        "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic"
-        in report
-    )
-    assert (
-        "- Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108"
-        in report
-    )
+    assert "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "- Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- common filter/amp starter values only" in report
     assert "- no MIDI sending" in report
 
@@ -253,10 +241,7 @@ def test_engine_cycle_starter_report_includes_engine_source_preview_when_enabled
     assert "Engine-source parameter messages: 48" in report
     assert "Starter messages: 132" in report
     assert "- Pad 5 / Closed hat pulse / CH Metallic: 11 message(s)" in report
-    assert (
-        "- Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100"
-        in report
-    )
+    assert "- Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100" in report
     assert "- engine-source starters use mapped SRC slots only" in report
 
 

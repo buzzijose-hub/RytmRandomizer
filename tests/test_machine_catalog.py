@@ -29,8 +29,7 @@ def test_importing_machine_catalog_is_passive_and_silent():
 
 
 def test_catalog_tracks_v134_mutable_machines_and_selectable_inventory():
-    from rytm_randomizer.machine_catalog import get_machine_profile
-    from rytm_randomizer.machine_catalog import list_machine_profiles
+    from rytm_randomizer.machine_catalog import get_machine_profile, list_machine_profiles
 
     profiles = list_machine_profiles()
 

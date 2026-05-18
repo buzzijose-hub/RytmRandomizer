@@ -256,10 +256,7 @@ class RytmEngineCycleStarterPlan:
     @property
     def machine_select_event_count(self) -> int:
         return sum(
-            1
-            for pad in self.pads
-            for event in pad.events
-            if event.event_role == "machine_select"
+            1 for pad in self.pads for event in pad.events if event.event_role == "machine_select"
         )
 
     @property
@@ -318,8 +315,7 @@ def _pads(values_by_pad: tuple[tuple[int, int, int, int, int, int], ...]):
         "wild discovery",
     )
     return tuple(
-        _pad(pad, role_labels[pad - 1], values)
-        for pad, values in enumerate(values_by_pad, start=1)
+        _pad(pad, role_labels[pad - 1], values) for pad, values in enumerate(values_by_pad, start=1)
     )
 
 

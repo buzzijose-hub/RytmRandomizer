@@ -61,8 +61,7 @@ def evaluate_dual_machine_live_snapshot_readiness(
 
     messages = capture_dual_machine_mock_messages(bridge).sent_messages
     devices = tuple(
-        _device_readiness(bridge, messages, device_key, label)
-        for device_key, label in DEVICE_ORDER
+        _device_readiness(bridge, messages, device_key, label) for device_key, label in DEVICE_ORDER
     )
     ready_devices = sum(1 for device in devices if device.status.startswith("ready"))
     blocked_devices = sum(1 for device in devices if device.status.startswith("blocked"))

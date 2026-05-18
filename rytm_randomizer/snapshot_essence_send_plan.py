@@ -15,8 +15,8 @@ from .mock_midi import MockMidiSender, build_cc_message
 from .observability.errors import DataError
 from .snapshot_essence_overlay import (
     MACHINE_PROFILE_KEYS,
-    SnapshotEssenceOverlayPlan,
     SnapshotEssenceOverlayPad,
+    SnapshotEssenceOverlayPlan,
     build_snapshot_essence_overlay_plan_from_file,
 )
 from .snapshot_mutation_planner import SnapshotPadMutationPlan

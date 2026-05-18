@@ -191,7 +191,10 @@ def test_readiness_report_marks_a4_snapshot_candidates_blocked(tmp_path):
     assert "RytmRandomizer passive Dual-Machine Live Snapshot Readiness Report" in report
     assert "Ready: False" in report
     assert "Reason: blocked_by_unverified_candidates" in report
-    assert "Analog Four MKII: active / saved-kit snapshot candidates / blocked_candidate_unverified" in report
+    assert (
+        "Analog Four MKII: active / saved-kit snapshot candidates / blocked_candidate_unverified"
+        in report
+    )
     assert "candidate events 2" in report
     assert "- saved-offset candidate events block hardware sending" in report
     assert "- no MIDI sending" in report
@@ -225,7 +228,10 @@ def test_dual_machine_live_snapshot_readiness_cli_reads_saved_dumps(tmp_path):
     assert "RytmRandomizer passive Dual-Machine Live Snapshot Readiness Report" in result.stdout
     assert "Ready: False" in result.stdout
     assert "Reason: blocked_by_unverified_candidates" in result.stdout
-    assert "Analog Four MKII: active / saved-kit snapshot candidates / blocked_candidate_unverified" in result.stdout
+    assert (
+        "Analog Four MKII: active / saved-kit snapshot candidates / blocked_candidate_unverified"
+        in result.stdout
+    )
     assert "candidate_unverified_no_cc_mapping" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

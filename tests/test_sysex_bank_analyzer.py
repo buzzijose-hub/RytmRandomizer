@@ -95,8 +95,10 @@ def test_analyzer_splits_fixed_length_bank_and_extracts_slot_metadata():
 
 
 def test_analyzer_rejects_bytes_without_complete_sysex_messages():
-    from rytm_randomizer.sysex_bank_analyzer import SysexBankAnalysisError
-    from rytm_randomizer.sysex_bank_analyzer import analyze_sysex_kit_bank_bytes
+    from rytm_randomizer.sysex_bank_analyzer import (
+        SysexBankAnalysisError,
+        analyze_sysex_kit_bank_bytes,
+    )
 
     with pytest.raises(SysexBankAnalysisError, match="no complete SysEx messages"):
         analyze_sysex_kit_bank_bytes(b"not a sysex bank")

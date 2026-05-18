@@ -12,13 +12,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from .analog_four_starter_profiles import (
-    AnalogFourStarterProfile,
-    get_analog_four_starter_profile,
-)
 from .analog_four_snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
+)
+from .analog_four_starter_profiles import (
+    AnalogFourStarterProfile,
+    get_analog_four_starter_profile,
 )
 from .mock_midi import MidiMessage, MockMidiSender, build_cc_message
 from .performance_snapshot_target import (
@@ -153,8 +153,7 @@ def build_dual_machine_mock_bridge(
     if analog_four_sysex_path is not None:
         if starter_profile.key != "balanced":
             raise ValueError(
-                "Analog Four starter profile cannot be combined with Analog Four "
-                "snapshot path"
+                "Analog Four starter profile cannot be combined with Analog Four " "snapshot path"
             )
         analog_four_plan = build_analog_four_snapshot_mutation_plan_from_file(
             analog_four_sysex_path,
@@ -303,12 +302,8 @@ def capture_dual_machine_mock_messages(bridge: DualMachineMockBridge) -> MockMid
                                 "baseline_type": "safe_starter",
                                 "planned_value": change.value,
                                 "source": "safe starter CC plan",
-                                "starter_profile_key": (
-                                    bridge.analog_four_starter_profile_key
-                                ),
-                                "starter_profile_label": (
-                                    bridge.analog_four_starter_profile_label
-                                ),
+                                "starter_profile_key": (bridge.analog_four_starter_profile_key),
+                                "starter_profile_label": (bridge.analog_four_starter_profile_label),
                             },
                         )
                     )
@@ -343,8 +338,7 @@ def format_dual_machine_mock_bridge_report(bridge: DualMachineMockBridge) -> lis
             if not pad.changes:
                 continue
             lines.append(
-                f"- Rytm Pad {pad.pad} / {pad.machine_label}: "
-                f"{len(pad.changes)} message(s)"
+                f"- Rytm Pad {pad.pad} / {pad.machine_label}: " f"{len(pad.changes)} message(s)"
             )
     if _is_device_active(bridge, "analog_four"):
         for track in bridge.analog_four_tracks:

@@ -323,8 +323,7 @@ def _changed_parameters(
     after_pad: RytmSnapshotPad,
 ) -> tuple[RytmControlledParameterChange, ...]:
     after_parameters = {
-        (parameter.cc, parameter.block_offset): parameter
-        for parameter in after_pad.parameters
+        (parameter.cc, parameter.block_offset): parameter for parameter in after_pad.parameters
     }
     changes = []
     for before_parameter in before_pad.parameters:

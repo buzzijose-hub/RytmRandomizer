@@ -267,8 +267,10 @@ def test_decoder_uses_generic_saved_slots_for_identified_unmapped_machine():
 
 
 def test_decoder_rejects_non_rytm_kit_record():
-    from rytm_randomizer.sysex_snapshot_decoder import SysexSnapshotDecodeError
-    from rytm_randomizer.sysex_snapshot_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.sysex_snapshot_decoder import (
+        SysexSnapshotDecodeError,
+        decode_rytm_kit_snapshot_record,
+    )
 
     analog_four_kit_record = bytearray(make_rytm_kit_record())
     analog_four_kit_record[4] = 0x06
@@ -318,14 +320,8 @@ def test_report_formatter_marks_parameter_decode_boundary():
             f"mapped params 22 / raw block bytes 162 / sha {snapshot.pads[0].sha256_12}"
         ),
     ]
-    assert (
-        "- Pad 1 BD Hard / SRC Tune: CC17 @0x001E -> 61"
-        in report
-    )
-    assert (
-        "- Pad 1 BD Hard / FLT Frequency: CC74 @0x0044 -> 27"
-        in report
-    )
+    assert "- Pad 1 BD Hard / SRC Tune: CC17 @0x001E -> 61" in report
+    assert "- Pad 1 BD Hard / FLT Frequency: CC74 @0x0044 -> 27" in report
     assert "- all 12 pad sound blocks present" in report
     assert "- no live SysEx receive" in report
     assert "- no SysEx writes" in report

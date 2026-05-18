@@ -190,10 +190,7 @@ def test_analog_four_snapshot_mutation_plan_report_help_exits_zero():
     result = run_cli("analog-four-snapshot-mutation-plan-report", "--help")
 
     assert result.returncode == 0
-    assert (
-        "RytmRandomizer passive CLI: analog-four-snapshot-mutation-plan-report"
-        in result.stdout
-    )
+    assert "RytmRandomizer passive CLI: analog-four-snapshot-mutation-plan-report" in result.stdout
     assert "candidate_unverified" in result.stdout
     assert "no parameter names claimed" in result.stdout
     assert "no MIDI sending" in result.stdout
@@ -204,10 +201,7 @@ def test_analog_four_snapshot_mock_runtime_report_help_exits_zero():
     result = run_cli("analog-four-snapshot-mock-runtime-report", "--help")
 
     assert result.returncode == 0
-    assert (
-        "RytmRandomizer passive CLI: analog-four-snapshot-mock-runtime-report"
-        in result.stdout
-    )
+    assert "RytmRandomizer passive CLI: analog-four-snapshot-mock-runtime-report" in result.stdout
     assert "saved-offset candidate" in result.stdout
     assert "no CC mapping claimed" in result.stdout
     assert result.stderr == ""
@@ -268,8 +262,7 @@ def test_dual_machine_live_snapshot_readiness_report_help_exits_zero():
 
     assert result.returncode == 0
     assert (
-        "RytmRandomizer passive CLI: dual-machine-live-snapshot-readiness-report"
-        in result.stdout
+        "RytmRandomizer passive CLI: dual-machine-live-snapshot-readiness-report" in result.stdout
     )
     assert "readiness gate" in result.stdout
     assert "--analog-four-path <path>" in result.stdout
@@ -322,10 +315,7 @@ def test_rytm_engine_cycle_starter_plan_report_help_exits_zero():
     result = run_cli("rytm-engine-cycle-starter-plan-report", "--help")
 
     assert result.returncode == 0
-    assert (
-        "RytmRandomizer passive CLI: rytm-engine-cycle-starter-plan-report"
-        in result.stdout
-    )
+    assert "RytmRandomizer passive CLI: rytm-engine-cycle-starter-plan-report" in result.stdout
     assert "starter shaping" in result.stdout
     assert "--style <text>" in result.stdout
     assert "--discovery <0..1>" in result.stdout

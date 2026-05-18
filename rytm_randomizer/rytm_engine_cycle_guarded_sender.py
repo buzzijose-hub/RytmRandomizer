@@ -217,9 +217,7 @@ def _result_metadata(plan: RytmEngineCycleSendPlan, reason: str) -> dict[str, ob
 def _messages_from_plan(plan: RytmEngineCycleSendPlan) -> tuple[MidiMessage, ...]:
     if isinstance(plan, RytmEngineCycleStarterPlan):
         return tuple(
-            _message_from_starter_event(event, plan)
-            for pad in plan.pads
-            for event in pad.events
+            _message_from_starter_event(event, plan) for pad in plan.pads for event in pad.events
         )
     return tuple(_message_from_pad(pad, plan) for pad in plan.pads)
 

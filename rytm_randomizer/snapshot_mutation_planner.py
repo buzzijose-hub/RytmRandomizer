@@ -188,10 +188,7 @@ def _build_pad_plan(
     pad: RytmSnapshotPad,
     depth: str,
 ) -> SnapshotPadMutationPlan:
-    changes = tuple(
-        _build_change(pad, parameter, depth)
-        for parameter in _select_parameters(pad)
-    )
+    changes = tuple(_build_change(pad, parameter, depth) for parameter in _select_parameters(pad))
     changes = tuple(change for change in changes if change.planned_value != change.baseline_value)
     return SnapshotPadMutationPlan(
         pad=pad.pad,
@@ -207,11 +204,7 @@ def _build_pad_plan(
 
 def _select_parameters(pad: RytmSnapshotPad) -> tuple[RytmSnapshotParameter, ...]:
     by_name = {parameter.name: parameter for parameter in pad.parameters}
-    selected = [
-        by_name[name]
-        for name in MUTATION_PARAMETER_PRIORITY
-        if name in by_name
-    ]
+    selected = [by_name[name] for name in MUTATION_PARAMETER_PRIORITY if name in by_name]
     return tuple(selected[:MAX_CHANGES_PER_PAD])
 
 

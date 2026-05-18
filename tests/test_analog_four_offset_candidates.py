@@ -172,7 +172,9 @@ def test_build_all_track_offset_candidate_report_summarizes_four_tracks():
     assert report.kit_count == 2
     assert report.manufacturer_id == "00 20 3C"
     assert tuple(track_report.track for track_report in report.track_reports) == (1, 2, 3, 4)
-    assert tuple(track_report.candidates[0].relative_offset for track_report in report.track_reports) == (
+    assert tuple(
+        track_report.candidates[0].relative_offset for track_report in report.track_reports
+    ) == (
         20,
         22,
         24,
