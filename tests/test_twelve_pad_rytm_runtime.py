@@ -157,3 +157,50 @@ def test_twelve_pad_rytm_runtime_error_report_is_safe():
     assert "Found: False" in report
     assert "bad style. No MIDI was sent. No command executed." in report
     assert "- no MIDI sending" in report
+
+
+def run_cli(*args):
+    return subprocess.run(
+        [sys.executable, "-m", "rytm_randomizer.cli", *args],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_twelve_pad_rytm_runtime_report_cli_accepts_style_discovery_and_profile():
+    result = run_cli(
+        "twelve-pad-rytm-runtime-report",
+        "--style",
+        "Birmingham dark techno",
+        "--discovery",
+        "0.35",
+        "--profile",
+        "auto",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Twelve Pad Rytm Runtime Report" in result.stdout
+    assert "Style prompt: Birmingham dark techno" in result.stdout
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in result.stdout
+    assert "Runtime messages: 132" in result.stdout
+    assert "engine_source_parameter / SRC Slot 1 CC16 -> 100" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_twelve_pad_rytm_runtime_report_cli_rejects_invalid_discovery():
+    result = run_cli(
+        "twelve-pad-rytm-runtime-report",
+        "--style",
+        "Birmingham dark techno",
+        "--discovery",
+        "2",
+    )
+
+    assert result.returncode == 1
+    assert "RytmRandomizer passive Twelve Pad Rytm Runtime Report" in result.stderr
+    assert "Discovery must be between 0.0 and 1.0" in result.stderr
+    assert "No MIDI was sent" in result.stderr
+    assert result.stdout == ""

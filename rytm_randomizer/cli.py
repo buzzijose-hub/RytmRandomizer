@@ -1733,6 +1733,48 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "twelve-pad-rytm-runtime-report":
+        from .essence.plan_report import parse_discovery_value
+        from .essence.twelve_pad_rytm_runtime import (
+            build_twelve_pad_rytm_runtime_plan,
+            format_twelve_pad_rytm_runtime_error,
+            format_twelve_pad_rytm_runtime_report,
+        )
+
+        if len(args) < 3 or args[1] != "--style" or len(args[3:]) % 2 != 0:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            discovery = None
+            profile = "auto"
+            index = 3
+            while index < len(args):
+                flag = args[index]
+                value = args[index + 1]
+                if flag == "--discovery":
+                    discovery = parse_discovery_value(value)
+                elif flag == "--profile":
+                    profile = value
+                else:
+                    sys.stderr.write(f"{USAGE}\n")
+                    return 2
+                index += 2
+            plan = build_twelve_pad_rytm_runtime_plan(
+                args[2],
+                discovery=discovery,
+                profile=profile,
+            )
+        except ValueError as exc:
+            lines = format_twelve_pad_rytm_runtime_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_twelve_pad_rytm_runtime_report(plan)))
+        sys.stdout.write("\n")
+        return 0
+
     if args == ["analog-four-reference-report"]:
         from .analog_four.reference import format_analog_four_reference_report
 

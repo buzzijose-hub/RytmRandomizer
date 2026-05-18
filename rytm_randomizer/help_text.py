@@ -33,6 +33,7 @@ USAGE = (
     "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
+    "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "analog-four-reference-report | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
@@ -106,6 +107,9 @@ Usage:
   python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -187,6 +191,8 @@ Commands:
                      Preview 12-pad Rytm engine-cycle starter shaping.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
+  twelve-pad-rytm-runtime-report
+                     Preview the passive style-driven 12-pad Rytm runtime stream.
   analog-four-reference-report
                      Print the passive Analog Four MKII reference intake report.
   inspect-command    Inspect passive command metadata by key.
@@ -841,6 +847,30 @@ Safety:
   passive/read-only
   mock sender only
   no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "twelve-pad-rytm-runtime-report": """RytmRandomizer passive CLI: twelve-pad-rytm-runtime-report
+
+Usage:
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --help
+
+Behavior:
+  Builds a passive/mock 12-pad Analog Rytm runtime stream from style intent.
+  The stream includes machine selects, engine-source starters, and common
+  filter/amp starter values. No MIDI is sent and no port is opened.
+
+Safety:
+  passive/read-only
+  mock sender only
+  no MIDI sending
+  no MIDI receive
   no port opening
   no command execution
   no hardware mutation

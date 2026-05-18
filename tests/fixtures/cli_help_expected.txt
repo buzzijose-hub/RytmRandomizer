@@ -63,6 +63,9 @@ Usage:
   python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-mock-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -144,6 +147,8 @@ Commands:
                      Preview 12-pad Rytm engine-cycle starter shaping.
   twelve-pad-mock-runtime-report
                      Preview mapped-only 12-pad mock runtime CC messages.
+  twelve-pad-rytm-runtime-report
+                     Preview the passive style-driven 12-pad Rytm runtime stream.
   analog-four-reference-report
                      Print the passive Analog Four MKII reference intake report.
   inspect-command    Inspect passive command metadata by key.
