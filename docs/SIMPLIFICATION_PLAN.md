@@ -113,6 +113,7 @@ After WS-S7 merges, before Wave 4 (learning) starts, **WS-S8 runs a full-package
   - `tests/architecture/test_no_duplicate_fixtures.py` — Gate 11 enforcement (shared test fixtures).
   - `tests/architecture/test_maintainability_review_present.py` — Gate 14 enforcement (every plan has paired audit + report docs).
   - `tests/architecture/test_learning_phase_complete.py` — Gate 15 enforcement (every plan ends with the full handoff package in-repo).
+  - `tests/architecture/test_plan_execution_shape.py` — Gate 16 enforcement (every `docs/*PLAN*.md` contains the 14 mandatory structural elements: workstream graph, worktree assignment, disjoint files, agent crew, self-driving rules, auto-merge cascade, auto-rebase rules, on-disk state, kickoff trigger, termination condition, hard time budget, recovery procedure, permission profile, stop signals).
 - **Maintainability re-audit** (Gate 14 deliverable): produces `docs/SIMPLIFICATION_MAINTAINABILITY_REPORT.md` scoring the 10 dimensions against the 2026-05-18 pre-plan baseline. Net-negative deltas (regressions) block WS-L until a corrective WS lands.
 
 **WS-S8 risk profile:** medium. The whole-package 100% gate is the biggest single push of the plan — it's where stragglers fall out. Mitigation: WS-S8 runs in a worktree just like every other WS, and if 100% is unreachable (a documented edge case), it's the only WS allowed to argue for a `pragma: no cover` instead, with the architect agent approving each one.
@@ -939,8 +940,9 @@ Per [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md), this plan commits to:
 - [x] **Gate 13** (env vars: docs + safe default) — no plan WS introduces a new env var. If a future WS does, the per-WS PR must update `CONTRIBUTING.md` + `LOCAL_DEV_TOOLING_NOTES.md` and provide a safe default.
 - [x] **Gate 14** (maintainability review) — pre-plan audit is the 2026-05-18 agent report; folded in as WS-M1..WS-M4. Post-plan re-audit runs as part of WS-S8 sweep and lands as `docs/SIMPLIFICATION_MAINTAINABILITY_REPORT.md` before WS-L (learning) starts. Any net-negative delta from pre-plan baseline blocks WS-L until a corrective WS lands.
 - [x] **Gate 15** (learning phase) — WS-L is explicit, mandatory, and produces the full repo-committed handoff package (skills, rules, reports, BEFORE_AFTER doc, AUTONOMOUS_RUN_PLAYBOOK, codex rebase guide). Fresh-clone test enforces in-repo completeness. Forward-port rule applies to any user-home `.claude/skills/learned/*` touched during the run.
+- [x] **Gate 16** (execution shape) — every WS in this plan runs in its own isolated worktree (`RytmRandomizer-worktrees/<ws-id>-<name>`) on its own branch (`refactor/<topic>`); disjoint file ownership prevents Wave-1 collisions; agent crew per WS is the 11-phase pipeline; orchestrator state machine has self-driving decision rules with zero `AskUserQuestion` calls; auto-merge cascade + auto-rebase rules match the proven PRs #22-#28 pattern; on-disk state lives in `docs/SIMPLIFICATION_STATE.json` + `docs/SIMPLIFICATION_RUN_LOG.md` and survives compaction; kickoff trigger is `/loop run docs/SIMPLIFICATION_PLAN.md` or `CronCreate <<autonomous-loop>>`; termination condition is "all PRs MERGED + WS-L PR MERGED + codex handoff issue opened"; hard time budget is 72h; recovery procedure reads state-file + reconciles via `gh pr list`; permission profile is `acceptEdits` with documented refuse-list; stop signals documented (`STOP` / `CronDelete` / close PR #29). All 14 mandatory structural elements present.
 
-Exceptions: none. The plan satisfies all 15 gates without carve-outs.
+Exceptions: none. The plan satisfies all 16 gates without carve-outs.
 
 ## Workstream summary
 

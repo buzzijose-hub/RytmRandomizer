@@ -204,6 +204,75 @@ Every plan must terminate with a **learning extraction phase** that captures non
 
 Enforcement: `tests/architecture/test_learning_phase_complete.py` (post-WS-S8) fails if a closed plan PR lacks the artifacts above, OR if `.claude/skills/learned/` has user-home skills referenced by the run log but not present in the repo.
 
+### Gate 16 — Execution shape (parallel agents, worktrees, autonomous start-to-finish)
+
+**Every plan in this repo is structured for parallel-agent execution in isolated git worktrees and runs fully autonomously from kickoff through learning-PR-merged with zero human intervention.**
+
+This is a structural rule about how plans are *written*, not just how they're executed. A plan that has manual checkpoints, single-thread sequencing, or "human reviews and approves" steps is rejected at plan-PR review.
+
+#### Mandatory structural elements
+
+Every plan MUST contain, by section:
+
+1. **Workstream graph** — explicit table of WSes with dependencies. WSes with no dependency edge between them MUST be runnable in parallel. Any plan with everything sequential is presumed wrong and must justify the chain.
+
+2. **Per-WS worktree assignment** — every WS names its isolated git worktree path (`<repo>-worktrees/<ws-id>-<short-name>`) and branch (`refactor/<topic>` or `feat/<topic>`). No WS shares a worktree with another WS.
+
+3. **Disjoint-file ownership** — every WS lists the files it owns. Two WSes in the same wave MUST own disjoint file sets; any overlap is a sequencing violation flagged at plan review.
+
+4. **Agent crew per WS** — explicit phase-by-phase agent assignment (planner → tdd-guide → orchestrator implement → refactor-cleaner → coverage gate → reviewers in parallel → doc-updater → PR open). The crew table is the source of truth; the orchestrator dispatches accordingly.
+
+5. **Self-driving decision rules** — for every state the orchestrator can enter, a deterministic action is enumerated. Zero `AskUserQuestion` calls during the run. If a state isn't enumerated, the orchestrator logs and continues with the next eligible action.
+
+6. **Auto-merge cascade** — every plan adopts the cascade-merge pattern proven in PRs #22–#28: `gh pr merge --squash` on `req=SUCCESS`, auto-rebase on cascade DIRTY, keep-both-entries on `docs/STATUS.md` "Recent Cleanup" conflicts. No `--auto`-with-wait; immediate squash-merge.
+
+7. **Auto-rebase rules** — every plan documents the cascade-conflict resolution (typically: `reset --hard origin/<base>` + cherry-pick own commits + auto-resolve known shared-file conflicts + force-push). Conflicts in files no automation knows how to resolve trigger `architect`, never the user.
+
+8. **Persistent state on disk** — every plan defines a `docs/<plan>_STATE.json` (orchestrator current state, per-WS phase, last-merge SHAs) and `docs/<plan>_RUN_LOG.md` (append-only event log). Plans must survive context compaction; on a fresh wake-up the orchestrator reads these files and reconciles via `gh pr list`.
+
+9. **Kickoff trigger** — one of:
+   - `/loop run docs/<plan>.md` (manual one-shot via the loop skill, with `<<autonomous-loop-dynamic>>` sentinel re-entry).
+   - `CronCreate` armed with `<<autonomous-loop>>` (autonomous from cold).
+
+   Plans must specify which kickoff form they're written for. Both forms work without any further human input.
+
+10. **Termination condition** — explicit, on-disk. Typically: all plan PRs MERGED + learning PR (Gate 15) MERGED + (optional) collaborator handoff issue opened. Orchestrator writes `DONE` to the run log, `TaskStop`s monitors, stops scheduling wake-ups.
+
+11. **Hard time budget** — explicit wall-clock cap (default 72h). At budget exhaustion, orchestrator writes `BUDGET_EXCEEDED` to the run log with current state snapshot and stops. No silent stalls.
+
+12. **Recovery procedure** — explicit steps the orchestrator runs on every wake-up: read state file → query `gh pr list` for live state → reconcile → pick next eligible action. Works after context compaction, after process crash, after user interruption.
+
+13. **Permission profile** — every plan declares the minimum permission mode it runs under (`acceptEdits` for most refactors; `bypassPermissions` only when absolutely necessary and with a documented justification). The orchestrator hard-codes a refuse-list (force-push to base branches, delete branches it doesn't own, close external collaborator PRs).
+
+14. **Stop signals** — every plan documents how a human can interrupt: send `STOP` → orchestrator writes `INTERRUPTED` + `TaskStop`s monitors; `CronDelete` → cron-armed plans halt; close the plan PR → orchestrator detects on next wake and writes `PLAN_REVOKED`.
+
+#### Plans NOT permitted
+
+- ❌ Plans with "wait for user to approve" or "ask the user which approach" steps inside the run.
+- ❌ Plans that sequentialize naturally-parallel WSes ("first do A, then B, then C" when A/B/C touch disjoint files).
+- ❌ Plans that share a worktree across WSes (the cascade-rebase pattern only works with isolated worktrees).
+- ❌ Plans without a written termination condition (open-ended loops are rejected).
+- ❌ Plans without a written hard time budget.
+- ❌ Plans without an on-disk state file (in-conversation state doesn't survive compaction).
+- ❌ Plans whose recovery procedure is "ask the user where we are."
+
+#### Enforcement
+
+- `tests/architecture/test_plan_execution_shape.py` (added in WS-S8) checks every `docs/*PLAN*.md` for the 14 mandatory sections. A plan missing any is a CI failure on the plan PR.
+- Plan-PR template (`.github/PULL_REQUEST_TEMPLATE/plan.md`, added in WS-M1) requires the author to confirm each of the 14 elements with file-line citations.
+- The `everything-claude-code:planner` agent is configured (via `.claude/CLAUDE.md`) to reject any plan request that can't be structured per this gate, and to refuse "manual" or "step-through" plan shapes.
+
+#### Why this is structural, not stylistic
+
+Every gate in this file is enforced because something went wrong without it. The PRs #22–#28 cleanup batch + the in-flight simplification plan both demonstrated that:
+
+- **Parallel beats serial by 5-10× in wall-clock** when WSes are truly independent (Wave 1's 4 worktrees vs sequential).
+- **Worktree isolation eliminates merge conflicts** that would otherwise burn hours of human attention.
+- **Autonomous execution beats manual oversight** because human attention is the actual bottleneck; agents are not.
+- **On-disk state survives compaction**; in-conversation state does not. Plans that depend on conversation continuity become un-resumable.
+
+Plans that violate Gate 16 are not slower — they are differently structured systems with different failure modes. This repo has decided autonomous parallel execution is its single execution model. Future plans inherit that decision.
+
 ---
 
 ## How a plan declares conformance
@@ -230,6 +299,7 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 13 (env vars: docs + safe default) — every new env var documented and opt-in.
 - [x] Gate 14 (maintainability review) — pre-plan audit + post-plan re-audit; regressions block learning phase.
 - [x] Gate 15 (learning phase) — every plan ends with learning extraction to repo (skills + rules + reports + handoff guides).
+- [x] Gate 16 (execution shape) — parallel agents in worktrees, autonomous start-to-finish, on-disk state, no human gates.
 
 Exceptions (with rationale):
 - (none, or list with one-line rationale each)
