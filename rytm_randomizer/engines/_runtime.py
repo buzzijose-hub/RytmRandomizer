@@ -68,14 +68,124 @@ byte-identical body previously inlined in each runtime class. Parity tests
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Mapping, MutableMapping
+from dataclasses import dataclass, field
+from typing import Any, Protocol, runtime_checkable
 
 from .. import midi_io as _midi_io
 from .. import randomization as _randomization
 from ..data import GROUP_LAYOUT, PROFILES
 
-__all__ = ["PadRuntimeMixin", "IsolatedPadMixin"]
+__all__ = [
+    "IsolatedPadMixin",
+    "IsolatedPadState",
+    "PadRuntime",
+    "PadRuntimeMixin",
+    "PadRuntimeState",
+]
+
+
+# ---------------------------------------------------------------------------
+# WS-S2: PadRuntimeState Protocol + PadRuntime dataclass.
+#
+# Today the engines (Pad{1-4}Engine + GroupRunner) inherit ``PadRuntimeMixin``
+# below and rely on a duck-typed attribute contract that pyright cannot see.
+# The Protocols + dataclass declared here are the typed replacement -- they
+# describe the same contract pyright-statically and serve as a drop-in
+# composable runtime for any future engine that wants to opt out of the
+# mixin (e.g. PR #21's pad-12 ``twelve_pad_*`` engines).
+#
+# The five existing engine classes continue to inherit the mixins; both
+# paths remain live and byte-identical. New engines should prefer composing
+# a ``PadRuntime`` instance instead.
+# ---------------------------------------------------------------------------
+
+
+@runtime_checkable
+class PadRuntimeState(Protocol):
+    """Per-pad runtime state every PadRuntimeMixin method reads / writes.
+
+    The Protocol intentionally declares **attributes only** (no methods).
+    Method helpers live alongside the legacy mixin; future composition-based
+    engines instantiate a ``PadRuntime`` dataclass and pass it to the
+    helpers as ``state``.
+
+    Track count: nothing here pins to four pads. ``target_pad`` and
+    ``channel`` are ``int``; ``group_*_states`` are ``dict[int, ...]``. A
+    pad-12 engine satisfies this Protocol structurally without any change.
+    """
+
+    out: Any
+    channel: int
+    sleep: Any
+    rng: Any
+    active_profile: Mapping[str, Any] | None
+    anchor_state: MutableMapping[str, int]
+    current_state: MutableMapping[str, int]
+    previous_state: MutableMapping[str, int] | None
+    target_pad: int
+    resolved_bounds: Any
+
+
+@runtime_checkable
+class IsolatedPadState(PadRuntimeState, Protocol):
+    """Extends ``PadRuntimeState`` with the four-pad group bookkeeping the
+    Pad3 / Pad4 isolated-anchor commands and ``_set_group_context`` /
+    ``_return_isolated_pad_to_anchor`` read.
+
+    ``_require_group_for_single_pad``'s ``< 4`` constant is Pad3/Pad4-specific
+    (the V1.34 monolith's guard); other implementations may not need it.
+    """
+
+    isolated_pad: int
+    group_anchor_states: dict[int, MutableMapping[str, int]]
+    group_current_states: dict[int, MutableMapping[str, int]]
+    group_previous_states: dict[int, MutableMapping[str, int] | None]
+
+
+@dataclass
+class PadRuntime:
+    """Concrete ``PadRuntimeState`` / ``IsolatedPadState`` implementation.
+
+    Mutable by design: per-pad ``anchor_state`` / ``current_state`` /
+    ``previous_state`` are reassigned (not mutated in place) by the helpers
+    on every state transition. A frozen dataclass would force a
+    ``dataclasses.replace`` at every site -- exactly the bookkeeping
+    the mixin was originally hiding. See WS-S2 design doc for the full
+    trade-off analysis.
+
+    Engines that compose this (instead of inheriting ``PadRuntimeMixin``)
+    construct one ``PadRuntime`` in their ``__init__`` and pass it to the
+    module-level helpers ``_send_cc(state, ...)`` etc. (when those land in
+    a follow-up).
+    """
+
+    out: Any
+    channel: int = 0
+    sleep: Any = None  # injected by __post_init__ default = time.sleep
+    rng: Any = None  # injected by __post_init__ default = random module
+    active_profile: Mapping[str, Any] | None = None
+    anchor_state: MutableMapping[str, int] = field(default_factory=dict)
+    current_state: MutableMapping[str, int] = field(default_factory=dict)
+    previous_state: MutableMapping[str, int] | None = None
+    target_pad: int = 1
+    resolved_bounds: Any = None
+    # IsolatedPadState extension fields. PadRuntime carries them so the
+    # same dataclass satisfies both Protocols at runtime.
+    isolated_pad: int = 3
+    group_anchor_states: dict[int, MutableMapping[str, int]] = field(default_factory=dict)
+    group_current_states: dict[int, MutableMapping[str, int]] = field(default_factory=dict)
+    group_previous_states: dict[int, MutableMapping[str, int] | None] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.sleep is None:
+            import time as _time  # noqa: PLC0415 - lazy default to stdlib time.sleep
+
+            self.sleep = _time.sleep
+        if self.rng is None:
+            import random as _random  # noqa: PLC0415 - lazy default to stdlib random module
+
+            self.rng = _random
 
 
 class PadRuntimeMixin:
