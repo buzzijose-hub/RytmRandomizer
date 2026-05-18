@@ -56,8 +56,9 @@ __all__ = ["Pad4Engine"]
 
 _logger = get_logger(__name__)
 
-# A MIDI sender duck-types ``mido.ports.BaseOutput``: anything with ``send``.
-Sender = Any
+# A MIDI sender: see :class:`rytm_randomizer.midi_io.MidiSender`.
+from ..midi_io import Sender  # noqa: E402, PLC0415 - canonical re-export per WS-S1
+
 # A sleep callable: takes a duration in seconds, returns nothing.
 SleepFunc = Callable[[float], Any]
 State = MutableMapping[str, int]
