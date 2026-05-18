@@ -4,6 +4,13 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-18: added the passive 12-pad Rytm runtime foundation.
+  `twelve-pad-rytm-runtime-report --style <text>` builds a mock-only setup
+  stream with machine selects, engine-source starter values, and common
+  filter/amp starter values across all 12 Analog Rytm pads. The existing
+  guarded `--rytm-engine-cycle` dry-run/arm path remains unchanged. No live
+  snapshot capture, audio analysis, Analog Four mutation, SysEx writes, or
+  unguarded hardware sending was added.
 - 2026-05-18: moved the dual-machine milestone modules that predated Gate 9
   into focused subpackages (`analog_four/`, `dual_machine/`, `sysex/`,
   `performance/`, `essence/`, `rytm/`, and `snapshot/`) and removed the
