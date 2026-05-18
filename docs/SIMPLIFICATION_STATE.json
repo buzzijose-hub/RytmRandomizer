@@ -227,7 +227,7 @@
       "pr_number": null,
       "head_sha": null,
       "retry_count": 0,
-      "notes": "Not a code WS - opens an issue and comments on PR #21 with the in-repo rebase guide link."
+      "notes": "INTENTIONAL: worktree=null and branch=null because WS-H is the only non-code WS in the plan. It produces a GitHub issue (`gh issue create`) and a comment on PR #21 (`gh pr comment 21`), both auto-generated from the post-WS-L state. No git branch, no code diff, no PR. The schema's allOf rule permits worktree=null only when `notes` is present (this field). Gate 16's structural element #2 ('Per-WS worktree assignment') is satisfied by the explicit null + this note rather than by an actual worktree, because there is nothing to commit."
     }
   },
   "phase_progression": [
