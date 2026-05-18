@@ -1,0 +1,212 @@
+{
+  "$schema": "./SIMPLIFICATION_STATE.schema.json",
+  "plan": "SIMPLIFICATION_PLAN.md",
+  "base_branch": "modularize-v1.34",
+  "base_sha_at_kickoff": "0bd46aa64f5ca1c37420ef1e5063b2cd0532515d",
+  "kickoff_at": "2026-05-18T13:28:15Z",
+  "budget_hours": 72,
+  "deadline_at": "2026-05-21T13:28:15Z",
+  "permission_profile": "acceptEdits",
+  "refuse_list": [
+    "force-push to modularize-v1.34",
+    "delete branches not owned by orchestrator",
+    "close PR #21 (codex)",
+    "set PARITY_CAPTURE_MODE=1 outside a deliberate capture WS"
+  ],
+  "workstreams": {
+    "WS-S1": {
+      "title": "MidiSender Protocol",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s1-midi-sender-protocol",
+      "branch": "refactor/midi-sender-protocol",
+      "depends_on": [],
+      "owns": ["rytm_randomizer/midi_io.py", "rytm_randomizer/mock_midi.py", "rytm_randomizer/real_midi_adapter.py"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S2": {
+      "title": "PadRuntime Protocol",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s2-pad-runtime-protocol",
+      "branch": "refactor/pad-runtime-protocol",
+      "depends_on": [],
+      "owns": ["rytm_randomizer/engines/_runtime.py", "rytm_randomizer/engines/pad1.py", "rytm_randomizer/engines/pad2.py", "rytm_randomizer/engines/pad3.py", "rytm_randomizer/engines/pad4.py"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S3": {
+      "title": "Close shell.dispatch 8-arm tail",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s3-shell-dispatch-close",
+      "branch": "refactor/shell-dispatch-close",
+      "depends_on": [],
+      "owns": ["rytm_randomizer/shell.py"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S4": {
+      "title": "PassiveReportFormatter",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s4-passive-report-formatter",
+      "branch": "refactor/passive-report-formatter",
+      "depends_on": [],
+      "owns": ["rytm_randomizer/reports/formatter.py (new)", "rytm_randomizer/reports.py", "rytm_randomizer/inspection.py", "rytm_randomizer/project_status_report.py"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S5": {
+      "title": "Device Protocol + registry",
+      "wave": 2,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s5-device-protocol",
+      "branch": "refactor/device-protocol-registry",
+      "depends_on": ["WS-S1"],
+      "owns": ["rytm_randomizer/devices/base.py (new)", "rytm_randomizer/devices/registry.py (new)", "rytm_randomizer/devices/analog_rytm.py (new)"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S6": {
+      "title": "Generic Elektron SysEx envelope",
+      "wave": 2,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s6-snapshot-envelope",
+      "branch": "refactor/snapshot-envelope",
+      "depends_on": ["WS-S5"],
+      "owns": ["rytm_randomizer/snapshot/envelope.py (new)", "rytm_randomizer/snapshot/decoder.py (new)", "rytm_randomizer/snapshot/planner.py (new)", "rytm_randomizer/snapshot/mock_runtime.py (new)"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S7": {
+      "title": "CLI command registry",
+      "wave": 3,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s7-cli-registry",
+      "branch": "refactor/cli-command-registry",
+      "depends_on": ["WS-S4", "WS-S6"],
+      "owns": ["rytm_randomizer/cli.py", "rytm_randomizer/cli/registry.py (new)", "rytm_randomizer/cli/commands/* (new)"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-S9": {
+      "title": "Observability hot-path adoption + metrics",
+      "wave": "3.1",
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s9-observability-adoption",
+      "branch": "refactor/observability-hot-path-adoption",
+      "depends_on": [],
+      "owns": ["rytm_randomizer/observability/metrics.py (new)", "rytm_randomizer/engines/_runtime.py", "rytm_randomizer/randomization.py", "rytm_randomizer/scene_runner.py", "rytm_randomizer/group_runner.py", "rytm_randomizer/shell.py", "rytm_randomizer/midi_io.py"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0,
+      "notes": "Coords with WS-S3 (shell.py) and WS-S2 (engines/_runtime.py). WS-S9 starts after both merge."
+    },
+    "WS-M1": {
+      "title": "Docs curation pass",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-m1-docs-curation",
+      "branch": "refactor/docs-curation",
+      "depends_on": [],
+      "owns": ["docs/*.md", "docs/archive/* (new)", "CONTRIBUTING.md"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-M2": {
+      "title": "behavior/ subpackage relocation",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-m2-behavior-subpackage",
+      "branch": "refactor/behavior-subpackage",
+      "depends_on": [],
+      "owns": ["rytm_randomizer/behavior_*.py (relocate to behavior/)", "rytm_randomizer/anchor_state.py (consolidate into state/)", "rytm_randomizer/selected_isolated_pad_runtime_state.py (consolidate)", "rytm_randomizer/selected_target_state.py (consolidate)"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0,
+      "notes": "Coords with WS-S3 (both edit shell.py imports). Whoever opens PR first wins; the other rebases."
+    },
+    "WS-M3": {
+      "title": "Mode/intensity Literal/Enum migration",
+      "wave": 2,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-m3-mode-literals",
+      "branch": "refactor/mode-literals",
+      "depends_on": ["WS-M2"],
+      "owns": ["rytm_randomizer/data/modes.py (new)", "rytm_randomizer/shell.py", "rytm_randomizer/group_runner.py", "rytm_randomizer/randomization.py", "rytm_randomizer/behavior/*.py"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-M4": {
+      "title": "Test ergonomics (shared conftest + parity-fixture index)",
+      "wave": 1,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-m4-test-ergonomics",
+      "branch": "refactor/test-ergonomics",
+      "depends_on": [],
+      "owns": ["tests/conftest.py (new)", "tests/_parity_worker.py", "tests/test_engines_pad1.py", "tests/test_engines_pad2.py", "tests/test_engines_pad3.py", "tests/test_engines_pad4.py", "CONTRIBUTING.md"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0,
+      "notes": "Coords with WS-M1 on CONTRIBUTING.md edits."
+    },
+    "WS-S8": {
+      "title": "Whole-package sweep + 100% coverage ratchet + architecture tests",
+      "wave": "3.5",
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-s8-full-sweep",
+      "branch": "refactor/full-package-sweep",
+      "depends_on": ["WS-S1", "WS-S2", "WS-S3", "WS-S4", "WS-S5", "WS-S6", "WS-S7", "WS-S9", "WS-M1", "WS-M2", "WS-M3", "WS-M4"],
+      "owns": ["rytm_randomizer/* (sweep)", "tests/architecture/test_*.py (new)", ".coveragerc"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-L": {
+      "title": "Learning extraction + in-repo handoff package",
+      "wave": 4,
+      "phase": "pending",
+      "worktree": "RytmRandomizer-worktrees/ws-l-learning",
+      "branch": "docs/learning-and-handoff",
+      "depends_on": ["WS-S8"],
+      "owns": [".claude/skills/learned/*", ".claude/rules/*", ".claude/templates/workstream/*", "docs/SIMPLIFICATION_RUN_REPORT.md", "docs/ARCHITECTURE_BEFORE_AFTER.md", "docs/AUTONOMOUS_RUN_PLAYBOOK.md", "docs/PR21_REBASE_GUIDE.md", "docs/PR21_MODULE_MAPPING.md"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0
+    },
+    "WS-H": {
+      "title": "PR #21 hand-off issue (auto-generated)",
+      "wave": 4,
+      "phase": "pending",
+      "worktree": null,
+      "branch": null,
+      "depends_on": ["WS-L"],
+      "owns": ["GitHub issue + PR #21 comment"],
+      "pr_number": null,
+      "head_sha": null,
+      "retry_count": 0,
+      "notes": "Not a code WS - opens an issue and comments on PR #21 with the in-repo rebase guide link."
+    }
+  },
+  "phase_progression": [
+    "pending", "planning", "tdd", "implementing", "dead_code_purge", "coverage_gate", "reviewing", "docs", "pr_open", "ci_running", "merging", "merged", "blocked"
+  ],
+  "monitors": {
+    "ci_pr_state": null,
+    "codex_pr_21": null
+  },
+  "merged_count": 0,
+  "blocked_count": 0,
+  "current_orchestrator_action": "bootstrap"
+}
