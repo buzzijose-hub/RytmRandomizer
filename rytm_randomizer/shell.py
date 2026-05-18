@@ -39,7 +39,7 @@ import random as _random_module
 import time
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Final, cast
 
 from . import midi_io as _midi_io
 from . import randomization as _randomization
@@ -180,6 +180,78 @@ def build_shell(
 # ``tests/test_engines_pad*.py``, ``tests/test_group_runner.py``) compare
 # byte-for-byte against the monolith's stdout/MIDI, so any drift fails CI.
 # ============================================================================
+@dataclass(frozen=True)
+class DispatchEntry:
+    """One row of the unified shell-dispatch table (WS-S3).
+
+    Discriminated on ``kind``. The matching ``payload`` shape per kind is:
+
+    * ``kind="simple"`` -> payload is a ``Callable[[InteractiveShell], None]``
+      (the existing closure shape; 84 of today's 92 arms).
+    * ``kind="quit"`` -> payload is ``None``. Dispatcher prints "Exiting." and
+      returns ``False`` (the only False-returning arm).
+    * ``kind="reselect"`` -> payload is one of the literal method-name strings
+      ``"choose_target_pad"`` or ``"select_profile"``. Dispatcher calls
+      ``getattr(gr, name)()`` then mirrors ``self.channel = gr.channel``.
+    * ``kind="scene_lookup"`` -> payload is ``None`` (the membership test is
+      ``cmd in SCENE_PRESETS``; the dispatcher forwards ``cmd`` itself to
+      ``deps.scene_runner.run_scene(cmd)``).
+    * ``kind="depth_guard"`` -> payload is a ``tuple[str, ...]`` of the
+      fixed warning lines.
+    * ``kind="depth_prompt"`` -> payload is the zone-name string the
+      dispatcher passes to ``_mutate_zone_for_selected_profile(zone, depth)``.
+    * ``kind="unknown"`` -> payload is ``None``. Dispatcher prints
+      "Unknown command." and re-prints the help. Used as the fallback when
+      lookup returns nothing.
+
+    Per Gate 12 (PLAN_REQUIREMENTS), the module-level ``_DISPATCH`` table
+    is annotated ``Final``. The ``payload`` field is typed ``object`` (a
+    tagged-union root type, NOT ``Any``, per Gate 6).
+
+    PR #21 forward-compat: the architect's analysis (see
+    ``docs/SIMPLIFICATION_PLAN.md`` WS-S3 section) found that
+    codex's expected new commands (machine-select, dual-machine-arm,
+    snapshot-load, essence-apply) all fit either ``kind="simple"`` or
+    ``kind="reselect"`` (extending ``method_name`` to include
+    ``"select_machine"``). No new ``kind`` is needed for WS-S3.
+    """
+
+    kind: str
+    payload: object = None
+
+
+_QUIT_ENTRY: Final[DispatchEntry] = DispatchEntry(kind="quit")
+_UNKNOWN_ENTRY: Final[DispatchEntry] = DispatchEntry(kind="unknown")
+_SCENE_LOOKUP_ENTRY: Final[DispatchEntry] = DispatchEntry(kind="scene_lookup")
+_DEPTH_GUARD_LINES: Final[tuple[str, ...]] = (
+    "\nDepth number entered at the main Command prompt. No MIDI was sent.",
+    "Use Y, V, N, S, F, A, G, or K first, then answer the depth prompt with 1, 2, or 3.",
+    "For legacy single-profile full mutation, use M1, M2, or M3.",
+)
+_DEPTH_GUARD_ENTRY: Final[DispatchEntry] = DispatchEntry(
+    kind="depth_guard", payload=_DEPTH_GUARD_LINES
+)
+
+
+# Special-shaped arms (the 8 that don't fit the uniform "call one method"
+# pattern). The dispatcher consults this map BEFORE looking up _DISPATCH so
+# the special handlers take precedence on shared keys (none today, but
+# defensive). Keys are V1.34-frozen mnemonics, not abbreviations we picked.
+_SPECIAL: Final[Mapping[str, DispatchEntry]] = {
+    "q": _QUIT_ENTRY,
+    "t": DispatchEntry(kind="reselect", payload="choose_target_pad"),
+    "p": DispatchEntry(kind="reselect", payload="select_profile"),
+    "1": _DEPTH_GUARD_ENTRY,
+    "2": _DEPTH_GUARD_ENTRY,
+    "3": _DEPTH_GUARD_ENTRY,
+    "s": DispatchEntry(kind="depth_prompt", payload="src"),
+    "f": DispatchEntry(kind="depth_prompt", payload="filter"),
+    "a": DispatchEntry(kind="depth_prompt", payload="amp"),
+    "g": DispatchEntry(kind="depth_prompt", payload="grit"),
+    "k": DispatchEntry(kind="depth_prompt", payload="body"),
+}
+
+
 _DISPATCH: Mapping[str, Callable[[InteractiveShell], None]] = {
     # Pad 1: BD engine tools / rotation / mutation
     "bd": lambda s: s.deps.pad1.show_bd_engine_tools(),
@@ -637,61 +709,49 @@ class InteractiveShell:
         deps = self.deps
         gr = deps.group_runner
 
-        # ----- Special-shaped commands (do not fit the uniform table) -----
-        if cmd == "q":
-            print("Exiting.")
-            return False
-
-        if cmd == "t":
-            gr.choose_target_pad()
-            self.channel = gr.channel
-            return True
-
-        if cmd == "p":
-            gr.select_profile()
-            self.channel = gr.channel
-            return True
-
+        # ----- WS-S3: special-shaped commands route via the typed _SPECIAL map -----
+        # (Pre-WS-S3 these were ~50 LOC of inline `if cmd == "x":` branches.
+        # See ``DispatchEntry`` docstring for the kind taxonomy. Membership in
+        # ``SCENE_PRESETS`` is checked first so a scene key wins over any
+        # collision -- there are none today but the dispatch order is fixed.)
         if cmd in SCENE_PRESETS:
             deps.scene_runner.run_scene(cmd)
             return True
 
-        if cmd in ("1", "2", "3"):
-            print("\nDepth number entered at the main Command prompt. " "No MIDI was sent.")
-            print(
-                "Use Y, V, N, S, F, A, G, or K first, then answer the depth "
-                "prompt with 1, 2, or 3."
-            )
-            print("For legacy single-profile full mutation, use M1, M2, or M3.")
-            return True
+        special = _SPECIAL.get(cmd)
+        if special is not None:
+            kind = special.kind
+            if kind == "quit":
+                print("Exiting.")
+                return False
+            if kind == "reselect":
+                # The kind invariant -- enforced at _SPECIAL construction site
+                # above -- guarantees payload is the str method-name. ``cast`` is
+                # the typing primitive that's pyright-aware and ruff-S101-safe.
+                method_name = cast(str, special.payload)
+                getattr(gr, method_name)()
+                self.channel = gr.channel
+                return True
+            if kind == "depth_guard":
+                lines = cast("tuple[str, ...]", special.payload)
+                for line in lines:
+                    print(line)
+                return True
+            if kind == "depth_prompt":
+                zone = cast(str, special.payload)
+                self._mutate_zone_for_selected_profile(zone, self._get_depth())
+                return True
+            # Defensive fallthrough -- pyright proves this unreachable given
+            # the literal kinds in _SPECIAL's construction site.
+            raise RuntimeError(f"unhandled DispatchEntry kind: {kind!r}")  # pragma: no cover
 
-        if cmd == "s":
-            self._mutate_zone_for_selected_profile("src", self._get_depth())
-            return True
-
-        if cmd == "f":
-            self._mutate_zone_for_selected_profile("filter", self._get_depth())
-            return True
-
-        if cmd == "a":
-            self._mutate_zone_for_selected_profile("amp", self._get_depth())
-            return True
-
-        if cmd == "g":
-            self._mutate_zone_for_selected_profile("grit", self._get_depth())
-            return True
-
-        if cmd == "k":
-            self._mutate_zone_for_selected_profile("body", self._get_depth())
-            return True
-
-        # ----- Uniform table dispatch -----
+        # ----- Uniform table dispatch (84 of 92 arms) -----
         entry = _DISPATCH.get(cmd)
         if entry is not None:
             entry(self)
             return True
 
-        # ----- Fallback -----
+        # ----- Fallback (kind="unknown" equivalent, no key lookup) -----
         print("Unknown command.")
         self.print_commands()
         return True
