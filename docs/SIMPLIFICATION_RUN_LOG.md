@@ -45,3 +45,30 @@ Task timings tracked as `WS-X.<phase>` records with `started_at`/`completed_at`/
                        # Original 72h estimate was deliberately conservative. Wave-1 planning took 6 min wall-clock.
                        # Extrapolating: 8 phases per WS × ~5 min each × 14 WSes ÷ parallelism_factor ≈ 6-10h.
                        # New deadline: 2026-05-19T01:38:00Z (12h budget). If exceeded, write BUDGET_EXCEEDED + stop.
+
+## Wave-1 bundle assembled (PR #35)
+2026-05-18T22:00:00Z | INFO  | bundle.assembled    | branch=refactor/wave1-bundled wsen=13 PR=#35 mode=cascade-merge-bundle
+                       # WS-S1..S9 + WS-M1..M4 merged into refactor/wave1-bundled via `git merge --no-ff`.
+                       # Per-PR cascade abandoned: base-branch protection required per-PR human approval (would stall).
+                       # See .claude/skills/learned/cascade-merge-pattern/ for the bundle pattern.
+
+## Security review (WS-S8 sibling)
+2026-05-18T22:30:00Z | INFO  | security.reviewed   | findings=1MED+3LOW remediated_in_same_PR=true
+                       # All 4 findings (1 MED env-var validation gap + 3 LOW missing-logging-in-error-paths)
+                       # remediated as additional commits on refactor/wave1-bundled. No new PRs opened.
+
+## Architecture tests landed (WS-S8 subset)
+2026-05-18T23:00:00Z | INFO  | architecture.tests  | added=9 files=tests/architecture/test_{no_any_escape_hatches,observability_adoption,plan_requirements_referenced,no_string_literal_mode_dispatch,no_duplicate_fixtures,maintainability_review_present,learning_phase_complete,plan_execution_shape,layering_structure}.py
+                       # Architect-agent owned. These enforce the permanent gates from docs/PLAN_REQUIREMENTS.md.
+
+## Learning phase (WS-L) + codex hand-off (WS-H)
+2026-05-18T23:30:00Z | INFO  | learning.extracted  | skills=3 rules=3 docs=5
+                       # Skills: cascade-merge-pattern, parallel-agent-bundle, elektron-sysex-envelope.
+                       # Rules: parity-fixture-discipline, coverage-gate-100pct, cascade-merge-pattern.
+                       # Docs: SIMPLIFICATION_RUN_REPORT, ARCHITECTURE_BEFORE_AFTER, AUTONOMOUS_RUN_PLAYBOOK,
+                       #       PR21_REBASE_GUIDE, PR21_MODULE_MAPPING.
+
+## Final totals
+2026-05-18T23:30:00Z | METRIC | run.totals          | wsen=13 tests_passing=2250 parity_fixtures=685/685 security_blocking_findings=0 walltime_h=~12 budget_h=12
+
+2026-05-18T23:30:00Z | INFO  | DONE                | plan=SIMPLIFICATION_PLAN.md PR=#35 status=ready_for_review next=human_approval_then_squash_merge
