@@ -74,6 +74,37 @@ def test_unknown_rytm_starter_profile_lists_valid_choices():
     assert "balanced, birmingham-dark, detroit-classic, peak-time" in message
 
 
+def test_rytm_starter_profile_auto_selects_from_style_prompt():
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        choose_rytm_starter_profile_for_style,
+    )
+
+    assert (
+        choose_rytm_starter_profile_for_style("Birmingham dark techno").key
+        == "birmingham-dark"
+    )
+    assert (
+        choose_rytm_starter_profile_for_style("classic Detroit techno").key
+        == "detroit-classic"
+    )
+    assert choose_rytm_starter_profile_for_style("schranz peak time").key == "peak-time"
+    assert choose_rytm_starter_profile_for_style("broken electro sketches").key == "balanced"
+
+
+def test_engine_cycle_starter_plan_accepts_auto_profile():
+    from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+    )
+
+    engine_plan = build_rytm_engine_cycle_plan("classic Detroit techno", discovery=0.45)
+    starter_plan = build_rytm_engine_cycle_starter_plan(engine_plan, profile="auto")
+
+    assert starter_plan.starter_profile_key == "detroit-classic"
+    assert starter_plan.starter_profile_label == "Detroit Classic"
+    assert starter_plan.event_count == 84
+
+
 def test_engine_cycle_starter_plan_adds_common_safe_shaping_to_all_12_pads():
     from rytm_randomizer.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
     from rytm_randomizer.rytm_engine_cycle_starter_profiles import (
@@ -190,4 +221,19 @@ def test_rytm_engine_cycle_starter_plan_report_cli_accepts_style_and_profile():
     assert "Pad 5 / Closed hat pulse / CH Metallic: 7 message(s)" in result.stdout
     assert "starter_parameter / FLT Frequency CC74 -> 108" in result.stdout
     assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_engine_cycle_starter_plan_report_cli_accepts_auto_profile():
+    result = run_cli(
+        "rytm-engine-cycle-starter-plan-report",
+        "--style",
+        "schranz peak time",
+        "--profile",
+        "auto",
+    )
+
+    assert result.returncode == 0
+    assert "Starter profile: Peak Time / peak-time" in result.stdout
+    assert "Starter messages: 84" in result.stdout
     assert result.stderr == ""

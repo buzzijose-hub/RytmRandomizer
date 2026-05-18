@@ -275,11 +275,36 @@ RYTM_STARTER_PROFILES: tuple[RytmStarterProfile, ...] = (
     ),
 )
 
+AUTO_PROFILE_KEYWORDS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "birmingham-dark",
+        ("birmingham", "dark", "industrial", "noise", "raw"),
+    ),
+    (
+        "detroit-classic",
+        ("detroit", "classic"),
+    ),
+    (
+        "peak-time",
+        ("peak", "peak-time", "driving", "hard", "hardcore", "schranz", "big-room"),
+    ),
+)
+
 
 def list_rytm_starter_profiles() -> tuple[RytmStarterProfile, ...]:
     """Return deterministic Rytm engine-cycle starter profiles."""
 
     return RYTM_STARTER_PROFILES
+
+
+def choose_rytm_starter_profile_for_style(style_prompt: str) -> RytmStarterProfile:
+    """Choose a starter profile from a style prompt."""
+
+    normalized = _normalize_style_prompt(style_prompt)
+    for profile_key, keywords in AUTO_PROFILE_KEYWORDS:
+        if any(keyword in normalized for keyword in keywords):
+            return get_rytm_starter_profile(profile_key)
+    return get_rytm_starter_profile("balanced")
 
 
 def get_rytm_starter_profile(key: str | None) -> RytmStarterProfile:
@@ -303,9 +328,7 @@ def build_rytm_engine_cycle_starter_plan(
 
     if not isinstance(engine_plan, RytmEngineCyclePlan):
         raise TypeError("engine_plan must be a RytmEngineCyclePlan")
-    starter_profile = (
-        profile if isinstance(profile, RytmStarterProfile) else get_rytm_starter_profile(profile)
-    )
+    starter_profile = _resolve_starter_profile(profile, engine_plan.style_prompt)
     starter_pads = {pad.pad: pad for pad in starter_profile.pads}
     pads = []
     for pad_plan in engine_plan.pads:
@@ -515,10 +538,27 @@ def _format_labels(labels: tuple[str, ...]) -> str:
     return ", ".join(labels) if labels else "none"
 
 
+def _resolve_starter_profile(
+    profile: str | RytmStarterProfile | None,
+    style_prompt: str,
+) -> RytmStarterProfile:
+    if isinstance(profile, RytmStarterProfile):
+        return profile
+    if _normalize_profile_key(profile) == "auto":
+        return choose_rytm_starter_profile_for_style(style_prompt)
+    return get_rytm_starter_profile(profile)
+
+
 def _normalize_profile_key(key: str | None) -> str:
     if key is None:
         return "balanced"
     normalized = str(key).strip().lower()
+    normalized = re.sub(r"[\s_]+", "-", normalized)
+    return normalized
+
+
+def _normalize_style_prompt(style_prompt: str) -> str:
+    normalized = str(style_prompt).strip().lower()
     normalized = re.sub(r"[\s_]+", "-", normalized)
     return normalized
 
@@ -534,6 +574,7 @@ __all__ = [
     "RytmStarterProfile",
     "build_rytm_engine_cycle_starter_plan",
     "capture_rytm_engine_cycle_starter_mock_messages",
+    "choose_rytm_starter_profile_for_style",
     "format_rytm_engine_cycle_starter_plan_error",
     "format_rytm_engine_cycle_starter_plan_report",
     "get_rytm_starter_profile",

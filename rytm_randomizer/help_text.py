@@ -807,9 +807,10 @@ Usage:
 
 Behavior:
   Builds passive 12-pad Rytm engine-cycle candidates, then adds starter shaping
-  from a named Rytm starter profile. The mock stream contains one CC15 machine
-  select event plus common filter/amp starter values only for each pad. It does
-  not change the existing guarded or armed engine-cycle senders.
+  from a named Rytm starter profile. Use --profile auto to choose a starter
+  profile from the style prompt. The mock stream contains one CC15 machine
+  select event plus common filter/amp starter values only for each pad. It
+  does not change the existing guarded or armed engine-cycle senders.
 
 Safety:
   passive/read-only

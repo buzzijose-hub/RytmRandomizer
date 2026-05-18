@@ -183,8 +183,9 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="PROFILE",
         help=(
             "Optional Rytm starter-shaping profile for --rytm-engine-cycle. "
-            "When supplied, the send plan emits CC15 machine select plus "
-            "common filter/amp starter CC values."
+            "Use 'auto' to choose from --engine-cycle-style. When supplied, "
+            "the send plan emits CC15 machine select plus common filter/amp "
+            "starter CC values."
         ),
     )
     parser.add_argument(
