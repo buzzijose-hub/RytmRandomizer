@@ -1,33 +1,24 @@
-# RytmRandomizer Modularization Rules
+# RytmRandomizer Modularization Rules — superseded
 
-> Note: the contributor-facing rules from this file are also folded into CONTRIBUTING.md.
+> **Status as of 2026-05-19:** The modularization is complete. The V1.34 monolith
+> (`rytm_hybrid_randomizer_v134.py`) was retired in PR #29 — its byte-for-byte
+> reference behavior is now captured as 685 JSON goldens under
+> `tests/fixtures/v134_parity/` and asserted by the parity tests. The
+> "split the monolith" rules below no longer apply because there is no monolith.
 
-Current stable baseline:
-- Active validated script: rytm_hybrid_randomizer_v134.py
-- Stable tag: v1.34-stable-expanded-scene-layer
-- Working branch: modularize-v1.34
+For current contributor rules, see:
 
-Primary rule:
-Preserve V1.34 behavior exactly.
+- **[`CONTRIBUTING.md`](../CONTRIBUTING.md)** — the developer handbook covering all rules: 15 strict non-negotiables, the 16 plan-requirement gates, the V1.34-parity rules, PR sizing and bundling, lint specifics, hardware-safety boundaries, etc.
+- **[`docs/ARCHITECTURE.md` §5 (Parity discipline)](ARCHITECTURE.md#5-parity-discipline-v134)** — the V1.34 parity contract.
+- **[`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md)** — the 16 gates every PR must satisfy.
+- **`.claude/rules/parity-fixture-discipline.md`** — when and how to regenerate parity fixtures.
 
-Allowed:
-- Split the monolithic script into modules.
-- Move constants, profiles, MIDI helpers, scene plans, and command handlers into separate files.
-- Add tests that verify command names, profile keys, scene names, and safety guardrails.
-- Improve readability without changing behavior.
+The current "V1.34 parity" rule (every PR must keep 685/685 parity fixtures
+byte-identical) is enforced by `tests/test_engines_pad*.py`,
+`tests/test_group_runner.py`, and `tests/test_scene_runner.py` — captured fixtures
+are at `tests/fixtures/v134_parity/`.
 
-Not allowed:
-- No new MIDI CC mappings.
-- No new pad profiles.
-- No new machines.
-- No Pads 5-12 yet.
-- No GUI yet.
-- No parameter range changes.
-- No command behavior changes unless explicitly approved.
-- Do not remove the working V1.34 script until the modular version is validated.
-
-Required safety:
-- Keep rytm_hybrid_randomizer_v134.py as the reference implementation.
-- Build modular code beside it, not instead of it.
-- Commit small steps.
-- Test after each major split.
+Historical note: This file's original rules ("split the monolithic script into
+modules", "keep `rytm_hybrid_randomizer_v134.py` as the reference") drove the
+Wave 1-4 modularization work that is now complete. It is kept here only as a
+trail marker. Do not use it to plan new work.

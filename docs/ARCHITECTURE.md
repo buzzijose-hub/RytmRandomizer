@@ -264,7 +264,53 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Change MIDI primitives               | `midi_io.py`. Keep `mido` lazy.                        | (architecture review)     |
 | Add new passive report               | `reports.py` (or `inspection.py`) + CLI wire-up.       | (none, follow existing)   |
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
+| **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
+
+---
+
+## 6.1 Device Protocol + Strategy seam (WS-S5 + Strategy)
+
+The `rytm_randomizer.devices.Device` Protocol is the single cross-machine
+boundary. Every Elektron device family — Rytm today, Analog Four next —
+exposes exactly one registered `Device` instance and routes its behavior
+through three Strategy sub-Protocols.
+
+**Protocol shape:**
+
+| Attribute                   | Type / Protocol                                       | Role |
+| --------------------------- | ----------------------------------------------------- | ---- |
+| `device_id`                 | `str`                                                 | Stable, lowercase, snake_case registry key (`"analog_rytm_mk2"`) |
+| `display_name`              | `str`                                                 | Operator-facing label |
+| `default_midi_channel`      | `int`                                                 | 0-based MIDI channel |
+| `track_count`               | `int`                                                 | Pads / tracks (4 for A4, 12 for Rytm) |
+| `sysex_manufacturer_id`     | `bytes`                                               | 3-byte Elektron ID (`0x00 0x20 0x3C`) |
+| `snapshot_decoder`          | `snapshot.SnapshotDecoder` Protocol                   | `decode(raw, slot)` → device-specific snapshot |
+| `mutation_planner`          | `snapshot.MutationPlanner` Protocol                   | `plan(snapshot, depth)` → device-specific plan |
+| `message_renderer`          | `devices.MessageRenderer` Protocol                    | `to_mock_message(event, plan)` + `to_cc_triple(event, plan)` |
+| `report_header`             | `str`                                                 | Header line for guarded / hardware send reports |
+
+The Protocol's four legacy convenience methods (`decode_snapshot`,
+`plan_mutation`, `to_mock_messages`, `to_cc_messages`) remain for
+backward compatibility — they delegate to the strategies.
+
+**To add a device family:**
+
+1. Create three strategy modules under `rytm_randomizer/devices/strategies/`:
+   - `<family>_snapshot_decoder.py` — implements `SnapshotDecoder.decode`. Use the shared `snapshot/envelope.py` helpers; do NOT fork them per family.
+   - `<family>_mutation_planner.py` — implements `MutationPlanner.plan`. The plan must carry `ready: bool` and `readiness_reason: str` so the generic guarded sender can refuse on an unfinished plan without device-specific introspection.
+   - `<family>_message_renderer.py` — implements `MessageRenderer.{to_mock_message, to_cc_triple}`. Looks up CC numbers through `data/profiles.py` (or the family's own param map).
+2. Create one device class at `rytm_randomizer/devices/<family>.py` that composes the three strategies in `__init__` and exposes the 9 Protocol attributes.
+3. Register at import time: `registry.register_device(<Family>Device())`.
+4. The `devices/__init__.py` must import the new module so the side-effect registration runs.
+
+**What NOT to do:**
+
+- Do NOT create a parallel `<family>/` subpackage at the package root with its own decoder / planner / renderer / sender — the architecture tests will reject it (see §7).
+- Do NOT import private symbols (`_foo`, `_BAR`) from a sibling family's strategy module — same enforcement.
+- Do NOT introduce a second registry; only `devices/registry.py` may define `register_device`.
+
+`AnalogRytmDevice` is the reference implementation; `tests/test_devices.py` and `tests/test_devices_strategies_*.py` cover the contract.
 
 ---
 
@@ -280,6 +326,11 @@ The rules above are mechanically enforced by:
   exists and the retired V1.34 monolith has not been resurrected)
 * `tests/architecture/test_data_not_code.py` (fact tables live only in
   `data/`; no module re-defines a `data/` name)
+* `tests/architecture/test_device_protocol_enforcement.py` (every Elektron
+  device family registers through `devices/registry.py`; no cross-family
+  private imports; `dual_machine/` consumes only the registry; only one
+  device registry exists; every registered Device satisfies the Protocol;
+  Protocol surface is pinned against accidental drift — see §6.1)
 
 These tests are run by `pytest tests/architecture/` and are wired into the
 `test` job of `.github/workflows/test.yml` so a violation fails the build.

@@ -1,18 +1,30 @@
 # Coverage Policy — Ratcheting, Package-First
 
+> **Note (2026-05-19):** the "two layers" framing below predates the
+> retirement of the V1.34 monolith (PR #29, 2026-05-17). The monolith no
+> longer exists as a code artifact — its byte-for-byte reference behavior
+> lives in the 685 JSON goldens at `tests/fixtures/v134_parity/`. Only the
+> package layer remains, and the **≥95% pure-branch ratchet** on
+> `rytm_randomizer/` is what `scripts/coverage_ratchet.py` enforces today.
+> The historical wording below is kept for diff archaeology. **For current
+> rules, see [`.claude/rules/coverage-gate-100pct.md`](../.claude/rules/coverage-gate-100pct.md)
+> and the [`CONTRIBUTING.md` plan-requirements section](../CONTRIBUTING.md#plan-requirements--the-16-gates-every-pr-must-satisfy)
+> (Gate 1).**
+
 RytmRandomizer enforces test coverage with a **ratcheting, package-first**
 policy. This document explains what that means, why it is structured this way,
 and how it evolves.
 
-## The two layers
+## The two layers (historical)
 
-The codebase currently has two layers:
+The codebase had two layers; one is retired:
 
-1. **`rytm_randomizer/` package** — the modular, ~41-module package that is the
-   long-term home of all logic. This is the **package-first 100% target**.
-2. **`rytm_hybrid_randomizer_v134.py` monolith** — the legacy 5,162-line script
-   that still works and still ships. Its logic is being extracted into the
-   package wave by wave.
+1. **`rytm_randomizer/` package** — the modular package that is the home of
+   all logic. This is the **package-first 100% target**.
+2. ~~**`rytm_hybrid_randomizer_v134.py` monolith** — the legacy 5,162-line
+   script that still works and still ships.~~ **Retired in PR #29
+   (2026-05-17).** Its reference behavior is captured as JSON goldens; no
+   source code remains.
 
 ## The policy
 

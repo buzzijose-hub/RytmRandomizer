@@ -32,7 +32,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 
 1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
-3. **Architecture tests** — all 14 tests under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
+3. **Architecture tests** — all 15 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
 5. **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
 6. **Lazy MIDI imports** — `mido` and `python-rtmidi` are imported lazily inside `real_midi_adapter.py`. Never at module top-level. Enforced by `tests/architecture/test_no_side_effects.py`.
@@ -202,6 +202,34 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
 
 All tests must pass. Coverage must stay ≥95% pure-branch (the ratchet floor, enforced by `scripts/coverage_ratchet.py` and `.coveragerc`).
 
+### Running tests fast — the recommended local loop
+
+`pyproject.toml` sets `addopts = "-n auto --durations=20"`, so **bare
+`python -m pytest`** parallelizes across all available CPU cores via
+`pytest-xdist`. On a 22-core dev machine the full 2370-test suite runs in
+~30s, the fast subset in ~25s.
+
+Use the right tool at each stage of the loop:
+
+| Stage | Command | Typical time | Notes |
+|---|---|---|---|
+| Inner loop while editing one feature | `python -m pytest -m fast` | ~25s | Skips the 685 V1.34 parity goldens. |
+| One test file | `python -m pytest tests/test_foo.py -n 0` | <2s | `-n 0` disables xdist (worker spawn > test time for small selections). |
+| One named test | `python -m pytest tests/test_foo.py::test_bar -n 0` | <1s | |
+| Pre-push | `python -m pytest` | ~30s | Full suite, xdist parallelized. |
+| Pre-PR (with coverage) | `python -m pytest --cov=rytm_randomizer --cov-branch` | ~50s | Coverage adds ~1.4× overhead. |
+
+**Common slow-down trap:** `python -m pytest -o addopts=''` overrides
+the `pyproject.toml` defaults and disables xdist, dropping you to
+single-process (~90s for the full suite, ~3× slower). Only use the
+override when capturing parity fixtures
+(`PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py -o addopts=''`) —
+the capture path has a documented TOCTOU concern with concurrent xdist
+workers.
+
+**On macOS / Linux**, the bare command is the same. CI runs the same
+invocation on a 4-core GitHub runner in ~30-90s depending on the OS.
+
 Lint / format / type-check gates (also required CI checks):
 
 ```bash
@@ -352,7 +380,7 @@ verify a subset of these gates on every CI run; do not skip them locally.
 
 ## Test suite structure
 
-The suite has 1631+ tests across these layers:
+The suite has 2370+ tests across these layers:
 
 | Layer | Where | Purpose |
 |---|---|---|
@@ -381,6 +409,7 @@ The suite has 1631+ tests across these layers:
 | `test_observability.py` | Hot paths call `get_metrics().record_*`. |
 | `test_ci_workflow.py` | The CI workflow files match the documented contract. |
 | `test_data_not_code.py` | "Tables of facts" live as data, not as functions. |
+| `test_device_protocol_enforcement.py` | Device-family subpackages register through `devices/registry.py`; no cross-family private imports; `dual_machine/` consumes only `devices.all_devices()`; only one device registry exists; every registered Device satisfies the Protocol; Protocol surface (9 attrs + 4 methods) is pinned against accidental drift. |
 
 **Parity fixtures.** The 685 JSON goldens under `tests/fixtures/v134_parity/` are the authoritative V1.34 reference. Regenerate only when an intentional reference-output change is being committed:
 
@@ -407,7 +436,7 @@ See [`.claude/rules/parity-fixture-discipline.md`](.claude/rules/parity-fixture-
 
 **CI workflows** under `.github/workflows/`:
 
-- `test.yml` — main suite: lint + test + e2e + architecture + security on `[windows-latest, macos-latest, ubuntu-latest] × py3.11`, plus the `required-checks` gate, the coverage ratchet, and a docs-gate.
+- `test.yml` — main suite: lint + test + e2e + architecture + security on `[windows-latest, macos-latest, ubuntu-latest] × py3.11`, plus the `required-checks` gate, the coverage ratchet, and a docs-gate. **The `test` and `e2e` matrices drop `macos-latest` on `pull_request` events** (macOS runner queues are 20-60 min on GitHub Actions; PR turnaround stays in minutes); push/schedule/workflow_dispatch events keep the full 3-OS matrix so `main` and the nightly run still validate macOS.
 - `codeql.yml` — CodeQL static analysis.
 - `release.yml` — triggered on `v*` tags; builds wheel + sdist and publishes a GitHub Release.
 - `installers.yml` — builds platform installers.
