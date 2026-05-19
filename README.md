@@ -1,19 +1,20 @@
 # RytmRandomizer
 
-RytmRandomizer is a Python tool for the Elektron Analog Rytm MK2 hardware drum machine. It randomizes and mutates drum-synthesis parameters over MIDI, organized as a four-pad layout, with a layered "scene" system (Rolling / Deeper / Intense / Wild, each with A/B depth variants) and safety guardrails so you do not accidentally send MIDI to the hardware. You drive it from a small text prompt: pick a scene or command, and it sends the corresponding parameter changes to the Rytm.
+RytmRandomizer is a Python tool for Elektron hardware: the Analog Rytm MK2 drum machine and the Analog Four MK2 synthesizer. The Analog Rytm path is the mature live-performance randomizer, with MIDI parameter mutation, a four-pad scene system (Rolling / Deeper / Intense / Wild, each with A/B depth variants), and safety guardrails so you do not accidentally send MIDI to hardware. The Analog Four path is now registered behind the same cross-machine `Device` Protocol, with candidate/manifest-gated planning while saved-kit offsets are promoted.
 
-As of Wave 4 / WS-O the interactive runtime is owned end-to-end by the modular package (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The original V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) was retired in favor of the package; its reference behavior is captured as JSON goldens under `tests/fixtures/v134_parity/` and asserted by the parity test files.
+Each machine is exposed as a registered `Device`; see `docs/ARCHITECTURE.md` section 6.1. You can inspect the dual-machine target surface with `rytm`, `a4`, or `both`. The interactive runtime is owned end-to-end by the modular package (`rytm_randomizer.app` -> `rytm_randomizer.shell`). The original V1.34 monolith (`rytm_hybrid_randomizer_v134.py`) was retired in favor of the package; its reference behavior is captured as JSON goldens under `tests/fixtures/v134_parity/` and asserted by the parity test files.
 
 ---
 
 ## End-user setup
 
-This path is for someone who just wants to run RytmRandomizer against their Analog Rytm MK2.
+This path is for someone who just wants to run RytmRandomizer against their Analog Rytm MK2, or inspect the safe dual-machine target surface that now includes Analog Four MK2.
 
 ### 1. Requirements
 
-- An Analog Rytm MK2 connected over USB MIDI
-- One of: a native installer (preferred, see below) **or** Python >= 3.9 + `pip`
+- An Analog Rytm MK2 connected over USB MIDI for the current interactive runtime
+- Optional: an Analog Four MK2 for the candidate dual-machine path
+- One of: a native installer (preferred, see below) **or** Python >= 3.9 + `pip` (Python 3.11 is the tested contributor/runtime matrix)
 
 ### 2. Install — option A: native installer (recommended)
 
@@ -21,7 +22,7 @@ This path is for someone who just wants to run RytmRandomizer against their Anal
 
 When available, the install flow is:
 
-1. Visit the [GitHub Releases](https://github.com/misteredr/RytmRandomizer/releases) page.
+1. Visit the [GitHub Releases](https://github.com/buzzijose-hub/RytmRandomizer/releases) page.
 2. Download the artifact for your OS:
    - Windows: `RytmRandomizer-<version>.msi`
    - macOS: `RytmRandomizer-<version>.pkg`
@@ -74,7 +75,7 @@ This path is for someone who wants to work on the code, run tests, or contribute
 ### 1. Clone and install with dev dependencies
 
 ```bash
-git clone https://github.com/<owner>/RytmRandomizer.git
+git clone https://github.com/buzzijose-hub/RytmRandomizer.git
 cd RytmRandomizer
 pip install -e ".[dev]"
 ```
@@ -85,27 +86,35 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The full suite is ~1280 tests in roughly five to six minutes (pytest-xdist parallelizes the parity workers). Every commit must keep the suite green. The pytest config in `pyproject.toml` enables:
+The full suite is roughly 2,400 tests and usually runs in about 30 seconds on a multi-core machine. `pyproject.toml` sets `-n auto`, so `pytest-xdist` parallelizes across CPU cores. Do not pass `-o addopts=''` for normal runs; it disables xdist and makes the suite much slower. Every commit must keep the suite green. The pytest config in `pyproject.toml` enables:
 
 - `pytest-xdist` (`-n auto`) for parallel execution.
 - `pytest-timeout` (default 180s per test) so no test can silently hang the suite.
 - `--durations=20` after every run so per-test timings are always visible.
 - `pytest-sugar` for a live progress bar; pass `-p no:sugar -v` for plain output.
 
+Common loops if `just` is installed: `just test` for the full suite, `just fast` for the fast subset, `just lint` for ruff/black/isort, and `just check` for the pre-PR gate.
+
 ### 3. Repository map
 
 | Path | What it is |
 |------|------------|
-| `rytm_randomizer/` | The product package. `app.py` is the entry point; `shell.py` is the interactive command loop; `engines/`, `group_runner.py`, `scene_runner.py` are the orchestration layer; `data/` and `state/` are the canonical data + runtime state. |
+| `rytm_randomizer/` | The product package. `app.py` is the entry point; `cli.py` is the passive CLI; `shell.py` is the interactive command loop. |
+| `rytm_randomizer/devices/` | Cross-machine `Device` Protocol + registry. `analog_rytm.py` and `analog_four.py` are the registered devices; `strategies/` holds each device's snapshot decoder, mutation planner, and message renderer. |
+| `rytm_randomizer/senders/` | Generic guarded and hardware send paths that consume any registered `Device`. |
+| `rytm_randomizer/dual_machine/` | Dual-machine target reporting and alias resolution for `rytm`, `a4`, and `both`; it fans out through `devices.all_devices()`. |
+| `rytm_randomizer/engines/`, `group_runner.py`, `scene_runner.py` | The V1.34 Analog Rytm orchestration layer. |
+| `rytm_randomizer/data/`, `state/` | Canonical fact tables and runtime state. |
+| `rytm_randomizer/guardrails/`, `observability/`, `snapshot/`, `reports/`, `behavior/`, `style_analysis/` | Safety/policy, logging/metrics, SysEx envelope helpers, passive reports, behavior evaluators, and style-analysis support. |
 | `tests/fixtures/v134_parity/` | Frozen V1.34 reference behavior as JSON goldens, one per parity request. The retired `rytm_hybrid_randomizer_v134.py` monolith used to be the live byte-parity baseline; the goldens are now the authoritative source. |
-| `tests/` | The test suite (~50 test files). Includes parity tests that compare the extracted engines' output to the V1.34 JSON goldens. |
-| `docs/` | Project documentation, status, and process notes. See `docs/STATUS.md` for the current wave state. |
-| `Scripts/` | Helper scripts (e.g. closeout checks, quick status). |
+| `tests/` | Roughly 2,400 tests across 108 test files, including `tests/architecture/` mechanical guardrails and parity tests against the V1.34 JSON goldens. |
+| `docs/` | Project documentation, status, process notes, `ARCHITECTURE.md`, `ARCHITECTURE_DIAGRAMS.md`, and `PLAN_REQUIREMENTS.md`. |
+| `scripts/` | Cross-platform Python tooling such as closeout and coverage checks. `Scripts/` is the legacy PowerShell equivalent. |
 | `tooling/` | Developer utilities (hardware-capture scripts). Not part of the core product. |
 
 ### 4. Contributing
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow (planning, TDD, code review) and the parity rules around the V1.34 reference. A more detailed architecture map will land in `docs/ARCHITECTURE.md` in a follow-up wave.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow (planning, TDD, code review) and the parity rules around the V1.34 reference. The architecture standard is `docs/ARCHITECTURE.md`; `docs/ARCHITECTURE_DIAGRAMS.md` has the visual map. Agentic contributors should also read `AGENTS.md`, and Codex work should read `docs/CODEX_CONTRIBUTING.md`.
 
 ---
 
@@ -149,6 +158,19 @@ Pad 4 = BD Acoustic / body + accent pressure lane
 - No Pads 5-12 expansion yet.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
+- Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
+
+### Dual-machine target commands
+
+The passive CLI exposes the current machine target surface without opening a MIDI port:
+
+```bash
+python -m rytm_randomizer.cli dual-machine-target-report rytm   # Analog Rytm only
+python -m rytm_randomizer.cli dual-machine-target-report a4     # Analog Four only
+python -m rytm_randomizer.cli dual-machine-target-report both   # both registered devices
+```
+
+Aliases: `rytm-only` and `a4-only` are accepted. The report is passive: it opens no MIDI port and sends no MIDI. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
 
 ### Recommended quick validation flow
 

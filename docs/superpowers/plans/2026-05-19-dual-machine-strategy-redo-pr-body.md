@@ -35,7 +35,7 @@ python -m vulture <touched python files> --min-confidence 80
 - [x] Coverage stays at or above 95 percent pure-branch: 2419 passed, 4 skipped; total coverage 97.92 percent; pure-branch coverage 95.50 percent.
 - [x] 685/685 V1.34 parity items byte-identical: full coverage suite passed without fixture changes.
 - [x] No new dead code in touched files: touched-file vulture scan clean at `--min-confidence 80`.
-- [ ] CI matrix green on all 3 OSes: pending after rebase onto merged PR #45.
+- [ ] CI matrix green on all 3 OSes: pending after README follow-up commit.
 
 ## Plan-requirements conformance
 
@@ -45,7 +45,7 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) - every non-triv
 - [x] **Gate 2** - V1.34 parity byte-identical (505 goldens / 685 pytest items). No parity fixtures changed.
 - [x] **Gate 3** - lint clean (ruff + black `--target-version=py311` + isort `--profile black`).
 - [x] **Gate 4** - no new dead code. Touched-file vulture scan is clean; full-repo vulture reports two pre-existing warnings outside this diff.
-- [x] **Gate 5** - docs updated: `docs/STATUS.md`, `docs/MANUAL_HARDWARE_VALIDATION.md`, migration map, design doc, and implementation plan.
+- [x] **Gate 5** - docs updated: `README.md`, `docs/STATUS.md`, `docs/MANUAL_HARDWARE_VALIDATION.md`, migration map, design doc, and implementation plan.
 - [x] **Gate 6** - type-system hygiene: Device Strategy Protocol shape used; `Final` constants used; no bare `Any` added.
 - [ ] **Gate 7** - N/A: this PR adds passive strategy/report/sender boundaries, not hot-path observability instrumentation.
 - [x] **Gate 8** - test hygiene: focused behavior tests added around public surfaces and defensive branches.
