@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added app-level dual-machine snapshot lane scoping.
+  `rytm_randomizer.app --dry-run/--arm --dual-machine-snapshot-send` now
+  accepts `--snapshot-rytm-pad <1-12>` and
+  `--snapshot-analog-four-track <1-4>`. The flags flow through the same guarded
+  dual-machine bridge and sender path, so dry-run previews and future armed
+  sends can target one Rytm pad and/or one A4 track while leaving the rest out
+  of the plan.
 - 2026-05-19: added lane-scoped dual-machine mock bridge previews.
   `dual-machine-mock-bridge-report` now accepts `--rytm-pad <1-12>` and
   `--analog-four-track <1-4>` so a saved Rytm kit plus the Analog Four starter

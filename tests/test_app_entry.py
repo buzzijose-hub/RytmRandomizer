@@ -612,6 +612,47 @@ def test_app_main_dry_run_dual_machine_snapshot_send_accepts_a4_profile(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_dual_machine_snapshot_send_can_scope_lanes(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--dual-machine-snapshot-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "both",
+            "--snapshot-rytm-pad",
+            "1",
+            "--snapshot-analog-four-track",
+            "4",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Guarded Send Dry-Run Report" in captured.out
+    assert "Target: both" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 11" in captured.out
+    assert "Track 4 / FX / noise / transition" in captured.out
+    assert "Track 1 / bass / low tonal anchor" not in captured.out
+    assert "Dry-run complete. Mock sender captured 11 message(s)." in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_dry_run_snapshot_essence_send_uses_guarded_mock_sender(
     tmp_path,
     capsys,
@@ -1583,6 +1624,84 @@ def test_app_main_arm_dual_machine_snapshot_send_both_target_sends_to_two_fake_p
     assert "Emitted real MIDI messages: 26" in captured.out
     assert "Choose the Analog Rytm MIDI output number" in captured.out
     assert "Choose the Analog Four MIDI output number" in captured.out
+
+
+def test_app_main_arm_dual_machine_snapshot_send_both_target_can_scope_lanes(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    rytm_port = _RecordingPort()
+    a4_port = _RecordingPort()
+    ports = {"Fake Rytm": rytm_port, "Fake A4": a4_port}
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return ports[port_name]
+
+    scripted_inputs = iter(["0", "1", "SEND"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-path",
+                str(rytm_path),
+                "--snapshot-slot",
+                "1",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "both",
+                "--snapshot-rytm-pad",
+                "1",
+                "--snapshot-analog-four-track",
+                "4",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm", "Fake A4"]
+    assert len(rytm_port.sent) == 6
+    assert len(a4_port.sent) == 5
+    assert {message.channel for message in rytm_port.sent} == {0}
+    assert {message.channel for message in a4_port.sent} == {3}
+    assert rytm_port.closed is True
+    assert a4_port.closed is True
+    assert "Target: both" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 11" in captured.out
+    assert "Type SEND to transmit 11 mapped CC message(s) to both machines" in captured.out
 
 
 def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(

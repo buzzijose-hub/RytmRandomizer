@@ -195,6 +195,24 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--snapshot-rytm-pad",
+        type=int,
+        metavar="PAD",
+        help=(
+            "With --dual-machine-snapshot-send, limit the Rytm side of the "
+            "guarded snapshot send plan to one pad, 1-12."
+        ),
+    )
+    parser.add_argument(
+        "--snapshot-analog-four-track",
+        type=int,
+        metavar="TRACK",
+        help=(
+            "With --dual-machine-snapshot-send, limit the Analog Four side of "
+            "the guarded snapshot send plan to one track, 1-4."
+        ),
+    )
+    parser.add_argument(
         "--engine-cycle-style",
         metavar="STYLE",
         help="Style or genre prompt for Rytm engine-cycle planning.",
@@ -331,6 +349,8 @@ def _print_passive_menu() -> None:
             "test one Analog Four track with Filter 1 Frequency CC18 only",
             "- --dual-machine-snapshot-send  with --arm/--dry-run, send a "
             "guarded single-target live snapshot mutation plan",
+            "  optional: --snapshot-rytm-pad <1-12>; "
+            "--snapshot-analog-four-track <1-4>",
             "- --snapshot-essence-send  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad style/genre snapshot essence plan",
             "- --rytm-engine-cycle  with --arm/--dry-run, send a guarded "
@@ -382,6 +402,8 @@ def _snapshot_send_request_from_args(args: argparse.Namespace) -> dict[str, obje
         "analog_four_path": args.analog_four_path,
         "analog_four_slot": args.analog_four_slot,
         "analog_four_profile": args.analog_four_profile,
+        "snapshot_rytm_pad": args.snapshot_rytm_pad,
+        "snapshot_analog_four_track": args.snapshot_analog_four_track,
     }
 
 
@@ -454,6 +476,16 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
         depth=str(request["snapshot_depth"]),
         target=str(request["snapshot_target"]),
         analog_four_profile=str(request.get("analog_four_profile") or "balanced"),
+        rytm_pad=(
+            None
+            if request.get("snapshot_rytm_pad") is None
+            else int(request["snapshot_rytm_pad"])
+        ),
+        analog_four_track=(
+            None
+            if request.get("snapshot_analog_four_track") is None
+            else int(request["snapshot_analog_four_track"])
+        ),
         **kwargs,
     )
 
@@ -1710,6 +1742,30 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.snapshot_pad is not None and args.snapshot_pad not in range(1, 13):
         sys.stderr.write("--snapshot-pad must be between 1 and 12.\n")
+        return 2
+
+    if args.snapshot_rytm_pad is not None and not args.dual_machine_snapshot_send:
+        sys.stderr.write("--snapshot-rytm-pad requires --dual-machine-snapshot-send.\n")
+        return 2
+
+    if args.snapshot_rytm_pad is not None and args.snapshot_rytm_pad not in range(1, 13):
+        sys.stderr.write("--snapshot-rytm-pad must be between 1 and 12.\n")
+        return 2
+
+    if (
+        args.snapshot_analog_four_track is not None
+        and not args.dual_machine_snapshot_send
+    ):
+        sys.stderr.write(
+            "--snapshot-analog-four-track requires --dual-machine-snapshot-send.\n"
+        )
+        return 2
+
+    if args.snapshot_analog_four_track is not None and args.snapshot_analog_four_track not in range(
+        1,
+        5,
+    ):
+        sys.stderr.write("--snapshot-analog-four-track must be between 1 and 4.\n")
         return 2
 
     if args.analog_four_profile is not None and not (
