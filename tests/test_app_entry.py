@@ -612,6 +612,41 @@ def test_app_main_dry_run_dual_machine_snapshot_send_accepts_a4_profile(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_dual_machine_snapshot_send_accepts_a4_only_snapshot(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(_make_a4_kit_record(kit_name="APP A4 SOLO"))
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--dual-machine-snapshot-send",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "analog-four",
+            "--analog-four-path",
+            str(a4_path),
+            "--analog-four-slot",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "Target: analog-four" in captured.out
+    assert "Reason: blocked_by_unverified_candidates" in captured.out
+    assert "Blocked candidate events: 2" in captured.out
+    assert "Emitted mock messages: 0" in captured.out
+    assert "Dry-run complete. Mock sender captured 0 message(s)." in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_dry_run_dual_machine_snapshot_send_can_scope_lanes(
     tmp_path,
     capsys,

@@ -403,20 +403,33 @@ def _is_dual_machine_cli_usage_error(exc: ValueError) -> bool:
     return str(exc) == _DUAL_MACHINE_CLI_USAGE_ERROR
 
 
+def _dual_machine_error_path(args) -> str:
+    if len(args) > 1 and not str(args[1]).startswith("--"):
+        return str(args[1])
+    return "<not required>"
+
+
 def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = False):
-    if (
-        len(args) < 6
-        or len(args) > (18 if allow_lane_filters else 14)
-        or (len(args) - 6) % 2
-        or args[2] != "--slot"
-        or args[4] != "--depth"
-    ):
+    if len(args) < 2 or len(args) > (18 if allow_lane_filters else 14):
         raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
 
-    try:
-        slot = int(args[3])
-    except ValueError as exc:
-        raise ValueError("Slot must be an integer") from exc
+    rytm_path = None
+    slot = None
+    depth = None
+    if not args[1].startswith("--"):
+        if len(args) < 6 or (len(args) - 6) % 2 or args[2] != "--slot" or args[4] != "--depth":
+            raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
+        rytm_path = args[1]
+        try:
+            slot = int(args[3])
+        except ValueError as exc:
+            raise ValueError("Slot must be an integer") from exc
+        depth = args[5]
+        tail = list(args[6:])
+    else:
+        if (len(args) - 1) % 2:
+            raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
+        tail = list(args[1:])
 
     target = "both"
     analog_four_path = None
@@ -424,7 +437,6 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
     analog_four_profile = "balanced"
     rytm_pad = None
     analog_four_track = None
-    tail = list(args[6:])
     while tail:
         flag = tail.pop(0)
         if not tail:
@@ -432,16 +444,15 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
         value = tail.pop(0)
         if flag == "--target":
             target = value
+        elif flag == "--depth" and rytm_path is None:
+            depth = value
         elif flag == "--analog-four-profile":
             analog_four_profile = value
         elif flag == "--analog-four-path":
             analog_four_path = value
-            if len(tail) < 2 or tail[0] != "--analog-four-slot":
-                raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
-            tail.pop(0)
-            raw_slot = tail.pop(0)
+        elif flag == "--analog-four-slot":
             try:
-                analog_four_slot = int(raw_slot)
+                analog_four_slot = int(value)
             except ValueError as exc:
                 raise ValueError("Analog Four slot must be an integer") from exc
         elif flag == "--rytm-pad" and allow_lane_filters:
@@ -457,9 +468,19 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
         else:
             raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
 
+    if depth is None:
+        raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
+    if rytm_path is None:
+        from .performance.snapshot_target import build_performance_snapshot_target_plan
+
+        target_plan = build_performance_snapshot_target_plan(target)
+        if target_plan.canonical_target != "analog-four":
+            raise ValueError("Rytm snapshot path and slot are required for target rytm or both")
+
     return {
+        "rytm_path": rytm_path,
         "slot": slot,
-        "depth": args[5],
+        "depth": depth,
         "target": target,
         "analog_four_path": analog_four_path,
         "analog_four_slot": analog_four_slot,
@@ -914,14 +935,14 @@ def main(argv=None):
             if _is_dual_machine_cli_usage_error(exc):
                 sys.stderr.write(f"{USAGE}\n")
                 return 2
-            lines = format_dual_machine_mock_bridge_error(args[1], str(exc))
+            lines = format_dual_machine_mock_bridge_error(_dual_machine_error_path(args), str(exc))
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
 
         try:
             bridge = build_dual_machine_mock_bridge(
-                args[1],
+                parsed["rytm_path"],
                 slot=parsed["slot"],
                 depth=parsed["depth"],
                 target=parsed["target"],
@@ -932,7 +953,10 @@ def main(argv=None):
                 analog_four_track=parsed["analog_four_track"],
             )
         except FileNotFoundError:
-            lines = format_dual_machine_mock_bridge_error(args[1], "File not found")
+            lines = format_dual_machine_mock_bridge_error(
+                parsed["rytm_path"] or "<not required>",
+                "File not found",
+            )
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
@@ -943,7 +967,10 @@ def main(argv=None):
             SysexSnapshotDecodeError,
             ValueError,
         ) as exc:
-            lines = format_dual_machine_mock_bridge_error(args[1], str(exc))
+            lines = format_dual_machine_mock_bridge_error(
+                parsed["rytm_path"] or "<not required>",
+                str(exc),
+            )
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
@@ -979,7 +1006,7 @@ def main(argv=None):
 
         try:
             bridge = build_dual_machine_mock_bridge(
-                args[1],
+                parsed["rytm_path"],
                 slot=parsed["slot"],
                 depth=parsed["depth"],
                 target=parsed["target"],
@@ -1038,7 +1065,7 @@ def main(argv=None):
 
         try:
             bridge = build_dual_machine_mock_bridge(
-                args[1],
+                parsed["rytm_path"],
                 slot=parsed["slot"],
                 depth=parsed["depth"],
                 target=parsed["target"],
@@ -1097,7 +1124,7 @@ def main(argv=None):
 
         try:
             bridge = build_dual_machine_mock_bridge(
-                args[1],
+                parsed["rytm_path"],
                 slot=parsed["slot"],
                 depth=parsed["depth"],
                 target=parsed["target"],

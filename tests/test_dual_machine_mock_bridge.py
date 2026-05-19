@@ -289,6 +289,44 @@ def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
     ]
 
 
+def test_dual_bridge_analog_four_target_can_omit_rytm_snapshot_path(tmp_path):
+    from rytm_randomizer.dual_machine.mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+        format_dual_machine_mock_bridge_report,
+    )
+
+    a4_path = tmp_path / "a4-kits.syx"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="A4 SOLO",
+            track_values={1: {20: 64}},
+        )
+    )
+
+    bridge = build_dual_machine_mock_bridge(
+        None,
+        slot=None,
+        depth="micro",
+        target="analog-four",
+        analog_four_sysex_path=str(a4_path),
+        analog_four_slot=1,
+    )
+    sender = capture_dual_machine_mock_messages(bridge)
+    report = "\n".join(format_dual_machine_mock_bridge_report(bridge))
+
+    assert bridge.target_plan.canonical_target == "analog-four"
+    assert bridge.rytm_source == "not captured for target analog-four"
+    assert bridge.rytm_plan.scanned_pad_count == 0
+    assert bridge.rytm_message_count == 0
+    assert bridge.analog_four_source == "saved-kit snapshot candidates"
+    assert {message.metadata["device"] for message in sender.sent_messages} == {
+        "Analog Four MKII",
+    }
+    assert "Rytm source path: <not required>" in report
+    assert "Rytm planned pads: 0 / 0" in report
+
+
 def test_dual_bridge_accepts_birmingham_analog_four_profile(tmp_path):
     from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
@@ -532,6 +570,35 @@ def test_dual_machine_mock_bridge_cli_accepts_a4_snapshot_path(tmp_path):
     assert "Offset +20: 64 -> 67" in result.stdout
     assert "candidate_unverified" in result.stdout
     assert "- no CC mapping claimed" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_accepts_a4_only_without_rytm_path(tmp_path):
+    a4_path = tmp_path / "a4-kits.syx"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI A4 SOLO",
+            track_values={1: {20: 64}},
+        )
+    )
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        "--target",
+        "analog-four",
+        "--depth",
+        "micro",
+        "--analog-four-path",
+        str(a4_path),
+        "--analog-four-slot",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "Target: analog-four" in result.stdout
+    assert "Rytm source path: <not required>" in result.stdout
+    assert "Analog Four kit: CLI A4 SOLO" in result.stdout
+    assert "Analog Four mock messages: 1" in result.stdout
     assert result.stderr == ""
 
 

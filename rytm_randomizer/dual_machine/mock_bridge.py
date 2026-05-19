@@ -36,6 +36,7 @@ from ..snapshot.rytm_mutation_planner import (
 
 PAD_COUNT = 12
 A4_TRACK_COUNT = 4
+DEPTHS = ("micro", "groove", "strong")
 
 
 @dataclass(frozen=True)
@@ -124,9 +125,9 @@ class DualMachineMockBridge:
 
 
 def build_dual_machine_mock_bridge(
-    rytm_sysex_path: str | Path,
+    rytm_sysex_path: str | Path | None,
     *,
-    slot: int,
+    slot: int | None,
     depth: str,
     target: str = "both",
     analog_four_sysex_path: str | Path | None = None,
@@ -146,13 +147,26 @@ def build_dual_machine_mock_bridge(
     if target_plan.canonical_target == "rytm" and analog_four_sysex_path is not None:
         raise ValueError("Analog Four snapshot path cannot be used with target rytm")
 
-    rytm_plan = build_snapshot_mutation_plan_from_file(
-        rytm_sysex_path,
-        slot=slot,
-        depth=depth,
-    )
-    if rytm_pad is not None:
-        rytm_plan = filter_snapshot_mutation_plan_to_pad(rytm_plan, pad=rytm_pad)
+    if _is_device_key_active(target_plan, "analog_rytm"):
+        if rytm_sysex_path is None or slot is None:
+            raise ValueError("Rytm snapshot path and slot are required for target rytm or both")
+        rytm_source_path = str(rytm_sysex_path)
+        rytm_source = "saved-kit snapshot"
+        rytm_plan = build_snapshot_mutation_plan_from_file(
+            rytm_sysex_path,
+            slot=slot,
+            depth=depth,
+        )
+        if rytm_pad is not None:
+            rytm_plan = filter_snapshot_mutation_plan_to_pad(rytm_plan, pad=rytm_pad)
+    else:
+        if depth not in DEPTHS:
+            raise ValueError("depth must be micro, groove, or strong")
+        if rytm_pad is not None:
+            raise ValueError("Rytm pad cannot be used with target analog-four")
+        rytm_source_path = "<not required>"
+        rytm_source = "not captured for target analog-four"
+        rytm_plan = _build_inactive_rytm_plan(depth)
 
     starter_profile = get_analog_four_starter_profile(analog_four_profile)
     analog_four_source = "safe starter CC plan"
@@ -189,8 +203,8 @@ def build_dual_machine_mock_bridge(
         analog_four_starter_profile_label = None
 
     return DualMachineMockBridge(
-        rytm_source_path=str(rytm_sysex_path),
-        rytm_source="saved-kit snapshot",
+        rytm_source_path=rytm_source_path,
+        rytm_source=rytm_source,
         analog_four_source=analog_four_source,
         depth=depth,
         rytm_plan=rytm_plan,
@@ -202,6 +216,16 @@ def build_dual_machine_mock_bridge(
         analog_four_mapping_status=analog_four_mapping_status,
         analog_four_starter_profile_key=analog_four_starter_profile_key,
         analog_four_starter_profile_label=analog_four_starter_profile_label,
+    )
+
+
+def _build_inactive_rytm_plan(depth: str) -> SnapshotMutationPlan:
+    return SnapshotMutationPlan(
+        slot_number=0,
+        kit_name="",
+        depth=depth,
+        snapshot_parameter_map_status="not_captured_for_target_analog_four",
+        pads=(),
     )
 
 
@@ -496,7 +520,14 @@ def _analog_four_starter_profile_lines(bridge: DualMachineMockBridge) -> list[st
 
 
 def _is_device_active(bridge: DualMachineMockBridge, device_key: str) -> bool:
-    return device_key in bridge.target_plan.active_device_keys
+    return _is_device_key_active(bridge.target_plan, device_key)
+
+
+def _is_device_key_active(
+    target_plan: PerformanceSnapshotTargetPlan,
+    device_key: str,
+) -> bool:
+    return device_key in target_plan.active_device_keys
 
 
 def _targeted_rytm_planned_pad_count(bridge: DualMachineMockBridge) -> int:

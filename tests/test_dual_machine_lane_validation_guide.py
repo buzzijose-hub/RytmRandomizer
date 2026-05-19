@@ -167,10 +167,7 @@ def test_dual_machine_lane_validation_guide_formats_analog_four_only_lane():
     assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in joined
     assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in joined
     assert "Snapshot source notes:" in joined
-    assert (
-        "- Rytm source: <rytm-sysex-path> slot 1 is bridge context only; "
-        "Rytm MIDI stays untouched."
-    ) in joined
+    assert "Rytm source:" not in joined
     assert (
         "- Analog Four source: <analog-four-sysex-path> slot 1 supplies saved A4 "
         "snapshot candidates."
@@ -218,6 +215,8 @@ def test_dual_machine_lane_validation_guide_cli_accepts_analog_four_only_target(
     assert "Expected lane-scoped messages: 5" in result.stdout
     assert "--target analog-four --analog-four-track 2" in result.stdout
     assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in result.stdout
+    assert "--snapshot-path <rytm-sysex-path>" not in result.stdout
+    assert "<rytm-sysex-path> --slot 1" not in result.stdout
     assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in result.stdout
     assert "--snapshot-rytm-pad" not in result.stdout
     assert result.stderr == ""

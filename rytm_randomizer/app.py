@@ -469,8 +469,8 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
         }
 
     return build_dual_machine_mock_bridge(
-        str(request["snapshot_path"]),
-        slot=int(request["snapshot_slot"]),
+        None if request.get("snapshot_path") is None else str(request["snapshot_path"]),
+        slot=None if request.get("snapshot_slot") is None else int(request["snapshot_slot"]),
         depth=str(request["snapshot_depth"]),
         target=str(request["snapshot_target"]),
         analog_four_profile=str(request.get("analog_four_profile") or "balanced"),
@@ -1770,20 +1770,28 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     if args.dual_machine_snapshot_send:
+        target_includes_rytm = args.snapshot_target in ("rytm", "both")
         missing = [
             flag
             for flag, value in (
-                ("--snapshot-path", args.snapshot_path),
-                ("--snapshot-slot", args.snapshot_slot),
                 ("--snapshot-depth", args.snapshot_depth),
                 ("--snapshot-target", args.snapshot_target),
             )
             if value is None
         ]
+        if target_includes_rytm:
+            missing.extend(
+                flag
+                for flag, value in (
+                    ("--snapshot-path", args.snapshot_path),
+                    ("--snapshot-slot", args.snapshot_slot),
+                )
+                if value is None
+            )
         if missing:
             sys.stderr.write("--dual-machine-snapshot-send requires " f"{', '.join(missing)}.\n")
             return 2
-        if args.snapshot_slot not in range(1, 129):
+        if args.snapshot_slot is not None and args.snapshot_slot not in range(1, 129):
             sys.stderr.write("--snapshot-slot must be between 1 and 128.\n")
             return 2
         if (args.analog_four_path is None) != (args.analog_four_slot is None):

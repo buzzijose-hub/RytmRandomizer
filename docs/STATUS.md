@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made A4-only dual-machine snapshot planning independent from
+  Rytm snapshot files. The shared bridge can now build `--target analog-four`
+  plans without a Rytm path/slot, the passive CLI supports a pathless A4-only
+  form using `--analog-four-path` and `--analog-four-slot`, and the app
+  `--dry-run --dual-machine-snapshot-send` path no longer requires
+  `--snapshot-path`/`--snapshot-slot` when the target is Analog Four only.
 - 2026-05-19: tightened one-machine snapshot isolation in the passive
   dual-machine bridge. When validation is explicitly scoped to `--target rytm`,
   supplying `--analog-four-path` is now rejected before any A4 saved snapshot is

@@ -225,9 +225,10 @@ def format_dual_machine_lane_validation_guide_error(message: str) -> list[str]:
 
 
 def _snapshot_report_args(request: DualMachineLaneValidationGuideRequest) -> str:
-    parts = [
-        "<rytm-sysex-path> " f"--slot {DEFAULT_RYTM_SLOT} --depth {DEFAULT_DEPTH}",
-    ]
+    parts = []
+    if request.target != "analog-four":
+        parts.append("<rytm-sysex-path> " f"--slot {DEFAULT_RYTM_SLOT}")
+    parts.append(f"--depth {DEFAULT_DEPTH}")
     if _targets_analog_four(request):
         parts.append(
             "--analog-four-path <analog-four-sysex-path> "
@@ -276,8 +277,6 @@ def _snapshot_source_note_lines(request: DualMachineLaneValidationGuideRequest) 
     if request.target == "analog-four":
         return [
             "Snapshot source notes:",
-            f"- Rytm source: <rytm-sysex-path> slot {DEFAULT_RYTM_SLOT} is bridge "
-            "context only; Rytm MIDI stays untouched.",
             "- Analog Four source: <analog-four-sysex-path> slot "
             f"{DEFAULT_ANALOG_FOUR_SLOT} supplies saved A4 snapshot candidates.",
         ]
@@ -305,11 +304,20 @@ def _all_lane_saved_bank_preflight_lines() -> list[str]:
 def _app_args(request: DualMachineLaneValidationGuideRequest) -> str:
     parts = [
         "--dual-machine-snapshot-send",
-        "--snapshot-path <rytm-sysex-path>",
-        f"--snapshot-slot {DEFAULT_RYTM_SLOT}",
-        f"--snapshot-depth {DEFAULT_DEPTH}",
-        f"--snapshot-target {request.target}",
     ]
+    if request.target != "analog-four":
+        parts.extend(
+            [
+                "--snapshot-path <rytm-sysex-path>",
+                f"--snapshot-slot {DEFAULT_RYTM_SLOT}",
+            ]
+        )
+    parts.extend(
+        [
+            f"--snapshot-depth {DEFAULT_DEPTH}",
+            f"--snapshot-target {request.target}",
+        ]
+    )
     if request.rytm_pad is not None:
         parts.append(f"--snapshot-rytm-pad {request.rytm_pad}")
     if request.analog_four_track is not None:
