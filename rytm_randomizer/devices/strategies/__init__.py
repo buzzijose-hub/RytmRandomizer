@@ -20,6 +20,12 @@ from .analog_four_snapshot_decoder import (
     AnalogFourKitSnapshot,
     AnalogFourSnapshotDecoder,
 )
+from .analog_four_mutation_planner import (
+    MAX_A4_DEPTH,
+    AnalogFourMutationPlan,
+    AnalogFourMutationPlanner,
+    AnalogFourPlanEvent,
+)
 from .analog_rytm_message_renderer import AnalogRytmMessageRenderer
 from .analog_rytm_mutation_planner import (
     MAX_DEPTH,
@@ -35,9 +41,13 @@ from .analog_rytm_snapshot_decoder import (
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
+    "MAX_A4_DEPTH",
     "MAX_DEPTH",
     "RYTM_KIT_TYPE_BYTE",
     "AnalogFourKitSnapshot",
+    "AnalogFourMutationPlan",
+    "AnalogFourMutationPlanner",
+    "AnalogFourPlanEvent",
     "AnalogFourSnapshotDecoder",
     "AnalogRytmMessageRenderer",
     "AnalogRytmMutationPlanner",
