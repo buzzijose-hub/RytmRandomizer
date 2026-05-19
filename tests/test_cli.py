@@ -1761,8 +1761,10 @@ def test_project_status_report_tracks_convergence_behind_arm_flag():
     assert "- default_mode: passive" in output
     assert "- hardware_required: False" in output
     assert "- hardware_behavior: opt_in_behind_arm_flag" in output
-    assert "- analog_four_support: absent" in output
-    assert "- pads_5_12_support: absent" in output
+    assert "- analog_four_support: present_behind_arm_flag" in output
+    assert "- pads_5_12_support: present_behind_arm_flag" in output
+    assert "Current Runtime Validation:" in output
+    assert "- status: dual_machine_lane_gate_ready" in output
     assert "- v134_reference: untouched" in output
     assert "- package_metadata: untouched" in output
     assert "- active_execution_gate: --arm flag" in output

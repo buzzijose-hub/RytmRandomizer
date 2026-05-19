@@ -129,8 +129,8 @@ PROJECT_STATUS_SAFETY = {
     "default_mode": "passive",
     "hardware_required": False,
     "hardware_behavior": "opt_in_behind_arm_flag",
-    "analog_four_support": "absent",
-    "pads_5_12_support": "absent",
+    "analog_four_support": "present_behind_arm_flag",
+    "pads_5_12_support": "present_behind_arm_flag",
     "v134_reference": "untouched",
     "package_metadata": "untouched",
 }
@@ -174,8 +174,19 @@ HARDWARE_VALIDATION_STATUS = {
         "bare_depth_digit_no_midi",
     ),
     "canonical_scene_flow": ("S1A", "S3A", "S3B", "S4B", "S5", "Z"),
-    "analog_four_support": "absent",
-    "pads_5_12_support": "absent",
+    "analog_four_support": "not_in_first_pass",
+    "pads_5_12_support": "not_in_first_pass",
+}
+
+CURRENT_RUNTIME_VALIDATION_STATUS = {
+    "status": "dual_machine_lane_gate_ready",
+    "date": "2026-05-19",
+    "analog_four_support": "operator_smoke_confirmed",
+    "pads_5_12_support": "operator_smoke_confirmed",
+    "dual_machine_lane_validation_guide": "software_ready",
+    "all_lane_validation_guide": "software_ready",
+    "pr37_required_checks": "passed",
+    "next_hardware_scope": "lane_scoped_manual_validation",
 }
 
 PROJECT_STATUS_CHECKS = (
@@ -186,11 +197,17 @@ PROJECT_STATUS_CHECKS = (
     ("safety.dispatch", "present_behind_arm_flag"),
     ("safety.default_mode", "passive"),
     ("safety.hardware_required", False),
+    ("safety.analog_four_support", "present_behind_arm_flag"),
+    ("safety.pads_5_12_support", "present_behind_arm_flag"),
     ("hardware_validation.status", "first_end_user_pass"),
     ("hardware_validation.dry_run", "passed"),
     ("hardware_validation.arm_port_open", "passed"),
     ("hardware_validation.audible_scene_mutation", "confirmed_by_operator"),
     ("hardware_validation.anchor_return", "confirmed_by_operator"),
+    ("current_runtime_validation.status", "dual_machine_lane_gate_ready"),
+    ("current_runtime_validation.analog_four_support", "operator_smoke_confirmed"),
+    ("current_runtime_validation.pads_5_12_support", "operator_smoke_confirmed"),
+    ("current_runtime_validation.pr37_required_checks", "passed"),
     ("safety.v134_reference", "untouched"),
     ("safety.package_metadata", "untouched"),
     # Convergence checks (WS-H): the package gained active execution behind --arm.
@@ -265,6 +282,7 @@ def build_project_status_report():
         "closeout": CLOSEOUT_STATUS,
         "convergence": CONVERGENCE_STATUS,
         "hardware_validation": HARDWARE_VALIDATION_STATUS,
+        "current_runtime_validation": CURRENT_RUNTIME_VALIDATION_STATUS,
         "safety": PROJECT_STATUS_SAFETY,
         "source": {
             "in_memory_only": True,
@@ -326,6 +344,10 @@ def summarize_project_status_report(report=None):
         "default_mode": source_report["safety"]["default_mode"],
         "hardware_required": source_report["safety"]["hardware_required"],
         "hardware_validation": source_report["hardware_validation"]["status"],
+        "current_runtime_validation": source_report["current_runtime_validation"]["status"],
+        "analog_four_support": source_report["safety"]["analog_four_support"],
+        "pads_5_12_support": source_report["safety"]["pads_5_12_support"],
+        "pr37_required_checks": source_report["current_runtime_validation"]["pr37_required_checks"],
         "v134_reference": source_report["safety"]["v134_reference"],
         "active_execution_gate": source_report["convergence"]["active_execution_gate"],
         "active_modes_present": source_report["convergence"]["active_modes_present"],
@@ -364,6 +386,10 @@ def format_project_status_summary(report=None):
         f"- total_modes: {summary['total_modes']}",
         f"- hardware_required: {summary['hardware_required']}",
         f"- hardware_validation: {summary['hardware_validation']}",
+        f"- current_runtime_validation: {summary['current_runtime_validation']}",
+        f"- analog_four_support: {summary['analog_four_support']}",
+        f"- pads_5_12_support: {summary['pads_5_12_support']}",
+        f"- pr37_required_checks: {summary['pr37_required_checks']}",
         f"- v134_reference: {summary['v134_reference']}",
     ]
 
@@ -406,6 +432,7 @@ def format_project_status_report(report=None):
     collaborator = source_report["collaborator_review_intake"]
     triage_template = source_report["collaborator_review_triage_template"]
     hardware_validation = source_report["hardware_validation"]
+    current_runtime_validation = source_report["current_runtime_validation"]
 
     lines = [
         source_report["title"],
@@ -497,6 +524,12 @@ def format_project_status_report(report=None):
 
     lines.append("Hardware Validation:")
     for key, value in hardware_validation.items():
+        if isinstance(value, tuple):
+            value = ", ".join(str(item) for item in value)
+        lines.append(f"- {key}: {value}")
+
+    lines.append("Current Runtime Validation:")
+    for key, value in current_runtime_validation.items():
         if isinstance(value, tuple):
             value = ", ".join(str(item) for item in value)
         lines.append(f"- {key}: {value}")

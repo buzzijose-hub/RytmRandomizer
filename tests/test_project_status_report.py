@@ -104,8 +104,8 @@ def test_project_status_report_tracks_convergence_behind_arm_flag():
         "default_mode": "passive",
         "hardware_required": False,
         "hardware_behavior": "opt_in_behind_arm_flag",
-        "analog_four_support": "absent",
-        "pads_5_12_support": "absent",
+        "analog_four_support": "present_behind_arm_flag",
+        "pads_5_12_support": "present_behind_arm_flag",
         "v134_reference": "untouched",
         "package_metadata": "untouched",
     }
@@ -146,8 +146,25 @@ def test_project_status_report_records_first_hardware_validation_pass():
             "bare_depth_digit_no_midi",
         ),
         "canonical_scene_flow": ("S1A", "S3A", "S3B", "S4B", "S5", "Z"),
-        "analog_four_support": "absent",
-        "pads_5_12_support": "absent",
+        "analog_four_support": "not_in_first_pass",
+        "pads_5_12_support": "not_in_first_pass",
+    }
+
+
+def test_project_status_report_records_current_runtime_validation_status():
+    from rytm_randomizer.project_status_report import build_project_status_report
+
+    report = build_project_status_report()
+
+    assert report["current_runtime_validation"] == {
+        "status": "dual_machine_lane_gate_ready",
+        "date": "2026-05-19",
+        "analog_four_support": "operator_smoke_confirmed",
+        "pads_5_12_support": "operator_smoke_confirmed",
+        "dual_machine_lane_validation_guide": "software_ready",
+        "all_lane_validation_guide": "software_ready",
+        "pr37_required_checks": "passed",
+        "next_hardware_scope": "lane_scoped_manual_validation",
     }
 
 
@@ -245,6 +262,10 @@ def test_project_status_summary_is_deterministic():
         "collaborator_review_triage_template": "accepted",
         "hardware_required": False,
         "hardware_validation": "first_end_user_pass",
+        "current_runtime_validation": "dual_machine_lane_gate_ready",
+        "analog_four_support": "present_behind_arm_flag",
+        "pads_5_12_support": "present_behind_arm_flag",
+        "pr37_required_checks": "passed",
         "v134_reference": "untouched",
         "active_execution_gate": "--arm flag",
         "active_modes_present": 2,
@@ -283,6 +304,10 @@ def test_project_status_summary_lines_are_deterministic():
         "- total_modes: 3",
         "- hardware_required: False",
         "- hardware_validation: first_end_user_pass",
+        "- current_runtime_validation: dual_machine_lane_gate_ready",
+        "- analog_four_support: present_behind_arm_flag",
+        "- pads_5_12_support: present_behind_arm_flag",
+        "- pr37_required_checks: passed",
         "- v134_reference: untouched",
     ]
 
@@ -305,11 +330,17 @@ def test_project_status_check_passes_for_current_report():
             "safety.dispatch": "present_behind_arm_flag",
             "safety.default_mode": "passive",
             "safety.hardware_required": False,
+            "safety.analog_four_support": "present_behind_arm_flag",
+            "safety.pads_5_12_support": "present_behind_arm_flag",
             "hardware_validation.status": "first_end_user_pass",
             "hardware_validation.dry_run": "passed",
             "hardware_validation.arm_port_open": "passed",
             "hardware_validation.audible_scene_mutation": "confirmed_by_operator",
             "hardware_validation.anchor_return": "confirmed_by_operator",
+            "current_runtime_validation.status": "dual_machine_lane_gate_ready",
+            "current_runtime_validation.analog_four_support": "operator_smoke_confirmed",
+            "current_runtime_validation.pads_5_12_support": "operator_smoke_confirmed",
+            "current_runtime_validation.pr37_required_checks": "passed",
             "safety.v134_reference": "untouched",
             "safety.package_metadata": "untouched",
             "convergence.active_execution": "present",
@@ -392,11 +423,17 @@ def test_project_status_check_lines_are_deterministic():
         "- safety.dispatch: present_behind_arm_flag",
         "- safety.default_mode: passive",
         "- safety.hardware_required: False",
+        "- safety.analog_four_support: present_behind_arm_flag",
+        "- safety.pads_5_12_support: present_behind_arm_flag",
         "- hardware_validation.status: first_end_user_pass",
         "- hardware_validation.dry_run: passed",
         "- hardware_validation.arm_port_open: passed",
         "- hardware_validation.audible_scene_mutation: confirmed_by_operator",
         "- hardware_validation.anchor_return: confirmed_by_operator",
+        "- current_runtime_validation.status: dual_machine_lane_gate_ready",
+        "- current_runtime_validation.analog_four_support: operator_smoke_confirmed",
+        "- current_runtime_validation.pads_5_12_support: operator_smoke_confirmed",
+        "- current_runtime_validation.pr37_required_checks: passed",
         "- safety.v134_reference: untouched",
         "- safety.package_metadata: untouched",
         "- convergence.active_execution: present",
@@ -556,8 +593,17 @@ def test_formatted_project_status_report_is_deterministic():
             "scn_command_menu_no_midi, bare_depth_digit_no_midi"
         ),
         "- canonical_scene_flow: S1A, S3A, S3B, S4B, S5, Z",
-        "- analog_four_support: absent",
-        "- pads_5_12_support: absent",
+        "- analog_four_support: not_in_first_pass",
+        "- pads_5_12_support: not_in_first_pass",
+        "Current Runtime Validation:",
+        "- status: dual_machine_lane_gate_ready",
+        "- date: 2026-05-19",
+        "- analog_four_support: operator_smoke_confirmed",
+        "- pads_5_12_support: operator_smoke_confirmed",
+        "- dual_machine_lane_validation_guide: software_ready",
+        "- all_lane_validation_guide: software_ready",
+        "- pr37_required_checks: passed",
+        "- next_hardware_scope: lane_scoped_manual_validation",
         "Safety:",
         "- real_midi: present_behind_arm_flag",
         "- port_opening: present_behind_arm_flag",
@@ -567,8 +613,8 @@ def test_formatted_project_status_report_is_deterministic():
         "- default_mode: passive",
         "- hardware_required: False",
         "- hardware_behavior: opt_in_behind_arm_flag",
-        "- analog_four_support: absent",
-        "- pads_5_12_support: absent",
+        "- analog_four_support: present_behind_arm_flag",
+        "- pads_5_12_support: present_behind_arm_flag",
         "- v134_reference: untouched",
         "- package_metadata: untouched",
         "Source:",
@@ -603,7 +649,14 @@ def test_project_status_report_json_is_deterministic_and_parseable():
     assert parsed["collaborator_review_triage_template"]["findings_recorded"] is False
     assert parsed["hardware_validation"]["status"] == "first_end_user_pass"
     assert parsed["hardware_validation"]["audible_scene_mutation"] == "confirmed_by_operator"
+    assert parsed["current_runtime_validation"]["status"] == "dual_machine_lane_gate_ready"
+    assert parsed["current_runtime_validation"]["analog_four_support"] == (
+        "operator_smoke_confirmed"
+    )
+    assert parsed["current_runtime_validation"]["pads_5_12_support"] == ("operator_smoke_confirmed")
     assert parsed["safety"]["hardware_required"] is False
+    assert parsed["safety"]["analog_four_support"] == "present_behind_arm_flag"
+    assert parsed["safety"]["pads_5_12_support"] == "present_behind_arm_flag"
     assert parsed["convergence"]["active_execution"] == "present"
     assert parsed["convergence"]["active_execution_gate"] == "--arm flag"
     assert parsed["convergence"]["default_mode"] == "passive"
@@ -621,6 +674,7 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     report["public_api_hardening"]["status"] = "MUTATED"
     report["collaborator_review_intake"]["status"] = "MUTATED"
     report["collaborator_review_triage_template"]["status"] = "MUTATED"
+    report["current_runtime_validation"]["status"] = "MUTATED"
 
     fresh_report = build_project_status_report()
 
@@ -630,6 +684,7 @@ def test_returned_project_status_report_is_copied_and_mutation_safe():
     assert fresh_report["public_api_hardening"]["status"] == "checkpointed"
     assert fresh_report["collaborator_review_intake"]["status"] == "checkpointed"
     assert fresh_report["collaborator_review_triage_template"]["status"] == "accepted"
+    assert fresh_report["current_runtime_validation"]["status"] == "dual_machine_lane_gate_ready"
 
 
 def test_project_status_report_imports_no_real_midi_libraries():
@@ -658,6 +713,7 @@ if __name__ == "__main__":
     test_project_status_report_summarizes_current_project_state()
     test_project_status_report_records_passive_cli_visibility()
     test_project_status_report_tracks_convergence_behind_arm_flag()
+    test_project_status_report_records_current_runtime_validation_status()
     test_project_status_report_records_public_api_hardening_checkpoint()
     test_project_status_report_records_collaborator_review_intake_checkpoint()
     test_project_status_report_records_collaborator_review_triage_template()

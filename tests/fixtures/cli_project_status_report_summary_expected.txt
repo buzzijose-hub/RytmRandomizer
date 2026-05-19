@@ -21,4 +21,8 @@ RytmRandomizer Project Status Summary
 - total_modes: 3
 - hardware_required: False
 - hardware_validation: first_end_user_pass
+- current_runtime_validation: dual_machine_lane_gate_ready
+- analog_four_support: present_behind_arm_flag
+- pads_5_12_support: present_behind_arm_flag
+- pr37_required_checks: passed
 - v134_reference: untouched
