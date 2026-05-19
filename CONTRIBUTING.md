@@ -32,7 +32,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 
 1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
-3. **Architecture tests** — all 15 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
+3. **Architecture tests** — all 16 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
 5. **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
 6. **Lazy MIDI imports** — `mido` and `python-rtmidi` are imported lazily inside `real_midi_adapter.py`. Never at module top-level. Enforced by `tests/architecture/test_no_side_effects.py`.
@@ -43,7 +43,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 11. **String-literal dispatch sites must consume `data/modes.py` constants** — the allowlist is drained. Enforced by `tests/architecture/test_no_string_literal_mode_dispatch.py`.
 12. **No stacked PRs** — see [PR bundling](#pr-bundling--one-pr-per-logical-change-not-per-commit).
 13. **Conformance checklist in PR body** — the 16 gates from [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md), each marked `[x]` or `[ ] N/A — reason`.
-14. **Docs updated** — `README.md`, this file, `docs/STATUS.md`, and any relevant `docs/` entries reflect the new reality (Gate 5).
+14. **Docs updated** — `README.md`, this file, `docs/STATUS.md`, and any relevant `docs/` entries reflect the new reality (Gate 5). `README.md` freshness (every registered device named, every internal link resolves, no stale placeholders) is mechanically enforced by `tests/architecture/test_readme_freshness.py`.
 15. **No `--no-verify`** — never skip pre-commit hooks. If a hook fails, fix the cause.
 
 ## Branching model
@@ -410,6 +410,7 @@ The suite has 2370+ tests across these layers. **Visual reference:** [`docs/ARCH
 | `test_ci_workflow.py` | The CI workflow files match the documented contract. |
 | `test_data_not_code.py` | "Tables of facts" live as data, not as functions. |
 | `test_device_protocol_enforcement.py` | Device-family subpackages register through `devices/registry.py`; no cross-family private imports; `dual_machine/` consumes only `devices.all_devices()`; only one device registry exists; every registered Device satisfies the Protocol; Protocol surface (9 attrs + 4 methods) is pinned against accidental drift. |
+| `test_readme_freshness.py` | `README.md` names every registered device; every internal README link resolves; no stale placeholder tokens (`<owner>`, `TODO`, "follow-up wave", ...); the README references `docs/ARCHITECTURE.md`. Catches "added a device/command, forgot the README" (Gate 5). |
 
 **Parity fixtures.** The 685 JSON goldens under `tests/fixtures/v134_parity/` are the authoritative V1.34 reference. Regenerate only when an intentional reference-output change is being committed:
 
