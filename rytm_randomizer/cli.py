@@ -1187,6 +1187,31 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if len(args) == 2 and args[0] == "analog-four-kit-bank-report":
+        from .analog_four.bank_analyzer import (
+            AnalogFourKitBankAnalysisError,
+            analyze_analog_four_kit_bank_file,
+            format_analog_four_kit_bank_error,
+            format_analog_four_kit_bank_report,
+        )
+
+        try:
+            analysis = analyze_analog_four_kit_bank_file(args[1])
+        except FileNotFoundError:
+            lines = format_analog_four_kit_bank_error(args[1], "File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except AnalogFourKitBankAnalysisError as exc:
+            lines = format_analog_four_kit_bank_error(args[1], str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_analog_four_kit_bank_report(analysis)))
+        sys.stdout.write("\n")
+        return 0
+
     if (
         len(args) in (6, 8)
         and args[0] == "analog-four-snapshot-mutation-plan-report"

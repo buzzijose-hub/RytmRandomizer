@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive Analog Four kit-bank readiness report.
+  `analog-four-kit-bank-report <path>` scans existing A4 kit banks or
+  whole-project dumps, counts decoded kit snapshots, planned/blocked
+  candidate tracks, candidate offset changes, and per-track sound-name usage.
+  Jose's `ANALOGFOURKITS1.syx` and `PROJECTANALOGFOUR01.syx` both scan as
+  128/128 decoded kit slots and 512/512 candidate-ready tracks, with zero
+  blocked tracks. This gives the A4 side bank-level visibility matching the
+  Rytm bank readiness report.
 - 2026-05-19: extended the passive `sysex-kit-bank-report` from record
   metadata into bank-level snapshot readiness. When records decode as full
   Rytm kit snapshots, the report now totals allowed/disabled/unknown/

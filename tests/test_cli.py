@@ -25,7 +25,7 @@ USAGE = (
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
-    "analog-four-kit-snapshot-report <path> --slot <1-128> | "
+    "analog-four-kit-bank-report <path> | analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
@@ -233,6 +233,17 @@ def test_analog_four_kit_snapshot_report_help_exits_zero():
     assert "Analog Four kit" in result.stdout
     assert "saved_parameter_offsets_unmapped" in result.stdout
     assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_kit_bank_report_help_exits_zero():
+    result = run_cli("analog-four-kit-bank-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: analog-four-kit-bank-report" in result.stdout
+    assert "candidate-ready tracks" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert "no live SysEx receive" in result.stdout
     assert result.stderr == ""
 
 

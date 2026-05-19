@@ -20,7 +20,7 @@ USAGE = (
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
-    "analog-four-kit-snapshot-report <path> --slot <1-128> | "
+    "analog-four-kit-bank-report <path> | analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
@@ -94,6 +94,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both> --rytm-pad <1-12> --analog-four-track <1-4>
+  python -m rytm_randomizer.cli analog-four-kit-bank-report <path>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
@@ -192,6 +193,8 @@ Commands:
                      Execute eligible send-plan events into a mock sender only.
   dual-machine-lane-validation-guide
                      Print the passive dual-machine lane validation guide.
+  analog-four-kit-bank-report
+                     Analyze saved Analog Four kit snapshots across a bank.
   analog-four-kit-snapshot-report
                      Decode a saved Analog Four kit into a passive track snapshot.
   analog-four-snapshot-mutation-plan-report
@@ -593,6 +596,28 @@ Behavior:
   saved_parameter_offsets_unmapped until a later mapper proves the layout. It
   does not request dumps, receive live SysEx, send MIDI, write SysEx, or touch
   hardware.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-kit-bank-report": """RytmRandomizer passive CLI: analog-four-kit-bank-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-kit-bank-report <path>
+  python -m rytm_randomizer.cli analog-four-kit-bank-report --help
+
+Behavior:
+  Reads an existing Analog Four kit bank or whole-project SysEx file and
+  summarizes decoded kit snapshots, candidate-ready tracks, planned candidate
+  changes, and track-name usage across the bank.
+  It does not request dumps, write SysEx, send MIDI, or touch hardware.
 
 Safety:
   passive/read-only
