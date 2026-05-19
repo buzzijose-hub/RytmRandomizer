@@ -88,6 +88,32 @@ def test_dual_machine_mapping_session_plan_formats_operator_run_sheet():
     assert "- no MIDI sending" in report
 
 
+def test_dual_machine_mapping_session_plan_names_implementation_boundaries():
+    from rytm_randomizer.dual_machine.mapping_session_plan import (
+        format_dual_machine_mapping_session_plan_report,
+    )
+
+    report = "\n".join(
+        format_dual_machine_mapping_session_plan_report(
+            target="both",
+            slot=7,
+            limit=1,
+        )
+    )
+
+    assert "Implementation boundaries:" in report
+    assert (
+        "- Rytm session path: controlled CC proofs across copied/restorable " "12-pad kits."
+    ) in report
+    assert (
+        "- Analog Four session path: saved-offset proof exports feed a " "4-track mapping manifest."
+    ) in report
+    assert (
+        "- Shared layer: run-sheet naming, target filtering, acceptance rules, "
+        "and guarded validation only."
+    ) in report
+
+
 def test_dual_machine_mapping_session_plan_can_filter_to_a4_alias():
     from rytm_randomizer.dual_machine.mapping_session_plan import (
         format_dual_machine_mapping_session_plan_report,

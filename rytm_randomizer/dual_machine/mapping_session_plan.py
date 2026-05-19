@@ -43,6 +43,8 @@ def format_dual_machine_mapping_session_plan_report(
         "- Turn the passive mapping queue into an operator-ready export run sheet.",
         "- Prove one saved mapping at a time from copied/restorable kits.",
         "- Keep unproven offsets out of guarded sends until a controlled proof passes.",
+        "Implementation boundaries:",
+        *_implementation_boundary_lines(),
         "Session setup:",
         "- Start from a copied kit or restorable project dump.",
         "- Export the baseline before touching the listed parameter.",
@@ -142,6 +144,20 @@ def _format_analog_four_manifest_follow_up() -> list[str]:
         (
             "- Use only a ready A4 manifest in snapshot/readiness/dry-run previews; "
             "blocked manifests stay out of guarded sends."
+        ),
+    ]
+
+
+def _implementation_boundary_lines() -> list[str]:
+    return [
+        ("- Rytm session path: controlled CC proofs across copied/restorable " "12-pad kits."),
+        (
+            "- Analog Four session path: saved-offset proof exports feed a "
+            "4-track mapping manifest."
+        ),
+        (
+            "- Shared layer: run-sheet naming, target filtering, acceptance rules, "
+            "and guarded validation only."
         ),
     ]
 

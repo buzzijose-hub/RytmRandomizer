@@ -734,7 +734,9 @@ Behavior:
   file names, one-parameter manual-move instructions, proof commands, and
   acceptance rules. When Analog Four targets are included, it also prints the
   passive manifest follow-up for collecting clean promotion JSON entries and
-  validating them before snapshot/readiness/dry-run previews. It does not read
+  validating them before snapshot/readiness/dry-run previews. It names the
+  Rytm 12-pad controlled CC session path, the A4 4-track saved-offset manifest
+  session path, and the shared run-sheet orchestration layer. It does not read
   SysEx files, request dumps, receive live SysEx, send MIDI, write SysEx,
   execute commands, open ports, or touch hardware.
 

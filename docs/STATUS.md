@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made the passive dual-machine mapping session plan print
+  implementation boundaries for the baseline/variant export run sheet. It now
+  states that the Rytm side proves controlled CC mappings across copied
+  12-pad kits, the Analog Four side proves saved offsets into a 4-track
+  mapping manifest, and the shared layer only handles run-sheet naming,
+  target filtering, acceptance rules, and guarded validation.
 - 2026-05-19: made the passive dual-machine mapping validation queue print
   implementation boundaries for the controlled proof phase. The queue now
   states that Rytm proofs cover mapped CCs across 12 pad/machine lanes, Analog

@@ -388,6 +388,9 @@ def test_dual_machine_mapping_session_plan_report_help_exits_zero():
     assert "RytmRandomizer passive CLI: dual-machine-mapping-session-plan-report" in result.stdout
     assert "operator-ready export run sheet" in result.stdout
     assert "--slot <1-128>" in result.stdout
+    assert "Rytm 12-pad controlled CC session path" in result.stdout
+    assert "A4 4-track saved-offset manifest" in result.stdout
+    assert "session path" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
