@@ -32,11 +32,35 @@ ENGINE_SOURCE_STARTERS: dict[str, tuple[tuple[str, int, int], ...]] = {
         ("SRC Snap", 21, 26),
         ("SRC Transient Tick", 23, 88),
     ),
+    "bd_sharp": (
+        ("SRC Tune", 17, 59),
+        ("SRC Decay", 18, 58),
+        ("SRC Sweep Depth", 19, 93),
+        ("SRC Sweep Time", 20, 81),
+    ),
     "bd_classic": (
         ("SRC Tune", 17, 58),
         ("SRC Decay", 18, 53),
         ("SRC Sweep Depth", 19, 32),
         ("SRC Transient", 23, 24),
+    ),
+    "bd_fm": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 60),
+        ("SRC Sweep Time", 18, 82),
+        ("SRC FM Decay", 19, 38),
+    ),
+    "bd_plastic": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 60),
+        ("SRC Decay", 18, 58),
+        ("SRC Sweep Depth", 19, 52),
+    ),
+    "bd_silky": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 60),
+        ("SRC Decay", 18, 66),
+        ("SRC Sweep Depth", 19, 34),
     ),
     "bd_acoustic": (
         ("SRC Tune", 17, 52),
@@ -49,6 +73,36 @@ ENGINE_SOURCE_STARTERS: dict[str, tuple[tuple[str, int, int], ...]] = {
         ("SRC Tune", 17, 65),
         ("SRC Decay", 18, 46),
         ("SRC Noise Level", 22, 78),
+    ),
+    "sd_classic": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 62),
+        ("SRC Decay", 18, 52),
+        ("SRC Detune", 19, 8),
+    ),
+    "sd_fm": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 64),
+        ("SRC Decay", 18, 48),
+        ("SRC FM Tune", 19, 70),
+    ),
+    "sd_natural": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 62),
+        ("SRC Slot 3", 18, 56),
+        ("SRC Slot 8", 23, 78),
+    ),
+    "sd_acoustic": (
+        ("SRC Slot 1", 16, 100),
+        ("SRC Slot 2", 17, 60),
+        ("SRC Slot 3", 18, 60),
+        ("SRC Slot 8", 23, 82),
+    ),
+    "sy_raw": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 69),
+        ("SRC Detune", 18, 23),
+        ("SRC Noise Level", 19, 5),
     ),
     "sy_chip": (
         ("SRC Slot 1", 16, 100),

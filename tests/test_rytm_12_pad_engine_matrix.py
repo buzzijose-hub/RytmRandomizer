@@ -53,8 +53,8 @@ def test_rytm_12_pad_engine_matrix_covers_os172_runtime_slots():
     assert matrix.concrete_machine_profile_count == 33
     assert matrix.allowed_machine_slot_count == 116
     assert matrix.cc15_selectable_slot_count == 116
-    assert matrix.source_starter_covered_slot_count == 80
-    assert matrix.source_starter_pending_slot_count == 36
+    assert matrix.source_starter_covered_slot_count == 116
+    assert matrix.source_starter_pending_slot_count == 0
     assert matrix.mutable_v134_slot_count == 44
     assert matrix.unmapped_slot_count == 0
 
@@ -119,8 +119,8 @@ def test_rytm_12_pad_engine_matrix_report_explains_pad10_and_safety():
     assert "RytmRandomizer passive Rytm 12-Pad Engine Matrix Report" in report
     assert "Allowed pad-machine slots: 116" in report
     assert "CC15-selectable slots: 116" in report
-    assert "Source-starter covered slots: 80" in report
-    assert "Source-starter pending slots: 36" in report
+    assert "Source-starter covered slots: 116" in report
+    assert "Source-starter pending slots: 0" in report
     assert "V1.34 tuned-mutation slots: 44" in report
     assert (
         "- Pad 10 / MIDI ch 10 wire 9 / OH / Open Hihat: "

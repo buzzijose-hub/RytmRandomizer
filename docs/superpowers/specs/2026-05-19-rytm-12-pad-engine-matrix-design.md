@@ -60,6 +60,8 @@ no MIDI, receives no SysEx, and mutates no hardware.
 - Pad 10 reports `OH / Open Hihat` and never lists `XT Classic`.
 - Pads 6-8 report `XT Classic` as the tom-lane engine.
 - Every listed machine has a CC15 value.
-- Source-starter coverage and pending gaps are counted explicitly.
+- Source-starter coverage and pending gaps are counted explicitly. The first
+  follow-up should drive pending slots to zero by reusing existing anchor data
+  where available and conservative generic source-slot starters where not.
 - The CLI help and top-level help fixture include the new report.
 - Focused tests, CLI tests, architecture tests, and fast tests pass.

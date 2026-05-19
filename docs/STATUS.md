@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: filled Rytm source-starter coverage for the full OS 1.72
+  engine matrix. The starter table now covers BD Sharp, BD FM, BD Plastic,
+  BD Silky, SD Classic, SD FM, SY Raw, SD Natural, and SD Acoustic in addition
+  to the previously covered machines, bringing the passive matrix to 116
+  covered pad-machine slots and 0 source-starter pending slots. The SD Natural
+  and SD Acoustic entries use conservative generic SRC-slot labels until deeper
+  per-machine source naming is verified. No new armed sending behavior was
+  added.
 - 2026-05-19: added the passive Rytm 12-pad engine matrix report.
   `python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report` prints the
   Analog Rytm MKII OS 1.72 pad/engine compatibility table with MIDI channel

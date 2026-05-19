@@ -175,6 +175,43 @@ def test_engine_cycle_starter_plan_can_include_engine_source_starters():
     assert pad5.events[5].value == 108
 
 
+def test_engine_source_starters_cover_all_os172_matrix_machine_slots():
+    from rytm_randomizer.essence.rytm_12_pad_engine_matrix import (
+        build_rytm_12_pad_engine_matrix,
+    )
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
+        ENGINE_SOURCE_STARTERS,
+    )
+
+    matrix = build_rytm_12_pad_engine_matrix()
+
+    assert matrix.source_starter_covered_slot_count == 116
+    assert matrix.source_starter_pending_slot_count == 0
+    assert set(ENGINE_SOURCE_STARTERS) >= {
+        "bd_sharp",
+        "bd_fm",
+        "bd_plastic",
+        "bd_silky",
+        "sd_classic",
+        "sd_fm",
+        "sy_raw",
+        "sd_natural",
+        "sd_acoustic",
+    }
+    assert ENGINE_SOURCE_STARTERS["bd_fm"][:4] == (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 60),
+        ("SRC Sweep Time", 18, 82),
+        ("SRC FM Decay", 19, 38),
+    )
+    assert ENGINE_SOURCE_STARTERS["sy_raw"][:4] == (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 69),
+        ("SRC Detune", 18, 23),
+        ("SRC Noise Level", 19, 5),
+    )
+
+
 def test_engine_cycle_starter_mock_capture_emits_machine_select_then_shaping():
     from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
     from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
