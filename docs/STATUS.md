@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: extended the passive `sysex-kit-bank-report` from record
+  metadata into bank-level snapshot readiness. When records decode as full
+  Rytm kit snapshots, the report now totals allowed/disabled/unknown/
+  incompatible pad-machine captures, ready/blocked mutation pads, and per-pad
+  engine usage across the bank. Jose's `ANALOGRYTMKITS2.syx` and
+  `PROJECTRYTM01.syx` both scan as 128/128 decoded slots, 1536/1536 legal
+  ready pads, and zero unknown or incompatible engines.
 - 2026-05-19: added operator-facing snapshot readiness summaries. Rytm
   saved-kit snapshot reports now include an allowed/disabled/unknown/
   incompatible machine-compatibility count, and snapshot mutation/mock-runtime

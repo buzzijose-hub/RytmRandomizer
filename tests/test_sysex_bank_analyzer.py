@@ -20,6 +20,46 @@ def make_kit_record(slot_index, name="", record_length=64, payload_seed=0):
     return bytes(record)
 
 
+def pack_7bit_payload(payload):
+    packed = bytearray()
+    for index in range(0, len(payload), 7):
+        chunk = payload[index : index + 7]
+        mask = 0
+        data = bytearray()
+        for bit, value in enumerate(chunk):
+            if value & 0x80:
+                mask |= 1 << bit
+            data.append(value & 0x7F)
+        packed.append(mask)
+        packed.extend(data)
+    return bytes(packed)
+
+
+def make_rytm_kit_record(
+    slot_index=0,
+    kit_name="KIT A",
+    machine_values=None,
+    pad_parameter_values=None,
+):
+    machine_values = machine_values or tuple(27 for _ in range(12))
+    pad_parameter_values = pad_parameter_values or {}
+    decoded = bytearray(58 + (12 * 162) + 8)
+    decoded[4 : 4 + len(kit_name)] = kit_name.encode("ascii")
+    for pad in range(1, 13):
+        sound_name = f"SOUND {pad}"
+        offset = 58 + ((pad - 1) * 162)
+        track_offset = 46 + ((pad - 1) * 162)
+        decoded[offset : offset + len(sound_name)] = sound_name.encode("ascii")
+        decoded[track_offset + 0x7C] = machine_values[pad - 1]
+        for parameter_offset, value in pad_parameter_values.get(pad, {}).items():
+            decoded[track_offset + parameter_offset] = value
+    return (
+        bytes([0xF0, 0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, slot_index])
+        + pack_7bit_payload(decoded)
+        + bytes([0xF7])
+    )
+
+
 def run_cli(*args):
     return subprocess.run(
         [sys.executable, "-m", "rytm_randomizer.cli", *args],
@@ -96,6 +136,57 @@ def test_analyzer_splits_fixed_length_bank_and_extracts_slot_metadata():
     assert third.name == ""
 
 
+def test_analyzer_adds_snapshot_readiness_for_decodable_rytm_kit_records():
+    from rytm_randomizer.sysex.bank_analyzer import analyze_sysex_kit_bank_bytes
+
+    first_machines = [27 for _ in range(12)]
+    first_machines[0] = 0
+    first_machines[9] = 10
+    second_machines = [27 for _ in range(12)]
+    second_machines[9] = 8  # Pad 10 is OH/open hihat, not an XT tom lane.
+    bank = b"".join(
+        [
+            make_rytm_kit_record(
+                slot_index=0,
+                kit_name="READY KIT",
+                machine_values=tuple(first_machines),
+                pad_parameter_values={
+                    1: {0x1E: 59, 0x20: 68, 0x44: 25, 0x50: 121},
+                    10: {0x1E: 63, 0x20: 70, 0x44: 96, 0x50: 88},
+                },
+            ),
+            make_rytm_kit_record(
+                slot_index=1,
+                kit_name="BAD KIT",
+                machine_values=tuple(second_machines),
+                pad_parameter_values={10: {0x1E: 63, 0x20: 70, 0x44: 96, 0x50: 88}},
+            ),
+        ]
+    )
+
+    analysis = analyze_sysex_kit_bank_bytes(bank)
+
+    assert analysis.snapshot_decoded_slot_count == 2
+    assert analysis.snapshot_machine_compatibility_totals == {
+        "allowed_on_pad": 2,
+        "machine_disabled": 21,
+        "unknown_machine": 0,
+        "incompatible_with_pad": 1,
+    }
+    assert analysis.snapshot_readiness_totals == {
+        "ready": 2,
+        "machine_disabled": 21,
+        "unknown_machine": 0,
+        "incompatible_with_pad": 1,
+        "no_mutable_legal_pads": 0,
+    }
+    usage_by_pad = {
+        usage.pad: dict(usage.machine_counts) for usage in analysis.snapshot_machine_usage_by_pad
+    }
+    assert usage_by_pad[1] == {"BD Hard": 1, "Disabled": 1}
+    assert usage_by_pad[10] == {"OH Classic": 1, "XT Classic": 1}
+
+
 def test_analyzer_rejects_bytes_without_complete_sysex_messages():
     from rytm_randomizer.sysex.bank_analyzer import (
         SysexBankAnalysisError,
@@ -149,6 +240,42 @@ def test_report_formatter_keeps_live_snapshot_boundaries_explicit():
     ]
 
 
+def test_report_formatter_includes_snapshot_readiness_when_records_decode():
+    from rytm_randomizer.sysex.bank_analyzer import (
+        analyze_sysex_kit_bank_bytes,
+        format_sysex_kit_bank_report,
+    )
+
+    machines = [27 for _ in range(12)]
+    machines[0] = 0
+    machines[9] = 10
+    report = format_sysex_kit_bank_report(
+        analyze_sysex_kit_bank_bytes(
+            make_rytm_kit_record(
+                slot_index=0,
+                kit_name="READY KIT",
+                machine_values=tuple(machines),
+                pad_parameter_values={
+                    1: {0x1E: 59, 0x20: 68, 0x44: 25, 0x50: 121},
+                    10: {0x1E: 63, 0x20: 70, 0x44: 96, 0x50: 88},
+                },
+            )
+        )
+    )
+
+    assert "Snapshot decoded slots: 1 / 1" in report
+    assert (
+        "Snapshot machine compatibility: allowed 2 / disabled 10 / unknown 0 / incompatible 0"
+        in report
+    )
+    assert (
+        "Snapshot readiness: ready 2 / disabled 10 / unknown 0 / "
+        "incompatible 0 / no mutable legal pads 0" in report
+    )
+    assert "- Pad 1: BD Hard 1" in report
+    assert "- Pad 10: OH Classic 1" in report
+
+
 def test_sysex_kit_bank_report_cli_reads_file_without_hardware(tmp_path):
     bank_path = tmp_path / "demo.syx"
     bank_path.write_bytes(
@@ -171,6 +298,34 @@ def test_sysex_kit_bank_report_cli_reads_file_without_hardware(tmp_path):
     assert "Blank/default candidate slots: 3-4" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no SysEx writes" in result.stdout
+    assert result.stderr == ""
+
+
+def test_sysex_kit_bank_report_cli_prints_snapshot_readiness_for_full_kits(tmp_path):
+    bank_path = tmp_path / "full-kits.syx"
+    machines = [27 for _ in range(12)]
+    machines[0] = 0
+    machines[9] = 10
+    bank_path.write_bytes(
+        make_rytm_kit_record(
+            slot_index=0,
+            kit_name="CLI FULL",
+            machine_values=tuple(machines),
+            pad_parameter_values={
+                1: {0x1E: 59, 0x20: 68, 0x44: 25, 0x50: 121},
+                10: {0x1E: 63, 0x20: 70, 0x44: 96, 0x50: 88},
+            },
+        )
+    )
+
+    result = run_cli("sysex-kit-bank-report", str(bank_path))
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive SysEx kit bank report" in result.stdout
+    assert "Snapshot decoded slots: 1 / 1" in result.stdout
+    assert "Snapshot readiness: ready 2 / disabled 10" in result.stdout
+    assert "- Pad 10: OH Classic 1" in result.stdout
+    assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 

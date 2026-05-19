@@ -288,7 +288,9 @@ Usage:
 
 Behavior:
   Reads an existing SysEx kit bank file and prints passive record metadata.
-  It does not request dumps, decode editable parameters, write SysEx, or touch hardware.
+  When records decode as full Rytm kit snapshots, it also summarizes
+  pad/machine compatibility, mutation readiness, and per-pad engine usage.
+  It does not request dumps, write SysEx, send MIDI, or touch hardware.
 
 Safety:
   passive/read-only
