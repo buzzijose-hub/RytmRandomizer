@@ -67,6 +67,7 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --runtime-pad <1-12>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide
   python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
@@ -156,6 +157,8 @@ Commands:
                      Preview mapped-only 12-pad mock runtime CC messages.
   twelve-pad-rytm-runtime-report
                      Preview the passive style-driven 12-pad Rytm runtime stream.
+  twelve-pad-rytm-runtime-validation-guide
+                     Print the passive 12-pad Rytm runtime validation guide.
   rytm-12-pad-engine-matrix-report
                      Print the passive 12-pad Rytm pad/engine support matrix.
   analog-four-reference-report

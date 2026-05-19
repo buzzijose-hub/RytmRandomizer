@@ -1791,6 +1791,15 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args == ["twelve-pad-rytm-runtime-validation-guide"]:
+        from .essence.rytm_runtime_validation_guide import (
+            format_rytm_runtime_validation_guide,
+        )
+
+        sys.stdout.write("\n".join(format_rytm_runtime_validation_guide()))
+        sys.stdout.write("\n")
+        return 0
+
     if args == ["analog-four-reference-report"]:
         from .analog_four.reference import format_analog_four_reference_report
 

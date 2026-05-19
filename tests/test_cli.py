@@ -39,6 +39,7 @@ USAGE = (
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] [--runtime-pad <1-12>] | "
+    "twelve-pad-rytm-runtime-validation-guide | "
     "rytm-12-pad-engine-matrix-report | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
@@ -200,6 +201,19 @@ def test_rytm_12_pad_engine_matrix_report_help_exits_zero():
     assert result.returncode == 0
     assert "RytmRandomizer passive CLI: rytm-12-pad-engine-matrix-report" in result.stdout
     assert "pad/engine compatibility matrix" in result.stdout
+    assert result.stderr == ""
+
+
+def test_twelve_pad_rytm_runtime_validation_guide_help_exits_zero():
+    result = run_cli("twelve-pad-rytm-runtime-validation-guide", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "RytmRandomizer passive CLI: twelve-pad-rytm-runtime-validation-guide"
+        in result.stdout
+    )
+    assert "one pad at a time" in result.stdout
+    assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 

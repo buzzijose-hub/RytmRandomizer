@@ -172,7 +172,38 @@ rytm-randomizer --arm --twelve-pad-smoke
 - [ ] Do not save the kit afterward unless you intentionally want the final
       centered Pan/Filter values.
 
-### 7. Optional guarded Analog Four smoke test
+### 7. Optional guarded Rytm runtime validation
+
+Run this only after the Rytm smoke path is confirmed. Use a copied/restorable
+pattern or kit, keep monitor volume moderate, and validate one pad before the
+full 12-pad runtime.
+
+First print the passive guide:
+
+```
+python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide
+```
+
+Then follow the guide's sequence:
+
+- [ ] Run the passive one-pad preview for Pad 1 and confirm it reports
+      `Runtime messages: 11`.
+- [ ] Run the dry-run command for Pad 1 and confirm it captures 11 mock
+      messages.
+- [ ] Run `rytm-randomizer --arm --twelve-pad-rytm-runtime --runtime-style "Birmingham dark techno" --runtime-discovery 0.35 --runtime-pad 1`.
+- [ ] Select the Analog Rytm output port, not Analog Four.
+- [ ] Type exact `SEND` only after confirming the port is correct.
+- [ ] Listen for Pad 1 changing; note whether it is audible and safe.
+- [ ] Repeat the same preview, dry-run, and armed sequence for Pads 2-12.
+- [ ] Only after all 12 single-pad checks pass, run the full dry-run and full
+      armed `--twelve-pad-rytm-runtime --runtime-style "Birmingham dark techno" --runtime-discovery 0.35` path.
+- [ ] Confirm the full runtime reports `Emitted real MIDI messages: 132`.
+- [ ] Confirm no Analog Four port was selected, no SysEx was requested or
+      written, no NRPN was sent, and no pattern/sequencer mutation occurred.
+- [ ] Do not save the kit afterward unless you intentionally want the runtime
+      starter values kept in the current kit.
+
+### 8. Optional guarded Analog Four smoke test
 
 Run this only with the Analog Four connected, audible, and on a copied or
 restorable pattern/kit:
@@ -221,7 +252,7 @@ rytm-randomizer --arm --analog-four-track-filter-smoke 4
 - [ ] Do not save the kit afterward unless you intentionally want the final
       centered Pan or open Filter 1 Frequency values.
 
-### 8. Optional guarded Analog Four runtime validation
+### 9. Optional guarded Analog Four runtime validation
 
 Run this only after the Analog Four smoke and filter-smoke paths are confirmed.
 Use a copied/restorable pattern or kit and keep monitor volume moderate.

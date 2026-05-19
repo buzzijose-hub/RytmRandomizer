@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive Rytm runtime validation guide.
+  `python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide`
+  prints the one-pad-at-a-time guarded validation sequence for the Rytm
+  runtime path: preview, dry-run, armed single-pad sends for Pads 1-12, then
+  full 12-pad dry-run and armed validation. The guide is pure text and opens
+  no MIDI ports, sends no MIDI, receives/writes no SysEx, and mutates no
+  hardware.
 - 2026-05-19: added passive one-pad Rytm runtime previews.
   `--runtime-pad <1-12>` can now be combined with
   `python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>`

@@ -34,6 +34,7 @@ USAGE = (
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] [--runtime-pad <1-12>] | "
+    "twelve-pad-rytm-runtime-validation-guide | "
     "rytm-12-pad-engine-matrix-report | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
@@ -114,6 +115,7 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --runtime-pad <1-12>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide
   python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
@@ -203,6 +205,8 @@ Commands:
                      Preview mapped-only 12-pad mock runtime CC messages.
   twelve-pad-rytm-runtime-report
                      Preview the passive style-driven 12-pad Rytm runtime stream.
+  twelve-pad-rytm-runtime-validation-guide
+                     Print the passive 12-pad Rytm runtime validation guide.
   rytm-12-pad-engine-matrix-report
                      Print the passive 12-pad Rytm pad/engine support matrix.
   analog-four-reference-report
@@ -889,6 +893,27 @@ Behavior:
 Safety:
   passive/read-only
   mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "twelve-pad-rytm-runtime-validation-guide": """RytmRandomizer passive CLI: twelve-pad-rytm-runtime-validation-guide
+
+Usage:
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide --help
+
+Behavior:
+  Prints the exact guarded Rytm runtime validation sequence: preview one pad,
+  dry-run one pad, arm one pad at a time, then validate the full 12-pad runtime.
+  It is pure text for operator preparation.
+
+Safety:
+  passive/read-only
   no MIDI sending
   no MIDI receive
   no port opening
