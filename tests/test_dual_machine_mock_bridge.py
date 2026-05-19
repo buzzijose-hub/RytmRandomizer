@@ -313,7 +313,7 @@ def test_dual_bridge_filters_rytm_pad_and_a4_starter_track(tmp_path):
     sysex_path.write_bytes(
         make_rytm_kit_record(
             kit_name="LANE FILTER",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             values={
                 1: {
                     0x1E: 59,
@@ -359,7 +359,7 @@ def test_dual_bridge_filters_rytm_pad_and_a4_starter_track(tmp_path):
     } == {4}
     assert "Rytm planned pads: 1 / 1" in report
     assert "Analog Four tracks: 1 / 1" in report
-    assert "- Rytm Pad 2 / CP Classic: 6 message(s)" in report
+    assert "- Rytm Pad 2 / SD Natural: 6 message(s)" in report
     assert "- Analog Four Track 4 / FX / noise / transition: 5 message(s)" in report
     assert "- Rytm Pad 1 " not in report
     assert "- Analog Four Track 1 " not in report
@@ -568,7 +568,7 @@ def test_dual_machine_mock_bridge_cli_accepts_lane_filters(tmp_path):
     sysex_path.write_bytes(
         make_rytm_kit_record(
             kit_name="CLI LANES",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             values={
                 1: {
                     0x1E: 59,
@@ -608,7 +608,7 @@ def test_dual_machine_mock_bridge_cli_accepts_lane_filters(tmp_path):
     assert "Rytm planned pads: 1 / 1" in result.stdout
     assert "Analog Four tracks: 1 / 1" in result.stdout
     assert "Combined mock messages: 11" in result.stdout
-    assert "- Rytm Pad 2 / CP Classic: 6 message(s)" in result.stdout
+    assert "- Rytm Pad 2 / SD Natural: 6 message(s)" in result.stdout
     assert "- Analog Four Track 4 / FX / noise / transition: 5 message(s)" in result.stdout
     assert "- Rytm Pad 1 " not in result.stdout
     assert "- Analog Four Track 1 " not in result.stdout
@@ -652,7 +652,7 @@ def test_dual_machine_mock_bridge_cli_main_covers_lane_success(tmp_path, capsys)
     sysex_path.write_bytes(
         make_rytm_kit_record(
             kit_name="MAIN LANES",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             values={
                 1: {
                     0x1E: 59,

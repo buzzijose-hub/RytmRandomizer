@@ -151,7 +151,7 @@ def test_snapshot_mock_runtime_captures_one_filtered_pad():
     snapshot = decode_rytm_kit_snapshot_record(
         make_rytm_kit_record(
             kit_name="MOCK PAD",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             pad_parameter_values={
                 1: {
                     0x1E: 59,
@@ -229,7 +229,7 @@ def test_snapshot_mock_runtime_cli_filters_to_one_pad(tmp_path):
     sysex_path.write_bytes(
         make_rytm_kit_record(
             kit_name="CLI MOCK PAD",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             pad_parameter_values={
                 1: {
                     0x1E: 59,
@@ -268,7 +268,7 @@ def test_snapshot_mock_runtime_cli_filters_to_one_pad(tmp_path):
     assert "Planned pads: 1 / 1" in result.stdout
     assert "Blocked pads: 0 / 1" in result.stdout
     assert "Mock sender captured: 6 message(s)" in result.stdout
-    assert "- Pad 2 ch 2 wire 1 CP Classic / SRC Slot 2: CC17 -> 62" in result.stdout
+    assert "- Pad 2 ch 2 wire 1 SD Natural / SRC Slot 2: CC17 -> 62" in result.stdout
     assert "- Pad 1 " not in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

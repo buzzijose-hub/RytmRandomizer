@@ -71,6 +71,7 @@ class SnapshotPadMutationPlan:
     sound_name: str
     machine_label: str
     machine_value: int
+    machine_compatibility_status: str
     baseline_status: str
     plan_status: str
     changes: tuple[SnapshotPlannedChange, ...]
@@ -177,7 +178,8 @@ def format_snapshot_mutation_plan_report(plan: SnapshotMutationPlan) -> list[str
     for pad in plan.pads:
         lines.append(
             f"- Pad {pad.pad} / MIDI channel {pad.midi_channel}: "
-            f"{pad.machine_label} / {pad.baseline_status} / "
+            f"{pad.machine_label} / {pad.machine_compatibility_status} / "
+            f"{pad.baseline_status} / "
             f"{len(pad.changes)} change(s)"
         )
     if plan.planned_change_count:
@@ -218,16 +220,26 @@ def _build_pad_plan(
     pad: RytmSnapshotPad,
     depth: str,
 ) -> SnapshotPadMutationPlan:
-    changes = tuple(_build_change(pad, parameter, depth) for parameter in _select_parameters(pad))
-    changes = tuple(change for change in changes if change.planned_value != change.baseline_value)
+    if pad.machine_compatibility_status == "incompatible_with_pad":
+        changes: tuple[SnapshotPlannedChange, ...] = ()
+        plan_status = "blocked_machine_incompatible_with_pad"
+    else:
+        changes = tuple(
+            _build_change(pad, parameter, depth) for parameter in _select_parameters(pad)
+        )
+        changes = tuple(
+            change for change in changes if change.planned_value != change.baseline_value
+        )
+        plan_status = "planned" if changes else "blocked_no_mutable_snapshot_parameters"
     return SnapshotPadMutationPlan(
         pad=pad.pad,
         midi_channel=pad.midi_channel,
         sound_name=pad.sound_name,
         machine_label=pad.machine_label,
         machine_value=pad.machine_value,
+        machine_compatibility_status=pad.machine_compatibility_status,
         baseline_status=pad.parameter_map_status,
-        plan_status="planned" if changes else "blocked_no_mutable_snapshot_parameters",
+        plan_status=plan_status,
         changes=changes,
     )
 

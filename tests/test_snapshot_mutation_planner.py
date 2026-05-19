@@ -89,7 +89,7 @@ def test_snapshot_mutation_plan_uses_captured_values_not_anchors():
     snapshot = decode_rytm_kit_snapshot_record(
         make_rytm_kit_record(
             kit_name="LIVE BASE",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             pad_parameter_values={
                 1: {
                     0x1E: 59,
@@ -131,7 +131,7 @@ def test_snapshot_mutation_plan_uses_captured_values_not_anchors():
     assert pad1_changes["AMP Decay"].baseline_value == 121
     assert pad1_changes["AMP Decay"].planned_value == 118
     pad2 = plan.pads[1]
-    assert pad2.machine_label == "CP Classic"
+    assert pad2.machine_label == "SD Natural"
     assert pad2.baseline_status == "generic_machine_parameters"
     pad2_changes = {change.parameter_name: change for change in pad2.changes}
     assert pad2_changes["SRC Slot 2"].baseline_value == 63
@@ -150,7 +150,7 @@ def test_snapshot_mutation_plan_can_filter_to_one_pad():
     snapshot = decode_rytm_kit_snapshot_record(
         make_rytm_kit_record(
             kit_name="PAD ONLY",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             pad_parameter_values={
                 1: {
                     0x1E: 59,
@@ -183,6 +183,37 @@ def test_snapshot_mutation_plan_can_filter_to_one_pad():
     assert filtered.pads[0].pad == 2
     assert filtered.pads[0].midi_channel == 2
     assert {change.pad for change in filtered.pads[0].changes} == {2}
+
+
+def test_snapshot_mutation_plan_blocks_pad_machine_incompatibility():
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mutation_planner import build_snapshot_mutation_plan
+
+    machine_values = [27 for _ in range(12)]
+    machine_values[9] = 8  # Pad 10 is OH/open hihat; XT Classic belongs on Pads 6-8.
+    snapshot = decode_rytm_kit_snapshot_record(
+        make_rytm_kit_record(
+            kit_name="BAD PAD",
+            machine_values=tuple(machine_values),
+            pad_parameter_values={
+                10: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x50: 88,
+                }
+            },
+        )
+    )
+
+    plan = build_snapshot_mutation_plan(snapshot, depth="micro")
+    pad10 = plan.pads[9]
+
+    assert pad10.machine_label == "XT Classic"
+    assert pad10.machine_compatibility_status == "incompatible_with_pad"
+    assert pad10.plan_status == "blocked_machine_incompatible_with_pad"
+    assert pad10.changes == ()
+    assert plan.planned_pad_count == 0
 
 
 def test_snapshot_mutation_plan_rejects_invalid_pad_filter():
@@ -262,7 +293,7 @@ def test_snapshot_mutation_plan_cli_filters_to_one_pad(tmp_path):
     sysex_path.write_bytes(
         make_rytm_kit_record(
             kit_name="CLI PAD",
-            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            machine_values=(0, 23) + tuple(27 for _ in range(10)),
             pad_parameter_values={
                 1: {
                     0x1E: 59,

@@ -4,6 +4,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added passive OS 1.72 pad/machine compatibility metadata to
+  decoded Rytm saved-kit snapshots. `sysex-kit-snapshot-report` now marks
+  each pad as allowed, disabled, unknown, or incompatible with its physical
+  Rytm lane, and snapshot-derived mutation planning blocks incompatible
+  captured machines before they can become mock or active send events.
 - 2026-05-19: updated the manual hardware validation checklist for
   dual-machine lane-scoped snapshot testing. The checklist now points to the
   target-aware `dual-machine-lane-validation-guide`, the `--all-lanes` matrix,

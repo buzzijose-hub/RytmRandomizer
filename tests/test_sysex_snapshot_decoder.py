@@ -268,6 +268,62 @@ def test_decoder_uses_generic_saved_slots_for_identified_unmapped_machine():
     assert "generic CC slot map" in parameter_values["SRC Slot 1"].source
 
 
+def test_decoder_marks_pad_machine_compatibility_against_os172_matrix():
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+
+    machine_values = [27 for _ in range(12)]
+    machine_values[5] = 8  # Pad 6 / LT may use XT Classic.
+    machine_values[9] = 10  # Pad 10 / OH may use OH Classic.
+    record = make_rytm_kit_record(
+        kit_name="COMPAT KIT",
+        machine_values=tuple(machine_values),
+    )
+
+    snapshot = decode_rytm_kit_snapshot_record(record)
+
+    pad6 = snapshot.pads[5]
+    assert pad6.machine_label == "XT Classic"
+    assert pad6.machine_key == "xt_classic"
+    assert pad6.machine_compatibility_status == "allowed_on_pad"
+
+    pad10 = snapshot.pads[9]
+    assert pad10.machine_label == "OH Classic"
+    assert pad10.machine_key == "oh_classic"
+    assert pad10.machine_compatibility_status == "allowed_on_pad"
+
+    disabled_pad = snapshot.pads[0]
+    assert disabled_pad.machine_label == "Disabled"
+    assert disabled_pad.machine_key is None
+    assert disabled_pad.machine_compatibility_status == "machine_disabled"
+
+
+def test_decoder_flags_illegal_pad_machine_pairings():
+    from rytm_randomizer.snapshot.rytm_decoder import (
+        decode_rytm_kit_snapshot_record,
+        format_rytm_kit_snapshot_report,
+    )
+
+    machine_values = [27 for _ in range(12)]
+    machine_values[9] = 8  # Pad 10 is OH/open hihat, not an XT tom lane.
+    record = make_rytm_kit_record(
+        kit_name="BAD COMPAT",
+        machine_values=tuple(machine_values),
+    )
+
+    snapshot = decode_rytm_kit_snapshot_record(record)
+    pad10 = snapshot.pads[9]
+
+    assert pad10.machine_label == "XT Classic"
+    assert pad10.machine_key == "xt_classic"
+    assert pad10.machine_compatibility_status == "incompatible_with_pad"
+
+    report = "\n".join(format_rytm_kit_snapshot_report(snapshot))
+    assert "Pad 10 / MIDI channel 10" in report
+    assert "machine XT Classic (8)" in report
+    assert "compat incompatible_with_pad" in report
+    assert "- decoded machine must be legal for its OS 1.72 pad before active use" in report
+
+
 def test_decoder_rejects_non_rytm_kit_record():
     from rytm_randomizer.snapshot.rytm_decoder import (
         SysexSnapshotDecodeError,
@@ -319,6 +375,7 @@ def test_report_formatter_marks_parameter_decode_boundary():
         "Pads:",
         (
             "- Pad 1 / MIDI channel 1: SOUND 1 / machine BD Hard (0) / "
+            "compat allowed_on_pad / "
             f"mapped params 22 / raw block bytes 162 / sha {snapshot.pads[0].sha256_12}"
         ),
     ]

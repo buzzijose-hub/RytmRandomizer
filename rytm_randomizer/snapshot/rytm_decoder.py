@@ -12,6 +12,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from ..data import param_maps
+from ..essence.machine_catalog import is_machine_allowed_on_pad, list_machine_profiles
 from ..observability.errors import DataError
 
 RYTM_DEVICE_FAMILY = 0x07
@@ -62,6 +63,12 @@ RYTM_MACHINE_LABELS = {
     31: "SD Acoustic",
     32: "SY Raw",
     33: "HH Lab",
+}
+
+MACHINE_KEYS_BY_VALUE = {
+    profile.machine_value: profile.key
+    for profile in list_machine_profiles()
+    if profile.machine_value is not None
 }
 
 SAVED_CC_OFFSETS = {
@@ -173,6 +180,8 @@ class RytmSnapshotPad:
     machine_raw_value: int
     machine_value: int
     machine_label: str
+    machine_key: str | None
+    machine_compatibility_status: str
     parameter_map_status: str
     parameters: tuple[RytmSnapshotParameter, ...]
     decoded_block_offset: int
@@ -287,6 +296,7 @@ def format_rytm_kit_snapshot_report(snapshot: RytmKitSnapshot) -> list[str]:
             "Live Snapshot relevance:",
             "- saved-kit baseline captured from SysEx bytes",
             "- all 12 pad sound blocks present",
+            "- decoded machine must be legal for its OS 1.72 pad before active use",
             "- suitable for snapshot-derived mutation planning",
             "Safety:",
             "- passive/read-only",
@@ -331,6 +341,7 @@ def _decode_pad(decoded_payload: bytes, pad: int) -> RytmSnapshotPad:
     block = decoded_payload[offset : offset + SOUND_BLOCK_LENGTH]
     machine_raw_value = track_block[TRACK_MACHINE_OFFSET]
     machine_value = _normalize_machine_value(machine_raw_value)
+    machine_key = _machine_key(machine_value)
     parameters = _decode_parameters(track_block, machine_value)
     return RytmSnapshotPad(
         pad=pad,
@@ -345,6 +356,12 @@ def _decode_pad(decoded_payload: bytes, pad: int) -> RytmSnapshotPad:
         machine_raw_value=machine_raw_value,
         machine_value=machine_value,
         machine_label=_machine_label(machine_value),
+        machine_key=machine_key,
+        machine_compatibility_status=_machine_compatibility_status(
+            pad=pad,
+            machine_value=machine_value,
+            machine_key=machine_key,
+        ),
         parameter_map_status=_pad_parameter_map_status(machine_value, parameters),
         parameters=parameters,
         decoded_block_offset=offset,
@@ -437,6 +454,25 @@ def _machine_label(machine_value: int) -> str:
     return RYTM_MACHINE_LABELS.get(machine_value, f"Unknown {machine_value}")
 
 
+def _machine_key(machine_value: int) -> str | None:
+    return MACHINE_KEYS_BY_VALUE.get(machine_value)
+
+
+def _machine_compatibility_status(
+    *,
+    pad: int,
+    machine_value: int,
+    machine_key: str | None,
+) -> str:
+    if machine_value == 27:
+        return "machine_disabled"
+    if machine_key is None:
+        return "unknown_machine"
+    if is_machine_allowed_on_pad(pad, machine_key):
+        return "allowed_on_pad"
+    return "incompatible_with_pad"
+
+
 def _is_rytm_kit_record(message: bytes) -> bool:
     return (
         len(message) > KIT_HEADER_LENGTH
@@ -479,6 +515,7 @@ def _format_pad_line(pad: RytmSnapshotPad) -> str:
     return (
         f"- Pad {pad.pad} / MIDI channel {pad.midi_channel}: {sound_name} / "
         f"machine {machine} / "
+        f"compat {pad.machine_compatibility_status} / "
         f"mapped params {len(pad.parameters)} / "
         f"raw block bytes {pad.decoded_block_length} / sha {pad.sha256_12}"
     )
