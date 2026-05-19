@@ -15,6 +15,11 @@ and other ``strategies/`` modules; strategies never import from
 
 from __future__ import annotations
 
+from .analog_four_snapshot_decoder import (
+    A4_CANDIDATE_KIT_TYPE_BYTE,
+    AnalogFourKitSnapshot,
+    AnalogFourSnapshotDecoder,
+)
 from .analog_rytm_message_renderer import AnalogRytmMessageRenderer
 from .analog_rytm_mutation_planner import (
     MAX_DEPTH,
@@ -29,8 +34,11 @@ from .analog_rytm_snapshot_decoder import (
 )
 
 __all__ = [
+    "A4_CANDIDATE_KIT_TYPE_BYTE",
     "MAX_DEPTH",
     "RYTM_KIT_TYPE_BYTE",
+    "AnalogFourKitSnapshot",
+    "AnalogFourSnapshotDecoder",
     "AnalogRytmMessageRenderer",
     "AnalogRytmMutationPlanner",
     "AnalogRytmSnapshotDecoder",
