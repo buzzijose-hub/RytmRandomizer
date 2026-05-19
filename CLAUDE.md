@@ -1,0 +1,87 @@
+# CLAUDE.md — repo-level system prompt for Claude Code
+
+> This file is automatically loaded by Claude Code at the start of every
+> session in this repository. It exists alongside [`AGENTS.md`](AGENTS.md)
+> (which is the GitHub-convention agent index) so Claude Code's automatic
+> context injection picks up the conventions whether or not the user
+> explicitly references AGENTS.md.
+
+## Read order at session start
+
+1. **This file** — operational guardrails.
+2. **[`AGENTS.md`](AGENTS.md)** — folder map, test commands, anti-patterns, cross-reference index.
+3. **[`CONTRIBUTING.md`](CONTRIBUTING.md)** — full developer handbook (read on demand; AGENTS.md links into the right sections).
+4. **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** + **[`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md)** — architecture standard + 26 mermaid diagrams.
+5. **[`.claude/rules/`](.claude/rules/)** — 11 mandatory rules (architecture, cascade-merge-pattern, coverage-gate-100pct, parity-fixture-discipline, skill-routing, device-protocol-strategy, hardware-pinned-packages, pr-body-conformance-checklist, maximize-parallelization, autonomous-agent-execution, codex-contribution-guide).
+6. **[`.claude/skills/`](.claude/skills/)** — 19 task-specific skills, invokable via `/<skill-name>`.
+
+## Operational guardrails — apply on every task
+
+### Hard rules (never bend without explicit user approval)
+
+1. **V1.34 parity is byte-frozen.** Never regenerate `tests/fixtures/v134_parity/*.json` without `PARITY_CAPTURE_MODE=1` and the user's explicit go-ahead. 505 JSON files; 685 parametrized pytest test items. See [`.claude/rules/parity-fixture-discipline.md`](.claude/rules/parity-fixture-discipline.md).
+2. **`mido==1.3.3` and `python-rtmidi==1.5.8` are pinned.** Do not bump even for CVEs. See [`.claude/rules/hardware-pinned-packages.md`](.claude/rules/hardware-pinned-packages.md).
+3. **No stacked PRs.** A PR's base must be the integration branch (`modularize-v1.34` until `main` lands), not another open PR's head. See [`.claude/rules/cascade-merge-pattern.md`](.claude/rules/cascade-merge-pattern.md).
+4. **No new top-level modules** under `rytm_randomizer/`. Use a subpackage. Enforced by `test_no_new_top_level_modules.py`.
+5. **No new sibling device subpackages.** Adding an Elektron device family = one `devices/<family>.py` + three strategy modules under `devices/strategies/`. See [`.claude/rules/device-protocol-strategy.md`](.claude/rules/device-protocol-strategy.md).
+6. **No bare `Any`.** Use `Protocol`, generic dataclasses, or explicit types.
+7. **Lazy MIDI imports.** `mido` and `python-rtmidi` import only inside `real_midi_adapter.py` and `mido_provider.py`.
+8. **Passive default.** `python -m rytm_randomizer.cli ...` never opens a real MIDI port. Only `python -m rytm_randomizer.app --arm` does.
+9. **No `--no-verify`.** Never bypass pre-commit hooks. Fix the underlying issue.
+10. **PR body must include the 16-gate conformance checklist.** See [`.claude/rules/pr-body-conformance-checklist.md`](.claude/rules/pr-body-conformance-checklist.md).
+11. **Do not pause on chained steps.** Once a multi-step task is approved, execute through to a hard stop (push, PR open, merge, force-push, dep bump, fixture regen). Hard stops are enumerated in [`.claude/rules/autonomous-agent-execution.md`](.claude/rules/autonomous-agent-execution.md).
+12. **Dispatch independent work in parallel.** Batch independent reads, searches, and subagent invocations into a single message. See [`.claude/rules/maximize-parallelization.md`](.claude/rules/maximize-parallelization.md).
+13. **On `codex/*` branches, follow the codex contribution guide.** Cascade ordering, redo-branch discipline, and PR-body provenance differ from normal feature branches. See [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md).
+
+### Tool defaults
+
+- **Running tests:** `python -m pytest` (default `-n auto` xdist parallelization). Never `-o addopts=''` outside `PARITY_CAPTURE_MODE=1` — 3× slowdown.
+- **Lint:** `python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .` (must all pass before push).
+- **Task runner:** prefer `just <task>` if [`Justfile`](Justfile) is present (`just test`, `just fast`, `just lint`, `just check`, `just pr`).
+- **PRs:** `gh pr create --base modularize-v1.34 --title "..." --body-file path/to/body.md`. Body must include conformance checklist.
+
+### Default to small reversible changes
+
+- Editing files / running tests = freely allowed.
+- Pushing branches / opening PRs / commenting on PRs / merging = always confirm with user first unless they explicitly authorized the broader action.
+- Force-pushing, deleting branches, dropping CODEOWNERS approval, bumping pinned deps = refuse without explicit user instruction.
+
+### When in doubt
+
+1. Search `.claude/rules/` and `.claude/skills/` first.
+2. Then `CONTRIBUTING.md` + `AGENTS.md`.
+3. Then `docs/ARCHITECTURE.md` + `docs/ARCHITECTURE_DIAGRAMS.md`.
+4. Then ask the user.
+
+## What's NEW relative to typical Python projects
+
+This repo has unusually strict invariants because it talks to physical hardware (Elektron Analog Rytm MK2). Key surprises that bite agents who skip the read order:
+
+- **685/505 distinction.** "685 parity tests" = pytest items; "505 goldens" = JSON files (parametrized).
+- **`-o addopts=''` is a 3× speed trap.** The pyproject default of `-n auto` is the fast path; don't override it.
+- **CONTRIBUTING.md's 16 plan-requirement gates** are mandatory in every PR body. The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) auto-fills the structure.
+- **The Strategy seam on `Device`** (PR #43) is the canonical cross-machine abstraction. The codex dual-machine cascade (PRs #21, #36-#41) is closed; PR #36 is the redo target.
+- **macOS is dropped from the PR-event CI matrix by design** (queue waits). It runs on push events. See `.github/workflows/test.yml:288-296`.
+
+## How to know which skill applies
+
+The [`.claude/rules/skill-routing.md`](.claude/rules/skill-routing.md) table maps task types to specific skills. For example: adding a CC parameter → `add-pad-command`; adding a data table → `extend-data-layer`; reviewing code post-push → `code-review`; updating docs → `docs-update-with-pr`. See [`docs/AGENT_TASK_RECIPES.md`](docs/AGENT_TASK_RECIPES.md) for step-by-step recipes for the most common tasks.
+
+## Anti-patterns to refuse
+
+Refuse these patterns by default; require explicit user override to proceed.
+
+1. **Stacked PRs.** Basing a PR on another open PR's head instead of the integration branch. See cascade-merge-pattern.
+2. **Parallel sibling device subpackages.** Adding `devices/<family>/` as a new subpackage instead of one `devices/<family>.py` + three strategies. See device-protocol-strategy.
+3. **Cross-family private imports.** Importing `_internal`/underscore-prefixed names across device families or layer boundaries. See architecture + device-protocol-strategy.
+4. **Fork envelope helpers.** Duplicating SysEx envelope helpers per device family instead of routing through the shared strategy seam. See device-protocol-strategy.
+5. **Bare `Any` in new code.** Use `Protocol`, generic dataclasses, or explicit types instead.
+6. **`--no-verify` on commits or pushes.** Pre-commit hooks must pass; fix the underlying issue.
+7. **Suppressing xdist with `-o addopts=''` outside parity capture.** 3× slowdown trap; only valid under `PARITY_CAPTURE_MODE=1`. See parity-fixture-discipline.
+8. **Bumping `mido` / `python-rtmidi` pins.** Pinned for hardware compatibility, not security. See hardware-pinned-packages.
+9. **Regenerating parity fixtures without `PARITY_CAPTURE_MODE=1` and user go-ahead.** See parity-fixture-discipline.
+10. **Pausing mid-cascade to re-confirm previously approved steps.** Run to a hard stop. See autonomous-agent-execution.
+
+---
+
+This file is kept short on purpose. The full context lives in CONTRIBUTING + AGENTS + the rules / skills / diagrams. Update this file only when a new project-wide guardrail lands.
