@@ -273,6 +273,14 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Analog Four kit slot to include when --analog-four-path is supplied.",
     )
     parser.add_argument(
+        "--analog-four-mapping-manifest",
+        metavar="PATH",
+        help=(
+            "With --dual-machine-snapshot-send and --analog-four-path, read a "
+            "ready verified Analog Four saved-offset mapping manifest."
+        ),
+    )
+    parser.add_argument(
         "--analog-four-profile",
         metavar="PROFILE",
         help=(
@@ -350,6 +358,8 @@ def _print_passive_menu() -> None:
             "- --dual-machine-snapshot-send  with --arm/--dry-run, send a "
             "guarded single-target live snapshot mutation plan",
             "  optional: --snapshot-rytm-pad <1-12>; " "--snapshot-analog-four-track <1-4>",
+            "  optional A4 snapshot proof: --analog-four-path <path>; "
+            "--analog-four-slot <1-128>; --analog-four-mapping-manifest <path>",
             "- --snapshot-essence-send  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad style/genre snapshot essence plan",
             "- --rytm-engine-cycle  with --arm/--dry-run, send a guarded "
@@ -399,6 +409,7 @@ def _snapshot_send_request_from_args(args: argparse.Namespace) -> dict[str, obje
         "snapshot_target": args.snapshot_target,
         "analog_four_path": args.analog_four_path,
         "analog_four_slot": args.analog_four_slot,
+        "analog_four_mapping_manifest": args.analog_four_mapping_manifest,
         "analog_four_profile": args.analog_four_profile,
         "snapshot_rytm_pad": args.snapshot_rytm_pad,
         "snapshot_analog_four_track": args.snapshot_analog_four_track,
@@ -461,11 +472,27 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
 
     analog_four_path = request.get("analog_four_path")
     analog_four_slot = request.get("analog_four_slot")
+    analog_four_mapping_manifest = request.get("analog_four_mapping_manifest")
+    analog_four_verified_mappings = None
+    analog_four_mapping_manifest_path = None
+    if analog_four_mapping_manifest is not None:
+        from .analog_four.saved_offset_mapping_manifest import (
+            load_ready_analog_four_saved_offset_mapping_manifest,
+        )
+
+        manifest = load_ready_analog_four_saved_offset_mapping_manifest(
+            str(analog_four_mapping_manifest)
+        )
+        analog_four_verified_mappings = manifest.mappings
+        analog_four_mapping_manifest_path = manifest.path
+
     kwargs = {}
     if analog_four_path is not None:
         kwargs = {
             "analog_four_sysex_path": str(analog_four_path),
             "analog_four_slot": int(analog_four_slot),
+            "analog_four_verified_mappings": analog_four_verified_mappings,
+            "analog_four_mapping_manifest_path": analog_four_mapping_manifest_path,
         }
 
     return build_dual_machine_mock_bridge(
@@ -1769,6 +1796,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
+    if args.analog_four_mapping_manifest is not None and not args.dual_machine_snapshot_send:
+        sys.stderr.write("--analog-four-mapping-manifest requires --dual-machine-snapshot-send.\n")
+        return 2
+
     if args.dual_machine_snapshot_send:
         target_includes_rytm = args.snapshot_target in ("rytm", "both")
         missing = [
@@ -1797,6 +1828,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if (args.analog_four_path is None) != (args.analog_four_slot is None):
             sys.stderr.write(
                 "--analog-four-path and --analog-four-slot must be supplied together.\n"
+            )
+            return 2
+        if args.analog_four_mapping_manifest is not None and args.analog_four_path is None:
+            sys.stderr.write(
+                "--analog-four-mapping-manifest requires "
+                "--analog-four-path and --analog-four-slot.\n"
             )
             return 2
         if args.analog_four_slot is not None and args.analog_four_slot not in range(1, 129):

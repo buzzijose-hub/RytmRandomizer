@@ -346,6 +346,9 @@ Then validate one machine at a time:
       `--snapshot-target analog-four --analog-four-track 2` plus
       `--analog-four-path <analog-four-sysex-path> --analog-four-slot 1`,
       and does not require `--snapshot-path` or `--snapshot-slot`.
+- [ ] When validating saved A4 snapshot offsets, add
+      `--analog-four-mapping-manifest <ready-a4-mapping-json>` so only
+      operator-proven saved offsets become mapped CC sends.
 - [ ] Run the focused guide's dry-run and confirm it captures 5 mock
       messages.
 - [ ] Run the focused guide's matching `--arm` command.

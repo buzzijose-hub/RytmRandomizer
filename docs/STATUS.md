@@ -179,6 +179,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   mapped CC mock events; unverified offsets remain blocked candidates, and
   duplicate or empty manifests fail closed before any send path can be marked
   ready.
+- 2026-05-19: carried ready Analog Four saved-offset mapping manifests through
+  the app-level guarded send path. `rytm_randomizer.app --dry-run/--arm
+  --dual-machine-snapshot-send` now accepts
+  `--analog-four-mapping-manifest <path>` with `--analog-four-path` and
+  `--analog-four-slot`, so A4 saved snapshots use verified offset-to-CC
+  mappings before dry-run or armed delivery can emit A4 messages.
 - 2026-05-19: added app-level dual-machine snapshot lane scoping.
   `rytm_randomizer.app --dry-run/--arm --dual-machine-snapshot-send` now
   accepts `--snapshot-rytm-pad <1-12>` and

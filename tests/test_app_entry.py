@@ -12,6 +12,7 @@ These tests verify the WS-H convergence wiring:
 Randomness is seeded so every test is deterministic.
 """
 
+import json
 import random
 import subprocess
 import sys
@@ -111,6 +112,13 @@ def _make_a4_kit_record(slot_index=0, kit_name="APP A4"):
         bytes([0xF0, 0x00, 0x20, 0x3C, 0x06, 0x00, 0x52, 0x01, 0x01, slot_index])
         + _pack_7bit_payload(decoded)
         + bytes([0xF7])
+    )
+
+
+def _write_a4_mapping_manifest(path, mappings):
+    path.write_text(
+        json.dumps({"mappings": mappings}, indent=2),
+        encoding="utf-8",
     )
 
 
@@ -644,6 +652,63 @@ def test_app_main_dry_run_dual_machine_snapshot_send_accepts_a4_only_snapshot(
     assert "Blocked candidate events: 2" in captured.out
     assert "Emitted mock messages: 0" in captured.out
     assert "Dry-run complete. Mock sender captured 0 message(s)." in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_dry_run_dual_machine_snapshot_send_accepts_a4_mapping_manifest(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    a4_path = tmp_path / "a4.syx"
+    manifest_path = tmp_path / "a4-mappings.json"
+    a4_path.write_bytes(_make_a4_kit_record(kit_name="APP A4 MAPPED"))
+    _write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            },
+            {
+                "track": 1,
+                "relative_offset": 22,
+                "parameter_name": "Filter 2 Frequency",
+                "cc": 19,
+            },
+        ],
+    )
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--dual-machine-snapshot-send",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-target",
+            "analog-four",
+            "--analog-four-path",
+            str(a4_path),
+            "--analog-four-slot",
+            "1",
+            "--analog-four-mapping-manifest",
+            str(manifest_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Target: analog-four" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Blocked candidate events: 0" in captured.out
+    assert "Emitted mock messages: 2" in captured.out
+    assert "Filter 1 Frequency" in captured.out
+    assert "Filter 2 Frequency" in captured.out
+    assert "Dry-run complete. Mock sender captured 2 message(s)." in captured.out
     assert captured.err == ""
 
 
@@ -2213,6 +2278,99 @@ def test_app_main_arm_dual_machine_snapshot_send_accepts_a4_only_snapshot_withou
     assert "Port: <not-opened>" in captured.out
     assert "Emitted real MIDI messages: 0" in captured.out
     assert "--dual-machine-snapshot-send requires --snapshot-path" not in captured.err
+
+
+def test_app_main_arm_dual_machine_snapshot_send_accepts_a4_mapping_manifest(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    a4_path = tmp_path / "a4.syx"
+    manifest_path = tmp_path / "a4-mappings.json"
+    a4_path.write_bytes(_make_a4_kit_record(kit_name="APP A4 MAPPED ARM"))
+    _write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            },
+            {
+                "track": 1,
+                "relative_offset": 22,
+                "parameter_name": "Filter 2 Frequency",
+                "cc": 19,
+            },
+        ],
+    )
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "analog-four",
+                "--analog-four-path",
+                str(a4_path),
+                "--analog-four-slot",
+                "1",
+                "--analog-four-mapping-manifest",
+                str(manifest_path),
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake A4"]
+    assert len(port.sent) == 2
+    assert [(message.channel, message.control, message.value) for message in port.sent] == [
+        (0, 18, 67),
+        (0, 19, 83),
+    ]
+    assert port.closed is True
+    assert "Target: analog-four" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 2" in captured.out
+    assert captured.err == ""
 
 
 def test_app_main_arm_dual_machine_snapshot_send_both_target_refuses_blocked_candidates_before_port_open(
