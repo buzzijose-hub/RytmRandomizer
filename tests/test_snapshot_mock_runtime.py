@@ -215,6 +215,10 @@ def test_snapshot_mock_runtime_cli_reads_saved_kit_without_hardware(tmp_path):
     assert "Kit: CLI MOCK" in result.stdout
     assert "Depth: micro" in result.stdout
     assert "Planned pads: 1 / 12" in result.stdout
+    assert (
+        "Readiness summary: ready 1 / disabled 11 / unknown 0 / "
+        "incompatible 0 / no mutable legal pads 0" in result.stdout
+    )
     assert "Mock sender captured: 6 message(s)" in result.stdout
     assert "- Pad 1 ch 1 wire 0 BD Hard / SRC Tune: CC17 -> 60" in result.stdout
     assert "baseline 59 / delta +1" in result.stdout

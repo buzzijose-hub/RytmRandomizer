@@ -14,6 +14,7 @@ from .rytm_mutation_planner import (
     SnapshotMutationPlan,
     build_snapshot_mutation_plan_from_file,
     format_snapshot_mutation_plan_error,
+    format_snapshot_readiness_summary,
 )
 
 
@@ -77,6 +78,7 @@ def format_snapshot_mock_runtime_report(
         f"Snapshot parameter map: {plan.snapshot_parameter_map_status}",
         f"Planned pads: {plan.planned_pad_count} / {plan.scanned_pad_count}",
         f"Blocked pads: {plan.blocked_pad_count} / {plan.scanned_pad_count}",
+        format_snapshot_readiness_summary(plan),
         f"Planned changes: {plan.planned_change_count}",
         f"Mock sender captured: {len(sender.sent_messages)} message(s)",
         "Pad plans:",

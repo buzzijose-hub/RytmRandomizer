@@ -71,6 +71,13 @@ MACHINE_KEYS_BY_VALUE = {
     if profile.machine_value is not None
 }
 
+MACHINE_COMPATIBILITY_STATUSES = (
+    "allowed_on_pad",
+    "machine_disabled",
+    "unknown_machine",
+    "incompatible_with_pad",
+)
+
 SAVED_CC_OFFSETS = {
     10: 0x58,
     16: 0x1C,
@@ -212,6 +219,15 @@ class RytmKitSnapshot:
     def mapped_parameter_pad_count(self) -> int:
         return sum(1 for pad in self.pads if pad.parameters)
 
+    @property
+    def machine_compatibility_counts(self) -> dict[str, int]:
+        counts = dict.fromkeys(MACHINE_COMPATIBILITY_STATUSES, 0)
+        for pad in self.pads:
+            counts[pad.machine_compatibility_status] = (
+                counts.get(pad.machine_compatibility_status, 0) + 1
+            )
+        return counts
+
 
 def decode_rytm_kit_snapshot_file(path: str | Path, *, slot: int) -> RytmKitSnapshot:
     """Decode a selected saved Rytm kit slot from a SysEx file."""
@@ -282,6 +298,7 @@ def format_rytm_kit_snapshot_report(snapshot: RytmKitSnapshot) -> list[str]:
         f"Pad snapshots: {snapshot.pad_count} / {PAD_COUNT}",
         f"Decode status: {snapshot.decode_status}",
         f"Parameter map: {snapshot.parameter_map_status}",
+        _format_machine_compatibility_summary(snapshot),
     ]
     if snapshot.mapped_parameter_pad_count:
         lines.append(f"Mapped parameter pads: {snapshot.mapped_parameter_pad_count} / {PAD_COUNT}")
@@ -518,6 +535,17 @@ def _format_pad_line(pad: RytmSnapshotPad) -> str:
         f"compat {pad.machine_compatibility_status} / "
         f"mapped params {len(pad.parameters)} / "
         f"raw block bytes {pad.decoded_block_length} / sha {pad.sha256_12}"
+    )
+
+
+def _format_machine_compatibility_summary(snapshot: RytmKitSnapshot) -> str:
+    counts = snapshot.machine_compatibility_counts
+    return (
+        "Machine compatibility: "
+        f"allowed {counts['allowed_on_pad']} / "
+        f"disabled {counts['machine_disabled']} / "
+        f"unknown {counts['unknown_machine']} / "
+        f"incompatible {counts['incompatible_with_pad']}"
     )
 
 

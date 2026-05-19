@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added operator-facing snapshot readiness summaries. Rytm
+  saved-kit snapshot reports now include an allowed/disabled/unknown/
+  incompatible machine-compatibility count, and snapshot mutation/mock-runtime
+  reports now summarize ready pads, disabled pads, unknown machines,
+  incompatible pad/engine captures, and legal pads with no mutable parameters.
+  This makes it obvious before any send plan whether a captured live kit is
+  mutation-ready or needs operator attention.
 - 2026-05-19: added passive OS 1.72 pad/machine compatibility metadata to
   decoded Rytm saved-kit snapshots. `sysex-kit-snapshot-report` now marks
   each pad as allowed, disabled, unknown, or incompatible with its physical

@@ -214,6 +214,23 @@ def test_snapshot_mutation_plan_blocks_pad_machine_incompatibility():
     assert pad10.plan_status == "blocked_machine_incompatible_with_pad"
     assert pad10.changes == ()
     assert plan.planned_pad_count == 0
+    assert plan.readiness_counts == {
+        "ready": 0,
+        "machine_disabled": 11,
+        "unknown_machine": 0,
+        "incompatible_with_pad": 1,
+        "no_mutable_legal_pads": 0,
+    }
+
+    from rytm_randomizer.snapshot.rytm_mutation_planner import (
+        format_snapshot_mutation_plan_report,
+    )
+
+    report = "\n".join(format_snapshot_mutation_plan_report(plan))
+    assert (
+        "Readiness summary: ready 0 / disabled 11 / unknown 0 / "
+        "incompatible 1 / no mutable legal pads 0" in report
+    )
 
 
 def test_snapshot_mutation_plan_rejects_invalid_pad_filter():
@@ -281,6 +298,10 @@ def test_snapshot_mutation_plan_cli_reads_saved_kit_without_hardware(tmp_path):
     assert "Depth: micro" in result.stdout
     assert "Planned pads: 1 / 12" in result.stdout
     assert "Planned changes: 6" in result.stdout
+    assert (
+        "Readiness summary: ready 1 / disabled 11 / unknown 0 / "
+        "incompatible 0 / no mutable legal pads 0" in result.stdout
+    )
     assert "- Pad 1 BD Hard / SRC Tune: CC17 59 -> 60 (delta +1)" in result.stdout
     assert "- captured-value relative" in result.stdout
     assert "- no anchor loading" in result.stdout

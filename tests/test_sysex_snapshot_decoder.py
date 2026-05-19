@@ -281,6 +281,13 @@ def test_decoder_marks_pad_machine_compatibility_against_os172_matrix():
 
     snapshot = decode_rytm_kit_snapshot_record(record)
 
+    assert snapshot.machine_compatibility_counts == {
+        "allowed_on_pad": 2,
+        "machine_disabled": 10,
+        "unknown_machine": 0,
+        "incompatible_with_pad": 0,
+    }
+
     pad6 = snapshot.pads[5]
     assert pad6.machine_label == "XT Classic"
     assert pad6.machine_key == "xt_classic"
@@ -316,8 +323,15 @@ def test_decoder_flags_illegal_pad_machine_pairings():
     assert pad10.machine_label == "XT Classic"
     assert pad10.machine_key == "xt_classic"
     assert pad10.machine_compatibility_status == "incompatible_with_pad"
+    assert snapshot.machine_compatibility_counts == {
+        "allowed_on_pad": 0,
+        "machine_disabled": 11,
+        "unknown_machine": 0,
+        "incompatible_with_pad": 1,
+    }
 
     report = "\n".join(format_rytm_kit_snapshot_report(snapshot))
+    assert "Machine compatibility: allowed 0 / disabled 11 / unknown 0 / incompatible 1" in report
     assert "Pad 10 / MIDI channel 10" in report
     assert "machine XT Classic (8)" in report
     assert "compat incompatible_with_pad" in report
@@ -361,7 +375,7 @@ def test_report_formatter_marks_parameter_decode_boundary():
 
     report = format_rytm_kit_snapshot_report(snapshot)
 
-    assert report[:12] == [
+    assert report[:13] == [
         "RytmRandomizer passive Rytm kit snapshot report",
         "Device: Analog Rytm MKII",
         "Source slot: 1",
@@ -371,6 +385,7 @@ def test_report_formatter_marks_parameter_decode_boundary():
         "Pad snapshots: 12 / 12",
         "Decode status: raw_sound_blocks_with_partial_parameter_map",
         "Parameter map: partial_bd_hard",
+        "Machine compatibility: allowed 1 / disabled 11 / unknown 0 / incompatible 0",
         "Mapped parameter pads: 1 / 12",
         "Pads:",
         (

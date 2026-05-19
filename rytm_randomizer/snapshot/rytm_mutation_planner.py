@@ -41,6 +41,13 @@ MUTATION_PARAMETER_PRIORITY = (
 
 MAX_CHANGES_PER_PAD = 6
 PAD_COUNT = 12
+READINESS_COUNT_KEYS = (
+    "ready",
+    "machine_disabled",
+    "unknown_machine",
+    "incompatible_with_pad",
+    "no_mutable_legal_pads",
+)
 
 
 class SnapshotMutationPlanError(DataError, ValueError):
@@ -102,6 +109,22 @@ class SnapshotMutationPlan:
     @property
     def scanned_pad_count(self) -> int:
         return len(self.pads)
+
+    @property
+    def readiness_counts(self) -> dict[str, int]:
+        counts = dict.fromkeys(READINESS_COUNT_KEYS, 0)
+        for pad in self.pads:
+            if pad.changes:
+                counts["ready"] += 1
+            elif pad.machine_compatibility_status == "machine_disabled":
+                counts["machine_disabled"] += 1
+            elif pad.machine_compatibility_status == "unknown_machine":
+                counts["unknown_machine"] += 1
+            elif pad.machine_compatibility_status == "incompatible_with_pad":
+                counts["incompatible_with_pad"] += 1
+            else:
+                counts["no_mutable_legal_pads"] += 1
+        return counts
 
 
 def build_snapshot_mutation_plan(
@@ -172,6 +195,7 @@ def format_snapshot_mutation_plan_report(plan: SnapshotMutationPlan) -> list[str
         f"Pads scanned: {_format_scanned_pads(plan)}",
         f"Planned pads: {plan.planned_pad_count} / {plan.scanned_pad_count}",
         f"Blocked pads: {plan.blocked_pad_count} / {plan.scanned_pad_count}",
+        format_snapshot_readiness_summary(plan),
         f"Planned changes: {plan.planned_change_count}",
         "Pad plans:",
     ]
@@ -244,6 +268,20 @@ def _build_pad_plan(
     )
 
 
+def format_snapshot_readiness_summary(plan: SnapshotMutationPlan) -> str:
+    """Format the operator-facing snapshot mutation readiness bucket summary."""
+
+    counts = plan.readiness_counts
+    return (
+        "Readiness summary: "
+        f"ready {counts['ready']} / "
+        f"disabled {counts['machine_disabled']} / "
+        f"unknown {counts['unknown_machine']} / "
+        f"incompatible {counts['incompatible_with_pad']} / "
+        f"no mutable legal pads {counts['no_mutable_legal_pads']}"
+    )
+
+
 def _select_parameters(pad: RytmSnapshotPad) -> tuple[RytmSnapshotParameter, ...]:
     by_name = {parameter.name: parameter for parameter in pad.parameters}
     selected = [by_name[name] for name in MUTATION_PARAMETER_PRIORITY if name in by_name]
@@ -311,6 +349,7 @@ __all__ = [
     "build_snapshot_mutation_plan",
     "build_snapshot_mutation_plan_from_file",
     "filter_snapshot_mutation_plan_to_pad",
+    "format_snapshot_readiness_summary",
     "format_snapshot_mutation_plan_error",
     "format_snapshot_mutation_plan_report",
 ]
