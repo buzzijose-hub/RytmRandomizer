@@ -1131,13 +1131,17 @@ def main(argv=None):
 
     if args and args[0] == "dual-machine-lane-validation-guide":
         from .dual_machine.lane_validation_guide import (
+            format_dual_machine_all_lane_validation_guide,
             format_dual_machine_lane_validation_guide,
             format_dual_machine_lane_validation_guide_error,
         )
 
         try:
-            parsed = _parse_dual_machine_lane_validation_guide_cli_args(args)
-            report = format_dual_machine_lane_validation_guide(**parsed)
+            if args == ["dual-machine-lane-validation-guide", "--all-lanes"]:
+                report = format_dual_machine_all_lane_validation_guide()
+            else:
+                parsed = _parse_dual_machine_lane_validation_guide_cli_args(args)
+                report = format_dual_machine_lane_validation_guide(**parsed)
         except ValueError as exc:
             if _is_dual_machine_cli_usage_error(exc):
                 sys.stderr.write(f"{USAGE}\n")

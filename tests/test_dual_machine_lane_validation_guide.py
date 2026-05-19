@@ -108,6 +108,45 @@ def test_dual_machine_lane_validation_guide_cli_rejects_invalid_rytm_pad_without
     assert "No MIDI was sent." in result.stderr
 
 
+def test_dual_machine_all_lane_validation_guide_lists_every_single_machine_lane():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_all_lane_validation_guide,
+    )
+
+    report = format_dual_machine_all_lane_validation_guide()
+    joined = "\n".join(report)
+
+    assert report[0] == "RytmRandomizer passive Dual-Machine All-Lane Validation Guide"
+    assert "Rytm-only lanes:" in joined
+    assert "- Pad 1 / expected 6 messages:" in joined
+    assert "- Pad 12 / expected 6 messages:" in joined
+    assert "dual-machine-lane-validation-guide --target rytm --rytm-pad 12" in joined
+    assert "Analog-Four-only lanes:" in joined
+    assert "- Track 1 / expected 5 messages:" in joined
+    assert "- Track 4 / expected 5 messages:" in joined
+    assert (
+        "dual-machine-lane-validation-guide --target analog-four --analog-four-track 4"
+        in joined
+    )
+    assert "Both-machine pilot pairs:" in joined
+    assert "- Pad 1 + A4 Track 1 / expected 11 messages:" in joined
+    assert "- Pad 10 + A4 Track 3 / expected 11 messages:" in joined
+    assert "- no MIDI sending" in joined
+
+
+def test_dual_machine_lane_validation_guide_cli_accepts_all_lanes_flag():
+    result = run_cli("dual-machine-lane-validation-guide", "--all-lanes")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Dual-Machine All-Lane Validation Guide" in result.stdout
+    assert "Rytm-only lanes:" in result.stdout
+    assert "Analog-Four-only lanes:" in result.stdout
+    assert "Both-machine pilot pairs:" in result.stdout
+    assert "--target rytm --rytm-pad 12" in result.stdout
+    assert "--target analog-four --analog-four-track 4" in result.stdout
+    assert result.stderr == ""
+
+
 def test_dual_machine_lane_validation_guide_cli_outputs_without_hardware():
     result = run_cli("dual-machine-lane-validation-guide")
 

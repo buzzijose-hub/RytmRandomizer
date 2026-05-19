@@ -9,8 +9,10 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   app dry-run, and armed command sequence for testing one Rytm pad, one Analog
   Four track, or one lane on both machines before widening to full dual-machine
   scope. It supports `--target <rytm|analog-four|both>`, `--rytm-pad <1-12>`,
-  and `--analog-four-track <1-4>`. It is guide text only: no MIDI ports are
-  opened, no MIDI is sent, and no hardware is touched.
+  and `--analog-four-track <1-4>`, plus `--all-lanes` for a full one-lane-at-a
+  time matrix across Rytm Pads 1-12, A4 Tracks 1-4, and both-machine pilot
+  pairs. It is guide text only: no MIDI ports are opened, no MIDI is sent, and
+  no hardware is touched.
 - 2026-05-19: added app-level dual-machine snapshot lane scoping.
   `rytm_randomizer.app --dry-run/--arm --dual-machine-snapshot-send` now
   accepts `--snapshot-rytm-pad <1-12>` and

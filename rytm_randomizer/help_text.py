@@ -19,7 +19,7 @@ USAGE = (
     "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
-    "dual-machine-lane-validation-guide [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
+    "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
@@ -92,6 +92,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
+  python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
@@ -549,6 +550,7 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
+  python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target rytm --rytm-pad <1-12>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track <1-4>
@@ -560,8 +562,10 @@ Behavior:
   snapshot send: passive bridge previews, readiness gates, app dry-run, and
   the final armed lane-scoped test command. Optional --target scopes the guide
   to Rytm only, Analog Four only, or both; lane flags choose the specific Rytm
-  pad and/or A4 track. It is pure text for preparation and does not send MIDI,
-  open ports, receive live SysEx, write SysEx, or mutate hardware.
+  pad and/or A4 track. Use --all-lanes to print the full one-lane-at-a-time
+  validation matrix for Rytm Pads 1-12, A4 Tracks 1-4, and both-machine pilot
+  pairs. It is pure text for preparation and does not send MIDI, open ports,
+  receive live SysEx, write SysEx, or mutate hardware.
 
 Safety:
   passive/read-only
