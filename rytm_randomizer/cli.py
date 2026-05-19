@@ -1810,6 +1810,34 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "analog-four-runtime-guarded-send-dry-run":
+        from .analog_four.guarded_runtime_sender import (
+            build_analog_four_runtime_guarded_send_dry_run,
+            format_analog_four_runtime_guarded_send_dry_run_report,
+            format_analog_four_runtime_guarded_send_error,
+        )
+        from .analog_four.runtime_plan import build_analog_four_runtime_plan
+
+        if len(args) not in (1, 3):
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+        if len(args) == 3 and args[1] != "--profile":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        profile = "balanced" if len(args) == 1 else args[2]
+        try:
+            plan = build_analog_four_runtime_plan(profile=profile)
+            result = build_analog_four_runtime_guarded_send_dry_run(plan)
+        except ValueError as exc:
+            sys.stderr.write("\n".join(format_analog_four_runtime_guarded_send_error(str(exc))))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_analog_four_runtime_guarded_send_dry_run_report(result)))
+        sys.stdout.write("\n")
+        return 0
+
     if args == ["list-commands"]:
         sys.stdout.write("\n".join(format_registry_list_report("commands", "command list")))
         sys.stdout.write("\n")

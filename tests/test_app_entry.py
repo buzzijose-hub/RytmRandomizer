@@ -328,6 +328,44 @@ def test_app_main_dry_run_analog_four_track_filter_smoke_captures_mock_stream(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_analog_four_runtime_uses_guarded_mock_sender(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--analog-four-runtime",
+            "--analog-four-profile",
+            "birmingham-dark",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "guarded Analog Four runtime send" in captured.out
+    assert "Analog Four Guarded Runtime Dry-Run Report" in captured.out
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 20" in captured.out
+    assert "Track 1 ch 1 wire 0 / Track Level CC95 -> 106" in captured.out
+    assert "Dry-run complete. Mock sender captured 20 message(s)." in captured.out
+    assert "Select target pad" not in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_arm_analog_four_runtime_is_blocked_for_now(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--arm", "--analog-four-runtime"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--analog-four-runtime supports --dry-run only in this slice" in captured.err
+    assert "Available MIDI outputs" not in captured.out
+
+
 def test_app_main_dry_run_dual_machine_snapshot_send_uses_guarded_mock_sender(
     tmp_path,
     capsys,

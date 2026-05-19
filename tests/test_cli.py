@@ -40,6 +40,7 @@ USAGE = (
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
+    "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "

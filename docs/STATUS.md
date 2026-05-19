@@ -4,6 +4,13 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added the A4-only guarded runtime dry-run path.
+  `analog-four-runtime-guarded-send-dry-run [--profile <profile>]` and
+  `rytm-randomizer --dry-run --analog-four-runtime --analog-four-profile <profile>`
+  execute the manual-backed A4 Track 1-4 runtime plan into a guarded mock
+  sender only. The path emits no real MIDI, opens no ports, touches no Rytm
+  state, and rejects `--arm --analog-four-runtime` until a separate hardware
+  slice is approved.
 - 2026-05-18: added the passive Analog Four Track 1-4 runtime planner.
   `analog-four-runtime-report [--profile <profile>]` turns the manual-backed
   A4 starter profiles into a mock-only CC stream for Tracks 1-4, including

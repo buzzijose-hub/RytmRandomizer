@@ -51,6 +51,14 @@ This is mock-only planning. It does not open an A4 port, send MIDI, receive
 live SysEx, write SysEx, mutate hardware, run cross-device scenes, or claim
 snapshot capture.
 
+## Current Guarded Runtime Dry-Run
+
+`python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run [--profile <profile>]`
+and `rytm-randomizer --dry-run --analog-four-runtime --analog-four-profile <profile>`
+now prove the A4 runtime plan through an A4-only guarded mock sender. This is
+the sender-shaped gate before real hardware. It does not open an A4 port, send
+MIDI, touch the Rytm, receive live SysEx, write SysEx, or mutate hardware.
+
 ## Current Guarded Hardware Smoke Path
 
 The active app can run a very narrow Analog Four smoke test:

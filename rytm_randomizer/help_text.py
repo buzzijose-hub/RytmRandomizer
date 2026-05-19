@@ -35,6 +35,7 @@ USAGE = (
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
+    "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -113,6 +114,8 @@ Usage:
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
   python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run
+  python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run --profile <profile>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -199,6 +202,8 @@ Commands:
                      Print the passive Analog Four MKII reference intake report.
   analog-four-runtime-report
                      Preview passive Analog Four Track 1-4 runtime CC messages.
+  analog-four-runtime-guarded-send-dry-run
+                     Execute A4 runtime events into a mock guarded sender only.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -920,6 +925,32 @@ Safety:
   passive/read-only
   passive/mock A4 runtime planning only
   mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-runtime-guarded-send-dry-run": """RytmRandomizer passive CLI: analog-four-runtime-guarded-send-dry-run
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run
+  python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run --help
+
+Behavior:
+  Builds an Analog Four Track 1-4 runtime plan from manual-backed starter
+  profiles, then executes eligible mapped CC events into an inert guarded mock
+  sender. It does not open ports, send MIDI, receive SysEx, write SysEx, touch
+  the Rytm, or mutate hardware.
+
+Safety:
+  passive/read-only
+  A4-only guarded dry-run
+  mock sender only
+  no Rytm MIDI sending
   no MIDI sending
   no MIDI receive
   no port opening

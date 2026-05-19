@@ -143,6 +143,14 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--analog-four-runtime",
+        action="store_true",
+        help=(
+            "With --dry-run only, execute the Analog Four Track 1-4 runtime "
+            "plan into a guarded mock sender. Real MIDI is blocked for this slice."
+        ),
+    )
+    parser.add_argument(
         "--snapshot-path",
         metavar="PATH",
         help="Saved Analog Rytm SysEx kit/project dump path for snapshot planning.",
@@ -304,6 +312,9 @@ def _print_passive_menu() -> None:
             "- --twelve-pad-rytm-runtime  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad runtime plan with auto starter/source values",
             "  required: --runtime-style <style>; optional: --runtime-discovery <0..1>",
+            "- --analog-four-runtime  with --dry-run only, send a guarded "
+            "Analog Four Track 1-4 runtime plan into the mock sender",
+            "  optional: --analog-four-profile <profile>",
             "",
             USAGE,
         ]
@@ -377,6 +388,16 @@ def _rytm_engine_cycle_request_from_args(
         "engine_cycle_discovery": args.engine_cycle_discovery,
         "engine_cycle_starter_profile": args.engine_cycle_starter_profile,
         "engine_cycle_source_starters": args.engine_cycle_source_starters,
+    }
+
+
+def _analog_four_runtime_request_from_args(
+    args: argparse.Namespace,
+) -> dict[str, object] | None:
+    if not args.analog_four_runtime:
+        return None
+    return {
+        "analog_four_profile": args.analog_four_profile or "balanced",
     }
 
 
@@ -1211,6 +1232,38 @@ def _run_dry_run_rytm_engine_cycle(request: dict[str, object]) -> int:
     return 0 if result.accepted else 1
 
 
+def _run_dry_run_analog_four_runtime(request: dict[str, object]) -> int:
+    """Run the guarded A4 runtime send against the mock sender."""
+
+    from .analog_four.guarded_runtime_sender import (
+        build_analog_four_runtime_guarded_send_dry_run,
+        format_analog_four_runtime_guarded_send_dry_run_report,
+        format_analog_four_runtime_guarded_send_error,
+    )
+    from .analog_four.runtime_plan import build_analog_four_runtime_plan
+
+    sys.stdout.write(
+        "RytmRandomizer --dry-run: guarded Analog Four runtime send "
+        "(mock-only, no hardware, no port opened).\n"
+    )
+    try:
+        plan = build_analog_four_runtime_plan(
+            profile=str(request.get("analog_four_profile") or "balanced")
+        )
+        result = build_analog_four_runtime_guarded_send_dry_run(plan)
+    except ValueError as exc:
+        sys.stdout.write("\n".join(format_analog_four_runtime_guarded_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    sys.stdout.write("\n".join(format_analog_four_runtime_guarded_send_dry_run_report(result)))
+    sys.stdout.write("\n")
+    sys.stdout.write(
+        f"Dry-run complete. Mock sender captured {result.emitted_message_count} message(s).\n"
+    )
+    return 0 if result.accepted else 1
+
+
 def _run_dry_run(
     *,
     twelve_pad_smoke: bool = False,
@@ -1220,6 +1273,7 @@ def _run_dry_run(
     snapshot_send_request: dict[str, object] | None = None,
     snapshot_essence_send_request: dict[str, object] | None = None,
     rytm_engine_cycle_request: dict[str, object] | None = None,
+    analog_four_runtime_request: dict[str, object] | None = None,
 ) -> int:
     """Run the interactive randomizer logic against the in-memory mock.
 
@@ -1234,6 +1288,8 @@ def _run_dry_run(
         return _run_dry_run_snapshot_essence_send(snapshot_essence_send_request)
     if rytm_engine_cycle_request is not None:
         return _run_dry_run_rytm_engine_cycle(rytm_engine_cycle_request)
+    if analog_four_runtime_request is not None:
+        return _run_dry_run_analog_four_runtime(analog_four_runtime_request)
 
     from .mock_midi import MockMidiSender
 
@@ -1360,6 +1416,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     snapshot_send_request = _snapshot_send_request_from_args(args)
     snapshot_essence_send_request = _snapshot_essence_send_request_from_args(args)
     rytm_engine_cycle_request = _rytm_engine_cycle_request_from_args(args)
+    analog_four_runtime_request = _analog_four_runtime_request_from_args(args)
     smoke_flag_count = sum(
         (
             bool(args.twelve_pad_smoke),
@@ -1386,6 +1443,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             bool(args.snapshot_essence_send),
             bool(args.rytm_engine_cycle),
             bool(args.twelve_pad_rytm_runtime),
+            bool(args.analog_four_runtime),
         )
     )
 
@@ -1393,7 +1451,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write(
             "Choose only one active-mode modifier: smoke tests or "
             "--dual-machine-snapshot-send/--snapshot-essence-send/"
-            "--rytm-engine-cycle/--twelve-pad-rytm-runtime.\n"
+            "--rytm-engine-cycle/--twelve-pad-rytm-runtime/--analog-four-runtime.\n"
         )
         return 2
 
@@ -1401,7 +1459,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write(
             "Choose only one active-mode modifier: "
             "--dual-machine-snapshot-send, --snapshot-essence-send, "
-            "--rytm-engine-cycle, or --twelve-pad-rytm-runtime.\n"
+            "--rytm-engine-cycle, --twelve-pad-rytm-runtime, or "
+            "--analog-four-runtime.\n"
         )
         return 2
 
@@ -1447,6 +1506,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("--twelve-pad-rytm-runtime requires --arm or --dry-run.\n")
         return 2
 
+    if args.analog_four_runtime and not args.dry_run:
+        if args.arm:
+            sys.stderr.write("--analog-four-runtime supports --dry-run only in this slice.\n")
+        else:
+            sys.stderr.write("--analog-four-runtime requires --dry-run in this slice.\n")
+        return 2
+
     if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:
         sys.stderr.write("--engine-cycle-starter-profile requires --rytm-engine-cycle.\n")
         return 2
@@ -1463,6 +1529,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.runtime_discovery is not None and not args.twelve_pad_rytm_runtime:
         sys.stderr.write("--runtime-discovery requires --twelve-pad-rytm-runtime.\n")
+        return 2
+
+    if args.analog_four_profile is not None and not (
+        args.dual_machine_snapshot_send or args.analog_four_runtime
+    ):
+        sys.stderr.write(
+            "--analog-four-profile requires --dual-machine-snapshot-send or "
+            "--analog-four-runtime.\n"
+        )
         return 2
 
     if args.dual_machine_snapshot_send:
@@ -1550,6 +1625,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             snapshot_send_request=snapshot_send_request,
             snapshot_essence_send_request=snapshot_essence_send_request,
             rytm_engine_cycle_request=rytm_engine_cycle_request,
+            analog_four_runtime_request=analog_four_runtime_request,
         )
 
     _print_passive_menu()
