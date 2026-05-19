@@ -106,7 +106,7 @@ The first 12-pad essence template is:
 - Pad 7: rim/click texture
 - Pad 8: snare/clap pressure
 - Pad 9: tonal bell accent
-- Pad 10: rolling percussion
+- Pad 10: open hat
 - Pad 11: atmosphere/noise layer
 - Pad 12: wild discovery lane
 

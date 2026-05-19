@@ -91,6 +91,7 @@ def build_rytm_engine_cycle_plan(
         candidates_per_role=MAX_CANDIDATES_PER_PAD,
         include_machine_selectable=True,
         ensure_mutable_fallback=False,
+        enforce_pad_families=True,
     )
     return RytmEngineCyclePlan(
         style_prompt=request.prompt,

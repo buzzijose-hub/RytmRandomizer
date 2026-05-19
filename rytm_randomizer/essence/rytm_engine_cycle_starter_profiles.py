@@ -310,7 +310,7 @@ def _pads(values_by_pad: tuple[tuple[int, int, int, int, int, int], ...]):
         "rim click motion",
         "snare clap pressure",
         "tonal bell accent",
-        "rolling percussion",
+        "open hat",
         "atmosphere texture",
         "wild discovery",
     )

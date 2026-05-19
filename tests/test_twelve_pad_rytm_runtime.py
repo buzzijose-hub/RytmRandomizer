@@ -92,6 +92,26 @@ def test_twelve_pad_rytm_runtime_plan_preserves_pad_event_order():
     assert pad5.events[5].value == 108
 
 
+def test_twelve_pad_rytm_runtime_keeps_pad10_on_open_hat_lane():
+    from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
+        build_twelve_pad_rytm_runtime_plan,
+    )
+
+    plan = build_twelve_pad_rytm_runtime_plan(
+        "schranz industrial hard techno",
+        discovery=0.9,
+        profile="birmingham-dark",
+    )
+
+    pad10 = plan.pads[9]
+    assert pad10.pad == 10
+    assert pad10.role_key == "open_hat"
+    assert pad10.role_label == "Open hat"
+    assert pad10.machine_key in {"oh_classic", "oh_metallic", "hh_basic", "hh_lab"}
+    assert pad10.machine_key != "xt_classic"
+    assert pad10.machine_label != "XT Classic"
+
+
 def test_twelve_pad_rytm_runtime_mock_capture_has_metadata_and_full_stream():
     from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
         build_twelve_pad_rytm_runtime_plan,

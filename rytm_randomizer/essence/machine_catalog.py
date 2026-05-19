@@ -35,6 +35,7 @@ class PadRole:
     label: str
     desired_tags: tuple[str, ...]
     role_weight: int
+    allowed_families: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -441,7 +442,7 @@ TWELVE_PAD_ROLES: tuple[PadRole, ...] = (
     PadRole(7, "rim_click_texture", "Rim/click texture", ("rim", "click", "texture"), 3),
     PadRole(8, "snare_clap_pressure", "Snare/clap pressure", ("snare", "clap", "pressure"), 4),
     PadRole(9, "tonal_bell_accent", "Tonal bell accent", ("tonal", "bell", "metallic"), 5),
-    PadRole(10, "rolling_percussion", "Rolling percussion", ("rolling", "percussion", "groove"), 3),
+    PadRole(10, "open_hat", "Open hat", ("hat", "open", "lift", "high"), 4, ("hat",)),
     PadRole(11, "atmosphere_noise_layer", "Atmosphere/noise layer", ("noise", "texture", "air"), 3),
     PadRole(12, "wild_discovery_lane", "Wild discovery lane", ("experimental", "tension"), 2),
 )
@@ -483,6 +484,7 @@ def rank_machines_for_role(
     essence_tags: tuple[str, ...] = (),
     include_unmapped: bool = False,
     include_machine_selectable: bool = False,
+    enforce_pad_families: bool = False,
 ) -> tuple[MachineCandidate, ...]:
     """Rank machine candidates for a role and reference essence tags."""
 
@@ -491,6 +493,12 @@ def rank_machines_for_role(
     essence = tuple(tag.lower() for tag in essence_tags)
 
     for machine in MACHINE_PROFILES:
+        if (
+            enforce_pad_families
+            and role.allowed_families
+            and machine.family not in role.allowed_families
+        ):
+            continue
         if not _include_machine(
             machine,
             include_unmapped=include_unmapped,
@@ -514,6 +522,7 @@ def build_essence_role_plan(
     candidates_per_role: int = 4,
     include_machine_selectable: bool = False,
     ensure_mutable_fallback: bool = True,
+    enforce_pad_families: bool = False,
 ) -> tuple[RoleAssignment, ...]:
     """Build a passive 12-pad role plan from reference essence tags."""
 
@@ -525,6 +534,7 @@ def build_essence_role_plan(
             essence_tags=essence_tags,
             include_unmapped=include_unmapped,
             include_machine_selectable=include_machine_selectable,
+            enforce_pad_families=enforce_pad_families,
         )
         candidates = _candidate_window(
             ranked,
