@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: expanded the passive Analog Four saved-offset proof target
+  catalog to cover the mapped-CC starter-profile parameters already used by
+  A4 runtime plans, including oscillator levels, oscillator waveform, Filter 1
+  and Filter 2 frequency, Amp Pan, Amp Env Decay, Reverb Send, Noise Level,
+  Noise Fade, and Track Level. The validation guide and promotion report now
+  accept a generic `--parameter <parameter>` key while still requiring a clean
+  controlled before/after diff before any saved offset can become a verified
+  mapping.
 - 2026-05-19: added a passive Rytm controlled mapping proof report.
   `rytm-controlled-mapping-proof-report <before> <after> --slot <1-128>
   --pad <1-12> --parameter <parameter> --limit <n>` wraps the existing Rytm
@@ -14,14 +22,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   hardware.
 - 2026-05-19: added a passive Analog Four saved-offset mapping promotion
   report. `analog-four-saved-offset-mapping-promotion-report <before> <after>
-  --slot <1-128> --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
+  --slot <1-128> --track <1-4> --parameter <parameter>
   --limit <n>` runs the controlled diff and prints an
   `AnalogFourVerifiedSavedOffsetMapping` entry only when exactly one saved
   offset changed for the selected track/parameter. Multi-offset or no-change
   diffs stay blocked for a cleaner retest.
 - 2026-05-19: added a passive Analog Four saved-offset mapping validation
   guide. `analog-four-saved-offset-mapping-guide [--track <1-4>]
-  [--parameter <filter-1-frequency|amp-pan|track-level>]` prints the exact
+  [--parameter <parameter>]` prints the exact
   controlled before/after export workflow for proving one A4 saved offset,
   then points the operator to `analog-four-controlled-diff-report` and the
   verified mapping entry shape. It is guide text only and does not send MIDI,

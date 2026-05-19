@@ -107,6 +107,31 @@ def test_a4_saved_offset_mapping_promotion_accepts_single_changed_offset():
     assert promotion.mapping.cc == 18
 
 
+def test_a4_saved_offset_mapping_promotion_accepts_starter_profile_parameter():
+    from rytm_randomizer.analog_four.saved_offset_mapping_promotion import (
+        build_analog_four_saved_offset_mapping_promotion_from_bytes,
+    )
+
+    before = make_a4_kit_record(track_values={3: {84: 12}})
+    after = make_a4_kit_record(track_values={3: {84: 64}})
+
+    promotion = build_analog_four_saved_offset_mapping_promotion_from_bytes(
+        before,
+        after,
+        slot=1,
+        track=3,
+        parameter="reverb-send",
+        limit=8,
+    )
+
+    assert promotion.ready is True
+    assert promotion.parameter_name == "Reverb Send"
+    assert promotion.cc == 93
+    assert promotion.mapping is not None
+    assert promotion.mapping.parameter_name == "Reverb Send"
+    assert promotion.mapping.cc == 93
+
+
 def test_a4_saved_offset_mapping_promotion_blocks_multiple_changed_offsets():
     from rytm_randomizer.analog_four.saved_offset_mapping_promotion import (
         build_analog_four_saved_offset_mapping_promotion_from_bytes,

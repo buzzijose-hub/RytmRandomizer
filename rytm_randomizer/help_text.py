@@ -112,8 +112,8 @@ Usage:
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
-  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
-  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <parameter>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -815,16 +815,16 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
-  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <parameter>
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --help
 
 Behavior:
   Prints a passive controlled before/after export workflow for proving one
   Analog Four saved-kit offset. The guide tells the operator how to export a
-  baseline, change exactly one selected parameter, export a variant, and run
-  analog-four-controlled-diff-report before adding a verified mapping. It does
-  not request dumps, receive live SysEx, send MIDI, write SysEx, execute
-  commands, or touch hardware.
+  baseline, change exactly one selected starter-profile CC mapping target,
+  export a variant, and run analog-four-controlled-diff-report before adding a
+  verified mapping. It does not request dumps, receive live SysEx, send MIDI,
+  write SysEx, execute commands, or touch hardware.
 
 Safety:
   passive/read-only
@@ -840,14 +840,14 @@ Safety:
     "analog-four-saved-offset-mapping-promotion-report": """RytmRandomizer passive CLI: analog-four-saved-offset-mapping-promotion-report
 
 Usage:
-  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n>
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report --help
 
 Behavior:
   Reads two existing Analog Four kit bank or whole-project SysEx files,
   runs the passive controlled diff for one slot and track, and reports whether
   the result has a single changed offset that can be reviewed as a verified
-  mapping for the selected parameter. It prints the proposed
+  mapping for the selected starter-profile CC mapping target. It prints the proposed
   AnalogFourVerifiedSavedOffsetMapping entry only when the diff is clean. It
   does not request dumps, receive live SysEx, send MIDI, write SysEx, execute
   commands, or touch hardware.

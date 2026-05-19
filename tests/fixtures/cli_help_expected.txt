@@ -61,8 +61,8 @@ Usage:
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
-  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
-  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <parameter>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>

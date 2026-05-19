@@ -312,7 +312,8 @@ def test_analog_four_saved_offset_mapping_guide_help_exits_zero():
     assert result.returncode == 0
     assert "RytmRandomizer passive CLI: analog-four-saved-offset-mapping-guide" in result.stdout
     assert "controlled before/after export workflow" in result.stdout
-    assert "--parameter <filter-1-frequency|amp-pan|track-level>" in result.stdout
+    assert "--parameter <parameter>" in result.stdout
+    assert "starter-profile CC mapping target" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
@@ -326,7 +327,8 @@ def test_analog_four_saved_offset_mapping_promotion_report_help_exits_zero():
         in result.stdout
     )
     assert "single changed offset" in result.stdout
-    assert "--parameter <filter-1-frequency|amp-pan|track-level>" in result.stdout
+    assert "--parameter <parameter>" in result.stdout
+    assert "starter-profile CC mapping target" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

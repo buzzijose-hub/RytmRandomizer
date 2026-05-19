@@ -81,6 +81,48 @@ def test_a4_saved_offset_mapping_validation_guide_accepts_track_and_parameter():
     assert "cc=10" in report
 
 
+def test_a4_saved_offset_mapping_parameters_cover_current_starter_profiles():
+    from rytm_randomizer.analog_four.saved_offset_mapping_validation_guide import (
+        SUPPORTED_MAPPING_PARAMETERS,
+    )
+
+    expected = {
+        "track-level": ("Track Level", 95),
+        "osc1-level": ("OSC1 Level", 69),
+        "osc2-level": ("OSC2 Level", 78),
+        "osc1-waveform": ("OSC1 Waveform", 70),
+        "filter-1-frequency": ("Filter 1 Frequency", 18),
+        "filter-2-frequency": ("Filter 2 Frequency", 19),
+        "amp-env-decay": ("Amp Env Decay", 105),
+        "amp-pan": ("Amp Pan", 10),
+        "reverb-send": ("Reverb Send", 93),
+        "noise-level": ("Noise Level", 77),
+        "noise-fade": ("Noise Fade", 76),
+    }
+
+    for key, target in expected.items():
+        assert SUPPORTED_MAPPING_PARAMETERS[key] == target
+
+
+def test_a4_saved_offset_mapping_validation_guide_accepts_filter2_frequency():
+    from rytm_randomizer.analog_four.saved_offset_mapping_validation_guide import (
+        format_analog_four_saved_offset_mapping_validation_guide,
+    )
+
+    report = "\n".join(
+        format_analog_four_saved_offset_mapping_validation_guide(
+            track=3,
+            parameter="filter-2-frequency",
+        )
+    )
+
+    assert "Track: 3" in report
+    assert "Parameter: Filter 2 Frequency" in report
+    assert "Known runtime CC: CC19" in report
+    assert 'parameter_name="Filter 2 Frequency"' in report
+    assert "cc=19" in report
+
+
 def test_a4_saved_offset_mapping_validation_guide_rejects_unknown_parameter():
     from rytm_randomizer.analog_four.saved_offset_mapping_validation_guide import (
         format_analog_four_saved_offset_mapping_validation_guide,

@@ -8,7 +8,15 @@ from __future__ import annotations
 
 SUPPORTED_MAPPING_PARAMETERS = {
     "filter-1-frequency": ("Filter 1 Frequency", 18),
+    "filter-2-frequency": ("Filter 2 Frequency", 19),
+    "osc1-level": ("OSC1 Level", 69),
+    "osc2-level": ("OSC2 Level", 78),
+    "osc1-waveform": ("OSC1 Waveform", 70),
+    "noise-fade": ("Noise Fade", 76),
+    "noise-level": ("Noise Level", 77),
     "amp-pan": ("Amp Pan", 10),
+    "amp-env-decay": ("Amp Env Decay", 105),
+    "reverb-send": ("Reverb Send", 93),
     "track-level": ("Track Level", 95),
 }
 DEFAULT_MAPPING_PARAMETER = "filter-1-frequency"
@@ -32,6 +40,7 @@ def format_analog_four_saved_offset_mapping_validation_guide(
         "RytmRandomizer passive Analog Four Saved-Offset Mapping Validation Guide",
         "Purpose:",
         "- Prepare a controlled before/after export workflow for proving one A4 saved offset.",
+        "- Cover the mapped-CC starter-profile parameters already used by A4 runtime plans.",
         "- Promote only offsets proven by controlled diffs into named CC mappings.",
         "- Keep unverified saved offsets blocked from guarded hardware sends.",
         "Selected target:",
@@ -39,6 +48,7 @@ def format_analog_four_saved_offset_mapping_validation_guide(
         f"- Parameter: {parameter_name}",
         f"- Parameter key: {parameter_key}",
         f"- Known runtime CC: CC{cc}",
+        f"- Supported mapping targets: {', '.join(sorted(SUPPORTED_MAPPING_PARAMETERS))}",
         "Operator setup:",
         "- Use a copied or otherwise restorable A4 kit slot, not the only live copy.",
         "- Start from a saved baseline export before changing the parameter.",

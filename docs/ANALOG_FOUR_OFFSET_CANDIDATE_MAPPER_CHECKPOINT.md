@@ -36,6 +36,12 @@ prints the controlled before/after export workflow, the matching
 `analog-four-controlled-diff-report` command, and the exact verified mapping
 entry shape to add only after the offset is proven.
 
+The accepted `--parameter` keys intentionally match the mapped-CC A4 starter
+profile surface already used by the runtime planner: `track-level`,
+`osc1-level`, `osc2-level`, `osc1-waveform`, `filter-1-frequency`,
+`filter-2-frequency`, `amp-env-decay`, `amp-pan`, `reverb-send`,
+`noise-level`, and `noise-fade`.
+
 After exporting before/after files, the passive promotion command:
 
 ```powershell
@@ -63,6 +69,7 @@ offsets changed, it stays blocked and asks for a cleaner controlled retest.
 
 Use the guide and promotion report with controlled baseline/variant exports to
 prove the first real A4 saved offset mappings, starting with one low-risk
-Track 1 parameter such as Filter 1 Frequency CC18 or Amp Pan CC10. Add only
-the proven track/offset/CC entry, then let the existing guarded send plan
-decide whether the selected snapshot has no remaining unverified offsets.
+Track 1 parameter such as Filter 1 Frequency CC18, Filter 2 Frequency CC19, or
+Amp Pan CC10. Add only the proven track/offset/CC entry, then let the existing
+guarded send plan decide whether the selected snapshot has no remaining
+unverified offsets.
