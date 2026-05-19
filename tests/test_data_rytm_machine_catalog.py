@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+pytestmark = pytest.mark.fast
+
 from rytm_randomizer.data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
     RYTM_MACHINE_PROFILES_BY_KEY,
@@ -123,3 +125,8 @@ def test_unknown_pad_raises_clear_key_error() -> None:
 def test_unknown_machine_raises_clear_key_error() -> None:
     with pytest.raises(KeyError, match="Unknown Rytm machine key"):
         get_rytm_machine_profile("not_a_machine")
+
+
+def test_is_machine_allowed_on_pad_rejects_unknown_machine_key() -> None:
+    with pytest.raises(KeyError, match="Unknown Rytm machine key"):
+        is_machine_allowed_on_pad(1, "not_a_machine")

@@ -193,6 +193,12 @@ def allowed_machine_profiles_for_pad(pad: int) -> tuple[RytmMachineProfile, ...]
 
 
 def is_machine_allowed_on_pad(pad: int, machine_key: str) -> bool:
+    """Return whether a known machine is legal on a known pad.
+
+    Both arguments are validated first; unknown pads or machine keys raise
+    KeyError with the same messages as the dedicated lookup helpers.
+    """
+
     get_rytm_machine_profile(machine_key)
     capability = get_rytm_pad_capability(pad)
     return machine_key in capability.allowed_machine_keys
