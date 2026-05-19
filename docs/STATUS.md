@@ -4,6 +4,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: refreshed the manual hardware validation checklist for the
+  latest operator-ready runtime guides. The checklist now calls out the Rytm
+  engine-matrix preflight, Pad 10's `OH / Open hihat` identity, the A4
+  `Track 3 / large motion layer` role label, and the pathless A4-only snapshot
+  send shape that uses only the Analog Four saved snapshot path.
 - 2026-05-19: pinned the guarded armed A4-only snapshot path with app-level
   regression coverage. `--arm --dual-machine-snapshot-send --snapshot-target
   analog-four` can build from `--analog-four-path`/`--analog-four-slot`

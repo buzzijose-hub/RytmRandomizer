@@ -72,7 +72,19 @@ python -m rytm_randomizer.cli analog-four-runtime-validation-guide
 
 Confirm the guide shows the single-track validation order and the expected
 counts: `Expected single-track messages: 5` and
-`Expected full-profile messages: 20`.
+`Expected full-profile messages: 20`. The track labels should come from the
+runtime plan, for example `Track 3 / large motion layer`.
+
+For the guarded Rytm runtime validation path, print the passive matrix and
+runtime guides:
+
+```
+python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
+python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide
+```
+
+Confirm the matrix says Pad 10 is `OH / Open hihat`, not an XT tom lane, and
+that XT Classic belongs only to Pads 6-8.
 
 For the guarded dual-machine lane-scoped snapshot path, print the passive
 guides:
@@ -200,6 +212,9 @@ python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide
 
 Then follow the guide's sequence:
 
+- [ ] Run the matrix preflight from the guide:
+      `python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report`.
+- [ ] Confirm Pad 10 is `OH / Open hihat`, not an XT tom lane.
 - [ ] Run the passive one-pad preview for Pad 1 and confirm it reports
       `Runtime messages: 11`.
 - [ ] Run the dry-run command for Pad 1 and confirm it captures 11 mock
@@ -281,6 +296,8 @@ Then follow the guide's sequence:
 
 - [ ] Run the passive single-track preview for Track 1 and confirm it reports
       `Runtime events: 5`.
+- [ ] Confirm the guide labels the planned roles, including
+      `Track 3 / large motion layer`.
 - [ ] Run the dry-run command for Track 1 and confirm it captures 5 mock
       messages.
 - [ ] Run `rytm-randomizer --arm --analog-four-runtime --analog-four-profile peak-time --analog-four-runtime-track 1`.
@@ -325,6 +342,10 @@ Then validate one machine at a time:
       is untouched.
 - [ ] Print the Analog-Four-only focused guide, for example
       `python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track 2`.
+- [ ] Confirm the A4-only guide uses
+      `--snapshot-target analog-four --analog-four-track 2` plus
+      `--analog-four-path <analog-four-sysex-path> --analog-four-slot 1`,
+      and does not require `--snapshot-path` or `--snapshot-slot`.
 - [ ] Run the focused guide's dry-run and confirm it captures 5 mock
       messages.
 - [ ] Run the focused guide's matching `--arm` command.
