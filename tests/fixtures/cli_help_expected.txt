@@ -67,6 +67,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <parameter>
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report <path>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -181,6 +182,8 @@ Commands:
                      Print the passive controlled export guide for A4 offset mapping.
   analog-four-saved-offset-mapping-promotion-report
                      Check whether one controlled diff can become a verified A4 mapping.
+  analog-four-saved-offset-mapping-manifest-report
+                     Validate a passive A4 verified saved-offset mapping manifest.
   essence-plan-report
                      Preview a 12-pad engine plan from essence tags or a description.
   essence-application-readiness-report

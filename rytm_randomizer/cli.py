@@ -1719,6 +1719,33 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if len(args) == 2 and args[0] == "analog-four-saved-offset-mapping-manifest-report":
+        from .analog_four.saved_offset_mapping_manifest import (
+            AnalogFourSavedOffsetMappingManifestError,
+            format_analog_four_saved_offset_mapping_manifest_error,
+            format_analog_four_saved_offset_mapping_manifest_report,
+            load_analog_four_saved_offset_mapping_manifest,
+        )
+
+        try:
+            manifest = load_analog_four_saved_offset_mapping_manifest(args[1])
+        except FileNotFoundError:
+            lines = format_analog_four_saved_offset_mapping_manifest_error("File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (AnalogFourSavedOffsetMappingManifestError, OSError, ValueError) as exc:
+            lines = format_analog_four_saved_offset_mapping_manifest_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write(
+            "\n".join(format_analog_four_saved_offset_mapping_manifest_report(manifest))
+        )
+        sys.stdout.write("\n")
+        return 0
+
     if (
         len(args) == 5
         and args[0] == "essence-plan-report"

@@ -73,3 +73,15 @@ one low-risk Track 1 parameter such as Filter 1 Frequency CC18, Filter 2
 Frequency CC19, or Amp Pan CC10. Add only the proven track/offset/CC entry,
 then let the existing guarded send plan decide whether the selected snapshot
 has no remaining unverified offsets.
+
+After a clean promotion report prints a reviewable
+`AnalogFourVerifiedSavedOffsetMapping`, collect the reviewed entries in a local
+JSON manifest and run:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
+The manifest report validates legal tracks, non-negative relative offsets,
+parameter names, CC values, verified status, and duplicate track/offset pairs.
+It is passive JSON-read-only and does not make the mappings live by itself.

@@ -100,6 +100,17 @@ It is also checklist text only; it does not read files, request dumps, receive
 live SysEx, open ports, send MIDI, execute commands, write SysEx, or touch
 hardware.
 
+For Analog Four mappings that pass promotion review, collect the entries in a
+local verified mapping manifest and validate it with:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
+This creates a passive handoff format for future snapshot planners: proof
+sessions produce entries, the manifest validates the collected entries, and a
+later runtime gate can decide when to consume them.
+
 The current runtime slice connects this planner to mock MIDI message capture,
 still without opening a port. Next, the armed Live Snapshot flow can be designed
 around the same plan object.

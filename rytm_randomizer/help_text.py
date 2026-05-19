@@ -29,6 +29,7 @@ USAGE = (
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "analog-four-saved-offset-mapping-guide [--track <1-4>] [--parameter <parameter>] | "
     "analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n> | "
+    "analog-four-saved-offset-mapping-manifest-report <path> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -120,6 +121,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <parameter>
   python -m rytm_randomizer.cli analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report <path>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -234,6 +236,8 @@ Commands:
                      Print the passive controlled export guide for A4 offset mapping.
   analog-four-saved-offset-mapping-promotion-report
                      Check whether one controlled diff can become a verified A4 mapping.
+  analog-four-saved-offset-mapping-manifest-report
+                     Validate a passive A4 verified saved-offset mapping manifest.
   essence-plan-report
                      Preview a 12-pad engine plan from essence tags or a description.
   essence-application-readiness-report
@@ -917,6 +921,31 @@ Safety:
   passive/read-only
   controlled comparison only
   single changed offset required
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-saved-offset-mapping-manifest-report": """RytmRandomizer passive CLI: analog-four-saved-offset-mapping-manifest-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report <path>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report --help
+
+Behavior:
+  Reads a local JSON verified saved-offset mapping manifest and validates that
+  every entry has a legal Analog Four track, non-negative relative offset,
+  non-empty parameter name, CC0-127 value, and verified mapping status. It
+  reports duplicate track/offset pairs as blocked. It does not read SysEx
+  files, request dumps, receive live SysEx, send MIDI, write SysEx, execute
+  commands, open ports, or touch hardware.
+
+Safety:
+  passive/read-only
+  local JSON read only
   no MIDI sending
   no MIDI receive
   no port opening
