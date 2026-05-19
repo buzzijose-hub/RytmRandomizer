@@ -1,0 +1,69 @@
+# .gitattributes — repo-wide line-ending + diff treatment
+#
+# Why this file exists:
+# - Cross-platform contributors (Windows + macOS + Linux) commit code that
+#   git would otherwise reinterpret per-OS. The pre-commit hook + ruff + black
+#   normalize Python files, but binary diff noise and CRLF on JSON would still
+#   bite if .gitattributes isn't pinned.
+# - The V1.34 parity goldens at tests/fixtures/v134_parity/*.json are
+#   byte-frozen reference data. Any line-ending drift breaks parity tests
+#   silently (the diff would show "no semantic change" but bytes differ).
+
+# Auto-detect text; reject autocrlf=true Windows defaults on text files.
+* text=auto eol=lf
+
+# Python sources: always LF, treat as text for diff.
+*.py             text eol=lf diff=python
+*.pyi            text eol=lf diff=python
+
+# Config + docs: always LF.
+*.toml           text eol=lf
+*.yml            text eol=lf
+*.yaml           text eol=lf
+*.cfg            text eol=lf
+*.ini            text eol=lf
+*.md             text eol=lf
+*.rst            text eol=lf
+*.txt            text eol=lf
+*.json           text eol=lf
+
+# Critical fixture files: explicit text+LF so any byte-level drift is
+# visible in the diff (parity tests would catch this anyway, but the
+# .gitattributes lock prevents "git renormalized line endings" mystery
+# diffs on Windows machines that previously committed CRLF.)
+tests/fixtures/v134_parity/*.json    text eol=lf
+tests/fixtures/cli_*.txt             text eol=lf
+
+# Shell scripts: LF (some tools choke on CRLF in shebang lines).
+*.sh             text eol=lf
+*.bash           text eol=lf
+
+# PowerShell: CRLF (Windows convention; ps1 parser is happy with either).
+*.ps1            text eol=crlf
+*.psm1           text eol=crlf
+*.psd1           text eol=crlf
+
+# Binary files: never normalize, never diff.
+*.png            binary
+*.jpg            binary
+*.jpeg           binary
+*.gif            binary
+*.ico            binary
+*.pdf            binary
+*.zip            binary
+*.gz             binary
+*.tar            binary
+*.whl            binary
+*.exe            binary
+*.dll            binary
+*.so             binary
+*.dylib          binary
+
+# Generated / lockfile: keep text but don't show in diff by default.
+poetry.lock      text eol=lf -diff
+uv.lock          text eol=lf -diff
+
+# linguist (for GitHub language stats): don't count tests as primary language.
+tests/**         linguist-detectable=true linguist-documentation=false
+docs/**          linguist-documentation=true
+*.md             linguist-documentation=true

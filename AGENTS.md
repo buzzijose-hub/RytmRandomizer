@@ -3,6 +3,17 @@
 > One-page entry point for AI agents (Claude Code, codex, etc.) doing work in this repo.
 > Humans should read [`CONTRIBUTING.md`](CONTRIBUTING.md) first; this file is a navigation index, not a replacement.
 
+> **Looking for the fastest path to a working PR?** Read [`docs/AGENT_TASK_RECIPES.md`](docs/AGENT_TASK_RECIPES.md) — 10 step-by-step recipes for the most common tasks (add a pad command, extend the data layer, add an Elektron device family, regenerate parity fixtures, bundle a multi-WS PR, etc.). Each recipe links back here for the rules it enforces.
+
+## For codex-namespace branches
+
+If you are operating under the OpenAI `codex` agent (or any agent working on a `codex/...` branch), read these **before any other action**:
+
+- [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md) — codex-specific pre-flight checklist mapping past anti-patterns (stacked PR cascades, parallel sibling subpackages, cross-family private-API imports, oversized PRs without a plan doc, missing 16-gate conformance checklist) to the rule that catches them.
+- [`docs/CODEX_CONTRIBUTING.md`](docs/CODEX_CONTRIBUTING.md) — the longer codex-facing contribution guide with concrete fix recipes for each anti-pattern. (Authored separately; may not yet exist at the time you read this — check the link.)
+
+All other agents (Claude Code, etc.) follow the same rules; the codex guide simply surfaces the specific patterns codex has historically gotten wrong on this repo.
+
 ## Before you do anything
 
 1. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md)** — the developer handbook. It has 22 sections; the most load-bearing are:
@@ -37,13 +48,18 @@
 ```
 RytmRandomizer/
 ├─ AGENTS.md                       ← you are here
+├─ CLAUDE.md                       ← per-session guardrails for Claude Code (mirrors the hard rules)
 ├─ CONTRIBUTING.md                 ← developer handbook (read first)
 ├─ README.md
 ├─ CHANGELOG.md
+├─ Justfile                        ← task runner (`just check`, `just test`, `just lint`, `just pr`, `just watch`)
 ├─ pyproject.toml                  ← deps + pytest addopts (-n auto)
 ├─ .coveragerc                     ← coverage ratchet floor
 ├─ .pre-commit-config.yaml
 ├─ .python-version
+├─ .gitattributes                  ← line-ending + diff rules (keeps fixtures byte-stable cross-platform)
+├─ .devcontainer/
+│  └─ devcontainer.json            ← reproducible dev container (matches CI Python + tooling)
 │
 ├─ rytm_randomizer/                ← the package (10 subpackages, 86 modules)
 │  ├─ app.py                       ← entry point (--arm / --dry-run / passive)
@@ -99,12 +115,18 @@ RytmRandomizer/
 │
 └─ .claude/
    ├─ agents/                      ← agent role definitions (code-reviewer, etc.)
-   ├─ rules/                       ← 5 mandatory rule files (read on every task)
-   │  ├─ architecture.md           ← agent-facing architecture distillation
-   │  ├─ cascade-merge-pattern.md  ← Gate 16 — no stacked PRs under approval-gated branches
-   │  ├─ coverage-gate-100pct.md   ← Gate 1 — coverage details
-   │  ├─ parity-fixture-discipline.md ← when/how to regenerate V1.34 fixtures
-   │  └─ skill-routing.md          ← which skill applies to which task
+   ├─ rules/                       ← 11 mandatory rule files (read on every task)
+   │  ├─ architecture.md                    ← agent-facing distillation of `docs/ARCHITECTURE.md` (layer order, direction rules)
+   │  ├─ autonomous-agent-execution.md      ← drive chained tasks to completion without per-step confirmation
+   │  ├─ cascade-merge-pattern.md           ← Gate 16 — bundle multi-WS work into one PR under approval-gated branches
+   │  ├─ codex-contribution-guide.md        ← codex-specific pre-flight checklist (read for any `codex/...` branch)
+   │  ├─ coverage-gate-100pct.md            ← Gate 1 — 100% branch coverage on touched files
+   │  ├─ device-protocol-strategy.md        ← every Elektron device family routes through `devices/` + `devices/strategies/`
+   │  ├─ hardware-pinned-packages.md        ← do not bump `mido==1.3.3` or `python-rtmidi==1.5.8` without hardware re-validation
+   │  ├─ maximize-parallelization.md        ← dispatch independent tool calls / agents in one message, not serially
+   │  ├─ parity-fixture-discipline.md       ← when/how to regenerate V1.34 fixtures (and when you absolutely must not)
+   │  ├─ pr-body-conformance-checklist.md   ← every PR body carries the 16-gate + strict-rules checklist verbatim
+   │  └─ skill-routing.md                   ← which skill applies to which task (consult before starting)
    ├─ settings.json                ← post-push code-reviewer hook config
    └─ skills/                      ← 19 task-specific skill files
       ├─ add-pad-command/SKILL.md       ← adding a V1.34-equivalent command
@@ -166,6 +188,8 @@ PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py tests/test_gro
 
 ## How to open a PR (autonomous-agent compatible)
 
+Prefer the `Justfile` task runner — it bundles the exact commands CI runs and keeps the agent path identical to the human path.
+
 ```bash
 # 1. Branch off the integration target
 git fetch origin
@@ -174,24 +198,36 @@ git pull --ff-only
 git checkout -b <type>/<short-slug>
 
 # 2. Implement (TDD where applicable)
+just watch            # optional: re-run fast tests on file change during inner-loop work
 
-# 3. Verify locally
+# 3. Verify locally (one command bundles tests + architecture gate + lint trio)
+just check            # = `just test` + `just lint` (matches CI; the canonical pre-push gate)
+# or run the pieces individually:
+just test             # full pytest suite (with -n auto xdist parallelization)
+just lint             # ruff + black --check + isort --check-only
+
+# 4. Push + open PR with conformance checklist
+just pr               # pushes the current branch, opens a draft PR against modularize-v1.34,
+                      # and pre-populates the body from `.github/PULL_REQUEST_TEMPLATE.md`
+                      # (the 16-gate checklist + strict-rules block)
+```
+
+If you need to fall back to raw commands (e.g., the dev container is unavailable), the underlying invocations are still:
+
+```bash
 python -m pytest
 python -m pytest tests/architecture/ -q
 python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .
-
-# 4. Push
 git push -u origin <your-branch>
-
-# 5. Open PR with conformance checklist
 gh pr create --base modularize-v1.34 --title "..." --body-file path/to/body.md
 ```
 
-PR body must include:
+PR body must include (enforced by `.claude/rules/pr-body-conformance-checklist.md`):
 
 - What changed and why
 - Test plan (checklist of what was verified)
-- Plan-requirements conformance checklist for all 16 gates (`[x]` or `[ ] N/A — reason`)
+- Plan-requirements conformance checklist for all 16 gates (`[x]` or `[ ] Gate N — N/A: <reason>`)
+- Strict-rules confirmation block (6 lines, all `[x]` for a normal PR)
 - Link to any plan doc under `docs/superpowers/plans/`
 
 ## Cross-reference index
