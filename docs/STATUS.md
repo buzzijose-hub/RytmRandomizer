@@ -331,6 +331,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   `--dry-run` or `--arm`. It sends only Pan CC10 and Filter Frequency CC74 to
   Pads 5-12, returning both controls to 64, then exits. This is channel
   validation only, not full Pads 5-12 mutation support.
+- The active app now exposes a guarded `--twelve-pad-rytm-runtime` path with
+  `--dry-run` or `--arm`. It can build the OS 1.72-aware 12-pad Rytm starter
+  stream from style/discovery input, optionally narrow the send to one pad with
+  `--runtime-pad <1-12>`, and still requires the exact `SEND` confirmation in
+  armed mode. Pad/machine legality is sourced from the passive 12-pad engine
+  matrix, so Pad 10 remains the OH open-hihat lane and XT Classic remains on
+  Pads 6-8.
 - The active app also exposes a guarded `--analog-four-smoke` modifier with
   `--dry-run` or `--arm`. It sends only Amp Pan CC10 to Analog Four Tracks
   1-4, returning Pan to 64, then exits. This is channel validation only, not
@@ -339,6 +346,17 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   for one selected A4 track. The
   `--analog-four-track-filter-smoke <1-4>` modifier runs Filter 1 Frequency
   CC18 low/open/open-return for one selected A4 track.
+- The active app also exposes a guarded Analog Four runtime path:
+  `--analog-four-runtime` with `--dry-run` or `--arm`, profile selection, and
+  optional `--analog-four-runtime-track <1-4>` narrowing. This sends the
+  manual-backed starter CC plan only after the operator selects the A4 port
+  and confirms `SEND`; it does not send NRPN, mutate CV tracks, write SysEx,
+  or touch the Rytm unless a separate dual-machine path is selected.
+- The dual-machine snapshot send path is lane-scoped. Passive reports and the
+  guarded app path can target Rytm-only, Analog-Four-only, or both machines,
+  with optional `--snapshot-rytm-pad <1-12>` and
+  `--snapshot-analog-four-track <1-4>` filters for one-lane-at-a-time live
+  validation.
 - Pad coverage is complete relative to V1.34: BD engine anchors/discovery (Pad 1), snare/secondary percussion (Pad 2), SY Raw bass (Pad 3), BD Acoustic (Pad 4), a four-pad group layer, scenes (S0-S5 plus variants), isolated single-pad mutation, legacy single-profile mutation, and the full command surface.
 - The V1.34 reference behavior is preserved as JSON goldens under `tests/fixtures/v134_parity/`. The original `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`) now compare engine output to those fixtures via `tests/_parity_worker.py`.
 
@@ -356,16 +374,18 @@ Each step is locked against the V1.34 reference by characterization tests.
 
 ## What's Next
 
-- Stabilize the V1.34 alpha around the first hardware pass: keep the canonical
-  dry-run and project-status checks green after every installer rebuild.
-- Polish the end-user operator flow without changing the validated MIDI
-  ranges or the protected V1.34 reference.
-- Further hardening: installer polish, release checklist, lint/type-check
-  baseline, and repeat hardware validation before a release candidate.
-- Out of scope for now: Pads 5-12 active runtime mutation, additional
-  hardware-validated Rytm machines/profiles, GUI/capture, live SysEx
-  receive/write behavior, Analog Four runtime mutation beyond pan-only smoke,
-  and cross-device hardware execution.
+- Keep PR #37 green while it remains stacked on PR #36, then retarget or
+  rebase after the subpackage cleanup lands.
+- Run the manual all-lane hardware validation guide on copied/restorable kits:
+  Rytm-only lanes, Analog-Four-only lanes, then one tiny both-machine pilot
+  before any wider dual-machine send.
+- Convert confirmed lane-validation notes back into source-starter,
+  safe-range, and operator-checklist updates without changing the protected
+  V1.34 four-pad behavior.
+- Still future work: GUI, live SysEx receive/write, real-time snapshot capture,
+  full audio analysis, deeper per-engine mutation maps for every Rytm machine,
+  and broader Analog Four sound-design mutation beyond the current starter CC
+  runtime.
 
 ## Reference Docs
 
