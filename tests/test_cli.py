@@ -16,8 +16,9 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
-    "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
-    "list-scenes | list-group-profiles | search-commands <query> | "
+    "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
+    "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
+    "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
 )
@@ -373,6 +374,28 @@ def test_behavior_parity_report_command_exits_zero_and_matches_fixture():
         "cli_behavior_parity_report_expected.txt"
     )
     assert result.stderr == ""
+
+
+def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
+    from rytm_randomizer.cli import main
+
+    exit_code = main(["dual-machine-target-report", "both"])
+
+    out = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Target: both" in out
+    assert "analog_rytm_mk2" in out
+    assert "analog_four_mk2" in out
+
+
+def test_dual_machine_target_report_rejects_unknown_target(capsys) -> None:
+    from rytm_randomizer.cli import main
+
+    exit_code = main(["dual-machine-target-report", "octatrack"])
+
+    err = capsys.readouterr().err
+    assert exit_code == 2
+    assert "unknown target" in err
 
 
 def test_report_command_is_deterministic():
