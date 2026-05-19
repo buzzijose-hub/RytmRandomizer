@@ -185,6 +185,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   `--analog-four-mapping-manifest <path>` with `--analog-four-path` and
   `--analog-four-slot`, so A4 saved snapshots use verified offset-to-CC
   mappings before dry-run or armed delivery can emit A4 messages.
+- 2026-05-19: taught the passive dual-machine lane validation guide about A4
+  saved-offset mapping manifests. A4-only and both-machine focused guides now
+  print `--analog-four-mapping-manifest` in their preview, dry-run, and armed
+  commands, using either a provided path or a clear placeholder for the ready
+  manifest Jose should supply during hardware validation.
 - 2026-05-19: added app-level dual-machine snapshot lane scoping.
   `rytm_randomizer.app --dry-run/--arm --dual-machine-snapshot-send` now
   accepts `--snapshot-rytm-pad <1-12>` and

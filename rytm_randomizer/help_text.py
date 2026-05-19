@@ -18,7 +18,7 @@ USAGE = (
     "dual-machine-live-snapshot-readiness-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--analog-four-mapping-manifest <path>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-active-send-plan-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--analog-four-mapping-manifest <path>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-guarded-send-dry-run-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--analog-four-mapping-manifest <path>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
-    "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
+    "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] [--analog-four-mapping-manifest <path>] | "
     "dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path> | "
     "dual-machine-mapping-validation-queue-report [--target <target>] [--limit <n>] | "
     "dual-machine-mapping-session-plan-report [--target <target>] [--slot <1-128>] [--limit <n>] | "
@@ -108,6 +108,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both> --rytm-pad <1-12> --analog-four-track <1-4>
+  python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track <1-4> --analog-four-mapping-manifest <path>
   python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>
   python -m rytm_randomizer.cli dual-machine-mapping-validation-queue-report
   python -m rytm_randomizer.cli dual-machine-mapping-validation-queue-report --target <rytm|analog-four|both> --limit <n>
@@ -638,6 +639,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target rytm --rytm-pad <1-12>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target both --rytm-pad <1-12> --analog-four-track <1-4>
+  python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track <1-4> --analog-four-mapping-manifest <path>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --help
 
 Behavior:
@@ -645,10 +647,12 @@ Behavior:
   snapshot send: passive bridge previews, readiness gates, app dry-run, and
   the final armed lane-scoped test command. Optional --target scopes the guide
   to Rytm only, Analog Four only, or both; lane flags choose the specific Rytm
-  pad and/or A4 track. Use --all-lanes to print the full one-lane-at-a-time
-  validation matrix for Rytm Pads 1-12, A4 Tracks 1-4, and both-machine pilot
-  pairs. It is pure text for preparation and does not send MIDI, open ports,
-  receive live SysEx, write SysEx, or mutate hardware.
+  pad and/or A4 track. Optional --analog-four-mapping-manifest fills the A4
+  saved-offset manifest path into generated A4 snapshot commands; when omitted
+  the guide prints a placeholder. Use --all-lanes to print the full
+  one-lane-at-a-time validation matrix for Rytm Pads 1-12, A4 Tracks 1-4, and
+  both-machine pilot pairs. It is pure text for preparation and does not send
+  MIDI, open ports, receive live SysEx, write SysEx, or mutate hardware.
 
 Safety:
   passive/read-only

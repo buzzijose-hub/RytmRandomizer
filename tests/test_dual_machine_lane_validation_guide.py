@@ -178,6 +178,25 @@ def test_dual_machine_lane_validation_guide_formats_analog_four_only_lane():
     assert "- A4 Track 2 heard change / safe:" in joined
 
 
+def test_dual_machine_lane_validation_guide_includes_a4_mapping_manifest_for_a4_scopes():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    a4_only = "\n".join(
+        format_dual_machine_lane_validation_guide(
+            target="analog-four",
+            analog_four_track=2,
+        )
+    )
+    both = "\n".join(format_dual_machine_lane_validation_guide())
+
+    assert "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>" in a4_only
+    assert "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>" in both
+    assert "- Analog Four mapping manifest path:" in a4_only
+    assert "- Analog Four mapping manifest path:" in both
+
+
 def test_dual_machine_lane_validation_request_rejects_invalid_cross_scope_values():
     from rytm_randomizer.dual_machine.lane_validation_guide import (
         build_dual_machine_lane_validation_guide_request,
@@ -219,6 +238,25 @@ def test_dual_machine_lane_validation_guide_cli_accepts_analog_four_only_target(
     assert "<rytm-sysex-path> --slot 1" not in result.stdout
     assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in result.stdout
     assert "--snapshot-rytm-pad" not in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_lane_validation_guide_cli_accepts_a4_mapping_manifest_path():
+    result = run_cli(
+        "dual-machine-lane-validation-guide",
+        "--target",
+        "analog-four",
+        "--analog-four-track",
+        "2",
+        "--analog-four-mapping-manifest",
+        "G:\\ANALOG FOUR\\MAPPING\\a4-verified-mappings.json",
+    )
+
+    assert result.returncode == 0
+    assert (
+        "--analog-four-mapping-manifest " "G:\\ANALOG FOUR\\MAPPING\\a4-verified-mappings.json"
+    ) in result.stdout
+    assert "<analog-four-mapping-manifest-path>" not in result.stdout
     assert result.stderr == ""
 
 

@@ -54,6 +54,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both> --rytm-pad <1-12> --analog-four-track <1-4>
+  python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track <1-4> --analog-four-mapping-manifest <path>
   python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>
   python -m rytm_randomizer.cli dual-machine-mapping-validation-queue-report
   python -m rytm_randomizer.cli dual-machine-mapping-validation-queue-report --target <rytm|analog-four|both> --limit <n>

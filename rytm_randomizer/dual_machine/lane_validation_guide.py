@@ -14,6 +14,7 @@ DEFAULT_RYTM_SLOT = 1
 DEFAULT_RYTM_PAD = 1
 DEFAULT_ANALOG_FOUR_SLOT = 1
 DEFAULT_ANALOG_FOUR_TRACK = 4
+DEFAULT_ANALOG_FOUR_MAPPING_MANIFEST_PATH = "<analog-four-mapping-manifest-path>"
 DEFAULT_DEPTH = "micro"
 EXPECTED_LANE_SCOPED_MESSAGES = 11
 EXPECTED_RYTM_LANE_MESSAGES = 6
@@ -39,6 +40,7 @@ class DualMachineLaneValidationGuideRequest:
     target: str
     rytm_pad: int | None
     analog_four_track: int | None
+    analog_four_mapping_manifest: str | None
 
 
 def build_dual_machine_lane_validation_guide_request(
@@ -46,6 +48,7 @@ def build_dual_machine_lane_validation_guide_request(
     target: str = "both",
     rytm_pad: int | None = None,
     analog_four_track: int | None = None,
+    analog_four_mapping_manifest: str | None = None,
 ) -> DualMachineLaneValidationGuideRequest:
     """Validate and normalize lane guide options."""
 
@@ -60,10 +63,13 @@ def build_dual_machine_lane_validation_guide_request(
     if target == "rytm":
         if analog_four_track is not None:
             raise ValueError("Analog Four track cannot be used with target rytm")
+        if analog_four_mapping_manifest is not None:
+            raise ValueError("Analog Four mapping manifest cannot be used with target rytm")
         return DualMachineLaneValidationGuideRequest(
             target=target,
             rytm_pad=rytm_pad or DEFAULT_RYTM_PAD,
             analog_four_track=None,
+            analog_four_mapping_manifest=None,
         )
     if target == "analog-four":
         if rytm_pad is not None:
@@ -72,11 +78,13 @@ def build_dual_machine_lane_validation_guide_request(
             target=target,
             rytm_pad=None,
             analog_four_track=analog_four_track or DEFAULT_ANALOG_FOUR_TRACK,
+            analog_four_mapping_manifest=analog_four_mapping_manifest,
         )
     return DualMachineLaneValidationGuideRequest(
         target=target,
         rytm_pad=rytm_pad or DEFAULT_RYTM_PAD,
         analog_four_track=analog_four_track or DEFAULT_ANALOG_FOUR_TRACK,
+        analog_four_mapping_manifest=analog_four_mapping_manifest,
     )
 
 
@@ -85,6 +93,7 @@ def format_dual_machine_lane_validation_guide(
     target: str = "both",
     rytm_pad: int | None = None,
     analog_four_track: int | None = None,
+    analog_four_mapping_manifest: str | None = None,
 ) -> list[str]:
     """Return the deterministic dual-machine lane validation guide."""
 
@@ -92,6 +101,7 @@ def format_dual_machine_lane_validation_guide(
         target=target,
         rytm_pad=rytm_pad,
         analog_four_track=analog_four_track,
+        analog_four_mapping_manifest=analog_four_mapping_manifest,
     )
     snapshot_args = _snapshot_report_args(request)
     app_args = _app_args(request)
@@ -234,6 +244,7 @@ def _snapshot_report_args(request: DualMachineLaneValidationGuideRequest) -> str
             "--analog-four-path <analog-four-sysex-path> "
             f"--analog-four-slot {DEFAULT_ANALOG_FOUR_SLOT}"
         )
+        parts.append(_analog_four_mapping_manifest_arg(request))
     parts.append(f"--target {request.target}")
     if request.rytm_pad is not None:
         parts.append(f"--rytm-pad {request.rytm_pad}")
@@ -256,14 +267,14 @@ def _saved_bank_preflight_lines(target: str) -> list[str]:
             "- Export or choose the saved Analog Four kit-bank/whole-project SysEx file.",
             ANALOG_FOUR_BANK_PREFLIGHT_COMMAND,
             "- Continue only if Analog Four blocked tracks are 0.",
-            "- Treat Analog Four as candidate-ready until the live lane test confirms the track.",
+            "- Use a ready Analog Four mapping manifest before any saved A4 " "snapshot send.",
         ]
     return [
         "Saved-bank preflight:",
         "- Export or choose the saved Rytm and Analog Four kit-bank/whole-project SysEx files.",
         SAVED_BANK_PREFLIGHT_COMMAND,
         "- Continue only if combined blocked lanes are 0 and Problem slots is none.",
-        "- Treat Analog Four as candidate-ready until the live lane tests confirm each track.",
+        "- Use a ready Analog Four mapping manifest before any saved A4 " "snapshot send.",
     ]
 
 
@@ -279,6 +290,8 @@ def _snapshot_source_note_lines(request: DualMachineLaneValidationGuideRequest) 
             "Snapshot source notes:",
             "- Analog Four source: <analog-four-sysex-path> slot "
             f"{DEFAULT_ANALOG_FOUR_SLOT} supplies saved A4 snapshot candidates.",
+            "- Analog Four mapping manifest: verified saved offsets become "
+            "mapped CC sends; unverified offsets stay blocked.",
         ]
     return [
         "Snapshot source notes:",
@@ -288,6 +301,8 @@ def _snapshot_source_note_lines(request: DualMachineLaneValidationGuideRequest) 
         ),
         "- Analog Four source: <analog-four-sysex-path> slot "
         f"{DEFAULT_ANALOG_FOUR_SLOT} supplies saved A4 snapshot candidates.",
+        "- Analog Four mapping manifest: verified saved offsets become "
+        "mapped CC sends; unverified offsets stay blocked.",
     ]
 
 
@@ -297,6 +312,7 @@ def _all_lane_saved_bank_preflight_lines() -> list[str]:
         "- Before Rytm-only lanes: " + RYTM_BANK_PREFLIGHT_COMMAND,
         "- Before Analog-Four-only lanes: " + ANALOG_FOUR_BANK_PREFLIGHT_COMMAND,
         "- Before both-machine pilot pairs: " + SAVED_BANK_PREFLIGHT_COMMAND,
+        "- Prepare a ready Analog Four mapping manifest before A4 saved-snapshot " "lane sends.",
         "- Continue only if the selected scope reports zero blocked lanes.",
     ]
 
@@ -327,9 +343,17 @@ def _app_args(request: DualMachineLaneValidationGuideRequest) -> str:
             [
                 "--analog-four-path <analog-four-sysex-path>",
                 f"--analog-four-slot {DEFAULT_ANALOG_FOUR_SLOT}",
+                _analog_four_mapping_manifest_arg(request),
             ]
         )
     return " ".join(parts)
+
+
+def _analog_four_mapping_manifest_arg(request: DualMachineLaneValidationGuideRequest) -> str:
+    manifest_path = (
+        request.analog_four_mapping_manifest or DEFAULT_ANALOG_FOUR_MAPPING_MANIFEST_PATH
+    )
+    return f"--analog-four-mapping-manifest {manifest_path}"
 
 
 def _purpose_line(request: DualMachineLaneValidationGuideRequest) -> str:
@@ -379,10 +403,14 @@ def _armed_order_line(request: DualMachineLaneValidationGuideRequest) -> str:
 
 def _path_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[str]:
     if request.target == "both":
-        return ["- Rytm project/kit path:", "- Analog Four project/kit path:"]
+        return [
+            "- Rytm project/kit path:",
+            "- Analog Four project/kit path:",
+            "- Analog Four mapping manifest path:",
+        ]
     if request.target == "rytm":
         return ["- Rytm project/kit path:"]
-    return ["- Analog Four project/kit path:"]
+    return ["- Analog Four project/kit path:", "- Analog Four mapping manifest path:"]
 
 
 def _port_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[str]:
@@ -405,6 +433,7 @@ def _heard_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[st
 __all__ = [
     "ALL_LANE_PILOT_PAIRS",
     "DualMachineLaneValidationGuideRequest",
+    "DEFAULT_ANALOG_FOUR_MAPPING_MANIFEST_PATH",
     "DEFAULT_ANALOG_FOUR_SLOT",
     "DEFAULT_ANALOG_FOUR_TRACK",
     "DEFAULT_DEPTH",

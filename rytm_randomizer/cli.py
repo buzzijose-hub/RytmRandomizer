@@ -514,6 +514,7 @@ def _parse_dual_machine_lane_validation_guide_cli_args(args):
     target = "both"
     rytm_pad = None
     analog_four_track = None
+    analog_four_mapping_manifest = None
     tail = list(args[1:])
     while tail:
         flag = tail.pop(0)
@@ -532,6 +533,8 @@ def _parse_dual_machine_lane_validation_guide_cli_args(args):
                 analog_four_track = int(value)
             except ValueError as exc:
                 raise ValueError("Analog Four track must be an integer") from exc
+        elif flag == "--analog-four-mapping-manifest":
+            analog_four_mapping_manifest = value
         else:
             raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
 
@@ -539,6 +542,7 @@ def _parse_dual_machine_lane_validation_guide_cli_args(args):
         "target": target,
         "rytm_pad": rytm_pad,
         "analog_four_track": analog_four_track,
+        "analog_four_mapping_manifest": analog_four_mapping_manifest,
     }
 
 
