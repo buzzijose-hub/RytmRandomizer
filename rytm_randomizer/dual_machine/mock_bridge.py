@@ -15,6 +15,7 @@ from pathlib import Path
 from ..analog_four.snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
+    filter_analog_four_snapshot_mutation_plan_to_track,
 )
 from ..analog_four.starter_profiles import (
     BALANCED_ANALOG_FOUR_STARTER_PROFILE_KEY,
@@ -29,6 +30,7 @@ from ..performance.snapshot_target import (
 from ..snapshot.rytm_mutation_planner import (
     SnapshotMutationPlan,
     build_snapshot_mutation_plan_from_file,
+    filter_snapshot_mutation_plan_to_pad,
     format_snapshot_mutation_plan_error,
 )
 
@@ -130,6 +132,8 @@ def build_dual_machine_mock_bridge(
     analog_four_sysex_path: str | Path | None = None,
     analog_four_slot: int | None = None,
     analog_four_profile: str | None = "balanced",
+    rytm_pad: int | None = None,
+    analog_four_track: int | None = None,
 ) -> DualMachineMockBridge:
     """Build the passive combined mock bridge from a saved Rytm kit."""
 
@@ -144,9 +148,17 @@ def build_dual_machine_mock_bridge(
         slot=slot,
         depth=depth,
     )
+    if rytm_pad is not None:
+        rytm_plan = filter_snapshot_mutation_plan_to_pad(rytm_plan, pad=rytm_pad)
+
     starter_profile = get_analog_four_starter_profile(analog_four_profile)
     analog_four_source = "safe starter CC plan"
     analog_four_tracks = build_analog_four_safe_starter_plan(starter_profile.key)
+    if analog_four_track is not None:
+        analog_four_tracks = filter_analog_four_bridge_plan_to_track(
+            analog_four_tracks,
+            track=analog_four_track,
+        )
     analog_four_kit_name = None
     analog_four_mapping_status = None
     analog_four_starter_profile_key = starter_profile.key
@@ -161,6 +173,11 @@ def build_dual_machine_mock_bridge(
             slot=analog_four_slot,
             depth=depth,
         )
+        if analog_four_track is not None:
+            analog_four_plan = filter_analog_four_snapshot_mutation_plan_to_track(
+                analog_four_plan,
+                track=analog_four_track,
+            )
         analog_four_source = "saved-kit snapshot candidates"
         analog_four_tracks = build_analog_four_snapshot_bridge_plan(analog_four_plan)
         analog_four_kit_name = analog_four_plan.kit_name
@@ -258,6 +275,21 @@ def build_analog_four_snapshot_bridge_plan(
     return tuple(tracks)
 
 
+def filter_analog_four_bridge_plan_to_track(
+    tracks: tuple[AnalogFourTrackPlan, ...],
+    *,
+    track: int,
+) -> tuple[AnalogFourTrackPlan, ...]:
+    """Return one Analog Four bridge track from a safe-starter or snapshot plan."""
+
+    if track not in range(1, A4_TRACK_COUNT + 1):
+        raise ValueError("Analog Four bridge track must be 1, 2, 3, or 4")
+    selected_tracks = tuple(track_plan for track_plan in tracks if track_plan.track == track)
+    if not selected_tracks:
+        raise ValueError("Analog Four bridge track must be 1, 2, 3, or 4")
+    return selected_tracks
+
+
 def capture_dual_machine_mock_messages(bridge: DualMachineMockBridge) -> MockMidiSender:
     """Capture the combined bridge stream in an inert mock sender."""
 
@@ -324,12 +356,14 @@ def format_dual_machine_mock_bridge_report(bridge: DualMachineMockBridge) -> lis
         f"Target: {bridge.target_plan.canonical_target}",
         f"Active devices: {_format_labels(bridge.target_plan.active_device_labels)}",
         f"Untouched devices: {_format_labels(bridge.target_plan.untouched_device_labels)}",
-        f"Rytm planned pads: {_targeted_rytm_planned_pad_count(bridge)} / {PAD_COUNT}",
+        f"Rytm planned pads: {_targeted_rytm_planned_pad_count(bridge)} / "
+        f"{bridge.rytm_plan.scanned_pad_count}",
         f"Rytm mock messages: {bridge.rytm_message_count}",
         f"Analog Four source: {bridge.analog_four_source}",
         *(_analog_four_starter_profile_lines(bridge)),
         *(_analog_four_snapshot_header_lines(bridge)),
-        f"Analog Four tracks: {bridge.analog_four_track_count} / {A4_TRACK_COUNT}",
+        f"Analog Four tracks: {bridge.analog_four_track_count} / "
+        f"{len(bridge.analog_four_tracks)}",
         f"Analog Four mock messages: {bridge.analog_four_message_count}",
         f"Combined mock messages: {bridge.combined_message_count}",
         "Device plans:",
@@ -481,6 +515,7 @@ __all__ = [
     "build_analog_four_snapshot_bridge_plan",
     "build_dual_machine_mock_bridge",
     "capture_dual_machine_mock_messages",
+    "filter_analog_four_bridge_plan_to_track",
     "format_dual_machine_mock_bridge_error",
     "format_dual_machine_mock_bridge_report",
 ]

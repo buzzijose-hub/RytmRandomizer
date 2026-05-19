@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added lane-scoped dual-machine mock bridge previews.
+  `dual-machine-mock-bridge-report` now accepts `--rytm-pad <1-12>` and
+  `--analog-four-track <1-4>` so a saved Rytm kit plus the Analog Four starter
+  or saved snapshot side can be previewed one lane at a time. This remains
+  passive/mock-only: no MIDI ports are opened, no MIDI is sent, and no hardware
+  is touched.
 - 2026-05-19: added one-pad Rytm saved-snapshot previews.
   `--pad <1-12>` can now be combined with
   `sysex-snapshot-mutation-plan-report` and

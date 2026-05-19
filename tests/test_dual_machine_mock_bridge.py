@@ -302,6 +302,114 @@ def test_dual_bridge_accepts_birmingham_analog_four_profile(tmp_path):
     assert "Track Level: CC95 -> 106" in report
 
 
+def test_dual_bridge_filters_rytm_pad_and_a4_starter_track(tmp_path):
+    from rytm_randomizer.dual_machine.mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+        format_dual_machine_mock_bridge_report,
+    )
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(
+        make_rytm_kit_record(
+            kit_name="LANE FILTER",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x4A: 65,
+                    0x50: 121,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+
+    bridge = build_dual_machine_mock_bridge(
+        str(sysex_path),
+        slot=1,
+        depth="micro",
+        rytm_pad=2,
+        analog_four_track=4,
+    )
+    sender = capture_dual_machine_mock_messages(bridge)
+    report = "\n".join(format_dual_machine_mock_bridge_report(bridge))
+
+    assert bridge.rytm_message_count == 6
+    assert bridge.analog_four_track_count == 1
+    assert bridge.analog_four_message_count == 5
+    assert bridge.combined_message_count == 11
+    assert {message.metadata.get("pad") for message in sender.sent_messages if "pad" in message.metadata} == {
+        2
+    }
+    assert {
+        message.metadata.get("track")
+        for message in sender.sent_messages
+        if message.metadata["device"] == "Analog Four MKII"
+    } == {4}
+    assert "Rytm planned pads: 1 / 1" in report
+    assert "Analog Four tracks: 1 / 1" in report
+    assert "- Rytm Pad 2 / CP Classic: 6 message(s)" in report
+    assert "- Analog Four Track 4 / FX / noise / transition: 5 message(s)" in report
+    assert "- Rytm Pad 1 " not in report
+    assert "- Analog Four Track 1 " not in report
+
+
+def test_dual_bridge_filters_a4_snapshot_track(tmp_path):
+    from rytm_randomizer.dual_machine.mock_bridge import (
+        build_dual_machine_mock_bridge,
+        capture_dual_machine_mock_messages,
+        format_dual_machine_mock_bridge_report,
+    )
+
+    rytm_path = tmp_path / "rytm-kits.syx"
+    a4_path = tmp_path / "a4-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="RYTM LANE"))
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="A4 LANE",
+            track_values={
+                1: {20: 64, 22: 80, 24: 96},
+                2: {20: 32, 22: 48},
+            },
+        )
+    )
+
+    bridge = build_dual_machine_mock_bridge(
+        str(rytm_path),
+        slot=1,
+        depth="micro",
+        analog_four_sysex_path=str(a4_path),
+        analog_four_slot=1,
+        analog_four_track=2,
+    )
+    sender = capture_dual_machine_mock_messages(bridge)
+    report = "\n".join(format_dual_machine_mock_bridge_report(bridge))
+
+    assert bridge.analog_four_source == "saved-kit snapshot candidates"
+    assert bridge.analog_four_track_count == 1
+    assert bridge.analog_four_message_count == 2
+    assert bridge.combined_message_count == 8
+    assert {
+        message.metadata.get("track")
+        for message in sender.sent_messages
+        if message.metadata["device"] == "Analog Four MKII"
+    } == {2}
+    assert "Analog Four tracks: 1 / 1" in report
+    assert "- Analog Four Track 2 / STAB HIT: 2 message(s)" in report
+    assert "- Analog Four Track 1 " not in report
+
+
 def test_dual_bridge_rejects_starter_profile_with_a4_snapshot_path(tmp_path):
     from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
 
@@ -452,6 +560,59 @@ def test_dual_machine_mock_bridge_cli_accepts_analog_four_profile(tmp_path):
     assert "Analog Four starter profile: Birmingham Dark / birmingham-dark" in result.stdout
     assert "Combined mock messages: 20" in result.stdout
     assert "Track Level: CC95 -> 106" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_accepts_lane_filters(tmp_path):
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(
+        make_rytm_kit_record(
+            kit_name="CLI LANES",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x4A: 65,
+                    0x50: 121,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--rytm-pad",
+        "2",
+        "--analog-four-track",
+        "4",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Dual-Machine Mock Bridge Report" in result.stdout
+    assert "Rytm planned pads: 1 / 1" in result.stdout
+    assert "Analog Four tracks: 1 / 1" in result.stdout
+    assert "Combined mock messages: 11" in result.stdout
+    assert "- Rytm Pad 2 / CP Classic: 6 message(s)" in result.stdout
+    assert "- Analog Four Track 4 / FX / noise / transition: 5 message(s)" in result.stdout
+    assert "- Rytm Pad 1 " not in result.stdout
+    assert "- Analog Four Track 1 " not in result.stdout
+    assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 

@@ -20,7 +20,7 @@ USAGE = (
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
-    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
+    "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "

@@ -403,10 +403,10 @@ def _is_dual_machine_cli_usage_error(exc: ValueError) -> bool:
     return str(exc) == _DUAL_MACHINE_CLI_USAGE_ERROR
 
 
-def _parse_dual_machine_bridge_cli_args(args):
+def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = False):
     if (
         len(args) < 6
-        or len(args) > 14
+        or len(args) > (18 if allow_lane_filters else 14)
         or (len(args) - 6) % 2
         or args[2] != "--slot"
         or args[4] != "--depth"
@@ -422,6 +422,8 @@ def _parse_dual_machine_bridge_cli_args(args):
     analog_four_path = None
     analog_four_slot = None
     analog_four_profile = "balanced"
+    rytm_pad = None
+    analog_four_track = None
     tail = list(args[6:])
     while tail:
         flag = tail.pop(0)
@@ -442,6 +444,16 @@ def _parse_dual_machine_bridge_cli_args(args):
                 analog_four_slot = int(raw_slot)
             except ValueError as exc:
                 raise ValueError("Analog Four slot must be an integer") from exc
+        elif flag == "--rytm-pad" and allow_lane_filters:
+            try:
+                rytm_pad = int(value)
+            except ValueError as exc:
+                raise ValueError("Rytm pad must be an integer") from exc
+        elif flag == "--analog-four-track" and allow_lane_filters:
+            try:
+                analog_four_track = int(value)
+            except ValueError as exc:
+                raise ValueError("Analog Four track must be an integer") from exc
         else:
             raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
 
@@ -452,6 +464,8 @@ def _parse_dual_machine_bridge_cli_args(args):
         "analog_four_path": analog_four_path,
         "analog_four_slot": analog_four_slot,
         "analog_four_profile": analog_four_profile,
+        "rytm_pad": rytm_pad,
+        "analog_four_track": analog_four_track,
     }
 
 
@@ -860,7 +874,7 @@ def main(argv=None):
         from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
 
         try:
-            parsed = _parse_dual_machine_bridge_cli_args(args)
+            parsed = _parse_dual_machine_bridge_cli_args(args, allow_lane_filters=True)
         except ValueError as exc:
             if _is_dual_machine_cli_usage_error(exc):
                 sys.stderr.write(f"{USAGE}\n")
@@ -879,6 +893,8 @@ def main(argv=None):
                 analog_four_sysex_path=parsed["analog_four_path"],
                 analog_four_slot=parsed["analog_four_slot"],
                 analog_four_profile=parsed["analog_four_profile"],
+                rytm_pad=parsed["rytm_pad"],
+                analog_four_track=parsed["analog_four_track"],
             )
         except FileNotFoundError:
             lines = format_dual_machine_mock_bridge_error(args[1], "File not found")
