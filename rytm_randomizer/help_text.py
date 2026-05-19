@@ -16,9 +16,9 @@ USAGE = (
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
-    "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
-    "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
-    "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
+    "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
+    "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
+    "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
@@ -79,14 +79,17 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
+  python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
@@ -454,14 +457,16 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
+  python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report --help
 
 Behavior:
   Builds the passive dual-machine mock bridge, then reports a readiness gate
   for future live snapshot sending. Mapped CC mock messages can be marked ready;
   Analog Four saved-offset candidate events are blocked as candidate_unverified
-  because no CC mapping is claimed. This command never sends MIDI or opens a
-  port.
+  because no CC mapping is claimed. Optional --rytm-pad and --analog-four-track
+  narrow the readiness gate to one drum pad and/or one synth track. This command
+  never sends MIDI or opens a port.
 
 Safety:
   passive/read-only
@@ -482,13 +487,16 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
+  python -m rytm_randomizer.cli dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-active-send-plan-report --help
 
 Behavior:
   Builds the passive dual-machine mock bridge, then prints an active send plan
   preview for future guarded hardware sending. Mapped CC mock messages are
   listed as eligible; saved-offset candidate events are blocked because no CC
-  mapping is claimed. This command never sends MIDI or opens a port.
+  mapping is claimed. Optional --rytm-pad and --analog-four-track narrow the
+  event plan to one drum pad and/or one synth track. This command never sends
+  MIDI or opens a port.
 
 Safety:
   passive/read-only
@@ -509,13 +517,15 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --target <rytm|analog-four|both>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
+  python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report --help
 
 Behavior:
   Builds the passive dual-machine active send plan, then runs the guarded send
   dry-run into an inert mock sender. Ready target scopes emit mapped CC mock
-  messages. Blocked plans emit no partial messages. This command never sends
-  MIDI or opens a port.
+  messages. Blocked plans emit no partial messages. Optional --rytm-pad and
+  --analog-four-track narrow the dry-run to one drum pad and/or one synth track.
+  This command never sends MIDI or opens a port.
 
 Safety:
   passive/read-only

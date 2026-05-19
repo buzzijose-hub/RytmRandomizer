@@ -10,6 +10,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   or saved snapshot side can be previewed one lane at a time. This remains
   passive/mock-only: no MIDI ports are opened, no MIDI is sent, and no hardware
   is touched.
+- 2026-05-19: extended dual-machine lane scoping across passive readiness and
+  send-plan reports. The same `--rytm-pad <1-12>` and
+  `--analog-four-track <1-4>` flags now work with
+  `dual-machine-live-snapshot-readiness-report`,
+  `dual-machine-active-send-plan-report`, and
+  `dual-machine-guarded-send-dry-run-report`, keeping the narrowed mock stream
+  consistent from preview through readiness and dry-run gating.
 - 2026-05-19: added one-pad Rytm saved-snapshot previews.
   `--pad <1-12>` can now be combined with
   `sysex-snapshot-mutation-plan-report` and

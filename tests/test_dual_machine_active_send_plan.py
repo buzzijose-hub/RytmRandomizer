@@ -288,3 +288,32 @@ def test_dual_machine_active_send_plan_cli_reads_saved_dumps(tmp_path):
     assert "candidate_unverified_no_cc_mapping" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
+
+
+def test_dual_machine_active_send_plan_cli_accepts_lane_filters(tmp_path):
+    rytm_path = tmp_path / "rytm-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="CLI SEND LANES"))
+
+    result = run_cli(
+        "dual-machine-active-send-plan-report",
+        str(rytm_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--rytm-pad",
+        "1",
+        "--analog-four-track",
+        "4",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Dual-Machine Active Send Plan Report" in result.stdout
+    assert "Send plan ready: True" in result.stdout
+    assert "Eligible mapped CC messages: 11" in result.stdout
+    assert "Combined planned events: 11" in result.stdout
+    assert "Rytm Pad 1" in result.stdout
+    assert "Track 4 / FX / noise / transition" in result.stdout
+    assert "Track 1 / bass / low tonal anchor" not in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""

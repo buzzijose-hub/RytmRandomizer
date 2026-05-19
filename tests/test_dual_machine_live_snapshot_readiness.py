@@ -239,3 +239,36 @@ def test_dual_machine_live_snapshot_readiness_cli_reads_saved_dumps(tmp_path):
     assert "candidate_unverified_no_cc_mapping" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
+
+
+def test_dual_machine_live_snapshot_readiness_cli_accepts_lane_filters(tmp_path):
+    rytm_path = tmp_path / "rytm-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="CLI READY LANES"))
+
+    result = run_cli(
+        "dual-machine-live-snapshot-readiness-report",
+        str(rytm_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--rytm-pad",
+        "1",
+        "--analog-four-track",
+        "4",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Dual-Machine Live Snapshot Readiness Report" in result.stdout
+    assert "Ready: True" in result.stdout
+    assert "Combined mock messages: 11" in result.stdout
+    assert (
+        "Analog Rytm MKII: active / saved-kit snapshot / ready_mapped_cc / "
+        "messages 6 / mapped CC 6" in result.stdout
+    )
+    assert (
+        "Analog Four MKII: active / safe starter CC plan / ready_safe_starter_cc / "
+        "messages 5 / mapped CC 5" in result.stdout
+    )
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
