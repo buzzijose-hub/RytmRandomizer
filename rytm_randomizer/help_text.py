@@ -24,6 +24,7 @@ USAGE = (
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
+    "analog-four-saved-offset-mapping-guide [--track <1-4>] [--parameter <parameter>] | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -107,6 +108,8 @@ Usage:
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -211,6 +214,8 @@ Commands:
                      Scan saved Analog Four kits for unverified offset candidates.
   analog-four-controlled-diff-report
                      Compare two saved Analog Four kit exports for changed offsets.
+  analog-four-saved-offset-mapping-guide
+                     Print the passive controlled export guide for A4 offset mapping.
   essence-plan-report
                      Preview a 12-pad engine plan from essence tags or a description.
   essence-application-readiness-report
@@ -764,6 +769,32 @@ Safety:
   controlled comparison only
   candidate offsets only
   no parameter names claimed
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-saved-offset-mapping-guide": """RytmRandomizer passive CLI: analog-four-saved-offset-mapping-guide
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --help
+
+Behavior:
+  Prints a passive controlled before/after export workflow for proving one
+  Analog Four saved-kit offset. The guide tells the operator how to export a
+  baseline, change exactly one selected parameter, export a variant, and run
+  analog-four-controlled-diff-report before adding a verified mapping. It does
+  not request dumps, receive live SysEx, send MIDI, write SysEx, execute
+  commands, or touch hardware.
+
+Safety:
+  passive/read-only
+  guide text only
   no MIDI sending
   no MIDI receive
   no port opening

@@ -59,6 +59,8 @@ Usage:
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide
+  python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
   python -m rytm_randomizer.cli essence-plan-report --tags <csv> --discovery <0..1>
   python -m rytm_randomizer.cli essence-plan-report --description <text> --discovery <0..1>
   python -m rytm_randomizer.cli essence-application-readiness-report --mode <mode> --tags <csv> --discovery <0..1>
@@ -163,6 +165,8 @@ Commands:
                      Scan saved Analog Four kits for unverified offset candidates.
   analog-four-controlled-diff-report
                      Compare two saved Analog Four kit exports for changed offsets.
+  analog-four-saved-offset-mapping-guide
+                     Print the passive controlled export guide for A4 offset mapping.
   essence-plan-report
                      Preview a 12-pad engine plan from essence tags or a description.
   essence-application-readiness-report

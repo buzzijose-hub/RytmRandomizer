@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive Analog Four saved-offset mapping validation
+  guide. `analog-four-saved-offset-mapping-guide [--track <1-4>]
+  [--parameter <filter-1-frequency|amp-pan|track-level>]` prints the exact
+  controlled before/after export workflow for proving one A4 saved offset,
+  then points the operator to `analog-four-controlled-diff-report` and the
+  verified mapping entry shape. It is guide text only and does not send MIDI,
+  receive SysEx, open ports, execute commands, write SysEx, or touch hardware.
 - 2026-05-19: added the verified Analog Four saved-offset mapping promotion
   path. The A4 snapshot planner can now accept controlled-diff-proven
   saved-offset mappings and promote those specific offsets into named CC mock

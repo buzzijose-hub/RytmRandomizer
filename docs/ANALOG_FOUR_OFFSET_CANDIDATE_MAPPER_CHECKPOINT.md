@@ -26,6 +26,16 @@ can be supplied to the snapshot planner. The planner then emits a mapped CC
 mock event for that saved offset while all other offsets remain
 `candidate_unverified`.
 
+The passive guide command:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-saved-offset-mapping-guide --track 1 --parameter filter-1-frequency
+```
+
+prints the controlled before/after export workflow, the matching
+`analog-four-controlled-diff-report` command, and the exact verified mapping
+entry shape to add only after the offset is proven.
+
 ## Safety Boundary
 
 - passive/read-only
@@ -41,8 +51,8 @@ mock event for that saved offset while all other offsets remain
 
 ## Next Slice
 
-Use controlled baseline/variant exports to prove the first real A4 saved
-offset mappings, starting with one low-risk Track 1 parameter such as Filter 1
-Frequency CC18 or Amp Pan CC10. Add only the proven track/offset/CC entry, then
-let the existing guarded send plan decide whether the selected snapshot has no
-remaining unverified offsets.
+Use the guide with controlled baseline/variant exports to prove the first real
+A4 saved offset mappings, starting with one low-risk Track 1 parameter such as
+Filter 1 Frequency CC18 or Amp Pan CC10. Add only the proven track/offset/CC
+entry, then let the existing guarded send plan decide whether the selected
+snapshot has no remaining unverified offsets.

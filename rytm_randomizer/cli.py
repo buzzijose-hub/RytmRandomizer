@@ -1527,6 +1527,40 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "analog-four-saved-offset-mapping-guide":
+        from .analog_four.saved_offset_mapping_validation_guide import (
+            format_analog_four_saved_offset_mapping_validation_error,
+            format_analog_four_saved_offset_mapping_validation_guide,
+        )
+
+        if len(args) not in (1, 3, 5) or len(args[1:]) % 2:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+        optional_args = _parse_optional_key_value_args(
+            args[1:],
+            {"--track", "--parameter"},
+        )
+        if optional_args is None:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            track = int(optional_args.get("--track", "1"))
+            parameter = optional_args.get("--parameter", "filter-1-frequency")
+            lines = format_analog_four_saved_offset_mapping_validation_guide(
+                track=track,
+                parameter=parameter,
+            )
+        except ValueError as exc:
+            lines = format_analog_four_saved_offset_mapping_validation_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(lines))
+        sys.stdout.write("\n")
+        return 0
+
     if (
         len(args) == 5
         and args[0] == "essence-plan-report"
