@@ -81,7 +81,7 @@ def test_dual_machine_bank_readiness_report_summarizes_both_saved_banks(tmp_path
         analyze_dual_machine_kit_bank_files(rytm_path, a4_path)
     )
 
-    assert report[:35] == [
+    assert report[:39] == [
         "RytmRandomizer passive dual-machine kit bank readiness report",
         "Rytm bank:",
         "- SysEx records: 1",
@@ -102,6 +102,10 @@ def test_dual_machine_bank_readiness_report_summarizes_both_saved_banks(tmp_path
         "- Rytm-only snapshot mode: ready",
         "- Analog Four-only snapshot mode: candidate-ready",
         "- both-machines snapshot mode: candidate-ready",
+        "Implementation boundaries:",
+        "- Rytm implementation: 12 pad/machine lanes with pad-machine compatibility gates.",
+        "- Analog Four implementation: 4 synth tracks with saved-offset mapping manifest gates.",
+        "- Shared layer: target scoping, reporting, orchestration, and guarded validation only.",
         "Problem slots:",
         "- none",
         "Next validation commands:",
@@ -175,6 +179,19 @@ def test_dual_machine_bank_readiness_report_names_problem_slots(tmp_path):
     assert "Problem slots:" in report
     assert "- Rytm slot 1: ready pads 11 / blocked pads 1" in report
     assert "- Analog Four slot 1: planned tracks 2 / blocked tracks 2" in report
+    assert "Implementation boundaries:" in report
+    assert (
+        "- Rytm implementation: 12 pad/machine lanes with pad-machine compatibility gates."
+        in report
+    )
+    assert (
+        "- Analog Four implementation: 4 synth tracks with saved-offset mapping manifest gates."
+        in report
+    )
+    assert (
+        "- Shared layer: target scoping, reporting, orchestration, and guarded validation only."
+        in report
+    )
     assert (
         "- status: blocked lanes present; resolve Problem slots before guarded send dry-runs."
         in report

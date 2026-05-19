@@ -201,12 +201,25 @@ def format_dual_machine_kit_bank_readiness_report(
         "- no hardware required",
     ]
     lines[20:20] = (
+        "Implementation boundaries:",
+        *_format_implementation_boundary_lines(),
         "Problem slots:",
         *readiness.problem_slot_lines,
         "Next validation commands:",
         *_format_next_validation_commands(readiness),
     )
     return lines
+
+
+def _format_implementation_boundary_lines() -> list[str]:
+    return [
+        "- Rytm implementation: 12 pad/machine lanes with pad-machine compatibility gates.",
+        (
+            "- Analog Four implementation: 4 synth tracks with saved-offset "
+            "mapping manifest gates."
+        ),
+        "- Shared layer: target scoping, reporting, orchestration, and guarded validation only.",
+    ]
 
 
 def format_dual_machine_kit_bank_readiness_error(

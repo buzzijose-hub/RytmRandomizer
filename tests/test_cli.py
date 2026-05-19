@@ -250,6 +250,7 @@ def test_dual_machine_kit_bank_readiness_report_help_exits_zero():
     normalized_stdout = " ".join(result.stdout.split())
     assert "RytmRandomizer passive CLI: dual-machine-kit-bank-readiness-report" in result.stdout
     assert "both-machine snapshot modes" in result.stdout
+    assert "device-specific implementation boundaries" in normalized_stdout
     assert "target-scoped next passive validation" in normalized_stdout
     assert "next passive validation" in normalized_stdout
     assert "no MIDI sending" in result.stdout

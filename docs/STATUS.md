@@ -127,11 +127,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   gate for snapshot mode. Jose's kit-bank exports and whole-project dumps scan
   as 2048/2048 candidate-ready saved lanes across Rytm Pads 1-12 plus Analog
   Four Tracks 1-4, with zero blocked lanes and no problem slots. The report
-  now prints target-scoped next passive validation commands for Rytm-only,
-  Analog-Four-only, and both-machine lane checks, mapping-session rehearsal,
-  and A4 manifest review before any armed send. This is read-only and does not
-  request dumps, receive live SysEx, send MIDI, open ports, write SysEx, or
-  touch hardware.
+  now prints device-specific implementation boundaries plus target-scoped next
+  passive validation commands for Rytm-only, Analog-Four-only, and
+  both-machine lane checks, mapping-session rehearsal, and A4 manifest review
+  before any armed send. This is read-only and does not request dumps, receive
+  live SysEx, send MIDI, open ports, write SysEx, or touch hardware.
 - 2026-05-19: added a passive Analog Four kit-bank readiness report.
   `analog-four-kit-bank-report <path>` scans existing A4 kit banks or
   whole-project dumps, counts decoded kit snapshots, planned/blocked
