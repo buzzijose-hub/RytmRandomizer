@@ -4,6 +4,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made the passive Twelve Pad Rytm runtime validation guide
+  operator-ready for tonight's hardware pass. It now prints the passive
+  engine-matrix preflight command and labels every one-pad dry-run/armed send
+  with the runtime pad lane and chosen engine, including Pad 10 as
+  `OH / Open hihat / OH Metallic` and Pads 6-8 as `XT Classic` tom lanes.
 - 2026-05-19: made A4-only dual-machine snapshot planning independent from
   Rytm snapshot files. The shared bridge can now build `--target analog-four`
   plans without a Rytm path/slot, the passive CLI supports a pathless A4-only

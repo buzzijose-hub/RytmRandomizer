@@ -6,6 +6,8 @@ no MIDI, receives no SysEx, writes no SysEx, and mutates no hardware.
 
 from __future__ import annotations
 
+from .twelve_pad_rytm_runtime import build_twelve_pad_rytm_runtime_plan
+
 DEFAULT_VALIDATION_STYLE = "Birmingham dark techno"
 DEFAULT_VALIDATION_DISCOVERY = 0.35
 
@@ -13,8 +15,13 @@ DEFAULT_VALIDATION_DISCOVERY = 0.35
 def format_rytm_runtime_validation_guide() -> list[str]:
     """Return the deterministic Rytm runtime hardware validation guide."""
 
+    plan = build_twelve_pad_rytm_runtime_plan(
+        DEFAULT_VALIDATION_STYLE,
+        discovery=DEFAULT_VALIDATION_DISCOVERY,
+    )
     style_arg = f'--runtime-style "{DEFAULT_VALIDATION_STYLE}"'
     discovery_arg = f"--runtime-discovery {DEFAULT_VALIDATION_DISCOVERY:.2f}"
+    one_pad_message_count = len(plan.pads[0].events)
     lines = [
         "RytmRandomizer passive Twelve Pad Rytm Runtime Validation Guide",
         "Purpose:",
@@ -22,8 +29,13 @@ def format_rytm_runtime_validation_guide() -> list[str]:
         "- Validate one Rytm pad at a time before sending the full 12-pad runtime.",
         f"Recommended style: {DEFAULT_VALIDATION_STYLE}",
         f"Recommended discovery: {DEFAULT_VALIDATION_DISCOVERY:.2f}",
-        "Expected one-pad messages: 11",
-        "Expected full-runtime messages: 132",
+        f"Expected one-pad messages: {one_pad_message_count}",
+        f"Expected full-runtime messages: {plan.event_count}",
+        "Matrix preflight:",
+        "python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report",
+        "Pad identity sanity checks:",
+        "- Pad 10 is OH / Open hihat; XT Classic belongs only to Pads 6-8.",
+        "- Runtime labels below come from the passive runtime plan that powers the dry-run.",
         "Passive preview before active validation:",
         (
             "python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report "
@@ -32,18 +44,19 @@ def format_rytm_runtime_validation_guide() -> list[str]:
         ),
         "One-pad validation order:",
     ]
-    for pad in range(1, 13):
+    for pad in plan.pads:
+        pad_label = f"Pad {pad.pad} / {pad.role_label} / {pad.machine_label}"
         lines.extend(
             [
-                f"- Pad {pad} dry-run:",
+                f"- {pad_label} dry-run:",
                 (
                     "rytm-randomizer --dry-run --twelve-pad-rytm-runtime "
-                    f"{style_arg} {discovery_arg} --runtime-pad {pad}"
+                    f"{style_arg} {discovery_arg} --runtime-pad {pad.pad}"
                 ),
-                f"- Pad {pad} armed send:",
+                f"- {pad_label} armed send:",
                 (
                     "rytm-randomizer --arm --twelve-pad-rytm-runtime "
-                    f"{style_arg} {discovery_arg} --runtime-pad {pad}"
+                    f"{style_arg} {discovery_arg} --runtime-pad {pad.pad}"
                 ),
             ]
         )
