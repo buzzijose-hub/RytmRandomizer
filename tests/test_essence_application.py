@@ -184,7 +184,7 @@ def test_format_essence_application_readiness_report():
     assert "Pad counts: ready 4 / blocked 8 / future-only 0" in report
     assert any(
         line
-        == "- Pad 5 / Closed hat pulse: BD FM [mutable] -> blocked (pads_5_12_not_runtime_supported)"
+        == "- Pad 5 / BT / Bass tom: BD Acoustic [mutable] -> blocked (pads_5_12_not_runtime_supported)"
         for line in report
     )
     assert "- no MIDI sending" in report
@@ -251,7 +251,7 @@ def test_essence_application_readiness_cli_uses_snapshot_fixture():
     assert "Reason: snapshot_mapping_incomplete" in result.stdout
     assert "Pad counts: ready 9 / blocked 0 / future-only 3" in result.stdout
     assert (
-        "Pad 5 / Closed hat pulse: BD FM [mutable] / captured CH/OH hat family [future] "
+        "Pad 5 / BT / Bass tom: BD Acoustic [mutable] / captured CH/OH hat family [future] "
         "-> future-only (snapshot_machine_needs_manual_mapping)"
     ) in result.stdout
     assert result.stderr == ""

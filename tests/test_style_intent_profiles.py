@@ -119,7 +119,7 @@ def test_format_style_intent_report_includes_analog_four_future_note_and_plan():
     assert "Matched profiles: Dark Techno, Birmingham Techno" in report
     assert "Analog Four: future expansion target only; no current A4 mapping" in report
     assert "12-pad style kit plan:" in report
-    assert any(line.startswith("- Pad 3 / Metallic motif:") for line in report)
+    assert any(line.startswith("- Pad 3 / RS / Rim shot:") for line in report)
     assert "- no MIDI sending" in report
     assert "- no Analog Four runtime support" in report
 

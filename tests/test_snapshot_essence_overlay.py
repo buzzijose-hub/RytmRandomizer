@@ -129,10 +129,10 @@ def test_snapshot_essence_overlay_separates_same_engine_and_switch_ready_pads(tm
     assert plan.style_prompt == "Birmingham dark techno"
     assert plan.discovery == 0.35
     assert plan.pad_count == 12
-    assert plan.same_engine_ready_count == 2
-    assert plan.engine_switch_ready_count == 10
+    assert plan.same_engine_ready_count == 1
+    assert plan.engine_switch_ready_count == 11
     assert plan.blocked_pad_count == 0
-    assert plan.machine_switch_count == 10
+    assert plan.machine_switch_count == 11
 
     pad1 = plan.pads[0]
     assert pad1.pad == 1
@@ -143,19 +143,19 @@ def test_snapshot_essence_overlay_separates_same_engine_and_switch_ready_pads(tm
     assert pad1.snapshot_change_count == 6
 
     pad3 = plan.pads[2]
-    assert pad3.role_label == "Metallic motif"
+    assert pad3.role_label == "RS / Rim shot"
     assert pad3.captured_machine_label == "BD FM"
-    assert pad3.selected_machine_label == "BD FM"
-    assert pad3.status == "same_engine_snapshot_ready"
-    assert pad3.selected_machine_value == 13
+    assert pad3.selected_machine_label == "BD Sharp"
+    assert pad3.status == "engine_switch_ready"
+    assert pad3.selected_machine_value == 26
 
     pad5 = plan.pads[4]
     assert pad5.captured_machine_label == "Disabled"
-    assert pad5.selected_machine_label == "BD Hard"
+    assert pad5.selected_machine_label == "BD Acoustic"
     assert pad5.status == "engine_switch_ready"
     assert pad5.machine_switch_required is True
     assert pad5.machine_switch_cc == 15
-    assert pad5.selected_machine_value == 0
+    assert pad5.selected_machine_value == 30
 
 
 def test_snapshot_essence_overlay_report_cli_reads_saved_snapshot(tmp_path):
@@ -179,10 +179,10 @@ def test_snapshot_essence_overlay_report_cli_reads_saved_snapshot(tmp_path):
     assert "RytmRandomizer passive Snapshot Essence Overlay Report" in result.stdout
     assert "Style prompt: Birmingham dark techno" in result.stdout
     assert "Kit: OVERLAY" in result.stdout
-    assert "Pad counts: same-engine ready 2 / engine-switch ready 10 / blocked 0" in result.stdout
-    assert "Machine switches needed: 10" in result.stdout
-    assert "- Pad 1 / Main kick foundation: captured BD Hard -> selected BD Hard" in result.stdout
-    assert "- Pad 5 / Closed hat pulse: captured Disabled -> selected BD Hard" in result.stdout
+    assert "Pad counts: same-engine ready 1 / engine-switch ready 11 / blocked 0" in result.stdout
+    assert "Machine switches needed: 11" in result.stdout
+    assert "- Pad 1 / BD / Bass drum: captured BD Hard -> selected BD Hard" in result.stdout
+    assert "- Pad 5 / BT / Bass tom: captured Disabled -> selected BD Acoustic" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no hardware mutation" in result.stdout
     assert result.stderr == ""

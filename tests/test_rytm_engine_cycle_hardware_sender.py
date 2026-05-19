@@ -167,8 +167,8 @@ def test_engine_cycle_hardware_send_accepts_ready_plan_with_fake_mido(monkeypatc
     assert port.sent[0].value == 0
     assert port.sent[4].channel == 4
     assert port.sent[4].control == 15
-    assert port.sent[4].value == 17
-    assert result.emitted_messages[4].machine_key == "ch_metallic"
+    assert port.sent[4].value == 7
+    assert result.emitted_messages[4].machine_key == "bt_classic"
 
 
 def test_engine_cycle_hardware_send_report_includes_active_safety_language(monkeypatch):
@@ -197,7 +197,7 @@ def test_engine_cycle_hardware_send_report_includes_active_safety_language(monke
     assert "Accepted: True" in report
     assert "Port: Fake Rytm" in report
     assert "Emitted real MIDI messages: 12" in report
-    assert "Pad 5 / ch 5 wire 4 / CC15 -> 17 / CH Metallic" in report
+    assert "Pad 5 / ch 5 wire 4 / CC15 -> 7 / BT Classic" in report
     assert "- sends CC15 machine-select events only" in report
     assert "- real MIDI sending happened only after --arm and SEND confirmation" in report
 
@@ -233,7 +233,7 @@ def test_engine_cycle_hardware_send_accepts_starter_plan_with_fake_mido(monkeypa
     assert len(port.sent) == 84
     assert port.sent[28].channel == 4
     assert port.sent[28].control == 15
-    assert port.sent[28].value == 17
+    assert port.sent[28].value == 7
     assert port.sent[29].channel == 4
     assert port.sent[29].control == 74
     assert port.sent[29].value == 108
@@ -241,7 +241,7 @@ def test_engine_cycle_hardware_send_accepts_starter_plan_with_fake_mido(monkeypa
     assert result.emitted_messages[29].parameter_name == "FLT Frequency"
     assert "Starter profile: Birmingham Dark / birmingham-dark" in report
     assert "Emitted real MIDI messages: 84" in report
-    assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 7 / BT Classic" in report
     assert "Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- sends CC15 machine-select plus common filter/amp starter values" in report
 

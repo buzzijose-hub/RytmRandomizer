@@ -16,6 +16,9 @@ class AnalogFourReferenceSource:
 
     device: str
     url: str
+    manual_path: str
+    manual_os: str
+    manual_midi_pages: str
     csv_history_url: str
     license: str
     last_update: str
@@ -70,6 +73,12 @@ class AnalogFourTrackRole:
 REFERENCE_SOURCE = AnalogFourReferenceSource(
     device="Elektron Analog Four MKII",
     url="https://midi.guide/d/elektron/analog-four-mkii/",
+    manual_path=(
+        "C:/Users/Jose Buzzi/Dropbox/Utilities/"
+        "Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf"
+    ),
+    manual_os="OS1.51C",
+    manual_midi_pages="100-108",
     csv_history_url=(
         "https://github.com/pencilresearch/midi/commits/main/" "Elektron/Analog%20Four%20MKII.csv"
     ),
@@ -312,6 +321,9 @@ def format_analog_four_reference_report() -> list[str]:
         "RytmRandomizer passive Analog Four MKII Reference Report",
         f"Device: {source.device}",
         f"Source: {source.url}",
+        f"Manual: {source.manual_path}",
+        f"Manual OS: {source.manual_os}",
+        f"Manual MIDI pages: {source.manual_midi_pages}",
         f"CSV history: {source.csv_history_url}",
         f"Last update: {source.last_update}",
         f"Parameter count: {source.parameter_count}",

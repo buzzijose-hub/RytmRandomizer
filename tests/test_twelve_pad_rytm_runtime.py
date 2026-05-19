@@ -69,9 +69,9 @@ def test_twelve_pad_rytm_runtime_plan_preserves_pad_event_order():
 
     pad5 = plan.pads[4]
     assert pad5.pad == 5
-    assert pad5.role_label == "Closed hat pulse"
-    assert pad5.machine_key == "ch_metallic"
-    assert pad5.machine_label == "CH Metallic"
+    assert pad5.role_label == "BT / Bass tom"
+    assert pad5.machine_key == "bt_classic"
+    assert pad5.machine_label == "BT Classic"
     assert pad5.source_starter_status == "covered"
     assert len(pad5.events) == 11
     assert [event.event_role for event in pad5.events[:6]] == [
@@ -83,7 +83,7 @@ def test_twelve_pad_rytm_runtime_plan_preserves_pad_event_order():
         "starter_parameter",
     ]
     assert pad5.events[0].cc == 15
-    assert pad5.events[0].value == 17
+    assert pad5.events[0].value == 7
     assert pad5.events[1].parameter_name == "SRC Slot 1"
     assert pad5.events[1].cc == 16
     assert pad5.events[1].value == 100
@@ -105,8 +105,8 @@ def test_twelve_pad_rytm_runtime_keeps_pad10_on_open_hat_lane():
 
     pad10 = plan.pads[9]
     assert pad10.pad == 10
-    assert pad10.role_key == "open_hat"
-    assert pad10.role_label == "Open hat"
+    assert pad10.role_key == "oh_track_open_hihat"
+    assert pad10.role_label == "OH / Open hihat"
     assert pad10.machine_key in {"oh_classic", "oh_metallic", "hh_basic", "hh_lab"}
     assert pad10.machine_key != "xt_classic"
     assert pad10.machine_label != "XT Classic"
@@ -204,9 +204,9 @@ def test_twelve_pad_rytm_runtime_report_explains_counts_stream_and_safety():
     assert "Source-starter covered pads: 12" in report
     assert "Source-starter skipped pads: 0" in report
     assert (
-        "- Pad 5 / Closed hat pulse / CH Metallic: " "11 message(s), source starters covered"
+        "- Pad 5 / BT / Bass tom / BT Classic: " "11 message(s), source starters covered"
     ) in report
-    assert "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 7 / BT Classic" in report
     assert "- Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100" in report
     assert "- Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- engine-source starters are enabled by default for this runtime report" in report

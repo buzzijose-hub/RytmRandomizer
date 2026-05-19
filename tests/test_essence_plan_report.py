@@ -80,9 +80,9 @@ def test_format_essence_plan_report_shows_12_pad_plan():
     assert "Discovery: 0.35" in report
     assert "Candidate mode: mapped mutable engines only" in report
     assert "12-pad role plan:" in report
-    assert any(line.startswith("- Pad 1 / Main kick foundation:") for line in report)
-    assert any(line.startswith("- Pad 3 / Metallic motif:") for line in report)
-    assert any(line.startswith("- Pad 9 / Tonal bell accent:") for line in report)
+    assert any(line.startswith("- Pad 1 / BD / Bass drum:") for line in report)
+    assert any(line.startswith("- Pad 3 / RS / Rim shot:") for line in report)
+    assert any(line.startswith("- Pad 9 / CH / Closed hihat:") for line in report)
     assert any("BD FM [mutable]" in line for line in report)
     assert any("SD FM [mutable]" in line for line in report)
     assert all("SY Chip [future]" not in line for line in report)
@@ -100,7 +100,7 @@ def test_discovery_report_marks_future_inventory_candidates():
 
     assert "Candidate mode: mapped engines plus future inventory candidates" in report
     assert any("SY Chip [future]" in line for line in report)
-    assert any("CB Classic [future]" in line for line in report)
+    assert any("RS Hard [future]" in line for line in report)
     assert "- no Pads 5-12 runtime mutation" in report
 
 
@@ -117,7 +117,7 @@ def test_essence_plan_report_cli_reads_tags_without_hardware():
     assert "RytmRandomizer passive Essence Plan Report" in result.stdout
     assert "Essence tags: metallic, bell, driving, repetition" in result.stdout
     assert "Discovery: 0.35" in result.stdout
-    assert "Pad 3 / Metallic motif" in result.stdout
+    assert "Pad 3 / RS / Rim shot" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
 

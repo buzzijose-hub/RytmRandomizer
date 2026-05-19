@@ -4,6 +4,14 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-18: corrected the Rytm 12-pad engine model against Analog Rytm MKII
+  OS 1.72. The machine catalog now records the manual pad/track compatibility
+  table, and the active engine-cycle/runtime planners enforce it before
+  building CC15 machine-select streams. Pad 5 is BT Classic, Pads 6-8 are XT
+  Classic lanes, Pad 9 is CH/hat, Pad 10 is OH/hat, Pad 11 is CY, and Pad 12
+  is CB. The Analog Four reference report now records Jose's current
+  OS1.51C manual path and MIDI appendix pages. No unguarded MIDI sending,
+  SysEx writes, live snapshot receive, or audio analysis was added.
 - 2026-05-18: added the passive 12-pad Rytm runtime foundation.
   `twelve-pad-rytm-runtime-report --style <text>` builds a mock-only setup
   stream with machine selects, engine-source starter values, and common

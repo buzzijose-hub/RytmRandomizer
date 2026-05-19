@@ -65,19 +65,119 @@ def test_twelve_pad_role_template_covers_performance_lanes():
     roles = list_twelve_pad_roles()
 
     assert tuple(role.pad for role in roles) == tuple(range(1, 13))
-    assert roles[0].key == "main_kick_foundation"
+    assert roles[0].key == "bd_track_bass_drum"
     assert roles[0].pad == 1
     assert "kick" in roles[0].desired_tags
-    assert roles[4].key == "closed_hat_pulse"
-    assert roles[8].key == "tonal_bell_accent"
-    assert roles[-1].key == "wild_discovery_lane"
+    assert roles[4].key == "bt_track_bass_tom"
+    assert roles[8].key == "ch_track_closed_hihat"
+    assert roles[9].key == "oh_track_open_hihat"
+    assert roles[-1].key == "cb_track_cowbell"
+
+
+def test_rytm_os172_pad_capabilities_match_manual_machine_table():
+    from rytm_randomizer.essence.machine_catalog import (
+        get_rytm_pad_capability,
+        is_machine_allowed_on_pad,
+        list_rytm_pad_capabilities,
+    )
+
+    capabilities = list_rytm_pad_capabilities()
+
+    assert tuple(capability.pad for capability in capabilities) == tuple(range(1, 13))
+    assert get_rytm_pad_capability(1).track_code == "BD"
+    assert get_rytm_pad_capability(10).track_code == "OH"
+    assert get_rytm_pad_capability(10).label == "Open Hihat"
+
+    assert set(get_rytm_pad_capability(1).allowed_machine_keys) >= {
+        "bd_hard",
+        "bd_classic",
+        "bd_fm",
+        "bd_plastic",
+        "bd_silky",
+        "bd_sharp",
+        "bd_acoustic",
+        "sd_hard",
+        "sd_classic",
+        "sd_fm",
+        "sd_natural",
+        "sd_acoustic",
+        "dual_vco",
+        "sy_chip",
+        "sy_raw",
+        "ut_noise",
+        "ut_impulse",
+    }
+    assert get_rytm_pad_capability(5).allowed_machine_keys == (
+        "bt_classic",
+        "ut_noise",
+        "ut_impulse",
+    )
+    assert get_rytm_pad_capability(6).allowed_machine_keys == (
+        "xt_classic",
+        "ut_noise",
+        "ut_impulse",
+    )
+    assert get_rytm_pad_capability(7).allowed_machine_keys == (
+        "xt_classic",
+        "ut_noise",
+        "ut_impulse",
+    )
+    assert get_rytm_pad_capability(8).allowed_machine_keys == (
+        "xt_classic",
+        "ut_noise",
+        "ut_impulse",
+    )
+    assert set(get_rytm_pad_capability(9).allowed_machine_keys) == {
+        "ch_classic",
+        "ch_metallic",
+        "hh_basic",
+        "hh_lab",
+        "oh_classic",
+        "oh_metallic",
+        "ut_noise",
+        "ut_impulse",
+    }
+    assert set(get_rytm_pad_capability(10).allowed_machine_keys) == {
+        "oh_classic",
+        "oh_metallic",
+        "hh_basic",
+        "hh_lab",
+        "ch_classic",
+        "ch_metallic",
+        "ut_noise",
+        "ut_impulse",
+    }
+    assert set(get_rytm_pad_capability(11).allowed_machine_keys) == {
+        "cy_classic",
+        "cy_metallic",
+        "cy_ride",
+        "cb_classic",
+        "cb_metallic",
+        "ut_noise",
+        "ut_impulse",
+    }
+    assert set(get_rytm_pad_capability(12).allowed_machine_keys) == {
+        "cb_classic",
+        "cb_metallic",
+        "cy_classic",
+        "cy_metallic",
+        "cy_ride",
+        "ut_noise",
+        "ut_impulse",
+    }
+
+    assert is_machine_allowed_on_pad(10, "oh_metallic")
+    assert is_machine_allowed_on_pad(10, "ch_classic")
+    assert not is_machine_allowed_on_pad(10, "xt_classic")
+    assert is_machine_allowed_on_pad(6, "xt_classic")
+    assert not is_machine_allowed_on_pad(6, "ch_classic")
 
 
 def test_metallic_reference_ranks_mapped_metallic_engines_first_by_default():
     from rytm_randomizer.essence.machine_catalog import rank_machines_for_role
 
     ranked = rank_machines_for_role(
-        "metallic_motif",
+        "rs_track_rim_shot",
         essence_tags=("metallic", "bell", "repetition", "detroit"),
     )
 
@@ -93,7 +193,7 @@ def test_metallic_reference_can_include_future_engines_as_inventory_candidates()
     from rytm_randomizer.essence.machine_catalog import rank_machines_for_role
 
     ranked = rank_machines_for_role(
-        "metallic_motif",
+        "rs_track_rim_shot",
         essence_tags=("metallic", "bell", "digital", "repetition"),
         include_unmapped=True,
     )
@@ -101,16 +201,16 @@ def test_metallic_reference_can_include_future_engines_as_inventory_candidates()
     keys = tuple(candidate.machine.key for candidate in ranked[:6])
 
     assert "bd_fm" in keys
-    assert "sd_fm" in keys
     assert "sy_chip" in keys
-    assert "dual_vco" in keys
+    assert "rs_hard" in keys
+    assert "rs_classic" in keys
 
 
 def test_hat_role_can_include_machine_selectable_real_hat_engines():
     from rytm_randomizer.essence.machine_catalog import rank_machines_for_role
 
     ranked = rank_machines_for_role(
-        "closed_hat_pulse",
+        "ch_track_closed_hihat",
         essence_tags=("bright", "repetition", "density"),
         include_machine_selectable=True,
     )

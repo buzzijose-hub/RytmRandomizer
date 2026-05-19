@@ -128,10 +128,10 @@ def test_snapshot_essence_send_plan_orders_switches_anchors_and_snapshot_changes
     assert plan.kit_name == "ESS SEND"
     assert plan.ready is True
     assert plan.blocked_pad_count == 0
-    assert plan.same_engine_pad_count == 2
-    assert plan.engine_switch_pad_count == 10
-    assert plan.machine_switch_event_count == 10
-    assert plan.snapshot_mutation_event_count == 11
+    assert plan.same_engine_pad_count == 1
+    assert plan.engine_switch_pad_count == 11
+    assert plan.machine_switch_event_count == 11
+    assert plan.snapshot_mutation_event_count == 6
     assert plan.selected_profile_anchor_event_count > 10
     assert plan.event_count == len(plan.events)
 
@@ -144,7 +144,7 @@ def test_snapshot_essence_send_plan_orders_switches_anchors_and_snapshot_changes
     pad5_events = [event for event in plan.events if event.pad == 5]
     assert pad5_events[0].event_role == "machine_switch"
     assert pad5_events[0].control == 15
-    assert pad5_events[0].value == 0
+    assert pad5_events[0].value == 30
     assert pad5_events[0].source == "style_engine_switch"
     assert pad5_events[1].event_role == "selected_profile_anchor"
     assert pad5_events[1].source == "selected_profile_anchor"
@@ -178,7 +178,7 @@ def test_snapshot_essence_send_plan_mock_capture_matches_eligible_events(tmp_pat
     assert first.metadata["event_role"] == "snapshot_mutation"
     switch = next(message for message in sender.sent_messages if message.metadata["pad"] == 5)
     assert switch.control == 15
-    assert switch.value == 0
+    assert switch.value == 30
     assert switch.metadata["event_role"] == "machine_switch"
 
 
@@ -204,11 +204,11 @@ def test_snapshot_essence_send_plan_cli_reads_saved_snapshot(tmp_path):
     assert "Style prompt: Birmingham dark techno" in result.stdout
     assert "Kit: ESS SEND" in result.stdout
     assert "Send plan ready: True" in result.stdout
-    assert "Pad counts: same-engine 2 / engine-switch 10 / blocked 0" in result.stdout
-    assert "Machine switch events: 10" in result.stdout
-    assert "Snapshot mutation events: 11" in result.stdout
+    assert "Pad counts: same-engine 1 / engine-switch 11 / blocked 0" in result.stdout
+    assert "Machine switch events: 11" in result.stdout
+    assert "Snapshot mutation events: 6" in result.stdout
     assert "Mock sender captured:" in result.stdout
-    assert "- Pad 5 ch 5 wire 4 machine_switch: CC15 -> 0" in result.stdout
+    assert "- Pad 5 ch 5 wire 4 machine_switch: CC15 -> 30" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no hardware mutation" in result.stdout
     assert result.stderr == ""

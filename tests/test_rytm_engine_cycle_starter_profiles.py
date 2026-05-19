@@ -125,13 +125,13 @@ def test_engine_cycle_starter_plan_adds_common_safe_shaping_to_all_12_pads():
 
     pad5 = starter_plan.pads[4]
     assert pad5.pad == 5
-    assert pad5.role_label == "Closed hat pulse"
-    assert pad5.machine_key == "ch_metallic"
-    assert pad5.machine_label == "CH Metallic"
+    assert pad5.role_label == "BT / Bass tom"
+    assert pad5.machine_key == "bt_classic"
+    assert pad5.machine_label == "BT Classic"
     assert len(pad5.events) == 7
     assert pad5.events[0].event_role == "machine_select"
     assert pad5.events[0].cc == 15
-    assert pad5.events[0].value == 17
+    assert pad5.events[0].value == 7
 
     starter_events = {event.parameter_name: event for event in pad5.events[1:]}
     assert starter_events["FLT Frequency"].cc == 74
@@ -168,7 +168,7 @@ def test_engine_cycle_starter_plan_can_include_engine_source_starters():
     assert pad5.events[1].value == 100
     assert pad5.events[4].parameter_name == "SRC Slot 8"
     assert pad5.events[4].cc == 23
-    assert pad5.events[4].value == 92
+    assert pad5.events[4].value == 72
     assert pad5.events[5].event_role == "starter_parameter"
     assert pad5.events[5].parameter_name == "FLT Frequency"
     assert pad5.events[5].cc == 74
@@ -191,9 +191,9 @@ def test_engine_cycle_starter_mock_capture_emits_machine_select_then_shaping():
     pad5_frequency = sender.sent_messages[29]
     assert pad5_machine_select.channel == 4
     assert pad5_machine_select.control == 15
-    assert pad5_machine_select.value == 17
+    assert pad5_machine_select.value == 7
     assert pad5_machine_select.metadata["event_role"] == "machine_select"
-    assert pad5_machine_select.metadata["machine_key"] == "ch_metallic"
+    assert pad5_machine_select.metadata["machine_key"] == "bt_classic"
     assert pad5_frequency.channel == 4
     assert pad5_frequency.control == 74
     assert pad5_frequency.value == 108
@@ -220,8 +220,8 @@ def test_engine_cycle_starter_report_includes_profile_preview_and_safety():
     assert "Starter profile: Birmingham Dark / birmingham-dark" in report
     assert "Planned pads: 12" in report
     assert "Starter messages: 84" in report
-    assert "- Pad 5 / Closed hat pulse / CH Metallic: 7 message(s)" in report
-    assert "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "- Pad 5 / BT / Bass tom / BT Classic: 7 message(s)" in report
+    assert "- Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 7 / BT Classic" in report
     assert "- Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- common filter/amp starter values only" in report
     assert "- no MIDI sending" in report
@@ -244,7 +244,7 @@ def test_engine_cycle_starter_report_includes_engine_source_preview_when_enabled
 
     assert "Engine-source parameter messages: 48" in report
     assert "Starter messages: 132" in report
-    assert "- Pad 5 / Closed hat pulse / CH Metallic: 11 message(s)" in report
+    assert "- Pad 5 / BT / Bass tom / BT Classic: 11 message(s)" in report
     assert "- Pad 5 / ch 5 wire 4 / engine_source_parameter / SRC Slot 1 CC16 -> 100" in report
     assert "- engine-source starters use mapped SRC slots only" in report
 
@@ -265,7 +265,7 @@ def test_rytm_engine_cycle_starter_plan_report_cli_accepts_style_and_profile():
     assert "Style prompt: Birmingham dark techno" in result.stdout
     assert "Starter profile: Birmingham Dark / birmingham-dark" in result.stdout
     assert "Starter messages: 84" in result.stdout
-    assert "Pad 5 / Closed hat pulse / CH Metallic: 7 message(s)" in result.stdout
+    assert "Pad 5 / BT / Bass tom / BT Classic: 7 message(s)" in result.stdout
     assert "starter_parameter / FLT Frequency CC74 -> 108" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

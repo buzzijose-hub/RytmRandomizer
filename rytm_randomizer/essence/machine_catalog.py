@@ -39,6 +39,16 @@ class PadRole:
 
 
 @dataclass(frozen=True)
+class RytmPadCapability:
+    """OS 1.72 machine compatibility for one Analog Rytm MKII pad/track."""
+
+    pad: int
+    track_code: str
+    label: str
+    allowed_machine_keys: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class MachineCandidate:
     """A ranked machine candidate for a pad role."""
 
@@ -430,21 +440,115 @@ MACHINE_PROFILES: tuple[MachineProfile, ...] = (
 )
 
 
-TWELVE_PAD_ROLES: tuple[PadRole, ...] = (
-    PadRole(1, "main_kick_foundation", "Main kick foundation", ("kick", "foundation", "low"), 5),
-    PadRole(
-        2, "secondary_low_percussion", "Secondary low percussion", ("secondary_low", "body"), 4
+BD_MACHINE_KEYS = (
+    "bd_hard",
+    "bd_classic",
+    "bd_fm",
+    "bd_plastic",
+    "bd_silky",
+    "bd_sharp",
+    "bd_acoustic",
+)
+SD_MACHINE_KEYS = ("sd_hard", "sd_classic", "sd_fm", "sd_natural", "sd_acoustic")
+SY_MACHINE_KEYS = ("dual_vco", "sy_chip", "sy_raw")
+RS_MACHINE_KEYS = ("rs_hard", "rs_classic")
+CP_MACHINE_KEYS = ("cp_classic",)
+BT_MACHINE_KEYS = ("bt_classic",)
+XT_MACHINE_KEYS = ("xt_classic",)
+CH_MACHINE_KEYS = ("ch_classic", "ch_metallic")
+OH_MACHINE_KEYS = ("oh_classic", "oh_metallic")
+HH_MACHINE_KEYS = ("hh_basic", "hh_lab")
+CY_MACHINE_KEYS = ("cy_classic", "cy_metallic", "cy_ride")
+CB_MACHINE_KEYS = ("cb_classic", "cb_metallic")
+UT_MACHINE_KEYS = ("ut_noise", "ut_impulse")
+
+
+def _allowed(*groups: tuple[str, ...]) -> tuple[str, ...]:
+    keys: list[str] = []
+    for group in groups:
+        for key in group:
+            if key not in keys:
+                keys.append(key)
+    return tuple(keys)
+
+
+RYTM_PAD_CAPABILITIES: tuple[RytmPadCapability, ...] = (
+    RytmPadCapability(
+        1,
+        "BD",
+        "Bass Drum",
+        _allowed(BD_MACHINE_KEYS, SY_MACHINE_KEYS, SD_MACHINE_KEYS, UT_MACHINE_KEYS),
     ),
-    PadRole(3, "metallic_motif", "Metallic motif", ("metallic", "tonal", "motif"), 5),
-    PadRole(4, "body_accent_hit", "Body/accent hit", ("body", "accent", "pressure"), 4),
-    PadRole(5, "closed_hat_pulse", "Closed hat pulse", ("hat", "pulse", "high"), 4),
-    PadRole(6, "open_hat_noise_lift", "Open hat / noise lift", ("hat", "noise", "lift"), 4),
-    PadRole(7, "rim_click_texture", "Rim/click texture", ("rim", "click", "texture"), 3),
-    PadRole(8, "snare_clap_pressure", "Snare/clap pressure", ("snare", "clap", "pressure"), 4),
-    PadRole(9, "tonal_bell_accent", "Tonal bell accent", ("tonal", "bell", "metallic"), 5),
-    PadRole(10, "open_hat", "Open hat", ("hat", "open", "lift", "high"), 4, ("hat",)),
-    PadRole(11, "atmosphere_noise_layer", "Atmosphere/noise layer", ("noise", "texture", "air"), 3),
-    PadRole(12, "wild_discovery_lane", "Wild discovery lane", ("experimental", "tension"), 2),
+    RytmPadCapability(
+        2,
+        "SD",
+        "Snare Drum",
+        _allowed(SD_MACHINE_KEYS, SY_MACHINE_KEYS, BD_MACHINE_KEYS, UT_MACHINE_KEYS),
+    ),
+    RytmPadCapability(
+        3,
+        "RS",
+        "Rim Shot",
+        _allowed(
+            RS_MACHINE_KEYS,
+            SY_MACHINE_KEYS,
+            BD_MACHINE_KEYS,
+            SD_MACHINE_KEYS,
+            CP_MACHINE_KEYS,
+            UT_MACHINE_KEYS,
+        ),
+    ),
+    RytmPadCapability(
+        4,
+        "CP",
+        "Hand Clap",
+        _allowed(
+            CP_MACHINE_KEYS,
+            SY_MACHINE_KEYS,
+            BD_MACHINE_KEYS,
+            SD_MACHINE_KEYS,
+            RS_MACHINE_KEYS,
+            UT_MACHINE_KEYS,
+        ),
+    ),
+    RytmPadCapability(5, "BT", "Bass Tom", _allowed(BT_MACHINE_KEYS, UT_MACHINE_KEYS)),
+    RytmPadCapability(6, "LT", "Low Tom", _allowed(XT_MACHINE_KEYS, UT_MACHINE_KEYS)),
+    RytmPadCapability(7, "MT", "Mid Tom", _allowed(XT_MACHINE_KEYS, UT_MACHINE_KEYS)),
+    RytmPadCapability(8, "HT", "Hi Tom", _allowed(XT_MACHINE_KEYS, UT_MACHINE_KEYS)),
+    RytmPadCapability(
+        9,
+        "CH",
+        "Closed Hihat",
+        _allowed(CH_MACHINE_KEYS, HH_MACHINE_KEYS, OH_MACHINE_KEYS, UT_MACHINE_KEYS),
+    ),
+    RytmPadCapability(
+        10,
+        "OH",
+        "Open Hihat",
+        _allowed(OH_MACHINE_KEYS, HH_MACHINE_KEYS, CH_MACHINE_KEYS, UT_MACHINE_KEYS),
+    ),
+    RytmPadCapability(
+        11, "CY", "Cymbal", _allowed(CY_MACHINE_KEYS, CB_MACHINE_KEYS, UT_MACHINE_KEYS)
+    ),
+    RytmPadCapability(
+        12, "CB", "Cow Bell", _allowed(CB_MACHINE_KEYS, CY_MACHINE_KEYS, UT_MACHINE_KEYS)
+    ),
+)
+
+
+TWELVE_PAD_ROLES: tuple[PadRole, ...] = (
+    PadRole(1, "bd_track_bass_drum", "BD / Bass drum", ("kick", "foundation", "low"), 5),
+    PadRole(2, "sd_track_snare_drum", "SD / Snare drum", ("snare", "body", "pressure"), 4),
+    PadRole(3, "rs_track_rim_shot", "RS / Rim shot", ("rim", "click", "metallic", "motif"), 5),
+    PadRole(4, "cp_track_hand_clap", "CP / Hand clap", ("clap", "body", "accent"), 4),
+    PadRole(5, "bt_track_bass_tom", "BT / Bass tom", ("tom", "body", "low", "percussion"), 4),
+    PadRole(6, "lt_track_low_tom", "LT / Low tom", ("tom", "low", "rolling", "percussion"), 4),
+    PadRole(7, "mt_track_mid_tom", "MT / Mid tom", ("tom", "mid", "rolling", "percussion"), 4),
+    PadRole(8, "ht_track_hi_tom", "HT / Hi tom", ("tom", "high", "accent", "percussion"), 4),
+    PadRole(9, "ch_track_closed_hihat", "CH / Closed hihat", ("hat", "closed", "pulse", "high"), 4),
+    PadRole(10, "oh_track_open_hihat", "OH / Open hihat", ("hat", "open", "lift", "high"), 4),
+    PadRole(11, "cy_track_cymbal", "CY / Cymbal", ("cymbal", "metallic", "wash", "high"), 4),
+    PadRole(12, "cb_track_cowbell", "CB / Cowbell", ("cowbell", "bell", "metallic", "tonal"), 4),
 )
 
 
@@ -461,6 +565,28 @@ def get_machine_profile(key: str) -> MachineProfile:
         if profile.key == key:
             return profile
     raise KeyError(f"unknown machine profile: {key!r}")
+
+
+def list_rytm_pad_capabilities() -> tuple[RytmPadCapability, ...]:
+    """Return OS 1.72 pad/track machine compatibility metadata."""
+
+    return RYTM_PAD_CAPABILITIES
+
+
+def get_rytm_pad_capability(pad: int) -> RytmPadCapability:
+    """Return OS 1.72 machine compatibility for one 1-based pad."""
+
+    for capability in RYTM_PAD_CAPABILITIES:
+        if capability.pad == pad:
+            return capability
+    raise KeyError(f"unknown Rytm pad: {pad!r}")
+
+
+def is_machine_allowed_on_pad(pad: int, machine_key: str) -> bool:
+    """Return whether an Analog Rytm machine can be selected on a pad."""
+
+    capability = get_rytm_pad_capability(pad)
+    return machine_key in capability.allowed_machine_keys
 
 
 def list_twelve_pad_roles() -> tuple[PadRole, ...]:
@@ -493,6 +619,8 @@ def rank_machines_for_role(
     essence = tuple(tag.lower() for tag in essence_tags)
 
     for machine in MACHINE_PROFILES:
+        if enforce_pad_families and not is_machine_allowed_on_pad(role.pad, machine.key):
+            continue
         if (
             enforce_pad_families
             and role.allowed_families

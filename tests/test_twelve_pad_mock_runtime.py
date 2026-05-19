@@ -57,9 +57,9 @@ def test_birmingham_dark_techno_mock_plan_covers_all_12_pads_with_mapped_engines
     assert {pad.selection_status for pad in plan.pads} == {"planned"}
     assert plan.pads[0].selected_machine_label == "BD Hard"
     assert plan.pads[0].machine_value == 0
-    assert plan.pads[2].role_label == "Metallic motif"
-    assert plan.pads[2].selected_machine_label == "BD FM"
-    assert plan.pads[11].role_label == "Wild discovery lane"
+    assert plan.pads[2].role_label == "RS / Rim shot"
+    assert plan.pads[2].selected_machine_label == "BD Sharp"
+    assert plan.pads[11].role_label == "CB / Cowbell"
 
 
 def test_schranz_mock_plan_falls_back_from_future_preference_to_mapped_engines():
@@ -73,9 +73,9 @@ def test_schranz_mock_plan_falls_back_from_future_preference_to_mapped_engines()
     assert plan.fallback_pad_count >= 4
 
     pad3 = plan.pads[2]
-    assert pad3.role_label == "Metallic motif"
-    assert pad3.preferred_machine_label == "SY Chip"
-    assert pad3.selected_machine_label == "BD FM"
+    assert pad3.role_label == "RS / Rim shot"
+    assert pad3.preferred_machine_label == "RS Hard"
+    assert pad3.selected_machine_label == "SD FM"
     assert pad3.selection_status == "mapped_fallback"
     assert pad3.selection_reason == "preferred_future_machine_needs_manual_mapping"
 
@@ -117,8 +117,7 @@ def test_format_twelve_pad_mock_runtime_report_includes_safety_and_stream():
     assert "Style prompt: Birmingham dark techno" in report
     assert "Pad counts: planned 12 / blocked 0 / fallback 0" in report
     assert any(
-        line.startswith("- Pad 12 / MIDI channel 12 / Wild discovery lane: BD Hard")
-        for line in report
+        line.startswith("- Pad 12 / MIDI channel 12 / CB / Cowbell: BD FM") for line in report
     )
     assert any(line == "- Pad 1 ch 1 wire 0 machine: CC15 -> 0" for line in report)
     assert any(line.startswith("- Pad 12 ch 12 wire 11") for line in report)
@@ -139,7 +138,7 @@ def test_twelve_pad_mock_runtime_report_cli_accepts_style_prompt():
     assert "Style prompt: Birmingham dark techno" in result.stdout
     assert "Pad counts: planned 12 / blocked 0 / fallback 0" in result.stdout
     assert "Mock sender captured:" in result.stdout
-    assert "Pad 12 / MIDI channel 12 / Wild discovery lane: BD Hard" in result.stdout
+    assert "Pad 12 / MIDI channel 12 / CB / Cowbell: BD FM" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
 
@@ -157,5 +156,5 @@ def test_twelve_pad_mock_runtime_report_cli_discovery_override():
     assert "Style prompt: schranz" in result.stdout
     assert "Discovery: 0.82" in result.stdout
     assert "Pad counts: planned 12 / blocked 0 / fallback" in result.stdout
-    assert "preferred SY Chip [future] -> selected BD FM [mutable]" in result.stdout
+    assert "preferred RS Hard [future] -> selected SD FM [mutable]" in result.stdout
     assert result.stderr == ""

@@ -44,6 +44,12 @@ ENGINE_SOURCE_STARTERS: dict[str, tuple[tuple[str, int, int], ...]] = {
         ("SRC Impact", 22, 110),
         ("SRC Waveform", 23, 0),
     ),
+    "sd_hard": (
+        ("SRC Level", 16, 100),
+        ("SRC Tune", 17, 65),
+        ("SRC Decay", 18, 46),
+        ("SRC Noise Level", 22, 78),
+    ),
     "sy_chip": (
         ("SRC Slot 1", 16, 100),
         ("SRC Slot 2", 17, 72),

@@ -455,7 +455,7 @@ def test_app_main_dry_run_rytm_engine_cycle_uses_guarded_mock_sender(capsys):
     assert "Style prompt: Birmingham dark techno" in captured.out
     assert "Accepted: True" in captured.out
     assert "Emitted mock messages: 12" in captured.out
-    assert "Pad 5 / ch 5 wire 4 / CC15 -> 17 / CH Metallic" in captured.out
+    assert "Pad 5 / ch 5 wire 4 / CC15 -> 7 / BT Classic" in captured.out
     assert "Mock sender captured 12 message(s)." in captured.out
     assert "Select target pad" not in captured.out
     assert captured.err == ""
@@ -1415,7 +1415,7 @@ def test_app_main_arm_rytm_engine_cycle_sends_to_selected_fake_port(
     assert port.sent[0].control == 15
     assert port.sent[0].value == 0
     assert port.sent[4].channel == 4
-    assert port.sent[4].value == 17
+    assert port.sent[4].value == 7
     assert port.closed is True
     assert "Rytm Engine Cycle Hardware Send Report" in captured.out
     assert "Accepted: True" in captured.out
@@ -1481,7 +1481,7 @@ def test_app_main_arm_rytm_engine_cycle_starter_profile_sends_to_selected_fake_p
     assert len(port.sent) == 84
     assert port.sent[28].channel == 4
     assert port.sent[28].control == 15
-    assert port.sent[28].value == 17
+    assert port.sent[28].value == 7
     assert port.sent[29].channel == 4
     assert port.sent[29].control == 74
     assert port.sent[29].value == 108
@@ -1549,7 +1549,7 @@ def test_app_main_arm_twelve_pad_rytm_runtime_alias_sends_source_starters_to_sel
     assert calls["open"] == ["Fake Rytm"]
     assert len(port.sent) == 132
     assert any(
-        message.channel == 4 and message.control == 15 and message.value == 17
+        message.channel == 4 and message.control == 15 and message.value == 7
         for message in port.sent
     )
     assert any(

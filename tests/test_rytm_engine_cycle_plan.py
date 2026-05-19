@@ -42,7 +42,8 @@ def test_importing_rytm_engine_cycle_plan_is_passive_and_silent():
     assert result.stderr == ""
 
 
-def test_birmingham_engine_cycle_plan_prefers_real_hat_and_metallic_engines():
+def test_birmingham_engine_cycle_plan_uses_os172_track_lanes():
+    from rytm_randomizer.essence.machine_catalog import is_machine_allowed_on_pad
     from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
 
     plan = build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35)
@@ -52,18 +53,53 @@ def test_birmingham_engine_cycle_plan_prefers_real_hat_and_metallic_engines():
     assert plan.pad_count == 12
     assert plan.top_candidate_count == 12
     assert plan.mock_message_count == 12
+    assert all(
+        is_machine_allowed_on_pad(pad.pad, pad.top_candidate.machine_key) for pad in plan.pads
+    )
 
     pad3 = plan.pads[2]
-    assert pad3.role_label == "Metallic motif"
-    assert pad3.top_candidate.machine_key == "sy_chip"
-    assert pad3.top_candidate.machine_value == 29
+    assert pad3.role_label == "RS / Rim shot"
+    assert pad3.top_candidate.machine_key == "rs_hard"
+    assert pad3.top_candidate.machine_value == 4
     assert pad3.top_candidate.support_status == "machine_selectable"
 
     pad5 = plan.pads[4]
-    assert pad5.role_label == "Closed hat pulse"
-    assert pad5.top_candidate.machine_key == "ch_metallic"
-    assert pad5.top_candidate.machine_value == 17
+    assert pad5.role_label == "BT / Bass tom"
+    assert pad5.top_candidate.machine_key == "bt_classic"
+    assert pad5.top_candidate.machine_value == 7
     assert pad5.top_candidate.support_status == "machine_selectable"
+
+    pad10 = plan.pads[9]
+    assert pad10.role_label == "OH / Open hihat"
+    assert pad10.top_candidate.machine_key in {"oh_classic", "oh_metallic", "hh_basic", "hh_lab"}
+    assert pad10.top_candidate.machine_key != "xt_classic"
+
+
+def test_engine_cycle_plan_applies_os172_pad_capabilities_to_all_candidates():
+    from rytm_randomizer.essence.machine_catalog import is_machine_allowed_on_pad
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+
+    plan = build_rytm_engine_cycle_plan("schranz industrial hard techno", discovery=0.9)
+
+    assert plan.pad_count == 12
+    assert plan.no_candidate_count == 0
+    for pad in plan.pads:
+        assert pad.candidates
+        assert all(
+            is_machine_allowed_on_pad(pad.pad, candidate.machine_key)
+            for candidate in pad.candidates
+        )
+
+    assert plan.pads[4].top_candidate.machine_key == "bt_classic"
+    assert plan.pads[5].top_candidate.machine_key == "xt_classic"
+    assert plan.pads[6].top_candidate.machine_key == "xt_classic"
+    assert plan.pads[7].top_candidate.machine_key == "xt_classic"
+    assert plan.pads[9].top_candidate.machine_key in {
+        "oh_classic",
+        "oh_metallic",
+        "hh_basic",
+        "hh_lab",
+    }
 
 
 def test_engine_cycle_mock_capture_sends_top_candidate_cc15_per_pad():
@@ -83,8 +119,8 @@ def test_engine_cycle_mock_capture_sends_top_candidate_cc15_per_pad():
     pad5 = sender.sent_messages[4]
     assert pad5.channel == 4
     assert pad5.control == 15
-    assert pad5.value == 17
-    assert pad5.metadata["machine_key"] == "ch_metallic"
+    assert pad5.value == 7
+    assert pad5.metadata["machine_key"] == "bt_classic"
 
 
 def test_engine_cycle_report_includes_support_boundaries_and_mock_stream():
@@ -102,12 +138,10 @@ def test_engine_cycle_report_includes_support_boundaries_and_mock_stream():
     assert "Pad counts: planned 12 / no-candidate 0" in report
     assert "Mock CC15 top-candidate stream: 12 message(s)" in report
     assert any(
-        line.startswith(
-            "- Pad 5 / Closed hat pulse: 1. CH Metallic CC15 -> 17 [machine_selectable]"
-        )
+        line.startswith("- Pad 5 / BT / Bass tom: 1. BT Classic CC15 -> 7 [machine_selectable]")
         for line in report
     )
-    assert any(line == "- Pad 5 ch 5 wire 4 CC15 -> 17 / CH Metallic" for line in report)
+    assert any(line == "- Pad 5 ch 5 wire 4 CC15 -> 7 / BT Classic" for line in report)
     assert "- machine_selectable means engine switch only; tuned anchors are pending" in report
     assert "- no MIDI sending" in report
 
@@ -125,7 +159,7 @@ def test_rytm_engine_cycle_plan_report_cli_accepts_style_prompt():
     assert "RytmRandomizer passive Rytm Engine Cycle Plan Report" in result.stdout
     assert "Style prompt: Birmingham dark techno" in result.stdout
     assert "Pad counts: planned 12 / no-candidate 0" in result.stdout
-    assert "Pad 5 / Closed hat pulse: 1. CH Metallic CC15 -> 17" in result.stdout
-    assert "Pad 9 / Tonal bell accent: 1. CB Classic CC15 -> 12" in result.stdout
+    assert "Pad 5 / BT / Bass tom: 1. BT Classic CC15 -> 7" in result.stdout
+    assert "Pad 9 / CH / Closed hihat: 1. CH Metallic CC15 -> 17" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

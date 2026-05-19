@@ -152,8 +152,8 @@ def test_guarded_engine_cycle_emits_12_cc15_messages_to_mock_sender():
     assert result.emitted_messages[0].value == 0
     assert result.emitted_messages[0].metadata["guard"] == "rytm_engine_cycle_guarded_send_dry_run"
     assert result.emitted_messages[4].channel == 4
-    assert result.emitted_messages[4].value == 17
-    assert result.emitted_messages[4].metadata["machine_key"] == "ch_metallic"
+    assert result.emitted_messages[4].value == 7
+    assert result.emitted_messages[4].metadata["machine_key"] == "bt_classic"
 
 
 def test_guarded_engine_cycle_report_formats_policy_and_preview():
@@ -168,7 +168,7 @@ def test_guarded_engine_cycle_report_formats_policy_and_preview():
     assert "RytmRandomizer passive Rytm Engine Cycle Guarded Send Dry-Run Report" in report
     assert "Accepted: True" in report
     assert "Emitted mock messages: 12" in report
-    assert "Pad 5 / ch 5 wire 4 / CC15 -> 17 / CH Metallic" in report
+    assert "Pad 5 / ch 5 wire 4 / CC15 -> 7 / BT Classic" in report
     assert "- mock-only guarded Rytm engine-cycle send" in report
     assert "- emits top-candidate CC15 machine-select events only" in report
     assert "- no MIDI sending" in report
@@ -199,7 +199,7 @@ def test_guarded_engine_cycle_starter_plan_emits_84_mock_messages():
     assert sender.sent_messages == result.emitted_messages
     assert result.emitted_messages[28].channel == 4
     assert result.emitted_messages[28].control == 15
-    assert result.emitted_messages[28].value == 17
+    assert result.emitted_messages[28].value == 7
     assert result.emitted_messages[28].metadata["event_role"] == "machine_select"
     assert result.emitted_messages[29].channel == 4
     assert result.emitted_messages[29].control == 74
@@ -208,7 +208,7 @@ def test_guarded_engine_cycle_starter_plan_emits_84_mock_messages():
     assert result.emitted_messages[29].metadata["parameter"] == "FLT Frequency"
     assert "Starter profile: Birmingham Dark / birmingham-dark" in report
     assert "Emitted mock messages: 84" in report
-    assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 17 / CH Metallic" in report
+    assert "Pad 5 / ch 5 wire 4 / machine_select / CC15 -> 7 / BT Classic" in report
     assert "Pad 5 / ch 5 wire 4 / starter_parameter / FLT Frequency CC74 -> 108" in report
     assert "- emits CC15 machine-select plus common filter/amp starter values" in report
 

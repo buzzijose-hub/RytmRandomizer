@@ -39,6 +39,12 @@ def test_reference_source_records_midi_guide_attribution():
 
     assert source.device == "Elektron Analog Four MKII"
     assert source.url == "https://midi.guide/d/elektron/analog-four-mkii/"
+    assert (
+        source.manual_path
+        == "C:/Users/Jose Buzzi/Dropbox/Utilities/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf"
+    )
+    assert source.manual_os == "OS1.51C"
+    assert source.manual_midi_pages == "100-108"
     assert source.csv_history_url.endswith("Elektron/Analog%20Four%20MKII.csv")
     assert source.license == "Creative Commons Attribution Share Alike 4.0 International"
     assert source.last_update == "2026-03-26"
@@ -97,6 +103,12 @@ def test_format_analog_four_reference_report_is_passive_and_actionable():
 
     assert report[0] == "RytmRandomizer passive Analog Four MKII Reference Report"
     assert "Source: https://midi.guide/d/elektron/analog-four-mkii/" in report
+    assert (
+        "Manual: C:/Users/Jose Buzzi/Dropbox/Utilities/"
+        "Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf"
+    ) in report
+    assert "Manual OS: OS1.51C" in report
+    assert "Manual MIDI pages: 100-108" in report
     assert "Parameter count: 230" in report
     assert "License: Creative Commons Attribution Share Alike 4.0 International" in report
     assert "Track roles:" in report

@@ -1,6 +1,6 @@
 # Machine Catalog And Essence Matcher Checkpoint
 
-Date: 2026-05-16
+Date: 2026-05-18
 
 ## Purpose
 
@@ -18,12 +18,13 @@ candidates that can capture the essence of that track.
 The new passive `rytm_randomizer.essence.machine_catalog` module provides:
 
 - machine-family metadata for the V1.34 mutable machines
-- inventory placeholders for future engines that still need manual mapping
-- a 12-pad role template for reference-driven kit planning
+- OS 1.72 pad/track machine compatibility for all 12 Rytm pads
+- machine-selectable inventory for engines that can be selected by CC15
+- a 12-pad role template aligned to the physical Rytm tracks
 - a role matcher that ranks machines from role tags and reference essence tags
 - Reference/Discovery behavior for planning:
   - reference side: only currently mapped mutable V1.34 machines
-  - discovery side: includes inventory-only future machines as candidates
+  - discovery side: includes machine-selectable inventory candidates
 
 The passive CLI now exposes this through:
 
@@ -39,9 +40,10 @@ python -m rytm_randomizer.cli essence-plan-report --description "metallic bell p
 
 This prints the 12-pad role plan and top candidate engines for each pad. The
 same command with a high discovery value, such as `--discovery 1.0`, may show
-future inventory candidates like SY Chip, Dual VCO, hat families, and cymbal
-families, but those candidates remain blocked from real mutation until mapped
-and validated.
+machine-selectable inventory candidates like SY Chip, Dual VCO, BT/XT toms,
+hat engines, and cymbal/cowbell engines. Active engine-cycling runtime paths
+must additionally enforce the OS 1.72 pad compatibility table before emitting
+any CC15 machine select.
 
 The description path uses `rytm_randomizer.essence.tag_adapter`. It extracts
 coarse musical tags only; it does not preserve artist names, track titles,
@@ -77,41 +79,45 @@ The catalog marks the currently mapped V1.34 machines as `mutable_v134`:
 - SD FM
 - SY Raw
 
-## Future Inventory Machines
+## Machine-Selectable Inventory
 
-The catalog also tracks important future machine families as
-`needs_manual_mapping`:
+The catalog also tracks Rytm engines that have manual-backed CC15 machine
+values but do not yet have full per-engine mutation maps:
 
 - SY Chip
 - Dual VCO
-- RS family
-- CP family
-- CH/OH hat family
-- CY/CB cymbal family
+- RS Hard / RS Classic
+- CP Classic
+- BT Classic
+- XT Classic
+- CH/OH and HH hat engines
+- CY/CB cymbal and cowbell engines
+- UT Noise / UT Impulse
 
-These engines can appear in discovery planning, but they are not yet approved
-for mutation. Each one still needs manual-backed machine values, parameter
+These engines can be selected by guarded CC15 paths when the runtime also has
+a safe starter plan. Full freeform mutation still requires per-engine parameter
 maps, safe ranges, fixtures, and hardware validation.
 
 ## Twelve-Pad Role Template
 
-The first 12-pad essence template is:
+The current 12-pad essence template follows the Analog Rytm MKII OS 1.72
+physical tracks:
 
-- Pad 1: main kick foundation
-- Pad 2: secondary low percussion
-- Pad 3: metallic motif
-- Pad 4: body/accent hit
-- Pad 5: closed hat pulse
-- Pad 6: open hat / noise lift
-- Pad 7: rim/click texture
-- Pad 8: snare/clap pressure
-- Pad 9: tonal bell accent
-- Pad 10: open hat
-- Pad 11: atmosphere/noise layer
-- Pad 12: wild discovery lane
+- Pad 1: BD / Bass drum
+- Pad 2: SD / Snare drum
+- Pad 3: RS / Rim shot
+- Pad 4: CP / Hand clap
+- Pad 5: BT / Bass tom
+- Pad 6: LT / Low tom
+- Pad 7: MT / Mid tom
+- Pad 8: HT / Hi tom
+- Pad 9: CH / Closed hihat
+- Pad 10: OH / Open hihat
+- Pad 11: CY / Cymbal
+- Pad 12: CB / Cowbell
 
-This is planning metadata only. It does not mean the runtime supports Pads 5-12
-mutation yet.
+The active engine-cycle/runtime planners use this same compatibility table, so
+Pad 10 remains an open-hat lane and Pads 6-8 remain XT tom lanes.
 
 ## Audio Analyzer Relevance
 
