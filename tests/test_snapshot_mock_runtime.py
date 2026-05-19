@@ -140,6 +140,48 @@ def test_snapshot_mock_runtime_captures_planned_changes_as_inert_cc_messages():
     assert pad3_message.metadata["parameter"] == "FLT Frequency"
 
 
+def test_snapshot_mock_runtime_captures_one_filtered_pad():
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mock_runtime import capture_snapshot_mutation_mock_messages
+    from rytm_randomizer.snapshot.rytm_mutation_planner import (
+        build_snapshot_mutation_plan,
+        filter_snapshot_mutation_plan_to_pad,
+    )
+
+    snapshot = decode_rytm_kit_snapshot_record(
+        make_rytm_kit_record(
+            kit_name="MOCK PAD",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            pad_parameter_values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x50: 121,
+                    0x52: 36,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+    plan = build_snapshot_mutation_plan(snapshot, depth="micro")
+    filtered = filter_snapshot_mutation_plan_to_pad(plan, pad=2)
+
+    sender = capture_snapshot_mutation_mock_messages(filtered)
+
+    assert len(sender.sent_messages) == 6
+    assert {message.metadata["pad"] for message in sender.sent_messages} == {2}
+    assert {message.channel for message in sender.sent_messages} == {1}
+
+
 def test_snapshot_mock_runtime_cli_reads_saved_kit_without_hardware(tmp_path):
     sysex_path = tmp_path / "kits.syx"
     sysex_path.write_bytes(
@@ -178,5 +220,55 @@ def test_snapshot_mock_runtime_cli_reads_saved_kit_without_hardware(tmp_path):
     assert "baseline 59 / delta +1" in result.stdout
     assert "- captured-value relative" in result.stdout
     assert "- mock sender only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_snapshot_mock_runtime_cli_filters_to_one_pad(tmp_path):
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(
+        make_rytm_kit_record(
+            kit_name="CLI MOCK PAD",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            pad_parameter_values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x50: 121,
+                    0x52: 36,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+
+    result = run_cli(
+        "sysex-snapshot-mock-runtime-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--pad",
+        "2",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Snapshot Mock Runtime Report" in result.stdout
+    assert "Kit: CLI MOCK PAD" in result.stdout
+    assert "Planned pads: 1 / 1" in result.stdout
+    assert "Blocked pads: 0 / 1" in result.stdout
+    assert "Mock sender captured: 6 message(s)" in result.stdout
+    assert "- Pad 2 ch 2 wire 1 CP Classic / SRC Slot 2: CC17 -> 62" in result.stdout
+    assert "- Pad 1 " not in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

@@ -16,8 +16,6 @@ from .rytm_mutation_planner import (
     format_snapshot_mutation_plan_error,
 )
 
-PAD_COUNT = 12
-
 
 def build_snapshot_mock_runtime_from_file(
     path: str | Path,
@@ -77,8 +75,8 @@ def format_snapshot_mock_runtime_report(
         f"Kit: {plan.kit_name or '<blank>'}",
         f"Depth: {plan.depth}",
         f"Snapshot parameter map: {plan.snapshot_parameter_map_status}",
-        f"Planned pads: {plan.planned_pad_count} / {PAD_COUNT}",
-        f"Blocked pads: {plan.blocked_pad_count} / {PAD_COUNT}",
+        f"Planned pads: {plan.planned_pad_count} / {plan.scanned_pad_count}",
+        f"Blocked pads: {plan.blocked_pad_count} / {plan.scanned_pad_count}",
         f"Planned changes: {plan.planned_change_count}",
         f"Mock sender captured: {len(sender.sent_messages)} message(s)",
         "Pad plans:",

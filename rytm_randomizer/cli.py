@@ -645,7 +645,7 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) == 6
+        len(args) in (6, 8)
         and args[0] == "sysex-snapshot-mutation-plan-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
@@ -654,9 +654,15 @@ def main(argv=None):
         from .snapshot.rytm_mutation_planner import (
             SnapshotMutationPlanError,
             build_snapshot_mutation_plan_from_file,
+            filter_snapshot_mutation_plan_to_pad,
             format_snapshot_mutation_plan_error,
             format_snapshot_mutation_plan_report,
         )
+
+        optional_args = _parse_optional_key_value_args(args[6:], {"--pad"})
+        if optional_args is None:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
 
         try:
             slot = int(args[3])
@@ -665,6 +671,11 @@ def main(argv=None):
                 slot=slot,
                 depth=args[5],
             )
+            if "--pad" in optional_args:
+                plan = filter_snapshot_mutation_plan_to_pad(
+                    plan,
+                    pad=int(optional_args["--pad"]),
+                )
         except FileNotFoundError:
             lines = format_snapshot_mutation_plan_error(args[1], "File not found")
             sys.stderr.write("\n".join(lines))
@@ -676,7 +687,10 @@ def main(argv=None):
             sys.stderr.write("\n")
             return 1
         except ValueError:
-            lines = format_snapshot_mutation_plan_error(args[1], "Slot must be an integer")
+            lines = format_snapshot_mutation_plan_error(
+                args[1],
+                "Slot and pad must be integers",
+            )
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
@@ -686,7 +700,7 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) == 6
+        len(args) in (6, 8)
         and args[0] == "sysex-snapshot-mock-runtime-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
@@ -698,7 +712,15 @@ def main(argv=None):
             format_snapshot_mock_runtime_error,
             format_snapshot_mock_runtime_report,
         )
-        from .snapshot.rytm_mutation_planner import SnapshotMutationPlanError
+        from .snapshot.rytm_mutation_planner import (
+            SnapshotMutationPlanError,
+            filter_snapshot_mutation_plan_to_pad,
+        )
+
+        optional_args = _parse_optional_key_value_args(args[6:], {"--pad"})
+        if optional_args is None:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
 
         try:
             slot = int(args[3])
@@ -707,6 +729,11 @@ def main(argv=None):
                 slot=slot,
                 depth=args[5],
             )
+            if "--pad" in optional_args:
+                plan = filter_snapshot_mutation_plan_to_pad(
+                    plan,
+                    pad=int(optional_args["--pad"]),
+                )
             sender = capture_snapshot_mutation_mock_messages(plan)
         except FileNotFoundError:
             lines = format_snapshot_mock_runtime_error(args[1], "File not found")
@@ -719,7 +746,10 @@ def main(argv=None):
             sys.stderr.write("\n")
             return 1
         except ValueError:
-            lines = format_snapshot_mock_runtime_error(args[1], "Slot must be an integer")
+            lines = format_snapshot_mock_runtime_error(
+                args[1],
+                "Slot and pad must be integers",
+            )
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1

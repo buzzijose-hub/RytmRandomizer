@@ -140,6 +140,67 @@ def test_snapshot_mutation_plan_uses_captured_values_not_anchors():
     assert pad2_changes["FLT Frequency"].planned_value == 99
 
 
+def test_snapshot_mutation_plan_can_filter_to_one_pad():
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mutation_planner import (
+        build_snapshot_mutation_plan,
+        filter_snapshot_mutation_plan_to_pad,
+    )
+
+    snapshot = decode_rytm_kit_snapshot_record(
+        make_rytm_kit_record(
+            kit_name="PAD ONLY",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            pad_parameter_values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x50: 121,
+                    0x52: 36,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+
+    plan = build_snapshot_mutation_plan(snapshot, depth="micro")
+    filtered = filter_snapshot_mutation_plan_to_pad(plan, pad=2)
+
+    assert filtered.kit_name == "PAD ONLY"
+    assert len(filtered.pads) == 1
+    assert filtered.planned_pad_count == 1
+    assert filtered.blocked_pad_count == 0
+    assert filtered.planned_change_count == 6
+    assert filtered.pads[0].pad == 2
+    assert filtered.pads[0].midi_channel == 2
+    assert {change.pad for change in filtered.pads[0].changes} == {2}
+
+
+def test_snapshot_mutation_plan_rejects_invalid_pad_filter():
+    from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
+    from rytm_randomizer.snapshot.rytm_mutation_planner import (
+        build_snapshot_mutation_plan,
+        filter_snapshot_mutation_plan_to_pad,
+    )
+
+    snapshot = decode_rytm_kit_snapshot_record(
+        make_rytm_kit_record(machine_values=(0,) + tuple(27 for _ in range(11)))
+    )
+    plan = build_snapshot_mutation_plan(snapshot, depth="micro")
+
+    with pytest.raises(ValueError, match="Rytm snapshot pad must be 1 through 12"):
+        filter_snapshot_mutation_plan_to_pad(plan, pad=13)
+
+
 def test_snapshot_mutation_plan_rejects_unknown_depth():
     from rytm_randomizer.snapshot.rytm_decoder import decode_rytm_kit_snapshot_record
     from rytm_randomizer.snapshot.rytm_mutation_planner import (
@@ -192,5 +253,56 @@ def test_snapshot_mutation_plan_cli_reads_saved_kit_without_hardware(tmp_path):
     assert "- Pad 1 BD Hard / SRC Tune: CC17 59 -> 60 (delta +1)" in result.stdout
     assert "- captured-value relative" in result.stdout
     assert "- no anchor loading" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_snapshot_mutation_plan_cli_filters_to_one_pad(tmp_path):
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(
+        make_rytm_kit_record(
+            kit_name="CLI PAD",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            pad_parameter_values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x50: 121,
+                    0x52: 36,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+
+    result = run_cli(
+        "sysex-snapshot-mutation-plan-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--pad",
+        "2",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Snapshot Mutation Plan Report" in result.stdout
+    assert "Kit: CLI PAD" in result.stdout
+    assert "Pads scanned: 2" in result.stdout
+    assert "Planned pads: 1 / 1" in result.stdout
+    assert "Blocked pads: 0 / 1" in result.stdout
+    assert "Planned changes: 6" in result.stdout
+    assert "- Pad 2 / MIDI channel 2:" in result.stdout
+    assert "- Pad 1 " not in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

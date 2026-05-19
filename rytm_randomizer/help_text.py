@@ -12,8 +12,8 @@ USAGE = (
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | performance-snapshot-target-report --target <target> | sysex-kit-bank-report <path> | "
     "sysex-project-report <path> | sysex-kit-snapshot-report <path> --slot <1-128> | "
-    "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
-    "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
+    "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
     "dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
     "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
@@ -65,7 +65,9 @@ Usage:
   python -m rytm_randomizer.cli sysex-project-report <path>
   python -m rytm_randomizer.cli sysex-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --pad <1-12>
   python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --pad <1-12>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
@@ -334,6 +336,7 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --pad <1-12>
   python -m rytm_randomizer.cli sysex-snapshot-mutation-plan-report --help
 
 Behavior:
@@ -341,6 +344,8 @@ Behavior:
   slot through the saved snapshot decoder, and prints a passive mutation plan
   using bounded deterministic deltas from the captured parameter values. It does
   not load anchors, switch machines, send MIDI, write SysEx, or touch hardware.
+  Use --pad to preview one saved pad from the captured kit while leaving the
+  other pads out of the printed plan.
 
 Safety:
   passive/read-only
@@ -356,13 +361,14 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --pad <1-12>
   python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report --help
 
 Behavior:
   Reads an existing Rytm kit bank or whole-project SysEx file, builds the
   captured-value snapshot mutation plan, and captures the planned CC moves into
-  an inert mock sender. It does not open ports, send MIDI, write SysEx, or touch
-  hardware.
+  an inert mock sender. Use --pad to capture only one saved pad from the kit.
+  It does not open ports, send MIDI, write SysEx, or touch hardware.
 
 Safety:
   passive/read-only

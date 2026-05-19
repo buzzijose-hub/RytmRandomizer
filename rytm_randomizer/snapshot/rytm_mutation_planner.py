@@ -98,6 +98,10 @@ class SnapshotMutationPlan:
     def planned_change_count(self) -> int:
         return sum(len(pad.changes) for pad in self.pads)
 
+    @property
+    def scanned_pad_count(self) -> int:
+        return len(self.pads)
+
 
 def build_snapshot_mutation_plan(
     snapshot: RytmKitSnapshot,
@@ -130,6 +134,31 @@ def build_snapshot_mutation_plan_from_file(
     return build_snapshot_mutation_plan(snapshot, depth=depth)
 
 
+def filter_snapshot_mutation_plan_to_pad(
+    plan: SnapshotMutationPlan,
+    *,
+    pad: int,
+) -> SnapshotMutationPlan:
+    """Return a copy of a Rytm snapshot mutation plan for one pad."""
+
+    if not isinstance(plan, SnapshotMutationPlan):
+        raise TypeError("plan must be a SnapshotMutationPlan")
+    if pad not in range(1, PAD_COUNT + 1):
+        raise SnapshotMutationPlanError("Rytm snapshot pad must be 1 through 12")
+
+    selected_pads = tuple(pad_plan for pad_plan in plan.pads if pad_plan.pad == pad)
+    if not selected_pads:
+        raise SnapshotMutationPlanError("Rytm snapshot pad must be 1 through 12")
+
+    return SnapshotMutationPlan(
+        slot_number=plan.slot_number,
+        kit_name=plan.kit_name,
+        depth=plan.depth,
+        snapshot_parameter_map_status=plan.snapshot_parameter_map_status,
+        pads=selected_pads,
+    )
+
+
 def format_snapshot_mutation_plan_report(plan: SnapshotMutationPlan) -> list[str]:
     """Format a deterministic passive snapshot mutation plan report."""
 
@@ -139,8 +168,9 @@ def format_snapshot_mutation_plan_report(plan: SnapshotMutationPlan) -> list[str
         f"Kit: {plan.kit_name or '<blank>'}",
         f"Depth: {plan.depth}",
         f"Snapshot parameter map: {plan.snapshot_parameter_map_status}",
-        f"Planned pads: {plan.planned_pad_count} / {PAD_COUNT}",
-        f"Blocked pads: {plan.blocked_pad_count} / {PAD_COUNT}",
+        f"Pads scanned: {_format_scanned_pads(plan)}",
+        f"Planned pads: {plan.planned_pad_count} / {plan.scanned_pad_count}",
+        f"Blocked pads: {plan.blocked_pad_count} / {plan.scanned_pad_count}",
         f"Planned changes: {plan.planned_change_count}",
         "Pad plans:",
     ]
@@ -254,6 +284,13 @@ def _format_change_line(change: SnapshotPlannedChange) -> str:
     )
 
 
+def _format_scanned_pads(plan: SnapshotMutationPlan) -> str:
+    pads = tuple(pad.pad for pad in plan.pads)
+    if pads == tuple(range(1, PAD_COUNT + 1)):
+        return "1-12"
+    return ", ".join(str(pad) for pad in pads) if pads else "none"
+
+
 __all__ = [
     "SnapshotMutationPlan",
     "SnapshotMutationPlanError",
@@ -261,6 +298,7 @@ __all__ = [
     "SnapshotPlannedChange",
     "build_snapshot_mutation_plan",
     "build_snapshot_mutation_plan_from_file",
+    "filter_snapshot_mutation_plan_to_pad",
     "format_snapshot_mutation_plan_error",
     "format_snapshot_mutation_plan_report",
 ]

@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added one-pad Rytm saved-snapshot previews.
+  `--pad <1-12>` can now be combined with
+  `sysex-snapshot-mutation-plan-report` and
+  `sysex-snapshot-mock-runtime-report` so saved Rytm kits can be inspected one
+  drum pad at a time from the captured kit baseline. This is still
+  passive/mock-only: no MIDI ports are opened, no MIDI is sent, no anchors are
+  loaded, and no hardware is touched.
 - 2026-05-19: added one-track Analog Four saved-snapshot previews.
   `--track <1-4>` can now be combined with
   `analog-four-snapshot-mutation-plan-report` and
