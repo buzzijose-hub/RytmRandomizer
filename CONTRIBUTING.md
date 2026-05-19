@@ -16,6 +16,30 @@ pytest
 
 All tests must pass. There is also `Scripts/closeout_check.ps1`, a PowerShell-only closeout check. A cross-platform equivalent is being added; until then, run the PowerShell script on Windows or rely on `pytest` elsewhere.
 
+## Plan requirements — the 16 gates every PR must satisfy
+
+[`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) is the contract
+for **every** non-trivial PR, not just an internal "plan" PR. It defines 16
+gates covering coverage, V1.34 parity, lint/format/type cleanliness,
+dead-code purge, docs updates, type-system hygiene, observability adoption,
+test hygiene, module-organization hygiene, string-literal dispatch hygiene,
+shared fixtures, `Final` constants, env-var docs, maintainability review,
+learning capture, and execution shape.
+
+**Before opening a PR**, read `docs/PLAN_REQUIREMENTS.md` and include a
+conformance checklist in the PR body (one line per gate, `[x]` or `[ ]
+N/A — reason`). PR #35 (the Wave-1 simplification bundle) is the canonical
+example of a fully-conformant PR body.
+
+Sub-rules and learned skills extend the 16 gates:
+
+- [`.claude/rules/parity-fixture-discipline.md`](.claude/rules/parity-fixture-discipline.md) — when and how to regenerate V1.34 fixtures.
+- [`.claude/rules/coverage-gate-100pct.md`](.claude/rules/coverage-gate-100pct.md) — Gate 1 details, including branch coverage and the per-file ratchet.
+- [`.claude/rules/cascade-merge-pattern.md`](.claude/rules/cascade-merge-pattern.md) — Gate 16 enforcement for autonomous multi-WS runs.
+
+Architecture-enforcement tests under `tests/architecture/` mechanically
+verify a subset of these gates on every CI run; do not skip them locally.
+
 ## Common contributor tasks
 
 For "where do I add X?" answers, the source of truth is
@@ -36,9 +60,10 @@ Quick links for the most common tasks:
 
 For the full list of change types, see `docs/ARCHITECTURE.md` §6.
 
-The full plan-time gate list (16 gates) lives in
-[`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md). Every plan PR
-includes a conformance checklist against those gates.
+The 16 plan-requirements gates that apply to every PR (not just the most
+common task types listed above) are documented in the
+[Plan requirements section](#plan-requirements--the-16-gates-every-pr-must-satisfy)
+above.
 
 ## Preserve parity with the V1.34 reference
 
@@ -62,6 +87,35 @@ Concretely:
 
 - Short, imperative summaries (e.g. `Split scene plans into scenes module`).
 - Commit in small steps.
+
+## PR bundling — one PR per logical change, not per commit
+
+Commit in small steps, but open **one bundled PR** for related work rather
+than a cascade of small PRs stacked on each other. The base branch
+(`modularize-v1.34` until `main` lands) requires CODEOWNERS review on every
+PR, so a 5-deep cascade is N approvals; a bundled PR is 1.
+
+**Specifically:**
+
+- If your change spans multiple workstreams (e.g. dual-machine = Rytm + A4 +
+  shared orchestration), implement each workstream on its own feature branch
+  in parallel, then bundle them into one integration branch via
+  `git merge --no-ff` and open **one** PR. See
+  [`.claude/rules/cascade-merge-pattern.md`](.claude/rules/cascade-merge-pattern.md)
+  for the operational recipe.
+- Do not open a PR whose base is another open PR's head (a "stacked PR"). If
+  the second piece truly cannot land without the first, finish the first
+  PR first; otherwise merge them in the source branch.
+- **Exception:** if the base branch is unprotected (no CODEOWNERS gate), the
+  per-PR cascade is fine — it gives independent revert capability and
+  finer-grained reviewer attention. The bundling rule is specifically for
+  approval-gated branches.
+
+If you are an autonomous agent (codex, claude-code, etc.) wired to open
+one PR per workstream under an approval-gated branch, **the orchestrator
+configuration is wrong**, not the policy — fix it to bundle before merging
+the next PR. The PR #35 run is the canonical example
+([`docs/SIMPLIFICATION_RUN_REPORT.md`](docs/SIMPLIFICATION_RUN_REPORT.md)).
 
 ## Data vs code
 
