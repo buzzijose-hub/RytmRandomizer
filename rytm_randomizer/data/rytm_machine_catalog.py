@@ -97,7 +97,7 @@ RYTM_MACHINE_PROFILES: Final = (
     RytmMachineProfile("hh_basic", "HH Basic", "HH", 24, "machine_selectable", ("hihat",)),
     RytmMachineProfile("cy_ride", "CY Ride", "CY", 25, "machine_selectable", ("cymbal", "ride")),
     RytmMachineProfile("bd_sharp", "BD Sharp", "BD", 26, "mutable_v134", ("kick",)),
-    RytmMachineProfile("dual_vco", "Dual VCO", "SY", 28, "machine_selectable", ("synth",)),
+    RytmMachineProfile("dual_vco", "SY Dual VCO", "SY", 28, "machine_selectable", ("synth",)),
     RytmMachineProfile("sy_chip", "SY Chip", "SY", 29, "machine_selectable", ("synth",)),
     RytmMachineProfile(
         "bd_acoustic", "BD Acoustic", "BD", 30, "mutable_v134", ("kick", "acoustic")

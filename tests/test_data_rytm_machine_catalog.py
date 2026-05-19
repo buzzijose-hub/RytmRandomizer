@@ -77,12 +77,22 @@ def test_pad_10_open_hihat_capability() -> None:
 
     assert pad.track_code == "OH"
     assert pad.label == "Open Hihat"
-    assert is_machine_allowed_on_pad(10, "oh_classic")
-    assert is_machine_allowed_on_pad(10, "oh_metallic")
-    assert is_machine_allowed_on_pad(10, "hh_basic")
-    assert is_machine_allowed_on_pad(10, "ch_classic")
-    assert is_machine_allowed_on_pad(10, "ut_noise")
+    for machine_key in (
+        "oh_classic",
+        "oh_metallic",
+        "hh_basic",
+        "hh_lab",
+        "ch_classic",
+        "ch_metallic",
+        "ut_noise",
+        "ut_impulse",
+    ):
+        assert is_machine_allowed_on_pad(10, machine_key)
     assert not is_machine_allowed_on_pad(10, "xt_classic")
+
+
+def test_dual_vco_uses_sy_prefixed_label() -> None:
+    assert get_rytm_machine_profile("dual_vco").label == "SY Dual VCO"
 
 
 @pytest.mark.parametrize("pad", (6, 7, 8))
