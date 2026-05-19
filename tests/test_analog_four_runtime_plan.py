@@ -202,3 +202,42 @@ def test_analog_four_runtime_report_cli_rejects_unknown_profile_safely():
     assert "RytmRandomizer passive Analog Four Runtime Plan Report" in result.stderr
     assert "Unknown Analog Four starter profile: acid-swamp" in result.stderr
     assert "No MIDI was sent" in result.stderr
+
+
+def test_analog_four_runtime_report_cli_main_accepts_track_filter(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(
+        ["analog-four-runtime-report", "--profile", "birmingham-dark", "--track", "3"]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Analog Four Runtime Plan Report" in captured.out
+    assert "Tracks planned: 1" in captured.out
+    assert "Track 3 / industrial drone: 5 event(s)" in captured.out
+    assert "Track 2 ch 2 wire 1" not in captured.out
+    assert captured.err == ""
+
+
+def test_analog_four_runtime_report_cli_main_rejects_usage_error(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(["analog-four-runtime-report", "--track"])
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "Usage:" in captured.err
+    assert captured.out == ""
+
+
+def test_analog_four_runtime_report_cli_main_rejects_bad_track_value(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(["analog-four-runtime-report", "--track", "snare"])
+
+    captured = capsys.readouterr()
+    assert result == 1
+    assert "Analog Four runtime track must be 1, 2, 3, or 4" in captured.err
+    assert "No MIDI was sent" in captured.err
+    assert captured.out == ""

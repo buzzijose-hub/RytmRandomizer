@@ -643,3 +643,148 @@ def test_dual_machine_mock_bridge_cli_rejects_a4_snapshot_profile_conflict(tmp_p
         "Analog Four starter profile cannot be combined with Analog Four snapshot path"
         in result.stderr
     )
+
+
+def test_dual_machine_mock_bridge_cli_main_covers_lane_success(tmp_path, capsys):
+    from rytm_randomizer import cli
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(
+        make_rytm_kit_record(
+            kit_name="MAIN LANES",
+            machine_values=(0, 6) + tuple(27 for _ in range(10)),
+            values={
+                1: {
+                    0x1E: 59,
+                    0x20: 68,
+                    0x44: 25,
+                    0x46: 14,
+                    0x4A: 65,
+                    0x50: 121,
+                },
+                2: {
+                    0x1E: 63,
+                    0x20: 70,
+                    0x44: 96,
+                    0x46: 18,
+                    0x4A: 62,
+                    0x50: 88,
+                },
+            },
+        )
+    )
+
+    result = cli.main(
+        [
+            "dual-machine-mock-bridge-report",
+            str(sysex_path),
+            "--slot",
+            "1",
+            "--depth",
+            "micro",
+            "--rytm-pad",
+            "2",
+            "--analog-four-track",
+            "4",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Dual-Machine Mock Bridge Report" in captured.out
+    assert "Rytm planned pads: 1 / 1" in captured.out
+    assert "Analog Four tracks: 1 / 1" in captured.out
+    assert "Combined mock messages: 11" in captured.out
+    assert captured.err == ""
+
+
+def test_dual_machine_readiness_cli_main_covers_both_lane_success(tmp_path, capsys):
+    from rytm_randomizer import cli
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="READY LANES"))
+
+    result = cli.main(
+        [
+            "dual-machine-live-snapshot-readiness-report",
+            str(sysex_path),
+            "--slot",
+            "1",
+            "--depth",
+            "micro",
+            "--target",
+            "both",
+            "--rytm-pad",
+            "1",
+            "--analog-four-track",
+            "1",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Dual-Machine Live Snapshot Readiness Report" in captured.out
+    assert "Target: both" in captured.out
+    assert "Ready: True" in captured.out
+    assert "Combined mock messages: 11" in captured.out
+    assert captured.err == ""
+
+
+def test_dual_machine_active_send_cli_main_covers_rytm_lane_success(tmp_path, capsys):
+    from rytm_randomizer import cli
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="ACTIVE LANES"))
+
+    result = cli.main(
+        [
+            "dual-machine-active-send-plan-report",
+            str(sysex_path),
+            "--slot",
+            "1",
+            "--depth",
+            "micro",
+            "--target",
+            "rytm",
+            "--rytm-pad",
+            "1",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Dual-Machine Active Send Plan Report" in captured.out
+    assert "Target: rytm" in captured.out
+    assert "Eligible mapped CC messages: 6" in captured.out
+    assert "target_scope_leave_alone" not in captured.out
+    assert captured.err == ""
+
+
+def test_dual_machine_guarded_send_cli_main_covers_a4_lane_success(tmp_path, capsys):
+    from rytm_randomizer import cli
+
+    sysex_path = tmp_path / "kits.syx"
+    sysex_path.write_bytes(make_rytm_kit_record(kit_name="GUARDED LANES"))
+
+    result = cli.main(
+        [
+            "dual-machine-guarded-send-dry-run-report",
+            str(sysex_path),
+            "--slot",
+            "1",
+            "--depth",
+            "micro",
+            "--target",
+            "analog-four",
+            "--analog-four-track",
+            "2",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Dual-Machine Guarded Send Dry-Run Report" in captured.out
+    assert "Target: analog-four" in captured.out
+    assert "Emitted mock messages: 5" in captured.out
+    assert "Analog Four MKII / ch 2 wire 1" in captured.out
+    assert captured.err == ""

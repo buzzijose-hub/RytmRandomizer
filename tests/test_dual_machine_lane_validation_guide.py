@@ -79,6 +79,48 @@ def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     assert "- A4 Track" not in joined
 
 
+def test_dual_machine_lane_validation_guide_formats_analog_four_only_lane():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    report = format_dual_machine_lane_validation_guide(
+        target="analog-four",
+        analog_four_track=2,
+    )
+    joined = "\n".join(report)
+
+    assert "Target scope: analog-four" in joined
+    assert "Rytm pad: not targeted" in joined
+    assert "Recommended Analog Four track: 2" in joined
+    assert "Expected lane-scoped messages: 5" in joined
+    assert "--target analog-four --analog-four-track 2" in joined
+    assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in joined
+    assert "- Analog Four port selected:" in joined
+    assert "- A4 Track 2 heard change / safe:" in joined
+
+
+def test_dual_machine_lane_validation_request_rejects_invalid_cross_scope_values():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        build_dual_machine_lane_validation_guide_request,
+    )
+
+    with pytest.raises(ValueError, match="Target must be rytm, analog-four, or both"):
+        build_dual_machine_lane_validation_guide_request(target="octatrack")
+    with pytest.raises(ValueError, match="Analog Four track must be between 1 and 4"):
+        build_dual_machine_lane_validation_guide_request(analog_four_track=5)
+    with pytest.raises(ValueError, match="Analog Four track cannot be used with target rytm"):
+        build_dual_machine_lane_validation_guide_request(
+            target="rytm",
+            analog_four_track=1,
+        )
+    with pytest.raises(ValueError, match="Rytm pad cannot be used with target analog-four"):
+        build_dual_machine_lane_validation_guide_request(
+            target="analog-four",
+            rytm_pad=1,
+        )
+
+
 def test_dual_machine_lane_validation_guide_cli_accepts_analog_four_only_target():
     result = run_cli(
         "dual-machine-lane-validation-guide",
@@ -142,6 +184,44 @@ def test_dual_machine_lane_validation_guide_cli_accepts_all_lanes_flag():
     assert "--target rytm --rytm-pad 12" in result.stdout
     assert "--target analog-four --analog-four-track 4" in result.stdout
     assert result.stderr == ""
+
+
+def test_dual_machine_lane_validation_guide_cli_main_covers_all_lanes(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(["dual-machine-lane-validation-guide", "--all-lanes"])
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Dual-Machine All-Lane Validation Guide" in captured.out
+    assert "--target rytm --rytm-pad 12" in captured.out
+    assert "--target analog-four --analog-four-track 4" in captured.out
+    assert captured.err == ""
+
+
+def test_dual_machine_lane_validation_guide_cli_main_rejects_usage_error(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(["dual-machine-lane-validation-guide", "--target"])
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "Usage:" in captured.err
+    assert captured.out == ""
+
+
+def test_dual_machine_lane_validation_guide_cli_main_rejects_value_error(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(
+        ["dual-machine-lane-validation-guide", "--target", "rytm", "--analog-four-track", "1"]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "Analog Four track cannot be used with target rytm" in captured.err
+    assert "No MIDI was sent" in captured.err
+    assert captured.out == ""
 
 
 def test_dual_machine_lane_validation_guide_cli_outputs_without_hardware():

@@ -355,3 +355,58 @@ def test_twelve_pad_rytm_runtime_report_cli_rejects_invalid_discovery():
     assert "Discovery must be between 0.0 and 1.0" in result.stderr
     assert "No MIDI was sent" in result.stderr
     assert result.stdout == ""
+
+
+def test_twelve_pad_rytm_runtime_report_cli_main_accepts_runtime_pad(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(
+        [
+            "twelve-pad-rytm-runtime-report",
+            "--style",
+            "Birmingham dark techno",
+            "--discovery",
+            "0.35",
+            "--runtime-pad",
+            "10",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 0
+    assert "RytmRandomizer passive Twelve Pad Rytm Runtime Report" in captured.out
+    assert "Planned pads: 1" in captured.out
+    assert "Runtime messages: 11" in captured.out
+    assert "- Pad 10 / OH / Open hihat" in captured.out
+    assert captured.err == ""
+
+
+def test_twelve_pad_rytm_runtime_report_cli_main_rejects_usage_error(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(["twelve-pad-rytm-runtime-report", "--style"])
+
+    captured = capsys.readouterr()
+    assert result == 2
+    assert "Usage:" in captured.err
+    assert captured.out == ""
+
+
+def test_twelve_pad_rytm_runtime_report_cli_main_rejects_bad_runtime_pad_value(capsys):
+    from rytm_randomizer import cli
+
+    result = cli.main(
+        [
+            "twelve-pad-rytm-runtime-report",
+            "--style",
+            "Birmingham dark techno",
+            "--runtime-pad",
+            "hat",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 1
+    assert "Pad must be between 1 and 12" in captured.err
+    assert "No MIDI was sent" in captured.err
+    assert captured.out == ""
