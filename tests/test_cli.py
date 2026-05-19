@@ -27,6 +27,7 @@ USAGE = (
     "dual-machine-guarded-send-dry-run-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path> | "
+    "dual-machine-mapping-validation-queue-report [--target <target>] [--limit <n>] | "
     "analog-four-kit-bank-report <path> | analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
@@ -340,6 +341,19 @@ def test_rytm_controlled_diff_report_help_exits_zero():
     assert "RytmRandomizer passive CLI: rytm-controlled-diff-report" in result.stdout
     assert "--all-pads" in result.stdout
     assert "mapped saved parameters only" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mapping_validation_queue_report_help_exits_zero():
+    result = run_cli("dual-machine-mapping-validation-queue-report", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "RytmRandomizer passive CLI: dual-machine-mapping-validation-queue-report" in result.stdout
+    )
+    assert "controlled mapping targets" in result.stdout
+    assert "--target <rytm|analog-four|both>" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive dual-machine mapping validation queue.
+  `dual-machine-mapping-validation-queue-report [--target <target>]
+  [--limit <n>]` prints an ordered checklist of controlled Rytm pad and Analog
+  Four track proof targets, including the exact guide/proof commands to run
+  after baseline/variant exports. This gives the next hardware session a
+  repeatable evidence queue without reading SysEx files, requesting dumps,
+  sending MIDI, opening ports, executing commands, writing SysEx, or touching
+  hardware.
 - 2026-05-19: expanded the passive Analog Four saved-offset proof target
   catalog to cover the mapped-CC starter-profile parameters already used by
   A4 runtime plans, including oscillator levels, oscillator waveform, Filter 1

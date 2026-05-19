@@ -77,6 +77,17 @@ selected pad and that change matches the requested parameter name or CC. This is
 the recommended operator loop for validating Rytm saved-kit mappings before
 trusting them in live snapshot workflows.
 
+Use the dual-machine queue when preparing a longer proof session:
+
+```powershell
+python -m rytm_randomizer.cli dual-machine-mapping-validation-queue-report --target both --limit 8
+```
+
+The queue is checklist text only. It lists controlled Rytm proof targets and
+Analog Four saved-offset guide/promotion targets with exact follow-up commands,
+but still does not read files, request dumps, receive live SysEx, open ports,
+send MIDI, execute commands, write SysEx, or touch hardware.
+
 The current runtime slice connects this planner to mock MIDI message capture,
 still without opening a port. Next, the armed Live Snapshot flow can be designed
 around the same plan object.
