@@ -676,10 +676,11 @@ Behavior:
   files, then summarizes whether the saved live rig is mutation-ready by
   Rytm-only, Analog Four-only, and both-machine snapshot modes. It combines
   the Rytm pad/machine compatibility gate with the Analog Four saved-offset
-  candidate readiness summary, then prints the next passive validation
-  commands for lane checks, mapping-session rehearsal, and A4 manifest
-  review. It does not request dumps, receive live SysEx, send MIDI, open
-  ports, write SysEx, or touch hardware.
+  candidate readiness summary, then prints target-scoped next passive
+  validation commands for Rytm-only, Analog-Four-only, and both-machine lane
+  checks, mapping-session rehearsal, and A4 manifest review. It does not
+  request dumps, receive live SysEx, send MIDI, open ports, write SysEx, or
+  touch hardware.
 
 Safety:
   passive/read-only

@@ -81,7 +81,7 @@ def test_dual_machine_bank_readiness_report_summarizes_both_saved_banks(tmp_path
         analyze_dual_machine_kit_bank_files(rytm_path, a4_path)
     )
 
-    assert report[:28] == [
+    assert report[:35] == [
         "RytmRandomizer passive dual-machine kit bank readiness report",
         "Rytm bank:",
         "- SysEx records: 1",
@@ -105,18 +105,36 @@ def test_dual_machine_bank_readiness_report_summarizes_both_saved_banks(tmp_path
         "Problem slots:",
         "- none",
         "Next validation commands:",
-        "- status: saved-bank preflight passed; run passive lane validation before any armed send.",
+        "- status: saved-bank preflight passed; choose one target scope before any armed send.",
+        "Rytm-only:",
+        "python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target rytm --rytm-pad 1",
+        (
+            "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
+            "--target rytm --slot 1 --limit 8"
+        ),
+        "Analog Four-only:",
+        (
+            "python -m rytm_randomizer.cli dual-machine-lane-validation-guide "
+            "--target analog-four --analog-four-track 1 "
+            "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>"
+        ),
+        (
+            "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
+            "--target analog-four --slot 1 --limit 8"
+        ),
+        (
+            "python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
+            "<analog-four-mapping-manifest-path>"
+        ),
+        "Both machines:",
         (
             "python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target both "
+            "--rytm-pad 1 --analog-four-track 1 "
             "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>"
         ),
         (
             "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
             "--target both --slot 1 --limit 8"
-        ),
-        (
-            "python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
-            "<analog-four-mapping-manifest-path>"
         ),
         "Policy:",
     ]
@@ -160,6 +178,11 @@ def test_dual_machine_bank_readiness_report_names_problem_slots(tmp_path):
     assert (
         "- status: blocked lanes present; resolve Problem slots before guarded send dry-runs."
         in report
+    )
+    assert "dual-machine-lane-validation-guide --target rytm --rytm-pad 1" in "\n".join(report)
+    assert (
+        "dual-machine-lane-validation-guide --target analog-four --analog-four-track 1"
+        in "\n".join(report)
     )
     assert "dual-machine-mapping-session-plan-report --target both --slot 1 --limit 8" in "\n".join(
         report

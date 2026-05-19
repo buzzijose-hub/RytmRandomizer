@@ -258,22 +258,40 @@ def _format_next_validation_commands(readiness: DualMachineKitBankReadiness) -> 
         )
     else:
         status_line = (
-            "- status: saved-bank preflight passed; run passive lane validation "
+            "- status: saved-bank preflight passed; choose one target scope "
             "before any armed send."
         )
     return [
         status_line,
+        "Rytm-only:",
+        "python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target rytm --rytm-pad 1",
+        (
+            "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
+            "--target rytm --slot 1 --limit 8"
+        ),
+        "Analog Four-only:",
+        (
+            "python -m rytm_randomizer.cli dual-machine-lane-validation-guide "
+            "--target analog-four --analog-four-track 1 "
+            "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>"
+        ),
+        (
+            "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
+            "--target analog-four --slot 1 --limit 8"
+        ),
+        (
+            "python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
+            "<analog-four-mapping-manifest-path>"
+        ),
+        "Both machines:",
         (
             "python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target both "
+            "--rytm-pad 1 --analog-four-track 1 "
             "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>"
         ),
         (
             "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
             "--target both --slot 1 --limit 8"
-        ),
-        (
-            "python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
-            "<analog-four-mapping-manifest-path>"
         ),
     ]
 
