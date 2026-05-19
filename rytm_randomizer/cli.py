@@ -1811,20 +1811,44 @@ def main(argv=None):
         from .analog_four.runtime_plan import (
             build_analog_four_runtime_plan,
             capture_analog_four_runtime_mock_messages,
+            filter_analog_four_runtime_plan_to_track,
             format_analog_four_runtime_error,
             format_analog_four_runtime_report,
         )
 
-        if len(args) not in (1, 3):
-            sys.stderr.write(f"{USAGE}\n")
-            return 2
-        if len(args) == 3 and args[1] != "--profile":
+        if len(args) % 2 == 0:
             sys.stderr.write(f"{USAGE}\n")
             return 2
 
-        profile = "balanced" if len(args) == 1 else args[2]
+        profile = "balanced"
+        runtime_track = None
+        index = 1
+        while index < len(args):
+            flag = args[index]
+            value = args[index + 1]
+            if flag == "--profile":
+                profile = value
+            elif flag == "--track":
+                try:
+                    runtime_track = int(value)
+                except ValueError:
+                    sys.stderr.write(
+                        "\n".join(
+                            format_analog_four_runtime_error(
+                                "Analog Four runtime track must be 1, 2, 3, or 4"
+                            )
+                        )
+                    )
+                    sys.stderr.write("\n")
+                    return 1
+            else:
+                sys.stderr.write(f"{USAGE}\n")
+                return 2
+            index += 2
         try:
             plan = build_analog_four_runtime_plan(profile=profile)
+            if runtime_track is not None:
+                plan = filter_analog_four_runtime_plan_to_track(plan, track=runtime_track)
         except ValueError as exc:
             sys.stderr.write("\n".join(format_analog_four_runtime_error(str(exc))))
             sys.stderr.write("\n")

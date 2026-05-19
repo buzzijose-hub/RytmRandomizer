@@ -4,6 +4,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added passive single-track Analog Four runtime previews.
+  `python -m rytm_randomizer.cli analog-four-runtime-report --track <1-4>`
+  now filters the mock-only Analog Four runtime report to one synth track.
+  This mirrors the existing active `--analog-four-runtime-track <1-4>` path so
+  Track 1-4 validation can be inspected passively before any armed send.
 - 2026-05-19: added a passive Rytm runtime validation guide.
   `python -m rytm_randomizer.cli twelve-pad-rytm-runtime-validation-guide`
   prints the one-pad-at-a-time guarded validation sequence for the Rytm

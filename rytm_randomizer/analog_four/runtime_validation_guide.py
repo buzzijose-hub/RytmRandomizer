@@ -23,6 +23,11 @@ def format_analog_four_runtime_validation_guide() -> list[str]:
         f"Recommended profile: {DEFAULT_VALIDATION_PROFILE}",
         "Expected single-track messages: 5",
         "Expected full-profile messages: 20",
+        "Passive preview before active validation:",
+        (
+            "python -m rytm_randomizer.cli analog-four-runtime-report "
+            f"--profile {DEFAULT_VALIDATION_PROFILE} --track 1"
+        ),
         "Single-track validation order:",
     ]
     for track in range(1, 5):

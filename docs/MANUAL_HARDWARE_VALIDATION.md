@@ -265,6 +265,8 @@ python -m rytm_randomizer.cli analog-four-runtime-validation-guide
 
 Then follow the guide's sequence:
 
+- [ ] Run the passive single-track preview for Track 1 and confirm it reports
+      `Runtime events: 5`.
 - [ ] Run the dry-run command for Track 1 and confirm it captures 5 mock
       messages.
 - [ ] Run `rytm-randomizer --arm --analog-four-runtime --analog-four-profile peak-time --analog-four-runtime-track 1`.

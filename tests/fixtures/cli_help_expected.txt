@@ -72,6 +72,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
   python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-report --track <1-4>
   python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run
   python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run --profile <profile>
   python -m rytm_randomizer.cli analog-four-runtime-validation-guide

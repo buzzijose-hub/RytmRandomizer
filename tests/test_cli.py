@@ -41,7 +41,7 @@ USAGE = (
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] [--runtime-pad <1-12>] | "
     "twelve-pad-rytm-runtime-validation-guide | "
     "rytm-12-pad-engine-matrix-report | "
-    "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
+    "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] [--track <1-4>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
     "analog-four-runtime-validation-guide | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -183,6 +183,16 @@ def test_analog_four_reference_report_help_exits_zero():
     assert "Analog Four MKII" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert "no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_runtime_report_help_exits_zero():
+    result = run_cli("analog-four-runtime-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: analog-four-runtime-report" in result.stdout
+    assert "--track <1-4>" in result.stdout
+    assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
 

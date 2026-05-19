@@ -36,7 +36,7 @@ USAGE = (
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] [--runtime-pad <1-12>] | "
     "twelve-pad-rytm-runtime-validation-guide | "
     "rytm-12-pad-engine-matrix-report | "
-    "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
+    "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] [--track <1-4>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
     "analog-four-runtime-validation-guide | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
@@ -120,6 +120,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
   python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-report --track <1-4>
   python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run
   python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run --profile <profile>
   python -m rytm_randomizer.cli analog-four-runtime-validation-guide
@@ -972,13 +973,15 @@ Safety:
 Usage:
   python -m rytm_randomizer.cli analog-four-runtime-report
   python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-report --track <1-4>
   python -m rytm_randomizer.cli analog-four-runtime-report --help
 
 Behavior:
   Builds a passive/mock Analog Four Track 1-4 runtime stream from manual-backed
-  starter profiles. It captures the planned CC events into an inert mock sender
-  only. It does not open ports, send MIDI, receive SysEx, write SysEx, or mutate
-  hardware.
+  starter profiles. Use --track to preview one synth track before an armed
+  runtime validation send. It captures the planned CC events into an inert mock
+  sender only. It does not open ports, send MIDI, receive SysEx, write SysEx,
+  or mutate hardware.
 
 Safety:
   passive/read-only

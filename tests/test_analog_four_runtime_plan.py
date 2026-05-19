@@ -169,6 +169,31 @@ def test_analog_four_runtime_report_cli_accepts_profile():
     assert result.stderr == ""
 
 
+def test_analog_four_runtime_report_cli_accepts_profile_and_track():
+    result = run_cli("analog-four-runtime-report", "--profile", "birmingham-dark", "--track", "3")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four Runtime Plan Report" in result.stdout
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in result.stdout
+    assert "Tracks planned: 1" in result.stdout
+    assert "Runtime events: 5" in result.stdout
+    assert "Track 3 / industrial drone: 5 event(s)" in result.stdout
+    assert "Track 3 ch 3 wire 2" in result.stdout
+    assert "Track 2 ch 2 wire 1" not in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_runtime_report_cli_rejects_bad_track_safely():
+    result = run_cli("analog-four-runtime-report", "--track", "5")
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "RytmRandomizer passive Analog Four Runtime Plan Report" in result.stderr
+    assert "Analog Four runtime track must be 1, 2, 3, or 4" in result.stderr
+    assert "No MIDI was sent" in result.stderr
+
+
 def test_analog_four_runtime_report_cli_rejects_unknown_profile_safely():
     result = run_cli("analog-four-runtime-report", "--profile", "acid-swamp")
 
