@@ -54,6 +54,12 @@ def test_dual_machine_lane_validation_guide_formats_operator_sequence():
     assert "Expected lane-scoped messages: 11" in joined
     assert "--snapshot-rytm-pad 1 --snapshot-analog-four-track 4" in joined
     assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in joined
+    assert "Snapshot source notes:" in joined
+    assert "- Rytm source: <rytm-sysex-path> slot 1 supplies the Rytm snapshot." in joined
+    assert (
+        "- Analog Four source: <analog-four-sysex-path> slot 1 supplies saved A4 "
+        "snapshot candidates."
+    ) in joined
     assert "dual-machine-mock-bridge-report" in joined
     assert "dual-machine-live-snapshot-readiness-report" in joined
     assert "rytm-randomizer --dry-run --dual-machine-snapshot-send" in joined
@@ -133,6 +139,9 @@ def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     assert "--snapshot-target rytm --snapshot-rytm-pad 10" in joined
     assert "- Rytm project/kit path:" in joined
     assert "- Analog Four project/kit path:" not in joined
+    assert "Snapshot source notes:" in joined
+    assert "- Rytm source: <rytm-sysex-path> slot 1 supplies the Rytm snapshot." in joined
+    assert "Analog Four source:" not in joined
     assert "--analog-four-path" not in joined
     assert "--analog-four-slot" not in joined
     assert "--snapshot-analog-four-track" not in joined
@@ -157,6 +166,15 @@ def test_dual_machine_lane_validation_guide_formats_analog_four_only_lane():
     assert "--target analog-four --analog-four-track 2" in joined
     assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in joined
     assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in joined
+    assert "Snapshot source notes:" in joined
+    assert (
+        "- Rytm source: <rytm-sysex-path> slot 1 is bridge context only; "
+        "Rytm MIDI stays untouched."
+    ) in joined
+    assert (
+        "- Analog Four source: <analog-four-sysex-path> slot 1 supplies saved A4 "
+        "snapshot candidates."
+    ) in joined
     assert "- Analog Four project/kit path:" in joined
     assert "- Rytm project/kit path:" not in joined
     assert "- Analog Four port selected:" in joined

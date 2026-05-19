@@ -107,6 +107,7 @@ def format_dual_machine_lane_validation_guide(
         f"Recommended depth: {DEFAULT_DEPTH}",
         f"Expected lane-scoped messages: {_expected_message_count(request)}",
         *_saved_bank_preflight_lines(request.target),
+        *_snapshot_source_note_lines(request),
         "Passive preview stack:",
         f"python -m rytm_randomizer.cli dual-machine-mock-bridge-report {snapshot_args}",
         (
@@ -262,6 +263,32 @@ def _saved_bank_preflight_lines(target: str) -> list[str]:
         SAVED_BANK_PREFLIGHT_COMMAND,
         "- Continue only if combined blocked lanes are 0 and Problem slots is none.",
         "- Treat Analog Four as candidate-ready until the live lane tests confirm each track.",
+    ]
+
+
+def _snapshot_source_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[str]:
+    if request.target == "rytm":
+        return [
+            "Snapshot source notes:",
+            f"- Rytm source: <rytm-sysex-path> slot {DEFAULT_RYTM_SLOT} supplies the "
+            "Rytm snapshot.",
+        ]
+    if request.target == "analog-four":
+        return [
+            "Snapshot source notes:",
+            f"- Rytm source: <rytm-sysex-path> slot {DEFAULT_RYTM_SLOT} is bridge "
+            "context only; Rytm MIDI stays untouched.",
+            "- Analog Four source: <analog-four-sysex-path> slot "
+            f"{DEFAULT_ANALOG_FOUR_SLOT} supplies saved A4 snapshot candidates.",
+        ]
+    return [
+        "Snapshot source notes:",
+        (
+            f"- Rytm source: <rytm-sysex-path> slot {DEFAULT_RYTM_SLOT} supplies the "
+            "Rytm snapshot."
+        ),
+        "- Analog Four source: <analog-four-sysex-path> slot "
+        f"{DEFAULT_ANALOG_FOUR_SLOT} supplies saved A4 snapshot candidates.",
     ]
 
 

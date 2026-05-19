@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added snapshot-source notes to the focused dual-machine lane
+  validation guide. A4-only guides now explain that `<rytm-sysex-path>` is
+  bridge context only and Rytm MIDI remains untouched, while
+  `<analog-four-sysex-path>` supplies the saved A4 snapshot candidates. Rytm
+  and both-machine guides also name their snapshot sources before the preview
+  stack, reducing operator confusion during one-machine live rehearsals.
 - 2026-05-19: made Analog-Four-targeted lane-validation commands use the
   saved A4 snapshot source explicitly. When the focused guide targets
   Analog Four or both machines, the passive preview stack and app dry-run/arm
