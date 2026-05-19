@@ -53,6 +53,7 @@ def test_dual_machine_lane_validation_guide_formats_operator_sequence():
     joined = "\n".join(report)
     assert "Expected lane-scoped messages: 11" in joined
     assert "--snapshot-rytm-pad 1 --snapshot-analog-four-track 4" in joined
+    assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in joined
     assert "dual-machine-mock-bridge-report" in joined
     assert "dual-machine-live-snapshot-readiness-report" in joined
     assert "rytm-randomizer --dry-run --dual-machine-snapshot-send" in joined
@@ -132,6 +133,8 @@ def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     assert "--snapshot-target rytm --snapshot-rytm-pad 10" in joined
     assert "- Rytm project/kit path:" in joined
     assert "- Analog Four project/kit path:" not in joined
+    assert "--analog-four-path" not in joined
+    assert "--analog-four-slot" not in joined
     assert "--snapshot-analog-four-track" not in joined
     assert "- A4 Track" not in joined
 
@@ -153,6 +156,7 @@ def test_dual_machine_lane_validation_guide_formats_analog_four_only_lane():
     assert "Expected lane-scoped messages: 5" in joined
     assert "--target analog-four --analog-four-track 2" in joined
     assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in joined
+    assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in joined
     assert "- Analog Four project/kit path:" in joined
     assert "- Rytm project/kit path:" not in joined
     assert "- Analog Four port selected:" in joined
@@ -196,6 +200,7 @@ def test_dual_machine_lane_validation_guide_cli_accepts_analog_four_only_target(
     assert "Expected lane-scoped messages: 5" in result.stdout
     assert "--target analog-four --analog-four-track 2" in result.stdout
     assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in result.stdout
+    assert "--analog-four-path <analog-four-sysex-path> --analog-four-slot 1" in result.stdout
     assert "--snapshot-rytm-pad" not in result.stdout
     assert result.stderr == ""
 

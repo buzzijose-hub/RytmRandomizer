@@ -12,6 +12,7 @@ from ..essence.machine_catalog import get_rytm_pad_capability
 
 DEFAULT_RYTM_SLOT = 1
 DEFAULT_RYTM_PAD = 1
+DEFAULT_ANALOG_FOUR_SLOT = 1
 DEFAULT_ANALOG_FOUR_TRACK = 4
 DEFAULT_DEPTH = "micro"
 EXPECTED_LANE_SCOPED_MESSAGES = 11
@@ -226,6 +227,11 @@ def _snapshot_report_args(request: DualMachineLaneValidationGuideRequest) -> str
     parts = [
         "<rytm-sysex-path> " f"--slot {DEFAULT_RYTM_SLOT} --depth {DEFAULT_DEPTH}",
     ]
+    if _targets_analog_four(request):
+        parts.append(
+            "--analog-four-path <analog-four-sysex-path> "
+            f"--analog-four-slot {DEFAULT_ANALOG_FOUR_SLOT}"
+        )
     parts.append(f"--target {request.target}")
     if request.rytm_pad is not None:
         parts.append(f"--rytm-pad {request.rytm_pad}")
@@ -281,6 +287,13 @@ def _app_args(request: DualMachineLaneValidationGuideRequest) -> str:
         parts.append(f"--snapshot-rytm-pad {request.rytm_pad}")
     if request.analog_four_track is not None:
         parts.append(f"--snapshot-analog-four-track {request.analog_four_track}")
+    if _targets_analog_four(request):
+        parts.extend(
+            [
+                "--analog-four-path <analog-four-sysex-path>",
+                f"--analog-four-slot {DEFAULT_ANALOG_FOUR_SLOT}",
+            ]
+        )
     return " ".join(parts)
 
 
@@ -315,6 +328,10 @@ def _expected_message_count(request: DualMachineLaneValidationGuideRequest) -> i
     if request.target == "analog-four":
         return EXPECTED_ANALOG_FOUR_LANE_MESSAGES
     return EXPECTED_LANE_SCOPED_MESSAGES
+
+
+def _targets_analog_four(request: DualMachineLaneValidationGuideRequest) -> bool:
+    return request.target in ("analog-four", "both")
 
 
 def _armed_order_line(request: DualMachineLaneValidationGuideRequest) -> str:
@@ -353,6 +370,7 @@ def _heard_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[st
 __all__ = [
     "ALL_LANE_PILOT_PAIRS",
     "DualMachineLaneValidationGuideRequest",
+    "DEFAULT_ANALOG_FOUR_SLOT",
     "DEFAULT_ANALOG_FOUR_TRACK",
     "DEFAULT_DEPTH",
     "DEFAULT_RYTM_PAD",

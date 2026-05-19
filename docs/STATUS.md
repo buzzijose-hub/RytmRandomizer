@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made Analog-Four-targeted lane-validation commands use the
+  saved A4 snapshot source explicitly. When the focused guide targets
+  Analog Four or both machines, the passive preview stack and app dry-run/arm
+  lines now include `--analog-four-path <analog-four-sysex-path>` and
+  `--analog-four-slot 1`; Rytm-only guides stay Rytm-path-only. This steers
+  live rehearsals toward Jose's captured A4 kit data instead of silently
+  falling back to starter profiles.
 - 2026-05-19: made the passive lane-validation operator notes target-aware.
   Rytm-only guides now ask for the Rytm project/kit path, Analog-Four-only
   guides ask for the Analog Four project/kit path, and both-machine guides ask
