@@ -1156,6 +1156,47 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "dual-machine-kit-bank-readiness-report":
+        from .dual_machine.bank_readiness import (
+            DualMachineKitBankReadinessError,
+            analyze_dual_machine_kit_bank_files,
+            format_dual_machine_kit_bank_readiness_error,
+            format_dual_machine_kit_bank_readiness_report,
+        )
+
+        parsed = _parse_optional_key_value_args(args[1:], {"--rytm", "--analog-four"})
+        if parsed is None or set(parsed) != {"--rytm", "--analog-four"}:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            readiness = analyze_dual_machine_kit_bank_files(
+                parsed["--rytm"],
+                parsed["--analog-four"],
+            )
+        except FileNotFoundError:
+            lines = format_dual_machine_kit_bank_readiness_error(
+                parsed["--rytm"],
+                parsed["--analog-four"],
+                "File not found",
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except DualMachineKitBankReadinessError as exc:
+            lines = format_dual_machine_kit_bank_readiness_error(
+                parsed["--rytm"],
+                parsed["--analog-four"],
+                str(exc),
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_dual_machine_kit_bank_readiness_report(readiness)))
+        sys.stdout.write("\n")
+        return 0
+
     if len(args) == 4 and args[0] == "analog-four-kit-snapshot-report" and args[2] == "--slot":
         from .analog_four.snapshot_decoder import (
             AnalogFourSnapshotDecodeError,

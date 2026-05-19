@@ -20,6 +20,7 @@ USAGE = (
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
+    "dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path> | "
     "analog-four-kit-bank-report <path> | analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
@@ -94,6 +95,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both> --rytm-pad <1-12> --analog-four-track <1-4>
+  python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>
   python -m rytm_randomizer.cli analog-four-kit-bank-report <path>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
@@ -193,6 +195,8 @@ Commands:
                      Execute eligible send-plan events into a mock sender only.
   dual-machine-lane-validation-guide
                      Print the passive dual-machine lane validation guide.
+  dual-machine-kit-bank-readiness-report
+                     Summarize saved Rytm + A4 kit-bank mutation readiness.
   analog-four-kit-bank-report
                      Analyze saved Analog Four kit snapshots across a bank.
   analog-four-kit-snapshot-report
@@ -575,6 +579,30 @@ Behavior:
 Safety:
   passive/read-only
   validation guide only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "dual-machine-kit-bank-readiness-report": """RytmRandomizer passive CLI: dual-machine-kit-bank-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>
+  python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report --help
+
+Behavior:
+  Reads existing saved Rytm and Analog Four kit bank or whole-project SysEx
+  files, then summarizes whether the saved live rig is mutation-ready by
+  Rytm-only, Analog Four-only, and both-machine snapshot modes. It combines
+  the Rytm pad/machine compatibility gate with the Analog Four saved-offset
+  candidate readiness summary. It does not request dumps, receive live SysEx,
+  send MIDI, open ports, write SysEx, or touch hardware.
+
+Safety:
+  passive/read-only
   no MIDI sending
   no MIDI receive
   no port opening

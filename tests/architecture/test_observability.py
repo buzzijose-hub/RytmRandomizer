@@ -308,6 +308,7 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "AnalogFourSnapshotDecodeError",
         "AnalogFourSnapshotMutationPlanError",
         "AnalogFourKitBankAnalysisError",
+        "DualMachineKitBankReadinessError",
         "AnalogFourOffsetCandidateError",
         "AnalogFourControlledDiffError",
         "PerformanceSnapshotTargetError",

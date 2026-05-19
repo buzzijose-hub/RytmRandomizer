@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive dual-machine kit-bank readiness report.
+  `dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>`
+  combines the saved Rytm and Analog Four bank analyzers into one live-rig
+  gate for snapshot mode. Jose's kit-bank exports and whole-project dumps scan
+  as 2048/2048 candidate-ready saved lanes across Rytm Pads 1-12 plus Analog
+  Four Tracks 1-4, with zero blocked lanes and no problem slots. This is
+  read-only and does not request dumps, receive live SysEx, send MIDI, open
+  ports, write SysEx, or touch hardware.
 - 2026-05-19: added a passive Analog Four kit-bank readiness report.
   `analog-four-kit-bank-report <path>` scans existing A4 kit banks or
   whole-project dumps, counts decoded kit snapshots, planned/blocked
