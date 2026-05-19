@@ -1,16 +1,23 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-19: added the software-ready A4-only guarded runtime hardware send.
+  `rytm-randomizer --arm --analog-four-runtime --analog-four-profile <profile>`
+  now builds the manual-backed A4 Track 1-4 runtime plan, lists real MIDI
+  output ports, requires an Analog Four port choice plus exact `SEND`
+  confirmation, opens only that selected port, and sends the mapped CC stream.
+  This path is still awaiting live operator validation on the hardware. It
+  does not touch Rytm, receive live SysEx, write SysEx, send NRPN, mutate CV
+  tracks, or run dual-machine scenes.
 - 2026-05-19: added the A4-only guarded runtime dry-run path.
   `analog-four-runtime-guarded-send-dry-run [--profile <profile>]` and
   `rytm-randomizer --dry-run --analog-four-runtime --analog-four-profile <profile>`
   execute the manual-backed A4 Track 1-4 runtime plan into a guarded mock
-  sender only. The path emits no real MIDI, opens no ports, touches no Rytm
-  state, and rejects `--arm --analog-four-runtime` until a separate hardware
-  slice is approved.
+  sender. The path emits no real MIDI, opens no ports, and touches no Rytm
+  state.
 - 2026-05-18: added the passive Analog Four Track 1-4 runtime planner.
   `analog-four-runtime-report [--profile <profile>]` turns the manual-backed
   A4 starter profiles into a mock-only CC stream for Tracks 1-4, including

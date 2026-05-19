@@ -354,16 +354,102 @@ def test_app_main_dry_run_analog_four_runtime_uses_guarded_mock_sender(capsys):
     assert captured.err == ""
 
 
-def test_app_main_arm_analog_four_runtime_is_blocked_for_now(capsys):
+def test_app_main_arm_analog_four_runtime_sends_to_selected_fake_port(monkeypatch, capsys):
     _seed()
-    from rytm_randomizer import app
+    from rytm_randomizer import app, mido_provider
 
-    exit_code = app.main(["--arm", "--analog-four-runtime"])
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm", "Fake A4")
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["1", "SEND"])
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--analog-four-runtime",
+                "--analog-four-profile",
+                "birmingham-dark",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
     captured = capsys.readouterr()
 
-    assert exit_code == 2
-    assert "--analog-four-runtime supports --dry-run only in this slice" in captured.err
-    assert "Available MIDI outputs" not in captured.out
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake A4"]
+    assert len(port.sent) == 20
+    assert port.sent[0].type == "control_change"
+    assert port.sent[0].channel == 0
+    assert port.sent[0].control == 95
+    assert port.sent[0].value == 106
+    assert port.closed is True
+    assert "Analog Four Runtime Hardware Send Report" in captured.out
+    assert "Starter profile: Birmingham Dark / birmingham-dark" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted real MIDI messages: 20" in captured.out
+    assert "Type SEND to transmit 20 Analog Four runtime CC message(s)" in captured.out
+
+
+def test_app_main_arm_analog_four_runtime_cancel_before_send_does_not_open_port(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return _RecordingPort()
+
+    scripted_inputs = iter(["0", "NOPE"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(["--arm", "--analog-four-runtime"])
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert calls["list"] == 1
+    assert calls["open"] == []
+    assert "--arm cancelled: exact SEND confirmation was not provided." in captured.err
 
 
 def test_app_main_dry_run_dual_machine_snapshot_send_uses_guarded_mock_sender(

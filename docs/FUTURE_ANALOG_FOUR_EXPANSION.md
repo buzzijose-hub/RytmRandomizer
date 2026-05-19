@@ -1,12 +1,14 @@
 # Future Analog Four Expansion
 
 > STATUS: FUTURE PRODUCT DIRECTION WITH PASSIVE REFERENCE INTAKE, MOCK RUNTIME
-> PLANNING, AND ONE GUARDED HARDWARE SMOKE PATH. This checkpoint now has a
-> read-only `analog-four-reference-report`, a mock-only
-> `analog-four-runtime-report`, and an explicitly armed `--analog-four-smoke`
-> channel validation path. It still does not add real Analog Four runtime
-> mutation, engine cycling, snapshot capture, SysEx receive/write behavior,
-> cross-device scene execution, or kit design.
+> PLANNING, GUARDED MOCK SEND, AND SOFTWARE-READY GUARDED HARDWARE SEND. This
+> checkpoint now has a read-only `analog-four-reference-report`, a mock-only
+> `analog-four-runtime-report`, a guarded `--dry-run --analog-four-runtime`
+> sender, an explicitly armed `--analog-four-smoke` channel validation path,
+> and a guarded `--arm --analog-four-runtime` path awaiting live hardware
+> validation. It still does not add Analog Four engine cycling, snapshot
+> capture, SysEx receive/write behavior, cross-device scene execution, or kit
+> design.
 
 ## Purpose
 
@@ -58,6 +60,18 @@ and `rytm-randomizer --dry-run --analog-four-runtime --analog-four-profile <prof
 now prove the A4 runtime plan through an A4-only guarded mock sender. This is
 the sender-shaped gate before real hardware. It does not open an A4 port, send
 MIDI, touch the Rytm, receive live SysEx, write SysEx, or mutate hardware.
+
+## Current Guarded Runtime Hardware Send
+
+`rytm-randomizer --arm --analog-four-runtime --analog-four-profile <profile>`
+now builds the same A4 runtime plan, lists real MIDI outputs, requires a chosen
+Analog Four port plus exact `SEND` confirmation, opens only that selected port,
+and sends the mapped CC stream to Tracks 1-4. The first profiles remain
+`balanced`, `birmingham-dark`, `detroit-classic`, and `peak-time`.
+
+This is software-ready but still awaiting live operator validation. It does not
+touch Rytm, receive live SysEx, write SysEx, send NRPN, mutate CV tracks, run
+dual-machine scenes, or design kits from audio/reference analysis.
 
 ## Current Guarded Hardware Smoke Path
 
@@ -177,14 +191,16 @@ outside the repository.
 5. Completed: draft a passive A4 reference-known parameter and safety intake.
 6. Completed: design the first A4 dry-run/mock representation before real MIDI.
 7. Completed: add a narrow, explicitly armed A4 pan-only hardware smoke path.
-8. Build a cross-device readiness gate that keeps Rytm and A4 arming separate.
-9. Only then consider broader A4 mutation and hardware validation paths.
+8. Completed in software: add the guarded A4 runtime hardware-send path with
+   separate A4 port arming and exact `SEND` confirmation.
+9. Validate the guarded A4 runtime hardware-send path with the actual machine.
+10. Build a cross-device readiness gate that keeps Rytm and A4 arming separate.
+11. Only then consider broader A4 mutation and hardware validation paths.
 
 ## Decision
 
-Analog Four remains part of the dream project, but real A4 runtime mutation is
-not part of the current active hardware scope.
+Analog Four remains part of the dream project, and the first guarded runtime
+hardware-send path now exists in software.
 
-The next practical milestone is turning the mock-only A4 runtime plan into a
-guarded active-send readiness path, while preserving separate arming for Rytm
-and Analog Four.
+The next practical milestone is validating the A4 runtime send on hardware,
+while preserving separate arming for Rytm and Analog Four.

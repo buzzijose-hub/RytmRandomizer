@@ -146,8 +146,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "--analog-four-runtime",
         action="store_true",
         help=(
-            "With --dry-run only, execute the Analog Four Track 1-4 runtime "
-            "plan into a guarded mock sender. Real MIDI is blocked for this slice."
+            "With --dry-run or --arm, execute the Analog Four Track 1-4 "
+            "runtime plan. --dry-run uses the guarded mock sender; --arm "
+            "requires a selected Analog Four port and exact SEND confirmation."
         ),
     )
     parser.add_argument(
@@ -312,8 +313,8 @@ def _print_passive_menu() -> None:
             "- --twelve-pad-rytm-runtime  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad runtime plan with auto starter/source values",
             "  required: --runtime-style <style>; optional: --runtime-discovery <0..1>",
-            "- --analog-four-runtime  with --dry-run only, send a guarded "
-            "Analog Four Track 1-4 runtime plan into the mock sender",
+            "- --analog-four-runtime  with --arm/--dry-run, send a guarded "
+            "Analog Four Track 1-4 runtime plan",
             "  optional: --analog-four-profile <profile>",
             "",
             USAGE,
@@ -478,6 +479,7 @@ def _run_arm(
     snapshot_send_request: dict[str, object] | None = None,
     snapshot_essence_send_request: dict[str, object] | None = None,
     rytm_engine_cycle_request: dict[str, object] | None = None,
+    analog_four_runtime_request: dict[str, object] | None = None,
 ) -> int:
     """Construct the real MIDI provider, open a port, run the package shell.
 
@@ -492,6 +494,8 @@ def _run_arm(
         return _run_arm_snapshot_essence_send(snapshot_essence_send_request)
     if rytm_engine_cycle_request is not None:
         return _run_arm_rytm_engine_cycle(rytm_engine_cycle_request)
+    if analog_four_runtime_request is not None:
+        return _run_arm_analog_four_runtime(analog_four_runtime_request)
 
     from .mido_provider import build_mido_midi_port_provider
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
@@ -982,6 +986,77 @@ def _run_arm_rytm_engine_cycle(request: dict[str, object]) -> int:
                 _shutdown_logger.debug("port_close_failed_best_effort")
 
 
+def _run_arm_analog_four_runtime(request: dict[str, object]) -> int:
+    """Run the guarded A4 runtime send against real hardware."""
+
+    from .analog_four.hardware_runtime_sender import (
+        execute_analog_four_runtime_hardware_send,
+        format_analog_four_runtime_hardware_send_error,
+        format_analog_four_runtime_hardware_send_report,
+    )
+    from .analog_four.runtime_plan import build_analog_four_runtime_plan
+
+    try:
+        plan = build_analog_four_runtime_plan(
+            profile=str(request.get("analog_four_profile") or "balanced")
+        )
+    except ValueError as exc:
+        sys.stdout.write("\n".join(format_analog_four_runtime_hardware_send_error(str(exc))))
+        sys.stdout.write("\n")
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm failed: no real MIDI output ports available. "
+            "Connect the Analog Four and retry.\n"
+        )
+        return 1
+
+    sys.stdout.write(
+        "RytmRandomizer --arm: real MIDI provider ready. "
+        f"Available output ports: {', '.join(output_names)}\n"
+    )
+
+    port_name = _choose_arm_port_name(output_names, device_label="Analog Four")
+    if port_name is None:
+        return 1
+
+    if not _confirm_analog_four_runtime_send(plan, port_name):
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm failed: {exc}\n")
+        return 1
+
+    try:
+        result = execute_analog_four_runtime_hardware_send(
+            plan,
+            port,
+            port_name=port_name,
+            armed=True,
+            operator_confirmed=True,
+            sleep=_smoke_sleep,
+        )
+        sys.stdout.write("\n".join(format_analog_four_runtime_hardware_send_report(result)))
+        sys.stdout.write("\n")
+        return 0 if result.accepted else 1
+    finally:
+        _close_port_best_effort(port)
+
+
 def _close_port_best_effort(port) -> None:
     if port is None:
         return
@@ -1066,6 +1141,24 @@ def _confirm_rytm_engine_cycle_send(
         f"{_rytm_engine_cycle_message_count(plan)} "
         f"{_rytm_engine_cycle_message_label(plan, runtime_alias=runtime_alias)} to "
         f"Analog Rytm on {port_name}: "
+    )
+    try:
+        raw = input().strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write("--arm cancelled: SEND confirmation was not provided.\n")
+        return False
+    if raw != "SEND":
+        sys.stderr.write("--arm cancelled: exact SEND confirmation was not provided.\n")
+        return False
+    return True
+
+
+def _confirm_analog_four_runtime_send(plan, port_name: str) -> bool:
+    message_count = sum(len(track.events) for track in plan.tracks)
+    sys.stdout.write(
+        "\nType SEND to transmit "
+        f"{message_count} Analog Four runtime CC message(s) to "
+        f"Analog Four on {port_name}: "
     )
     try:
         raw = input().strip()
@@ -1506,11 +1599,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("--twelve-pad-rytm-runtime requires --arm or --dry-run.\n")
         return 2
 
-    if args.analog_four_runtime and not args.dry_run:
-        if args.arm:
-            sys.stderr.write("--analog-four-runtime supports --dry-run only in this slice.\n")
-        else:
-            sys.stderr.write("--analog-four-runtime requires --dry-run in this slice.\n")
+    if args.analog_four_runtime and not (args.arm or args.dry_run):
+        sys.stderr.write("--analog-four-runtime requires --arm or --dry-run.\n")
         return 2
 
     if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:
@@ -1615,6 +1705,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             snapshot_send_request=snapshot_send_request,
             snapshot_essence_send_request=snapshot_essence_send_request,
             rytm_engine_cycle_request=rytm_engine_cycle_request,
+            analog_four_runtime_request=analog_four_runtime_request,
         )
     if args.dry_run:
         return _run_dry_run(
