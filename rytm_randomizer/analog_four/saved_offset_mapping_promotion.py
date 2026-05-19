@@ -7,6 +7,7 @@ MIDI, receive live SysEx, write SysEx, execute commands, or mutate hardware.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -151,6 +152,12 @@ def format_analog_four_saved_offset_mapping_promotion_report(
     else:
         lines.extend(_format_mapping_entry(promotion.mapping))
 
+    lines.append("JSON manifest entry:")
+    if promotion.mapping is None:
+        lines.append("- not ready; no JSON entry emitted")
+    else:
+        lines.extend(_format_json_manifest_entry(promotion.mapping))
+
     lines.extend(
         [
             "Promotion policy:",
@@ -262,6 +269,17 @@ def _format_mapping_entry(mapping: AnalogFourVerifiedSavedOffsetMapping) -> list
         f"    cc={mapping.cc},",
         ")",
     ]
+
+
+def _format_json_manifest_entry(mapping: AnalogFourVerifiedSavedOffsetMapping) -> list[str]:
+    payload = {
+        "track": mapping.track,
+        "relative_offset": mapping.relative_offset,
+        "parameter_name": mapping.parameter_name,
+        "cc": mapping.cc,
+        "mapping_status": mapping.mapping_status,
+    }
+    return json.dumps(payload, indent=2).splitlines()
 
 
 __all__ = [

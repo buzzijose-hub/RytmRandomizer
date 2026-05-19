@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -181,8 +182,52 @@ def test_format_a4_saved_offset_mapping_promotion_report_includes_mapping_entry(
     assert "relative_offset=28" in report
     assert 'parameter_name="Amp Pan"' in report
     assert "cc=10" in report
+    assert "JSON manifest entry:" in report
+    assert '"track": 2' in report
+    assert '"relative_offset": 28' in report
+    assert '"parameter_name": "Amp Pan"' in report
+    assert '"cc": 10' in report
+    assert '"mapping_status": "verified_cc_mapping"' in report
     assert "- no MIDI sending" in report
     assert "- no SysEx writes" in report
+
+
+def test_a4_saved_offset_mapping_promotion_json_entry_matches_manifest_schema():
+    from rytm_randomizer.analog_four.saved_offset_mapping_manifest import (
+        load_ready_analog_four_saved_offset_mapping_manifest,
+    )
+    from rytm_randomizer.analog_four.saved_offset_mapping_promotion import (
+        build_analog_four_saved_offset_mapping_promotion_from_bytes,
+        format_analog_four_saved_offset_mapping_promotion_report,
+    )
+
+    before = make_a4_kit_record(track_values={1: {20: 40}})
+    after = make_a4_kit_record(track_values={1: {20: 96}})
+    promotion = build_analog_four_saved_offset_mapping_promotion_from_bytes(
+        before,
+        after,
+        slot=1,
+        track=1,
+        parameter="filter-1-frequency",
+        limit=8,
+    )
+    lines = format_analog_four_saved_offset_mapping_promotion_report(promotion)
+    start = lines.index("JSON manifest entry:") + 1
+    payload = json.loads("\n".join(lines[start : start + 7]))
+
+    manifest_path = PROJECT_ROOT / ".tmp-a4-promotion-manifest.json"
+    try:
+        manifest_path.write_text(json.dumps({"mappings": [payload]}), encoding="utf-8")
+        manifest = load_ready_analog_four_saved_offset_mapping_manifest(manifest_path)
+    finally:
+        manifest_path.unlink(missing_ok=True)
+
+    assert manifest.ready is True
+    assert len(manifest.mappings) == 1
+    assert manifest.mappings[0].track == 1
+    assert manifest.mappings[0].relative_offset == 20
+    assert manifest.mappings[0].parameter_name == "Filter 1 Frequency"
+    assert manifest.mappings[0].cc == 18
 
 
 def test_a4_saved_offset_mapping_promotion_cli_reads_saved_files(tmp_path):
@@ -212,6 +257,8 @@ def test_a4_saved_offset_mapping_promotion_cli_reads_saved_files(tmp_path):
     assert "Ready: True" in result.stdout
     assert "relative_offset=20" in result.stdout
     assert "cc=18" in result.stdout
+    assert "JSON manifest entry:" in result.stdout
+    assert '"parameter_name": "Filter 1 Frequency"' in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
 
