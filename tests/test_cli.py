@@ -149,11 +149,13 @@ def test_behavior_parity_report_help_exits_zero_and_matches_fixture():
     assert result.stderr == ""
 
 
-def test_rytm_machine_matrix_report_help_exits_zero():
+def test_rytm_machine_matrix_report_help_exits_zero_and_matches_fixture():
     result = run_cli("rytm-12-pad-machine-matrix-report", "--help")
 
     assert result.returncode == 0
-    assert "RytmRandomizer passive CLI: rytm-12-pad-machine-matrix-report" in result.stdout
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_rytm_machine_matrix_report_help_expected.txt"
+    )
     assert result.stderr == ""
 
 
