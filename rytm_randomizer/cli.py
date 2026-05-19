@@ -1094,6 +1094,15 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args == ["dual-machine-lane-validation-guide"]:
+        from .dual_machine.lane_validation_guide import (
+            format_dual_machine_lane_validation_guide,
+        )
+
+        sys.stdout.write("\n".join(format_dual_machine_lane_validation_guide()))
+        sys.stdout.write("\n")
+        return 0
+
     if len(args) == 4 and args[0] == "analog-four-kit-snapshot-report" and args[2] == "--slot":
         from .analog_four.snapshot_decoder import (
             AnalogFourSnapshotDecodeError,

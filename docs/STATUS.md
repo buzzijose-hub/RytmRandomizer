@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive dual-machine lane validation guide.
+  `dual-machine-lane-validation-guide` prints the exact preview, readiness,
+  app dry-run, and armed command sequence for testing one Rytm pad plus one
+  Analog Four track before widening to full dual-machine scope. It is guide
+  text only: no MIDI ports are opened, no MIDI is sent, and no hardware is
+  touched.
 - 2026-05-19: added app-level dual-machine snapshot lane scoping.
   `rytm_randomizer.app --dry-run/--arm --dual-machine-snapshot-send` now
   accepts `--snapshot-rytm-pad <1-12>` and
