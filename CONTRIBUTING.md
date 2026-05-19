@@ -380,13 +380,13 @@ verify a subset of these gates on every CI run; do not skip them locally.
 
 ## Test suite structure
 
-The suite has 2370+ tests across these layers:
+The suite has 2370+ tests across these layers. **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md` §13 Test Suite Layers](docs/ARCHITECTURE_DIAGRAMS.md#13-test-suite-layers-2370-tests) and [§24 Closeout + Test Coverage Map](docs/ARCHITECTURE_DIAGRAMS.md#24-closeout--test-coverage-map).
 
 | Layer | Where | Purpose |
 |---|---|---|
 | Unit / behavior | `tests/test_*.py` | Per-module unit and behavior tests. |
-| V1.34 parity | `tests/test_engines_pad{1..4}.py`, `tests/test_group_runner.py`, `tests/test_scene_runner.py` | Lock 685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. |
-| Architecture conformance | `tests/architecture/` | Mechanically check Gate 6 / 8 / 9 / 10 / 11 / 12 invariants. |
+| V1.34 parity | `tests/test_engines_pad{1..4}.py`, `tests/test_group_runner.py`, `tests/test_scene_runner.py` | Diff engine output against the 505 byte-frozen JSON golden files under `tests/fixtures/v134_parity/` (parametrized into 685 pytest test items). |
+| Architecture conformance | `tests/architecture/` | Mechanically check Gates 6 / 8 / 9 / 10 / 11 / 12 invariants. See [diagram §10](docs/ARCHITECTURE_DIAGRAMS.md#10-architecture-test-enforcement-graph). |
 | Coverage ratchet | `scripts/coverage_ratchet.py` | Post-pytest hook that fails CI if pure-branch coverage drops below 95%. |
 | E2E | `tests/test_*_e2e.py` | End-to-end smoke (no hardware; runs through `MockMidiSender`). |
 | Fast subset | `pytest -m fast` | Lightweight tests; skip 685 parity goldens for sub-60s iteration. |
@@ -444,22 +444,34 @@ See [`.claude/rules/parity-fixture-discipline.md`](.claude/rules/parity-fixture-
 ## Common contributor tasks
 
 For "where do I add X?" answers, the source of truth is
-[`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work).
+[`docs/ARCHITECTURE.md` §6 — Where to put new work](docs/ARCHITECTURE.md#6-where-to-put-new-work).
 The table there maps change types to the right module and the right skill.
+
+**Three architecture-doc entry points for contributors:**
+
+| Doc | Purpose | When to read |
+|---|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The fixed architecture standard. §3 dependency direction rules, §5 V1.34 parity discipline, §6 "where to put new work", §6.1 Device + Strategy seam, §7 enforcement summary, §8 V1.34 parity API surface. | First read before any non-trivial change. |
+| [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) | 27 mermaid diagrams covering the package layer map, Device + Strategy stack, snapshot → plan → render lifecycle, engines / data / guardrails / observability subpackages, arch-test enforcement graph, CI pipeline, 16 plan-requirement gates, cascade-vs-bundled PR flow, future codex PR shape, and more. | Before adding a new device family, refactoring a subpackage, or trying to understand any of the major abstractions. |
+| [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) | The 16 mandatory gates every PR must satisfy. | Before opening any PR — its conformance checklist is required in the PR body. |
 
 Quick links for the most common tasks:
 
 - **Add a new V1.34-equivalent command** — `shell.py` dispatch + relevant
   runner/engine. Skill: [`add-pad-command`](.claude/skills/add-pad-command/SKILL.md).
+  See [`docs/ARCHITECTURE_DIAGRAMS.md` §14 Passive CLI Command Flow](docs/ARCHITECTURE_DIAGRAMS.md#14-passive-cli-command-flow) and [§25 Command / Capability Surface](docs/ARCHITECTURE_DIAGRAMS.md#25-command--capability-surface).
 - **Add a new fact table** — a new module under `rytm_randomizer/data/` plus
   the re-export in `__init__.py`. Skill: [`extend-data-layer`](.claude/skills/extend-data-layer/SKILL.md).
+  See [`docs/ARCHITECTURE_DIAGRAMS.md` §7 Data Layer + Guardrails](docs/ARCHITECTURE_DIAGRAMS.md#7-data-layer--guardrails-subpackage) and [§21 Passive Metadata + Registry Graph](docs/ARCHITECTURE_DIAGRAMS.md#21-passive-metadata--registry-graph).
 - **Change MIDI primitives** — `midi_io.py`. Keep `mido` lazy. Requires
   architecture review.
+  See [`docs/ARCHITECTURE_DIAGRAMS.md` §15 MIDI Boundary Map](docs/ARCHITECTURE_DIAGRAMS.md#15-midi-boundary-map-mock-vs-real-lazy-import-discipline).
 - **Add a passive read-only report** — extend `reports/` (the post-WS-S4
   subpackage) and wire it through `cli.py`. The passive CLI never opens a
-  MIDI port; see `docs/ARCHITECTURE.md` §2.
+  MIDI port; see [`docs/ARCHITECTURE.md` §2](docs/ARCHITECTURE.md#2-module-responsibility-map) and [`docs/ARCHITECTURE_DIAGRAMS.md` §20 Reports Subpackage](docs/ARCHITECTURE_DIAGRAMS.md#20-reports-subpackage-post-pr-35-ws-s4-layout).
+- **Add a new Elektron device family** (Analog Four, Digitakt, ...) — one module at `devices/<family>.py` + three strategy modules under `devices/strategies/`. Skill: architecture review. See [`docs/ARCHITECTURE.md` §6.1 Device + Strategy seam](docs/ARCHITECTURE.md#61-device-protocol--strategy-seam-ws-s5--strategy) and [`docs/ARCHITECTURE_DIAGRAMS.md` §§3, 4, 5, 18, 19](docs/ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy).
 
-For the full list of change types, see `docs/ARCHITECTURE.md` §6.
+For the full list of change types, see [`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work).
 
 ## Skill catalog
 

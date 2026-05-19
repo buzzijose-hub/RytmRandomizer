@@ -7,344 +7,1358 @@ code, tests, scripts, and documentation structure present in this repository.
 
 It does not describe desired future behavior as if it already exists. When a
 component is a mock, report, passive preview, or guarded boundary, the diagram
-labels it that way.
+labels it that way. Diagrams describing the upcoming codex dual-machine work
+(§22) are explicitly labeled as forward-looking.
 
-Current baseline used while creating this document:
+Current baseline used while creating / refreshing this document:
 
-- branch: `modularize-v1.34`
-- current HEAD before this documentation slice:
-  - `55300be Add bridge report CLI preview progress review`
-- protected reference:
-  - `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as JSON goldens)
-- current package:
-  - `rytm_randomizer/`
-- closeout script:
-  - `Scripts/closeout_check.ps1`
+- Branch: `governance/enforce-abstractions-and-policy` (PR #43), built on `modularize-v1.34` at `df54b3f` (Wave-1 simplification bundle merged).
+- Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
+- Current package: `rytm_randomizer/` — 26 top-level Python files + 10 subpackages = 86 total modules. The 10 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `engines/`, `guardrails/`, `observability/`, `reports/`, `snapshot/`, `state/`, `style_analysis/`.
+- Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
+- This file was audited and refreshed as part of PR #43; ~6 of the original 12 diagrams were stale relative to the current subpackage layout and have been redrawn.
 
 ## Source Files Used
 
-The diagrams below were derived from these current source groups:
-
 | Area | Files |
-| --- | --- |
-| Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/__init__.py` |
+|---|---|
+| Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Lookup, registry, inspection, preview | `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/registry.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/preview.py`, `rytm_randomizer/audit.py` |
-| Report surfaces | `rytm_randomizer/reports.py` (consolidated registry, mock-mapper, runtime-plan, active-boundary, anchor-profile, behavior-parity-coverage, mock-runtime-active-bridge report builders, formatters, and summarizers) |
-| Behavior parity evaluators | `rytm_randomizer/behavior_menu_utility.py`, `rytm_randomizer/behavior_anchor_profile.py`, `rytm_randomizer/behavior_mutation_depth.py`, `rytm_randomizer/behavior_scene_group.py`, `rytm_randomizer/behavior_pad1_lane.py`, `rytm_randomizer/behavior_pad2_lane.py`, `rytm_randomizer/behavior_pad3_lane.py`, `rytm_randomizer/behavior_pad4_lane.py`, `rytm_randomizer/behavior_selected_profile.py`, `rytm_randomizer/behavior_selected_isolated_pad.py`, `rytm_randomizer/behavior_undo_commit_state.py` |
-| Runtime-adjacent state | `rytm_randomizer/selected_target_state.py`, `rytm_randomizer/anchor_state.py`, `rytm_randomizer/selected_isolated_pad_runtime_state.py` |
-| Mock MIDI and mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
-| Active and real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py` |
-| Tests and closeout | `tests/test_*.py`, `tests/fixtures/*.txt`, `Scripts/closeout_check.ps1` |
-| Current docs | `docs/STATUS.md`, `docs/*.md` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes}.py` |
+| Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/formatter.py` (subpackage; was the old top-level `reports.py`) |
+| Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
+| Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
+| Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
+| Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
+| Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm}.py`, `rytm_randomizer/devices/strategies/{analog_rytm_snapshot_decoder,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime}.py` |
+| Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
+| Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
+| Style analysis | `rytm_randomizer/style_analysis/{extractor,feature_report,library}.py` |
+| Tests | `tests/test_*.py`, `tests/architecture/test_*.py`, `tests/fixtures/v134_parity/`, `tests/_parity_worker.py`, `tests/conftest.py` |
+| Project documentation | `CONTRIBUTING.md`, `docs/*.md`, `.claude/rules/*.md`, `.claude/skills/**/SKILL.md` |
+
+---
 
 ## 1. Repository-Level System Map
 
 ```mermaid
 flowchart TB
     User["Operator / developer"]
-    V134["V1.34 reference behavior\ntests/fixtures/v134_parity/*.json"]
-    Package["Modular package\nrytm_randomizer/"]
-    Tests["Tests\ntests/test_*.py + fixtures"]
-    Closeout["Closeout script\nScripts/closeout_check.ps1"]
-    Docs["Project documentation\ndocs/*.md"]
+    V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(10 subpackages, 86 modules)"]
+    Tests["Tests<br/>2370+ pytest tests<br/>tests/, tests/architecture/"]
+    CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
+    Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
-    User -->|"runs passive CLI / closeout"| Package
-    User -->|"reviews docs"| Docs
+    User -->|"runs CLI / dev loop"| Package
+    User -->|"opens PRs"| CI
+    User -->|"reads"| Docs
 
     Package -->|"validated by"| Tests
-    Tests -->|"run by"| Closeout
-    Tests -->|"compares engine output to"| V134
+    Tests -->|"asserted against"| V134
+    Tests -->|"executed on every push/PR"| CI
+
+    CI -->|"gates merges via<br/>required-checks"| Package
+
+    Docs -.->|"governs"| Package
+    Docs -.->|"governs"| Tests
 ```
 
-Current nuance:
+**Current nuance:**
 
-- The V1.34 reference behavior is preserved as JSON goldens under
-  `tests/fixtures/v134_parity/`. The original
-  `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the
-  parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`,
-  `tests/test_scene_runner.py`) compare engine output to those fixtures via
-  `tests/_parity_worker.py`.
-- The modular package now owns the interactive runtime end-to-end:
-  `rytm_randomizer.app` exposes the passive menu (default), `--arm` (real
-  MIDI), and `--dry-run` (mock sender) modes. The interactive command loop
-  lives in `rytm_randomizer.shell.InteractiveShell`.
-- Closeout repeatedly verifies tests and the package's import smoke.
+- The V1.34 reference behavior is preserved as 505 JSON golden files (parametrized into 685 pytest test items). The original `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17 (PR #29); the parity tests compare engine output to those fixtures via `tests/_parity_worker.py`.
+- The modular package owns the interactive runtime end-to-end: `rytm_randomizer.app` exposes passive menu (default), `--arm` (real MIDI), and `--dry-run` (mock sender) modes. The interactive command loop lives in `rytm_randomizer.shell.InteractiveShell`.
+- CI is the source-of-truth merge gate; `required-checks` aggregates per-PR results across all 3 OSes (macOS dropped on pull_request events by design, included on push).
+
+---
 
 ## 2. Package Layer Map
 
+The package layout as of `modularize-v1.34` @ `df54b3f` + the Strategy seam landing on PR #43.
+
 ```mermaid
 flowchart TB
-    CLI["cli.py\npassive report/list/search/inspect/preview CLI"]
-    App["app.py\nentry point: passive menu / --arm / --dry-run"]
-    Shell["shell.py\ninteractive command shell"]
-    Init["__init__.py\nexports constants only"]
-
-    subgraph Metadata["Passive metadata"]
-        Constants["constants.py"]
-        Commands["commands.py"]
-        Scenes["scenes.py"]
-        Profiles["profiles.py"]
+    subgraph EntryPoints["Entry points"]
+        Init["__init__.py<br/>exports constants"]
+        App["app.py<br/>--arm / --dry-run / passive"]
+        CLI["cli.py<br/>passive CLI"]
+        Shell["shell.py<br/>InteractiveShell + DispatchEntry"]
+        HelpText["help_text.py"]
     end
 
-    subgraph PassiveCore["Passive registry and preview core"]
+    subgraph DataLayer["Data layer (single source of truth)"]
+        DataPM["data/param_maps.py<br/>MACHINE_CC, per-machine dicts"]
+        DataProfiles["data/profiles.py<br/>PROFILES, GROUP_LAYOUT"]
+        DataScenes["data/scenes.py + scene_display.py"]
+        DataPlans["data/plans.py"]
+        DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
+    end
+
+    subgraph PassiveMetadata["Passive metadata"]
+        Constants["constants.py"]
+        Commands["commands.py"]
+        Profiles["profiles.py"]
+        Scenes["scenes.py"]
+    end
+
+    subgraph RegistryCore["Registry / lookup / inspection"]
         Registry["registry.py"]
         ProfileLookup["profile_lookup.py"]
         Inspection["inspection.py"]
-        Preview["preview.py"]
-        Audit["audit.py"]
+        Validation["validation.py"]
+        CliRegistry["cli_registry.py<br/>CliCommand registry"]
     end
 
-    subgraph BehaviorParity["Behavior parity evaluators"]
-        MenuUtility["behavior_menu_utility.py"]
-        AnchorProfile["behavior_anchor_profile.py"]
-        MutationDepth["behavior_mutation_depth.py"]
-        SceneGroup["behavior_scene_group.py"]
-        Pad1["behavior_pad1_lane.py"]
-        Pad2["behavior_pad2_lane.py"]
-        Pad3["behavior_pad3_lane.py"]
-        Pad4["behavior_pad4_lane.py"]
-        SelectedProfile["behavior_selected_profile.py"]
-        SelectedIsolated["behavior_selected_isolated_pad.py"]
-        UndoCommit["behavior_undo_commit_state.py"]
-        RuntimeState["selected_target_state.py\nanchor_state.py\nselected_isolated_pad_runtime_state.py"]
+    subgraph BehaviorPkg["behavior/ subpackage (8 modules)<br/>(WS-M2 moved 11 top-level behavior_*.py here;<br/>4 pad_*_lane.py modules then consolidated<br/>into one pad_lane.py)"]
+        BehPadLane["pad_lane.py<br/>(consolidated Pad1/2/3/4 lane)"]
+        BehOther["anchor_profile<br/>mutation_depth<br/>scene_group<br/>menu_utility<br/>selected_profile<br/>selected_isolated_pad<br/>undo_commit_state"]
     end
 
-    subgraph Reports["Read-only report surfaces (reports.py)"]
-        RegistryReport["build/format/summarize_registry_report"]
-        MockMapperReport["build/format/summarize_mock_mapper_report"]
-        RuntimePlanReport["build/format/summarize_runtime_plan_report"]
-        ActiveBoundaryReport["build/format/summarize_active_boundary_report"]
-        AnchorProfileReport["build/format/summarize_anchor_profile_report"]
-        CoverageReport["build/format/summarize_behavior_parity_coverage_report"]
-        BridgeReport["build/format/summarize_mock_runtime_active_bridge_report"]
+    subgraph StatePkg["state/ subpackage"]
+        StateCore["anchor / group / pad_mode<br/>scene / selection"]
+        StateValidation["anchor_validation<br/>selected_target_validation<br/>selected_isolated_pad_validation"]
     end
 
-    subgraph RuntimeMock["Runtime / active mock boundary"]
-        MockMidi["mock_midi.py"]
+    subgraph EnginesPkg["engines/ subpackage"]
+        EngRuntime["_runtime.py<br/>PadRuntimeMixin + IsolatedPadMixin<br/>PadRuntime dataclass"]
+        EngPads["pad1 / pad2 / pad3 / pad4"]
+    end
+
+    subgraph DevicesPkg["devices/ subpackage<br/>(WS-S5 + Strategy seam)"]
+        DevBase["base.py<br/>Device, MidiOutbox,<br/>MessageRenderer Protocols"]
+        DevRegistry["registry.py<br/>register_device, get_device, all_devices"]
+        DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>mutation_planner,<br/>message_renderer}.py"]
+    end
+
+    subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
+        SnapEnvelope["envelope.py<br/>ELEKTRON_MFR_ID +<br/>unpack_elektron_7bit +<br/>find_kit_record +<br/>read_ascii_name"]
+        SnapProto["decoder / planner / mock_runtime<br/>Protocols"]
+    end
+
+    subgraph GuardrailsPkg["guardrails/"]
+        GResolver["resolver.py<br/>ResolvedBounds"]
+        GStore["store.py"]
+        GSchema["schema.py"]
+        GValidation["validation.py<br/>PAD_PROFILE_KEY"]
+    end
+
+    subgraph ReportsPkg["reports/ subpackage<br/>(was reports.py)"]
+        RInit["__init__.py<br/>~9 report builders"]
+        RFormatter["formatter.py<br/>PassiveReportHeader"]
+    end
+
+    subgraph ObservabilityPkg["observability/"]
+        OLogging["logging.py"]
+        OTracing["tracing.py"]
+        OMetrics["metrics.py<br/>MidiMetrics singleton"]
+        OErrors["errors.py<br/>raises taxonomy"]
+    end
+
+    subgraph MidiBoundary["MIDI boundaries"]
+        MidiIO["midi_io.py<br/>send_cc, send_param<br/>MidiSender Protocol"]
+        MockMidi["mock_midi.py<br/>MidiMessage, MockMidiSender"]
         MockMapper["mock_message_mapper.py"]
-        RuntimePlan["runtime_plan.py"]
-        ActiveBoundary["active_boundary.py"]
         MockBridge["mock_runtime_active_bridge.py"]
-        RealAdapter["real_midi_adapter.py\nimport-safe adapter boundary"]
+        ActiveBoundary["active_boundary.py"]
+        RealAdapter["real_midi_adapter.py<br/>(lazy mido import)"]
+        MidoProvider["mido_provider.py"]
     end
 
-    CLI --> Registry
-    CLI --> Preview
-    CLI --> RegistryReport
-    CLI --> MockMapperReport
-    CLI --> RuntimePlanReport
-    CLI --> ActiveBoundaryReport
-    CLI --> AnchorProfileReport
-    CLI --> CoverageReport
-    CLI --> BridgeReport
+    subgraph RuntimePkg["Runtime orchestration"]
+        Randomization["randomization.py"]
+        SceneRunner["scene_runner.py"]
+        GroupRunner["group_runner.py"]
+        RuntimePlan["runtime_plan.py"]
+    end
 
-    Registry --> Commands
-    Registry --> Scenes
-    Registry --> Profiles
-    CommandLookup --> Commands
-    SceneLookup --> Scenes
-    ProfileLookup --> Profiles
-    Inspection --> Validation["validation.py"]
-    Preview --> Inspection
-    Audit --> Validation
+    subgraph StyleAnalysis["style_analysis/"]
+        SAExtractor["extractor / feature_report / library"]
+    end
 
-    Commands --> Constants
-    Commands --> Scenes
-    Profiles --> Constants
+    Init -.-> Constants
+    App --> Shell
+    App --> CLI
+    Shell --> EnginesPkg
+    Shell --> BehaviorPkg
+    Shell --> RegistryCore
+    CLI --> RegistryCore
+    CLI --> ReportsPkg
+    CLI --> CliRegistry
 
-    BehaviorParity --> Commands
-    BehaviorParity --> Profiles
-    BehaviorParity --> Scenes
-    BehaviorParity --> RuntimeState
+    BehaviorPkg --> Commands
+    BehaviorPkg --> DataLayer
+    BehaviorPkg --> StatePkg
 
-    Reports --> BehaviorParity
-    Reports --> RuntimePlan
-    Reports --> ActiveBoundary
-    Reports --> ProfileLookup
+    EnginesPkg --> DataLayer
+    EnginesPkg --> MidiIO
+    EnginesPkg --> GuardrailsPkg
+    EnginesPkg --> ObservabilityPkg
 
+    DevAR --> DevStrategies
+    DevStrategies --> SnapshotPkg
+    DevStrategies --> DataLayer
+    DevAR --> DevRegistry
+    DevBase --> SnapshotPkg
+
+    GroupRunner --> EnginesPkg
+    SceneRunner --> EnginesPkg
+    RuntimePlan --> DataLayer
+
+    MidiIO --> MockMidi
+    MidiIO --> ObservabilityPkg
     MockMapper --> MockMidi
-    MockMapper --> ProfileLookup
-    RuntimePlanReport --> RuntimePlan
-    ActiveBoundary --> MockMapper
     ActiveBoundary --> MockMidi
-    MockBridge --> RuntimePlan
     MockBridge --> ActiveBoundary
-    MockBridge --> MockMidi
-    RealAdapter --> MockMidi
+    RealAdapter --> MidoProvider
+
+    ReportsPkg --> RFormatter
+    ReportsPkg --> RegistryCore
+    ReportsPkg --> BehaviorPkg
 ```
 
-Current nuance:
+**Subpackage count (audit baseline):** 10 (`behavior/`, `data/`, `devices/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `snapshot/`, `state/`, `style_analysis/`). Plus `devices/strategies/` as a nested subpackage under `devices/`. The architecture test `test_no_new_top_level_modules.py` mechanically rejects new top-level modules (Gate 9).
 
-- `cli.py` exposes passive visibility and formatter output only.
-- `active_boundary.py` and `mock_runtime_active_bridge.py` are test/mock
-  boundaries, not hardware execution paths.
-- `real_midi_adapter.py` exists as an import-safe adapter boundary using
-  injected providers. It does not import real MIDI libraries at module import
-  time.
+---
 
-## 3. Passive CLI Command Flow
+## 3. Device + Strategy Capability Stack (WS-S5 + Strategy)
+
+The cross-machine boundary. This is the abstraction PR #43 widens.
+
+```mermaid
+classDiagram
+    direction LR
+
+    class Device {
+        <<Protocol @runtime_checkable>>
+        +str device_id
+        +str display_name
+        +int default_midi_channel
+        +int track_count
+        +bytes sysex_manufacturer_id
+        +SnapshotDecoder snapshot_decoder
+        +MutationPlanner mutation_planner
+        +MessageRenderer message_renderer
+        +str report_header
+        +decode_snapshot(raw, slot) Any
+        +plan_mutation(snapshot, depth) Any
+        +to_mock_messages(plan) list
+        +to_cc_messages(plan) Iterable
+    }
+
+    class SnapshotDecoder {
+        <<Protocol @runtime_checkable>>
+        +decode(raw, slot) Any
+    }
+
+    class MutationPlanner {
+        <<Protocol @runtime_checkable>>
+        +plan(snapshot, depth) Any
+    }
+
+    class MessageRenderer {
+        <<Protocol @runtime_checkable>>
+        +to_mock_message(event, plan) Any
+        +to_cc_triple(event, plan) tuple
+    }
+
+    class MidiOutbox {
+        <<Protocol>>
+        +send(message) None
+    }
+
+    class AnalogRytmDevice {
+        +device_id = "analog_rytm_mk2"
+        +display_name = "Elektron Analog Rytm MKII"
+        +default_midi_channel = 0
+        +track_count = 12
+        +sysex_manufacturer_id = 0x00 0x20 0x3C
+        +report_header
+        +__init__()
+        +decode_snapshot() delegates
+        +plan_mutation() delegates
+        +to_mock_messages() delegates
+        +to_cc_messages() delegates
+    }
+
+    class AnalogRytmSnapshotDecoder {
+        +decode(raw, slot) RytmKitSnapshot
+    }
+
+    class AnalogRytmMutationPlanner {
+        +seed
+        +plan(snapshot, depth) RytmMutationPlan
+    }
+
+    class AnalogRytmMessageRenderer {
+        +channel
+        +to_mock_message() MidiMessage
+        +to_cc_triple() tuple
+    }
+
+    class Registry {
+        <<module>>
+        -dict _DEVICES
+        +register_device(device)
+        +get_device(id) Device
+        +all_devices() MappingProxyType
+    }
+
+    Device ..> SnapshotDecoder : exposes
+    Device ..> MutationPlanner : exposes
+    Device ..> MessageRenderer : exposes
+
+    AnalogRytmDevice ..|> Device : structurally satisfies
+    AnalogRytmDevice o-- AnalogRytmSnapshotDecoder : composes
+    AnalogRytmDevice o-- AnalogRytmMutationPlanner : composes
+    AnalogRytmDevice o-- AnalogRytmMessageRenderer : composes
+
+    AnalogRytmSnapshotDecoder ..|> SnapshotDecoder : satisfies
+    AnalogRytmMutationPlanner ..|> MutationPlanner : satisfies
+    AnalogRytmMessageRenderer ..|> MessageRenderer : satisfies
+
+    Registry --> Device : holds Mapping[str, Device]
+    AnalogRytmDevice --> Registry : register_device() at import time
+```
+
+**Key:**
+
+- **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
+- **Composition over inheritance.** `AnalogRytmDevice` constructs the three strategy instances in `__init__` and delegates its convenience methods to them. The strategies don't know about each other except through their shared types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`).
+- **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
+- **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
+
+---
+
+## 4. Snapshot → Plan → Render Lifecycle (one Rytm CC)
+
+The lifecycle of one parameter change, from incoming SysEx bytes to one outgoing CC. This is what generic guarded / hardware senders will consume once they're written.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Caller as Operator code<br/>(future generic sender)
+    participant Device as AnalogRytmDevice
+    participant Decoder as AnalogRytmSnapshotDecoder
+    participant Envelope as snapshot.envelope
+    participant Planner as AnalogRytmMutationPlanner
+    participant Data as data/profiles.py<br/>+ PAD_PROFILE_KEY
+    participant Renderer as AnalogRytmMessageRenderer
+    participant Mock as MockMidiSender<br/>(or real port)
+
+    Caller->>Device: get_device("analog_rytm_mk2")
+    Note over Device: composed at import time<br/>(snapshot_decoder, mutation_planner, message_renderer)
+
+    Caller->>Device: decode_snapshot(raw_sysex, slot=3)
+    Device->>Decoder: snapshot_decoder.decode(raw, 3)
+    Decoder->>Envelope: find_kit_record(raw, slot=0, kit_type_byte=0x07)
+    Decoder->>Envelope: unpack_elektron_7bit(record)
+    Decoder->>Envelope: read_ascii_name(unpacked, offset, length=16)
+    Envelope-->>Decoder: kit_name="KICK_8"
+    Decoder-->>Device: RytmKitSnapshot(slot=3, kit_name, raw, unpacked)
+    Device-->>Caller: snapshot
+
+    Caller->>Device: plan_mutation(snapshot, depth=3)
+    Device->>Planner: mutation_planner.plan(snapshot, 3)
+    Planner->>Data: read PAD_PROFILE_KEY (pad → profile_key)
+    Planner->>Data: read PROFILES[profile_key]["safe"] (param range table)
+    Note over Planner: deterministic random.Random<br/>seeded by (seed, slot, depth)
+    Planner-->>Device: RytmMutationPlan(events=(...,))<br/>ready=True
+    Device-->>Caller: plan
+
+    loop for each RytmPlanEvent in plan.events
+        Caller->>Device: to_cc_messages(plan)
+        Device->>Renderer: message_renderer.to_cc_triple(event, plan)
+        Renderer->>Data: PROFILES[event.profile_key]["params"][event.parameter]
+        Data-->>Renderer: CC number (e.g. 74 for "FLT Frequency")
+        Renderer-->>Device: (channel=0, control=74, value=42)
+        Device-->>Caller: tuple
+    end
+
+    Caller->>Mock: send_cc(channel=0, control=74, value=42)
+    Mock-->>Caller: recorded MidiMessage
+```
+
+**Determinism guarantee:** the same `(snapshot, depth)` + the same planner `seed` always produce the same `RytmMutationPlan`. The same `(event, plan)` always produces the same triple. Renderers and decoders are pure — no I/O, no randomness, no state. This is what makes the generic senders' `for event in plan.events: out.send(renderer.to_mock_message(event, plan))` work.
+
+---
+
+## 5. Device + Strategy Composition vs Old "Stub" Shape
+
+The Strategy seam landed in PR #43 replaces what was previously `NotImplementedError` stubs on `AnalogRytmDevice`. The diff is structural, not just behavioral.
+
+```mermaid
+flowchart LR
+    subgraph Before["Before PR #43 (WS-S5 only)"]
+        OldDev["AnalogRytmDevice<br/>5 attrs + 4 methods"]
+        OldDS["decode_snapshot()<br/>returns _RytmSnapshot stub"]
+        OldPM["plan_mutation()<br/>returns _RytmMutationPlan stub"]
+        OldTM["to_mock_messages()<br/>raise NotImplementedError"]
+        OldTC["to_cc_messages()<br/>raise NotImplementedError"]
+
+        OldDev --> OldDS
+        OldDev --> OldPM
+        OldDev --> OldTM
+        OldDev --> OldTC
+    end
+
+    subgraph After["After PR #43 (Strategy)"]
+        NewDev["AnalogRytmDevice<br/>9 attrs + 4 methods<br/>(5 identity + 4 strategy)"]
+
+        SD["snapshot_decoder<br/>: AnalogRytmSnapshotDecoder"]
+        MP["mutation_planner<br/>: AnalogRytmMutationPlanner"]
+        MR["message_renderer<br/>: AnalogRytmMessageRenderer"]
+        RH["report_header<br/>: str"]
+
+        Conv1["decode_snapshot()<br/>delegates to snapshot_decoder.decode()"]
+        Conv2["plan_mutation()<br/>delegates to mutation_planner.plan()"]
+        Conv3["to_mock_messages()<br/>renders each event<br/>via message_renderer"]
+        Conv4["to_cc_messages()<br/>renders each event<br/>via message_renderer"]
+
+        NewDev --> SD
+        NewDev --> MP
+        NewDev --> MR
+        NewDev --> RH
+        NewDev --> Conv1
+        NewDev --> Conv2
+        NewDev --> Conv3
+        NewDev --> Conv4
+
+        Conv1 -.-> SD
+        Conv2 -.-> MP
+        Conv3 -.-> MR
+        Conv4 -.-> MR
+    end
+
+    Before -->|"PR #43"| After
+```
+
+**What the seam unlocks:** future generic `senders/{guarded,hardware}.py` modules consume `Device.message_renderer` directly. The 8 near-identical per-device sender modules in codex's dual-machine cascade (analog_four/, dual_machine/, essence/) collapse to 2 generic modules + per-device `MessageRenderer` strategies. See §22 for the post-PR #43 codex shape.
+
+---
+
+## 6. Engines Subpackage (pads 1-4 runtime cores)
+
+The engines own the V1.34 parity behavior — these are byte-frozen against the JSON goldens.
+
+```mermaid
+flowchart TB
+    subgraph EngineCore["engines/_runtime.py"]
+        PRM["PadRuntimeMixin<br/>shared state machine for pads"]
+        IPM["IsolatedPadMixin<br/>shared isolated-pad behavior"]
+        PRS["PadRuntimeState<br/>@runtime_checkable Protocol"]
+        IPS["IsolatedPadState<br/>@runtime_checkable Protocol"]
+        PRDC["PadRuntime<br/>composable mutable dataclass"]
+    end
+
+    subgraph Engines["Per-pad engines (concrete)"]
+        P1["pad1.py<br/>Pad1Engine(PadRuntimeMixin)<br/>BD machines (Sharp/Hard/Classic/FM)"]
+        P2["pad2.py<br/>Pad2Engine(PadRuntimeMixin)<br/>secondary percussion"]
+        P3["pad3.py<br/>Pad3Engine(PadRuntimeMixin, IsolatedPadMixin)<br/>SY Raw mid-bass"]
+        P4["pad4.py<br/>Pad4Engine(PadRuntimeMixin, IsolatedPadMixin)<br/>BD Acoustic"]
+    end
+
+    subgraph Orchestrators["Multi-pad orchestrators"]
+        GR["group_runner.py<br/>4-pad group ops"]
+        SR["scene_runner.py<br/>scene walks"]
+    end
+
+    subgraph DataConsumers["Data the engines consume"]
+        DataPM["data/param_maps.py<br/>per-machine CC dicts"]
+        DataProfiles["data/profiles.py<br/>safe ranges, anchors"]
+        DataPlans["data/plans.py"]
+    end
+
+    subgraph SafetyLayer["Per-event guardrail layer"]
+        Guardrails["guardrails/resolver.py<br/>ResolvedBounds.clamp_value()"]
+        Metrics["observability/metrics.py<br/>record_guardrail_block(pad)<br/>record_cc_sent(channel)"]
+    end
+
+    subgraph MidiPath["Wire path"]
+        MidiIO["midi_io.py<br/>send_cc + send_param"]
+        Mock["mock_midi.py<br/>(test path)"]
+        Real["real_midi_adapter.py<br/>(--arm path)"]
+    end
+
+    P1 --> PRM
+    P2 --> PRM
+    P3 --> PRM
+    P3 --> IPM
+    P4 --> PRM
+    P4 --> IPM
+
+    PRM -.satisfies.-> PRS
+    IPM -.satisfies.-> IPS
+    PRDC -.satisfies.-> PRS
+    PRDC -.satisfies.-> IPS
+
+    GR --> P1
+    GR --> P2
+    GR --> P3
+    GR --> P4
+    SR --> GR
+
+    Engines --> DataPM
+    Engines --> DataProfiles
+    Engines --> DataPlans
+
+    Engines --> Guardrails
+    Engines --> Metrics
+    Engines --> MidiIO
+
+    MidiIO --> Mock
+    MidiIO --> Real
+```
+
+**Parity:** the 505 V1.34 golden files at `tests/fixtures/v134_parity/` (parametrized into 685 pytest test items) are diffed against `Pad{1-4}Engine` output by `test_engines_pad{1-4}.py`, `test_group_runner.py`, and `test_scene_runner.py`. Any change that alters byte-for-byte output of these engines fails parity tests.
+
+**WS-S2 Protocol layer:** `PadRuntimeState` / `IsolatedPadState` / `PadRuntime` exist so future engines (pad 5-12, A4 tracks) can satisfy the contract structurally without inheriting from the existing mixins.
+
+---
+
+## 7. Data Layer + Guardrails Subpackage
+
+Single source of truth for "tables of facts" + the safety/policy layer that gates mutations.
+
+```mermaid
+flowchart LR
+    subgraph DataPkg["data/ — single source of truth"]
+        ParamMaps["param_maps.py<br/>MACHINE_CC = 15<br/>BD_SHARP_PARAMS, BD_HARD_PARAMS<br/>SY_RAW_PARAMS, ... (~69 dicts)<br/>+ safe/anchor/zone tables"]
+        Profiles["profiles.py<br/>PROFILES<br/>(machine_value + safe + anchor + zones + params)"]
+        Plans["plans.py<br/>PAD_PROFILE_PLANS, ..."]
+        Scenes["scenes.py + scene_display.py"]
+        Modes["modes.py<br/>IntensityMode, PageMode,<br/>MutationKind, Pad1Mode, ZoneName<br/>Literal + Final[tuple]"]
+    end
+
+    subgraph GuardrailsPkg["guardrails/ — safety/policy"]
+        Schema["schema.py<br/>GuardrailProfile dataclass<br/>GuardrailBound dataclass<br/>SceneGuardrail dataclass<br/>ProfileState enum"]
+        Store["store.py<br/>load + persist + content hash"]
+        Validation["validation.py<br/>PAD_PROFILE_KEY (default key per pad)<br/>MODE_STATE_REQUIREMENTS"]
+        Resolver["resolver.py<br/>ResolvedBound<br/>ResolvedBounds.clamp_value()<br/>resolve(profile, mode) -> ResolvedBounds"]
+    end
+
+    subgraph EnginesView["What engines see (Strategy seam)"]
+        EngRuntime["engines/_runtime.py<br/>PadRuntimeMixin._send_param<br/>+ get_metrics().record_guardrail_block"]
+    end
+
+    subgraph StratView["What Strategy seam sees"]
+        AS_Planner["AnalogRytmMutationPlanner<br/>reads PROFILES + PAD_PROFILE_KEY"]
+        AS_Renderer["AnalogRytmMessageRenderer<br/>reads PROFILES[k].params (CC map)"]
+    end
+
+    DataPkg --> EnginesView
+    DataPkg --> StratView
+
+    Schema --> Store
+    Schema --> Validation
+    Validation --> Resolver
+    Resolver --> EnginesView
+
+    ParamMaps --> Profiles
+    Modes -.-> EnginesView
+    Modes -.-> StratView
+```
+
+**Architecture test:** `test_data_not_code.py` enforces that "tables of facts" live only in `data/` and no other module re-defines a `data/` name (Gate 9 + data-vs-code rule).
+
+**Cross-layer note (follow-up for a future PR):** `PAD_PROFILE_KEY` currently lives in `guardrails/validation.py` but is *configuration data* (pad → default profile key). It should move into `data/` proper. Out of scope for PR #43, flagged in the AnalogRytmMutationPlanner docstring.
+
+---
+
+## 8. Observability Tripod
+
+```mermaid
+flowchart TB
+    subgraph Observability["observability/ subpackage"]
+        Logging["logging.py<br/>get_logger(name)<br/>structured logging + module-scoped loggers"]
+        Tracing["tracing.py<br/>@trace decorator<br/>operation-id span tracking"]
+        Metrics["metrics.py<br/>MidiMetrics dataclass<br/>get_metrics() singleton<br/>reset_metrics() (tests only)"]
+        Errors["errors.py<br/>RytmRandomizerError taxonomy<br/>MidiError, StateError, DataError,<br/>BoundaryError, ConfigError<br/>PEP-562 __getattr__ re-export of<br/>legacy concrete classes"]
+    end
+
+    subgraph Counters["MidiMetrics counters (Counter[K])"]
+        CC_Sent["cc_sent_by_channel<br/>Counter[int]<br/>incremented from midi_io.send_cc"]
+        Blocked["cc_blocked_by_guardrail_by_pad<br/>Counter[int]<br/>incremented from engines._runtime<br/>when ResolvedBounds.clamp -> None"]
+        ErrKind["errors_by_kind<br/>Counter[str]<br/>incremented at error boundaries"]
+    end
+
+    subgraph HotPath["Hot path adoption (WS-S9)"]
+        MidiSendCC["midi_io.send_cc<br/>(every CC emission)"]
+        EngSendParam["engines._runtime<br/>PadRuntimeMixin._send_param<br/>(every LOCKED/FORBIDDEN clamp)"]
+        ErrorSites["error boundary sites<br/>(real_midi_adapter, active_boundary)"]
+    end
+
+    Metrics --> CC_Sent
+    Metrics --> Blocked
+    Metrics --> ErrKind
+
+    MidiSendCC -->|"record_cc_sent(channel)"| CC_Sent
+    EngSendParam -->|"record_guardrail_block(pad)"| Blocked
+    ErrorSites -.->|"record_error(kind)"| ErrKind
+
+    Logging -.->|"used by all modules"| HotPath
+    Tracing -.->|"@trace on key entry points"| HotPath
+    Errors -.->|"raised at boundaries"| ErrorSites
+```
+
+**Architecture test:** `test_observability.py` enforces that the hot path actually adopts `get_metrics().record_*` (Gate 7).
+
+**Singleton + reset:** `MidiMetrics` is a module-level singleton accessed via `get_metrics()`. `reset_metrics()` is the test escape hatch — it zeroes the counters in place so the singleton identity stays stable for cached references.
+
+---
+
+## 9. Snapshot Subpackage (WS-S6 envelope + Protocols)
+
+The shared Elektron SysEx envelope helpers + the three Protocols every per-device decoder/planner/runtime implements.
+
+```mermaid
+flowchart TB
+    subgraph Envelope["snapshot/envelope.py (shared)"]
+        MFR_ID["ELEKTRON_MFR_ID: Final[bytes]<br/>= 0x00 0x20 0x3C"]
+        Unpack["unpack_elektron_7bit(packed)<br/>rejects lone trailing header<br/>(codex P2)"]
+        FindKit["find_kit_record(raw, slot, type_byte)<br/>scans for kit-type byte"]
+        ReadName["read_ascii_name(record, offset, length)<br/>NUL-stripped ASCII"]
+        FormatID["format_manufacturer_id(raw)"]
+    end
+
+    subgraph Protocols["snapshot/{decoder,planner,mock_runtime}.py"]
+        SD["SnapshotDecoder Protocol<br/>decode(raw, slot) -> Any"]
+        MP_proto["MutationPlanner Protocol<br/>plan(snapshot, depth) -> Any"]
+        MockProto["MockRuntime Protocol<br/>capture_messages(plan) -> list"]
+        BaseMockRuntime["BaseMockRuntime ABC<br/>capture_messages(plan, device)<br/>forwards to outbox + device.to_mock_messages"]
+    end
+
+    subgraph RytmImpls["Rytm impls (devices/strategies/)"]
+        RytmDecoder["AnalogRytmSnapshotDecoder<br/>uses envelope helpers"]
+        RytmPlanner["AnalogRytmMutationPlanner<br/>(no shared planner state needed)"]
+    end
+
+    subgraph FutureImpls["Future device impls<br/>(PR #36 redo target)"]
+        A4Decoder["AnalogFourSnapshotDecoder<br/>(MUST use shared envelope helpers,<br/>not fork them)"]
+        A4Planner["AnalogFourMutationPlanner<br/>(produces ready=False<br/>while manifest-gated)"]
+    end
+
+    RytmDecoder -->|"depends on"| Envelope
+    RytmDecoder -.satisfies.-> SD
+    RytmPlanner -.satisfies.-> MP_proto
+
+    A4Decoder -->|"MUST depend on"| Envelope
+    A4Decoder -.must satisfy.-> SD
+    A4Planner -.must satisfy.-> MP_proto
+
+    BaseMockRuntime -.satisfies.-> MockProto
+```
+
+**Gate enforced:** the upcoming codex AnalogFour work cannot fork `unpack_elektron_7bit` etc. — the architecture test `test_no_cross_family_private_api_imports` rejects any per-family decoder that imports from a sibling's privates. Shared helpers live in `snapshot/envelope.py`.
+
+**Codex P2 fix retained:** `unpack_elektron_7bit` rejects lone trailing header bytes (zero OR non-zero) so corrupt framing surfaces a `ValueError` instead of silently emitting a truncated payload.
+
+---
+
+## 10. Architecture Test Enforcement Graph
+
+The 15 architecture tests under `tests/architecture/` mechanically enforce the rules in `docs/PLAN_REQUIREMENTS.md` + `CONTRIBUTING.md`. Each one uses the **drained-allowlist** pattern: violations today are explicit `frozenset` entries that PR-review must approve; the long-term state is empty allowlists.
+
+```mermaid
+flowchart TB
+    subgraph Production["Production code in PR diff"]
+        SourceFiles["rytm_randomizer/**/*.py<br/>tests/**/*.py<br/>docs/**/*.md"]
+    end
+
+    subgraph Gates["15 architecture-test gates"]
+        Gate1["test_no_any_escape_hatches<br/>(Gate 6)"]
+        Gate2["test_no_new_top_level_modules<br/>(Gate 9)"]
+        Gate3["test_no_string_literal_mode_dispatch<br/>(Gate 10)"]
+        Gate4["test_shared_fixtures_available<br/>(Gate 11)"]
+        Gate5["test_fast_marker_coverage"]
+        Gate6["test_parity_index_writer<br/>(Gate 2)"]
+        Gate7["test_plan_requirements_referenced<br/>(Gate 14)"]
+        Gate8["test_layering_structure"]
+        Gate9["test_house_style"]
+        Gate10["test_import_direction"]
+        Gate11["test_no_side_effects<br/>(hardware safety)"]
+        Gate12["test_observability<br/>(Gate 7)"]
+        Gate13["test_ci_workflow"]
+        Gate14["test_data_not_code<br/>(data vs code)"]
+        Gate15["test_device_protocol_enforcement<br/>(NEW in PR #43)<br/>7 sub-tests for Device Protocol"]
+    end
+
+    subgraph Allowlists["Drained-allowlist mechanic"]
+        AL_today["Today<br/>frozenset() (empty) for new gates<br/>or frozenset(...) for migration-deferred"]
+        AL_future["Long-term<br/>frozenset() everywhere<br/>(no exceptions)"]
+        AL_new["NEW entries<br/>require explicit reviewer approval<br/>in PR body"]
+    end
+
+    subgraph Outcome["CI outcome"]
+        Pass["architecture: PASS<br/>required-checks: PASS"]
+        Fail["architecture: FAIL<br/>blocks merge"]
+    end
+
+    SourceFiles --> Gates
+    Gates --> AL_today
+    AL_today -.->|"every PR drains 0..N entries"| AL_future
+    AL_new --> AL_today
+
+    Gates -->|"all green"| Pass
+    Gates -->|"any red"| Fail
+    Fail -.->|"contributor must<br/>fix code OR<br/>justify allowlist addition"| SourceFiles
+```
+
+**Why the drained allowlist matters** (from the new learned skill `ast-walked-arch-tests-with-drained-allowlist`):
+
+- **Strict from day 1** → fails on every legacy violation → developers add `# noqa` → rule erodes.
+- **Lax forever** → never enforces anything.
+- **Drained allowlist** → tests pass today, new violations fail immediately, allowlist shrinks over time. PR-review treats every new allowlist entry as a deliberate scope decision.
+
+The 7 sub-tests in `test_device_protocol_enforcement.py` (added by PR #43) all use this pattern:
+1. Every device-family subpackage registers via `devices/registry.py`
+2. No cross-family private-API imports
+3. `dual_machine/` only depends on `devices.all_devices()`
+4. Every registered Device satisfies the Protocol (runtime `isinstance`)
+5. Only one `register_device` definition exists (no parallel registry)
+6. Per-device snapshot impls reference the WS-S6 Protocols
+7. Device Protocol surface is stable (9 attrs + 4 methods pinned)
+
+---
+
+## 11. CI Pipeline + Required-Checks Gate
+
+```mermaid
+flowchart TB
+    subgraph Trigger["What triggers CI"]
+        Push["push to any branch"]
+        PR["pull_request to modularize-v1.34"]
+        Schedule["weekly schedule<br/>(nightly security/CVE scan)"]
+        Manual["workflow_dispatch"]
+    end
+
+    subgraph PathFilter["paths-filter (test.yml: detect-changes)"]
+        DetectCode["any rytm_randomizer/** changed?"]
+        DetectDeps["pyproject.toml or requirements changed?"]
+        DetectCI["any .github/workflows/ changed?"]
+        DetectDocs["any docs/ or .md changed?"]
+    end
+
+    subgraph Jobs["Parallel CI jobs (test.yml)"]
+        Lint["lint<br/>ruff + black + isort<br/>~14s"]
+        Security["security<br/>pip-audit<br/>(skipped if no deps/ci changes)"]
+        Architecture["architecture<br/>tests/architecture/<br/>~26s · 220 tests"]
+        TestMatrix["test (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~60-90s · 2370 tests"]
+        E2EMatrix["e2e (matrix)<br/>windows + ubuntu<br/>(+ macos on push only)<br/>~20-40s · 43 tests"]
+        DocsGate["docs-gate<br/>~7s"]
+        CodeQL["codeql.yml<br/>~60-75s"]
+        CoverageRatchet["coverage-ratchet<br/>(ubuntu only)<br/>auto-commits .coveragerc bump"]
+    end
+
+    subgraph Aggregator["required-checks"]
+        Gate["required-checks gate<br/>fails if any upstream<br/>!= success && != skipped"]
+    end
+
+    subgraph MergeGate["Merge gate"]
+        BranchProtection["modularize-v1.34<br/>branch protection<br/>+ CODEOWNERS"]
+        Approval["CODEOWNERS approval<br/>(@buzzijose-hub)"]
+        Merge["gh pr merge --squash<br/>OK to merge"]
+    end
+
+    Push --> PathFilter
+    PR --> PathFilter
+    Schedule --> PathFilter
+    Manual --> PathFilter
+
+    PathFilter --> Jobs
+
+    Jobs --> Gate
+    Gate --> BranchProtection
+    BranchProtection --> Approval
+    Approval --> Merge
+
+    DetectDeps -.->|"true"| Security
+    DetectDeps -.->|"false"| Skip1["Security: skipped"]
+    Skip1 -.->|"skipped counts as OK"| Gate
+```
+
+**macOS asymmetry:** the `test` and `e2e` matrices use a conditional JSON for the `os` list — `["windows-latest", "ubuntu-latest"]` on `pull_request`, `["windows-latest", "macos-latest", "ubuntu-latest"]` on push/schedule/workflow_dispatch. Rationale (from `test.yml:288-296`): macOS runner queues on GitHub Actions are 20-60 min for public repos; dropping macOS on PR keeps turnaround in minutes, while push/schedule still validates the full matrix.
+
+**Path filters:** `security` only runs when `pyproject.toml` or workflows change (CVE scan only relevant to dependency changes). `docs-gate` only runs when docs change. These skips don't fail `required-checks` — the aggregator accepts `success` OR `skipped`.
+
+---
+
+## 12. 16 Plan-Requirement Gates
+
+Every non-trivial PR must satisfy all 16 gates per `docs/PLAN_REQUIREMENTS.md`. The PR body must include a `[x]` / `[ ] N/A — reason` line per gate.
+
+```mermaid
+flowchart LR
+    subgraph Code["Code quality (1-4)"]
+        G1["1. 100% branch cov<br/>on touched files"]
+        G2["2. V1.34 parity<br/>byte-identical"]
+        G3["3. lint clean<br/>ruff + black + isort"]
+        G4["4. dead-code purge<br/>vulture clean"]
+    end
+
+    subgraph Type["Type system (5-7)"]
+        G5["5. docs updated"]
+        G6["6. type-system hygiene<br/>Protocol > ABC<br/>no Any escape"]
+        G7["7. observability adoption<br/>logging/tracing/metrics"]
+    end
+
+    subgraph Test["Test discipline (8-11)"]
+        G8["8. test hygiene<br/>Gate 8 naming"]
+        G9["9. module-org hygiene<br/>subpackage by default"]
+        G10["10. string-literal dispatch<br/>consume data/modes.py"]
+        G11["11. shared fixtures<br/>conftest.py"]
+    end
+
+    subgraph Hygiene["Hygiene (12-14)"]
+        G12["12. Final constants"]
+        G13["13. env var docs"]
+        G14["14. maintainability<br/>timing tracked"]
+    end
+
+    subgraph Process["Process (15-16)"]
+        G15["15. learning capture<br/>extract skills"]
+        G16["16. execution shape<br/>cascade-merge for<br/>multi-WS"]
+    end
+
+    subgraph CIEnforced["Mechanically enforced by CI"]
+        Mech1["1, 2 -- coverage_ratchet + parity tests"]
+        Mech2["3 -- lint job"]
+        Mech3["6, 9, 10, 11, 14 -- arch tests"]
+        Mech4["7 -- test_observability"]
+    end
+
+    subgraph ReviewerEnforced["Reviewer-enforced (PR body checklist)"]
+        Rev1["4, 5, 8, 12, 13, 15, 16"]
+    end
+
+    Code -.-> CIEnforced
+    Type -.-> CIEnforced
+    Test -.-> CIEnforced
+    Hygiene -.-> ReviewerEnforced
+    Process -.-> ReviewerEnforced
+```
+
+**Authoritative source:** [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md). The reviewer-enforced gates are checked by reading the PR body's conformance checklist.
+
+---
+
+## 13. Test Suite Layers (2370+ tests)
+
+```mermaid
+flowchart TB
+    subgraph Layer1["Layer 1 — V1.34 parity (685 test items from 505 goldens)"]
+        Goldens["tests/fixtures/v134_parity/<br/>505 JSON byte-frozen files<br/>(parametrized into 685 pytest items)"]
+        ParityTests["test_engines_pad{1-4}.py<br/>test_group_runner.py<br/>test_scene_runner.py"]
+        ParityWorker["tests/_parity_worker.py<br/>capture / diff modes"]
+    end
+
+    subgraph Layer2["Layer 2 — Unit / behavior (~1500 tests)"]
+        BehaviorTests["test_behavior_*.py"]
+        EngineUnits["test_engines_*.py<br/>(non-parity)"]
+        DataTests["test_data_layer.py<br/>test_profiles_lookup.py"]
+        GuardrailsTests["test_guardrails_*.py"]
+        ReportsTests["test_*_report.py"]
+        DeviceTests["test_devices*.py<br/>(NEW: 96 tests in PR #43)"]
+        ObservabilityTests["test_observability_*.py"]
+        CliTests["test_cli.py<br/>test_app_entry.py"]
+        ShellTests["test_shell.py"]
+        MidiTests["test_midi_io.py<br/>test_mock_*.py<br/>test_real_midi_*.py"]
+    end
+
+    subgraph Layer3["Layer 3 — Architecture (220 tests, 15 files)"]
+        ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
+    end
+
+    subgraph Layer4["Layer 4 — E2E (43 tests)"]
+        E2ETests["tests/test_*_e2e.py<br/>(MockMidiSender end-to-end;<br/>no real hardware)"]
+    end
+
+    subgraph Layer5["Layer 5 — Coverage ratchet"]
+        CovScript["scripts/coverage_ratchet.py<br/>fails if pure-branch < 95%<br/>auto-commits floor bumps"]
+    end
+
+    subgraph CIJobs["CI job mapping"]
+        TestJob["test job<br/>matrix × OS<br/>(all layers 1+2+4)"]
+        ArchJob["architecture job<br/>(layer 3)<br/>fast: ~26s"]
+        CovJob["coverage-ratchet step<br/>(layer 5, ubuntu only)<br/>post-test step"]
+        E2EJob["e2e job<br/>matrix × OS<br/>(layer 4)"]
+    end
+
+    Layer1 --> TestJob
+    Layer2 --> TestJob
+    Layer3 --> ArchJob
+    Layer4 --> E2EJob
+    Layer5 --> CovJob
+
+    ParityTests -->|"diffs against"| Goldens
+    ParityTests -->|"uses"| ParityWorker
+```
+
+**Markers:** `pytest.mark.fast` is applied to every test that is not in Layer 1 (parity goldens). `pytest -m fast` runs Layers 2+3+4 in ~25s (parity goldens skipped). Bare `pytest` runs everything in ~30s with `-n auto` xdist parallelization (see CONTRIBUTING.md "Running tests fast").
+
+---
+
+## 14. Passive CLI Command Flow
 
 ```mermaid
 flowchart LR
     Operator["python -m rytm_randomizer.cli ..."]
-    CLI["cli.py main(argv=None)"]
+    CLI["cli.py main(argv)"]
 
-    subgraph DirectReportCommands["Direct read-only report commands"]
-        Report["report\nformat_registry_report()"]
-        MockMapper["mock-mapper-report\nformat_mock_mapper_report()"]
-        RuntimePlan["runtime-plan-report\nformat_runtime_plan_report()"]
-        ActiveBoundary["active-boundary-report\nformat_active_boundary_report()"]
-        Bridge["mock-runtime-active-bridge-report\nformat_mock_runtime_active_bridge_report()"]
-        AnchorProfile["anchor-profile-report\nformat_anchor_profile_report()"]
-        Coverage["behavior-parity-report\nformat_behavior_parity_coverage_report()"]
+    subgraph ReportCmds["Direct read-only report commands"]
+        Report["report<br/>format_registry_report()"]
+        MockMapper["mock-mapper-report"]
+        Runtime["runtime-plan-report"]
+        Active["active-boundary-report"]
+        Bridge["mock-runtime-active-bridge-report"]
+        Anchor["anchor-profile-report"]
+        Coverage["behavior-parity-report"]
+        QuickStatus["quick-status"]
     end
 
-    subgraph RegistryCommands["Registry-backed commands"]
-        List["list-commands\nlist-scenes\nlist-group-profiles"]
-        Search["search-commands\nsearch-scenes\nsearch-group-profiles"]
-        Inspect["inspect-command\ninspect-scene\ninspect-group-profile"]
-        Preview["preview-command\npreview-scene\npreview-group-profile"]
+    subgraph BrowseCmds["Registry-backed browse commands"]
+        List["list-commands<br/>list-scenes<br/>list-group-profiles"]
+        Search["search-commands<br/>search-scenes<br/>search-group-profiles"]
+        Inspect["inspect-command<br/>inspect-scene<br/>inspect-group-profile"]
+        Preview["preview-command<br/>preview-scene<br/>preview-group-profile"]
     end
 
     Operator --> CLI
-    CLI --> DirectReportCommands
-    CLI --> RegistryCommands
+    CLI --> ReportCmds
+    CLI --> BrowseCmds
 
-    Report --> RegistryReport["reports.format_registry_report"]
-    MockMapper --> MockMapperReport["reports.format_mock_mapper_report"]
-    RuntimePlan --> RuntimePlanReport["reports.format_runtime_plan_report"]
-    ActiveBoundary --> ActiveBoundaryReport["reports.format_active_boundary_report"]
-    Bridge --> BridgeReport["reports.format_mock_runtime_active_bridge_report"]
-    AnchorProfile --> AnchorProfileReport["reports.format_anchor_profile_report"]
-    Coverage --> CoverageReport["reports.format_behavior_parity_coverage_report"]
+    ReportCmds --> ReportsPkg["reports/<br/>(PassiveReportHeader + builders)"]
+    BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
 
-    List --> Registry["registry.py"]
-    Search --> Registry
-    Inspect --> Registry
-    Preview --> PreviewModule["preview.py"]
-    PreviewModule --> Inspection["inspection.py"]
-
-    CLI -.->|"documented and tested safety"| Safety["no MIDI\nno ports\nno command execution\nno hardware mutation\nno hardware required"]
+    CLI -.->|"safety invariants tested by<br/>test_real_midi_passive_cli_safety<br/>test_real_midi_import_safety"| Safety["no MIDI sent<br/>no ports opened<br/>no execution<br/>no hardware required"]
 ```
 
-Current nuance:
+**Architecture test:** `test_real_midi_import_safety.py` + `test_real_midi_passive_cli_safety.py` enforce that the passive CLI never imports `mido` or `rtmidi` and never opens a real port (hardware safety boundaries from CONTRIBUTING.md).
 
-- The CLI imports report formatter modules and passive registry/preview
-  helpers.
-- Tests assert the passive CLI does not introduce real MIDI imports, ports,
-  active commands, bridge invocation, or sender construction.
-- `mock-runtime-active-bridge-report` prints report data only; it does not call
-  `evaluate_mock_runtime_active_bridge`.
+---
 
-## 4. Passive Metadata and Registry Graph
+## 15. MIDI Boundary Map (mock vs real, lazy-import discipline)
 
 ```mermaid
 flowchart TB
-    Constants["constants.py\nMACHINE_CC\nSUPPORTED_PADS\nOUT_OF_SCOPE_PADS\nPAD_TO_MIDI_CHANNEL\nGUARDED_MAIN_PROMPT_DEPTH_COMMANDS"]
-    Commands["commands.py\nCOMMANDS and command groups"]
-    Scenes["scenes.py\nSCENE_COMMANDS"]
-    Profiles["profiles.py\nGROUP_PROFILE_METADATA\nPAD_PROFILES\nGROUP_LAYOUT"]
+    subgraph Lazy["Lazy-import boundary (enforced)"]
+        MidoLazy["mido / rtmidi imports<br/>ONLY inside<br/>real_midi_adapter.py<br/>+ mido_provider.py"]
+    end
 
-    Registry["registry.py\nbuild_registry()\nget_registry_section()\nget_registry_item()\nsummarize_registry()"]
-    ProfileLookup["profile_lookup.py\ndescribe_group_profile()"]
-    Validation["validation.py\nregistry guardrails\nforbidden execution fields\nPads 5-12 references"]
-    Inspection["inspection.py\ninspect_command()"]
-    Preview["preview.py\npreview_command()\nSAFETY_SUMMARY"]
-    Audit["audit.py\naudit_command_registry()"]
+    subgraph MockPath["Mock path (default, --dry-run, tests)"]
+        MidiIO["midi_io.py<br/>send_cc, send_param<br/>MidiSender Protocol"]
+        MockMidi["mock_midi.py<br/>MidiMessage frozen dataclass<br/>MockMidiSender (recording)"]
+        MockMapper["mock_message_mapper.py"]
+        ActiveBoundary["active_boundary.py<br/>(MockMidiSender consumer)"]
+        MockBridge["mock_runtime_active_bridge.py<br/>(test-only routing)"]
+    end
+
+    subgraph RealPath["Real path (--arm only)"]
+        RealAdapter["real_midi_adapter.py<br/>RealMidiPortProvider<br/>RealMidiSender"]
+        MidoProvider["mido_provider.py<br/>get_mido_module()<br/>(lazy)"]
+        RealHardware["python-rtmidi / mido<br/>(Elektron Analog Rytm MK2)"]
+    end
+
+    subgraph Observability["Telemetry"]
+        Metrics["observability/metrics.py<br/>cc_sent_by_channel<br/>cc_blocked_by_guardrail_by_pad"]
+    end
+
+    MidiIO --> MockMidi
+    MockMapper --> MockMidi
+    ActiveBoundary --> MockMidi
+    MockBridge --> ActiveBoundary
+
+    MidiIO -.->|"(--arm only)<br/>send to RealMidiSender"| RealAdapter
+    RealAdapter --> MidoProvider
+    MidoProvider --> RealHardware
+
+    MidiIO -.->|"every send_cc"| Metrics
+
+    Lazy -.->|"enforced by<br/>test_no_side_effects<br/>(import-safe)"| RealAdapter
+```
+
+**Hardware-pinned dependencies:** `mido==1.3.3` and `python-rtmidi==1.5.8` are pinned in `pyproject.toml` (byte-level wire format compatibility with Analog Rytm MK2). Do not bump.
+
+---
+
+## 16. Safety Boundary Diagram
+
+```mermaid
+flowchart TB
+    Passive["Passive surfaces<br/>cli.py, registry.py,<br/>profile_lookup, inspection,<br/>reports/, behavior/"]
+
+    Mock["Mock-only surfaces<br/>mock_midi, mock_mapper,<br/>active_boundary, mock_bridge,<br/>MockMidiSender"]
+
+    Adapter["Adapter boundary<br/>real_midi_adapter.py<br/>(lazy mido import;<br/>fake provider in tests)"]
+
+    Armed["Armed-only surfaces<br/>(--arm flag required)<br/>real port open,<br/>real CC send"]
+
+    Forbidden["Still absent / not authorized<br/>real MIDI in passive CLI<br/>port discovery at import<br/>hardware send without --arm<br/>SysEx writes<br/>GUI"]
+
+    Tests["~30 safety tests<br/>test_no_side_effects<br/>test_real_midi_import_safety<br/>test_real_midi_passive_cli_safety<br/>test_real_midi_adapter_boundary"]
+
+    Passive -.->|"must not import mido<br/>must not open ports"| Tests
+    Mock -.->|"allowed but mock-only"| Tests
+    Adapter -.->|"fake-provider tests only"| Tests
+    Armed -.->|"only path that touches<br/>real hardware"| Tests
+    Forbidden -.->|"guarded as absent"| Tests
+
+    Passive -.x-Forbidden
+    Mock -.x-Forbidden
+    Adapter -.x-Forbidden
+```
+
+---
+
+## 17. Cascade vs Bundled PR Flow (anti-pattern vs pattern)
+
+```mermaid
+flowchart TB
+    subgraph Anti["Anti-pattern: cascade (PRs #21, #36→#41)"]
+        BaseA["modularize-v1.34"]
+        PR36A["PR #36<br/>~35k LOC"]
+        PR37A["PR #37<br/>+11k LOC"]
+        PR38A["PR #38<br/>+275 LOC"]
+        PR39A["PR #39<br/>+313 LOC"]
+        PR40A["PR #40<br/>+593 LOC"]
+        PR41A["PR #41<br/>+7k LOC"]
+
+        BaseA --> PR36A
+        PR36A --> PR37A
+        PR37A --> PR38A
+        PR38A --> PR39A
+        PR39A --> PR40A
+        PR40A --> PR41A
+
+        AntiCost["6 PRs × 6 CODEOWNERS approvals<br/>= 6 approval cycles<br/>= sequential, never parallel"]
+        PR41A -.-> AntiCost
+    end
+
+    subgraph Pattern["Pattern: bundled (PR #35, PR #43)"]
+        BaseB["modularize-v1.34"]
+        WS1["WS branch 1"]
+        WS2["WS branch 2"]
+        WS3["WS branch 3"]
+        WSN["WS branch N"]
+
+        Bundle["Integration branch<br/>(git merge --no-ff)<br/>governance/enforce-abstractions-and-policy"]
+        PR["One bundled PR<br/>(e.g. PR #43)<br/>~9k LOC total"]
+
+        BaseB --> WS1
+        BaseB --> WS2
+        BaseB --> WS3
+        BaseB --> WSN
+
+        WS1 --> Bundle
+        WS2 --> Bundle
+        WS3 --> Bundle
+        WSN --> Bundle
+
+        Bundle --> PR
+        PR --> BaseB
+
+        PatternCost["1 PR × 1 approval<br/>= 1 cycle<br/>= parallel WS development"]
+        PR -.-> PatternCost
+    end
+
+    Anti -->|"PR #43 + CONTRIBUTING.md<br/>codifies the rule;<br/>arch tests reject parallel<br/>subpackages that bypass<br/>Device Protocol"| Pattern
+```
+
+**The rule** (CONTRIBUTING.md "PR bundling"): under a CODEOWNERS-gated base branch, multi-workstream work must be bundled into one PR via an integration branch. Stacked PRs (where each PR's base is another open PR's head) multiply approval cycles and were exactly the failure mode of the codex dual-machine cascade.
+
+---
+
+## 18. Future Codex PR Shape (post-PR #43, dual-machine redo)
+
+**Forward-looking diagram.** This is what PR #36's redo should look like after PR #43 merges. See the [architecture review on PR #36](https://github.com/buzzijose-hub/RytmRandomizer/pull/36#issuecomment-4490858526) for the file-by-file authoritative plan.
+
+```mermaid
+flowchart TB
+    subgraph PostPR43["State after PR #43 merges"]
+        DevBase["devices/base.py<br/>(Device + 3 capability sub-Protocols)"]
+        DevRegistry["devices/registry.py"]
+        DevAR["devices/analog_rytm.py"]
+        DevAR_Strategies["devices/strategies/<br/>analog_rytm_{decoder,planner,renderer}"]
+    end
+
+    subgraph CodexRedo["Future codex PR (PR #36 redo)"]
+        DevA4["devices/analog_four.py<br/>(NEW: AnalogFourDevice<br/>composes 3 A4 strategies,<br/>registers at import)"]
+        DevA4_Strategies["devices/strategies/<br/>analog_four_snapshot_decoder<br/>analog_four_mutation_planner<br/>(ready=False while manifest-gated)<br/>analog_four_message_renderer"]
+
+        Senders["NEW: senders/<br/>guarded.py<br/>hardware.py<br/>(generic, consume Device.message_renderer;<br/>collapses 8 per-device sender files)"]
+
+        DualMachine["dual_machine/ (simplified)<br/>orchestrates over Mapping[str, Device]<br/>NO direct imports from devices/analog_*<br/>fans out to devices.all_devices()"]
+
+        Manifest["devices/analog_four_offset_manifest.py<br/>(saved-offset mapping + promotion + validation;<br/>A4-specific, not in dual_machine/)"]
+    end
+
+    subgraph Deleted["Deleted from PR #36 (LOC reduction)"]
+        DelEssence["rytm_randomizer/essence/<br/>(18 modules misnamed -- Rytm internals;<br/>fold into engines/ or devices/strategies/)"]
+        DelAnalogFour["rytm_randomizer/analog_four/<br/>(17 modules; collapse into<br/>devices/analog_four.py + strategies)"]
+        DelRytm["rytm_randomizer/rytm/<br/>(3 modules; controlled_diff etc.<br/>fold into reports/ or devices/strategies/)"]
+        DelSenders["8 per-device sender modules<br/>(replaced by senders/guarded.py + hardware.py)"]
+        DelCascade["Stacked PRs #37, #38, #39, #40, #41<br/>(merge into one bundled PR)"]
+    end
+
+    PostPR43 --> CodexRedo
+    DevBase -.->|"AnalogFourDevice<br/>satisfies Protocol<br/>(9 attrs + 4 methods)"| DevA4
+    DevA4 --> DevA4_Strategies
+    DevA4 --> DevRegistry
+
+    DevA4_Strategies -.->|"consumed by"| Senders
+    DevAR_Strategies -.->|"consumed by"| Senders
+
+    DualMachine --> DevRegistry
+
+    CodexRedo -.->|"replaces"| Deleted
+
+    subgraph Enforcement["Arch tests enforce this shape (added in PR #43)"]
+        ArchE1["test_every_device_family_subpackage_registers_with_devices_registry<br/>-> rejects parallel analog_four/"]
+        ArchE2["test_no_cross_family_private_api_imports<br/>-> rejects analog_four reaching rytm privates"]
+        ArchE3["test_dual_machine_does_not_import_concrete_device_families<br/>-> forces fan-out via registry"]
+        ArchE4["test_every_registered_device_satisfies_device_protocol<br/>-> enforces 9-attr surface"]
+    end
+
+    CodexRedo -.->|"must pass"| Enforcement
+```
+
+**Net effect:** codex's ~35k-LOC dual-machine cascade (PRs #36-#41) becomes a single ~6-8k-LOC bundled PR with 1 device class + 3 strategies + manifest + simplified `dual_machine/`. The 8 sender modules collapse to 2 generic. The arch tests catch any drift from this shape.
+
+---
+
+## 19. Registry Fan-Out (dual-machine orchestration via Mapping[str, Device])
+
+How `dual_machine/` consumes the registry instead of importing per-family modules directly. This is the key abstraction that makes adding a 4th machine family (Syntakt, Digitone, etc.) trivial — no `dual_machine/` edits required.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Op as Operator code<br/>(e.g. CLI)
+    participant DM as dual_machine/<br/>orchestrator
+    participant Reg as devices.registry
+    participant Rytm as AnalogRytmDevice
+    participant A4 as AnalogFourDevice<br/>(future)
+    participant Senders as senders/guarded.py<br/>(future generic)
+
+    Op->>DM: dual_machine_bank_readiness()
+    DM->>Reg: all_devices()
+    Reg-->>DM: Mapping[<br/>"analog_rytm_mk2": AnalogRytmDevice,<br/>"analog_four_mk2": AnalogFourDevice]<br/>
+
+    loop for device_id, device in all_devices().items()
+        DM->>device: device.snapshot_decoder.decode(raw, slot)
+        device-->>DM: device-specific snapshot
+
+        DM->>device: device.mutation_planner.plan(snapshot, depth)
+        device-->>DM: plan (with .ready / .readiness_reason)
+
+        alt plan.ready is True
+            DM->>Senders: execute_guarded_send(device, plan, sender)
+            Senders->>device: device.message_renderer.to_mock_message(event, plan)
+            device-->>Senders: MidiMessage
+        else plan.ready is False
+            Note over DM,Senders: skip; record readiness_reason in report
+        end
+    end
+
+    DM-->>Op: cross-device readiness report
+```
+
+**Adding a 4th family** = `register_device(SyntaktDevice())` + 3 strategy modules. `dual_machine/` literally never changes. This is what the Strategy seam was for.
+
+---
+
+## 20. Reports Subpackage (post-PR #35 WS-S4 layout)
+
+```mermaid
+flowchart TB
+    subgraph ReportsPkg["reports/ subpackage"]
+        Init["__init__.py<br/>9 report builders + formatters<br/>(was reports.py before WS-S4)"]
+        Formatter["formatter.py<br/>PassiveReportHeader (frozen dataclass)<br/>safety_section_lines()<br/>passive_footer_lines()<br/>+ Final-annotated constants"]
+    end
+
+    subgraph Reports["Report builders (in __init__.py)"]
+        R1["registry_report"]
+        R2["mock_mapper_report"]
+        R3["runtime_plan_report"]
+        R4["active_boundary_report"]
+        R5["mock_runtime_active_bridge_report"]
+        R6["anchor_profile_report"]
+        R7["behavior_parity_coverage_report"]
+        R8["project_status_report<br/>(separate top-level project_status_report.py)"]
+        R9["quick_status report"]
+    end
+
+    subgraph CLICmds["CLI commands → reports"]
+        C1["report → registry_report"]
+        C2["mock-mapper-report"]
+        C3["runtime-plan-report"]
+        C4["active-boundary-report"]
+        C5["mock-runtime-active-bridge-report"]
+        C6["anchor-profile-report"]
+        C7["behavior-parity-report"]
+        C8["project-status (separate)"]
+        C9["quick-status"]
+    end
+
+    subgraph Fixtures["Golden-fixture CLI tests"]
+        GoldenTests["tests/fixtures/cli_*_expected.txt<br/>tests/test_cli.py<br/>test_*_report.py"]
+    end
+
+    Reports --> Formatter
+    Formatter --> Init
+    Reports --> Init
+
+    Init --> CLICmds
+    CLICmds --> Fixtures
+```
+
+**Architecture: all reports share** `PassiveReportHeader` + `safety_section_lines()` + `passive_footer_lines()`. The pre-WS-S4 duplication of `"Safety:"` / `"Source:"` / `"In-memory only: True"` literals across 6 sites is gone (Gate 4 dead-code purge).
+
+---
+
+## 21. Passive Metadata + Registry Graph
+
+The metadata layer behind the passive CLI's `list-`, `search-`, `inspect-`, and `preview-` commands. Restored and refreshed against current paths.
+
+```mermaid
+flowchart TB
+    subgraph DataLayer["data/ (single source of truth; WS-M3-era)"]
+        DataPM["data/param_maps.py<br/>MACHINE_CC = 15<br/>BD_SHARP_PARAMS, BD_HARD_PARAMS,<br/>BD_CLASSIC_PARAMS, BD_FM_PARAMS,<br/>BD_ACOUSTIC_PARAMS,<br/>SY_RAW_PARAMS, ... (~69 dicts)<br/>+ safe/anchor/zone/order tables"]
+        DataProfiles["data/profiles.py<br/>PROFILES (registry of profile_key → dict)"]
+        DataPlans["data/plans.py<br/>PAD_PROFILE_PLANS, ..."]
+        DataScenes["data/scenes.py + scene_display.py<br/>SCENE_COMMANDS, scene_menu_lines()"]
+        DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
+    end
+
+    subgraph TopLevel["Top-level passive surfaces"]
+        Constants["constants.py<br/>MACHINE_CC, SUPPORTED_PADS,<br/>OUT_OF_SCOPE_PADS,<br/>PAD_TO_MIDI_CHANNEL,<br/>PAD1_DEFAULT_HOME"]
+        Commands["commands.py<br/>COMMANDS dict, PAD{1-4}_COMMANDS"]
+        Profiles["profiles.py<br/>GROUP_PROFILE_METADATA<br/>(derived from data/profiles.PROFILES)"]
+        Scenes["scenes.py<br/>(re-export from data/scenes.py)"]
+    end
+
+    subgraph Lookup["Lookup + inspection"]
+        Registry["registry.py<br/>build_registry()<br/>get_registry_section()<br/>get_registry_item()<br/>summarize_registry()"]
+        ProfileLookup["profile_lookup.py<br/>describe_group_profile()"]
+        Inspection["inspection.py<br/>inspect_command()"]
+        Validation["validation.py<br/>registry guardrails<br/>forbidden execution fields<br/>Pads 5-12 references"]
+        CliRegistry["cli_registry.py<br/>CliCommand frozen dataclass<br/>register/get/all_commands"]
+    end
+
+    subgraph Browse["CLI browse path"]
+        CLI["cli.py main(argv)"]
+    end
+
+    DataPM --> DataProfiles
+    DataProfiles --> Profiles
+    DataScenes --> Scenes
+    DataPM -.-> Constants
 
     Constants --> Commands
     Constants --> Profiles
-    Scenes --> Commands
     Commands --> Registry
     Scenes --> Registry
     Profiles --> Registry
 
     Profiles --> ProfileLookup
-
     Validation --> Inspection
-    Inspection --> Preview
-    Validation --> Audit
-    Registry --> CLI["cli.py\nlist/search/inspect"]
-    Preview --> CLI
+    Validation --> Registry
+
+    Registry --> CLI
+    Inspection --> CLI
+    ProfileLookup --> CLI
+    CliRegistry --> CLI
 ```
 
-Current metadata scope from code:
+**Current metadata scope (verified from `constants.py` + `data/`):**
 
-- supported pads: `1`, `2`, `3`, `4`
-- out-of-scope pads: `5` through `12`
-- group profile metadata currently includes keys `2`, `3`, `4`, and `5`
-- mock message mapper support is narrower than profile metadata support:
-  - supported by mapper: `2`, `3`
-  - unsupported/safe in mock mapper report: `4`
-- runtime plan support is also narrower:
-  - supported runtime planning keys: `2`, `3`
-  - parked runtime planning key: `4`
+- Supported pads: `1`, `2`, `3`, `4` (`SUPPORTED_PADS = (1, 2, 3, 4)`)
+- Out-of-scope pads: `5` through `12` (`OUT_OF_SCOPE_PADS = (5, 6, ..., 12)`)
+- Group profile metadata: keys `1` through `9` for the V1.34 machine catalog (PROFILES at `data/profiles.py`)
+- `MACHINE_CC = 15` (the program-change-like CC the Rytm uses for machine selection)
+- Mock message mapper supports a narrower subset of profile keys for the active-bridge path (see §6 below)
 
-## 5. Behavior Parity Evaluator Map
+---
+
+## 22. Behavior Parity Evaluator Map
+
+The `behavior/` subpackage holds the passive evaluators that model V1.34's command-by-command behavior. Restored and refreshed against the WS-M2 subpackage layout.
 
 ```mermaid
 flowchart TB
-    Commands["commands.py\ncommand metadata groups"]
-    Scenes["scenes.py\nscene metadata"]
-    Profiles["profiles.py\ngroup profile metadata"]
-    RuntimeState["runtime-state helpers\nselected_target_state.py\nanchor_state.py\nselected_isolated_pad_runtime_state.py"]
+    Commands["commands.py<br/>command metadata groups"]
+    Scenes["scenes.py / data/scenes.py<br/>scene metadata"]
+    Profiles["profiles.py / data/profiles.py<br/>group profile metadata"]
+    StateValidation["state/{anchor,selected_target,<br/>selected_isolated_pad}_validation.py"]
 
-    subgraph Evaluators["Behavior parity evaluator modules"]
-        MenuUtility["behavior_menu_utility.py\nmenus + T/C/Q utilities"]
-        AnchorProfile["behavior_anchor_profile.py\nBH/BC/BS/BF/... anchors"]
-        MutationDepth["behavior_mutation_depth.py\nguarded depth + mutation command intent"]
-        SceneGroup["behavior_scene_group.py\nscene/group/lane-aware intent"]
-        Pad1["behavior_pad1_lane.py\nPad 1 BD lane"]
-        Pad2["behavior_pad2_lane.py\nPad 2 lane"]
-        Pad3["behavior_pad3_lane.py\nPad 3 lane"]
-        Pad4["behavior_pad4_lane.py\nPad 4 lane"]
-        SelectedProfile["behavior_selected_profile.py\nP/M profile workflow"]
-        SelectedIsolated["behavior_selected_isolated_pad.py\nL/PZ isolated pad behavior"]
-        UndoCommit["behavior_undo_commit_state.py\nB/E/W/U state behavior"]
+    subgraph BehaviorPkg["behavior/ subpackage (8 modules; WS-M2 layout)"]
+        MenuUtility["menu_utility.py<br/>menus + T/C/Q utilities"]
+        AnchorProfile["anchor_profile.py<br/>BH/BC/BS/BF/... anchor commands"]
+        MutationDepth["mutation_depth.py<br/>guarded depth + mutation intent"]
+        SceneGroup["scene_group.py<br/>scene/group/lane-aware intent"]
+        PadLane["pad_lane.py<br/>(WS-S2 consolidation:<br/>Pad1+Pad2+Pad3+Pad4 lane commands<br/>previously in 4 separate files)"]
+        SelectedProfile["selected_profile.py<br/>P/M profile workflow"]
+        SelectedIsolated["selected_isolated_pad.py<br/>L/PZ isolated pad behavior"]
+        UndoCommit["undo_commit_state.py<br/>B/E/W/U state behavior"]
     end
 
-    Report["behavior_anchor_profile_report.py\naggregated read-only report"]
-    Coverage["behavior_parity_coverage_report.py\ncoverage summary"]
+    subgraph BehaviorReports["Aggregated read-only reports (in reports/)"]
+        AnchorReport["anchor_profile_report builder<br/>(reports/__init__.py)"]
+        CoverageReport["behavior_parity_coverage_report builder<br/>(reports/__init__.py)"]
+    end
 
-    Commands --> Evaluators
+    subgraph CLIAccess["CLI commands"]
+        CLIAnchor["cli.py anchor-profile-report"]
+        CLICoverage["cli.py behavior-parity-report"]
+    end
+
+    Commands --> BehaviorPkg
     Scenes --> SceneGroup
     Profiles --> AnchorProfile
-    RuntimeState --> SelectedIsolated
+    Profiles --> PadLane
+    StateValidation --> SelectedIsolated
+    StateValidation --> UndoCommit
 
-    Evaluators --> Report
-    Evaluators --> Coverage
+    BehaviorPkg --> AnchorReport
+    BehaviorPkg --> CoverageReport
 
-    Report --> CLIAnchor["cli.py anchor-profile-report"]
-    Coverage --> CLICoverage["cli.py behavior-parity-report"]
+    AnchorReport --> CLIAnchor
+    CoverageReport --> CLICoverage
 ```
 
-Current nuance:
+**Current nuance:**
 
-- Behavior modules return passive result objects and metadata. They do not open
-  ports or send MIDI.
-- Packet constants in those files document which V1.34 command areas have been
-  modeled.
-- Report modules aggregate evaluator output into read-only CLI-visible text.
+- Behavior modules return passive result objects and metadata. They do NOT open ports, send MIDI, or mutate device state.
+- Packet constants in these files document which V1.34 command areas have been modeled (look for `PACKET_*` named constants).
+- Per WS-S2, the four `behavior_pad{1-4}_lane.py` files at the package root were collapsed into one `behavior/pad_lane.py` containing all four pads' lane behavior (frozen dataclass `PadLaneCommand` plus `Pad{1,2,3,4}LaneBehaviorResult` records).
 
-## 6. Runtime Planning and Active Boundary Flow
+---
+
+## 23. Runtime Planning + Active Boundary Flow
+
+The runtime-plan validator + active-boundary mock-only evaluator. Restored from the original §6 and verified against current code.
 
 ```mermaid
 flowchart TB
-    Intent["RuntimeIntent\nruntime_plan.py"]
-    Validate["validate_runtime_intent_scope()"]
-    Preview["RuntimePlanPreview\nblocked, would_execute=False"]
-    RuntimeReport["runtime_plan_report.py\nread-only report"]
+    Intent["RuntimeIntent<br/>runtime_plan.py"]
+    Validate["validate_runtime_intent_scope()<br/>runtime_plan.py"]
+    Preview["RuntimePlanPreview<br/>blocked, would_execute=False"]
+    Provider["MockRuntimeProvider<br/>runtime_plan.py"]
+    RuntimeReport["build/format_runtime_plan_report()<br/>(in reports/__init__.py)"]
     RuntimeCLI["cli.py runtime-plan-report"]
 
-    BridgeReq["RuntimeActiveBridgeRequest\nmock_runtime_active_bridge.py"]
+    BridgeReq["RuntimeActiveBridgeRequest<br/>mock_runtime_active_bridge.py"]
     BridgeEval["evaluate_mock_runtime_active_bridge()"]
-    ActiveReq["ActiveBoundaryRequest\nactive_boundary.py"]
+    ActiveReq["ActiveBoundaryRequest<br/>active_boundary.py"]
     ActiveEval["evaluate_mock_active_boundary()"]
-    Mapper["map_group_profile_to_mock_messages()\nmock_message_mapper.py"]
-    Sender["MockMidiSender\nmock_midi.py"]
-    Result["RuntimeActiveBridgeResult\nmock_only=True\nsends_real_midi=False"]
-    BridgeReport["mock_runtime_active_bridge_report.py\nread-only report"]
+    ActiveErr["ActiveBoundaryError<br/>(BoundaryError, ValueError)"]
+    Mapper["map_group_profile_to_mock_messages()<br/>mock_message_mapper.py"]
+    Sender["MockMidiSender<br/>mock_midi.py"]
+    Result["RuntimeActiveBridgeResult<br/>mock_only=True<br/>sends_real_midi=False"]
+    BridgeReport["build/format_mock_runtime_active_bridge_report()<br/>(in reports/__init__.py)"]
     BridgeCLI["cli.py mock-runtime-active-bridge-report"]
 
     Intent --> Validate
@@ -360,215 +1374,113 @@ flowchart TB
     Mapper --> ActiveEval
     ActiveEval -->|"send_many() only on injected mock sender"| Sender
     ActiveEval --> Result
+    ActiveEval -.->|"on rejection"| ActiveErr
     BridgeEval --> Result
 
     BridgeReport --> BridgeCLI
-    BridgeReport -.->|"metadata-only; does not invoke bridge"| BridgeEval
+    BridgeReport -.->|"metadata-only;<br/>does not invoke bridge"| BridgeEval
 
-    Validate -->|"group_profile 2 or 3"| Supported["runtime supported preview\nstill blocked"]
-    Validate -->|"group_profile 4"| Parked["parked preview"]
-    Validate -->|"unknown / scene / command"| Unsupported["unsupported preview"]
+    Validate -->|"group_profile in supported set"| Supported["runtime supported preview<br/>still blocked (would_execute=False)"]
+    Validate -->|"parked profile key"| Parked["parked preview"]
+    Validate -->|"unknown / scene / command kind"| Unsupported["unsupported preview"]
 
-    ActiveEval -->|"only group_profile 2 with armed + dry-run confirmed"| Accepted["accepted_mock_only"]
-    ActiveEval -->|"missing arming / dry-run / unsupported key/kind"| Rejected["safe failure\nno messages"]
+    ActiveEval -->|"armed + dry-run confirmed + supported key"| Accepted["accepted_mock_only"]
+    ActiveEval -->|"missing arming / dry-run / unsupported"| Rejected["safe failure (no messages)"]
 ```
 
-Current nuance:
+**Current nuance (verified from source):**
 
-- `runtime_plan.py` validates intent scope but always produces blocked previews
-  with `would_execute=False`.
-- `active_boundary.py` accepts only source kind `group_profile`, source key
-  `2`, with arming and dry-run confirmation, and only through
-  `MockMidiSender`.
-- `mock_runtime_active_bridge.py` is test-only and routes a narrow request
-  through runtime planning and active boundary evaluation.
-- `mock_runtime_active_bridge_report.py` reports this contract without calling
-  the bridge.
+- `runtime_plan.py` exports `RuntimeIntent`, `RuntimeSafetyEnvelope`, `RuntimePlanPreview`, `MockRuntimeProvider`, `validate_runtime_intent_scope()`, `create_blocked_runtime_preview()`. The validator always produces blocked previews with `would_execute=False` in the passive path.
+- `active_boundary.py` exports `ActiveBoundaryRequest`, `ActiveBoundaryResult`, `ActiveBoundaryError`, `evaluate_mock_active_boundary()`. The evaluator accepts source kind `group_profile` only, requires arming + dry-run confirmation, and routes only through an injected `MockMidiSender`.
+- `mock_runtime_active_bridge.py` exports `RuntimeActiveBridgeRequest`, `RuntimeActiveBridgeResult`, `evaluate_mock_runtime_active_bridge()`. It composes the runtime-plan validator + active-boundary evaluator.
+- `build_*_report` / `format_*_report` functions for both `runtime-plan-report` and `mock-runtime-active-bridge-report` live in `reports/__init__.py` (after the WS-S4 reports-subpackage move).
 
-## 7. MIDI Boundary Map
+---
+
+## 24. Closeout + Test Coverage Map
+
+Both closeout entry points and what they verify. Restored from the original §9 and refreshed with cross-platform parity.
+
+```mermaid
+flowchart TB
+    subgraph Entry["Closeout entry points"]
+        CloseoutPS1["Scripts/closeout_check.ps1<br/>(Windows PowerShell)"]
+        CloseoutPy["scripts/closeout_check.py<br/>(cross-platform Python; preferred)"]
+        QuickStatus["scripts/quick_status.ps1<br/>(quick local status)"]
+    end
+
+    subgraph GateSteps["Closeout gate steps (closeout_check.py)"]
+        Step1["1. pytest (full suite)<br/>~30s with -n auto<br/>(2370+ tests)"]
+        Step2["2. import smoke<br/>(import rytm_randomizer)"]
+    end
+
+    subgraph PytestLayers["What pytest runs"]
+        PassiveTests["Layer 2 unit / behavior tests<br/>(~1500 tests)"]
+        ParityTests["Layer 1 V1.34 parity tests<br/>(685 items from 505 goldens)"]
+        ArchTests["Layer 3 architecture tests<br/>(220 tests across 15 files)"]
+        E2ETests["Layer 4 e2e tests<br/>(43 tests)"]
+        CovStep["Layer 5 coverage ratchet<br/>(scripts/coverage_ratchet.py)<br/>floor: ≥95% pure-branch"]
+    end
+
+    subgraph CIJobs["GitHub Actions jobs"]
+        CIArch["architecture job"]
+        CITest["test job (matrix)"]
+        CIE2E["e2e job (matrix)"]
+        CIRatchet["coverage-ratchet step (ubuntu)"]
+    end
+
+    CloseoutPS1 -->|"runs pytest"| Step1
+    CloseoutPy --> Step1
+    CloseoutPy --> Step2
+
+    Step1 --> PassiveTests
+    Step1 --> ParityTests
+    Step1 --> ArchTests
+    Step1 --> E2ETests
+    Step1 --> CovStep
+
+    PytestLayers --> CIJobs
+    ArchTests -.->|"separate CI job"| CIArch
+    E2ETests -.->|"separate CI job"| CIE2E
+    CovStep -.->|"separate CI step"| CIRatchet
+```
+
+**Current nuance:**
+
+- `Scripts/closeout_check.ps1` is the original Windows-only PowerShell entry. `scripts/closeout_check.py` is the cross-platform Python equivalent added in WS-M4 (preferred for new tooling).
+- Both run pytest and an import smoke. The Python script also tests cross-platform (works on Windows / macOS / Linux without modification).
+- CI splits the 5 layers across separate jobs (test / architecture / e2e / coverage-ratchet) so a failure in one layer is visible without scrolling through 2400 test results — see §11 (CI Pipeline) for the full job map.
+
+---
+
+## 25. Command / Capability Surface
+
+Refreshed from the original §11 to add `cli_registry.py` and the actual command set.
 
 ```mermaid
 flowchart LR
-    MockMidi["mock_midi.py\nMidiMessage\nMockMidiSender\nbuild_cc_message()"]
-    MockMapper["mock_message_mapper.py\nprofiles 2 and 3 -> inert MidiMessage"]
-    ActiveBoundary["active_boundary.py\nuses injected MockMidiSender"]
-    MockBridge["mock_runtime_active_bridge.py\nuses injected MockMidiSender"]
-    RealAdapter["real_midi_adapter.py\nRealMidiPortProvider\nRealMidiSender\nfake-provider tests"]
-    Tests["tests/test_mock_midi.py\ntest_mock_message_mapper.py\ntest_active_boundary.py\ntest_mock_runtime_active_bridge.py\ntest_real_midi_adapter_boundary.py"]
-    Forbidden["Absent by current tests/docs\nmido import\nrtmidi import\nport discovery\npassive CLI sender construction\nhardware send"]
+    CLI["cli.py main(argv=None)"]
 
-    MockMapper --> MockMidi
-    ActiveBoundary --> MockMapper
-    ActiveBoundary --> MockMidi
-    MockBridge --> ActiveBoundary
-    MockBridge --> MockMidi
-    RealAdapter --> MockMidi
-    Tests --> MockMidi
-    Tests --> MockMapper
-    Tests --> ActiveBoundary
-    Tests --> MockBridge
-    Tests --> RealAdapter
-
-    Forbidden -.->|"guarded by import/passive CLI/adapter tests"| Tests
-```
-
-Current nuance:
-
-- `mock_midi.py` is the in-memory mock boundary.
-- `mock_message_mapper.py` supports group profile keys `2` and `3`.
-- `real_midi_adapter.py` defines an import-safe adapter boundary and uses fake
-  injected providers in tests. It does not import real MIDI libraries in module
-  source.
-- Passive CLI safety tests guard against importing or constructing real MIDI or
-  sender behavior from passive CLI paths.
-
-## 8. Report Surface Map
-
-```mermaid
-flowchart TB
-    subgraph Reports["Formatter/report modules (consolidated in reports.py)"]
-        RegistryReport["build/format/summarize_registry_report"]
-        MockMapperReport["build/format/summarize_mock_mapper_report"]
-        RuntimePlanReport["build/format/summarize_runtime_plan_report"]
-        ActiveBoundaryReport["build/format/summarize_active_boundary_report"]
-        AnchorProfileReport["build/format/summarize_anchor_profile_report"]
-        CoverageReport["build/format/summarize_behavior_parity_coverage_report"]
-        BridgeReport["build/format/summarize_mock_runtime_active_bridge_report"]
-    end
-
-    subgraph CLICommands["CLI report commands"]
-        CLIRegistry["report"]
-        CLIMockMapper["mock-mapper-report"]
-        CLIRuntime["runtime-plan-report"]
-        CLIActive["active-boundary-report"]
-        CLIAnchor["anchor-profile-report"]
-        CLICoverage["behavior-parity-report"]
-        CLIBridge["mock-runtime-active-bridge-report"]
-    end
-
-    RegistryReport --> CLIRegistry
-    MockMapperReport --> CLIMockMapper
-    RuntimePlanReport --> CLIRuntime
-    ActiveBoundaryReport --> CLIActive
-    AnchorProfileReport --> CLIAnchor
-    CoverageReport --> CLICoverage
-    BridgeReport --> CLIBridge
-
-    CLICommands --> Fixtures["tests/fixtures/cli_*_expected.txt"]
-    CLICommands --> CLITests["tests/test_cli.py"]
-```
-
-Current nuance:
-
-- Reports generally expose `build_*_report`, `summarize_*_report`, and
-  `format_*_report` functions.
-- CLI report commands use formatted report output and fixture-backed tests.
-- Report modules are read-only visibility surfaces, not execution entry
-  points.
-
-## 9. Closeout and Test Coverage Map
-
-```mermaid
-flowchart TB
-    Closeout["Scripts/closeout_check.ps1"]
-
-    subgraph PassiveTests["Passive metadata / CLI tests"]
-        Scaffold["test_scaffold.py"]
-        Validation["test_validation.py"]
-        Lookup["test_profile_lookup.py"]
-        RegistryTests["test_registry.py\ntest_registry_report.py\ntest_registry_report_cli.py"]
-        CLITests["test_cli.py"]
-        InspectionPreviewAudit["test_inspection.py\ntest_preview.py\ntest_audit.py"]
-    end
-
-    subgraph BehaviorTests["Behavior parity tests"]
-        BehaviorCore["test_behavior_menu_utility.py\ntest_behavior_anchor_profile.py\ntest_behavior_mutation_depth.py\ntest_behavior_scene_group.py"]
-        PadTests["test_behavior_pad1_lane.py\ntest_behavior_pad2_lane.py\ntest_behavior_pad3_lane.py\ntest_behavior_pad4_lane.py"]
-        StateBehavior["test_behavior_selected_profile.py\ntest_behavior_selected_isolated_pad.py\ntest_behavior_undo_commit_state.py"]
-        Reports["test_behavior_anchor_profile_report.py\ntest_behavior_parity_coverage_report.py"]
-    end
-
-    subgraph RuntimeTests["Runtime / active mock tests"]
-        RuntimeState["test_selected_target_state.py\ntest_anchor_state.py\ntest_selected_isolated_pad_runtime_state.py"]
-        RuntimeAdjacent["test_runtime_adjacent_mock_only_pz.py\ntest_runtime_adjacent_mock_only_b.py\ntest_runtime_adjacent_mock_only_l.py"]
-        RuntimePlan["test_runtime_plan.py\ntest_runtime_plan_report.py"]
-        ActiveBoundary["test_mock_only_active_candidate.py\ntest_active_boundary.py\ntest_active_boundary_report.py"]
-        Bridge["test_mock_runtime_active_bridge.py\ntest_mock_runtime_active_bridge_report.py"]
-        Alignment["test_active_runtime_report_alignment.py"]
-    end
-
-    subgraph MidiSafetyTests["MIDI safety tests"]
-        MockMidi["test_mock_midi.py"]
-        MockMapper["test_mock_message_mapper.py\ntest_mock_mapper_report.py"]
-        RealMidiSafety["test_real_midi_import_safety.py\ntest_real_midi_passive_cli_safety.py\ntest_real_midi_adapter_boundary.py"]
-    end
-
-    Closeout --> PassiveTests
-    Closeout --> BehaviorTests
-    Closeout --> RuntimeTests
-    Closeout --> MidiSafetyTests
-    Closeout --> GitChecks["V1.34 Reference Diff\nGit Status"]
-```
-
-Current nuance:
-
-- `Scripts/closeout_check.ps1` runs individual Python test files and then
-  prints V1.34 reference diff and git status sections.
-- The closeout suite currently includes passive CLI, behavior parity, runtime
-  plan, active boundary, real MIDI safety, mock runtime bridge, and report
-  coverage.
-
-## 10. Current Safety Boundary Diagram
-
-```mermaid
-flowchart TB
-    Passive["Passive/read-only surfaces\nregistry, lookup, inspect, preview, reports, CLI"]
-    Mock["Mock-only surfaces\nmock MIDI\nmock mapper\nmock runtime plan\nactive boundary\nmock runtime bridge"]
-    Adapter["Import-safe adapter boundary\nreal_midi_adapter.py"]
-    Forbidden["Still absent / not authorized\nactive CLI execution\nreal MIDI dependency\nport discovery\nport opening\nhardware send\nhardware validation\nAnalog Four\nPads 5-12\nSysEx\nGUI/capture"]
-    Tests["Closeout safety tests"]
-
-    Passive -->|"allowed"| Tests
-    Mock -->|"allowed in tests only"| Tests
-    Adapter -->|"fake-provider tests only"| Tests
-    Forbidden -.->|"guarded as absent"| Tests
-
-    Passive -.->|"must not cross into"| Forbidden
-    Mock -.->|"must not become hardware path"| Forbidden
-    Adapter -.->|"must not add real backend without later approval"| Forbidden
-```
-
-Current safety facts in code/tests/docs:
-
-- passive CLI commands do not execute commands
-- passive CLI commands do not open ports
-- passive CLI commands do not send MIDI
-- mock bridge report CLI does not invoke bridge behavior
-- real MIDI adapter tests use fake providers
-- package metadata remains protected from accidental MIDI dependency additions
-- V1.34 reference remains protected by closeout
-
-## 11. Current Command/Capability Surface
-
-```mermaid
-flowchart LR
-    CLI["cli.py"]
-
-    subgraph Browsing["Passive browsing"]
-        List["list-*"]
-        Search["search-*"]
-        Inspect["inspect-*"]
-        Preview["preview-*"]
+    subgraph Browse["Passive browsing"]
+        List["list-commands<br/>list-scenes<br/>list-group-profiles"]
+        Search["search-commands<br/>search-scenes<br/>search-group-profiles"]
+        Inspect["inspect-command<br/>inspect-scene<br/>inspect-group-profile"]
+        Preview["preview-command<br/>preview-scene<br/>preview-group-profile"]
     end
 
     subgraph Reports["Passive reports"]
-        Registry["report"]
+        RegistryC["report"]
         MockMapper["mock-mapper-report"]
         Runtime["runtime-plan-report"]
         Active["active-boundary-report"]
         Bridge["mock-runtime-active-bridge-report"]
         Anchor["anchor-profile-report"]
         Coverage["behavior-parity-report"]
+        Status["project-status / quick-status"]
+    end
+
+    subgraph CliRegistry["cli_registry.py<br/>(WS-S7 future-extension surface)"]
+        Reg["CliCommand frozen dataclass<br/>register / get / all_commands<br/>default_error_formatter"]
     end
 
     subgraph NotPresent["Not present as CLI commands"]
@@ -577,49 +1489,114 @@ flowchart LR
         Hardware["hardware-test"]
     end
 
-    CLI --> Browsing
+    subgraph Armed["Reachable only via app.py --arm"]
+        ArmedRun["python -m rytm_randomizer.app --arm<br/>(real MIDI; requires --arm flag)"]
+        DryRun["python -m rytm_randomizer.app --dry-run<br/>(MockMidiSender)"]
+    end
+
+    CLI --> Browse
     CLI --> Reports
-    CLI -.->|"not implemented"| NotPresent
+
+    CliRegistry -.->|"future-extension seam:<br/>register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
+
+    CLI -.->|"not implemented in passive CLI"| NotPresent
+    NotPresent -.->|"reachable via app.py --arm"| Armed
 ```
 
-Current nuance:
+**Current nuance:**
 
-- The CLI is visibility-first.
-- No active execution command is present in `cli.py`.
-- The closest active-facing surface is still report-only:
-  `mock-runtime-active-bridge-report`.
+- The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
+- `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
+- `cli_registry.py` (WS-S7) is the future-extension seam. Today the cli's argparse dispatch is still in-line; future commands should register a `CliCommand` here instead of growing `cli.py`. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
-## 12. Architecture Reading Guide
+---
 
-Use this map as follows:
+## 26. Cross-Reference Map (where to read for what)
 
-- To understand what the operator can run, start with **Passive CLI Command
-  Flow**.
-- To understand where command/profile/scene data comes from, use **Passive
-  Metadata and Registry Graph**.
-- To understand V1.34 behavior-parity modeling, use **Behavior Parity
-  Evaluator Map**.
-- To understand the path toward active-facing work, use **Runtime Planning and
-  Active Boundary Flow**.
-- To understand why the project is still safe, use **MIDI Boundary Map** and
-  **Current Safety Boundary Diagram**.
-- To understand what closeout protects, use **Closeout and Test Coverage Map**.
+```mermaid
+flowchart LR
+    subgraph Newcomer["I'm a newcomer"]
+        N1["What is this?"]
+        N2["How do I run it?"]
+        N3["How do I contribute?"]
+    end
 
-## 13. Explicit Non-Claims
+    subgraph Contributor["I'm writing code"]
+        C1["Where do I add X?"]
+        C2["What's the rule for Y?"]
+        C3["How do I avoid breaking parity?"]
+        C4["How do I add a new device family?"]
+        C5["How do I run tests fast?"]
+    end
 
-This document does not claim that the project currently has:
+    subgraph Reviewer["I'm reviewing a PR"]
+        R1["Are the 16 gates satisfied?"]
+        R2["Does the architecture hold?"]
+        R3["Is the PR appropriately scoped?"]
+    end
 
-- real MIDI sending
-- real MIDI dependency installation
-- automatic hardware port discovery
-- hardware validation
-- active CLI execution
-- scene execution
-- command mutation execution
-- Analog Four support
-- Pads 5-12 support
-- SysEx behavior
-- GUI/capture behavior
+    subgraph Sources["Authoritative sources"]
+        README["README.md"]
+        CONTRIB["CONTRIBUTING.md<br/>(developer handbook)"]
+        ARCH["docs/ARCHITECTURE.md<br/>§6.1 Device + Strategy seam"]
+        DIAG["docs/ARCHITECTURE_DIAGRAMS.md<br/>(this file)"]
+        PLAN_REQ["docs/PLAN_REQUIREMENTS.md<br/>(16 gates)"]
+        RULES[".claude/rules/<br/>{cascade-merge-pattern,<br/>parity-fixture-discipline,<br/>coverage-gate-100pct,<br/>architecture,<br/>skill-routing}"]
+        SKILLS[".claude/skills/<br/>(19 skills incl. add-pad-command,<br/>extend-data-layer,<br/>python-on-windows)"]
+        STATUS["docs/STATUS.md"]
+    end
 
-Those remain absent unless a later committed code change and closeout evidence
-prove otherwise.
+    N1 --> README
+    N2 --> README
+    N2 --> CONTRIB
+    N3 --> CONTRIB
+
+    C1 --> ARCH
+    C1 --> CONTRIB
+    C2 --> CONTRIB
+    C2 --> RULES
+    C3 --> RULES
+    C3 --> ARCH
+    C4 --> ARCH
+    C4 --> DIAG
+    C5 --> CONTRIB
+
+    R1 --> PLAN_REQ
+    R1 --> CONTRIB
+    R2 --> ARCH
+    R2 --> DIAG
+    R3 --> CONTRIB
+
+    Sources -.->|"diagrams illustrate"| DIAG
+```
+
+---
+
+## 27. Reading Guide + Non-Claims
+
+### How to use this map
+
+- **First time:** Repository-Level System Map (§1) + Package Layer Map (§2) + Cross-Reference Map (§26).
+- **Adding a feature:** Common contributor tasks in `CONTRIBUTING.md`, then the relevant subpackage diagram here (§§6 engines, §7 data+guardrails, §8 observability, §20 reports, §21 metadata, §22 behavior, §23 runtime/active boundary).
+- **Adding a device family:** Device + Strategy Capability Stack (§3), Snapshot → Plan → Render Lifecycle (§4), Composition vs Stub (§5), Snapshot Subpackage (§9), Future Codex PR Shape (§18), Registry Fan-Out (§19).
+- **Reviewing a PR:** Architecture Test Enforcement Graph (§10), CI Pipeline (§11), 16 Plan-Requirement Gates (§12), Cascade vs Bundled (§17).
+- **Understanding safety:** MIDI Boundary Map (§15), Safety Boundary Diagram (§16).
+- **Test ecosystem:** Test Suite Layers (§13), Closeout + Test Coverage Map (§24).
+- **CLI surface:** Passive CLI Command Flow (§14), Command / Capability Surface (§25).
+
+### Explicit non-claims
+
+The diagrams DO NOT claim that the project currently has:
+
+- Real MIDI sending in passive default (only `--arm` triggers real ports)
+- Automatic hardware port discovery
+- A working `AnalogFourDevice` (forward-looking in §18; PR #36 redo target)
+- Pads 5-12 in the live mutation path (work-in-progress on PR #36)
+- A GUI / capture interface
+- Generic `senders/guarded.py` + `senders/hardware.py` (forward-looking in §18)
+- A nested `dual_machine/` subpackage (forward-looking in §18)
+- `analog_four/` / `rytm/` / `essence/` subpackages (anti-pattern, rejected by arch tests in §10)
+
+These remain absent unless a later committed code change and CI evidence prove
+otherwise. The forward-looking diagrams (§18, §19) are labeled as such and
+describe the intended shape, not the current shape.
