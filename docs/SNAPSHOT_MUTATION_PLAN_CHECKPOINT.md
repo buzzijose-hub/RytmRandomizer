@@ -95,10 +95,10 @@ python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report --target 
 ```
 
 The session plan wraps the same queue with baseline/variant export names,
-manual one-parameter move instructions, proof commands, and acceptance rules.
-It is also checklist text only; it does not read files, request dumps, receive
-live SysEx, open ports, send MIDI, execute commands, write SysEx, or touch
-hardware.
+manual one-parameter move instructions, proof commands, acceptance rules, and
+the A4 manifest follow-up whenever Analog Four targets are present. It is also
+checklist text only; it does not read files, request dumps, receive live SysEx,
+open ports, send MIDI, execute commands, write SysEx, or touch hardware.
 
 For Analog Four mappings that pass promotion review, collect the entries in a
 local verified mapping manifest and validate it with:

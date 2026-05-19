@@ -725,9 +725,11 @@ Behavior:
   Prints a passive operator-ready export run sheet for a controlled mapping
   session. It wraps the mapping validation queue with baseline and variant
   file names, one-parameter manual-move instructions, proof commands, and
-  acceptance rules. It does not read SysEx files, request dumps, receive live
-  SysEx, send MIDI, write SysEx, execute commands, open ports, or touch
-  hardware.
+  acceptance rules. When Analog Four targets are included, it also prints the
+  passive manifest follow-up for collecting clean promotion JSON entries and
+  validating them before snapshot/readiness/dry-run previews. It does not read
+  SysEx files, request dumps, receive live SysEx, send MIDI, write SysEx,
+  execute commands, open ports, or touch hardware.
 
 Safety:
   passive/read-only

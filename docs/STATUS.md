@@ -535,7 +535,8 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   `dual-machine-mapping-validation-queue-report` lists the Rytm/A4 mappings to
   prove, while `dual-machine-mapping-session-plan-report` turns that queue into
   baseline/variant export names, manual one-parameter move instructions,
-  proof commands, and acceptance rules. Both are checklist text only.
+  proof commands, acceptance rules, and the A4 manifest follow-up whenever
+  Analog Four targets are present. Both are checklist text only.
 - Analog Four verified saved-offset mappings now have a passive JSON manifest
   validator: `analog-four-saved-offset-mapping-manifest-report <path>` reads
   locally collected proof entries, validates track/offset/name/CC/status, and

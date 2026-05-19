@@ -73,6 +73,15 @@ def test_dual_machine_mapping_session_plan_formats_operator_run_sheet():
         'rytm-controlled-mapping-proof-report "rytm-slot-007-baseline.syx" '
         '"rytm-slot-007-pad-1-flt-frequency-after.syx" --slot 7'
     ) in report
+    assert "Analog Four manifest follow-up:" in report
+    assert "Review the JSON manifest entry from each clean Analog Four promotion report." in report
+    assert (
+        "analog-four-saved-offset-mapping-manifest-report " '"<analog-four-mapping-manifest.json>"'
+    ) in report
+    assert (
+        "Use only a ready A4 manifest in snapshot/readiness/dry-run previews; "
+        "blocked manifests stay out of guarded sends."
+    ) in report
     assert '"<before.syx>"' not in report
     assert "--slot <1-128>" not in report
     assert "Accept only if the proof shows exactly one intended mapping change." in report
@@ -117,6 +126,7 @@ def test_dual_machine_mapping_session_plan_can_filter_to_rytm():
     assert "Rytm Pad 1 / FLT Frequency / CC74 / key flt-frequency" in report
     assert "Rytm Pad 1 / FLT Resonance / CC75 / key flt-resonance" in report
     assert "Analog Four Track" not in report
+    assert "Analog Four manifest follow-up:" not in report
 
 
 def test_dual_machine_mapping_session_plan_rejects_invalid_slot():

@@ -54,6 +54,9 @@ def format_dual_machine_mapping_session_plan_report(
     for index, queued_target in enumerate(targets, start=1):
         lines.extend(_format_session_step(index, queued_target, validated_slot))
 
+    if _includes_analog_four_targets(targets):
+        lines.extend(_format_analog_four_manifest_follow_up())
+
     lines.extend(
         [
             "Acceptance rule:",
@@ -121,6 +124,30 @@ def _format_session_step(index, queued_target, slot: int) -> list[str]:
         (f"   Manual move: change only {queued_target.lane} " f"{queued_target.parameter_name}."),
         f"   Proof: {proof_command}",
     ]
+
+
+def _format_analog_four_manifest_follow_up() -> list[str]:
+    return [
+        "Analog Four manifest follow-up:",
+        "- Review the JSON manifest entry from each clean Analog Four promotion report.",
+        (
+            "- Collect reviewed entries under a local JSON object shaped as "
+            '{"mappings": [...]} before using them in runtime previews.'
+        ),
+        (
+            "   Validate: python -m rytm_randomizer.cli "
+            "analog-four-saved-offset-mapping-manifest-report "
+            '"<analog-four-mapping-manifest.json>"'
+        ),
+        (
+            "- Use only a ready A4 manifest in snapshot/readiness/dry-run previews; "
+            "blocked manifests stay out of guarded sends."
+        ),
+    ]
+
+
+def _includes_analog_four_targets(targets) -> bool:
+    return any(target.machine == "Analog Four" for target in targets)
 
 
 def _fill_session_proof_command(
