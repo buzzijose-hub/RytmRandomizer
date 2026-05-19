@@ -4,6 +4,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: updated the manual hardware validation checklist for
+  dual-machine lane-scoped snapshot testing. The checklist now points to the
+  target-aware `dual-machine-lane-validation-guide`, the `--all-lanes` matrix,
+  Rytm-only validation, Analog-Four-only validation, and a tiny both-machine
+  pilot before any wider dual-machine send.
 - 2026-05-19: added a target-aware passive dual-machine lane validation guide.
   `dual-machine-lane-validation-guide` prints the exact preview, readiness,
   app dry-run, and armed command sequence for testing one Rytm pad, one Analog

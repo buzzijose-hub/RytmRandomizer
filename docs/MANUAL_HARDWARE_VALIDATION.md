@@ -74,6 +74,20 @@ Confirm the guide shows the single-track validation order and the expected
 counts: `Expected single-track messages: 5` and
 `Expected full-profile messages: 20`.
 
+For the guarded dual-machine lane-scoped snapshot path, print the passive
+guides:
+
+```
+python -m rytm_randomizer.cli dual-machine-lane-validation-guide
+python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
+python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target rytm --rytm-pad 10
+python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track 2
+```
+
+Confirm the focused guides show the target scope, the exact dry-run and armed
+commands, and the expected lane-scoped counts: Rytm-only `6`, Analog-Four-only
+`5`, and both-machine `11`.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the
@@ -282,6 +296,51 @@ Then follow the guide's sequence:
 - [ ] Do not save the kit afterward unless you intentionally want the runtime
       starter values kept in the current kit.
 
+### 10. Optional guarded dual-machine lane snapshot validation
+
+Run this only after the Rytm runtime and Analog Four runtime paths are each
+safe on their own. Use copied/restorable kits or projects on both machines.
+This path is for proving live snapshot scoping: one Rytm pad only, one Analog
+Four track only, then a tiny both-machine pair.
+
+First print the all-lane matrix:
+
+```
+python -m rytm_randomizer.cli dual-machine-lane-validation-guide --all-lanes
+```
+
+Then validate one machine at a time:
+
+- [ ] Print the Rytm-only focused guide for the pad you want, for example
+      `python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target rytm --rytm-pad 10`.
+- [ ] Run the focused guide's passive preview stack against the saved Rytm
+      SysEx path and confirm the reports are ready.
+- [ ] Run the focused guide's
+      `rytm-randomizer --dry-run --dual-machine-snapshot-send ... --snapshot-target rytm ...`
+      command and confirm it captures 6 mock messages.
+- [ ] Run the focused guide's matching `--arm` command.
+- [ ] Select the Analog Rytm output port, not Analog Four.
+- [ ] Type exact `SEND` only after confirming the port is correct.
+- [ ] Listen for only the selected Rytm pad changing; confirm the Analog Four
+      is untouched.
+- [ ] Print the Analog-Four-only focused guide, for example
+      `python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target analog-four --analog-four-track 2`.
+- [ ] Run the focused guide's dry-run and confirm it captures 5 mock
+      messages.
+- [ ] Run the focused guide's matching `--arm` command.
+- [ ] Select the Analog Four output port, not Analog Rytm.
+- [ ] Listen for only the selected Analog Four track changing; confirm the
+      Rytm is untouched.
+- [ ] After both single-machine passes are safe, print a both-machine focused
+      guide, for example
+      `python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target both --rytm-pad 1 --analog-four-track 1`.
+- [ ] Run the both-machine dry-run and confirm it captures 11 mock messages.
+- [ ] Run the both-machine `--arm` command, selecting separate Rytm and Analog
+      Four output ports.
+- [ ] Confirm both selected lanes change and all untargeted lanes stay still.
+- [ ] Do not save either kit afterward unless you intentionally want the
+      lane-scoped starter/snapshot values kept.
+
 ## First-session notes template
 
 ### First validated V1.34 alpha pass
@@ -336,6 +395,14 @@ Optional Analog Four smoke:
 - hardware smoke pass / fail: not run in first session
 - tracks 1-4 responded: not recorded in first session
 - notes:
+
+Optional dual-machine lane snapshot:
+- dry-run report pass / fail: not run in first session
+- hardware lane pass / fail: not run in first session
+- Rytm-only lane responded / A4 untouched: not recorded in first session
+- A4-only lane responded / Rytm untouched: not recorded in first session
+- both-machine pilot responded: not recorded in first session
+- notes:
 ```
 
 Use this short template for future real-machine passes:
@@ -382,6 +449,14 @@ Optional Analog Four smoke:
 - dry-run report pass / fail:
 - hardware smoke pass / fail:
 - tracks 1-4 responded:
+- notes:
+
+Optional dual-machine lane snapshot:
+- dry-run report pass / fail:
+- hardware lane pass / fail:
+- Rytm-only lane responded / A4 untouched:
+- A4-only lane responded / Rytm untouched:
+- both-machine pilot responded:
 - notes:
 ```
 
