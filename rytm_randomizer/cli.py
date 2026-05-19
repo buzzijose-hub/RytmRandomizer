@@ -1775,6 +1775,15 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args == ["rytm-12-pad-engine-matrix-report"]:
+        from .essence.rytm_12_pad_engine_matrix import (
+            format_rytm_12_pad_engine_matrix_report,
+        )
+
+        sys.stdout.write("\n".join(format_rytm_12_pad_engine_matrix_report()))
+        sys.stdout.write("\n")
+        return 0
+
     if args == ["analog-four-reference-report"]:
         from .analog_four.reference import format_analog_four_reference_report
 

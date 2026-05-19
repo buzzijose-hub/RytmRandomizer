@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added the passive Rytm 12-pad engine matrix report.
+  `python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report` prints the
+  Analog Rytm MKII OS 1.72 pad/engine compatibility table with MIDI channel
+  routing, CC15 machine-select readiness, source-starter coverage, and V1.34
+  tuned-mutation coverage, including pending source-starter gaps. This locks
+  Pad 10 as the OH open-hihat lane and keeps XT Classic restricted to Pads 6-8
+  before more live engine-cycling work. It is read-only: no MIDI sending, port
+  opening, SysEx receive/write, or hardware mutation.
 - 2026-05-19: added a passive A4 runtime validation guide.
   `python -m rytm_randomizer.cli analog-four-runtime-validation-guide` prints
   the exact dry-run and armed command sequence for validating the guarded A4

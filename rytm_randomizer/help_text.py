@@ -34,6 +34,7 @@ USAGE = (
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
+    "rytm-12-pad-engine-matrix-report | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
     "analog-four-runtime-validation-guide | "
@@ -112,6 +113,7 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
+  python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
   python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
@@ -200,6 +202,8 @@ Commands:
                      Preview mapped-only 12-pad mock runtime CC messages.
   twelve-pad-rytm-runtime-report
                      Preview the passive style-driven 12-pad Rytm runtime stream.
+  rytm-12-pad-engine-matrix-report
+                     Print the passive 12-pad Rytm pad/engine support matrix.
   analog-four-reference-report
                      Print the passive Analog Four MKII reference intake report.
   analog-four-runtime-report
@@ -882,6 +886,29 @@ Behavior:
 Safety:
   passive/read-only
   mock sender only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "rytm-12-pad-engine-matrix-report": """RytmRandomizer passive CLI: rytm-12-pad-engine-matrix-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
+  python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report --help
+
+Behavior:
+  Prints the passive Analog Rytm MKII OS 1.72 pad/engine compatibility matrix.
+  The report shows every legal engine for each of the 12 pads, MIDI channel
+  routing, CC15 machine-select readiness, source-starter coverage, and existing
+  V1.34 tuned-mutation coverage. It is the read-only reference for future
+  12-pad engine cycling and snapshot/audio-analyzer kit design.
+
+Safety:
+  passive/read-only
   no MIDI sending
   no MIDI receive
   no port opening
