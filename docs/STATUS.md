@@ -4,6 +4,15 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added one-pad Rytm runtime validation targeting.
+  `--runtime-pad <1-12>` can now be combined with
+  `rytm-randomizer --dry-run --twelve-pad-rytm-runtime --runtime-style <style>`
+  or the matching `--arm` path to filter the guarded 12-pad runtime
+  starter/source plan to a single Rytm pad before sending. This is intended for
+  safer live validation and performance use: one pad can be snapshot-style
+  tested without disturbing the other 11. The flag is valid only with
+  `--twelve-pad-rytm-runtime`, uses the same exact `SEND` confirmation gate in
+  armed mode, and still sends no MIDI unless `--arm` is explicitly selected.
 - 2026-05-19: filled Rytm source-starter coverage for the full OS 1.72
   engine matrix. The starter table now covers BD Sharp, BD FM, BD Plastic,
   BD Silky, SD Classic, SD FM, SY Raw, SD Natural, and SD Acoustic in addition

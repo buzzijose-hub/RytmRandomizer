@@ -785,6 +785,34 @@ def test_app_main_dry_run_twelve_pad_rytm_runtime_alias_uses_guarded_mock_sender
     assert captured.err == ""
 
 
+def test_app_main_dry_run_twelve_pad_rytm_runtime_can_target_one_pad(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--twelve-pad-rytm-runtime",
+            "--runtime-style",
+            "Birmingham dark techno",
+            "--runtime-discovery",
+            "0.35",
+            "--runtime-pad",
+            "10",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "guarded Twelve Pad Rytm Runtime send" in captured.out
+    assert "Planned pads: 1" in captured.out
+    assert "Emitted mock messages: 11" in captured.out
+    assert "Pad 10 / ch 10 wire 9" in captured.out
+    assert "Pad 9 / ch 9 wire 8" not in captured.out
+    assert "Dry-run complete. Mock sender captured 11 message(s)." in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_twelve_pad_smoke_requires_active_mode(capsys):
     _seed()
     from rytm_randomizer import app
@@ -1040,6 +1068,37 @@ def test_app_main_twelve_pad_rytm_runtime_alias_rejects_engine_cycle_conflict(ca
 
     assert exit_code == 2
     assert "Choose only one active-mode modifier" in captured.err
+
+
+def test_app_main_runtime_pad_requires_twelve_pad_rytm_runtime(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--dry-run", "--runtime-pad", "10"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--runtime-pad requires --twelve-pad-rytm-runtime" in captured.err
+
+
+def test_app_main_twelve_pad_rytm_runtime_rejects_out_of_range_runtime_pad(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--twelve-pad-rytm-runtime",
+            "--runtime-style",
+            "Birmingham dark techno",
+            "--runtime-pad",
+            "13",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "--runtime-pad must be between 1 and 12" in captured.err
 
 
 def test_app_main_analog_four_smoke_requires_active_mode(capsys):
@@ -1780,6 +1839,69 @@ def test_app_main_arm_twelve_pad_rytm_runtime_alias_sends_source_starters_to_sel
         "Type SEND to transmit 132 Rytm twelve-pad runtime starter/source " "CC message(s)"
     ) in captured.out
     assert "Choose the Analog Rytm MIDI output number" in captured.out
+
+
+def test_app_main_arm_twelve_pad_rytm_runtime_can_target_one_pad(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake Rytm",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--twelve-pad-rytm-runtime",
+                "--runtime-style",
+                "Birmingham dark techno",
+                "--runtime-discovery",
+                "0.35",
+                "--runtime-pad",
+                "10",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake Rytm"]
+    assert len(port.sent) == 11
+    assert {message.channel for message in port.sent} == {9}
+    assert port.sent[0].control == 15
+    assert port.closed is True
+    assert "Emitted real MIDI messages: 11" in captured.out
+    assert "Pad 10 / ch 10 wire 9" in captured.out
+    assert (
+        "Type SEND to transmit 11 Rytm twelve-pad runtime starter/source " "CC message(s)"
+    ) in captured.out
 
 
 def test_app_main_arm_dual_machine_snapshot_send_refuses_blocked_plan_before_port_open(

@@ -208,6 +208,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional twelve-pad Rytm runtime discovery amount from 0.0 to 1.0.",
     )
     parser.add_argument(
+        "--runtime-pad",
+        type=int,
+        metavar="PAD",
+        help=(
+            "With --twelve-pad-rytm-runtime, limit the guarded Rytm runtime "
+            "plan to one pad, 1-12."
+        ),
+    )
+    parser.add_argument(
         "--engine-cycle-starter-profile",
         metavar="PROFILE",
         help=(
@@ -321,7 +330,8 @@ def _print_passive_menu() -> None:
             "  optional: --engine-cycle-source-starters adds SRC-slot source " "starter values",
             "- --twelve-pad-rytm-runtime  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad runtime plan with auto starter/source values",
-            "  required: --runtime-style <style>; optional: --runtime-discovery <0..1>",
+            "  required: --runtime-style <style>; optional: "
+            "--runtime-discovery <0..1>; --runtime-pad <1-12>",
             "- --analog-four-runtime  with --arm/--dry-run, send a guarded "
             "Analog Four Track 1-4 runtime plan",
             "  optional: --analog-four-profile <profile>; "
@@ -388,6 +398,7 @@ def _rytm_engine_cycle_request_from_args(
             "engine_cycle_surface": "twelve_pad_rytm_runtime",
             "engine_cycle_style": args.runtime_style,
             "engine_cycle_discovery": args.runtime_discovery,
+            "runtime_pad": args.runtime_pad,
             "engine_cycle_starter_profile": "auto",
             "engine_cycle_source_starters": True,
         }
@@ -472,13 +483,26 @@ def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
     if starter_profile is None:
         return plan
 
-    from .essence.rytm_engine_cycle_starter_profiles import build_rytm_engine_cycle_starter_plan
+    from .essence.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+        filter_rytm_engine_cycle_starter_plan_to_pad,
+    )
 
-    return build_rytm_engine_cycle_starter_plan(
+    starter_plan = build_rytm_engine_cycle_starter_plan(
         plan,
         profile=str(starter_profile),
         include_engine_source_starters=bool(request.get("engine_cycle_source_starters")),
     )
+    runtime_pad = request.get("runtime_pad")
+    if (
+        request.get("engine_cycle_surface") == "twelve_pad_rytm_runtime"
+        and runtime_pad is not None
+    ):
+        return filter_rytm_engine_cycle_starter_plan_to_pad(
+            starter_plan,
+            pad=int(runtime_pad),
+        )
+    return starter_plan
 
 
 def _build_analog_four_runtime_plan_from_request(request: dict[str, object]):
@@ -1651,6 +1675,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.runtime_discovery is not None and not args.twelve_pad_rytm_runtime:
         sys.stderr.write("--runtime-discovery requires --twelve-pad-rytm-runtime.\n")
+        return 2
+
+    if args.runtime_pad is not None and not args.twelve_pad_rytm_runtime:
+        sys.stderr.write("--runtime-pad requires --twelve-pad-rytm-runtime.\n")
+        return 2
+
+    if args.runtime_pad is not None and args.runtime_pad not in range(1, 13):
+        sys.stderr.write("--runtime-pad must be between 1 and 12.\n")
         return 2
 
     if args.analog_four_profile is not None and not (

@@ -212,6 +212,34 @@ def test_engine_source_starters_cover_all_os172_matrix_machine_slots():
     )
 
 
+def test_engine_cycle_starter_plan_can_filter_to_one_runtime_pad():
+    from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
+    from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (
+        build_rytm_engine_cycle_starter_plan,
+        filter_rytm_engine_cycle_starter_plan_to_pad,
+    )
+
+    starter_plan = build_rytm_engine_cycle_starter_plan(
+        build_rytm_engine_cycle_plan("Birmingham dark techno", discovery=0.35),
+        profile="auto",
+        include_engine_source_starters=True,
+    )
+
+    pad10_plan = filter_rytm_engine_cycle_starter_plan_to_pad(starter_plan, pad=10)
+
+    assert pad10_plan.pad_count == 1
+    assert pad10_plan.event_count == 11
+    assert pad10_plan.machine_select_event_count == 1
+    assert pad10_plan.engine_source_event_count == 4
+    assert pad10_plan.starter_parameter_event_count == 6
+    assert pad10_plan.pads[0].pad == 10
+    assert pad10_plan.pads[0].role_label == "OH / Open hihat"
+    assert {event.pad for event in pad10_plan.pads[0].events} == {10}
+
+    with pytest.raises(ValueError, match="Pad must be between 1 and 12"):
+        filter_rytm_engine_cycle_starter_plan_to_pad(starter_plan, pad=13)
+
+
 def test_engine_cycle_starter_mock_capture_emits_machine_select_then_shaping():
     from rytm_randomizer.essence.rytm_engine_cycle_plan import build_rytm_engine_cycle_plan
     from rytm_randomizer.essence.rytm_engine_cycle_starter_profiles import (

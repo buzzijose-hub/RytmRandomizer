@@ -616,6 +616,34 @@ def build_rytm_engine_cycle_starter_plan(
     )
 
 
+def filter_rytm_engine_cycle_starter_plan_to_pad(
+    plan: RytmEngineCycleStarterPlan,
+    *,
+    pad: int,
+) -> RytmEngineCycleStarterPlan:
+    """Return a starter plan scoped to one Rytm runtime pad."""
+
+    if not isinstance(plan, RytmEngineCycleStarterPlan):
+        raise TypeError("plan must be a RytmEngineCycleStarterPlan")
+    if pad not in range(1, 13):
+        raise ValueError("Pad must be between 1 and 12")
+
+    selected = tuple(pad_plan for pad_plan in plan.pads if pad_plan.pad == pad)
+    if not selected:
+        raise ValueError(f"Pad {pad} is not present in the starter plan")
+
+    return RytmEngineCycleStarterPlan(
+        style_prompt=plan.style_prompt,
+        matched_profile_labels=plan.matched_profile_labels,
+        essence_tags=plan.essence_tags,
+        discovery=plan.discovery,
+        starter_profile_key=plan.starter_profile_key,
+        starter_profile_label=plan.starter_profile_label,
+        starter_profile_description=plan.starter_profile_description,
+        pads=selected,
+    )
+
+
 def capture_rytm_engine_cycle_starter_mock_messages(
     plan: RytmEngineCycleStarterPlan,
 ) -> MockMidiSender:
@@ -823,6 +851,7 @@ __all__ = [
     "build_rytm_engine_cycle_starter_plan",
     "capture_rytm_engine_cycle_starter_mock_messages",
     "choose_rytm_starter_profile_for_style",
+    "filter_rytm_engine_cycle_starter_plan_to_pad",
     "format_rytm_engine_cycle_starter_plan_error",
     "format_rytm_engine_cycle_starter_plan_report",
     "get_rytm_starter_profile",
