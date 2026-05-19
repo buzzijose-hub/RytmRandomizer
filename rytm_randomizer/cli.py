@@ -1782,6 +1782,34 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "analog-four-runtime-report":
+        from .analog_four.runtime_plan import (
+            build_analog_four_runtime_plan,
+            capture_analog_four_runtime_mock_messages,
+            format_analog_four_runtime_error,
+            format_analog_four_runtime_report,
+        )
+
+        if len(args) not in (1, 3):
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+        if len(args) == 3 and args[1] != "--profile":
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        profile = "balanced" if len(args) == 1 else args[2]
+        try:
+            plan = build_analog_four_runtime_plan(profile=profile)
+        except ValueError as exc:
+            sys.stderr.write("\n".join(format_analog_four_runtime_error(str(exc))))
+            sys.stderr.write("\n")
+            return 1
+
+        sender = capture_analog_four_runtime_mock_messages(plan)
+        sys.stdout.write("\n".join(format_analog_four_runtime_report(plan, sender)))
+        sys.stdout.write("\n")
+        return 0
+
     if args == ["list-commands"]:
         sys.stdout.write("\n".join(format_registry_list_report("commands", "command list")))
         sys.stdout.write("\n")

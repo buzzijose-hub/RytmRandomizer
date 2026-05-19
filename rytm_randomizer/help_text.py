@@ -34,7 +34,7 @@ USAGE = (
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
-    "analog-four-reference-report | "
+    "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -111,6 +111,8 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
   python -m rytm_randomizer.cli analog-four-reference-report
+  python -m rytm_randomizer.cli analog-four-runtime-report
+  python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -195,6 +197,8 @@ Commands:
                      Preview the passive style-driven 12-pad Rytm runtime stream.
   analog-four-reference-report
                      Print the passive Analog Four MKII reference intake report.
+  analog-four-runtime-report
+                     Preview passive Analog Four Track 1-4 runtime CC messages.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -893,6 +897,31 @@ Safety:
   passive/read-only
   reference intake only
   no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-runtime-report": """RytmRandomizer passive CLI: analog-four-runtime-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-runtime-report
+  python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-report --help
+
+Behavior:
+  Builds a passive/mock Analog Four Track 1-4 runtime stream from manual-backed
+  starter profiles. It captures the planned CC events into an inert mock sender
+  only. It does not open ports, send MIDI, receive SysEx, write SysEx, or mutate
+  hardware.
+
+Safety:
+  passive/read-only
+  passive/mock A4 runtime planning only
+  mock sender only
+  no MIDI sending
+  no MIDI receive
   no port opening
   no command execution
   no hardware mutation

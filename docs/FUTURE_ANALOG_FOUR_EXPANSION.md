@@ -1,11 +1,12 @@
 # Future Analog Four Expansion
 
-> STATUS: FUTURE PRODUCT DIRECTION WITH PASSIVE REFERENCE INTAKE AND ONE
-> GUARDED HARDWARE SMOKE PATH. This checkpoint now has a read-only
-> `analog-four-reference-report` plus an explicitly armed
-> `--analog-four-smoke` channel validation path. It still does not add Analog
-> Four runtime mutation, engine cycling, snapshot capture, SysEx
-> receive/write behavior, cross-device scene execution, or kit design.
+> STATUS: FUTURE PRODUCT DIRECTION WITH PASSIVE REFERENCE INTAKE, MOCK RUNTIME
+> PLANNING, AND ONE GUARDED HARDWARE SMOKE PATH. This checkpoint now has a
+> read-only `analog-four-reference-report`, a mock-only
+> `analog-four-runtime-report`, and an explicitly armed `--analog-four-smoke`
+> channel validation path. It still does not add real Analog Four runtime
+> mutation, engine cycling, snapshot capture, SysEx receive/write behavior,
+> cross-device scene execution, or kit design.
 
 ## Purpose
 
@@ -29,8 +30,26 @@ reference:
   filters, envelopes, send space, and LFO motion
 - explicit blockers before any active A4 behavior
 
-This is reference-known/mock-only metadata. It gives us enough structure to
-plan a mock A4 runtime next without pretending that hardware sending is ready.
+This is reference-known/mock-only metadata. It now feeds the mock A4 runtime
+plan without pretending that hardware sending is ready.
+
+## Current Passive Runtime Plan
+
+`python -m rytm_randomizer.cli analog-four-runtime-report [--profile <profile>]`
+turns the manual-backed starter profiles into an inert Track 1-4 CC stream.
+The first profiles are `balanced`, `birmingham-dark`, `detroit-classic`, and
+`peak-time`.
+
+The report shows:
+
+- source/manual attribution from the A4 reference intake
+- Track 1-4 roles and wire channels
+- 20 planned starter events per profile
+- the exact mock CC stream that future guarded senders can validate against
+
+This is mock-only planning. It does not open an A4 port, send MIDI, receive
+live SysEx, write SysEx, mutate hardware, run cross-device scenes, or claim
+snapshot capture.
 
 ## Current Guarded Hardware Smoke Path
 
@@ -126,7 +145,7 @@ Analog Four must inherit the same safety stance:
 
 ## Required Future Work Before Implementation
 
-Before any A4 runtime mutation work, create a separate plan that answers:
+Before any real A4 runtime mutation work, create a separate plan that answers:
 
 - Which MIDI transport is used: CC, NRPN, SysEx, or a combination?
 - Which parameters are safe enough for first mutation?
@@ -148,16 +167,16 @@ outside the repository.
 4. Use passive style-intent and reference-analysis reports to clarify which A4
    roles matter most before mapping parameters.
 5. Completed: draft a passive A4 reference-known parameter and safety intake.
-6. Design A4 dry-run/mock representation before real MIDI.
+6. Completed: design the first A4 dry-run/mock representation before real MIDI.
 7. Completed: add a narrow, explicitly armed A4 pan-only hardware smoke path.
 8. Build a cross-device readiness gate that keeps Rytm and A4 arming separate.
-9. Only then consider mock A4 mutation and broader hardware validation paths.
+9. Only then consider broader A4 mutation and hardware validation paths.
 
 ## Decision
 
-Analog Four remains part of the dream project, but not part of the current
-runtime mutation scope.
+Analog Four remains part of the dream project, but real A4 runtime mutation is
+not part of the current active hardware scope.
 
-The next practical milestone is turning the passive A4 reference intake into a
-mock-only A4 message plan, while using the pan-only smoke path to confirm
-basic Track 1-4 MIDI targeting on hardware.
+The next practical milestone is turning the mock-only A4 runtime plan into a
+guarded active-send readiness path, while preserving separate arming for Rytm
+and Analog Four.

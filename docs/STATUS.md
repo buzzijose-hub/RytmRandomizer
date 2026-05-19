@@ -4,6 +4,13 @@ Last updated: 2026-05-18. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-18: added the passive Analog Four Track 1-4 runtime planner.
+  `analog-four-runtime-report [--profile <profile>]` turns the manual-backed
+  A4 starter profiles into a mock-only CC stream for Tracks 1-4, including
+  Track Level, oscillator/noise, filter, envelope/send, and pan starter moves
+  depending on the selected profile. This is passive/mock planning only: no
+  A4 port opening, MIDI sending, live SysEx receive, SysEx writes, hardware
+  mutation, or cross-device scene execution was added.
 - 2026-05-18: corrected the Rytm 12-pad engine model against Analog Rytm MKII
   OS 1.72. The machine catalog now records the manual pad/track compatibility
   table, and the active engine-cycle/runtime planners enforce it before
