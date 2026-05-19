@@ -6,6 +6,8 @@ no MIDI, receives no SysEx, writes no SysEx, and mutates no hardware.
 
 from __future__ import annotations
 
+from .runtime_plan import build_analog_four_runtime_plan
+
 SUPPORTED_PROFILES = ("balanced", "birmingham-dark", "detroit-classic", "peak-time")
 DEFAULT_VALIDATION_PROFILE = "peak-time"
 
@@ -13,6 +15,8 @@ DEFAULT_VALIDATION_PROFILE = "peak-time"
 def format_analog_four_runtime_validation_guide() -> list[str]:
     """Return the deterministic A4 runtime hardware validation guide."""
 
+    plan = build_analog_four_runtime_plan(DEFAULT_VALIDATION_PROFILE)
+    single_track_message_count = len(plan.tracks[0].events)
     lines = [
         "RytmRandomizer passive Analog Four Runtime Validation Guide",
         "Purpose:",
@@ -21,8 +25,12 @@ def format_analog_four_runtime_validation_guide() -> list[str]:
         "Supported profiles:",
         f"- {', '.join(SUPPORTED_PROFILES)}",
         f"Recommended profile: {DEFAULT_VALIDATION_PROFILE}",
-        "Expected single-track messages: 5",
-        "Expected full-profile messages: 20",
+        f"Expected single-track messages: {single_track_message_count}",
+        f"Expected full-profile messages: {plan.event_count}",
+        "Profile preflight:",
+        f"python -m rytm_randomizer.cli analog-four-runtime-report --profile {DEFAULT_VALIDATION_PROFILE}",
+        "Track identity sanity checks:",
+        "- Runtime labels below come from the passive A4 runtime plan.",
         "Passive preview before active validation:",
         (
             "python -m rytm_randomizer.cli analog-four-runtime-report "
@@ -30,20 +38,21 @@ def format_analog_four_runtime_validation_guide() -> list[str]:
         ),
         "Single-track validation order:",
     ]
-    for track in range(1, 5):
+    for track in plan.tracks:
+        track_label = f"Track {track.track} / {track.role_label}"
         lines.extend(
             [
-                f"- Track {track} dry-run:",
+                f"- {track_label} dry-run:",
                 (
                     "rytm-randomizer --dry-run --analog-four-runtime "
                     f"--analog-four-profile {DEFAULT_VALIDATION_PROFILE} "
-                    f"--analog-four-runtime-track {track}"
+                    f"--analog-four-runtime-track {track.track}"
                 ),
-                f"- Track {track} armed send:",
+                f"- {track_label} armed send:",
                 (
                     "rytm-randomizer --arm --analog-four-runtime "
                     f"--analog-four-profile {DEFAULT_VALIDATION_PROFILE} "
-                    f"--analog-four-runtime-track {track}"
+                    f"--analog-four-runtime-track {track.track}"
                 ),
             ]
         )

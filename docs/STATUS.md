@@ -4,6 +4,10 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made the passive Analog Four runtime validation guide match the
+  Rytm operator clarity pass. It now prints the profile preflight command and
+  labels each one-track dry-run/armed send with the planned runtime role, such
+  as `Track 3 / large motion layer`, before any guarded A4 hardware send.
 - 2026-05-19: made the passive Twelve Pad Rytm runtime validation guide
   operator-ready for tonight's hardware pass. It now prints the passive
   engine-matrix preflight command and labels every one-pad dry-run/armed send

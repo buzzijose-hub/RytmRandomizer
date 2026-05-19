@@ -54,6 +54,10 @@ def test_a4_runtime_validation_guide_report_lists_single_track_sequence():
     assert (
         "python -m rytm_randomizer.cli analog-four-runtime-report " "--profile peak-time --track 1"
     ) in report
+    assert "Profile preflight:" in report
+    assert "python -m rytm_randomizer.cli analog-four-runtime-report --profile peak-time" in report
+    assert "Track identity sanity checks:" in report
+    assert "- Runtime labels below come from the passive A4 runtime plan." in report
     assert (
         "rytm-randomizer --dry-run --analog-four-runtime "
         "--analog-four-profile peak-time --analog-four-runtime-track 1"
@@ -68,12 +72,31 @@ def test_a4_runtime_validation_guide_report_lists_single_track_sequence():
     assert "- no port opening" in report
 
 
+def test_a4_runtime_validation_guide_prints_actual_track_roles():
+    from rytm_randomizer.analog_four.runtime_validation_guide import (
+        format_analog_four_runtime_validation_guide,
+    )
+
+    report = format_analog_four_runtime_validation_guide()
+    joined = "\n".join(report)
+
+    assert "- Track 1 / bright bass anchor dry-run:" in joined
+    assert "- Track 2 / peak stab pressure dry-run:" in joined
+    assert "- Track 3 / large motion layer dry-run:" in joined
+    assert "- Track 4 / bright riser texture dry-run:" in joined
+
+
 def test_a4_runtime_validation_guide_cli_prints_report():
     result = run_cli("analog-four-runtime-validation-guide")
 
     assert result.returncode == 0
     assert "RytmRandomizer passive Analog Four Runtime Validation Guide" in result.stdout
     assert "rytm-randomizer --arm --analog-four-runtime" in result.stdout
+    assert (
+        "python -m rytm_randomizer.cli analog-four-runtime-report --profile peak-time"
+        in result.stdout
+    )
+    assert "Track 3 / large motion layer" in result.stdout
     assert "Track 1, Track 2, Track 3, Track 4, then full profile" in result.stdout
     assert "- no port opening" in result.stdout
     assert result.stderr == ""
