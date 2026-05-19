@@ -4,6 +4,11 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: pinned the guarded armed A4-only snapshot path with app-level
+  regression coverage. `--arm --dual-machine-snapshot-send --snapshot-target
+  analog-four` can build from `--analog-four-path`/`--analog-four-slot`
+  without a Rytm snapshot path, refuses unverified saved-offset candidates
+  before opening any port, and keeps the Rytm side out of the path.
 - 2026-05-19: made the passive Analog Four runtime validation guide match the
   Rytm operator clarity pass. It now prints the profile preflight command and
   labels each one-track dry-run/armed send with the planned runtime role, such

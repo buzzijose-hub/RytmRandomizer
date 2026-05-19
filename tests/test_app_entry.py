@@ -2159,6 +2159,62 @@ def test_app_main_arm_dual_machine_snapshot_send_refuses_blocked_plan_before_por
     assert "Emitted real MIDI messages: 0" in captured.out
 
 
+def test_app_main_arm_dual_machine_snapshot_send_accepts_a4_only_snapshot_without_rytm_path(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(_make_a4_kit_record(kit_name="APP A4 SOLO ARM"))
+
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return _RecordingPort()
+
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--dual-machine-snapshot-send",
+                "--snapshot-depth",
+                "micro",
+                "--snapshot-target",
+                "analog-four",
+                "--analog-four-path",
+                str(a4_path),
+                "--analog-four-slot",
+                "1",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert calls["list"] == 0
+    assert calls["open"] == []
+    assert "Target: analog-four" in captured.out
+    assert "Reason: blocked_by_unverified_candidates" in captured.out
+    assert "Port: <not-opened>" in captured.out
+    assert "Emitted real MIDI messages: 0" in captured.out
+    assert "--dual-machine-snapshot-send requires --snapshot-path" not in captured.err
+
+
 def test_app_main_arm_dual_machine_snapshot_send_both_target_refuses_blocked_candidates_before_port_open(
     tmp_path,
     monkeypatch,
