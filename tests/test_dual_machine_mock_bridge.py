@@ -201,6 +201,47 @@ def test_dual_bridge_uses_a4_snapshot_when_path_is_supplied(tmp_path):
     assert first_a4.metadata["sends_real_midi"] is False
 
 
+def test_dual_bridge_report_marks_verified_a4_snapshot_mappings(tmp_path):
+    from rytm_randomizer.analog_four.saved_offset_mappings import (
+        AnalogFourVerifiedSavedOffsetMapping,
+    )
+    from rytm_randomizer.dual_machine.mock_bridge import (
+        build_dual_machine_mock_bridge,
+        format_dual_machine_mock_bridge_report,
+    )
+
+    a4_path = tmp_path / "a4-kits.syx"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="A4 VERIFIED",
+            track_values={1: {20: 64}},
+        )
+    )
+
+    bridge = build_dual_machine_mock_bridge(
+        None,
+        slot=None,
+        depth="micro",
+        target="analog-four",
+        analog_four_sysex_path=str(a4_path),
+        analog_four_slot=1,
+        analog_four_verified_mappings=(
+            AnalogFourVerifiedSavedOffsetMapping(
+                track=1,
+                relative_offset=20,
+                parameter_name="Filter 1 Frequency",
+                cc=18,
+            ),
+        ),
+    )
+    report = "\n".join(format_dual_machine_mock_bridge_report(bridge))
+
+    assert "Analog Four mapping: verified_cc_mapping" in report
+    assert "Filter 1 Frequency: CC18 -> 67 from offset +20" in report
+    assert "- verified saved offsets emit mapped CC mock events" in report
+    assert "- no CC mapping claimed" not in report
+
+
 def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
     from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,

@@ -216,6 +216,56 @@ def test_a4_saved_snapshot_candidates_are_blocked_but_rytm_ccs_remain_visible(tm
     assert "Track 1" in blocked[0].label
 
 
+def test_a4_only_saved_snapshot_is_ready_when_all_offsets_are_verified(tmp_path):
+    from rytm_randomizer.analog_four.saved_offset_mappings import (
+        AnalogFourVerifiedSavedOffsetMapping,
+    )
+    from rytm_randomizer.dual_machine.active_send_plan import (
+        build_dual_machine_active_send_plan,
+    )
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
+
+    a4_path = tmp_path / "a4-kits.syx"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="A4 MAPPED",
+            track_values={1: {20: 64}},
+        )
+    )
+
+    bridge = build_dual_machine_mock_bridge(
+        None,
+        slot=None,
+        depth="micro",
+        target="analog-four",
+        analog_four_sysex_path=str(a4_path),
+        analog_four_slot=1,
+        analog_four_verified_mappings=(
+            AnalogFourVerifiedSavedOffsetMapping(
+                track=1,
+                relative_offset=20,
+                parameter_name="Filter 1 Frequency",
+                cc=18,
+            ),
+        ),
+    )
+    plan = build_dual_machine_active_send_plan(bridge)
+
+    assert plan.ready is True
+    assert plan.readiness_reason == "all_active_devices_mapping_ready"
+    assert plan.eligible_message_count == 1
+    assert plan.blocked_event_count == 0
+    assert plan.combined_event_count == 1
+    event = plan.events[0]
+    assert event.device == "Analog Four MKII"
+    assert event.message_type == "cc"
+    assert event.channel == 0
+    assert event.control == 18
+    assert event.value == 67
+    assert event.source == "saved-kit snapshot"
+    assert event.label == "Track 1 / BASS LOW / Filter 1 Frequency"
+
+
 def test_active_send_plan_report_shows_event_policy_and_safety(tmp_path):
     from rytm_randomizer.dual_machine.active_send_plan import (
         build_dual_machine_active_send_plan,

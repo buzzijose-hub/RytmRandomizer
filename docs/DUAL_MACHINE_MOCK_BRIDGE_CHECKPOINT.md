@@ -48,6 +48,12 @@ events. These saved-offset events are still marked `candidate_unverified`
 until the exact A4 parameter mapping is promoted from candidate offsets to
 validated named CC mappings.
 
+The promotion path is now wired: when a controlled-diff-proven A4 saved offset
+is supplied to the snapshot planner, the bridge turns that one offset into a
+named mapped CC mock event. Any remaining unverified saved offsets stay
+blocked, so guarded sending only becomes ready when the selected target plan
+contains mapped CC events and no candidate events.
+
 The first safe starter plan is:
 
 - Track 1: bass / low tonal anchor
@@ -84,6 +90,6 @@ This report is passive/read-only:
 
 ## Next Best Slice
 
-The best next technical slice is to promote selected Analog Four saved-offset
-candidates into validated named parameter mappings through controlled hardware
-tests, then let the guarded sender emit those mapped A4 snapshot changes.
+The best next technical slice is to run controlled hardware/export tests for
+one low-risk Analog Four parameter at a time, record the proven saved offset,
+and add only those verified mappings to the registry.

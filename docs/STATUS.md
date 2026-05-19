@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added the verified Analog Four saved-offset mapping promotion
+  path. The A4 snapshot planner can now accept controlled-diff-proven
+  saved-offset mappings and promote those specific offsets into named CC mock
+  events, while unverified offsets remain `candidate_unverified` and continue
+  blocking guarded hardware sends. The default verified mapping registry is
+  intentionally empty until hardware/operator evidence proves individual A4
+  saved offsets.
 - 2026-05-19: refreshed the manual hardware validation checklist for the
   latest operator-ready runtime guides. The checklist now calls out the Rytm
   engine-matrix preflight, Pad 10's `OH / Open hihat` identity, the A4

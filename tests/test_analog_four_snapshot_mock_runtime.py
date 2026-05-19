@@ -122,6 +122,56 @@ def test_analog_four_snapshot_mock_runtime_captures_saved_offset_candidates():
     assert first.metadata["sends_real_midi"] is False
 
 
+def test_analog_four_snapshot_mock_runtime_emits_verified_saved_offset_as_cc():
+    from rytm_randomizer.analog_four.saved_offset_mappings import (
+        AnalogFourVerifiedSavedOffsetMapping,
+    )
+    from rytm_randomizer.analog_four.snapshot_mock_runtime import (
+        capture_analog_four_snapshot_mock_messages,
+    )
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
+        build_analog_four_snapshot_mutation_plan_from_bytes,
+    )
+
+    plan = build_analog_four_snapshot_mutation_plan_from_bytes(
+        make_a4_kit_record(
+            kit_name="MOCK MAPPED",
+            track_values={1: {20: 64, 22: 80}},
+        ),
+        slot=1,
+        depth="micro",
+        verified_mappings=(
+            AnalogFourVerifiedSavedOffsetMapping(
+                track=1,
+                relative_offset=20,
+                parameter_name="Filter 1 Frequency",
+                cc=18,
+            ),
+        ),
+    )
+
+    sender = capture_analog_four_snapshot_mock_messages(plan)
+
+    mapped, unmapped = sender.sent_messages
+    assert mapped.type == "cc"
+    assert mapped.channel == 0
+    assert mapped.control == 18
+    assert mapped.value == 67
+    assert mapped.metadata["source_kind"] == "analog_four_snapshot_mutation_plan"
+    assert mapped.metadata["device"] == "Analog Four MKII"
+    assert mapped.metadata["track"] == 1
+    assert mapped.metadata["parameter"] == "Filter 1 Frequency"
+    assert mapped.metadata["saved_offset"] == 20
+    assert mapped.metadata["baseline_value"] == 64
+    assert mapped.metadata["planned_value"] == 67
+    assert mapped.metadata["mapping_status"] == "verified_cc_mapping"
+    assert mapped.metadata["cc_mapping_claimed"] is True
+    assert mapped.metadata["sends_real_midi"] is False
+    assert unmapped.type == "saved_offset_candidate"
+    assert unmapped.control == 22
+    assert unmapped.metadata["mapping_status"] == "candidate_unverified"
+
+
 def test_analog_four_snapshot_mock_runtime_captures_one_filtered_track():
     from rytm_randomizer.analog_four.snapshot_mock_runtime import (
         capture_analog_four_snapshot_mock_messages,

@@ -16,6 +16,16 @@ The project can now scan saved Analog Four MKII kit variations and identify save
 - Reports varying offsets across saved kits
 - Marks every offset as `candidate_unverified`
 
+## Promotion Path
+
+The codebase now has a verified saved-offset mapping registry and lookup path.
+The registry is empty by default, so no saved Analog Four offset is guessed or
+sent as a CC until controlled evidence promotes it. When a future controlled
+diff proves a track/offset pair maps to a named CC parameter, that exact entry
+can be supplied to the snapshot planner. The planner then emits a mapped CC
+mock event for that saved offset while all other offsets remain
+`candidate_unverified`.
+
 ## Safety Boundary
 
 - passive/read-only
@@ -31,4 +41,8 @@ The project can now scan saved Analog Four MKII kit variations and identify save
 
 ## Next Slice
 
-Use the controlled diff report with baseline/variant exports to promote specific offsets from `candidate_unverified` to named saved-parameter mappings. Analog Four captured-value mutation should wait until those named mappings are proven.
+Use controlled baseline/variant exports to prove the first real A4 saved
+offset mappings, starting with one low-risk Track 1 parameter such as Filter 1
+Frequency CC18 or Amp Pan CC10. Add only the proven track/offset/CC entry, then
+let the existing guarded send plan decide whether the selected snapshot has no
+remaining unverified offsets.

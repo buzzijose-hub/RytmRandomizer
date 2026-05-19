@@ -9,9 +9,14 @@ write SysEx, or mutate hardware.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..analog_four.saved_offset_mappings import (
+    VERIFIED_MAPPING_STATUS,
+    AnalogFourVerifiedSavedOffsetMapping,
+)
 from ..analog_four.snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
@@ -67,6 +72,8 @@ class AnalogFourSnapshotBridgeChange:
     delta: int
     mapping_status: str
     source: str
+    parameter_name: str | None = None
+    cc: int | None = None
 
 
 AnalogFourBridgeChange = AnalogFourStarterChange | AnalogFourSnapshotBridgeChange
@@ -135,6 +142,7 @@ def build_dual_machine_mock_bridge(
     analog_four_profile: str | None = "balanced",
     rytm_pad: int | None = None,
     analog_four_track: int | None = None,
+    analog_four_verified_mappings: Iterable[AnalogFourVerifiedSavedOffsetMapping] | None = None,
 ) -> DualMachineMockBridge:
     """Build the passive combined mock bridge from a saved Rytm kit."""
 
@@ -189,6 +197,7 @@ def build_dual_machine_mock_bridge(
             analog_four_sysex_path,
             slot=analog_four_slot,
             depth=depth,
+            verified_mappings=analog_four_verified_mappings,
         )
         if analog_four_track is not None:
             analog_four_plan = filter_analog_four_snapshot_mutation_plan_to_track(
@@ -198,7 +207,7 @@ def build_dual_machine_mock_bridge(
         analog_four_source = "saved-kit snapshot candidates"
         analog_four_tracks = build_analog_four_snapshot_bridge_plan(analog_four_plan)
         analog_four_kit_name = analog_four_plan.kit_name
-        analog_four_mapping_status = "candidate_unverified"
+        analog_four_mapping_status = _analog_four_snapshot_mapping_status(analog_four_plan)
         analog_four_starter_profile_key = None
         analog_four_starter_profile_label = None
 
@@ -287,6 +296,8 @@ def build_analog_four_snapshot_bridge_plan(
                 delta=change.delta,
                 mapping_status=change.mapping_status,
                 source=change.source,
+                parameter_name=change.parameter_name,
+                cc=change.cc,
             )
             for change in track.changes
         )
@@ -417,10 +428,8 @@ def format_dual_machine_mock_bridge_report(bridge: DualMachineMockBridge) -> lis
         lines.extend(
             [
                 "Analog Four snapshot policy:",
-                "- saved-offset candidate events only",
                 f"- {bridge.analog_four_mapping_status}",
-                "- no parameter names claimed",
-                "- no CC mapping claimed",
+                *_analog_four_snapshot_policy_lines(bridge.analog_four_mapping_status),
             ]
         )
     lines.extend(
@@ -463,6 +472,12 @@ def _format_message_preview(message) -> str:
             f"{metadata['baseline_value']} -> {metadata['planned_value']} "
             f"(delta {metadata['delta']:+d}), {metadata['mapping_status']}"
         )
+    if metadata.get("source") == "saved-kit snapshot":
+        return (
+            f"- Analog Four Track {metadata['track']} / {metadata['role']} / "
+            f"{metadata['parameter']}: CC{message.control} -> {message.value} "
+            f"from offset +{metadata['saved_offset']} ({metadata['mapping_status']})"
+        )
     return (
         f"- Analog Four Track {metadata['track']} / {metadata['role']} / "
         f"{metadata['parameter']}: CC{message.control} -> {message.value}"
@@ -472,30 +487,70 @@ def _format_message_preview(message) -> str:
 def _build_analog_four_snapshot_message(
     change: AnalogFourSnapshotBridgeChange,
 ) -> MidiMessage:
+    metadata = {
+        "device": "Analog Four MKII",
+        "track": change.track,
+        "midi_channel": change.midi_channel,
+        "wire_channel": change.wire_channel,
+        "role": change.track_name or "<blank>",
+        "track_name": change.track_name,
+        "saved_offset": change.relative_offset,
+        "word_index": change.word_index,
+        "baseline_value": change.baseline_value,
+        "planned_value": change.planned_value,
+        "delta": change.delta,
+        "mapping_status": change.mapping_status,
+        "parameter_source": change.source,
+        "mock_only": True,
+        "sends_real_midi": False,
+    }
+    if change.cc is not None and change.parameter_name is not None:
+        return build_cc_message(
+            channel=change.wire_channel,
+            control=change.cc,
+            value=change.planned_value,
+            metadata={
+                **metadata,
+                "parameter": change.parameter_name,
+                "source": "saved-kit snapshot",
+                "cc_mapping_claimed": True,
+            },
+        )
     return MidiMessage(
         message_type="saved_offset_candidate",
         channel=change.wire_channel,
         control=change.relative_offset,
         value=change.planned_value,
         metadata={
-            "device": "Analog Four MKII",
-            "track": change.track,
-            "midi_channel": change.midi_channel,
-            "wire_channel": change.wire_channel,
-            "role": change.track_name or "<blank>",
-            "track_name": change.track_name,
-            "saved_offset": change.relative_offset,
-            "word_index": change.word_index,
-            "baseline_value": change.baseline_value,
-            "planned_value": change.planned_value,
-            "delta": change.delta,
-            "mapping_status": change.mapping_status,
-            "parameter_source": change.source,
+            **metadata,
             "mock_only": True,
             "cc_mapping_claimed": False,
-            "sends_real_midi": False,
         },
     )
+
+
+def _analog_four_snapshot_mapping_status(plan: AnalogFourSnapshotMutationPlan) -> str:
+    statuses = {change.mapping_status for track in plan.tracks for change in track.changes}
+    if statuses == {VERIFIED_MAPPING_STATUS}:
+        return VERIFIED_MAPPING_STATUS
+    if VERIFIED_MAPPING_STATUS in statuses:
+        return "mixed_verified_and_candidate"
+    return "candidate_unverified"
+
+
+def _analog_four_snapshot_policy_lines(mapping_status: str) -> list[str]:
+    if mapping_status == VERIFIED_MAPPING_STATUS:
+        return ["- verified saved offsets emit mapped CC mock events"]
+    if mapping_status == "mixed_verified_and_candidate":
+        return [
+            "- verified saved offsets emit mapped CC mock events",
+            "- unverified saved offsets remain candidate events",
+        ]
+    return [
+        "- saved-offset candidate events only",
+        "- no parameter names claimed",
+        "- no CC mapping claimed",
+    ]
 
 
 def _analog_four_snapshot_header_lines(bridge: DualMachineMockBridge) -> list[str]:

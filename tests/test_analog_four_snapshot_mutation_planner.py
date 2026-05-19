@@ -119,6 +119,43 @@ def test_analog_four_snapshot_mutation_plan_uses_captured_values_not_starters():
     assert track2_change.planned_value == 35
 
 
+def test_analog_four_snapshot_mutation_plan_promotes_verified_saved_offset_mapping():
+    from rytm_randomizer.analog_four.saved_offset_mappings import (
+        AnalogFourVerifiedSavedOffsetMapping,
+    )
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
+        build_analog_four_snapshot_mutation_plan_from_bytes,
+    )
+
+    plan = build_analog_four_snapshot_mutation_plan_from_bytes(
+        make_a4_kit_record(
+            kit_name="MAPPED A4",
+            track_values={1: {20: 64, 22: 80}},
+        ),
+        slot=1,
+        depth="micro",
+        verified_mappings=(
+            AnalogFourVerifiedSavedOffsetMapping(
+                track=1,
+                relative_offset=20,
+                parameter_name="Filter 1 Frequency",
+                cc=18,
+            ),
+        ),
+    )
+
+    mapped, unmapped = plan.tracks[0].changes
+    assert mapped.relative_offset == 20
+    assert mapped.parameter_name == "Filter 1 Frequency"
+    assert mapped.cc == 18
+    assert mapped.mapping_status == "verified_cc_mapping"
+    assert mapped.source == "saved_parameter_offset_verified_cc_mapping"
+    assert unmapped.relative_offset == 22
+    assert unmapped.parameter_name is None
+    assert unmapped.cc is None
+    assert unmapped.mapping_status == "candidate_unverified"
+
+
 def test_analog_four_snapshot_mutation_plan_can_filter_to_one_track():
     from rytm_randomizer.analog_four.snapshot_mutation_planner import (
         build_analog_four_snapshot_mutation_plan_from_bytes,
