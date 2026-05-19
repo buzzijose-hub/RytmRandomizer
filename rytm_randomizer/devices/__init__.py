@@ -19,12 +19,15 @@ from __future__ import annotations
 # ``register_device`` call so ``get_device("analog_rytm_mk2")`` resolves
 # out of the box. Side-effect import is the documented registry pattern.
 from . import analog_rytm  # noqa: F401 - import for side effect (registration)
-from .base import Device, MidiOutbox
+from .base import Device, MessageRenderer, MidiOutbox, MutationPlanner, SnapshotDecoder
 from .registry import all_devices, get_device, register_device
 
 __all__ = [
     "Device",
+    "MessageRenderer",
     "MidiOutbox",
+    "MutationPlanner",
+    "SnapshotDecoder",
     "all_devices",
     "get_device",
     "register_device",
