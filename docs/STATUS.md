@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive Analog Four saved-offset mapping promotion
+  report. `analog-four-saved-offset-mapping-promotion-report <before> <after>
+  --slot <1-128> --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>
+  --limit <n>` runs the controlled diff and prints an
+  `AnalogFourVerifiedSavedOffsetMapping` entry only when exactly one saved
+  offset changed for the selected track/parameter. Multi-offset or no-change
+  diffs stay blocked for a cleaner retest.
 - 2026-05-19: added a passive Analog Four saved-offset mapping validation
   guide. `analog-four-saved-offset-mapping-guide [--track <1-4>]
   [--parameter <filter-1-frequency|amp-pan|track-level>]` prints the exact

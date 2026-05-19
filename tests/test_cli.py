@@ -32,6 +32,7 @@ USAGE = (
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "analog-four-saved-offset-mapping-guide [--track <1-4>] [--parameter <parameter>] | "
+    "analog-four-saved-offset-mapping-promotion-report <before> <after> --slot <1-128> --track <1-4> --parameter <parameter> --limit <n> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
     "essence-application-readiness-report --mode <mode> (--tags <csv>|--description <text>|--style <text>) [--discovery <0..1>] [--snapshot <status>|--fixture <key>] | "
     "style-intent-report --style <text> [--discovery <0..1>] | "
@@ -310,6 +311,20 @@ def test_analog_four_saved_offset_mapping_guide_help_exits_zero():
     assert result.returncode == 0
     assert "RytmRandomizer passive CLI: analog-four-saved-offset-mapping-guide" in result.stdout
     assert "controlled before/after export workflow" in result.stdout
+    assert "--parameter <filter-1-frequency|amp-pan|track-level>" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_saved_offset_mapping_promotion_report_help_exits_zero():
+    result = run_cli("analog-four-saved-offset-mapping-promotion-report", "--help")
+
+    assert result.returncode == 0
+    assert (
+        "RytmRandomizer passive CLI: analog-four-saved-offset-mapping-promotion-report"
+        in result.stdout
+    )
+    assert "single changed offset" in result.stdout
     assert "--parameter <filter-1-frequency|amp-pan|track-level>" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""

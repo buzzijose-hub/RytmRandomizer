@@ -1562,6 +1562,50 @@ def main(argv=None):
         return 0
 
     if (
+        len(args) == 11
+        and args[0] == "analog-four-saved-offset-mapping-promotion-report"
+        and args[3] == "--slot"
+        and args[5] == "--track"
+        and args[7] == "--parameter"
+        and args[9] == "--limit"
+    ):
+        from .analog_four.controlled_diff import AnalogFourControlledDiffError
+        from .analog_four.saved_offset_mapping_promotion import (
+            build_analog_four_saved_offset_mapping_promotion_from_file,
+            format_analog_four_saved_offset_mapping_promotion_error,
+            format_analog_four_saved_offset_mapping_promotion_report,
+        )
+
+        try:
+            slot = int(args[4])
+            track = int(args[6])
+            limit = int(args[10])
+            promotion = build_analog_four_saved_offset_mapping_promotion_from_file(
+                args[1],
+                args[2],
+                slot=slot,
+                track=track,
+                parameter=args[8],
+                limit=limit,
+            )
+        except FileNotFoundError:
+            lines = format_analog_four_saved_offset_mapping_promotion_error("File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except (AnalogFourControlledDiffError, ValueError) as exc:
+            lines = format_analog_four_saved_offset_mapping_promotion_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write(
+            "\n".join(format_analog_four_saved_offset_mapping_promotion_report(promotion))
+        )
+        sys.stdout.write("\n")
+        return 0
+
+    if (
         len(args) == 5
         and args[0] == "essence-plan-report"
         and args[1] in {"--tags", "--description"}
