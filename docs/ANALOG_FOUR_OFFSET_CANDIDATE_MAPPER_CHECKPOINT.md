@@ -75,8 +75,9 @@ then let the existing guarded send plan decide whether the selected snapshot
 has no remaining unverified offsets.
 
 After a clean promotion report prints a reviewable
-`AnalogFourVerifiedSavedOffsetMapping`, collect the reviewed entries in a local
-JSON manifest and run:
+`AnalogFourVerifiedSavedOffsetMapping`, JSON manifest entry, and complete
+one-entry JSON manifest example, collect the reviewed entries in a local JSON
+manifest and run:
 
 ```powershell
 python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"

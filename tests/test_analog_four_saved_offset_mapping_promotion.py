@@ -188,11 +188,13 @@ def test_format_a4_saved_offset_mapping_promotion_report_includes_mapping_entry(
     assert '"parameter_name": "Amp Pan"' in report
     assert '"cc": 10' in report
     assert '"mapping_status": "verified_cc_mapping"' in report
+    assert "JSON manifest file example:" in report
+    assert '"mappings": [' in report
     assert "- no MIDI sending" in report
     assert "- no SysEx writes" in report
 
 
-def test_a4_saved_offset_mapping_promotion_json_entry_matches_manifest_schema():
+def test_a4_saved_offset_mapping_promotion_json_manifest_example_matches_schema():
     from rytm_randomizer.analog_four.saved_offset_mapping_manifest import (
         load_ready_analog_four_saved_offset_mapping_manifest,
     )
@@ -212,12 +214,12 @@ def test_a4_saved_offset_mapping_promotion_json_entry_matches_manifest_schema():
         limit=8,
     )
     lines = format_analog_four_saved_offset_mapping_promotion_report(promotion)
-    start = lines.index("JSON manifest entry:") + 1
-    payload = json.loads("\n".join(lines[start : start + 7]))
+    start = lines.index("JSON manifest file example:") + 1
+    payload = json.loads("\n".join(lines[start : start + 11]))
 
     manifest_path = PROJECT_ROOT / ".tmp-a4-promotion-manifest.json"
     try:
-        manifest_path.write_text(json.dumps({"mappings": [payload]}), encoding="utf-8")
+        manifest_path.write_text(json.dumps(payload), encoding="utf-8")
         manifest = load_ready_analog_four_saved_offset_mapping_manifest(manifest_path)
     finally:
         manifest_path.unlink(missing_ok=True)
@@ -258,6 +260,7 @@ def test_a4_saved_offset_mapping_promotion_cli_reads_saved_files(tmp_path):
     assert "relative_offset=20" in result.stdout
     assert "cc=18" in result.stdout
     assert "JSON manifest entry:" in result.stdout
+    assert "JSON manifest file example:" in result.stdout
     assert '"parameter_name": "Filter 1 Frequency"' in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

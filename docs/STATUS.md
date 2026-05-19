@@ -33,9 +33,9 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   --slot <1-128> --track <1-4> --parameter <parameter>
   --limit <n>` runs the controlled diff and prints an
   `AnalogFourVerifiedSavedOffsetMapping` entry plus a matching JSON manifest
-  entry only when exactly one saved offset changed for the selected
-  track/parameter. Multi-offset or no-change diffs stay blocked for a cleaner
-  retest.
+  entry and complete one-entry JSON manifest example only when exactly one
+  saved offset changed for the selected track/parameter. Multi-offset or
+  no-change diffs stay blocked for a cleaner retest.
 - 2026-05-19: added a passive Analog Four saved-offset mapping validation
   guide. `analog-four-saved-offset-mapping-guide [--track <1-4>]
   [--parameter <parameter>]` prints the exact

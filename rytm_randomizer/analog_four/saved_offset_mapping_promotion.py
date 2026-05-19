@@ -158,6 +158,12 @@ def format_analog_four_saved_offset_mapping_promotion_report(
     else:
         lines.extend(_format_json_manifest_entry(promotion.mapping))
 
+    lines.append("JSON manifest file example:")
+    if promotion.mapping is None:
+        lines.append("- not ready; no JSON manifest emitted")
+    else:
+        lines.extend(_format_json_manifest_example(promotion.mapping))
+
     lines.extend(
         [
             "Promotion policy:",
@@ -272,14 +278,22 @@ def _format_mapping_entry(mapping: AnalogFourVerifiedSavedOffsetMapping) -> list
 
 
 def _format_json_manifest_entry(mapping: AnalogFourVerifiedSavedOffsetMapping) -> list[str]:
-    payload = {
+    return json.dumps(_json_manifest_entry(mapping), indent=2).splitlines()
+
+
+def _format_json_manifest_example(mapping: AnalogFourVerifiedSavedOffsetMapping) -> list[str]:
+    payload = {"mappings": [_json_manifest_entry(mapping)]}
+    return json.dumps(payload, indent=2).splitlines()
+
+
+def _json_manifest_entry(mapping: AnalogFourVerifiedSavedOffsetMapping) -> dict[str, int | str]:
+    return {
         "track": mapping.track,
         "relative_offset": mapping.relative_offset,
         "parameter_name": mapping.parameter_name,
         "cc": mapping.cc,
         "mapping_status": mapping.mapping_status,
     }
-    return json.dumps(payload, indent=2).splitlines()
 
 
 __all__ = [

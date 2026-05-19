@@ -938,10 +938,10 @@ Behavior:
   runs the passive controlled diff for one slot and track, and reports whether
   the result has a single changed offset that can be reviewed as a verified
   mapping for the selected starter-profile CC mapping target. It prints the
-  proposed AnalogFourVerifiedSavedOffsetMapping entry and matching JSON
-  manifest entry only when the diff is clean. It does not request dumps,
-  receive live SysEx, send MIDI, write SysEx, execute commands, or touch
-  hardware.
+  proposed AnalogFourVerifiedSavedOffsetMapping entry, matching JSON manifest
+  entry, and a complete one-entry JSON manifest example only when the diff is
+  clean. It does not request dumps, receive live SysEx, send MIDI, write
+  SysEx, execute commands, or touch hardware.
 
 Safety:
   passive/read-only
