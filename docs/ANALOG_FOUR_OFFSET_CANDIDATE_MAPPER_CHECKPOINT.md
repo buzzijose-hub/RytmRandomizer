@@ -67,9 +67,9 @@ offsets changed, it stays blocked and asks for a cleaner controlled retest.
 
 ## Next Slice
 
-Use the guide and promotion report with controlled baseline/variant exports to
-prove the first real A4 saved offset mappings, starting with one low-risk
-Track 1 parameter such as Filter 1 Frequency CC18, Filter 2 Frequency CC19, or
-Amp Pan CC10. Add only the proven track/offset/CC entry, then let the existing
-guarded send plan decide whether the selected snapshot has no remaining
-unverified offsets.
+Use the dual-machine mapping queue/session-plan reports with controlled
+baseline/variant exports to prove real A4 saved offset mappings. Start with
+one low-risk Track 1 parameter such as Filter 1 Frequency CC18, Filter 2
+Frequency CC19, or Amp Pan CC10. Add only the proven track/offset/CC entry,
+then let the existing guarded send plan decide whether the selected snapshot
+has no remaining unverified offsets.

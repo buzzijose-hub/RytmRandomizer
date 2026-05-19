@@ -508,6 +508,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   with optional `--snapshot-rytm-pad <1-12>` and
   `--snapshot-analog-four-track <1-4>` filters for one-lane-at-a-time live
   validation.
+- The passive dual-machine mapping validation path now has both the ordered
+  target queue and an operator session plan:
+  `dual-machine-mapping-validation-queue-report` lists the Rytm/A4 mappings to
+  prove, while `dual-machine-mapping-session-plan-report` turns that queue into
+  baseline/variant export names, manual one-parameter move instructions,
+  proof commands, and acceptance rules. Both are checklist text only.
 - Pad coverage is complete relative to V1.34: BD engine anchors/discovery (Pad 1), snare/secondary percussion (Pad 2), SY Raw bass (Pad 3), BD Acoustic (Pad 4), a four-pad group layer, scenes (S0-S5 plus variants), isolated single-pad mutation, legacy single-profile mutation, and the full command surface.
 - The V1.34 reference behavior is preserved as JSON goldens under `tests/fixtures/v134_parity/`. The original `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`) now compare engine output to those fixtures via `tests/_parity_worker.py`.
 
@@ -525,14 +531,14 @@ Each step is locked against the V1.34 reference by characterization tests.
 
 ## What's Next
 
-- Keep PR #37 green while it remains stacked on PR #36, then retarget or
-  rebase after the subpackage cleanup lands.
-- Run the manual all-lane hardware validation guide on copied/restorable kits:
-  Rytm-only lanes, Analog-Four-only lanes, then one tiny both-machine pilot
-  before any wider dual-machine send.
-- Convert confirmed lane-validation notes back into source-starter,
-  safe-range, and operator-checklist updates without changing the protected
-  V1.34 four-pad behavior.
+- Keep the current dual-machine readiness PR green while it remains stacked on
+  the A4 kit-bank readiness base.
+- Use the new mapping queue/session-plan reports to run controlled
+  baseline/variant export sessions on copied/restorable kits: Rytm-only first,
+  Analog-Four-only second, then one tiny both-machine pilot.
+- Promote only mappings proven by exactly one intended saved-parameter change,
+  then let the guarded send plan decide whether a selected snapshot is eligible
+  for live mutation.
 - Still future work: GUI, live SysEx receive/write, real-time snapshot capture,
   full audio analysis, deeper per-engine mutation maps for every Rytm machine,
   and broader Analog Four sound-design mutation beyond the current starter CC

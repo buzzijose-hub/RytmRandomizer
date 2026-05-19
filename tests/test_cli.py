@@ -28,6 +28,7 @@ USAGE = (
     "dual-machine-lane-validation-guide [--all-lanes] [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path> | "
     "dual-machine-mapping-validation-queue-report [--target <target>] [--limit <n>] | "
+    "dual-machine-mapping-session-plan-report [--target <target>] [--slot <1-128>] [--limit <n>] | "
     "analog-four-kit-bank-report <path> | analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
@@ -354,6 +355,17 @@ def test_dual_machine_mapping_validation_queue_report_help_exits_zero():
     )
     assert "controlled mapping targets" in result.stdout
     assert "--target <rytm|analog-four|both>" in result.stdout
+    assert "no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mapping_session_plan_report_help_exits_zero():
+    result = run_cli("dual-machine-mapping-session-plan-report", "--help")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive CLI: dual-machine-mapping-session-plan-report" in result.stdout
+    assert "operator-ready export run sheet" in result.stdout
+    assert "--slot <1-128>" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

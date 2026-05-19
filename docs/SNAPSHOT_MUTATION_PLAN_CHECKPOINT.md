@@ -88,6 +88,18 @@ Analog Four saved-offset guide/promotion targets with exact follow-up commands,
 but still does not read files, request dumps, receive live SysEx, open ports,
 send MIDI, execute commands, write SysEx, or touch hardware.
 
+Use the session plan when the operator is ready to do the exports:
+
+```powershell
+python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report --target both --slot 1 --limit 8
+```
+
+The session plan wraps the same queue with baseline/variant export names,
+manual one-parameter move instructions, proof commands, and acceptance rules.
+It is also checklist text only; it does not read files, request dumps, receive
+live SysEx, open ports, send MIDI, execute commands, write SysEx, or touch
+hardware.
+
 The current runtime slice connects this planner to mock MIDI message capture,
 still without opening a port. Next, the armed Live Snapshot flow can be designed
 around the same plan object.

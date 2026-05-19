@@ -116,8 +116,10 @@ Current behavior:
 - Safe Anchors reports Pads 1-4 as ready when the selected candidates are
   mapped, and Pads 5-12 as blocked because current V1.34 runtime support is
   four-pad only.
-- Live Snapshot reports all pads blocked until a complete 12-pad snapshot is
-  available.
+- Live Snapshot remains conservative until the selected saved snapshot and
+  mapping surface are proven. The saved-bank analyzers, lane-scoped dry-runs,
+  mapping queue, and mapping session plan now give the operator a passive path
+  to prove those mappings before enabling wider live mutation.
 - With a captured snapshot, future inventory-only candidates such as SY Chip
   still report `future_only` until manual-backed machine maps and safe ranges
   exist.

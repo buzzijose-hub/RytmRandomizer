@@ -1303,6 +1303,41 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "dual-machine-mapping-session-plan-report":
+        from .dual_machine.mapping_session_plan import (
+            DEFAULT_MAPPING_SESSION_SLOT,
+            format_dual_machine_mapping_session_plan_error,
+            format_dual_machine_mapping_session_plan_report,
+        )
+        from .dual_machine.mapping_validation_queue import DEFAULT_MAPPING_QUEUE_LIMIT
+
+        optional_args = _parse_optional_key_value_args(
+            args[1:],
+            {"--target", "--slot", "--limit"},
+        )
+        if optional_args is None:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+
+        try:
+            target = optional_args.get("--target", "both")
+            slot = int(optional_args.get("--slot", str(DEFAULT_MAPPING_SESSION_SLOT)))
+            limit = int(optional_args.get("--limit", str(DEFAULT_MAPPING_QUEUE_LIMIT)))
+            report = format_dual_machine_mapping_session_plan_report(
+                target=target,
+                slot=slot,
+                limit=limit,
+            )
+        except ValueError as exc:
+            lines = format_dual_machine_mapping_session_plan_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(report))
+        sys.stdout.write("\n")
+        return 0
+
     if len(args) == 4 and args[0] == "analog-four-kit-snapshot-report" and args[2] == "--slot":
         from .analog_four.snapshot_decoder import (
             AnalogFourSnapshotDecodeError,
