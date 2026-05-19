@@ -77,6 +77,43 @@ def test_dual_machine_lane_validation_guide_includes_saved_bank_preflight():
     assert "- Continue only if combined blocked lanes are 0 and Problem slots is none." in joined
 
 
+def test_dual_machine_lane_validation_guide_scopes_saved_bank_preflight_to_rytm_only():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    report = format_dual_machine_lane_validation_guide(target="rytm", rytm_pad=10)
+    joined = "\n".join(report)
+
+    assert "Saved-bank preflight:" in joined
+    assert "python -m rytm_randomizer.cli sysex-kit-bank-report <rytm-sysex-path>" in joined
+    assert "dual-machine-kit-bank-readiness-report" not in joined
+    assert "analog-four-kit-bank-report" not in joined
+    assert "analog-four-sysex-path" not in joined
+    assert "- Continue only if Rytm blocked mutation pads are 0." in joined
+
+
+def test_dual_machine_lane_validation_guide_scopes_saved_bank_preflight_to_a4_only():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    report = format_dual_machine_lane_validation_guide(
+        target="analog-four",
+        analog_four_track=2,
+    )
+    joined = "\n".join(report)
+
+    assert "Saved-bank preflight:" in joined
+    assert (
+        "python -m rytm_randomizer.cli analog-four-kit-bank-report <analog-four-sysex-path>"
+        in joined
+    )
+    assert "dual-machine-kit-bank-readiness-report" not in joined
+    assert "sysex-kit-bank-report <rytm-sysex-path>" not in joined
+    assert "- Continue only if Analog Four blocked tracks are 0." in joined
+
+
 def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     from rytm_randomizer.dual_machine.lane_validation_guide import (
         format_dual_machine_lane_validation_guide,
@@ -189,6 +226,8 @@ def test_dual_machine_all_lane_validation_guide_lists_every_single_machine_lane(
     assert "- Pad 10 / OH / Open Hihat + A4 Track 3 / expected 11 messages:" in joined
     assert "Saved-bank preflight:" in joined
     assert "dual-machine-kit-bank-readiness-report --rytm <rytm-sysex-path>" in joined
+    assert "sysex-kit-bank-report <rytm-sysex-path>" in joined
+    assert "analog-four-kit-bank-report <analog-four-sysex-path>" in joined
     assert "- no MIDI sending" in joined
 
 

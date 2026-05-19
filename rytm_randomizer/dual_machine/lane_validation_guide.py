@@ -23,6 +23,12 @@ SAVED_BANK_PREFLIGHT_COMMAND = (
     "python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report "
     "--rytm <rytm-sysex-path> --analog-four <analog-four-sysex-path>"
 )
+RYTM_BANK_PREFLIGHT_COMMAND = (
+    "python -m rytm_randomizer.cli sysex-kit-bank-report <rytm-sysex-path>"
+)
+ANALOG_FOUR_BANK_PREFLIGHT_COMMAND = (
+    "python -m rytm_randomizer.cli analog-four-kit-bank-report <analog-four-sysex-path>"
+)
 
 
 @dataclass(frozen=True)
@@ -99,7 +105,7 @@ def format_dual_machine_lane_validation_guide(
         _analog_four_track_line(request),
         f"Recommended depth: {DEFAULT_DEPTH}",
         f"Expected lane-scoped messages: {_expected_message_count(request)}",
-        *_saved_bank_preflight_lines(),
+        *_saved_bank_preflight_lines(request.target),
         "Passive preview stack:",
         f"python -m rytm_randomizer.cli dual-machine-mock-bridge-report {snapshot_args}",
         (
@@ -152,7 +158,7 @@ def format_dual_machine_all_lane_validation_guide() -> list[str]:
         "- Rytm-only Pads 1-12",
         "- Analog-Four-only Tracks 1-4",
         "- Both-machine pilot pairs",
-        *_saved_bank_preflight_lines(),
+        *_all_lane_saved_bank_preflight_lines(),
         "Rytm-only lanes:",
     ]
     for pad in range(1, 13):
@@ -228,13 +234,38 @@ def _snapshot_report_args(request: DualMachineLaneValidationGuideRequest) -> str
     return " ".join(parts)
 
 
-def _saved_bank_preflight_lines() -> list[str]:
+def _saved_bank_preflight_lines(target: str) -> list[str]:
+    if target == "rytm":
+        return [
+            "Saved-bank preflight:",
+            "- Export or choose the saved Rytm kit-bank/whole-project SysEx file.",
+            RYTM_BANK_PREFLIGHT_COMMAND,
+            "- Continue only if Rytm blocked mutation pads are 0.",
+        ]
+    if target == "analog-four":
+        return [
+            "Saved-bank preflight:",
+            "- Export or choose the saved Analog Four kit-bank/whole-project SysEx file.",
+            ANALOG_FOUR_BANK_PREFLIGHT_COMMAND,
+            "- Continue only if Analog Four blocked tracks are 0.",
+            "- Treat Analog Four as candidate-ready until the live lane test confirms the track.",
+        ]
     return [
         "Saved-bank preflight:",
         "- Export or choose the saved Rytm and Analog Four kit-bank/whole-project SysEx files.",
         SAVED_BANK_PREFLIGHT_COMMAND,
         "- Continue only if combined blocked lanes are 0 and Problem slots is none.",
         "- Treat Analog Four as candidate-ready until the live lane tests confirm each track.",
+    ]
+
+
+def _all_lane_saved_bank_preflight_lines() -> list[str]:
+    return [
+        "Saved-bank preflight:",
+        "- Before Rytm-only lanes: " + RYTM_BANK_PREFLIGHT_COMMAND,
+        "- Before Analog-Four-only lanes: " + ANALOG_FOUR_BANK_PREFLIGHT_COMMAND,
+        "- Before both-machine pilot pairs: " + SAVED_BANK_PREFLIGHT_COMMAND,
+        "- Continue only if the selected scope reports zero blocked lanes.",
     ]
 
 

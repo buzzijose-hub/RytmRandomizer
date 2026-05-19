@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made the passive saved-bank preflight target-aware in
+  `dual-machine-lane-validation-guide`. Rytm-only validation now points to
+  `sysex-kit-bank-report <path>`, Analog-Four-only validation points to
+  `analog-four-kit-bank-report <path>`, and both-machine validation points to
+  `dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>`.
+  The all-lane guide lists the correct preflight before each scope, matching
+  the live-performance need to snapshot/mutate one machine while leaving the
+  other alone.
 - 2026-05-19: added OS 1.72 Rytm lane labels to the passive dual-machine
   validation guides. The focused guide now prints the selected Rytm pad as
   `pad / track code / track name`, and the all-lane matrix labels each Rytm
