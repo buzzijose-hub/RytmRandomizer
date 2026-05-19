@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -70,6 +71,13 @@ def make_a4_kit_record(slot_index=0, kit_name="A4 SEND", track_values=None):
         bytes([0xF0, 0x00, 0x20, 0x3C, 0x06, 0x00, 0x52, 0x01, 0x01, slot_index])
         + pack_7bit_payload(decoded)
         + bytes([0xF7])
+    )
+
+
+def write_a4_mapping_manifest(path, mappings):
+    path.write_text(
+        json.dumps({"mappings": mappings}, indent=2),
+        encoding="utf-8",
     )
 
 
@@ -337,6 +345,53 @@ def test_dual_machine_active_send_plan_cli_reads_saved_dumps(tmp_path):
     assert "Blocked candidate events: 2" in result.stdout
     assert "candidate_unverified_no_cc_mapping" in result.stdout
     assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_active_send_plan_cli_accepts_ready_a4_mapping_manifest(tmp_path):
+    a4_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-mappings.json"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI SEND A4 READY",
+            track_values={1: {20: 64}},
+        )
+    )
+    write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            }
+        ],
+    )
+
+    result = run_cli(
+        "dual-machine-active-send-plan-report",
+        "--target",
+        "analog-four",
+        "--depth",
+        "micro",
+        "--analog-four-path",
+        str(a4_path),
+        "--analog-four-slot",
+        "1",
+        "--analog-four-mapping-manifest",
+        str(manifest_path),
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Dual-Machine Active Send Plan Report" in result.stdout
+    assert "Send plan ready: True" in result.stdout
+    assert "Readiness reason: all_active_devices_mapping_ready" in result.stdout
+    assert "Eligible mapped CC messages: 1" in result.stdout
+    assert "Blocked candidate events: 0" in result.stdout
+    assert "Filter 1 Frequency" in result.stdout
+    assert "CC18 -> 67" in result.stdout
+    assert "mapped_cc_message" in result.stdout
     assert result.stderr == ""
 
 

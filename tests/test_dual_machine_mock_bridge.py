@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -71,6 +72,13 @@ def make_a4_kit_record(slot_index=0, kit_name="A4 BRIDGE", track_values=None):
         bytes([0xF0, 0x00, 0x20, 0x3C, 0x06, 0x00, 0x52, 0x01, 0x01, slot_index])
         + pack_7bit_payload(decoded)
         + bytes([0xF7])
+    )
+
+
+def write_a4_mapping_manifest(path, mappings):
+    path.write_text(
+        json.dumps({"mappings": mappings}, indent=2),
+        encoding="utf-8",
     )
 
 
@@ -289,6 +297,22 @@ def test_dual_bridge_rytm_target_rejects_a4_snapshot_path(tmp_path):
             target="rytm",
             analog_four_sysex_path=str(a4_path),
             analog_four_slot=1,
+        )
+
+
+def test_dual_bridge_rejects_a4_mapping_manifest_without_snapshot_path():
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
+
+    with pytest.raises(
+        ValueError,
+        match="Analog Four mapping manifest requires an Analog Four snapshot path",
+    ):
+        build_dual_machine_mock_bridge(
+            None,
+            slot=None,
+            depth="micro",
+            target="analog-four",
+            analog_four_mapping_manifest_path="a4-mappings.json",
         )
 
 
@@ -612,6 +636,101 @@ def test_dual_machine_mock_bridge_cli_accepts_a4_snapshot_path(tmp_path):
     assert "candidate_unverified" in result.stdout
     assert "- no CC mapping claimed" in result.stdout
     assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_accepts_a4_mapping_manifest(tmp_path):
+    rytm_path = tmp_path / "rytm-kits.syx"
+    a4_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-mappings.json"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="CLI RYTM MANIFEST"))
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI A4 MANIFEST",
+            track_values={1: {20: 64, 22: 80}},
+        )
+    )
+    write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            }
+        ],
+    )
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        str(rytm_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--analog-four-path",
+        str(a4_path),
+        "--analog-four-slot",
+        "1",
+        "--analog-four-mapping-manifest",
+        str(manifest_path),
+    )
+
+    assert result.returncode == 0
+    assert f"Analog Four mapping manifest: {manifest_path}" in result.stdout
+    assert "Analog Four mapping: mixed_verified_and_candidate" in result.stdout
+    assert "Filter 1 Frequency: CC18 -> 67 from offset +20" in result.stdout
+    assert "Offset +22: 80 -> 83" in result.stdout
+    assert "- verified saved offsets emit mapped CC mock events" in result.stdout
+    assert "- unverified saved offsets remain candidate events" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_rejects_unready_a4_mapping_manifest(tmp_path):
+    a4_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-duplicate-mappings.json"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI A4 DUPES",
+            track_values={1: {20: 64}},
+        )
+    )
+    write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            },
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Duplicate Filter 1 Frequency",
+                "cc": 18,
+            },
+        ],
+    )
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        "--target",
+        "analog-four",
+        "--depth",
+        "micro",
+        "--analog-four-path",
+        str(a4_path),
+        "--analog-four-slot",
+        "1",
+        "--analog-four-mapping-manifest",
+        str(manifest_path),
+    )
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "mapping manifest not ready: blocked_duplicate_track_offsets" in result.stderr
+    assert "No MIDI was sent" in result.stderr
 
 
 def test_dual_machine_mock_bridge_cli_accepts_a4_only_without_rytm_path(tmp_path):
@@ -945,3 +1064,108 @@ def test_dual_machine_guarded_send_cli_main_covers_a4_lane_success(tmp_path, cap
     assert "Emitted mock messages: 5" in captured.out
     assert "Analog Four MKII / ch 2 wire 1" in captured.out
     assert captured.err == ""
+
+
+def test_dual_machine_cli_main_covers_ready_a4_mapping_manifest_routes(tmp_path, capsys):
+    from rytm_randomizer import cli
+
+    a4_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-mappings.json"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="MAIN A4 MANIFEST",
+            track_values={1: {20: 64}},
+        )
+    )
+    write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            }
+        ],
+    )
+
+    routes = (
+        ("dual-machine-mock-bridge-report", "Analog Four mapping manifest:", "Filter 1 Frequency"),
+        ("dual-machine-live-snapshot-readiness-report", "Ready: True", "mapped CC 1"),
+        ("dual-machine-active-send-plan-report", "Send plan ready: True", "Filter 1 Frequency"),
+        ("dual-machine-guarded-send-dry-run-report", "Accepted: True", "Filter 1 Frequency"),
+    )
+    for command, expected, detail in routes:
+        result = cli.main(
+            [
+                command,
+                "--target",
+                "analog-four",
+                "--depth",
+                "micro",
+                "--analog-four-path",
+                str(a4_path),
+                "--analog-four-slot",
+                "1",
+                "--analog-four-mapping-manifest",
+                str(manifest_path),
+            ]
+        )
+
+        captured = capsys.readouterr()
+        assert result == 0
+        assert expected in captured.out
+        assert detail in captured.out
+        assert captured.err == ""
+
+
+def test_dual_machine_cli_main_rejects_unready_a4_mapping_manifest(tmp_path, capsys):
+    from rytm_randomizer import cli
+
+    a4_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-duplicate-mappings.json"
+    a4_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="MAIN A4 DUPES",
+            track_values={1: {20: 64}},
+        )
+    )
+    write_a4_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            },
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Duplicate Filter 1 Frequency",
+                "cc": 18,
+            },
+        ],
+    )
+
+    result = cli.main(
+        [
+            "dual-machine-active-send-plan-report",
+            "--target",
+            "analog-four",
+            "--depth",
+            "micro",
+            "--analog-four-path",
+            str(a4_path),
+            "--analog-four-slot",
+            "1",
+            "--analog-four-mapping-manifest",
+            str(manifest_path),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert result == 1
+    assert captured.out == ""
+    assert "mapping manifest not ready: blocked_duplicate_track_offsets" in captured.err
+    assert "No MIDI was sent" in captured.err

@@ -169,6 +169,16 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   time matrix across Rytm Pads 1-12, A4 Tracks 1-4, and both-machine pilot
   pairs. It is guide text only: no MIDI ports are opened, no MIDI is sent, and
   no hardware is touched.
+- 2026-05-19: carried ready Analog Four saved-offset mapping manifests into
+  the dual-machine snapshot layer. `dual-machine-mock-bridge-report`,
+  `dual-machine-live-snapshot-readiness-report`,
+  `dual-machine-active-send-plan-report`, and
+  `dual-machine-guarded-send-dry-run-report` now accept
+  `--analog-four-mapping-manifest <path>` alongside `--analog-four-path` and
+  `--analog-four-slot`. Ready manifests promote matching A4 saved offsets to
+  mapped CC mock events; unverified offsets remain blocked candidates, and
+  duplicate or empty manifests fail closed before any send path can be marked
+  ready.
 - 2026-05-19: added app-level dual-machine snapshot lane scoping.
   `rytm_randomizer.app --dry-run/--arm --dual-machine-snapshot-send` now
   accepts `--snapshot-rytm-pad <1-12>` and

@@ -36,6 +36,12 @@ A4-only saved-snapshot variant:
 python -m rytm_randomizer.cli dual-machine-mock-bridge-report --target analog-four --depth micro --analog-four-path "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --analog-four-slot 1
 ```
 
+Verified A4 saved-offset manifest variant:
+
+```powershell
+python -m rytm_randomizer.cli dual-machine-mock-bridge-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 16 --depth micro --analog-four-path "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --analog-four-slot 1 --analog-four-mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
 ## Current Behavior
 
 The Rytm side reads an existing saved `.syx` kit bank or whole-project dump,
@@ -53,6 +59,12 @@ is supplied to the snapshot planner, the bridge turns that one offset into a
 named mapped CC mock event. Any remaining unverified saved offsets stay
 blocked, so guarded sending only becomes ready when the selected target plan
 contains mapped CC events and no candidate events.
+
+The same ready manifest gate now reaches the dual-machine preview, readiness,
+active-send plan, and guarded-send dry-run commands through
+`--analog-four-mapping-manifest <path>`. Duplicate or empty manifests fail
+closed; matching A4 saved offsets become named CC mock events, and unmatched
+offsets remain `candidate_unverified`.
 
 The first safe starter plan is:
 
@@ -91,5 +103,6 @@ This report is passive/read-only:
 ## Next Best Slice
 
 The best next technical slice is to run controlled hardware/export tests for
-one low-risk Analog Four parameter at a time, record the proven saved offset,
-and add only those verified mappings to the registry.
+one low-risk Analog Four parameter at a time, add the proven entries to the
+local manifest, and use the dual-machine readiness and guarded dry-run reports
+to prove when a selected A4 snapshot is fully mapped.

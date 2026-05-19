@@ -410,7 +410,7 @@ def _dual_machine_error_path(args) -> str:
 
 
 def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = False):
-    if len(args) < 2 or len(args) > (18 if allow_lane_filters else 14):
+    if len(args) < 2 or len(args) > (20 if allow_lane_filters else 16):
         raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
 
     rytm_path = None
@@ -435,6 +435,7 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
     analog_four_path = None
     analog_four_slot = None
     analog_four_profile = "balanced"
+    analog_four_mapping_manifest = None
     rytm_pad = None
     analog_four_track = None
     while tail:
@@ -455,6 +456,8 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
                 analog_four_slot = int(value)
             except ValueError as exc:
                 raise ValueError("Analog Four slot must be an integer") from exc
+        elif flag == "--analog-four-mapping-manifest":
+            analog_four_mapping_manifest = value
         elif flag == "--rytm-pad" and allow_lane_filters:
             try:
                 rytm_pad = int(value)
@@ -485,9 +488,23 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
         "analog_four_path": analog_four_path,
         "analog_four_slot": analog_four_slot,
         "analog_four_profile": analog_four_profile,
+        "analog_four_mapping_manifest": analog_four_mapping_manifest,
         "rytm_pad": rytm_pad,
         "analog_four_track": analog_four_track,
     }
+
+
+def _load_analog_four_mapping_manifest_for_dual_cli(parsed):
+    manifest_path = parsed["analog_four_mapping_manifest"]
+    if manifest_path is None:
+        return None, None
+
+    from .analog_four.saved_offset_mapping_manifest import (
+        load_ready_analog_four_saved_offset_mapping_manifest,
+    )
+
+    manifest = load_ready_analog_four_saved_offset_mapping_manifest(manifest_path)
+    return manifest.mappings, manifest.path
 
 
 def _parse_dual_machine_lane_validation_guide_cli_args(args):
@@ -988,6 +1005,9 @@ def main(argv=None):
             return 1
 
         try:
+            analog_four_verified_mappings, analog_four_mapping_manifest_path = (
+                _load_analog_four_mapping_manifest_for_dual_cli(parsed)
+            )
             bridge = build_dual_machine_mock_bridge(
                 parsed["rytm_path"],
                 slot=parsed["slot"],
@@ -998,6 +1018,8 @@ def main(argv=None):
                 analog_four_profile=parsed["analog_four_profile"],
                 rytm_pad=parsed["rytm_pad"],
                 analog_four_track=parsed["analog_four_track"],
+                analog_four_verified_mappings=analog_four_verified_mappings,
+                analog_four_mapping_manifest_path=analog_four_mapping_manifest_path,
             )
         except FileNotFoundError:
             lines = format_dual_machine_mock_bridge_error(
@@ -1052,6 +1074,9 @@ def main(argv=None):
             return 1
 
         try:
+            analog_four_verified_mappings, analog_four_mapping_manifest_path = (
+                _load_analog_four_mapping_manifest_for_dual_cli(parsed)
+            )
             bridge = build_dual_machine_mock_bridge(
                 parsed["rytm_path"],
                 slot=parsed["slot"],
@@ -1062,6 +1087,8 @@ def main(argv=None):
                 analog_four_profile=parsed["analog_four_profile"],
                 rytm_pad=parsed["rytm_pad"],
                 analog_four_track=parsed["analog_four_track"],
+                analog_four_verified_mappings=analog_four_verified_mappings,
+                analog_four_mapping_manifest_path=analog_four_mapping_manifest_path,
             )
             readiness = evaluate_dual_machine_live_snapshot_readiness(bridge)
         except FileNotFoundError:
@@ -1111,6 +1138,9 @@ def main(argv=None):
             return 1
 
         try:
+            analog_four_verified_mappings, analog_four_mapping_manifest_path = (
+                _load_analog_four_mapping_manifest_for_dual_cli(parsed)
+            )
             bridge = build_dual_machine_mock_bridge(
                 parsed["rytm_path"],
                 slot=parsed["slot"],
@@ -1121,6 +1151,8 @@ def main(argv=None):
                 analog_four_profile=parsed["analog_four_profile"],
                 rytm_pad=parsed["rytm_pad"],
                 analog_four_track=parsed["analog_four_track"],
+                analog_four_verified_mappings=analog_four_verified_mappings,
+                analog_four_mapping_manifest_path=analog_four_mapping_manifest_path,
             )
             plan = build_dual_machine_active_send_plan(bridge)
         except FileNotFoundError:
@@ -1170,6 +1202,9 @@ def main(argv=None):
             return 1
 
         try:
+            analog_four_verified_mappings, analog_four_mapping_manifest_path = (
+                _load_analog_four_mapping_manifest_for_dual_cli(parsed)
+            )
             bridge = build_dual_machine_mock_bridge(
                 parsed["rytm_path"],
                 slot=parsed["slot"],
@@ -1180,6 +1215,8 @@ def main(argv=None):
                 analog_four_profile=parsed["analog_four_profile"],
                 rytm_pad=parsed["rytm_pad"],
                 analog_four_track=parsed["analog_four_track"],
+                analog_four_verified_mappings=analog_four_verified_mappings,
+                analog_four_mapping_manifest_path=analog_four_mapping_manifest_path,
             )
             result = build_dual_machine_guarded_send_dry_run(bridge)
         except FileNotFoundError:

@@ -119,6 +119,16 @@ Ready manifests promote matching track/offset pairs into named CC plan/mock
 events. Empty or duplicate manifests fail closed, and unmatched offsets remain
 `candidate_unverified`.
 
+The ready manifest can also be carried into the dual-machine snapshot layer:
+
+```powershell
+python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report "G:\ANALOG RYTM\WHOLE PROJECT DUMP\PROJECTRYTM01.syx" --slot 1 --depth micro --analog-four-path "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --analog-four-slot 1 --analog-four-mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report "G:\ANALOG RYTM\WHOLE PROJECT DUMP\PROJECTRYTM01.syx" --slot 1 --depth micro --analog-four-path "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --analog-four-slot 1 --analog-four-mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
+Those reports only become send-ready when the active target has mapped CC mock
+events and no remaining saved-offset candidates.
+
 The current runtime slice connects this planner to mock MIDI message capture,
 still without opening a port. Next, the armed Live Snapshot flow can be designed
 around the same plan object.

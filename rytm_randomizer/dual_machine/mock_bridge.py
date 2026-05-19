@@ -105,6 +105,7 @@ class DualMachineMockBridge:
     analog_four_slot: int | None = None
     analog_four_kit_name: str | None = None
     analog_four_mapping_status: str | None = None
+    analog_four_mapping_manifest_path: str | None = None
     analog_four_starter_profile_key: str | None = None
     analog_four_starter_profile_label: str | None = None
 
@@ -143,6 +144,7 @@ def build_dual_machine_mock_bridge(
     rytm_pad: int | None = None,
     analog_four_track: int | None = None,
     analog_four_verified_mappings: Iterable[AnalogFourVerifiedSavedOffsetMapping] | None = None,
+    analog_four_mapping_manifest_path: str | Path | None = None,
 ) -> DualMachineMockBridge:
     """Build the passive combined mock bridge from a saved Rytm kit."""
 
@@ -150,6 +152,8 @@ def build_dual_machine_mock_bridge(
         raise ValueError("Analog Four slot requires an Analog Four path")
     if analog_four_sysex_path is not None and analog_four_slot is None:
         raise ValueError("Analog Four path requires an Analog Four slot")
+    if analog_four_mapping_manifest_path is not None and analog_four_sysex_path is None:
+        raise ValueError("Analog Four mapping manifest requires an Analog Four snapshot path")
 
     target_plan = build_performance_snapshot_target_plan(target)
     if target_plan.canonical_target == "rytm" and analog_four_sysex_path is not None:
@@ -198,6 +202,7 @@ def build_dual_machine_mock_bridge(
             slot=analog_four_slot,
             depth=depth,
             verified_mappings=analog_four_verified_mappings,
+            mapping_manifest_path=analog_four_mapping_manifest_path,
         )
         if analog_four_track is not None:
             analog_four_plan = filter_analog_four_snapshot_mutation_plan_to_track(
@@ -223,6 +228,9 @@ def build_dual_machine_mock_bridge(
         analog_four_slot=analog_four_slot,
         analog_four_kit_name=analog_four_kit_name,
         analog_four_mapping_status=analog_four_mapping_status,
+        analog_four_mapping_manifest_path=(
+            str(analog_four_mapping_manifest_path) if analog_four_mapping_manifest_path else None
+        ),
         analog_four_starter_profile_key=analog_four_starter_profile_key,
         analog_four_starter_profile_label=analog_four_starter_profile_label,
     )
@@ -556,12 +564,15 @@ def _analog_four_snapshot_policy_lines(mapping_status: str) -> list[str]:
 def _analog_four_snapshot_header_lines(bridge: DualMachineMockBridge) -> list[str]:
     if not bridge.analog_four_source_path:
         return []
-    return [
+    lines = [
         f"Analog Four source path: {bridge.analog_four_source_path}",
         f"Analog Four slot: {bridge.analog_four_slot}",
         f"Analog Four kit: {bridge.analog_four_kit_name or '<blank>'}",
         f"Analog Four mapping: {bridge.analog_four_mapping_status}",
     ]
+    if bridge.analog_four_mapping_manifest_path:
+        lines.append(f"Analog Four mapping manifest: {bridge.analog_four_mapping_manifest_path}")
+    return lines
 
 
 def _analog_four_starter_profile_lines(bridge: DualMachineMockBridge) -> list[str]:

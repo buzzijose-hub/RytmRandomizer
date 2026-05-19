@@ -97,3 +97,16 @@ python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report "<a4-bank
 Only matching verified track/offset pairs become named CC plan/mock events.
 Unmatched offsets remain `candidate_unverified`, and duplicate manifests are
 rejected before any runtime plan can consume them.
+
+The dual-machine snapshot commands consume the same ready manifest through
+`--analog-four-mapping-manifest <path>`:
+
+```powershell
+python -m rytm_randomizer.cli dual-machine-mock-bridge-report --target analog-four --depth micro --analog-four-path "<a4-bank-or-project.syx>" --analog-four-slot 1 --analog-four-mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+python -m rytm_randomizer.cli dual-machine-active-send-plan-report --target analog-four --depth micro --analog-four-path "<a4-bank-or-project.syx>" --analog-four-slot 1 --analog-four-mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report --target analog-four --depth micro --analog-four-path "<a4-bank-or-project.syx>" --analog-four-slot 1 --analog-four-mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
+This is still mock/passive until an explicit armed live path is used. The
+guarded dry-run emits mock messages only when every active A4 saved offset has
+a verified mapped CC and no candidate events remain.
