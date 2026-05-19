@@ -374,6 +374,9 @@ def test_dual_machine_mapping_validation_queue_report_help_exits_zero():
     )
     assert "controlled mapping targets" in result.stdout
     assert "--target <rytm|analog-four|both>" in result.stdout
+    assert "Rytm 12-pad controlled" in result.stdout
+    assert "CC proof path" in result.stdout
+    assert "A4 4-track saved-offset proof path" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

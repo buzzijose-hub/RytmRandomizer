@@ -98,6 +98,8 @@ def format_dual_machine_mapping_validation_queue_report(
         "- Give the operator an ordered no-hardware checklist for proving saved mappings.",
         "- Prefer controlled before/after exports with exactly one parameter changed.",
         "- Keep unproven A4 saved offsets and broad Rytm edits blocked from guarded sends.",
+        "Implementation boundaries:",
+        *_implementation_boundary_lines(),
         "Queue:",
     ]
     for index, queued_target in enumerate(targets, start=1):
@@ -206,6 +208,23 @@ def _format_queue_target(index: int, target: MappingValidationQueueTarget) -> li
         lines.append(f"   Guide: {target.guide_command}")
     lines.append(f"   Proof: {target.proof_command}")
     return lines
+
+
+def _implementation_boundary_lines() -> list[str]:
+    return [
+        (
+            "- Rytm implementation: controlled proofs cover mapped CCs across "
+            "12 pad/machine lanes."
+        ),
+        (
+            "- Analog Four implementation: controlled proofs promote saved offsets "
+            "into a 4-track mapping manifest."
+        ),
+        (
+            "- Shared layer: queue ordering, target filtering, proof commands, and "
+            "guarded validation only."
+        ),
+    ]
 
 
 def _available_target_count(target: str) -> int:

@@ -59,6 +59,27 @@ def test_dual_machine_mapping_validation_queue_lists_both_machines_by_default():
     assert "- no MIDI sending" in report
 
 
+def test_dual_machine_mapping_validation_queue_names_implementation_boundaries():
+    from rytm_randomizer.dual_machine.mapping_validation_queue import (
+        format_dual_machine_mapping_validation_queue_report,
+    )
+
+    report = "\n".join(format_dual_machine_mapping_validation_queue_report(limit=1))
+
+    assert "Implementation boundaries:" in report
+    assert (
+        "- Rytm implementation: controlled proofs cover mapped CCs across " "12 pad/machine lanes."
+    ) in report
+    assert (
+        "- Analog Four implementation: controlled proofs promote saved offsets "
+        "into a 4-track mapping manifest."
+    ) in report
+    assert (
+        "- Shared layer: queue ordering, target filtering, proof commands, and "
+        "guarded validation only."
+    ) in report
+
+
 def test_dual_machine_mapping_validation_queue_can_filter_to_a4():
     from rytm_randomizer.dual_machine.mapping_validation_queue import (
         format_dual_machine_mapping_validation_queue_report,

@@ -704,9 +704,11 @@ Usage:
 Behavior:
   Prints an ordered passive checklist of controlled mapping targets for Rytm
   pads and Analog Four tracks, including the exact guide/proof commands to run
-  after controlled before/after exports. It does not read SysEx files, request
-  dumps, receive live SysEx, send MIDI, write SysEx, execute commands, open
-  ports, or touch hardware.
+  after controlled before/after exports. It names the Rytm 12-pad controlled
+  CC proof path, the A4 4-track saved-offset proof path, and the shared queue
+  orchestration layer. It does not read SysEx files, request dumps, receive
+  live SysEx, send MIDI, write SysEx, execute commands, open ports, or touch
+  hardware.
 
 Safety:
   passive/read-only

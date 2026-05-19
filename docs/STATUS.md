@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made the passive dual-machine mapping validation queue print
+  implementation boundaries for the controlled proof phase. The queue now
+  states that Rytm proofs cover mapped CCs across 12 pad/machine lanes, Analog
+  Four proofs promote saved offsets into a 4-track mapping manifest, and the
+  shared layer only handles queue ordering, target filtering, proof commands,
+  and guarded validation. This keeps the next evidence-collection session clear
+  before any mappings are allowed into snapshot sends.
 - 2026-05-19: made the passive dual-machine lane validation guide print the
   same implementation-boundary summary as the bank-readiness gate. Focused and
   all-lane guides now state that Rytm uses 12 pad/machine compatibility gates,
