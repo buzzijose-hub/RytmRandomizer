@@ -17,9 +17,14 @@ plumbing.
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from ..devices.base import Device, MidiOutbox
+if TYPE_CHECKING:
+    # Annotations only -- avoiding a runtime cycle with ``devices.base``,
+    # which itself imports ``SnapshotDecoder`` / ``MutationPlanner`` from
+    # the ``snapshot`` subpackage. ``with __future__ import annotations``
+    # above means these names are never evaluated at runtime.
+    from ..devices.base import Device, MidiOutbox
 
 
 @runtime_checkable

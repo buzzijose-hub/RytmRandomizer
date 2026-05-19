@@ -1,4 +1,4 @@
-"""``Device`` Protocol -- the cross-machine boundary (WS-S5).
+"""``Device`` Protocol -- the cross-machine boundary (WS-S5 + Strategy capabilities).
 
 The ``Device`` protocol describes what every Elektron device an operator can
 target through RytmRandomizer must provide:
@@ -13,7 +13,17 @@ target through RytmRandomizer must provide:
 * a contract for decoding a snapshot from a SysEx kit dump, planning a
   mutation against that snapshot, and rendering the plan into either mock
   ``MidiMessage`` instances (for ``--dry-run``) or real CC byte streams
-  (for ``--arm``).
+  (for ``--arm``),
+* four **capability strategies** (Strategy pattern): a ``SnapshotDecoder``,
+  a ``RuntimePlanBuilder``, a ``MessageRenderer``, and a per-device
+  ``report_header`` string. These are the single seam through which the
+  generic guarded / hardware senders consume device-specific behavior.
+
+The capability strategies are what make the ``dual_machine/`` orchestrator
+collapse from "import each device family directly" to "fan out over
+``devices.all_devices()``". Adding a new family (Syntakt, Digitone, ...)
+becomes "implement four strategies + register" -- no edits to senders or
+orchestrators.
 
 Per Gate 6 (PLAN_REQUIREMENTS) the surface is a ``@runtime_checkable``
 ``Protocol`` (not an ABC) so structural typing admits hand-rolled and
@@ -30,13 +40,25 @@ PR #21 forward-compat: codex's planned Analog Four engine collapses from
 ``AnalogFourDevice`` instance against this protocol. The hand-rolled
 ``analog_four_snapshot_decoder.py`` / ``_mutation_planner.py`` /
 ``_mock_runtime.py`` triple becomes the body of ``AnalogFourDevice``'s
-``decode_snapshot`` / ``plan_mutation`` / ``to_mock_messages`` methods.
+``snapshot_decoder``, ``runtime_plan_builder``, and ``message_renderer``
+strategies; the eight per-device ``*_sender.py`` modules collapse into the
+two generic senders (``senders/guarded.py``, ``senders/hardware.py``)
+that consume those strategies.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
 from typing import Any, Protocol, runtime_checkable
+
+# Capability sub-protocols (Strategy pattern). We REUSE the WS-S6 Protocols
+# at ``rytm_randomizer.snapshot.{decoder,planner}`` instead of redefining
+# them here -- a single Protocol per concept is the whole point. Re-export
+# them under the ``devices`` namespace so consumers can import everything
+# they need from one place (``from rytm_randomizer.devices import Device,
+# SnapshotDecoder, MutationPlanner, MessageRenderer``).
+from ..snapshot.decoder import SnapshotDecoder
+from ..snapshot.planner import MutationPlanner
 
 
 class MidiOutbox(Protocol):
@@ -48,6 +70,28 @@ class MidiOutbox(Protocol):
     """
 
     def send(self, message: object) -> None: ...
+
+
+@runtime_checkable
+class MessageRenderer(Protocol):
+    """Render one plan event into one MIDI message (mock or real-CC).
+
+    The third leg of the Strategy stack alongside
+    :class:`~rytm_randomizer.snapshot.decoder.SnapshotDecoder` and
+    :class:`~rytm_randomizer.snapshot.planner.MutationPlanner`.
+
+    The two methods stay separate (instead of an ``armed`` boolean) so the
+    type system distinguishes the two output shapes and the test harness
+    can verify each independently.
+
+    Renderers are pure: same ``(event, plan)`` in -> same message out.
+    Renderers do NOT call ``send()`` -- they construct the message; the
+    sender owns the dispatch.
+    """
+
+    def to_mock_message(self, event: Any, plan: Any) -> Any: ...
+
+    def to_cc_triple(self, event: Any, plan: Any) -> tuple[int, int, int]: ...
 
 
 @runtime_checkable
@@ -70,22 +114,33 @@ class Device(Protocol):
       pads. 4 for Analog Four; 12 for the Rytm MKII pad grid.
     * ``sysex_manufacturer_id`` -- the 3-byte Elektron manufacturer ID
       sequence (``b"\\x00\\x20\\x3c"``).
+    * ``snapshot_decoder`` -- the device's ``SnapshotDecoder`` strategy
+      (the WS-S6 Protocol re-exported from
+      :mod:`rytm_randomizer.snapshot.decoder`).
+    * ``mutation_planner`` -- the device's ``MutationPlanner`` strategy
+      (the WS-S6 Protocol re-exported from
+      :mod:`rytm_randomizer.snapshot.planner`).
+    * ``message_renderer`` -- the device's ``MessageRenderer`` strategy.
+    * ``report_header`` -- the operator-facing header line for guarded
+      and hardware send reports (e.g.
+      ``"RytmRandomizer passive Snapshot Essence Guarded Send"``).
 
-    Method contract:
+    Method contract (convenience wrappers that delegate to the strategies;
+    they remain on the Protocol so the WS-S5 surface is byte-stable for
+    callers that already use it):
 
-    * ``decode_snapshot(raw, slot)`` -- parse a SysEx kit/pattern dump.
-      Returns a device-specific dataclass; callers treat it opaque.
-    * ``plan_mutation(snapshot, depth)`` -- produce a mutation plan from
-      the snapshot at the given depth. Returns a device-specific plan.
-    * ``to_mock_messages(plan)`` -- render a plan into a list of inert
-      :class:`~rytm_randomizer.mock_midi.MidiMessage` instances.
-    * ``to_cc_messages(plan)`` -- render a plan into an iterable of
-      ``(channel, control, value)`` triples for a real port to forward.
+    * ``decode_snapshot(raw, slot)`` -- equivalent to
+      ``snapshot_decoder.decode(raw, slot)``.
+    * ``plan_mutation(snapshot, depth)`` -- equivalent to
+      ``mutation_planner.plan(snapshot, depth)``.
+    * ``to_mock_messages(plan)`` -- render every event in ``plan`` via
+      ``message_renderer.to_mock_message``.
+    * ``to_cc_messages(plan)`` -- render every event in ``plan`` via
+      ``message_renderer.to_cc_triple``.
 
-    The two render methods are kept separate (instead of returning a
-    single sequence routed by an ``armed`` boolean) so the type system can
-    distinguish the two output shapes and the test harness can verify each
-    independently.
+    New code SHOULD prefer the strategy attributes (they expose the
+    individual capabilities directly; the generic senders consume them).
+    The convenience methods are kept so WS-S5 callers do not break.
     """
 
     device_id: str
@@ -93,6 +148,11 @@ class Device(Protocol):
     default_midi_channel: int
     track_count: int
     sysex_manufacturer_id: bytes
+
+    snapshot_decoder: SnapshotDecoder
+    mutation_planner: MutationPlanner
+    message_renderer: MessageRenderer
+    report_header: str
 
     def decode_snapshot(self, raw: bytes, slot: int) -> Any: ...
 

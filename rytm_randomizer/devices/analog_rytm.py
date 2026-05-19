@@ -1,139 +1,107 @@
-"""AnalogRytmDevice -- the existing Rytm code surfaced as a Device (WS-S5).
+"""``AnalogRytmDevice`` -- the canonical Rytm ``Device`` (WS-S5 + Strategy).
 
-This module is a thin wrapper that exposes the existing
-``rytm_randomizer/engines/*`` + ``randomization.py`` + ``data/*`` code
-through the :class:`rytm_randomizer.devices.base.Device` protocol. It
-serves three purposes:
+Composes the three Strategy capabilities (``snapshot_decoder``,
+``mutation_planner``, ``message_renderer``) into one ``Device`` instance
+that registers with the canonical
+:func:`rytm_randomizer.devices.registry.register_device` lookup at import
+time.
 
-1. The device registry is non-empty out of the box -- ``get_device("analog_rytm_mk2")``
-   resolves to something real, not a stub.
-2. The Protocol's surface is exercised against the live Rytm code, so the
-   shape is proven before PR #21's ``AnalogFourDevice`` arrives.
-3. Future cross-device code (a dual-machine bridge, a CLI that lists
-   available devices) has a reference implementation to lean on.
-
-The snapshot decoder / mutation planner / message renderers are
-**deliberately minimal** -- they return shape-correct stubs so the Protocol
-is satisfied at runtime, but the actual decode + plan + render bodies will
-be filled in when PR #21's snapshot work lands and the Rytm side needs
-them. Today the live Rytm path goes through ``engines/pad{1-4}.py`` not
-through ``Device``; the wrapper is the *forward-compat seam*, not a
-replacement for the engine path.
+Single-responsibility: this module is *composition only*. The decoding,
+planning, and rendering bodies live in ``devices/strategies/``; the
+Device class wires them together and exposes the WS-S5 convenience
+methods that delegate to the strategies.
 """
 
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
-from typing import Any, Final
+from typing import Final
 
+from ..mock_midi import MidiMessage
 from . import registry
 from .base import Device
+from .strategies import (
+    AnalogRytmMessageRenderer,
+    AnalogRytmMutationPlanner,
+    AnalogRytmSnapshotDecoder,
+    RytmKitSnapshot,
+    RytmMutationPlan,
+)
 
-
-@dataclass(frozen=True)
-class _RytmSnapshot:
-    """Stub snapshot type -- placeholder until PR #21's snapshot work lands."""
-
-    raw: bytes
-    slot: int
-
-
-@dataclass(frozen=True)
-class _RytmMutationPlan:
-    """Stub mutation plan -- placeholder until the snapshot path is wired."""
-
-    snapshot: _RytmSnapshot
-    depth: int
-
-
-# Elektron's 3-byte SysEx manufacturer ID. Documented in the Analog Rytm
-# MKII MIDI spec and reused across every Elektron device. NOT secret.
+#: Elektron's 3-byte SysEx manufacturer ID. Documented in the Analog Rytm
+#: MKII MIDI spec and reused across every Elektron device. NOT secret.
 _ELEKTRON_MFR_ID: Final[bytes] = bytes([0x00, 0x20, 0x3C])
+
+#: Operator-facing report header line for guarded / hardware sends.
+_REPORT_HEADER: Final[str] = "RytmRandomizer Analog Rytm MK2 Guarded Send"
 
 
 class AnalogRytmDevice:
-    """``Device`` wrapping the live Rytm code path.
+    """The Analog Rytm MK2 surfaced as a :class:`Device`.
 
-    See module docstring for what's wired today vs. deferred. Protocol
-    conformance is what matters; the decode / plan / render bodies
-    expand as the snapshot pipeline matures.
+    The four capability strategies are constructed eagerly at instance
+    creation. Each ``AnalogRytmDevice`` is effectively a singleton -- the
+    module's import-time ``register_device`` call wires one instance into
+    the registry.
     """
 
     device_id: Final[str] = "analog_rytm_mk2"
     display_name: Final[str] = "Elektron Analog Rytm MKII"
     default_midi_channel: Final[int] = 0
-    track_count: Final[int] = 12  # Pads 1-12 (V1.34 currently uses 1-4)
+    track_count: Final[int] = 12
     sysex_manufacturer_id: Final[bytes] = _ELEKTRON_MFR_ID
+    report_header: Final[str] = _REPORT_HEADER
 
-    def decode_snapshot(self, raw: bytes, slot: int) -> _RytmSnapshot:
-        """Decode a SysEx kit dump into the internal snapshot shape.
+    def __init__(self) -> None:
+        """Compose the three capability strategies on this device instance."""
 
-        Stub: returns the raw + slot wrapped. The real Elektron envelope
-        unpacking (7-bit unstuffing, manufacturer-id check, kit-record
-        location) will land alongside PR #21's snapshot path.
+        self.snapshot_decoder: AnalogRytmSnapshotDecoder = AnalogRytmSnapshotDecoder()
+        self.mutation_planner: AnalogRytmMutationPlanner = AnalogRytmMutationPlanner()
+        self.message_renderer: AnalogRytmMessageRenderer = AnalogRytmMessageRenderer()
+
+    # ------------------------------------------------------------------
+    # WS-S5 convenience methods. Each delegates to the matching strategy
+    # so old callers keep working byte-identically.
+    # ------------------------------------------------------------------
+
+    def decode_snapshot(self, raw: bytes, slot: int) -> RytmKitSnapshot:
+        """Delegate to :attr:`snapshot_decoder` (the WS-S6 ``decode``)."""
+
+        return self.snapshot_decoder.decode(raw, slot=slot)
+
+    def plan_mutation(self, snapshot: RytmKitSnapshot, depth: int) -> RytmMutationPlan:
+        """Delegate to :attr:`mutation_planner` (the WS-S6 ``plan``)."""
+
+        return self.mutation_planner.plan(snapshot, depth)
+
+    def to_mock_messages(self, plan: RytmMutationPlan) -> list[MidiMessage]:
+        """Render every event in ``plan`` into an inert ``MidiMessage``.
+
+        Calls :meth:`AnalogRytmMessageRenderer.to_mock_message` once per
+        event and returns the materialized list. The caller (test harness
+        or mock sender) holds the list, so we can't lazily generate it.
         """
-        return _RytmSnapshot(raw=raw, slot=slot)
 
-    def plan_mutation(self, snapshot: Any, depth: int) -> _RytmMutationPlan:
-        """Plan a depth-bounded mutation against the snapshot.
-
-        Stub: returns the snapshot + depth wrapped. The Rytm engines'
-        existing mutation logic (in ``engines/pad{1-4}.py`` +
-        ``randomization.py``) will be reached for here when the snapshot
-        path is wired.
-        """
-        if not isinstance(snapshot, _RytmSnapshot):
+        if not isinstance(plan, RytmMutationPlan):
             raise TypeError(
-                f"AnalogRytmDevice.plan_mutation expected _RytmSnapshot, got {type(snapshot).__name__}"
+                "AnalogRytmDevice.to_mock_messages expected RytmMutationPlan, got "
+                f"{type(plan).__name__}"
             )
-        return _RytmMutationPlan(snapshot=snapshot, depth=depth)
+        return [self.message_renderer.to_mock_message(event, plan) for event in plan.events]
 
-    def to_mock_messages(self, plan: Any) -> list[Any]:
-        """Render the plan into inert ``MidiMessage`` instances.
+    def to_cc_messages(self, plan: RytmMutationPlan) -> Iterable[tuple[int, int, int]]:
+        """Render every event in ``plan`` into a ``(channel, control, value)``.
 
-        Not yet implemented. The renderer lands when the snapshot path is
-        wired; today the live Rytm path captures into a ``MockMidiSender``
-        via the engine code (``engines/pad{1-4}.py``), not via this surface.
-
-        Codex review P1: this previously returned ``[]``, which let a caller
-        successfully ``plan -> render`` and silently emit zero messages -- a
-        false positive (tests could pass while the machine would not move).
-        Raising ``NotImplementedError`` makes the unfinished state loud so
-        the caller can route to the engines for now, or wait for the wiring.
+        Returns a tuple (eager materialization) so callers can iterate
+        twice and assert against the same sequence.
         """
-        if not isinstance(plan, _RytmMutationPlan):
+
+        if not isinstance(plan, RytmMutationPlan):
             raise TypeError(
-                f"AnalogRytmDevice.to_mock_messages expected _RytmMutationPlan, got {type(plan).__name__}"
+                "AnalogRytmDevice.to_cc_messages expected RytmMutationPlan, got "
+                f"{type(plan).__name__}"
             )
-        raise NotImplementedError(
-            "AnalogRytmDevice.to_mock_messages: snapshot-to-mock rendering is "
-            "not yet wired. The live mutation path goes through engines/pad*.py "
-            "and captures via MockMidiSender directly; use that surface, or "
-            "wait until the snapshot-decoder lands to populate this renderer."
-        )
-
-    def to_cc_messages(self, plan: Any) -> Iterable[tuple[int, int, int]]:
-        """Render the plan into ``(channel, control, value)`` triples.
-
-        Not yet implemented. The renderer lands when the snapshot path is
-        wired; today the live Rytm path sends CCs via ``midi_io.send_cc``
-        directly from the engines.
-
-        Codex review P1: previously returned ``()``; see ``to_mock_messages``
-        above for the same rationale on why a silent empty return masks an
-        unfinished implementation. Raising surfaces the gap.
-        """
-        if not isinstance(plan, _RytmMutationPlan):
-            raise TypeError(
-                f"AnalogRytmDevice.to_cc_messages expected _RytmMutationPlan, got {type(plan).__name__}"
-            )
-        raise NotImplementedError(
-            "AnalogRytmDevice.to_cc_messages: snapshot-to-CC rendering is "
-            "not yet wired. The live mutation path emits CCs via "
-            "midi_io.send_cc from engines/pad*.py; use that surface, or "
-            "wait until the snapshot-decoder lands to populate this renderer."
-        )
+        return tuple(self.message_renderer.to_cc_triple(event, plan) for event in plan.events)
 
 
 # Register at import time so consumers see a non-empty registry.
@@ -141,16 +109,18 @@ registry.register_device(AnalogRytmDevice())
 
 
 def _assert_protocol_conformance() -> None:
-    """Compile-time-ish sanity check: AnalogRytmDevice satisfies Device.
+    """Compile-time-ish sanity check: ``AnalogRytmDevice`` satisfies ``Device``.
 
-    Called once at module import (it's free) so a structural mismatch is
+    Runs once at module import (it's cheap) so a structural mismatch is
     caught at import rather than at first ``isinstance(device, Device)``
     call from a consumer.
     """
+
     if not isinstance(registry.get_device("analog_rytm_mk2"), Device):
         raise AssertionError(  # noqa: S101 - structural-typing invariant
             "AnalogRytmDevice does not conform to Device protocol -- check "
-            "the attribute / method surface in rytm_randomizer/devices/base.py."
+            "the attribute / method surface in rytm_randomizer/devices/base.py "
+            "against the strategy attributes wired in AnalogRytmDevice.__init__."
         )
 
 
