@@ -9,9 +9,11 @@ SysEx, or mutate hardware.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
 
 from ..mock_midi import MidiMessage, MockMidiSender, build_cc_message
+from .saved_offset_mappings import AnalogFourVerifiedSavedOffsetMapping
 from .snapshot_mutation_planner import (
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
@@ -24,10 +26,18 @@ def build_analog_four_snapshot_mock_runtime_from_file(
     *,
     slot: int,
     depth: str,
+    verified_mappings: Iterable[AnalogFourVerifiedSavedOffsetMapping] | None = None,
+    mapping_manifest_path: str | Path | None = None,
 ) -> AnalogFourSnapshotMutationPlan:
     """Build a captured-value A4 mutation plan for mock runtime preview."""
 
-    return build_analog_four_snapshot_mutation_plan_from_file(path, slot=slot, depth=depth)
+    return build_analog_four_snapshot_mutation_plan_from_file(
+        path,
+        slot=slot,
+        depth=depth,
+        verified_mappings=verified_mappings,
+        mapping_manifest_path=mapping_manifest_path,
+    )
 
 
 def capture_analog_four_snapshot_mock_messages(
@@ -83,6 +93,11 @@ def format_analog_four_snapshot_mock_runtime_report(
         f"Source slot: {plan.slot_number}",
         f"Kit: {plan.kit_name or '<blank>'}",
         f"Depth: {plan.depth}",
+        *(
+            [f"Mapping manifest: {plan.mapping_manifest_path}"]
+            if plan.mapping_manifest_path
+            else []
+        ),
         f"Planned tracks: {plan.planned_track_count} / {plan.scanned_track_count}",
         f"Blocked tracks: {plan.blocked_track_count} / {plan.scanned_track_count}",
         f"Planned changes: {plan.planned_change_count}",

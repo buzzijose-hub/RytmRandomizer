@@ -107,9 +107,17 @@ local verified mapping manifest and validate it with:
 python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
 ```
 
-This creates a passive handoff format for future snapshot planners: proof
-sessions produce entries, the manifest validates the collected entries, and a
-later runtime gate can decide when to consume them.
+The Analog Four saved-snapshot planner and mock-runtime report can consume a
+ready manifest directly:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --slot 1 --depth micro --mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report "G:\ANALOG FOUR\WHOLE PROJECT DUMP\PROJECTANALOGFOUR01.syx" --slot 1 --depth micro --mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
+Ready manifests promote matching track/offset pairs into named CC plan/mock
+events. Empty or duplicate manifests fail closed, and unmatched offsets remain
+`candidate_unverified`.
 
 The current runtime slice connects this planner to mock MIDI message capture,
 still without opening a port. Next, the armed Live Snapshot flow can be designed

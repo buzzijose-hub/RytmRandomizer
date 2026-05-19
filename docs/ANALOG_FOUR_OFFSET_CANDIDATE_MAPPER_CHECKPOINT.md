@@ -84,4 +84,16 @@ python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
 
 The manifest report validates legal tracks, non-negative relative offsets,
 parameter names, CC values, verified status, and duplicate track/offset pairs.
-It is passive JSON-read-only and does not make the mappings live by itself.
+It is passive JSON-read-only and does not send hardware MIDI by itself.
+
+The A4 saved-snapshot planner and mock-runtime reports can consume a ready
+manifest with:
+
+```powershell
+python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report "<a4-bank-or-project.syx>" --slot 1 --depth micro --mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report "<a4-bank-or-project.syx>" --slot 1 --depth micro --mapping-manifest "G:\ANALOG FOUR\MAPPING\a4-verified-mappings.json"
+```
+
+Only matching verified track/offset pairs become named CC plan/mock events.
+Unmatched offsets remain `candidate_unverified`, and duplicate manifests are
+rejected before any runtime plan can consume them.

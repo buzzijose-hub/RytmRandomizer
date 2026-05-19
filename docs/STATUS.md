@@ -518,6 +518,10 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   validator: `analog-four-saved-offset-mapping-manifest-report <path>` reads
   locally collected proof entries, validates track/offset/name/CC/status, and
   blocks duplicate track/offset pairs before any future runtime integration.
+- The A4 saved-snapshot planner and mock-runtime reports can now consume a
+  ready verified manifest with `--mapping-manifest <path>`. Matching
+  track/offset pairs become named CC plan/mock events, while unverified offsets
+  stay inert `candidate_unverified` saved-offset candidates.
 - Pad coverage is complete relative to V1.34: BD engine anchors/discovery (Pad 1), snare/secondary percussion (Pad 2), SY Raw bass (Pad 3), BD Acoustic (Pad 4), a four-pad group layer, scenes (S0-S5 plus variants), isolated single-pad mutation, legacy single-profile mutation, and the full command surface.
 - The V1.34 reference behavior is preserved as JSON goldens under `tests/fixtures/v134_parity/`. The original `rytm_hybrid_randomizer_v134.py` monolith was retired in 2026-05-17; the parity tests (`tests/test_engines_pad*`, `tests/test_group_runner.py`, `tests/test_scene_runner.py`) now compare engine output to those fixtures via `tests/_parity_worker.py`.
 
@@ -541,8 +545,8 @@ Each step is locked against the V1.34 reference by characterization tests.
   baseline/variant export sessions on copied/restorable kits: Rytm-only first,
   Analog-Four-only second, then one tiny both-machine pilot.
 - Promote only mappings proven by exactly one intended saved-parameter change,
-  collect A4 entries in a verified mapping manifest, then let the guarded send
-  plan decide whether a selected snapshot is eligible for live mutation.
+  collect A4 entries in a verified mapping manifest, then extend the
+  dual-machine guarded send plan to consume the same manifest gate.
 - Still future work: GUI, live SysEx receive/write, real-time snapshot capture,
   full audio analysis, deeper per-engine mutation maps for every Rytm machine,
   and broader Analog Four sound-design mutation beyond the current starter CC

@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +53,13 @@ def run_cli(*args):
         capture_output=True,
         text=True,
         check=False,
+    )
+
+
+def write_mapping_manifest(path: Path, mappings):
+    path.write_text(
+        json.dumps({"mappings": mappings}),
+        encoding="utf-8",
     )
 
 
@@ -172,6 +180,42 @@ def test_analog_four_snapshot_mock_runtime_emits_verified_saved_offset_as_cc():
     assert unmapped.metadata["mapping_status"] == "candidate_unverified"
 
 
+def test_analog_four_snapshot_mock_runtime_builder_carries_manifest_source(tmp_path):
+    from rytm_randomizer.analog_four.saved_offset_mappings import (
+        AnalogFourVerifiedSavedOffsetMapping,
+    )
+    from rytm_randomizer.analog_four.snapshot_mock_runtime import (
+        build_analog_four_snapshot_mock_runtime_from_file,
+    )
+
+    sysex_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-verified-mappings.json"
+    sysex_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="MOCK SOURCE",
+            track_values={1: {20: 64}},
+        )
+    )
+
+    plan = build_analog_four_snapshot_mock_runtime_from_file(
+        sysex_path,
+        slot=1,
+        depth="micro",
+        verified_mappings=(
+            AnalogFourVerifiedSavedOffsetMapping(
+                track=1,
+                relative_offset=20,
+                parameter_name="Filter 1 Frequency",
+                cc=18,
+            ),
+        ),
+        mapping_manifest_path=manifest_path,
+    )
+
+    assert plan.mapping_manifest_path == str(manifest_path)
+    assert plan.tracks[0].changes[0].parameter_name == "Filter 1 Frequency"
+
+
 def test_analog_four_snapshot_mock_runtime_captures_one_filtered_track():
     from rytm_randomizer.analog_four.snapshot_mock_runtime import (
         capture_analog_four_snapshot_mock_messages,
@@ -267,5 +311,52 @@ def test_analog_four_snapshot_mock_runtime_cli_filters_to_one_track(tmp_path):
     assert "Mock sender captured: 2 message(s)" in result.stdout
     assert "- Track 2 ch 2 wire 1 STAB HIT / Offset +20: 32 -> 35" in result.stdout
     assert "- Track 1 " not in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_snapshot_mock_runtime_cli_uses_manifest_for_cc_events(tmp_path):
+    sysex_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-verified-mappings.json"
+    sysex_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI A4 MAPPED",
+            track_values={1: {20: 64, 22: 80}},
+        )
+    )
+    write_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            }
+        ],
+    )
+
+    result = run_cli(
+        "analog-four-snapshot-mock-runtime-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--mapping-manifest",
+        str(manifest_path),
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four Snapshot Mock Runtime Report" in result.stdout
+    assert "Kit: CLI A4 MAPPED" in result.stdout
+    assert (
+        "- Track 1 ch 1 wire 0 BASS LOW / Filter 1 Frequency: "
+        "CC18 -> 67 from offset +20 (verified_cc_mapping)"
+    ) in result.stdout
+    assert "Offset +22: 80 -> 83" in result.stdout
+    assert "- verified saved offsets emit mapped CC mock events" in result.stdout
+    assert "- unverified saved offsets remain candidate_unverified" in result.stdout
+    assert "- mock sender only" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

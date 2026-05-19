@@ -1395,11 +1395,14 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) in (6, 8)
+        len(args) in (6, 8, 10)
         and args[0] == "analog-four-snapshot-mutation-plan-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
     ):
+        from .analog_four.saved_offset_mapping_manifest import (
+            load_ready_analog_four_saved_offset_mapping_manifest,
+        )
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
             build_analog_four_snapshot_mutation_plan_from_file,
@@ -1408,17 +1411,40 @@ def main(argv=None):
             format_analog_four_snapshot_mutation_plan_report,
         )
 
-        optional_args = _parse_optional_key_value_args(args[6:], {"--track"})
+        optional_args = _parse_optional_key_value_args(
+            args[6:],
+            {"--track", "--mapping-manifest"},
+        )
         if optional_args is None:
             sys.stderr.write(f"{USAGE}\n")
             return 2
 
         try:
             slot = int(args[3])
+        except ValueError:
+            lines = format_analog_four_snapshot_mutation_plan_error(
+                args[1],
+                "Slot must be an integer",
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        try:
+            verified_mappings = None
+            mapping_manifest_path = None
+            if "--mapping-manifest" in optional_args:
+                manifest = load_ready_analog_four_saved_offset_mapping_manifest(
+                    optional_args["--mapping-manifest"]
+                )
+                verified_mappings = manifest.mappings
+                mapping_manifest_path = manifest.path
             plan = build_analog_four_snapshot_mutation_plan_from_file(
                 args[1],
                 slot=slot,
                 depth=args[5],
+                verified_mappings=verified_mappings,
+                mapping_manifest_path=mapping_manifest_path,
             )
             if "--track" in optional_args:
                 plan = filter_analog_four_snapshot_mutation_plan_to_track(
@@ -1435,10 +1461,10 @@ def main(argv=None):
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
-        except ValueError:
+        except ValueError as exc:
             lines = format_analog_four_snapshot_mutation_plan_error(
                 args[1],
-                "Slot must be an integer",
+                str(exc),
             )
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
@@ -1449,11 +1475,14 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) in (6, 8)
+        len(args) in (6, 8, 10)
         and args[0] == "analog-four-snapshot-mock-runtime-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
     ):
+        from .analog_four.saved_offset_mapping_manifest import (
+            load_ready_analog_four_saved_offset_mapping_manifest,
+        )
         from .analog_four.snapshot_mock_runtime import (
             build_analog_four_snapshot_mock_runtime_from_file,
             capture_analog_four_snapshot_mock_messages,
@@ -1465,17 +1494,40 @@ def main(argv=None):
             filter_analog_four_snapshot_mutation_plan_to_track,
         )
 
-        optional_args = _parse_optional_key_value_args(args[6:], {"--track"})
+        optional_args = _parse_optional_key_value_args(
+            args[6:],
+            {"--track", "--mapping-manifest"},
+        )
         if optional_args is None:
             sys.stderr.write(f"{USAGE}\n")
             return 2
 
         try:
             slot = int(args[3])
+        except ValueError:
+            lines = format_analog_four_snapshot_mock_runtime_error(
+                args[1],
+                "Slot must be an integer",
+            )
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        try:
+            verified_mappings = None
+            mapping_manifest_path = None
+            if "--mapping-manifest" in optional_args:
+                manifest = load_ready_analog_four_saved_offset_mapping_manifest(
+                    optional_args["--mapping-manifest"]
+                )
+                verified_mappings = manifest.mappings
+                mapping_manifest_path = manifest.path
             plan = build_analog_four_snapshot_mock_runtime_from_file(
                 args[1],
                 slot=slot,
                 depth=args[5],
+                verified_mappings=verified_mappings,
+                mapping_manifest_path=mapping_manifest_path,
             )
             if "--track" in optional_args:
                 plan = filter_analog_four_snapshot_mutation_plan_to_track(
@@ -1493,10 +1545,10 @@ def main(argv=None):
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")
             return 1
-        except ValueError:
+        except ValueError as exc:
             lines = format_analog_four_snapshot_mock_runtime_error(
                 args[1],
-                "Slot must be an integer",
+                str(exc),
             )
             sys.stderr.write("\n".join(lines))
             sys.stderr.write("\n")

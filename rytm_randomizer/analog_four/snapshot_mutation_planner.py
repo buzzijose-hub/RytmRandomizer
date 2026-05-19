@@ -93,6 +93,7 @@ class AnalogFourSnapshotMutationPlan:
     depth: str
     manufacturer_id: str
     tracks: tuple[AnalogFourTrackMutationPlan, ...]
+    mapping_manifest_path: str | None = None
 
     @property
     def planned_track_count(self) -> int:
@@ -117,6 +118,7 @@ def build_analog_four_snapshot_mutation_plan_from_file(
     slot: int,
     depth: str,
     verified_mappings: Iterable[AnalogFourVerifiedSavedOffsetMapping] | None = None,
+    mapping_manifest_path: str | Path | None = None,
 ) -> AnalogFourSnapshotMutationPlan:
     """Build a passive A4 snapshot mutation plan from an existing SysEx file."""
 
@@ -125,6 +127,7 @@ def build_analog_four_snapshot_mutation_plan_from_file(
         slot=slot,
         depth=depth,
         verified_mappings=verified_mappings,
+        mapping_manifest_path=mapping_manifest_path,
     )
     return AnalogFourSnapshotMutationPlan(
         source_path=str(path),
@@ -133,6 +136,7 @@ def build_analog_four_snapshot_mutation_plan_from_file(
         depth=plan.depth,
         manufacturer_id=plan.manufacturer_id,
         tracks=plan.tracks,
+        mapping_manifest_path=plan.mapping_manifest_path,
     )
 
 
@@ -142,6 +146,7 @@ def build_analog_four_snapshot_mutation_plan_from_bytes(
     slot: int,
     depth: str,
     verified_mappings: Iterable[AnalogFourVerifiedSavedOffsetMapping] | None = None,
+    mapping_manifest_path: str | Path | None = None,
 ) -> AnalogFourSnapshotMutationPlan:
     """Build a passive A4 snapshot mutation plan from raw SysEx bytes."""
 
@@ -166,6 +171,7 @@ def build_analog_four_snapshot_mutation_plan_from_bytes(
         tracks=tuple(
             _build_track_plan(payload, track, depth, normalized_mappings) for track in range(1, 5)
         ),
+        mapping_manifest_path=str(mapping_manifest_path) if mapping_manifest_path else None,
     )
 
 
@@ -196,6 +202,7 @@ def filter_analog_four_snapshot_mutation_plan_to_track(
         depth=plan.depth,
         manufacturer_id=plan.manufacturer_id,
         tracks=selected_tracks,
+        mapping_manifest_path=plan.mapping_manifest_path,
     )
 
 
@@ -217,6 +224,8 @@ def format_analog_four_snapshot_mutation_plan_report(
         f"Planned changes: {plan.planned_change_count}",
         "Track plans:",
     ]
+    if plan.mapping_manifest_path:
+        lines.insert(6, f"Mapping manifest: {plan.mapping_manifest_path}")
     for track in plan.tracks:
         lines.append(
             f"- Track {track.track} / MIDI channel {track.midi_channel}: "

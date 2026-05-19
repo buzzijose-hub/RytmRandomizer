@@ -87,6 +87,33 @@ def test_saved_offset_mapping_manifest_report_accepts_verified_mappings(tmp_path
     assert "- no MIDI sending" in report
 
 
+def test_ready_saved_offset_mapping_manifest_returns_ready_manifest(tmp_path):
+    from rytm_randomizer.analog_four.saved_offset_mapping_manifest import (
+        load_ready_analog_four_saved_offset_mapping_manifest,
+    )
+
+    manifest_path = tmp_path / "a4-ready-mappings.json"
+    write_manifest(
+        manifest_path,
+        {
+            "mappings": [
+                {
+                    "track": 1,
+                    "relative_offset": 120,
+                    "parameter_name": "Filter 1 Frequency",
+                    "cc": 18,
+                }
+            ]
+        },
+    )
+
+    manifest = load_ready_analog_four_saved_offset_mapping_manifest(manifest_path)
+
+    assert manifest.ready is True
+    assert manifest.reason == "verified_manifest_ready"
+    assert manifest.mappings[0].parameter_name == "Filter 1 Frequency"
+
+
 def test_saved_offset_mapping_manifest_blocks_duplicate_track_offsets(tmp_path):
     from rytm_randomizer.analog_four.saved_offset_mapping_manifest import (
         format_analog_four_saved_offset_mapping_manifest_report,
@@ -122,6 +149,36 @@ def test_saved_offset_mapping_manifest_blocks_duplicate_track_offsets(tmp_path):
     assert "Reason: blocked_duplicate_track_offsets" in report
     assert "Duplicate count: 1" in report
     assert "- Track 1 / offset +120 appears 2 times" in report
+
+
+def test_ready_saved_offset_mapping_manifest_rejects_duplicate_manifest(tmp_path):
+    from rytm_randomizer.analog_four.saved_offset_mapping_manifest import (
+        load_ready_analog_four_saved_offset_mapping_manifest,
+    )
+
+    manifest_path = tmp_path / "a4-duplicate-mappings.json"
+    write_manifest(
+        manifest_path,
+        {
+            "mappings": [
+                {
+                    "track": 1,
+                    "relative_offset": 120,
+                    "parameter_name": "Filter 1 Frequency",
+                    "cc": 18,
+                },
+                {
+                    "track": 1,
+                    "relative_offset": 120,
+                    "parameter_name": "Filter 2 Frequency",
+                    "cc": 19,
+                },
+            ]
+        },
+    )
+
+    with pytest.raises(ValueError, match="mapping manifest not ready"):
+        load_ready_analog_four_saved_offset_mapping_manifest(manifest_path)
 
 
 def test_saved_offset_mapping_manifest_reports_empty_manifest(tmp_path):

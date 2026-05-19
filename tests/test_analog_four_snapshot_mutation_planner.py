@@ -1,3 +1,4 @@
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +53,13 @@ def run_cli(*args):
         capture_output=True,
         text=True,
         check=False,
+    )
+
+
+def write_mapping_manifest(path: Path, mappings):
+    path.write_text(
+        json.dumps({"mappings": mappings}),
+        encoding="utf-8",
     )
 
 
@@ -306,3 +314,86 @@ def test_analog_four_snapshot_mutation_plan_cli_filters_to_one_track(tmp_path):
     assert "- Track 1 " not in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
+
+
+def test_analog_four_snapshot_mutation_plan_cli_promotes_manifest_mapping(tmp_path):
+    sysex_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-verified-mappings.json"
+    sysex_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI MANIFEST",
+            track_values={1: {20: 64, 22: 80}},
+        )
+    )
+    write_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+                "mapping_status": "verified_cc_mapping",
+            }
+        ],
+    )
+
+    result = run_cli(
+        "analog-four-snapshot-mutation-plan-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--mapping-manifest",
+        str(manifest_path),
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four Snapshot Mutation Plan Report" in result.stdout
+    assert f"Mapping manifest: {manifest_path}" in result.stdout
+    assert "Kit: CLI MANIFEST" in result.stdout
+    assert "Filter 1 Frequency CC18, verified_cc_mapping" in result.stdout
+    assert "candidate_unverified" in result.stdout
+    assert "- verified saved offsets may become named CC mock events" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_snapshot_mutation_plan_cli_rejects_unready_manifest(tmp_path):
+    sysex_path = tmp_path / "a4-kits.syx"
+    manifest_path = tmp_path / "a4-duplicate-mappings.json"
+    sysex_path.write_bytes(make_a4_kit_record(track_values={1: {20: 64}}))
+    write_mapping_manifest(
+        manifest_path,
+        [
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Frequency",
+                "cc": 18,
+            },
+            {
+                "track": 1,
+                "relative_offset": 20,
+                "parameter_name": "Filter 1 Resonance",
+                "cc": 19,
+            },
+        ],
+    )
+
+    result = run_cli(
+        "analog-four-snapshot-mutation-plan-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--mapping-manifest",
+        str(manifest_path),
+    )
+
+    assert result.returncode == 1
+    assert "mapping manifest not ready: blocked_duplicate_track_offsets" in result.stderr
+    assert "No MIDI was sent" in result.stderr
+    assert result.stdout == ""

@@ -23,8 +23,8 @@ USAGE = (
     "dual-machine-mapping-validation-queue-report [--target <target>] [--limit <n>] | "
     "dual-machine-mapping-session-plan-report [--target <target>] [--slot <1-128>] [--limit <n>] | "
     "analog-four-kit-bank-report <path> | analog-four-kit-snapshot-report <path> --slot <1-128> | "
-    "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
-    "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
+    "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] [--mapping-manifest <path>] | "
+    "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] [--mapping-manifest <path>] | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "analog-four-saved-offset-mapping-guide [--track <1-4>] [--parameter <parameter>] | "
@@ -113,8 +113,10 @@ Usage:
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
+  python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --mapping-manifest <path>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --mapping-manifest <path>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
@@ -771,20 +773,23 @@ Safety:
 Usage:
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
+  python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --mapping-manifest <path>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report --help
 
 Behavior:
   Reads an existing Analog Four kit bank or whole-project SysEx file, decodes
   one saved kit slot, and plans captured-value-relative changes around
   candidate_unverified saved offsets. Use --track to inspect one saved synth
-  track while leaving the other tracks out of the passive plan. It does not
-  claim parameter names, CC mappings, send MIDI, write SysEx, or touch
-  hardware.
+  track while leaving the other tracks out of the passive plan. Use
+  --mapping-manifest to load a ready verified saved-offset manifest and promote
+  matching offsets into named CC mappings. Unverified offsets remain candidates.
+  It does not send MIDI, write SysEx, or touch hardware.
 
 Safety:
   passive/read-only
-  candidate offsets only
-  no parameter names claimed
+  local JSON manifest read only when requested
+  verified mappings only from ready manifests
+  no parameter names claimed without ready manifest match
   no MIDI sending
   no MIDI receive
   no port opening
@@ -798,22 +803,24 @@ Safety:
 Usage:
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --mapping-manifest <path>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report --help
 
 Behavior:
   Reads an existing Analog Four kit bank or whole-project SysEx file, builds a
   captured-value-relative saved-offset candidate plan, and captures that plan
   into inert mock events. Use --track to capture one saved synth track only.
-  Events are saved-offset candidate records only: candidate_unverified, no
-  parameter names claimed, and no CC mapping claimed. It does not request
-  dumps, receive live SysEx, send MIDI, write SysEx, or touch hardware.
+  Use --mapping-manifest to load a ready verified saved-offset manifest; matching
+  offsets become mapped CC mock events and unverified offsets remain inert
+  saved-offset candidates. It does not request dumps, receive live SysEx, send
+  MIDI, write SysEx, or touch hardware.
 
 Safety:
   passive/read-only
   mock sender only
-  saved-offset candidate events only
-  no parameter names claimed
-  no CC mapping claimed
+  local JSON manifest read only when requested
+  verified mappings only from ready manifests
+  no CC mapping claimed without ready manifest match
   no MIDI sending
   no MIDI receive
   no port opening

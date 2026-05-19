@@ -73,6 +73,17 @@ def load_analog_four_saved_offset_mapping_manifest(
     )
 
 
+def load_ready_analog_four_saved_offset_mapping_manifest(
+    path: str | Path,
+) -> AnalogFourSavedOffsetMappingManifest:
+    """Load a verified mapping manifest and fail closed if it is not ready."""
+
+    manifest = load_analog_four_saved_offset_mapping_manifest(path)
+    if not manifest.ready:
+        raise ValueError(f"mapping manifest not ready: {manifest.reason}")
+    return manifest
+
+
 def format_analog_four_saved_offset_mapping_manifest_report(
     manifest: AnalogFourSavedOffsetMappingManifest,
 ) -> list[str]:
@@ -198,4 +209,5 @@ __all__ = [
     "format_analog_four_saved_offset_mapping_manifest_error",
     "format_analog_four_saved_offset_mapping_manifest_report",
     "load_analog_four_saved_offset_mapping_manifest",
+    "load_ready_analog_four_saved_offset_mapping_manifest",
 ]
