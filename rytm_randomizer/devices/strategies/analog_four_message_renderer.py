@@ -42,9 +42,7 @@ class AnalogFourMessageRenderer:
                 f"got {evt.track}"
             )
         if evt.control < 0 or evt.control > 127:
-            raise ValueError(
-                "AnalogFourMessageRenderer.to_cc_triple: control must be in [0, 127]"
-            )
+            raise ValueError("AnalogFourMessageRenderer.to_cc_triple: control must be in [0, 127]")
         if evt.value < 0 or evt.value > 127:
             raise ValueError("AnalogFourMessageRenderer.to_cc_triple: value must be in [0, 127]")
 
@@ -56,8 +54,7 @@ def _require_event(event: object) -> AnalogFourPlanEvent:
 
     if not isinstance(event, AnalogFourPlanEvent):
         raise TypeError(
-            "AnalogFourMessageRenderer expected AnalogFourPlanEvent, "
-            f"got {type(event).__name__}"
+            "AnalogFourMessageRenderer expected AnalogFourPlanEvent, " f"got {type(event).__name__}"
         )
     return event
 

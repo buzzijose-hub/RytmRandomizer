@@ -42,9 +42,7 @@ class AnalogFourDevice:
 
         return self.snapshot_decoder.decode(raw, slot=slot)
 
-    def plan_mutation(
-        self, snapshot: AnalogFourKitSnapshot, depth: int
-    ) -> AnalogFourMutationPlan:
+    def plan_mutation(self, snapshot: AnalogFourKitSnapshot, depth: int) -> AnalogFourMutationPlan:
         """Delegate to the Analog Four mutation planner strategy."""
 
         return self.mutation_planner.plan(snapshot, depth)

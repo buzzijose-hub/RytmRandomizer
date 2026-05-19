@@ -29,8 +29,7 @@ def resolve_target_devices(
     normalized = target.strip().lower()
     if normalized not in _ALIASES:
         raise ValueError(
-            "unknown target "
-            f"{target!r}; expected one of {', '.join(sorted(_ALIASES))}"
+            "unknown target " f"{target!r}; expected one of {', '.join(sorted(_ALIASES))}"
         )
     source = all_devices() if registry is None else registry
     return {device_id: source[device_id] for device_id in _ALIASES[normalized]}

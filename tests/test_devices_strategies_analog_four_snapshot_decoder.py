@@ -23,8 +23,7 @@ def _a4_kit_payload(name: bytes = b"A4KIT") -> bytes:
 
 
 def test_decode_returns_analog_four_kit_snapshot_with_slot_and_name() -> None:
-    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
-    from rytm_randomizer.devices.strategies import AnalogFourSnapshotDecoder
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot, AnalogFourSnapshotDecoder
 
     snapshot = AnalogFourSnapshotDecoder().decode(_a4_kit_payload(b"FOUR01"), slot=2)
 

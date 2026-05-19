@@ -37,9 +37,7 @@ class AnalogFourSnapshotDecoder:
         if slot < 0:
             raise ValueError("AnalogFourSnapshotDecoder.decode: slot must be non-negative")
         if not raw.startswith(ELEKTRON_MFR_ID):
-            raise ValueError(
-                "AnalogFourSnapshotDecoder.decode: missing Elektron manufacturer id"
-            )
+            raise ValueError("AnalogFourSnapshotDecoder.decode: missing Elektron manufacturer id")
         if len(raw) < _KIT_NAME_OFFSET + _KIT_NAME_LENGTH:
             raise ValueError("AnalogFourSnapshotDecoder.decode: payload too short for kit name")
         if raw[3] != A4_CANDIDATE_KIT_TYPE_BYTE:

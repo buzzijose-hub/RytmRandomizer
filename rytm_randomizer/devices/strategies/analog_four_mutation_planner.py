@@ -63,7 +63,7 @@ class AnalogFourMutationPlanner:
             )
 
         rng_seed = (self._seed * 1_000_003) ^ (snapshot.slot * 1009) ^ depth
-        rng = random.Random(rng_seed)
+        rng = random.Random(rng_seed)  # noqa: S311 - non-crypto mutation planning
         events = tuple(
             AnalogFourPlanEvent(
                 track=track,
