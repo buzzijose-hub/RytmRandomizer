@@ -5,6 +5,14 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # Hardware-pinned packages must not be auto-bumped. These versions
+    # encode the byte-level MIDI wire format the Elektron Analog Rytm MK2
+    # expects; any bump requires manual hardware validation per
+    # `docs/MANUAL_HARDWARE_VALIDATION.md` AND explicit user approval.
+    # See `.claude/rules/hardware-pinned-packages.md` for the full rule.
+    ignore:
+      - dependency-name: "mido"
+      - dependency-name: "python-rtmidi"
 
   - package-ecosystem: "github-actions"
     directory: "/"
