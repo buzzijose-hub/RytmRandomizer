@@ -24,7 +24,7 @@ USAGE = (
     "dual-machine-live-snapshot-readiness-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
-    "dual-machine-lane-validation-guide | "
+    "dual-machine-lane-validation-guide [--target <target>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
     "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
@@ -357,6 +357,9 @@ def test_dual_machine_lane_validation_guide_help_exits_zero():
     assert result.returncode == 0
     assert "RytmRandomizer passive CLI: dual-machine-lane-validation-guide" in result.stdout
     assert "one lane-scoped dual-machine" in result.stdout
+    assert "--target <rytm|analog-four|both>" in result.stdout
+    assert "--rytm-pad <1-12>" in result.stdout
+    assert "--analog-four-track <1-4>" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 

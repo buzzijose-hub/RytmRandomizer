@@ -469,6 +469,41 @@ def _parse_dual_machine_bridge_cli_args(args, *, allow_lane_filters: bool = Fals
     }
 
 
+def _parse_dual_machine_lane_validation_guide_cli_args(args):
+    if len(args) % 2 == 0:
+        raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
+
+    target = "both"
+    rytm_pad = None
+    analog_four_track = None
+    tail = list(args[1:])
+    while tail:
+        flag = tail.pop(0)
+        if not tail:
+            raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
+        value = tail.pop(0)
+        if flag == "--target":
+            target = value
+        elif flag == "--rytm-pad":
+            try:
+                rytm_pad = int(value)
+            except ValueError as exc:
+                raise ValueError("Rytm pad must be an integer") from exc
+        elif flag == "--analog-four-track":
+            try:
+                analog_four_track = int(value)
+            except ValueError as exc:
+                raise ValueError("Analog Four track must be an integer") from exc
+        else:
+            raise ValueError(_DUAL_MACHINE_CLI_USAGE_ERROR)
+
+    return {
+        "target": target,
+        "rytm_pad": rytm_pad,
+        "analog_four_track": analog_four_track,
+    }
+
+
 def main(argv=None):
     """Run the passive report-only CLI."""
     args = sys.argv[1:] if argv is None else list(argv)
@@ -1094,12 +1129,24 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
-    if args == ["dual-machine-lane-validation-guide"]:
+    if args and args[0] == "dual-machine-lane-validation-guide":
         from .dual_machine.lane_validation_guide import (
             format_dual_machine_lane_validation_guide,
+            format_dual_machine_lane_validation_guide_error,
         )
 
-        sys.stdout.write("\n".join(format_dual_machine_lane_validation_guide()))
+        try:
+            parsed = _parse_dual_machine_lane_validation_guide_cli_args(args)
+            report = format_dual_machine_lane_validation_guide(**parsed)
+        except ValueError as exc:
+            if _is_dual_machine_cli_usage_error(exc):
+                sys.stderr.write(f"{USAGE}\n")
+            else:
+                sys.stderr.write("\n".join(format_dual_machine_lane_validation_guide_error(str(exc))))
+                sys.stderr.write("\n")
+            return 2
+
+        sys.stdout.write("\n".join(report))
         sys.stdout.write("\n")
         return 0
 

@@ -61,6 +61,53 @@ def test_dual_machine_lane_validation_guide_formats_operator_sequence():
     assert "- no hardware required" in joined
 
 
+def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    report = format_dual_machine_lane_validation_guide(target="rytm", rytm_pad=10)
+    joined = "\n".join(report)
+
+    assert "Target scope: rytm" in joined
+    assert "Recommended Rytm pad: 10" in joined
+    assert "Analog Four track: not targeted" in joined
+    assert "Expected lane-scoped messages: 6" in joined
+    assert "--target rytm --rytm-pad 10" in joined
+    assert "--snapshot-target rytm --snapshot-rytm-pad 10" in joined
+    assert "--snapshot-analog-four-track" not in joined
+    assert "- A4 Track" not in joined
+
+
+def test_dual_machine_lane_validation_guide_cli_accepts_analog_four_only_target():
+    result = run_cli(
+        "dual-machine-lane-validation-guide",
+        "--target",
+        "analog-four",
+        "--analog-four-track",
+        "2",
+    )
+
+    assert result.returncode == 0
+    assert "Target scope: analog-four" in result.stdout
+    assert "Rytm pad: not targeted" in result.stdout
+    assert "Recommended Analog Four track: 2" in result.stdout
+    assert "Expected lane-scoped messages: 5" in result.stdout
+    assert "--target analog-four --analog-four-track 2" in result.stdout
+    assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in result.stdout
+    assert "--snapshot-rytm-pad" not in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_lane_validation_guide_cli_rejects_invalid_rytm_pad_without_hardware():
+    result = run_cli("dual-machine-lane-validation-guide", "--rytm-pad", "13")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Rytm pad must be between 1 and 12" in result.stderr
+    assert "No MIDI was sent." in result.stderr
+
+
 def test_dual_machine_lane_validation_guide_cli_outputs_without_hardware():
     result = run_cli("dual-machine-lane-validation-guide")
 

@@ -43,6 +43,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli dual-machine-lane-validation-guide
+  python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target <rytm|analog-four|both> --rytm-pad <1-12> --analog-four-track <1-4>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
