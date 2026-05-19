@@ -127,7 +127,7 @@ def format_dual_machine_lane_validation_guide(
         _armed_order_line(request),
         "- Then widen to other pads/tracks or full target scope",
         "Operator notes template:",
-        "- Rytm project/kit path:",
+        *_path_note_lines(request),
         *_port_note_lines(request),
         *_heard_note_lines(request),
         "- Expected message count seen:",
@@ -323,6 +323,14 @@ def _armed_order_line(request: DualMachineLaneValidationGuideRequest) -> str:
     if request.target == "rytm":
         return "- Armed Rytm-only lane-scoped send"
     return "- Armed Analog-Four-only lane-scoped send"
+
+
+def _path_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[str]:
+    if request.target == "both":
+        return ["- Rytm project/kit path:", "- Analog Four project/kit path:"]
+    if request.target == "rytm":
+        return ["- Rytm project/kit path:"]
+    return ["- Analog Four project/kit path:"]
 
 
 def _port_note_lines(request: DualMachineLaneValidationGuideRequest) -> list[str]:

@@ -57,6 +57,8 @@ def test_dual_machine_lane_validation_guide_formats_operator_sequence():
     assert "dual-machine-live-snapshot-readiness-report" in joined
     assert "rytm-randomizer --dry-run --dual-machine-snapshot-send" in joined
     assert "rytm-randomizer --arm --dual-machine-snapshot-send" in joined
+    assert "- Rytm project/kit path:" in joined
+    assert "- Analog Four project/kit path:" in joined
     assert "- no MIDI sending" in joined
     assert "- no hardware required" in joined
 
@@ -128,6 +130,8 @@ def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     assert "Expected lane-scoped messages: 6" in joined
     assert "--target rytm --rytm-pad 10" in joined
     assert "--snapshot-target rytm --snapshot-rytm-pad 10" in joined
+    assert "- Rytm project/kit path:" in joined
+    assert "- Analog Four project/kit path:" not in joined
     assert "--snapshot-analog-four-track" not in joined
     assert "- A4 Track" not in joined
 
@@ -149,6 +153,8 @@ def test_dual_machine_lane_validation_guide_formats_analog_four_only_lane():
     assert "Expected lane-scoped messages: 5" in joined
     assert "--target analog-four --analog-four-track 2" in joined
     assert "--snapshot-target analog-four --snapshot-analog-four-track 2" in joined
+    assert "- Analog Four project/kit path:" in joined
+    assert "- Rytm project/kit path:" not in joined
     assert "- Analog Four port selected:" in joined
     assert "- A4 Track 2 heard change / safe:" in joined
 
