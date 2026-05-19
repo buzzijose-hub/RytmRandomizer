@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: made the passive dual-machine lane validation guide print the
+  same implementation-boundary summary as the bank-readiness gate. Focused and
+  all-lane guides now state that Rytm uses 12 pad/machine compatibility gates,
+  Analog Four uses 4 saved-offset mapping-manifest gates, and only target
+  scoping/reporting/orchestration are shared. This keeps Eddie's docs review
+  and Jose's hardware checklist aligned before any armed lane send.
 - 2026-05-19: added a passive dual-machine mapping validation queue.
   `dual-machine-mapping-validation-queue-report [--target <target>]
   [--limit <n>]` prints an ordered checklist of controlled Rytm pad and Analog

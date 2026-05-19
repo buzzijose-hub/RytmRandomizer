@@ -649,9 +649,11 @@ Behavior:
   to Rytm only, Analog Four only, or both; lane flags choose the specific Rytm
   pad and/or A4 track. Optional --analog-four-mapping-manifest fills the A4
   saved-offset manifest path into generated A4 snapshot commands; when omitted
-  the guide prints a placeholder. Use --all-lanes to print the full
-  one-lane-at-a-time validation matrix for Rytm Pads 1-12, A4 Tracks 1-4, and
-  both-machine pilot pairs. It is pure text for preparation and does not send
+  the guide prints a placeholder. It prints device-specific implementation
+  boundaries for the Rytm 12-pad path, Analog Four 4-track path, and shared
+  orchestration layer. Use --all-lanes to print the full one-lane-at-a-time
+  validation matrix for Rytm Pads 1-12, A4 Tracks 1-4, and both-machine pilot
+  pairs. It is pure text for preparation and does not send
   MIDI, open ports, receive live SysEx, write SysEx, or mutate hardware.
 
 Safety:

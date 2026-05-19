@@ -86,6 +86,29 @@ def test_dual_machine_lane_validation_guide_includes_saved_bank_preflight():
     assert "- Continue only if combined blocked lanes are 0 and Problem slots is none." in joined
 
 
+def test_dual_machine_lane_validation_guide_names_implementation_boundaries():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    report = format_dual_machine_lane_validation_guide()
+    joined = "\n".join(report)
+
+    assert "Implementation boundaries:" in joined
+    assert (
+        "- Rytm implementation: 12 pad/machine lanes with pad-machine compatibility gates."
+        in joined
+    )
+    assert (
+        "- Analog Four implementation: 4 synth tracks with saved-offset mapping manifest gates."
+        in joined
+    )
+    assert (
+        "- Shared layer: target scoping, reporting, orchestration, and guarded validation only."
+        in joined
+    )
+
+
 def test_dual_machine_lane_validation_guide_scopes_saved_bank_preflight_to_rytm_only():
     from rytm_randomizer.dual_machine.lane_validation_guide import (
         format_dual_machine_lane_validation_guide,
@@ -294,6 +317,19 @@ def test_dual_machine_all_lane_validation_guide_lists_every_single_machine_lane(
     assert "dual-machine-kit-bank-readiness-report --rytm <rytm-sysex-path>" in joined
     assert "sysex-kit-bank-report <rytm-sysex-path>" in joined
     assert "analog-four-kit-bank-report <analog-four-sysex-path>" in joined
+    assert "Implementation boundaries:" in joined
+    assert (
+        "- Rytm implementation: 12 pad/machine lanes with pad-machine compatibility gates."
+        in joined
+    )
+    assert (
+        "- Analog Four implementation: 4 synth tracks with saved-offset mapping manifest gates."
+        in joined
+    )
+    assert (
+        "- Shared layer: target scoping, reporting, orchestration, and guarded validation only."
+        in joined
+    )
     assert "- no MIDI sending" in joined
 
 

@@ -116,6 +116,8 @@ def format_dual_machine_lane_validation_guide(
         _analog_four_track_line(request),
         f"Recommended depth: {DEFAULT_DEPTH}",
         f"Expected lane-scoped messages: {_expected_message_count(request)}",
+        "Implementation boundaries:",
+        *_implementation_boundary_lines(),
         *_saved_bank_preflight_lines(request.target),
         *_snapshot_source_note_lines(request),
         "Passive preview stack:",
@@ -170,6 +172,8 @@ def format_dual_machine_all_lane_validation_guide() -> list[str]:
         "- Rytm-only Pads 1-12",
         "- Analog-Four-only Tracks 1-4",
         "- Both-machine pilot pairs",
+        "Implementation boundaries:",
+        *_implementation_boundary_lines(),
         *_all_lane_saved_bank_preflight_lines(),
         "Rytm-only lanes:",
     ]
@@ -314,6 +318,14 @@ def _all_lane_saved_bank_preflight_lines() -> list[str]:
         "- Before both-machine pilot pairs: " + SAVED_BANK_PREFLIGHT_COMMAND,
         "- Prepare a ready Analog Four mapping manifest before A4 saved-snapshot " "lane sends.",
         "- Continue only if the selected scope reports zero blocked lanes.",
+    ]
+
+
+def _implementation_boundary_lines() -> list[str]:
+    return [
+        "- Rytm implementation: 12 pad/machine lanes with pad-machine compatibility gates.",
+        "- Analog Four implementation: 4 synth tracks with saved-offset mapping manifest gates.",
+        "- Shared layer: target scoping, reporting, orchestration, and guarded validation only.",
     ]
 
 

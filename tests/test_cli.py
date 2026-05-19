@@ -469,6 +469,8 @@ def test_dual_machine_lane_validation_guide_help_exits_zero():
     assert "--target <rytm|analog-four|both>" in result.stdout
     assert "--rytm-pad <1-12>" in result.stdout
     assert "--analog-four-track <1-4>" in result.stdout
+    assert "device-specific implementation" in result.stdout
+    assert "boundaries for the Rytm 12-pad path" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert result.stderr == ""
 
