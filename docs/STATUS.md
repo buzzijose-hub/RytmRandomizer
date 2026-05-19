@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added single-track A4 runtime validation targeting.
+  `--analog-four-runtime-track <1-4>` can now be combined with
+  `rytm-randomizer --dry-run --analog-four-runtime` or
+  `rytm-randomizer --arm --analog-four-runtime` to filter the A4 runtime plan
+  to one synth track before sending. This is intended for safer live
+  validation: Track 1, then 2, then 3, then 4, before the full 20-message
+  profile send. It still uses the same mapped CC plan and the same exact
+  `SEND` confirmation gate.
 - 2026-05-19: added the software-ready A4-only guarded runtime hardware send.
   `rytm-randomizer --arm --analog-four-runtime --analog-four-profile <profile>`
   now builds the manual-backed A4 Track 1-4 runtime plan, lists real MIDI

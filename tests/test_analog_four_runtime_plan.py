@@ -97,6 +97,41 @@ def test_analog_four_runtime_mock_capture_uses_cc_metadata_without_real_midi():
     assert first.metadata["sends_real_midi"] is False
 
 
+def test_analog_four_runtime_plan_can_be_filtered_to_one_track():
+    from rytm_randomizer.analog_four.runtime_plan import (
+        build_analog_four_runtime_plan,
+        capture_analog_four_runtime_mock_messages,
+        filter_analog_four_runtime_plan_to_track,
+    )
+
+    plan = build_analog_four_runtime_plan(profile="birmingham-dark")
+    track3_plan = filter_analog_four_runtime_plan_to_track(plan, track=3)
+    sender = capture_analog_four_runtime_mock_messages(track3_plan)
+
+    assert track3_plan.device == plan.device
+    assert track3_plan.starter_profile_key == "birmingham-dark"
+    assert track3_plan.track_count == 1
+    assert track3_plan.event_count == 5
+    assert track3_plan.tracks[0].track == 3
+    assert track3_plan.tracks[0].midi_channel == 3
+    assert track3_plan.tracks[0].wire_channel == 2
+    assert len(sender.sent_messages) == 5
+    assert {message.metadata["track"] for message in sender.sent_messages} == {3}
+    assert {message.channel for message in sender.sent_messages} == {2}
+
+
+def test_analog_four_runtime_track_filter_rejects_unknown_track():
+    from rytm_randomizer.analog_four.runtime_plan import (
+        build_analog_four_runtime_plan,
+        filter_analog_four_runtime_plan_to_track,
+    )
+
+    plan = build_analog_four_runtime_plan(profile="balanced")
+
+    with pytest.raises(ValueError, match="track must be 1, 2, 3, or 4"):
+        filter_analog_four_runtime_plan_to_track(plan, track=5)
+
+
 def test_format_analog_four_runtime_report_shows_tracks_stream_and_safety():
     from rytm_randomizer.analog_four.runtime_plan import (
         build_analog_four_runtime_plan,

@@ -84,6 +84,35 @@ def build_analog_four_runtime_plan(profile: str | None = "balanced") -> AnalogFo
     )
 
 
+def filter_analog_four_runtime_plan_to_track(
+    plan: AnalogFourRuntimePlan,
+    *,
+    track: int,
+) -> AnalogFourRuntimePlan:
+    """Return a copy of an Analog Four runtime plan containing one track."""
+
+    if not isinstance(plan, AnalogFourRuntimePlan):
+        raise TypeError("plan must be an AnalogFourRuntimePlan")
+
+    selected_tracks = tuple(
+        runtime_track for runtime_track in plan.tracks if runtime_track.track == track
+    )
+    if not selected_tracks:
+        raise ValueError("Analog Four runtime track must be 1, 2, 3, or 4")
+
+    return AnalogFourRuntimePlan(
+        device=plan.device,
+        source_url=plan.source_url,
+        manual_path=plan.manual_path,
+        manual_os=plan.manual_os,
+        manual_midi_pages=plan.manual_midi_pages,
+        starter_profile_key=plan.starter_profile_key,
+        starter_profile_label=plan.starter_profile_label,
+        runtime_status=plan.runtime_status,
+        tracks=selected_tracks,
+    )
+
+
 def capture_analog_four_runtime_mock_messages(
     plan: AnalogFourRuntimePlan,
 ) -> MockMidiSender:
@@ -223,6 +252,7 @@ __all__ = [
     "AnalogFourRuntimeTrack",
     "build_analog_four_runtime_plan",
     "capture_analog_four_runtime_mock_messages",
+    "filter_analog_four_runtime_plan_to_track",
     "format_analog_four_runtime_error",
     "format_analog_four_runtime_report",
 ]

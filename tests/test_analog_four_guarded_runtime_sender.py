@@ -99,6 +99,29 @@ def test_a4_guarded_runtime_preserves_birmingham_dark_values():
     assert first.metadata["starter_profile_key"] == "birmingham-dark"
 
 
+def test_a4_guarded_runtime_accepts_single_track_filtered_plan():
+    from rytm_randomizer.analog_four.guarded_runtime_sender import (
+        build_analog_four_runtime_guarded_send_dry_run,
+    )
+    from rytm_randomizer.analog_four.runtime_plan import (
+        build_analog_four_runtime_plan,
+        filter_analog_four_runtime_plan_to_track,
+    )
+
+    plan = filter_analog_four_runtime_plan_to_track(
+        build_analog_four_runtime_plan(profile="peak-time"),
+        track=4,
+    )
+    result = build_analog_four_runtime_guarded_send_dry_run(plan)
+
+    assert result.accepted is True
+    assert result.eligible_message_count == 5
+    assert result.emitted_message_count == 5
+    assert result.track_count == 1
+    assert {message.metadata["track"] for message in result.emitted_messages} == {4}
+    assert {message.channel for message in result.emitted_messages} == {3}
+
+
 def test_a4_guarded_runtime_blocks_without_arming_or_confirmation():
     from rytm_randomizer.analog_four.guarded_runtime_sender import (
         execute_analog_four_runtime_guarded_send,

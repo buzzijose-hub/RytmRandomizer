@@ -241,7 +241,16 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="PROFILE",
         help=(
             "Analog Four safe-starter profile for dual-machine snapshot send "
-            "when no Analog Four snapshot path is supplied."
+            "or Analog Four runtime planning."
+        ),
+    )
+    parser.add_argument(
+        "--analog-four-runtime-track",
+        type=int,
+        metavar="TRACK",
+        help=(
+            "With --analog-four-runtime, limit the A4 runtime plan to one "
+            "track, where TRACK is 1, 2, 3, or 4."
         ),
     )
     parser.add_argument(
@@ -315,7 +324,8 @@ def _print_passive_menu() -> None:
             "  required: --runtime-style <style>; optional: --runtime-discovery <0..1>",
             "- --analog-four-runtime  with --arm/--dry-run, send a guarded "
             "Analog Four Track 1-4 runtime plan",
-            "  optional: --analog-four-profile <profile>",
+            "  optional: --analog-four-profile <profile>; "
+            "--analog-four-runtime-track <1-4>",
             "",
             USAGE,
         ]
@@ -399,6 +409,7 @@ def _analog_four_runtime_request_from_args(
         return None
     return {
         "analog_four_profile": args.analog_four_profile or "balanced",
+        "analog_four_runtime_track": args.analog_four_runtime_track,
     }
 
 
@@ -468,6 +479,23 @@ def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
         profile=str(starter_profile),
         include_engine_source_starters=bool(request.get("engine_cycle_source_starters")),
     )
+
+
+def _build_analog_four_runtime_plan_from_request(request: dict[str, object]):
+    """Build an A4 runtime plan for an app request."""
+
+    from .analog_four.runtime_plan import (
+        build_analog_four_runtime_plan,
+        filter_analog_four_runtime_plan_to_track,
+    )
+
+    plan = build_analog_four_runtime_plan(
+        profile=str(request.get("analog_four_profile") or "balanced")
+    )
+    runtime_track = request.get("analog_four_runtime_track")
+    if runtime_track is None:
+        return plan
+    return filter_analog_four_runtime_plan_to_track(plan, track=int(runtime_track))
 
 
 def _run_arm(
@@ -994,12 +1022,9 @@ def _run_arm_analog_four_runtime(request: dict[str, object]) -> int:
         format_analog_four_runtime_hardware_send_error,
         format_analog_four_runtime_hardware_send_report,
     )
-    from .analog_four.runtime_plan import build_analog_four_runtime_plan
 
     try:
-        plan = build_analog_four_runtime_plan(
-            profile=str(request.get("analog_four_profile") or "balanced")
-        )
+        plan = _build_analog_four_runtime_plan_from_request(request)
     except ValueError as exc:
         sys.stdout.write("\n".join(format_analog_four_runtime_hardware_send_error(str(exc))))
         sys.stdout.write("\n")
@@ -1333,16 +1358,13 @@ def _run_dry_run_analog_four_runtime(request: dict[str, object]) -> int:
         format_analog_four_runtime_guarded_send_dry_run_report,
         format_analog_four_runtime_guarded_send_error,
     )
-    from .analog_four.runtime_plan import build_analog_four_runtime_plan
 
     sys.stdout.write(
         "RytmRandomizer --dry-run: guarded Analog Four runtime send "
         "(mock-only, no hardware, no port opened).\n"
     )
     try:
-        plan = build_analog_four_runtime_plan(
-            profile=str(request.get("analog_four_profile") or "balanced")
-        )
+        plan = _build_analog_four_runtime_plan_from_request(request)
         result = build_analog_four_runtime_guarded_send_dry_run(plan)
     except ValueError as exc:
         sys.stdout.write("\n".join(format_analog_four_runtime_guarded_send_error(str(exc))))
@@ -1601,6 +1623,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.analog_four_runtime and not (args.arm or args.dry_run):
         sys.stderr.write("--analog-four-runtime requires --arm or --dry-run.\n")
+        return 2
+
+    if args.analog_four_runtime_track is not None and not args.analog_four_runtime:
+        sys.stderr.write("--analog-four-runtime-track requires --analog-four-runtime.\n")
+        return 2
+
+    if args.analog_four_runtime_track is not None and args.analog_four_runtime_track not in range(
+        1, 5
+    ):
+        sys.stderr.write("--analog-four-runtime-track must be 1, 2, 3, or 4.\n")
         return 2
 
     if args.engine_cycle_starter_profile is not None and not args.rytm_engine_cycle:

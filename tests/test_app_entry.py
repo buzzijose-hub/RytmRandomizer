@@ -354,6 +354,34 @@ def test_app_main_dry_run_analog_four_runtime_uses_guarded_mock_sender(capsys):
     assert captured.err == ""
 
 
+def test_app_main_dry_run_analog_four_runtime_can_target_one_track(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--analog-four-runtime",
+            "--analog-four-profile",
+            "peak-time",
+            "--analog-four-runtime-track",
+            "3",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Analog Four Guarded Runtime Dry-Run Report" in captured.out
+    assert "Starter profile: Peak Time / peak-time" in captured.out
+    assert "Eligible mapped CC messages: 5" in captured.out
+    assert "Emitted mock messages: 5" in captured.out
+    assert "- Track 3 / large motion layer: 5 message(s)" in captured.out
+    assert "Track 3 ch 3 wire 2 / Track Level" in captured.out
+    assert "Track 1 ch 1 wire 0" not in captured.out
+    assert "Dry-run complete. Mock sender captured 5 message(s)." in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_arm_analog_four_runtime_sends_to_selected_fake_port(monkeypatch, capsys):
     _seed()
     from rytm_randomizer import app, mido_provider
@@ -414,6 +442,67 @@ def test_app_main_arm_analog_four_runtime_sends_to_selected_fake_port(monkeypatc
     assert "Accepted: True" in captured.out
     assert "Emitted real MIDI messages: 20" in captured.out
     assert "Type SEND to transmit 20 Analog Four runtime CC message(s)" in captured.out
+
+
+def test_app_main_arm_analog_four_runtime_can_target_one_track(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    fake_mido = types.ModuleType("mido")
+    fake_mido.Message = _FakeMessage
+    original_mido = sys.modules.get("mido")
+    sys.modules["mido"] = fake_mido
+
+    port = _RecordingPort()
+    calls = {"list": 0, "open": []}
+    real_list = mido_provider.MidoMidiPortProvider.list_output_names
+    real_open = mido_provider.MidoMidiPortProvider.open_output
+
+    def fake_list(self):
+        calls["list"] += 1
+        return ("Fake A4",)
+
+    def fake_open(self, port_name):
+        calls["open"].append(port_name)
+        return port
+
+    scripted_inputs = iter(["0", "SEND"])
+    monkeypatch.setattr(app, "_smoke_sleep", lambda _seconds: None, raising=False)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fake_open
+    try:
+        exit_code = app.main(
+            [
+                "--arm",
+                "--analog-four-runtime",
+                "--analog-four-profile",
+                "peak-time",
+                "--analog-four-runtime-track",
+                "3",
+            ]
+        )
+    finally:
+        mido_provider.MidoMidiPortProvider.list_output_names = real_list
+        mido_provider.MidoMidiPortProvider.open_output = real_open
+        if original_mido is not None:
+            sys.modules["mido"] = original_mido
+        else:
+            sys.modules.pop("mido", None)
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert calls["list"] == 1
+    assert calls["open"] == ["Fake A4"]
+    assert len(port.sent) == 5
+    assert {message.channel for message in port.sent} == {2}
+    assert port.sent[0].type == "control_change"
+    assert port.sent[0].control == 95
+    assert port.closed is True
+    assert "Emitted real MIDI messages: 5" in captured.out
+    assert "Type SEND to transmit 5 Analog Four runtime CC message(s)" in captured.out
+    assert "Track 3 ch 3 wire 2" in captured.out
 
 
 def test_app_main_arm_analog_four_runtime_cancel_before_send_does_not_open_port(

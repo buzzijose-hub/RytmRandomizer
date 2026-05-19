@@ -69,6 +69,18 @@ Analog Four port plus exact `SEND` confirmation, opens only that selected port,
 and sends the mapped CC stream to Tracks 1-4. The first profiles remain
 `balanced`, `birmingham-dark`, `detroit-classic`, and `peak-time`.
 
+For safer first-pass validation, add `--analog-four-runtime-track <1-4>` to
+send only one track from the runtime plan:
+
+```powershell
+rytm-randomizer --dry-run --analog-four-runtime --analog-four-profile peak-time --analog-four-runtime-track 1
+rytm-randomizer --arm --analog-four-runtime --analog-four-profile peak-time --analog-four-runtime-track 1
+```
+
+The one-track path sends five mapped CC messages to the selected A4 track
+instead of the full 20-message Track 1-4 profile. The recommended live order is
+Track 1, Track 2, Track 3, Track 4, then the all-track runtime send.
+
 This is software-ready but still awaiting live operator validation. It does not
 touch Rytm, receive live SysEx, write SysEx, send NRPN, mutate CV tracks, run
 dual-machine scenes, or design kits from audio/reference analysis.
