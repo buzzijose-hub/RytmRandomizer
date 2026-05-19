@@ -53,12 +53,12 @@ def test_rytm_runtime_validation_guide_lists_one_pad_sequence():
     assert "One-pad validation order:" in report
     assert (
         "rytm-randomizer --dry-run --twelve-pad-rytm-runtime "
-        "--runtime-style \"Birmingham dark techno\" --runtime-discovery 0.35 "
+        '--runtime-style "Birmingham dark techno" --runtime-discovery 0.35 '
         "--runtime-pad 1"
     ) in report
     assert (
         "rytm-randomizer --arm --twelve-pad-rytm-runtime "
-        "--runtime-style \"Birmingham dark techno\" --runtime-discovery 0.35 "
+        '--runtime-style "Birmingham dark techno" --runtime-discovery 0.35 '
         "--runtime-pad 12"
     ) in report
     assert "Expected one-pad messages: 11" in report

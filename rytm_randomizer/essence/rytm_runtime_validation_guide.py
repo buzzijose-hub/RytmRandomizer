@@ -27,7 +27,7 @@ def format_rytm_runtime_validation_guide() -> list[str]:
         "Passive preview before active validation:",
         (
             "python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report "
-            f"--style \"{DEFAULT_VALIDATION_STYLE}\" "
+            f'--style "{DEFAULT_VALIDATION_STYLE}" '
             f"--discovery {DEFAULT_VALIDATION_DISCOVERY:.2f} --runtime-pad 10"
         ),
         "One-pad validation order:",
@@ -51,14 +51,8 @@ def format_rytm_runtime_validation_guide() -> list[str]:
     lines.extend(
         [
             "Full 12-pad runtime validation:",
-            (
-                "rytm-randomizer --dry-run --twelve-pad-rytm-runtime "
-                f"{style_arg} {discovery_arg}"
-            ),
-            (
-                "rytm-randomizer --arm --twelve-pad-rytm-runtime "
-                f"{style_arg} {discovery_arg}"
-            ),
+            ("rytm-randomizer --dry-run --twelve-pad-rytm-runtime " f"{style_arg} {discovery_arg}"),
+            ("rytm-randomizer --arm --twelve-pad-rytm-runtime " f"{style_arg} {discovery_arg}"),
             "Recommended live order:",
             "- Pad 1 through Pad 12, then full 12-pad runtime",
             "Operator notes template:",

@@ -1146,7 +1146,9 @@ def main(argv=None):
             if _is_dual_machine_cli_usage_error(exc):
                 sys.stderr.write(f"{USAGE}\n")
             else:
-                sys.stderr.write("\n".join(format_dual_machine_lane_validation_guide_error(str(exc))))
+                sys.stderr.write(
+                    "\n".join(format_dual_machine_lane_validation_guide_error(str(exc)))
+                )
                 sys.stderr.write("\n")
             return 2
 

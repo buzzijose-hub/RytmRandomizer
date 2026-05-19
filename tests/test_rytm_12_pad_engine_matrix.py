@@ -112,9 +112,7 @@ def test_rytm_12_pad_engine_matrix_report_explains_pad10_and_safety():
         format_rytm_12_pad_engine_matrix_report,
     )
 
-    report = "\n".join(
-        format_rytm_12_pad_engine_matrix_report(build_rytm_12_pad_engine_matrix())
-    )
+    report = "\n".join(format_rytm_12_pad_engine_matrix_report(build_rytm_12_pad_engine_matrix()))
 
     assert "RytmRandomizer passive Rytm 12-Pad Engine Matrix Report" in report
     assert "Allowed pad-machine slots: 116" in report

@@ -349,8 +349,7 @@ def _print_passive_menu() -> None:
             "test one Analog Four track with Filter 1 Frequency CC18 only",
             "- --dual-machine-snapshot-send  with --arm/--dry-run, send a "
             "guarded single-target live snapshot mutation plan",
-            "  optional: --snapshot-rytm-pad <1-12>; "
-            "--snapshot-analog-four-track <1-4>",
+            "  optional: --snapshot-rytm-pad <1-12>; " "--snapshot-analog-four-track <1-4>",
             "- --snapshot-essence-send  with --arm/--dry-run, send a guarded "
             "Rytm 12-pad style/genre snapshot essence plan",
             "- --rytm-engine-cycle  with --arm/--dry-run, send a guarded "
@@ -363,8 +362,7 @@ def _print_passive_menu() -> None:
             "--runtime-discovery <0..1>; --runtime-pad <1-12>",
             "- --analog-four-runtime  with --arm/--dry-run, send a guarded "
             "Analog Four Track 1-4 runtime plan",
-            "  optional: --analog-four-profile <profile>; "
-            "--analog-four-runtime-track <1-4>",
+            "  optional: --analog-four-profile <profile>; " "--analog-four-runtime-track <1-4>",
             "",
             USAGE,
         ]
@@ -477,9 +475,7 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
         target=str(request["snapshot_target"]),
         analog_four_profile=str(request.get("analog_four_profile") or "balanced"),
         rytm_pad=(
-            None
-            if request.get("snapshot_rytm_pad") is None
-            else int(request["snapshot_rytm_pad"])
+            None if request.get("snapshot_rytm_pad") is None else int(request["snapshot_rytm_pad"])
         ),
         analog_four_track=(
             None
@@ -545,10 +541,7 @@ def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
         include_engine_source_starters=bool(request.get("engine_cycle_source_starters")),
     )
     runtime_pad = request.get("runtime_pad")
-    if (
-        request.get("engine_cycle_surface") == "twelve_pad_rytm_runtime"
-        and runtime_pad is not None
-    ):
+    if request.get("engine_cycle_surface") == "twelve_pad_rytm_runtime" and runtime_pad is not None:
         return filter_rytm_engine_cycle_starter_plan_to_pad(
             starter_plan,
             pad=int(runtime_pad),
@@ -1752,18 +1745,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         sys.stderr.write("--snapshot-rytm-pad must be between 1 and 12.\n")
         return 2
 
-    if (
-        args.snapshot_analog_four_track is not None
-        and not args.dual_machine_snapshot_send
-    ):
-        sys.stderr.write(
-            "--snapshot-analog-four-track requires --dual-machine-snapshot-send.\n"
-        )
+    if args.snapshot_analog_four_track is not None and not args.dual_machine_snapshot_send:
+        sys.stderr.write("--snapshot-analog-four-track requires --dual-machine-snapshot-send.\n")
         return 2
 
-    if args.snapshot_analog_four_track is not None and args.snapshot_analog_four_track not in range(
-        1,
-        5,
+    if (
+        args.snapshot_analog_four_track is not None
+        and args.snapshot_analog_four_track
+        not in range(
+            1,
+            5,
+        )
     ):
         sys.stderr.write("--snapshot-analog-four-track must be between 1 and 4.\n")
         return 2

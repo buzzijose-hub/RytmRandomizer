@@ -349,9 +349,9 @@ def test_dual_bridge_filters_rytm_pad_and_a4_starter_track(tmp_path):
     assert bridge.analog_four_track_count == 1
     assert bridge.analog_four_message_count == 5
     assert bridge.combined_message_count == 11
-    assert {message.metadata.get("pad") for message in sender.sent_messages if "pad" in message.metadata} == {
-        2
-    }
+    assert {
+        message.metadata.get("pad") for message in sender.sent_messages if "pad" in message.metadata
+    } == {2}
     assert {
         message.metadata.get("track")
         for message in sender.sent_messages

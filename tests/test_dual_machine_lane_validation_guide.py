@@ -124,10 +124,7 @@ def test_dual_machine_all_lane_validation_guide_lists_every_single_machine_lane(
     assert "Analog-Four-only lanes:" in joined
     assert "- Track 1 / expected 5 messages:" in joined
     assert "- Track 4 / expected 5 messages:" in joined
-    assert (
-        "dual-machine-lane-validation-guide --target analog-four --analog-four-track 4"
-        in joined
-    )
+    assert "dual-machine-lane-validation-guide --target analog-four --analog-four-track 4" in joined
     assert "Both-machine pilot pairs:" in joined
     assert "- Pad 1 + A4 Track 1 / expected 11 messages:" in joined
     assert "- Pad 10 + A4 Track 3 / expected 11 messages:" in joined

@@ -67,9 +67,7 @@ def build_analog_four_runtime_plan(profile: str | None = "balanced") -> AnalogFo
 
     source = get_analog_four_reference_source()
     starter_profile = get_analog_four_starter_profile(profile)
-    tracks = tuple(
-        _build_runtime_track(track_profile) for track_profile in starter_profile.tracks
-    )
+    tracks = tuple(_build_runtime_track(track_profile) for track_profile in starter_profile.tracks)
 
     return AnalogFourRuntimePlan(
         device=source.device,
@@ -172,9 +170,7 @@ def format_analog_four_runtime_report(
         "Track plans:",
     ]
     for track in plan.tracks:
-        lines.append(
-            f"- Track {track.track} / {track.role_label}: {len(track.events)} event(s)"
-        )
+        lines.append(f"- Track {track.track} / {track.role_label}: {len(track.events)} event(s)")
 
     lines.append("Mock CC stream:")
     if sender.sent_messages:

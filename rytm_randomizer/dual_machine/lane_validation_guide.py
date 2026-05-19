@@ -99,10 +99,7 @@ def format_dual_machine_lane_validation_guide(
             "python -m rytm_randomizer.cli "
             f"dual-machine-live-snapshot-readiness-report {snapshot_args}"
         ),
-        (
-            "python -m rytm_randomizer.cli "
-            f"dual-machine-active-send-plan-report {snapshot_args}"
-        ),
+        ("python -m rytm_randomizer.cli " f"dual-machine-active-send-plan-report {snapshot_args}"),
         (
             "python -m rytm_randomizer.cli "
             f"dual-machine-guarded-send-dry-run-report {snapshot_args}"
@@ -213,8 +210,7 @@ def format_dual_machine_lane_validation_guide_error(message: str) -> list[str]:
 
 def _snapshot_report_args(request: DualMachineLaneValidationGuideRequest) -> str:
     parts = [
-        "<rytm-sysex-path> "
-        f"--slot {DEFAULT_RYTM_SLOT} --depth {DEFAULT_DEPTH}",
+        "<rytm-sysex-path> " f"--slot {DEFAULT_RYTM_SLOT} --depth {DEFAULT_DEPTH}",
     ]
     parts.append(f"--target {request.target}")
     if request.rytm_pad is not None:

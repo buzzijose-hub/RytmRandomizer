@@ -52,8 +52,7 @@ def test_a4_runtime_validation_guide_report_lists_single_track_sequence():
     assert report[0] == "RytmRandomizer passive Analog Four Runtime Validation Guide"
     assert "Single-track validation order:" in report
     assert (
-        "python -m rytm_randomizer.cli analog-four-runtime-report "
-        "--profile peak-time --track 1"
+        "python -m rytm_randomizer.cli analog-four-runtime-report " "--profile peak-time --track 1"
     ) in report
     assert (
         "rytm-randomizer --dry-run --analog-four-runtime "
