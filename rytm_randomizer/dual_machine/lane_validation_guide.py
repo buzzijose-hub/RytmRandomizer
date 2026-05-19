@@ -17,6 +17,10 @@ EXPECTED_RYTM_LANE_MESSAGES = 6
 EXPECTED_ANALOG_FOUR_LANE_MESSAGES = 5
 VALID_TARGETS = ("rytm", "analog-four", "both")
 ALL_LANE_PILOT_PAIRS = ((1, 1), (5, 2), (10, 3), (12, 4))
+SAVED_BANK_PREFLIGHT_COMMAND = (
+    "python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report "
+    "--rytm <rytm-sysex-path> --analog-four <analog-four-sysex-path>"
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +97,7 @@ def format_dual_machine_lane_validation_guide(
         _analog_four_track_line(request),
         f"Recommended depth: {DEFAULT_DEPTH}",
         f"Expected lane-scoped messages: {_expected_message_count(request)}",
+        *_saved_bank_preflight_lines(),
         "Passive preview stack:",
         f"python -m rytm_randomizer.cli dual-machine-mock-bridge-report {snapshot_args}",
         (
@@ -145,6 +150,7 @@ def format_dual_machine_all_lane_validation_guide() -> list[str]:
         "- Rytm-only Pads 1-12",
         "- Analog-Four-only Tracks 1-4",
         "- Both-machine pilot pairs",
+        *_saved_bank_preflight_lines(),
         "Rytm-only lanes:",
     ]
     for pad in range(1, 13):
@@ -218,6 +224,16 @@ def _snapshot_report_args(request: DualMachineLaneValidationGuideRequest) -> str
     if request.analog_four_track is not None:
         parts.append(f"--analog-four-track {request.analog_four_track}")
     return " ".join(parts)
+
+
+def _saved_bank_preflight_lines() -> list[str]:
+    return [
+        "Saved-bank preflight:",
+        "- Export or choose the saved Rytm and Analog Four kit-bank/whole-project SysEx files.",
+        SAVED_BANK_PREFLIGHT_COMMAND,
+        "- Continue only if combined blocked lanes are 0 and Problem slots is none.",
+        "- Treat Analog Four as candidate-ready until the live lane tests confirm each track.",
+    ]
 
 
 def _app_args(request: DualMachineLaneValidationGuideRequest) -> str:

@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: connected the dual-machine bank-readiness proof to the passive
+  lane-validation guide. `dual-machine-lane-validation-guide` and
+  `dual-machine-lane-validation-guide --all-lanes` now begin with a
+  saved-bank preflight that points operators to
+  `dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>`,
+  then tells them to proceed only when blocked lanes are zero and problem slots
+  are none. This keeps tomorrow's hardware validation flow anchored to the
+  saved Rytm/A4 dump scan before any armed lane sends.
 - 2026-05-19: added a passive dual-machine kit-bank readiness report.
   `dual-machine-kit-bank-readiness-report --rytm <path> --analog-four <path>`
   combines the saved Rytm and Analog Four bank analyzers into one live-rig

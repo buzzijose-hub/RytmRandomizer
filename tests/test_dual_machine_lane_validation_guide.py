@@ -61,6 +61,22 @@ def test_dual_machine_lane_validation_guide_formats_operator_sequence():
     assert "- no hardware required" in joined
 
 
+def test_dual_machine_lane_validation_guide_includes_saved_bank_preflight():
+    from rytm_randomizer.dual_machine.lane_validation_guide import (
+        format_dual_machine_lane_validation_guide,
+    )
+
+    report = format_dual_machine_lane_validation_guide()
+    joined = "\n".join(report)
+
+    assert "Saved-bank preflight:" in joined
+    assert (
+        "python -m rytm_randomizer.cli dual-machine-kit-bank-readiness-report "
+        "--rytm <rytm-sysex-path> --analog-four <analog-four-sysex-path>"
+    ) in joined
+    assert "- Continue only if combined blocked lanes are 0 and Problem slots is none." in joined
+
+
 def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     from rytm_randomizer.dual_machine.lane_validation_guide import (
         format_dual_machine_lane_validation_guide,
@@ -170,6 +186,8 @@ def test_dual_machine_all_lane_validation_guide_lists_every_single_machine_lane(
     assert "Both-machine pilot pairs:" in joined
     assert "- Pad 1 + A4 Track 1 / expected 11 messages:" in joined
     assert "- Pad 10 + A4 Track 3 / expected 11 messages:" in joined
+    assert "Saved-bank preflight:" in joined
+    assert "dual-machine-kit-bank-readiness-report --rytm <rytm-sysex-path>" in joined
     assert "- no MIDI sending" in joined
 
 
