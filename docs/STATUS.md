@@ -540,6 +540,9 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
   validator: `analog-four-saved-offset-mapping-manifest-report <path>` reads
   locally collected proof entries, validates track/offset/name/CC/status, and
   blocks duplicate track/offset pairs before any future runtime integration.
+  When the manifest is ready, the report now prints passive A4 snapshot,
+  dual-machine readiness, and guarded dry-run command examples using the same
+  manifest path.
 - The A4 saved-snapshot planner and mock-runtime reports can now consume a
   ready verified manifest with `--mapping-manifest <path>`. Matching
   track/offset pairs become named CC plan/mock events, while unverified offsets

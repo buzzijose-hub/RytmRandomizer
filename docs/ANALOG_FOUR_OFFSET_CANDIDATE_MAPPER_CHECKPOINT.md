@@ -85,7 +85,9 @@ python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
 
 The manifest report validates legal tracks, non-negative relative offsets,
 parameter names, CC values, verified status, and duplicate track/offset pairs.
-It is passive JSON-read-only and does not send hardware MIDI by itself.
+When ready, it also prints passive A4 snapshot, dual-machine readiness, and
+guarded dry-run command examples with the manifest path already filled in. It
+is passive JSON-read-only and does not send hardware MIDI by itself.
 
 The A4 saved-snapshot planner and mock-runtime reports can consume a ready
 manifest with:

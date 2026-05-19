@@ -965,9 +965,10 @@ Behavior:
   Reads a local JSON verified saved-offset mapping manifest and validates that
   every entry has a legal Analog Four track, non-negative relative offset,
   non-empty parameter name, CC0-127 value, and verified mapping status. It
-  reports duplicate track/offset pairs as blocked. It does not read SysEx
-  files, request dumps, receive live SysEx, send MIDI, write SysEx, execute
-  commands, open ports, or touch hardware.
+  reports duplicate track/offset pairs as blocked, and prints passive
+  snapshot/readiness/dry-run command examples only when the manifest is ready.
+  It does not read SysEx files, request dumps, receive live SysEx, send MIDI,
+  write SysEx, execute commands, open ports, or touch hardware.
 
 Safety:
   passive/read-only

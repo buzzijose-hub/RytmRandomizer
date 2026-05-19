@@ -110,6 +110,9 @@ def format_analog_four_saved_offset_mapping_manifest_report(
     else:
         lines.append("- none")
 
+    lines.append("Runtime use:")
+    lines.extend(_format_runtime_use(manifest))
+
     lines.extend(
         [
             "Manifest policy:",
@@ -201,6 +204,42 @@ def _format_duplicate(duplicate: AnalogFourSavedOffsetMappingDuplicate) -> str:
         f"- Track {duplicate.track} / offset +{duplicate.relative_offset} "
         f"appears {duplicate.count} times"
     )
+
+
+def _format_runtime_use(manifest: AnalogFourSavedOffsetMappingManifest) -> list[str]:
+    if not manifest.ready:
+        return ["- blocked until manifest is ready; fix Reason before using it in send previews"]
+
+    manifest_arg = _quote_cli_path(manifest.path)
+    return [
+        (
+            "python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report "
+            '"<a4-bank-or-project.syx>" --slot <1-128> --depth micro '
+            f"--mapping-manifest {manifest_arg}"
+        ),
+        (
+            "python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report "
+            '"<a4-bank-or-project.syx>" --slot <1-128> --depth micro '
+            f"--mapping-manifest {manifest_arg}"
+        ),
+        (
+            "python -m rytm_randomizer.cli dual-machine-live-snapshot-readiness-report "
+            '"<rytm-bank-or-project.syx>" --slot <1-128> --depth micro '
+            '--analog-four-path "<a4-bank-or-project.syx>" '
+            f"--analog-four-slot <1-128> --analog-four-mapping-manifest {manifest_arg}"
+        ),
+        (
+            "python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report "
+            '"<rytm-bank-or-project.syx>" --slot <1-128> --depth micro '
+            '--analog-four-path "<a4-bank-or-project.syx>" '
+            f"--analog-four-slot <1-128> --analog-four-mapping-manifest {manifest_arg}"
+        ),
+    ]
+
+
+def _quote_cli_path(path: str) -> str:
+    escaped = path.replace('"', '\\"')
+    return f'"{escaped}"'
 
 
 __all__ = [

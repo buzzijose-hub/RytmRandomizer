@@ -84,6 +84,24 @@ def test_saved_offset_mapping_manifest_report_accepts_verified_mappings(tmp_path
     assert "Duplicate count: 0" in report
     assert "Track 1 / offset +120 / Filter 1 Frequency / CC18 / verified_cc_mapping" in report
     assert "Track 2 / offset +334 / Amp Pan / CC10 / verified_cc_mapping" in report
+    assert "Runtime use:" in report
+    assert (
+        "analog-four-snapshot-mutation-plan-report "
+        '"<a4-bank-or-project.syx>" --slot <1-128> --depth micro '
+        f'--mapping-manifest "{manifest_path}"'
+    ) in report
+    assert (
+        "dual-machine-live-snapshot-readiness-report "
+        '"<rytm-bank-or-project.syx>" --slot <1-128> --depth micro '
+        '--analog-four-path "<a4-bank-or-project.syx>" --analog-four-slot <1-128> '
+        f'--analog-four-mapping-manifest "{manifest_path}"'
+    ) in report
+    assert (
+        "dual-machine-guarded-send-dry-run-report "
+        '"<rytm-bank-or-project.syx>" --slot <1-128> --depth micro '
+        '--analog-four-path "<a4-bank-or-project.syx>" --analog-four-slot <1-128> '
+        f'--analog-four-mapping-manifest "{manifest_path}"'
+    ) in report
     assert "- no MIDI sending" in report
 
 
@@ -196,6 +214,11 @@ def test_saved_offset_mapping_manifest_reports_empty_manifest(tmp_path):
     assert manifest.ready is False
     assert "Reason: blocked_empty_manifest" in report
     assert "Mappings:\n- none" in report
+    assert "Runtime use:" in report
+    assert (
+        "- blocked until manifest is ready; fix Reason before using it in send previews" in report
+    )
+    assert "dual-machine-guarded-send-dry-run-report" not in report
 
 
 def test_saved_offset_mapping_manifest_rejects_non_object_payload(tmp_path):
