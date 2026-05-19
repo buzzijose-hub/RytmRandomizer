@@ -1838,6 +1838,15 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args == ["analog-four-runtime-validation-guide"]:
+        from .analog_four.runtime_validation_guide import (
+            format_analog_four_runtime_validation_guide,
+        )
+
+        sys.stdout.write("\n".join(format_analog_four_runtime_validation_guide()))
+        sys.stdout.write("\n")
+        return 0
+
     if args == ["list-commands"]:
         sys.stdout.write("\n".join(format_registry_list_report("commands", "command list")))
         sys.stdout.write("\n")

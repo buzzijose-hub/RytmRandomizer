@@ -64,6 +64,16 @@ Confirm the report says `Tracks tested: 1-4` and `Messages sent: 12`.
 For the one-track command, confirm the report says `Track tested: 1` and
 `Messages sent: 3`.
 
+For the guarded Analog Four runtime validation path, print the passive guide:
+
+```
+python -m rytm_randomizer.cli analog-four-runtime-validation-guide
+```
+
+Confirm the guide shows the single-track validation order and the expected
+counts: `Expected single-track messages: 5` and
+`Expected full-profile messages: 20`.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the
@@ -210,6 +220,34 @@ rytm-randomizer --arm --analog-four-track-filter-smoke 4
       requested or written.
 - [ ] Do not save the kit afterward unless you intentionally want the final
       centered Pan or open Filter 1 Frequency values.
+
+### 8. Optional guarded Analog Four runtime validation
+
+Run this only after the Analog Four smoke and filter-smoke paths are confirmed.
+Use a copied/restorable pattern or kit and keep monitor volume moderate.
+
+First print the passive guide:
+
+```
+python -m rytm_randomizer.cli analog-four-runtime-validation-guide
+```
+
+Then follow the guide's sequence:
+
+- [ ] Run the dry-run command for Track 1 and confirm it captures 5 mock
+      messages.
+- [ ] Run `rytm-randomizer --arm --analog-four-runtime --analog-four-profile peak-time --analog-four-runtime-track 1`.
+- [ ] Select the Analog Four output port, not Analog Rytm.
+- [ ] Type exact `SEND` only after confirming the port is correct.
+- [ ] Listen for Track 1 changing; note whether it is audible and safe.
+- [ ] Repeat the same dry-run and armed sequence for Tracks 2, 3, and 4.
+- [ ] Only after all four single-track checks pass, run the full dry-run and
+      full armed `--analog-four-runtime --analog-four-profile peak-time` path.
+- [ ] Confirm the full profile reports `Emitted real MIDI messages: 20`.
+- [ ] Confirm no Rytm port was selected, no SysEx was requested or written,
+      no NRPN was sent, and no CV track mutation occurred.
+- [ ] Do not save the kit afterward unless you intentionally want the runtime
+      starter values kept in the current kit.
 
 ## First-session notes template
 

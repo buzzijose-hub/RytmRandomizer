@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive A4 runtime validation guide.
+  `python -m rytm_randomizer.cli analog-four-runtime-validation-guide` prints
+  the exact dry-run and armed command sequence for validating the guarded A4
+  runtime path one track at a time, then with the full profile. It is
+  read-only documentation surfaced through the CLI: no MIDI sending, port
+  opening, SysEx receive/write, or hardware mutation.
 - 2026-05-19: added single-track A4 runtime validation targeting.
   `--analog-four-runtime-track <1-4>` can now be combined with
   `rytm-randomizer --dry-run --analog-four-runtime` or

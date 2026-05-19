@@ -36,6 +36,7 @@ USAGE = (
     "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
+    "analog-four-runtime-validation-guide | "
     "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
     "list-scenes | list-group-profiles | search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | preview-command <key> | "
@@ -116,6 +117,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-runtime-report --profile <profile>
   python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run
   python -m rytm_randomizer.cli analog-four-runtime-guarded-send-dry-run --profile <profile>
+  python -m rytm_randomizer.cli analog-four-runtime-validation-guide
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -204,6 +206,8 @@ Commands:
                      Preview passive Analog Four Track 1-4 runtime CC messages.
   analog-four-runtime-guarded-send-dry-run
                      Execute A4 runtime events into a mock guarded sender only.
+  analog-four-runtime-validation-guide
+                     Print the passive A4 runtime hardware validation guide.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -951,6 +955,29 @@ Safety:
   A4-only guarded dry-run
   mock sender only
   no Rytm MIDI sending
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "analog-four-runtime-validation-guide": """RytmRandomizer passive CLI: analog-four-runtime-validation-guide
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-runtime-validation-guide
+  python -m rytm_randomizer.cli analog-four-runtime-validation-guide --help
+
+Behavior:
+  Prints the operator sequence for validating the guarded Analog Four runtime
+  path one track at a time, then with the full Track 1-4 profile. It is a
+  passive checklist only; it does not open ports, send MIDI, receive SysEx,
+  write SysEx, or mutate hardware.
+
+Safety:
+  passive/read-only
+  validation guide only
   no MIDI sending
   no MIDI receive
   no port opening
