@@ -272,3 +272,28 @@ def test_snapshot_essence_guarded_send_dry_run_cli_reads_saved_snapshot(tmp_path
     assert "- mock-only guarded dry-run" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
+
+
+def test_snapshot_essence_guarded_send_dry_run_cli_filters_to_one_snapshot_pad(tmp_path):
+    sysex_path = tmp_path / "essence-guard.syx"
+    write_guard_fixture(sysex_path)
+
+    result = run_cli(
+        "snapshot-essence-guarded-send-dry-run-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--style",
+        "Birmingham dark techno",
+        "--snapshot-pad",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "Accepted: True" in result.stdout
+    assert "Emitted mock messages: 6" in result.stdout
+    assert "- Analog Rytm MKII / Pad 1 / ch 1 wire 0" in result.stdout
+    assert "Pad 5" not in result.stdout
+    assert result.stderr == ""

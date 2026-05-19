@@ -182,6 +182,84 @@ def test_snapshot_essence_send_plan_mock_capture_matches_eligible_events(tmp_pat
     assert switch.metadata["event_role"] == "machine_switch"
 
 
+def test_snapshot_essence_send_plan_can_filter_to_one_same_engine_pad(tmp_path):
+    from rytm_randomizer.essence.snapshot_send_plan import (
+        build_snapshot_essence_send_plan_from_file,
+        capture_snapshot_essence_send_mock_messages,
+        filter_snapshot_essence_send_plan_to_pad,
+    )
+
+    sysex_path = tmp_path / "essence-send.syx"
+    write_send_plan_fixture(sysex_path)
+    plan = build_snapshot_essence_send_plan_from_file(
+        sysex_path,
+        slot=1,
+        depth="micro",
+        style="Birmingham dark techno",
+    )
+
+    filtered = filter_snapshot_essence_send_plan_to_pad(plan, pad=1)
+    sender = capture_snapshot_essence_send_mock_messages(filtered)
+
+    assert filtered.ready is True
+    assert filtered.same_engine_pad_count == 1
+    assert filtered.engine_switch_pad_count == 0
+    assert filtered.blocked_pad_count == 0
+    assert filtered.event_count == 6
+    assert filtered.snapshot_mutation_event_count == 6
+    assert filtered.machine_switch_event_count == 0
+    assert {event.pad for event in filtered.events} == {1}
+    assert {message.channel for message in sender.sent_messages} == {0}
+    assert len(sender.sent_messages) == 6
+
+
+def test_snapshot_essence_send_plan_can_filter_to_one_engine_switch_pad(tmp_path):
+    from rytm_randomizer.essence.snapshot_send_plan import (
+        build_snapshot_essence_send_plan_from_file,
+        filter_snapshot_essence_send_plan_to_pad,
+    )
+
+    sysex_path = tmp_path / "essence-send.syx"
+    write_send_plan_fixture(sysex_path)
+    plan = build_snapshot_essence_send_plan_from_file(
+        sysex_path,
+        slot=1,
+        depth="micro",
+        style="Birmingham dark techno",
+    )
+
+    filtered = filter_snapshot_essence_send_plan_to_pad(plan, pad=5)
+
+    assert filtered.ready is True
+    assert filtered.same_engine_pad_count == 0
+    assert filtered.engine_switch_pad_count == 1
+    assert filtered.blocked_pad_count == 0
+    assert filtered.machine_switch_event_count == 1
+    assert filtered.selected_profile_anchor_event_count > 0
+    assert filtered.snapshot_mutation_event_count == 0
+    assert {event.pad for event in filtered.events} == {5}
+    assert filtered.events[0].event_role == "machine_switch"
+
+
+def test_snapshot_essence_send_plan_rejects_invalid_pad_filter(tmp_path):
+    from rytm_randomizer.essence.snapshot_send_plan import (
+        build_snapshot_essence_send_plan_from_file,
+        filter_snapshot_essence_send_plan_to_pad,
+    )
+
+    sysex_path = tmp_path / "essence-send.syx"
+    write_send_plan_fixture(sysex_path)
+    plan = build_snapshot_essence_send_plan_from_file(
+        sysex_path,
+        slot=1,
+        depth="micro",
+        style="Birmingham dark techno",
+    )
+
+    with pytest.raises(ValueError, match="Pad must be between 1 and 12"):
+        filter_snapshot_essence_send_plan_to_pad(plan, pad=13)
+
+
 def test_snapshot_essence_send_plan_cli_reads_saved_snapshot(tmp_path):
     sysex_path = tmp_path / "essence-send.syx"
     write_send_plan_fixture(sysex_path)
@@ -211,4 +289,30 @@ def test_snapshot_essence_send_plan_cli_reads_saved_snapshot(tmp_path):
     assert "- Pad 5 ch 5 wire 4 machine_switch: CC15 -> 30" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no hardware mutation" in result.stdout
+    assert result.stderr == ""
+
+
+def test_snapshot_essence_send_plan_cli_filters_to_one_snapshot_pad(tmp_path):
+    sysex_path = tmp_path / "essence-send.syx"
+    write_send_plan_fixture(sysex_path)
+
+    result = run_cli(
+        "snapshot-essence-send-plan-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--style",
+        "Birmingham dark techno",
+        "--snapshot-pad",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "Pad counts: same-engine 1 / engine-switch 0 / blocked 0" in result.stdout
+    assert "Machine switch events: 0" in result.stdout
+    assert "Snapshot mutation events: 6" in result.stdout
+    assert "- Pad 1 ch 1 wire 0 snapshot_mutation" in result.stdout
+    assert "- Pad 5 " not in result.stdout
     assert result.stderr == ""

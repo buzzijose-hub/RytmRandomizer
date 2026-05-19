@@ -647,6 +647,43 @@ def test_app_main_dry_run_snapshot_essence_send_uses_guarded_mock_sender(
     assert captured.err == ""
 
 
+def test_app_main_dry_run_snapshot_essence_send_filters_to_one_snapshot_pad(
+    tmp_path,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(_make_rytm_kit_record())
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--snapshot-essence-send",
+            "--snapshot-path",
+            str(rytm_path),
+            "--snapshot-slot",
+            "1",
+            "--snapshot-depth",
+            "micro",
+            "--snapshot-style",
+            "Birmingham dark techno",
+            "--snapshot-pad",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Snapshot Essence Guarded Send Dry-Run Report" in captured.out
+    assert "Accepted: True" in captured.out
+    assert "Emitted mock messages: 6" in captured.out
+    assert "- Analog Rytm MKII / Pad 1 / ch 1 wire 0" in captured.out
+    assert "Pad 5" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_dry_run_rytm_engine_cycle_uses_guarded_mock_sender(capsys):
     _seed()
     from rytm_randomizer import app
@@ -1557,6 +1594,7 @@ def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
     from rytm_randomizer import app, mido_provider
     from rytm_randomizer.essence.snapshot_send_plan import (
         build_snapshot_essence_send_plan_from_file,
+        filter_snapshot_essence_send_plan_to_pad,
     )
 
     rytm_path = tmp_path / "rytm.syx"
@@ -1567,6 +1605,7 @@ def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
         depth="micro",
         style="Birmingham dark techno",
     )
+    expected_plan = filter_snapshot_essence_send_plan_to_pad(expected_plan, pad=1)
 
     fake_mido = types.ModuleType("mido")
     fake_mido.Message = _FakeMessage
@@ -1603,6 +1642,8 @@ def test_app_main_arm_snapshot_essence_send_sends_to_selected_fake_port(
                 "micro",
                 "--snapshot-style",
                 "Birmingham dark techno",
+                "--snapshot-pad",
+                "1",
             ]
         )
     finally:

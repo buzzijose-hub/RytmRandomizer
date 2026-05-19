@@ -15,6 +15,18 @@ def _metadata_search_text(key, metadata):
     return "\n".join(values).lower()
 
 
+def _parse_optional_key_value_args(args, allowed_flags):
+    if len(args) % 2:
+        return None
+    parsed = {}
+    for index in range(0, len(args), 2):
+        flag = args[index]
+        if flag not in allowed_flags or flag in parsed:
+            return None
+        parsed[flag] = args[index + 1]
+    return parsed
+
+
 def format_registry_list_report(section_name, title):
     """Return deterministic passive registry list lines."""
     from .registry import get_registry_section
@@ -1515,17 +1527,25 @@ def main(argv=None):
         from .essence.snapshot_send_plan import (
             build_snapshot_essence_send_plan_from_file,
             capture_snapshot_essence_send_mock_messages,
+            filter_snapshot_essence_send_plan_to_pad,
             format_snapshot_essence_send_plan_error,
             format_snapshot_essence_send_plan_report,
         )
         from .observability.errors import DataError
 
         if (
-            len(args) not in (8, 10)
+            len(args) not in (8, 10, 12)
             or args[2] != "--slot"
             or args[4] != "--depth"
             or args[6] != "--style"
         ):
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+        optional_args = _parse_optional_key_value_args(
+            args[8:],
+            {"--discovery", "--snapshot-pad"},
+        )
+        if optional_args is None:
             sys.stderr.write(f"{USAGE}\n")
             return 2
 
@@ -1542,11 +1562,11 @@ def main(argv=None):
 
         try:
             discovery = None
-            if len(args) == 10:
-                if args[8] != "--discovery":
-                    sys.stderr.write(f"{USAGE}\n")
-                    return 2
-                discovery = parse_discovery_value(args[9])
+            if "--discovery" in optional_args:
+                discovery = parse_discovery_value(optional_args["--discovery"])
+            snapshot_pad = None
+            if "--snapshot-pad" in optional_args:
+                snapshot_pad = int(optional_args["--snapshot-pad"])
             plan = build_snapshot_essence_send_plan_from_file(
                 args[1],
                 slot=slot,
@@ -1554,6 +1574,8 @@ def main(argv=None):
                 style=args[7],
                 discovery=discovery,
             )
+            if snapshot_pad is not None:
+                plan = filter_snapshot_essence_send_plan_to_pad(plan, pad=snapshot_pad)
             sender = capture_snapshot_essence_send_mock_messages(plan)
         except FileNotFoundError:
             lines = format_snapshot_essence_send_plan_error(args[1], "File not found")
@@ -1577,15 +1599,25 @@ def main(argv=None):
             format_snapshot_essence_guarded_send_dry_run_report,
             format_snapshot_essence_guarded_send_error,
         )
-        from .essence.snapshot_send_plan import build_snapshot_essence_send_plan_from_file
+        from .essence.snapshot_send_plan import (
+            build_snapshot_essence_send_plan_from_file,
+            filter_snapshot_essence_send_plan_to_pad,
+        )
         from .observability.errors import DataError
 
         if (
-            len(args) not in (8, 10)
+            len(args) not in (8, 10, 12)
             or args[2] != "--slot"
             or args[4] != "--depth"
             or args[6] != "--style"
         ):
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
+        optional_args = _parse_optional_key_value_args(
+            args[8:],
+            {"--discovery", "--snapshot-pad"},
+        )
+        if optional_args is None:
             sys.stderr.write(f"{USAGE}\n")
             return 2
 
@@ -1602,11 +1634,11 @@ def main(argv=None):
 
         try:
             discovery = None
-            if len(args) == 10:
-                if args[8] != "--discovery":
-                    sys.stderr.write(f"{USAGE}\n")
-                    return 2
-                discovery = parse_discovery_value(args[9])
+            if "--discovery" in optional_args:
+                discovery = parse_discovery_value(optional_args["--discovery"])
+            snapshot_pad = None
+            if "--snapshot-pad" in optional_args:
+                snapshot_pad = int(optional_args["--snapshot-pad"])
             plan = build_snapshot_essence_send_plan_from_file(
                 args[1],
                 slot=slot,
@@ -1614,6 +1646,8 @@ def main(argv=None):
                 style=args[7],
                 discovery=discovery,
             )
+            if snapshot_pad is not None:
+                plan = filter_snapshot_essence_send_plan_to_pad(plan, pad=snapshot_pad)
             result = build_snapshot_essence_guarded_send_dry_run(plan)
         except FileNotFoundError:
             lines = format_snapshot_essence_guarded_send_error(args[1], "File not found")

@@ -139,6 +139,41 @@ def build_snapshot_essence_send_plan(
     )
 
 
+def filter_snapshot_essence_send_plan_to_pad(
+    plan: SnapshotEssenceSendPlan,
+    *,
+    pad: int,
+) -> SnapshotEssenceSendPlan:
+    """Return a snapshot essence send plan scoped to one Rytm pad."""
+
+    if not isinstance(plan, SnapshotEssenceSendPlan):
+        raise TypeError("plan must be a SnapshotEssenceSendPlan")
+    if pad not in range(1, 13):
+        raise ValueError("Pad must be between 1 and 12")
+
+    events = tuple(event for event in plan.events if event.pad == pad)
+    if not events:
+        raise ValueError(f"Pad {pad} has no eligible snapshot essence events in this plan")
+
+    same_engine_pads = {event.pad for event in events if event.event_role == "snapshot_mutation"}
+    engine_switch_pads = {event.pad for event in events if event.event_role == "machine_switch"}
+
+    return SnapshotEssenceSendPlan(
+        source_path=plan.source_path,
+        slot_number=plan.slot_number,
+        kit_name=plan.kit_name,
+        depth=plan.depth,
+        style_prompt=plan.style_prompt,
+        matched_profile_labels=plan.matched_profile_labels,
+        essence_tags=plan.essence_tags,
+        discovery=plan.discovery,
+        same_engine_pad_count=len(same_engine_pads),
+        engine_switch_pad_count=len(engine_switch_pads),
+        blocked_pad_count=0,
+        events=events,
+    )
+
+
 def capture_snapshot_essence_send_mock_messages(
     plan: SnapshotEssenceSendPlan,
 ) -> MockMidiSender:
@@ -374,6 +409,7 @@ __all__ = [
     "build_snapshot_essence_send_plan",
     "build_snapshot_essence_send_plan_from_file",
     "capture_snapshot_essence_send_mock_messages",
+    "filter_snapshot_essence_send_plan_to_pad",
     "format_snapshot_essence_send_plan_error",
     "format_snapshot_essence_send_plan_report",
 ]

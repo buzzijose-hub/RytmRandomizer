@@ -186,6 +186,15 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional snapshot essence discovery amount from 0.0 to 1.0.",
     )
     parser.add_argument(
+        "--snapshot-pad",
+        type=int,
+        metavar="PAD",
+        help=(
+            "With --snapshot-essence-send, limit the guarded Rytm snapshot "
+            "essence send plan to one pad, 1-12."
+        ),
+    )
+    parser.add_argument(
         "--engine-cycle-style",
         metavar="STYLE",
         help="Style or genre prompt for Rytm engine-cycle planning.",
@@ -387,6 +396,7 @@ def _snapshot_essence_send_request_from_args(
         "snapshot_depth": args.snapshot_depth,
         "snapshot_style": args.snapshot_style,
         "snapshot_discovery": args.snapshot_discovery,
+        "snapshot_pad": args.snapshot_pad,
     }
 
 
@@ -451,9 +461,12 @@ def _build_dual_machine_snapshot_bridge_from_request(request: dict[str, object])
 def _build_snapshot_essence_send_plan_from_request(request: dict[str, object]):
     """Build the passive snapshot essence send plan for an app request."""
 
-    from .essence.snapshot_send_plan import build_snapshot_essence_send_plan_from_file
+    from .essence.snapshot_send_plan import (
+        build_snapshot_essence_send_plan_from_file,
+        filter_snapshot_essence_send_plan_to_pad,
+    )
 
-    return build_snapshot_essence_send_plan_from_file(
+    plan = build_snapshot_essence_send_plan_from_file(
         str(request["snapshot_path"]),
         slot=int(request["snapshot_slot"]),
         depth=str(request["snapshot_depth"]),
@@ -464,6 +477,12 @@ def _build_snapshot_essence_send_plan_from_request(request: dict[str, object]):
             else float(request["snapshot_discovery"])
         ),
     )
+    if request.get("snapshot_pad") is not None:
+        return filter_snapshot_essence_send_plan_to_pad(
+            plan,
+            pad=int(request["snapshot_pad"]),
+        )
+    return plan
 
 
 def _build_rytm_engine_cycle_plan_from_request(request: dict[str, object]):
@@ -1683,6 +1702,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.runtime_pad is not None and args.runtime_pad not in range(1, 13):
         sys.stderr.write("--runtime-pad must be between 1 and 12.\n")
+        return 2
+
+    if args.snapshot_pad is not None and not args.snapshot_essence_send:
+        sys.stderr.write("--snapshot-pad requires --snapshot-essence-send.\n")
+        return 2
+
+    if args.snapshot_pad is not None and args.snapshot_pad not in range(1, 13):
+        sys.stderr.write("--snapshot-pad must be between 1 and 12.\n")
         return 2
 
     if args.analog_four_profile is not None and not (

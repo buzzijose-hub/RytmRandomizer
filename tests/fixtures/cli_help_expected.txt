@@ -54,8 +54,10 @@ Usage:
   python -m rytm_randomizer.cli snapshot-essence-overlay-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
   python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli snapshot-essence-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --snapshot-pad <1-12>
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text>
   python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --discovery <0..1>
+  python -m rytm_randomizer.cli snapshot-essence-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --style <text> --snapshot-pad <1-12>
   python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text>
   python -m rytm_randomizer.cli rytm-engine-cycle-plan-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli rytm-engine-cycle-starter-plan-report --style <text>

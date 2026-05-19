@@ -4,6 +4,15 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added one-pad Rytm snapshot essence send targeting.
+  `--snapshot-pad <1-12>` can now be combined with the passive
+  `snapshot-essence-send-plan-report`, the mock-only
+  `snapshot-essence-guarded-send-dry-run-report`, or the app's
+  `--dry-run/--arm --snapshot-essence-send` path. This filters the saved-kit
+  snapshot essence send plan to one Rytm pad so a live performer can mutate
+  only that pad from the captured/saved kit baseline while leaving the other 11
+  pads out of the send plan. The full 12-pad behavior remains the default, and
+  armed mode still requires port selection plus exact `SEND` confirmation.
 - 2026-05-19: added passive single-track Analog Four runtime previews.
   `python -m rytm_randomizer.cli analog-four-runtime-report --track <1-4>`
   now filters the mock-only Analog Four runtime report to one synth track.
