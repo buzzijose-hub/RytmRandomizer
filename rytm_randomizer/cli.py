@@ -435,6 +435,13 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args == ["rytm-12-pad-machine-matrix-report"]:
+        from .reports import format_rytm_machine_matrix_report
+
+        sys.stdout.write("\n".join(format_rytm_machine_matrix_report()))
+        sys.stdout.write("\n")
+        return 0
+
     if args and args[0] == "dual-machine-target-report":
         if len(args) != 2:
             sys.stderr.write(

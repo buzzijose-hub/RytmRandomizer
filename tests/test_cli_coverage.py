@@ -335,6 +335,16 @@ def test_main_behavior_parity_report_writes_report(capsys):
     assert len(captured.out) > 0
 
 
+def test_main_rytm_machine_matrix_report_writes_report(capsys):
+    rc = cli.main(["rytm-12-pad-machine-matrix-report"])
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert captured.out.endswith("\n")
+    assert "RytmRandomizer passive Rytm 12-pad machine matrix" in captured.out
+    assert captured.err == ""
+
+
 def test_main_list_commands_writes_command_list(capsys):
     rc = cli.main(["list-commands"])
 
