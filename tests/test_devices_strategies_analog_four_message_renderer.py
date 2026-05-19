@@ -66,3 +66,41 @@ def test_renderer_rejects_track_outside_1_to_4() -> None:
 
     with pytest.raises(ValueError, match=r"track must be in \[1, 4\]"):
         AnalogFourMessageRenderer().to_cc_triple(event, plan)
+
+
+def test_renderer_rejects_control_outside_0_to_127() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer, AnalogFourPlanEvent
+
+    plan, _event = _plan_event()
+    event = AnalogFourPlanEvent(track=1, parameter="Filter 1 Frequency", control=128, value=91)
+
+    with pytest.raises(ValueError, match=r"control must be in \[0, 127\]"):
+        AnalogFourMessageRenderer().to_cc_triple(event, plan)
+
+
+def test_renderer_rejects_value_outside_0_to_127() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer, AnalogFourPlanEvent
+
+    plan, _event = _plan_event()
+    event = AnalogFourPlanEvent(track=1, parameter="Filter 1 Frequency", control=74, value=-1)
+
+    with pytest.raises(ValueError, match=r"value must be in \[0, 127\]"):
+        AnalogFourMessageRenderer().to_cc_triple(event, plan)
+
+
+def test_renderer_rejects_wrong_event_type() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer
+
+    plan, _event = _plan_event()
+
+    with pytest.raises(TypeError, match="AnalogFourPlanEvent"):
+        AnalogFourMessageRenderer().to_cc_triple(object(), plan)
+
+
+def test_renderer_rejects_wrong_plan_type() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourMessageRenderer
+
+    _plan, event = _plan_event()
+
+    with pytest.raises(TypeError, match="AnalogFourMutationPlan"):
+        AnalogFourMessageRenderer().to_mock_message(event, object())

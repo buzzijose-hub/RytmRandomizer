@@ -50,6 +50,24 @@ def test_decode_rejects_payload_without_elektron_prefix() -> None:
         AnalogFourSnapshotDecoder().decode(payload, slot=0)
 
 
+def test_decode_rejects_payload_too_short_for_kit_name() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourSnapshotDecoder
+
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + bytes(3)
+
+    with pytest.raises(ValueError, match="payload too short"):
+        AnalogFourSnapshotDecoder().decode(payload, slot=0)
+
+
+def test_decode_rejects_wrong_candidate_kit_type_byte() -> None:
+    from rytm_randomizer.devices.strategies import AnalogFourSnapshotDecoder
+
+    payload = bytes([0x00, 0x20, 0x3C, 0x08]) + b"A4".ljust(16, b"\x00")
+
+    with pytest.raises(ValueError, match="candidate kit type byte"):
+        AnalogFourSnapshotDecoder().decode(payload, slot=0)
+
+
 def test_decode_is_deterministic_for_same_input() -> None:
     from rytm_randomizer.devices.strategies import AnalogFourSnapshotDecoder
 

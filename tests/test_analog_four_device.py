@@ -54,3 +54,34 @@ def test_analog_four_device_convenience_methods_delegate_to_strategies() -> None
     assert plan.ready is False
     assert a4.to_mock_messages(plan) == []
     assert tuple(a4.to_cc_messages(plan)) == ()
+
+
+def test_analog_four_device_renders_ready_plan_messages() -> None:
+    from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+
+    a4 = get_device("analog_four_mk2")
+    snapshot = AnalogFourKitSnapshot(slot=1, kit_name="A4", raw=b"", offsets_promoted=True)
+    plan = a4.plan_mutation(snapshot, depth=1)
+
+    assert plan.ready is True
+    assert len(a4.to_mock_messages(plan)) == len(plan.events)
+    assert len(tuple(a4.to_cc_messages(plan))) == len(plan.events)
+
+
+def test_analog_four_device_rejects_wrong_plan_type_for_mock_messages() -> None:
+    from rytm_randomizer.devices import get_device
+
+    a4 = get_device("analog_four_mk2")
+
+    with pytest.raises(TypeError, match="AnalogFourMutationPlan"):
+        a4.to_mock_messages(object())  # type: ignore[arg-type]
+
+
+def test_analog_four_device_rejects_wrong_plan_type_for_cc_messages() -> None:
+    from rytm_randomizer.devices import get_device
+
+    a4 = get_device("analog_four_mk2")
+
+    with pytest.raises(TypeError, match="AnalogFourMutationPlan"):
+        tuple(a4.to_cc_messages(object()))  # type: ignore[arg-type]

@@ -55,3 +55,21 @@ def test_hardware_send_refuses_not_ready_plan_even_when_armed() -> None:
     assert result.sent_count == 0
     assert sender.messages == []
     assert "candidate-only" in result.reason
+
+
+def test_hardware_send_sends_ready_plan_when_armed() -> None:
+    from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.strategies import RytmKitSnapshot
+    from rytm_randomizer.senders.hardware import hardware_send
+
+    rytm = get_device("analog_rytm_mk2")
+    plan = rytm.plan_mutation(RytmKitSnapshot(slot=0, kit_name="", raw=b"", unpacked=b""), depth=1)
+    expected_messages = list(rytm.to_cc_messages(plan))
+    sender = RecordingSender()
+
+    result = hardware_send(rytm, plan, sender=sender, armed=True)
+
+    assert result.ready is True
+    assert result.sent_count == len(expected_messages)
+    assert result.reason == ""
+    assert sender.messages == expected_messages

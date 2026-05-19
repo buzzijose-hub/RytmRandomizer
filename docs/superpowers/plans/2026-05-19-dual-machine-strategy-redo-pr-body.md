@@ -14,15 +14,16 @@
 - [x] `python -m ruff check rytm_randomizer/ tests/`
 - [x] `python -m black --check --target-version=py311 .`
 - [x] `python -m isort --profile black --check-only .`
-- [x] `python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing`
+- [x] `python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml -q`
+- [x] `python scripts/coverage_ratchet.py coverage.xml`
 
 ## Verification summary
 
-- Focused changed-area tests: 26 passed.
+- Focused changed-area tests: 37 passed.
 - Architecture gate: 229 passed, 1 skipped.
 - Fast suite: 1724 passed, 4 skipped.
-- Full suite: 2409 passed, 4 skipped.
-- Coverage: 97.55 percent total, above the 95 percent gate.
+- Full coverage suite: 2419 passed, 4 skipped.
+- Coverage: 97.92 percent total, 95.50 percent pure-branch coverage, above the 95 percent ratchet gate.
 
 ## Plan-requirements conformance
 
