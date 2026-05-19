@@ -26,6 +26,7 @@ from .analog_four_mutation_planner import (
     AnalogFourMutationPlanner,
     AnalogFourPlanEvent,
 )
+from .analog_four_message_renderer import AnalogFourMessageRenderer
 from .analog_rytm_message_renderer import AnalogRytmMessageRenderer
 from .analog_rytm_mutation_planner import (
     MAX_DEPTH,
@@ -48,6 +49,7 @@ __all__ = [
     "AnalogFourMutationPlan",
     "AnalogFourMutationPlanner",
     "AnalogFourPlanEvent",
+    "AnalogFourMessageRenderer",
     "AnalogFourSnapshotDecoder",
     "AnalogRytmMessageRenderer",
     "AnalogRytmMutationPlanner",
