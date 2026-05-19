@@ -15,9 +15,10 @@ new Protocol so the registry is non-empty out of the box.
 
 from __future__ import annotations
 
-# Importing ``analog_rytm`` triggers AnalogRytmDevice's import-time
-# ``register_device`` call so ``get_device("analog_rytm_mk2")`` resolves
-# out of the box. Side-effect import is the documented registry pattern.
+# Importing concrete device modules triggers their import-time
+# ``register_device`` calls so ``get_device("<device_id>")`` resolves out
+# of the box. Side-effect import is the documented registry pattern.
+from . import analog_four  # noqa: F401 - import for side effect (registration)
 from . import analog_rytm  # noqa: F401 - import for side effect (registration)
 from .base import Device, MessageRenderer, MidiOutbox, MutationPlanner, SnapshotDecoder
 from .registry import all_devices, get_device, register_device

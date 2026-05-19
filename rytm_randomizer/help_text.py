@@ -11,8 +11,9 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
-    "inspect-scene <key> | inspect-group-profile <key> | list-commands | "
-    "list-scenes | list-group-profiles | search-commands <query> | "
+    "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
+    "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
+    "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
 )
@@ -32,6 +33,7 @@ Usage:
   python -m rytm_randomizer.cli mock-runtime-active-bridge-report
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
+  python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -62,6 +64,8 @@ Commands:
                      Print the read-only anchor/profile behavior report.
   behavior-parity-report
                      Print the read-only behavior-parity coverage report.
+  dual-machine-target-report
+                     Print the passive dual-machine target report.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -228,6 +232,22 @@ Usage:
 
 Behavior:
   Prints the deterministic read-only behavior-parity coverage report to stdout.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
+  python -m rytm_randomizer.cli dual-machine-target-report --help
+
+Behavior:
+  Prints the passive dual-machine target report to stdout.
 
 Safety:
   passive/read-only

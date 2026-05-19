@@ -435,6 +435,24 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if args and args[0] == "dual-machine-target-report":
+        if len(args) != 2:
+            sys.stderr.write(
+                "Usage: python -m rytm_randomizer.cli "
+                "dual-machine-target-report <rytm|a4|both>\n"
+            )
+            return 2
+
+        from .dual_machine.reports import target_report
+
+        try:
+            sys.stdout.write(target_report(args[1]))
+            sys.stdout.write("\n")
+        except ValueError as exc:
+            sys.stderr.write(f"{exc}\n")
+            return 2
+        return 0
+
     if args == ["list-commands"]:
         sys.stdout.write("\n".join(format_registry_list_report("commands", "command list")))
         sys.stdout.write("\n")

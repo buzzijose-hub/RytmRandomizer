@@ -76,6 +76,7 @@ The `everything-claude-code:doc-updater` agent runs **before** PR open, not afte
 - `docs/ARCHITECTURE.md` updated if the WS touches a documented boundary (Protocols, registries, subpackages, the parity API surface).
 - `docs/CODEMAPS/*` updated if the WS adds new top-level modules.
 - Cross-links resolve: `grep -rE '\]\([^)]+\)' docs/ .claude/ | grep -v http` returns no broken paths.
+- **`README.md` updated when the user-facing surface changes** — a new device family, a new CLI command, a new install path, a changed default. `README.md` is the front door; a stale front door is a Gate 5 failure. Mechanically enforced by `tests/architecture/test_readme_freshness.py` (a required CI check): every registered device must be named in the README, every internal README link must resolve, and the README must carry no stale placeholder tokens. See `.claude/rules/readme-freshness.md`.
 
 ### Gate 6 — Type-system hygiene (Pattern-Review-WS-S1 findings, made permanent)
 
