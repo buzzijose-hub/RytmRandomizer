@@ -22,6 +22,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --pad <1-12>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
+  python -m rytm_randomizer.cli rytm-controlled-mapping-proof-report <before> <after> --slot <1-128> --pad <1-12> --parameter <parameter> --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report --target analog-four --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
@@ -142,6 +143,8 @@ Commands:
                      Capture snapshot-plan CC moves into an inert mock sender.
   rytm-controlled-diff-report
                      Compare two saved Rytm kit exports for changed pad parameters.
+  rytm-controlled-mapping-proof-report
+                     Check whether one Rytm controlled diff proves one mapped parameter.
   dual-machine-mock-bridge-report
                      Preview a combined Rytm + Analog Four mock performance stream.
   dual-machine-live-snapshot-readiness-report

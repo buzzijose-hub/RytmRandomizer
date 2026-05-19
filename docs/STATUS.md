@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added a passive Rytm controlled mapping proof report.
+  `rytm-controlled-mapping-proof-report <before> <after> --slot <1-128>
+  --pad <1-12> --parameter <parameter> --limit <n>` wraps the existing Rytm
+  controlled diff with a stricter proof gate: exactly one mapped parameter
+  must change, and it must match the requested parameter name or CC. This gives
+  the 12-pad snapshot workflow a clean pad-by-pad evidence loop without
+  sending MIDI, receiving SysEx, opening ports, writing SysEx, or touching
+  hardware.
 - 2026-05-19: added a passive Analog Four saved-offset mapping promotion
   report. `analog-four-saved-offset-mapping-promotion-report <before> <after>
   --slot <1-128> --track <1-4> --parameter <filter-1-frequency|amp-pan|track-level>

@@ -66,6 +66,17 @@ which decoded saved parameter moved after one controlled hand tweak. This is the
 passive calibration path for expanding Live Snapshot behavior across all 12
 pads.
 
+For a stricter single-parameter proof, use:
+
+```powershell
+python -m rytm_randomizer.cli rytm-controlled-mapping-proof-report "G:\ANALOG RYTM\MAPPING\RYTM_BASELINE.syx" "G:\ANALOG RYTM\MAPPING\RYTM_AFTER_FILTER_UP.syx" --slot 1 --pad 1 --parameter flt-frequency --limit 8
+```
+
+The proof report is ready only when exactly one mapped parameter changed on the
+selected pad and that change matches the requested parameter name or CC. This is
+the recommended operator loop for validating Rytm saved-kit mappings before
+trusting them in live snapshot workflows.
+
 The current runtime slice connects this planner to mock MIDI message capture,
 still without opening a port. Next, the armed Live Snapshot flow can be designed
 around the same plan object.

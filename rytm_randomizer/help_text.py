@@ -13,6 +13,7 @@ USAGE = (
     "sysex-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
     "sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--pad <1-12>] | "
     "rytm-controlled-diff-report <before> <after> --slot <1-128> (--pad <1-12>|--all-pads) --limit <n> | "
+    "rytm-controlled-mapping-proof-report <before> <after> --slot <1-128> --pad <1-12> --parameter <parameter> --limit <n> | "
     "dual-machine-mock-bridge-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-live-snapshot-readiness-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
     "dual-machine-active-send-plan-report (<path> --slot <1-128>|--target analog-four) --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] [--rytm-pad <1-12>] [--analog-four-track <1-4>] | "
@@ -72,6 +73,7 @@ Usage:
   python -m rytm_randomizer.cli sysex-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --pad <1-12>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --pad <1-12> --limit <n>
   python -m rytm_randomizer.cli rytm-controlled-diff-report <before> <after> --slot <1-128> --all-pads --limit <n>
+  python -m rytm_randomizer.cli rytm-controlled-mapping-proof-report <before> <after> --slot <1-128> --pad <1-12> --parameter <parameter> --limit <n>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
   python -m rytm_randomizer.cli dual-machine-mock-bridge-report --target analog-four --depth <micro|groove|strong> --analog-four-path <path> --analog-four-slot <1-128>
@@ -192,6 +194,8 @@ Commands:
                      Capture snapshot-plan CC moves into an inert mock sender.
   rytm-controlled-diff-report
                      Compare two saved Rytm kit exports for changed pad parameters.
+  rytm-controlled-mapping-proof-report
+                     Check whether one Rytm controlled diff proves one mapped parameter.
   dual-machine-mock-bridge-report
                      Preview a combined Rytm + Analog Four mock performance stream.
   dual-machine-live-snapshot-readiness-report
@@ -430,6 +434,32 @@ Safety:
   passive/read-only
   controlled comparison only
   mapped saved parameters only
+  no MIDI sending
+  no MIDI receive
+  no port opening
+  no command execution
+  no hardware mutation
+  no live SysEx receive
+  no SysEx writes
+  no hardware required""",
+    "rytm-controlled-mapping-proof-report": """RytmRandomizer passive CLI: rytm-controlled-mapping-proof-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-controlled-mapping-proof-report <before> <after> --slot <1-128> --pad <1-12> --parameter <parameter> --limit <n>
+  python -m rytm_randomizer.cli rytm-controlled-mapping-proof-report --help
+
+Behavior:
+  Reads two existing Rytm kit bank or whole-project SysEx files, selects one
+  saved kit slot and one pad, and checks whether the controlled diff proves one
+  intended parameter. The report is ready only when there is a single changed
+  mapped parameter and that change matches the requested parameter name or CC.
+  It does not request dumps, receive live SysEx, send MIDI, write SysEx, execute
+  commands, or touch hardware.
+
+Safety:
+  passive/read-only
+  controlled comparison only
+  single changed mapped parameter required
   no MIDI sending
   no MIDI receive
   no port opening

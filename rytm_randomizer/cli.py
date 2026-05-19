@@ -916,6 +916,53 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
+    if (
+        len(args) == 11
+        and args[0] == "rytm-controlled-mapping-proof-report"
+        and args[3] == "--slot"
+        and args[5] == "--pad"
+        and args[7] == "--parameter"
+        and args[9] == "--limit"
+    ):
+        from .rytm.controlled_diff import RytmControlledDiffError
+        from .rytm.controlled_mapping_proof import (
+            build_rytm_controlled_mapping_proof_from_file,
+            format_rytm_controlled_mapping_proof_error,
+            format_rytm_controlled_mapping_proof_report,
+        )
+
+        try:
+            slot = int(args[4])
+            pad = int(args[6])
+            limit = int(args[10])
+            proof = build_rytm_controlled_mapping_proof_from_file(
+                args[1],
+                args[2],
+                slot=slot,
+                pad=pad,
+                parameter=args[8],
+                limit=limit,
+            )
+        except FileNotFoundError:
+            lines = format_rytm_controlled_mapping_proof_error("File not found")
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except RytmControlledDiffError as exc:
+            lines = format_rytm_controlled_mapping_proof_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+        except ValueError as exc:
+            lines = format_rytm_controlled_mapping_proof_error(str(exc))
+            sys.stderr.write("\n".join(lines))
+            sys.stderr.write("\n")
+            return 1
+
+        sys.stdout.write("\n".join(format_rytm_controlled_mapping_proof_report(proof)))
+        sys.stdout.write("\n")
+        return 0
+
     if args and args[0] == "dual-machine-mock-bridge-report":
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
