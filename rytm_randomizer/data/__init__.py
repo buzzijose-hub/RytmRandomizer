@@ -108,9 +108,19 @@ from .plans import (
     SY_RAW_FILTER_NAMES,
 )
 from .profiles import PROFILES
+from .rytm_machine_catalog import (
+    RYTM_MACHINE_PROFILES,
+    RYTM_MACHINE_PROFILES_BY_KEY,
+    RYTM_PAD_CAPABILITIES,
+    RYTM_PAD_CAPABILITIES_BY_PAD,
+)
 from .scenes import SCENE_PRESETS
 
 __all__ = [
+    "RYTM_MACHINE_PROFILES",
+    "RYTM_MACHINE_PROFILES_BY_KEY",
+    "RYTM_PAD_CAPABILITIES",
+    "RYTM_PAD_CAPABILITIES_BY_PAD",
     "MACHINE_CC",
     "BD_SHARP_PARAMS",
     "BD_HARD_PARAMS",
