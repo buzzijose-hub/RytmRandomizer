@@ -33,7 +33,7 @@ USAGE = (
     "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
-    "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
+    "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] [--runtime-pad <1-12>] | "
     "rytm-12-pad-engine-matrix-report | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
@@ -113,6 +113,7 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --runtime-pad <1-12>
   python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report
@@ -876,12 +877,14 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --runtime-pad <1-12>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --help
 
 Behavior:
   Builds a passive/mock 12-pad Analog Rytm runtime stream from style intent.
   The stream includes machine selects, engine-source starters, and common
-  filter/amp starter values. No MIDI is sent and no port is opened.
+  filter/amp starter values. Use --runtime-pad to preview one pad before an
+  armed validation send. No MIDI is sent and no port is opened.
 
 Safety:
   passive/read-only

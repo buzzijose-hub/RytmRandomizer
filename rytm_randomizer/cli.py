@@ -1748,6 +1748,7 @@ def main(argv=None):
         try:
             discovery = None
             profile = "auto"
+            runtime_pad = None
             index = 3
             while index < len(args):
                 flag = args[index]
@@ -1756,6 +1757,11 @@ def main(argv=None):
                     discovery = parse_discovery_value(value)
                 elif flag == "--profile":
                     profile = value
+                elif flag == "--runtime-pad":
+                    try:
+                        runtime_pad = int(value)
+                    except ValueError as exc:
+                        raise ValueError("Pad must be between 1 and 12") from exc
                 else:
                     sys.stderr.write(f"{USAGE}\n")
                     return 2
@@ -1764,6 +1770,7 @@ def main(argv=None):
                 args[2],
                 discovery=discovery,
                 profile=profile,
+                pad=runtime_pad,
             )
         except ValueError as exc:
             lines = format_twelve_pad_rytm_runtime_error(str(exc))

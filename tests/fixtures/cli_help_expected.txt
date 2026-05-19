@@ -66,6 +66,7 @@ Usage:
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --discovery <0..1>
   python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --profile <profile>
+  python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text> --runtime-pad <1-12>
   python -m rytm_randomizer.cli rytm-12-pad-engine-matrix-report
   python -m rytm_randomizer.cli analog-four-reference-report
   python -m rytm_randomizer.cli analog-four-runtime-report

@@ -4,6 +4,14 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added passive one-pad Rytm runtime previews.
+  `--runtime-pad <1-12>` can now be combined with
+  `python -m rytm_randomizer.cli twelve-pad-rytm-runtime-report --style <text>`
+  to filter the mock-only 12-pad runtime report to one pad before any active
+  validation. This pairs with the active `--runtime-pad <1-12>` app flag so an
+  operator can inspect Pad 10, Pad 3, or any other single Rytm lane before
+  choosing an armed send. The report remains passive/read-only: no MIDI
+  sending, port opening, SysEx receive/write, or hardware mutation.
 - 2026-05-19: added one-pad Rytm runtime validation targeting.
   `--runtime-pad <1-12>` can now be combined with
   `rytm-randomizer --dry-run --twelve-pad-rytm-runtime --runtime-style <style>`

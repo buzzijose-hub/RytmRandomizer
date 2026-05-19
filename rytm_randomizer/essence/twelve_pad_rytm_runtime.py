@@ -112,6 +112,7 @@ def build_twelve_pad_rytm_runtime_plan(
     discovery: float | None = None,
     profile: str | None = "auto",
     include_engine_source_starters: bool = True,
+    pad: int | None = None,
 ) -> TwelvePadRytmRuntimePlan:
     """Build a passive 12-pad Rytm runtime plan from style intent."""
 
@@ -121,9 +122,41 @@ def build_twelve_pad_rytm_runtime_plan(
         profile=profile,
         include_engine_source_starters=include_engine_source_starters,
     )
-    return _runtime_plan_from_starter_plan(
+    plan = _runtime_plan_from_starter_plan(
         starter_plan,
         include_engine_source_starters=include_engine_source_starters,
+    )
+    if pad is None:
+        return plan
+    return filter_twelve_pad_rytm_runtime_plan_to_pad(plan, pad=pad)
+
+
+def filter_twelve_pad_rytm_runtime_plan_to_pad(
+    plan: TwelvePadRytmRuntimePlan,
+    *,
+    pad: int,
+) -> TwelvePadRytmRuntimePlan:
+    """Return a passive runtime plan scoped to one Rytm pad."""
+
+    if not isinstance(plan, TwelvePadRytmRuntimePlan):
+        raise TypeError("plan must be a TwelvePadRytmRuntimePlan")
+    if pad not in range(1, 13):
+        raise ValueError("Pad must be between 1 and 12")
+
+    selected = tuple(pad_plan for pad_plan in plan.pads if pad_plan.pad == pad)
+    if not selected:
+        raise ValueError(f"Pad {pad} is not present in the runtime plan")
+
+    return TwelvePadRytmRuntimePlan(
+        style_prompt=plan.style_prompt,
+        matched_profile_labels=plan.matched_profile_labels,
+        essence_tags=plan.essence_tags,
+        discovery=plan.discovery,
+        starter_profile_key=plan.starter_profile_key,
+        starter_profile_label=plan.starter_profile_label,
+        starter_profile_description=plan.starter_profile_description,
+        include_engine_source_starters=plan.include_engine_source_starters,
+        pads=selected,
     )
 
 
@@ -356,6 +389,7 @@ __all__ = [
     "TwelvePadRytmRuntimePlan",
     "build_twelve_pad_rytm_runtime_plan",
     "capture_twelve_pad_rytm_runtime_mock_messages",
+    "filter_twelve_pad_rytm_runtime_plan_to_pad",
     "format_twelve_pad_rytm_runtime_error",
     "format_twelve_pad_rytm_runtime_report",
 ]

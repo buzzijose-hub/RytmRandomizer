@@ -186,6 +186,51 @@ def test_twelve_pad_rytm_runtime_mock_capture_matches_guarded_source_starter_str
     assert runtime_stream == guarded_stream
 
 
+def test_twelve_pad_rytm_runtime_plan_can_filter_to_one_pad():
+    from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
+        build_twelve_pad_rytm_runtime_plan,
+        filter_twelve_pad_rytm_runtime_plan_to_pad,
+    )
+
+    full_plan = build_twelve_pad_rytm_runtime_plan(
+        "Birmingham dark techno",
+        discovery=0.35,
+    )
+
+    pad10_plan = filter_twelve_pad_rytm_runtime_plan_to_pad(full_plan, pad=10)
+
+    assert pad10_plan.pad_count == 1
+    assert pad10_plan.event_count == 11
+    assert pad10_plan.machine_select_event_count == 1
+    assert pad10_plan.engine_source_event_count == 4
+    assert pad10_plan.starter_parameter_event_count == 6
+    assert pad10_plan.source_starter_covered_pad_count == 1
+    assert pad10_plan.source_starter_skipped_pad_count == 0
+    assert pad10_plan.pads[0].pad == 10
+    assert pad10_plan.pads[0].role_label == "OH / Open hihat"
+    assert {event.pad for event in pad10_plan.pads[0].events} == {10}
+
+    with pytest.raises(ValueError, match="Pad must be between 1 and 12"):
+        filter_twelve_pad_rytm_runtime_plan_to_pad(full_plan, pad=13)
+
+
+def test_build_twelve_pad_rytm_runtime_plan_accepts_one_pad_target():
+    from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
+        build_twelve_pad_rytm_runtime_plan,
+    )
+
+    plan = build_twelve_pad_rytm_runtime_plan(
+        "Birmingham dark techno",
+        discovery=0.35,
+        pad=10,
+    )
+
+    assert plan.pad_count == 1
+    assert plan.event_count == 11
+    assert plan.pads[0].pad == 10
+    assert plan.pads[0].role_label == "OH / Open hihat"
+
+
 def test_twelve_pad_rytm_runtime_report_explains_counts_stream_and_safety():
     from rytm_randomizer.essence.twelve_pad_rytm_runtime import (
         build_twelve_pad_rytm_runtime_plan,
@@ -256,6 +301,44 @@ def test_twelve_pad_rytm_runtime_report_cli_accepts_style_discovery_and_profile(
     assert "engine_source_parameter / SRC Slot 1 CC16 -> 100" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""
+
+
+def test_twelve_pad_rytm_runtime_report_cli_accepts_runtime_pad():
+    result = run_cli(
+        "twelve-pad-rytm-runtime-report",
+        "--style",
+        "Birmingham dark techno",
+        "--discovery",
+        "0.35",
+        "--runtime-pad",
+        "10",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Twelve Pad Rytm Runtime Report" in result.stdout
+    assert "Planned pads: 1" in result.stdout
+    assert "Runtime messages: 11" in result.stdout
+    assert "Source-starter covered pads: 1" in result.stdout
+    assert "- Pad 10 / OH / Open hihat" in result.stdout
+    assert "- Pad 10 / ch 10 wire 9" in result.stdout
+    assert "- Pad 9 / ch 9 wire 8" not in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_twelve_pad_rytm_runtime_report_cli_rejects_bad_runtime_pad():
+    result = run_cli(
+        "twelve-pad-rytm-runtime-report",
+        "--style",
+        "Birmingham dark techno",
+        "--runtime-pad",
+        "13",
+    )
+
+    assert result.returncode == 1
+    assert "Pad must be between 1 and 12" in result.stderr
+    assert "No MIDI was sent" in result.stderr
+    assert result.stdout == ""
 
 
 def test_twelve_pad_rytm_runtime_report_cli_rejects_invalid_discovery():

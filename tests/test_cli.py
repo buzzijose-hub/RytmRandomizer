@@ -38,7 +38,7 @@ USAGE = (
     "rytm-engine-cycle-plan-report --style <text> [--discovery <0..1>] | "
     "rytm-engine-cycle-starter-plan-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
     "twelve-pad-mock-runtime-report --style <text> [--discovery <0..1>] | "
-    "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] | "
+    "twelve-pad-rytm-runtime-report --style <text> [--discovery <0..1>] [--profile <profile>] [--runtime-pad <1-12>] | "
     "rytm-12-pad-engine-matrix-report | "
     "analog-four-reference-report | analog-four-runtime-report [--profile <profile>] | "
     "analog-four-runtime-guarded-send-dry-run [--profile <profile>] | "
