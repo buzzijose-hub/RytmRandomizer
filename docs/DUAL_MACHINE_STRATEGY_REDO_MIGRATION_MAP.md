@@ -88,5 +88,8 @@ The generic guarded sender must refuse not-ready plans cleanly. No per-family se
 
 - Design checkpoint committed on branch `codex/dual-machine-strategy-redo`.
 - Detailed implementation plan committed at `docs/superpowers/plans/2026-05-19-dual-machine-strategy-redo.md`.
-- Migration map created as the first execution checkpoint.
-- Runtime code is not yet changed in this branch.
+- `AnalogFourDevice` registered through `devices/registry.py`.
+- `dual_machine` target selection goes through `devices.all_devices()`.
+- Generic sender package added; readiness gates are centralized.
+- Passive CLI target report added for `rytm`, `a4`, and `both`.
+- No architecture-test allowlist entries were added.

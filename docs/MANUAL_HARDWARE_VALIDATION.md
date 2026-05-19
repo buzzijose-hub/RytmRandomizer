@@ -105,6 +105,18 @@ Enter each command in order; after each, sanity-check the device:
       `MockMidiSender`-recorded golden file. A green E2E suite plus a
       green hardware run is the full validation gate.
 
+## Dual-Machine Strategy Redo Manual Validation
+
+These checks are manual only. Do not add them to CI.
+
+1. Run `python -m rytm_randomizer.cli dual-machine-target-report rytm`.
+2. Confirm the report lists only `analog_rytm_mk2`.
+3. Run `python -m rytm_randomizer.cli dual-machine-target-report a4`.
+4. Confirm the report lists only `analog_four_mk2`.
+5. Run `python -m rytm_randomizer.cli dual-machine-target-report both`.
+6. Confirm both devices are listed.
+7. Do not run armed hardware sends until the A4 readiness report says the plan is ready.
+
 ## What to do if a step fails
 
 - **Scene does not audibly change the Rytm**: confirm the MIDI cable, the
