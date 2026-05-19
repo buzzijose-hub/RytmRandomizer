@@ -143,6 +143,9 @@ def build_dual_machine_mock_bridge(
         raise ValueError("Analog Four path requires an Analog Four slot")
 
     target_plan = build_performance_snapshot_target_plan(target)
+    if target_plan.canonical_target == "rytm" and analog_four_sysex_path is not None:
+        raise ValueError("Analog Four snapshot path cannot be used with target rytm")
+
     rytm_plan = build_snapshot_mutation_plan_from_file(
         rytm_sysex_path,
         slot=slot,

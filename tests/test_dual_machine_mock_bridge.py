@@ -229,6 +229,28 @@ def test_dual_bridge_rytm_target_emits_only_rytm_messages(tmp_path):
     }
 
 
+def test_dual_bridge_rytm_target_rejects_a4_snapshot_path(tmp_path):
+    from rytm_randomizer.dual_machine.mock_bridge import build_dual_machine_mock_bridge
+
+    rytm_path = tmp_path / "rytm-kits.syx"
+    a4_path = tmp_path / "a4-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="RYTM ISOLATE"))
+    a4_path.write_bytes(make_a4_kit_record(kit_name="A4 SHOULD STAY OUT"))
+
+    with pytest.raises(
+        ValueError,
+        match="Analog Four snapshot path cannot be used with target rytm",
+    ):
+        build_dual_machine_mock_bridge(
+            str(rytm_path),
+            slot=1,
+            depth="micro",
+            target="rytm",
+            analog_four_sysex_path=str(a4_path),
+            analog_four_slot=1,
+        )
+
+
 def test_dual_bridge_analog_four_target_emits_only_a4_messages(tmp_path):
     from rytm_randomizer.dual_machine.mock_bridge import (
         build_dual_machine_mock_bridge,
@@ -536,6 +558,33 @@ def test_dual_machine_mock_bridge_cli_accepts_target_scope(tmp_path):
     assert "Combined mock messages: 6" in result.stdout
     assert "- Analog Four Track" not in result.stdout
     assert result.stderr == ""
+
+
+def test_dual_machine_mock_bridge_cli_rejects_rytm_target_a4_snapshot_path(tmp_path):
+    rytm_path = tmp_path / "rytm-kits.syx"
+    a4_path = tmp_path / "a4-kits.syx"
+    rytm_path.write_bytes(make_rytm_kit_record(kit_name="CLI RYTM ISOLATE"))
+    a4_path.write_bytes(make_a4_kit_record(kit_name="CLI A4 SHOULD STAY OUT"))
+
+    result = run_cli(
+        "dual-machine-mock-bridge-report",
+        str(rytm_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--target",
+        "rytm",
+        "--analog-four-path",
+        str(a4_path),
+        "--analog-four-slot",
+        "1",
+    )
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "Analog Four snapshot path cannot be used with target rytm" in result.stderr
+    assert "No MIDI was sent" in result.stderr
 
 
 def test_dual_machine_mock_bridge_cli_accepts_analog_four_profile(tmp_path):

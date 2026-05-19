@@ -266,28 +266,12 @@ def test_guarded_send_refuses_combined_a4_snapshot_candidates_without_partial_em
     assert sender.sent_messages == ()
 
 
-def test_guarded_send_target_rytm_ignores_a4_snapshot_candidates_and_emits_rytm_only(tmp_path):
-    from rytm_randomizer.dual_machine.guarded_sender import (
-        execute_dual_machine_guarded_send,
-    )
-    from rytm_randomizer.mock_midi import MockMidiSender
-
-    sender = MockMidiSender()
-    result = execute_dual_machine_guarded_send(
-        build_plan(tmp_path, target="rytm", with_a4_snapshot=True),
-        sender,
-        armed=True,
-        dry_run_confirmed=True,
-    )
-
-    assert result.accepted is True
-    assert result.reason == "accepted_guarded_mock_only"
-    assert result.eligible_message_count == 6
-    assert result.blocked_event_count == 0
-    assert result.emitted_message_count == 6
-    assert {message.metadata["device"] for message in sender.sent_messages} == {
-        "Analog Rytm MKII",
-    }
+def test_guarded_send_target_rytm_rejects_a4_snapshot_candidates(tmp_path):
+    with pytest.raises(
+        ValueError,
+        match="Analog Four snapshot path cannot be used with target rytm",
+    ):
+        build_plan(tmp_path, target="rytm", with_a4_snapshot=True)
 
 
 def test_guarded_send_report_formats_refusal_policy(tmp_path):
@@ -349,7 +333,9 @@ def test_dual_machine_guarded_send_dry_run_cli_refuses_combined_a4_candidates(tm
     assert result.stderr == ""
 
 
-def test_dual_machine_guarded_send_dry_run_cli_accepts_rytm_target_scope(tmp_path):
+def test_dual_machine_guarded_send_dry_run_cli_rejects_rytm_target_a4_snapshot_path(
+    tmp_path,
+):
     rytm_path = tmp_path / "rytm-kits.syx"
     a4_path = tmp_path / "a4-kits.syx"
     rytm_path.write_bytes(make_rytm_kit_record(kit_name="CLI RYTM ONLY"))
@@ -375,13 +361,10 @@ def test_dual_machine_guarded_send_dry_run_cli_accepts_rytm_target_scope(tmp_pat
         "rytm",
     )
 
-    assert result.returncode == 0
-    assert "Target: rytm" in result.stdout
-    assert "Accepted: True" in result.stdout
-    assert "Reason: accepted_guarded_mock_only" in result.stdout
-    assert "Blocked candidate events: 0" in result.stdout
-    assert "Emitted mock messages: 6" in result.stdout
-    assert result.stderr == ""
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "Analog Four snapshot path cannot be used with target rytm" in result.stderr
+    assert "No MIDI was sent" in result.stderr
 
 
 def test_dual_machine_guarded_send_dry_run_cli_accepts_lane_filters(tmp_path):

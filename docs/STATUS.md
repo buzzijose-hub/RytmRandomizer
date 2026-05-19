@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: tightened one-machine snapshot isolation in the passive
+  dual-machine bridge. When validation is explicitly scoped to `--target rytm`,
+  supplying `--analog-four-path` is now rejected before any A4 saved snapshot is
+  parsed or planned. This keeps Rytm-only rehearsals from depending on an A4
+  bank file and preserves the live-performance promise that the other machine
+  stays out of the path.
 - 2026-05-19: added snapshot-source notes to the focused dual-machine lane
   validation guide. A4-only guides now explain that `<rytm-sysex-path>` is
   bridge context only and Rytm MIDI remains untouched, while
