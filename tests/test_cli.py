@@ -249,6 +249,7 @@ def test_dual_machine_kit_bank_readiness_report_help_exits_zero():
     assert result.returncode == 0
     assert "RytmRandomizer passive CLI: dual-machine-kit-bank-readiness-report" in result.stdout
     assert "both-machine snapshot modes" in result.stdout
+    assert "next passive validation" in result.stdout
     assert "no MIDI sending" in result.stdout
     assert "no live SysEx receive" in result.stdout
     assert result.stderr == ""

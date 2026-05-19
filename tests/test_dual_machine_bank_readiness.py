@@ -81,7 +81,7 @@ def test_dual_machine_bank_readiness_report_summarizes_both_saved_banks(tmp_path
         analyze_dual_machine_kit_bank_files(rytm_path, a4_path)
     )
 
-    assert report[:23] == [
+    assert report[:28] == [
         "RytmRandomizer passive dual-machine kit bank readiness report",
         "Rytm bank:",
         "- SysEx records: 1",
@@ -104,6 +104,20 @@ def test_dual_machine_bank_readiness_report_summarizes_both_saved_banks(tmp_path
         "- both-machines snapshot mode: candidate-ready",
         "Problem slots:",
         "- none",
+        "Next validation commands:",
+        "- status: saved-bank preflight passed; run passive lane validation before any armed send.",
+        (
+            "python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target both "
+            "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>"
+        ),
+        (
+            "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
+            "--target both --slot 1 --limit 8"
+        ),
+        (
+            "python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
+            "<analog-four-mapping-manifest-path>"
+        ),
         "Policy:",
     ]
     assert "- saved kit-bank files only" in report
@@ -143,6 +157,13 @@ def test_dual_machine_bank_readiness_report_names_problem_slots(tmp_path):
     assert "Problem slots:" in report
     assert "- Rytm slot 1: ready pads 11 / blocked pads 1" in report
     assert "- Analog Four slot 1: planned tracks 2 / blocked tracks 2" in report
+    assert (
+        "- status: blocked lanes present; resolve Problem slots before guarded send dry-runs."
+        in report
+    )
+    assert "dual-machine-mapping-session-plan-report --target both --slot 1 --limit 8" in "\n".join(
+        report
+    )
 
 
 def test_dual_machine_kit_bank_report_cli_reads_both_files_without_hardware(tmp_path):

@@ -200,7 +200,12 @@ def format_dual_machine_kit_bank_readiness_report(
         "- no SysEx writes",
         "- no hardware required",
     ]
-    lines[20:20] = ("Problem slots:", *readiness.problem_slot_lines)
+    lines[20:20] = (
+        "Problem slots:",
+        *readiness.problem_slot_lines,
+        "Next validation commands:",
+        *_format_next_validation_commands(readiness),
+    )
     return lines
 
 
@@ -243,6 +248,34 @@ def _format_candidate_mode_status(scanned_count: int, blocked_count: int) -> str
     if status == "ready":
         return "candidate-ready"
     return status
+
+
+def _format_next_validation_commands(readiness: DualMachineKitBankReadiness) -> list[str]:
+    if readiness.combined_blocked_lane_count:
+        status_line = (
+            "- status: blocked lanes present; resolve Problem slots before "
+            "guarded send dry-runs."
+        )
+    else:
+        status_line = (
+            "- status: saved-bank preflight passed; run passive lane validation "
+            "before any armed send."
+        )
+    return [
+        status_line,
+        (
+            "python -m rytm_randomizer.cli dual-machine-lane-validation-guide --target both "
+            "--analog-four-mapping-manifest <analog-four-mapping-manifest-path>"
+        ),
+        (
+            "python -m rytm_randomizer.cli dual-machine-mapping-session-plan-report "
+            "--target both --slot 1 --limit 8"
+        ),
+        (
+            "python -m rytm_randomizer.cli analog-four-saved-offset-mapping-manifest-report "
+            "<analog-four-mapping-manifest-path>"
+        ),
+    ]
 
 
 def _count_tuple_value(counts: tuple[tuple[str, int], ...], key: str) -> int:
