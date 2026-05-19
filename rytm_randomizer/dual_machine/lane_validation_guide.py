@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..essence.machine_catalog import get_rytm_pad_capability
+
 DEFAULT_RYTM_SLOT = 1
 DEFAULT_RYTM_PAD = 1
 DEFAULT_ANALOG_FOUR_TRACK = 4
@@ -155,7 +157,7 @@ def format_dual_machine_all_lane_validation_guide() -> list[str]:
     ]
     for pad in range(1, 13):
         lines.append(
-            f"- Pad {pad} / expected {EXPECTED_RYTM_LANE_MESSAGES} messages: "
+            f"- Pad {_rytm_pad_label(pad)} / expected {EXPECTED_RYTM_LANE_MESSAGES} messages: "
             "python -m rytm_randomizer.cli dual-machine-lane-validation-guide "
             f"--target rytm --rytm-pad {pad}"
         )
@@ -171,7 +173,7 @@ def format_dual_machine_all_lane_validation_guide() -> list[str]:
     lines.append("Both-machine pilot pairs:")
     for pad, track in ALL_LANE_PILOT_PAIRS:
         lines.append(
-            f"- Pad {pad} + A4 Track {track} / expected "
+            f"- Pad {_rytm_pad_label(pad)} + A4 Track {track} / expected "
             f"{EXPECTED_LANE_SCOPED_MESSAGES} messages: "
             "python -m rytm_randomizer.cli dual-machine-lane-validation-guide "
             f"--target both --rytm-pad {pad} --analog-four-track {track}"
@@ -262,7 +264,12 @@ def _purpose_line(request: DualMachineLaneValidationGuideRequest) -> str:
 def _rytm_pad_line(request: DualMachineLaneValidationGuideRequest) -> str:
     if request.rytm_pad is None:
         return "Rytm pad: not targeted"
-    return f"Recommended Rytm pad: {request.rytm_pad}"
+    return f"Recommended Rytm pad: {_rytm_pad_label(request.rytm_pad)}"
+
+
+def _rytm_pad_label(pad: int) -> str:
+    capability = get_rytm_pad_capability(pad)
+    return f"{pad} / {capability.track_code} / {capability.label}"
 
 
 def _analog_four_track_line(request: DualMachineLaneValidationGuideRequest) -> str:

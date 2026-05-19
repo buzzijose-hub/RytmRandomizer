@@ -4,6 +4,12 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added OS 1.72 Rytm lane labels to the passive dual-machine
+  validation guides. The focused guide now prints the selected Rytm pad as
+  `pad / track code / track name`, and the all-lane matrix labels each Rytm
+  lane before the command, including Pad 10 as `OH / Open Hihat` and Pads 6-8
+  as tom lanes. The labels come from the existing canonical pad-capability
+  catalog and remain passive guide text only.
 - 2026-05-19: connected the dual-machine bank-readiness proof to the passive
   lane-validation guide. `dual-machine-lane-validation-guide` and
   `dual-machine-lane-validation-guide --all-lanes` now begin with a

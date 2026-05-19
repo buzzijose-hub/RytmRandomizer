@@ -86,7 +86,7 @@ def test_dual_machine_lane_validation_guide_formats_rytm_only_lane():
     joined = "\n".join(report)
 
     assert "Target scope: rytm" in joined
-    assert "Recommended Rytm pad: 10" in joined
+    assert "Recommended Rytm pad: 10 / OH / Open Hihat" in joined
     assert "Analog Four track: not targeted" in joined
     assert "Expected lane-scoped messages: 6" in joined
     assert "--target rytm --rytm-pad 10" in joined
@@ -176,16 +176,17 @@ def test_dual_machine_all_lane_validation_guide_lists_every_single_machine_lane(
 
     assert report[0] == "RytmRandomizer passive Dual-Machine All-Lane Validation Guide"
     assert "Rytm-only lanes:" in joined
-    assert "- Pad 1 / expected 6 messages:" in joined
-    assert "- Pad 12 / expected 6 messages:" in joined
+    assert "- Pad 1 / BD / Bass Drum / expected 6 messages:" in joined
+    assert "- Pad 10 / OH / Open Hihat / expected 6 messages:" in joined
+    assert "- Pad 12 / CB / Cow Bell / expected 6 messages:" in joined
     assert "dual-machine-lane-validation-guide --target rytm --rytm-pad 12" in joined
     assert "Analog-Four-only lanes:" in joined
     assert "- Track 1 / expected 5 messages:" in joined
     assert "- Track 4 / expected 5 messages:" in joined
     assert "dual-machine-lane-validation-guide --target analog-four --analog-four-track 4" in joined
     assert "Both-machine pilot pairs:" in joined
-    assert "- Pad 1 + A4 Track 1 / expected 11 messages:" in joined
-    assert "- Pad 10 + A4 Track 3 / expected 11 messages:" in joined
+    assert "- Pad 1 / BD / Bass Drum + A4 Track 1 / expected 11 messages:" in joined
+    assert "- Pad 10 / OH / Open Hihat + A4 Track 3 / expected 11 messages:" in joined
     assert "Saved-bank preflight:" in joined
     assert "dual-machine-kit-bank-readiness-report --rytm <rytm-sysex-path>" in joined
     assert "- no MIDI sending" in joined
