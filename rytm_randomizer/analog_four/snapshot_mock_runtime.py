@@ -13,7 +13,6 @@ from pathlib import Path
 
 from ..mock_midi import MidiMessage, MockMidiSender
 from .snapshot_mutation_planner import (
-    TRACK_COUNT,
     AnalogFourSnapshotMutationPlan,
     build_analog_four_snapshot_mutation_plan_from_file,
     format_analog_four_snapshot_mutation_plan_error,
@@ -84,8 +83,8 @@ def format_analog_four_snapshot_mock_runtime_report(
         f"Source slot: {plan.slot_number}",
         f"Kit: {plan.kit_name or '<blank>'}",
         f"Depth: {plan.depth}",
-        f"Planned tracks: {plan.planned_track_count} / {TRACK_COUNT}",
-        f"Blocked tracks: {plan.blocked_track_count} / {TRACK_COUNT}",
+        f"Planned tracks: {plan.planned_track_count} / {plan.scanned_track_count}",
+        f"Blocked tracks: {plan.blocked_track_count} / {plan.scanned_track_count}",
         f"Planned changes: {plan.planned_change_count}",
         f"Mock sender captured: {len(sender.sent_messages)} message(s)",
         "Track plans:",

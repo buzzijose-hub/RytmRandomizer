@@ -20,8 +20,8 @@ USAGE = (
     "dual-machine-active-send-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
     "dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> [--analog-four-path <path> --analog-four-slot <slot>] [--target <target>] [--analog-four-profile <profile>] | "
     "analog-four-kit-snapshot-report <path> --slot <1-128> | "
-    "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> | "
-    "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> | "
+    "analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
+    "analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> [--track <1-4>] | "
     "analog-four-offset-candidate-report <path> (--track <1-4>|--all-tracks) --limit <n> | "
     "analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n> | "
     "essence-plan-report (--tags <csv>|--description <text>) --discovery <0..1> | inspect-command <key> | "
@@ -86,7 +86,9 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-guarded-send-dry-run-report <path> --slot <1-128> --depth <micro|groove|strong> --analog-four-profile <profile>
   python -m rytm_randomizer.cli analog-four-kit-snapshot-report <path> --slot <1-128>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --track <1-4> --limit <n>
   python -m rytm_randomizer.cli analog-four-offset-candidate-report <path> --all-tracks --limit <n>
   python -m rytm_randomizer.cli analog-four-controlled-diff-report <before> <after> --slot <1-128> --track <1-4> --limit <n>
@@ -547,13 +549,16 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
   python -m rytm_randomizer.cli analog-four-snapshot-mutation-plan-report --help
 
 Behavior:
   Reads an existing Analog Four kit bank or whole-project SysEx file, decodes
   one saved kit slot, and plans captured-value-relative changes around
-  candidate_unverified saved offsets. It does not claim parameter names, CC
-  mappings, send MIDI, write SysEx, or touch hardware.
+  candidate_unverified saved offsets. Use --track to inspect one saved synth
+  track while leaving the other tracks out of the passive plan. It does not
+  claim parameter names, CC mappings, send MIDI, write SysEx, or touch
+  hardware.
 
 Safety:
   passive/read-only
@@ -571,15 +576,16 @@ Safety:
 
 Usage:
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong>
+  python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report <path> --slot <1-128> --depth <micro|groove|strong> --track <1-4>
   python -m rytm_randomizer.cli analog-four-snapshot-mock-runtime-report --help
 
 Behavior:
   Reads an existing Analog Four kit bank or whole-project SysEx file, builds a
   captured-value-relative saved-offset candidate plan, and captures that plan
-  into inert mock events. Events are saved-offset candidate records only:
-  candidate_unverified, no parameter names claimed, and no CC mapping claimed.
-  It does not request dumps, receive live SysEx, send MIDI, write SysEx, or
-  touch hardware.
+  into inert mock events. Use --track to capture one saved synth track only.
+  Events are saved-offset candidate records only: candidate_unverified, no
+  parameter names claimed, and no CC mapping claimed. It does not request
+  dumps, receive live SysEx, send MIDI, write SysEx, or touch hardware.
 
 Safety:
   passive/read-only

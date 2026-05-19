@@ -96,6 +96,10 @@ class AnalogFourSnapshotMutationPlan:
     def planned_change_count(self) -> int:
         return sum(len(track.changes) for track in self.tracks)
 
+    @property
+    def scanned_track_count(self) -> int:
+        return len(self.tracks)
+
 
 def build_analog_four_snapshot_mutation_plan_from_file(
     path: str | Path,
@@ -149,6 +153,36 @@ def build_analog_four_snapshot_mutation_plan_from_bytes(
     )
 
 
+def filter_analog_four_snapshot_mutation_plan_to_track(
+    plan: AnalogFourSnapshotMutationPlan,
+    *,
+    track: int,
+) -> AnalogFourSnapshotMutationPlan:
+    """Return a copy of an Analog Four snapshot mutation plan for one track."""
+
+    if not isinstance(plan, AnalogFourSnapshotMutationPlan):
+        raise TypeError("plan must be an AnalogFourSnapshotMutationPlan")
+    if track not in range(1, 5):
+        raise AnalogFourSnapshotMutationPlanError(
+            "Analog Four snapshot track must be 1, 2, 3, or 4"
+        )
+
+    selected_tracks = tuple(track_plan for track_plan in plan.tracks if track_plan.track == track)
+    if not selected_tracks:
+        raise AnalogFourSnapshotMutationPlanError(
+            "Analog Four snapshot track must be 1, 2, 3, or 4"
+        )
+
+    return AnalogFourSnapshotMutationPlan(
+        source_path=plan.source_path,
+        slot_number=plan.slot_number,
+        kit_name=plan.kit_name,
+        depth=plan.depth,
+        manufacturer_id=plan.manufacturer_id,
+        tracks=selected_tracks,
+    )
+
+
 def format_analog_four_snapshot_mutation_plan_report(
     plan: AnalogFourSnapshotMutationPlan,
 ) -> list[str]:
@@ -161,9 +195,9 @@ def format_analog_four_snapshot_mutation_plan_report(
         f"Kit: {plan.kit_name or '<blank>'}",
         f"Depth: {plan.depth}",
         f"Manufacturer ID: {plan.manufacturer_id}",
-        "Tracks scanned: 1-4",
-        f"Planned tracks: {plan.planned_track_count} / {TRACK_COUNT}",
-        f"Blocked tracks: {plan.blocked_track_count} / {TRACK_COUNT}",
+        f"Tracks scanned: {_format_scanned_tracks(plan)}",
+        f"Planned tracks: {plan.planned_track_count} / {plan.scanned_track_count}",
+        f"Blocked tracks: {plan.blocked_track_count} / {plan.scanned_track_count}",
         f"Planned changes: {plan.planned_change_count}",
         "Track plans:",
     ]
@@ -275,6 +309,13 @@ def _format_change_line(
     )
 
 
+def _format_scanned_tracks(plan: AnalogFourSnapshotMutationPlan) -> str:
+    tracks = tuple(track.track for track in plan.tracks)
+    if tracks == tuple(range(1, TRACK_COUNT + 1)):
+        return "1-4"
+    return ", ".join(str(track) for track in tracks) if tracks else "none"
+
+
 def _policy_and_safety_lines() -> list[str]:
     return [
         "Mutation policy:",
@@ -303,6 +344,7 @@ __all__ = [
     "AnalogFourTrackMutationPlan",
     "build_analog_four_snapshot_mutation_plan_from_bytes",
     "build_analog_four_snapshot_mutation_plan_from_file",
+    "filter_analog_four_snapshot_mutation_plan_to_track",
     "format_analog_four_snapshot_mutation_plan_error",
     "format_analog_four_snapshot_mutation_plan_report",
 ]

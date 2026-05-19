@@ -1074,7 +1074,7 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) == 6
+        len(args) in (6, 8)
         and args[0] == "analog-four-snapshot-mutation-plan-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
@@ -1082,9 +1082,15 @@ def main(argv=None):
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
             build_analog_four_snapshot_mutation_plan_from_file,
+            filter_analog_four_snapshot_mutation_plan_to_track,
             format_analog_four_snapshot_mutation_plan_error,
             format_analog_four_snapshot_mutation_plan_report,
         )
+
+        optional_args = _parse_optional_key_value_args(args[6:], {"--track"})
+        if optional_args is None:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
 
         try:
             slot = int(args[3])
@@ -1093,6 +1099,11 @@ def main(argv=None):
                 slot=slot,
                 depth=args[5],
             )
+            if "--track" in optional_args:
+                plan = filter_analog_four_snapshot_mutation_plan_to_track(
+                    plan,
+                    track=int(optional_args["--track"]),
+                )
         except FileNotFoundError:
             lines = format_analog_four_snapshot_mutation_plan_error(args[1], "File not found")
             sys.stderr.write("\n".join(lines))
@@ -1117,7 +1128,7 @@ def main(argv=None):
         return 0
 
     if (
-        len(args) == 6
+        len(args) in (6, 8)
         and args[0] == "analog-four-snapshot-mock-runtime-report"
         and args[2] == "--slot"
         and args[4] == "--depth"
@@ -1130,7 +1141,13 @@ def main(argv=None):
         )
         from .analog_four.snapshot_mutation_planner import (
             AnalogFourSnapshotMutationPlanError,
+            filter_analog_four_snapshot_mutation_plan_to_track,
         )
+
+        optional_args = _parse_optional_key_value_args(args[6:], {"--track"})
+        if optional_args is None:
+            sys.stderr.write(f"{USAGE}\n")
+            return 2
 
         try:
             slot = int(args[3])
@@ -1139,6 +1156,11 @@ def main(argv=None):
                 slot=slot,
                 depth=args[5],
             )
+            if "--track" in optional_args:
+                plan = filter_analog_four_snapshot_mutation_plan_to_track(
+                    plan,
+                    track=int(optional_args["--track"]),
+                )
             sender = capture_analog_four_snapshot_mock_messages(plan)
         except FileNotFoundError:
             lines = format_analog_four_snapshot_mock_runtime_error(args[1], "File not found")

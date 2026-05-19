@@ -122,6 +122,35 @@ def test_analog_four_snapshot_mock_runtime_captures_saved_offset_candidates():
     assert first.metadata["sends_real_midi"] is False
 
 
+def test_analog_four_snapshot_mock_runtime_captures_one_filtered_track():
+    from rytm_randomizer.analog_four.snapshot_mock_runtime import (
+        capture_analog_four_snapshot_mock_messages,
+    )
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
+        build_analog_four_snapshot_mutation_plan_from_bytes,
+        filter_analog_four_snapshot_mutation_plan_to_track,
+    )
+
+    plan = build_analog_four_snapshot_mutation_plan_from_bytes(
+        make_a4_kit_record(
+            kit_name="MOCK ONE",
+            track_values={
+                1: {20: 64, 22: 80},
+                2: {20: 32, 22: 48, 24: 60},
+            },
+        ),
+        slot=1,
+        depth="micro",
+    )
+    filtered = filter_analog_four_snapshot_mutation_plan_to_track(plan, track=2)
+
+    sender = capture_analog_four_snapshot_mock_messages(filtered)
+
+    assert len(sender.sent_messages) == 3
+    assert {message.metadata["track"] for message in sender.sent_messages} == {2}
+    assert {message.channel for message in sender.sent_messages} == {1}
+
+
 def test_analog_four_snapshot_mock_runtime_cli_reads_saved_kit_without_hardware(tmp_path):
     sysex_path = tmp_path / "a4-kits.syx"
     sysex_path.write_bytes(
@@ -154,5 +183,39 @@ def test_analog_four_snapshot_mock_runtime_cli_reads_saved_kit_without_hardware(
     assert "- saved-offset candidate events only" in result.stdout
     assert "- no CC mapping claimed" in result.stdout
     assert "- mock sender only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_snapshot_mock_runtime_cli_filters_to_one_track(tmp_path):
+    sysex_path = tmp_path / "a4-kits.syx"
+    sysex_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI A4 ONE",
+            track_values={
+                1: {20: 64, 22: 80, 24: 96},
+                2: {20: 32, 22: 48},
+            },
+        )
+    )
+
+    result = run_cli(
+        "analog-four-snapshot-mock-runtime-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--track",
+        "2",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four Snapshot Mock Runtime Report" in result.stdout
+    assert "Kit: CLI A4 ONE" in result.stdout
+    assert "Planned tracks: 1 / 1" in result.stdout
+    assert "Mock sender captured: 2 message(s)" in result.stdout
+    assert "- Track 2 ch 2 wire 1 STAB HIT / Offset +20: 32 -> 35" in result.stdout
+    assert "- Track 1 " not in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

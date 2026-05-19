@@ -119,6 +119,54 @@ def test_analog_four_snapshot_mutation_plan_uses_captured_values_not_starters():
     assert track2_change.planned_value == 35
 
 
+def test_analog_four_snapshot_mutation_plan_can_filter_to_one_track():
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
+        build_analog_four_snapshot_mutation_plan_from_bytes,
+        filter_analog_four_snapshot_mutation_plan_to_track,
+    )
+
+    plan = build_analog_four_snapshot_mutation_plan_from_bytes(
+        make_a4_kit_record(
+            kit_name="TRACK ONLY",
+            track_values={
+                1: {20: 64, 22: 80},
+                2: {20: 32, 22: 48, 24: 60},
+                3: {20: 100},
+                4: {20: 12},
+            },
+        ),
+        slot=1,
+        depth="micro",
+    )
+
+    filtered = filter_analog_four_snapshot_mutation_plan_to_track(plan, track=2)
+
+    assert filtered.kit_name == "TRACK ONLY"
+    assert len(filtered.tracks) == 1
+    assert filtered.planned_track_count == 1
+    assert filtered.blocked_track_count == 0
+    assert filtered.planned_change_count == 3
+    assert filtered.tracks[0].track == 2
+    assert filtered.tracks[0].wire_channel == 1
+    assert {change.track for change in filtered.tracks[0].changes} == {2}
+
+
+def test_analog_four_snapshot_mutation_plan_rejects_invalid_track_filter():
+    from rytm_randomizer.analog_four.snapshot_mutation_planner import (
+        build_analog_four_snapshot_mutation_plan_from_bytes,
+        filter_analog_four_snapshot_mutation_plan_to_track,
+    )
+
+    plan = build_analog_four_snapshot_mutation_plan_from_bytes(
+        make_a4_kit_record(track_values={1: {20: 64}}),
+        slot=1,
+        depth="micro",
+    )
+
+    with pytest.raises(ValueError, match="Analog Four snapshot track must be 1, 2, 3, or 4"):
+        filter_analog_four_snapshot_mutation_plan_to_track(plan, track=5)
+
+
 def test_analog_four_snapshot_mutation_plan_rejects_unknown_depth():
     from rytm_randomizer.analog_four.snapshot_mutation_planner import (
         AnalogFourSnapshotMutationPlanError,
@@ -184,5 +232,40 @@ def test_analog_four_snapshot_mutation_plan_cli_reads_saved_kit_without_hardware
     assert "Planned changes: 3" in result.stdout
     assert "candidate_unverified" in result.stdout
     assert "- no parameter names claimed" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_snapshot_mutation_plan_cli_filters_to_one_track(tmp_path):
+    sysex_path = tmp_path / "a4-kits.syx"
+    sysex_path.write_bytes(
+        make_a4_kit_record(
+            kit_name="CLI ONE TRACK",
+            track_values={
+                1: {20: 64, 22: 80},
+                2: {20: 32, 22: 48, 24: 60},
+            },
+        )
+    )
+
+    result = run_cli(
+        "analog-four-snapshot-mutation-plan-report",
+        str(sysex_path),
+        "--slot",
+        "1",
+        "--depth",
+        "micro",
+        "--track",
+        "2",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four Snapshot Mutation Plan Report" in result.stdout
+    assert "Kit: CLI ONE TRACK" in result.stdout
+    assert "Tracks scanned: 2" in result.stdout
+    assert "Planned tracks: 1 / 1" in result.stdout
+    assert "Planned changes: 3" in result.stdout
+    assert "- Track 2 / MIDI channel 2: STAB HIT" in result.stdout
+    assert "- Track 1 " not in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert result.stderr == ""

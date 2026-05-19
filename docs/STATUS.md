@@ -4,6 +4,13 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: added one-track Analog Four saved-snapshot previews.
+  `--track <1-4>` can now be combined with
+  `analog-four-snapshot-mutation-plan-report` and
+  `analog-four-snapshot-mock-runtime-report` so saved A4 kit snapshots can be
+  inspected one synth track at a time. This remains passive/mock-only: the
+  saved offsets are still `candidate_unverified`, no named CC mappings are
+  claimed, no MIDI ports are opened, and no hardware sends are added.
 - 2026-05-19: added one-pad Rytm snapshot essence send targeting.
   `--snapshot-pad <1-12>` can now be combined with the passive
   `snapshot-essence-send-plan-report`, the mock-only
