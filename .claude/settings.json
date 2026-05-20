@@ -5,11 +5,25 @@
     "The hooks block below auto-invokes the code-reviewer agent after a git",
     "push. The matcher fires PostToolUse on any Bash invocation whose command",
     "begins with `git push`. The harness invokes the agent definition at",
-    ".claude/agents/code-reviewer.md.",
+    ".claude/agents/code-reviewer.md, which runs the 8-step code-review skill",
+    "at .claude/skills/code-review/SKILL.md (Steps 7-8 add abstraction-reuse",
+    "analysis and architecture-doc/diagram freshness).",
+    "",
+    "SETUP — no action needed. Claude Code reads .claude/settings.json",
+    "automatically from the repo root. Codex has its own equivalent at",
+    ".codex/hooks.json (also zero-setup). A universal git pre-push hook at",
+    ".githooks/pre-push runs the mechanical gates for ANY tool once",
+    "core.hooksPath is set (`just install` / the dev container do this).",
+    "All three call the one shared scripts/code_review_gate.py. See",
+    "docs/CODE_REVIEW_HOOK_SETUP.md for the full three-mechanism picture",
+    "and what to do if the harness does not support the `Agent` action.",
     "",
     "If your harness version does not yet support the `Agent` action type for",
-    "hooks, the hook will be ignored harmlessly. The CONTRIBUTING.md hook",
-    "section documents the manual fallback (`/agent code-reviewer`).",
+    "hooks, the hook is ignored harmlessly. Run the review manually with",
+    "`/agent code-reviewer` or `/skill code-review` (Claude Code), or per",
+    "docs/CODE_REVIEW_HOOK_SETUP.md (codex / other agents). The review is",
+    "ALSO enforced server-side by the `architecture` CI job, so a skipped",
+    "local hook never lets a violation merge.",
     "",
     "See docs/ARCHITECTURE.md and .claude/rules/architecture.md for the",
     "architecture spec that the code-reviewer agent enforces."
@@ -24,7 +38,7 @@
         "action": {
           "type": "Agent",
           "agent": "code-reviewer",
-          "prompt": "A `git push` just completed in this worktree. Execute the code-review skill against the most recently pushed commits. Gather the diff with `git log --oneline -10` plus `git diff @{upstream}..HEAD` (or `git diff <base-branch>...HEAD` if no upstream), then produce the structured Critical/Important/Minor verdict. Run `pytest tests/architecture/ -q` as part of the review."
+          "prompt": "A `git push` just completed in this worktree. Execute the code-review skill (.claude/skills/code-review/SKILL.md) against the most recently pushed commits. Gather the diff with `git log --oneline -10` plus `git diff @{upstream}..HEAD` (or `git diff <base-branch>...HEAD` if no upstream). Walk all 8 steps — including Step 7 (abstraction reuse / genericization deep analysis: could the new code be generalized further, or does an existing abstraction such as the Device Protocol, the snapshot envelope helpers, the generic senders, cli_registry, data/, observability/metrics, or the report formatter already cover it) and Step 8 (architecture-doc + diagram freshness: are docs/ARCHITECTURE.md and docs/ARCHITECTURE_DIAGRAMS.md updated for any architecture-surface change, and do the counts the docs quote still match reality). Run `pytest tests/architecture/ -q` as part of the review. Produce the structured Critical/Important/Minor/Abstraction/Docs verdict."
         }
       }
     ]

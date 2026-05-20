@@ -789,9 +789,9 @@ flowchart TB
 
 ---
 
-## 12. 16 Plan-Requirement Gates
+## 12. 18 Plan-Requirement Gates
 
-Every non-trivial PR must satisfy all 16 gates per `docs/PLAN_REQUIREMENTS.md`. The PR body must include a `[x]` / `[ ] N/A — reason` line per gate.
+Every non-trivial PR must satisfy all 18 gates per `docs/PLAN_REQUIREMENTS.md`. The PR body must include a `[x]` / `[ ] N/A — reason` line per gate.
 
 ```mermaid
 flowchart LR
@@ -821,9 +821,11 @@ flowchart LR
         G14["14. maintainability<br/>timing tracked"]
     end
 
-    subgraph Process["Process (15-16)"]
+    subgraph Process["Process + Design (15-18)"]
         G15["15. learning capture<br/>extract skills"]
         G16["16. execution shape<br/>cascade-merge for<br/>multi-WS"]
+        G17["17. abstraction reuse<br/>and genericization"]
+        G18["18. architecture-doc<br/>and diagram freshness"]
     end
 
     subgraph CIEnforced["Mechanically enforced by CI"]
@@ -834,7 +836,7 @@ flowchart LR
     end
 
     subgraph ReviewerEnforced["Reviewer-enforced (PR body checklist)"]
-        Rev1["4, 5, 8, 12, 13, 15, 16"]
+        Rev1["4, 5, 8, 12, 13, 15, 16, 17, 18"]
     end
 
     Code -.-> CIEnforced
@@ -1540,7 +1542,7 @@ flowchart LR
     end
 
     subgraph Reviewer["I'm reviewing a PR"]
-        R1["Are the 16 gates satisfied?"]
+        R1["Are the 18 gates satisfied?"]
         R2["Does the architecture hold?"]
         R3["Is the PR appropriately scoped?"]
     end
@@ -1550,7 +1552,7 @@ flowchart LR
         CONTRIB["CONTRIBUTING.md<br/>(developer handbook)"]
         ARCH["docs/ARCHITECTURE.md<br/>§6.1 Device + Strategy seam"]
         DIAG["docs/ARCHITECTURE_DIAGRAMS.md<br/>(this file)"]
-        PLAN_REQ["docs/PLAN_REQUIREMENTS.md<br/>(16 gates)"]
+        PLAN_REQ["docs/PLAN_REQUIREMENTS.md<br/>(18 gates)"]
         RULES[".claude/rules/<br/>{cascade-merge-pattern,<br/>parity-fixture-discipline,<br/>coverage-gate-100pct,<br/>architecture,<br/>skill-routing}"]
         SKILLS[".claude/skills/<br/>(19 skills incl. add-pad-command,<br/>extend-data-layer,<br/>python-on-windows)"]
         STATUS["docs/STATUS.md"]
@@ -1589,7 +1591,7 @@ flowchart LR
 - **First time:** Repository-Level System Map (§1) + Package Layer Map (§2) + Cross-Reference Map (§26).
 - **Adding a feature:** Common contributor tasks in `CONTRIBUTING.md`, then the relevant subpackage diagram here (§§6 engines, §7 data+guardrails, §8 observability, §20 reports, §21 metadata, §22 behavior, §23 runtime/active boundary).
 - **Adding a device family:** Device + Strategy Capability Stack (§3), Snapshot → Plan → Render Lifecycle (§4), Composition vs Stub (§5), Snapshot Subpackage (§9), Future Codex PR Shape (§18), Registry Fan-Out (§19).
-- **Reviewing a PR:** Architecture Test Enforcement Graph (§10), CI Pipeline (§11), 16 Plan-Requirement Gates (§12), Cascade vs Bundled (§17).
+- **Reviewing a PR:** Architecture Test Enforcement Graph (§10), CI Pipeline (§11), 18 Plan-Requirement Gates (§12), Cascade vs Bundled (§17).
 - **Understanding safety:** MIDI Boundary Map (§15), Safety Boundary Diagram (§16).
 - **Test ecosystem:** Test Suite Layers (§13), Closeout + Test Coverage Map (§24).
 - **CLI surface:** Passive CLI Command Flow (§14), Command / Capability Surface (§25).

@@ -274,6 +274,56 @@ Every gate in this file is enforced because something went wrong without it. The
 
 Plans that violate Gate 16 are not slower — they are differently structured systems with different failure modes. This repo has decided autonomous parallel execution is its single execution model. Future plans inherit that decision.
 
+### Gate 17 — Abstraction reuse and genericization (codex-dual-machine-cascade findings, made permanent)
+
+**Before any new module / class / non-trivial function lands, two questions must be asked and answered in writing: (a) could it be generalized further, and (b) does an existing abstraction already cover it.**
+
+Lifted from the codex dual-machine cascade (PRs #21, #36-#41), which shipped ~15k LOC of parallel per-device subpackages because nobody asked whether an abstraction already existed. Made permanent because the failure mode recurs whenever new code is written without surveying what is already there.
+
+For every new module / class / non-trivial function in a WS:
+
+1. **Could it be generalized?** If the WS adds N near-identical things (senders, decoders, report builders, dispatch arms, `pad{1-4}_*` functions), they must be ONE generic thing parameterized by a `data/` table — not N copies. Hard-coded counts / ids / CC numbers must be read from `data/` or from a Protocol attribute, not inlined.
+
+2. **Does an existing abstraction cover it?** The new code must consume, not reimplement, the existing abstractions:
+
+   | Abstraction | Location | Reuse when |
+   |---|---|---|
+   | `Device` Protocol + registry | `devices/` | adding any Elektron device family |
+   | `SnapshotDecoder` / `MutationPlanner` / `MessageRenderer` strategies | `devices/strategies/` + `snapshot/` | per-device snapshot decode / plan / render |
+   | Elektron SysEx envelope helpers | `snapshot/envelope.py` | any 7-bit unstuffing, kit-record location, ASCII-name read |
+   | Generic guarded / hardware senders | `senders/` | sending a device's plan |
+   | `dual_machine` target resolver | `dual_machine/targets.py` | resolving `rytm` / `a4` / `both` |
+   | `data/` fact tables | `data/` | any "table of facts" |
+   | `data/modes.py` `Literal` + `Final` tuples | `data/modes.py` | dispatching on a mode/intensity/page/kind string |
+   | `cli_registry.CliCommand` | `cli_registry.py` | adding a CLI command |
+   | `MidiMetrics` / `get_metrics()` | `observability/metrics.py` | a hot path sending a CC / making a guardrail decision |
+   | `PassiveReportHeader` + formatter helpers | `reports/formatter.py` | a new passive report |
+   | `PadRuntimeMixin` / `IsolatedPadMixin` / `PadRuntime` | `engines/_runtime.py` | per-pad runtime state |
+   | shared test fixtures | `tests/conftest.py` | `RecordingOut`, `_FakeMessage`, `_install_fake_mido`, `no_sleep` |
+
+Net-new behavior with no existing abstraction is permitted — but the WS must *state* that the question was asked and the shape is justified. "I didn't check" is the violation, not "there is no existing abstraction."
+
+**Enforcement.** Step 7 of the `code-review` skill (`.claude/skills/code-review/SKILL.md`) — the post-push `code-reviewer` agent (`.claude/settings.json` hook) and the codex pre-push review (`docs/CODE_REVIEW_HOOK_SETUP.md`) both produce a mandatory **Abstraction** section. Reimplementing an existing abstraction is at least an Important finding; bypassing a Protocol that an architecture test enforces is Critical. The `tests/architecture/test_device_protocol_enforcement.py` mechanical gate catches the device-family subset.
+
+### Gate 18 — Architecture-doc and diagram freshness (PR-#44-review findings, made permanent)
+
+**A change that adds a subpackage, Protocol, registry, CLI surface, architecture test, or dependency-direction rule MUST update `docs/ARCHITECTURE.md` AND `docs/ARCHITECTURE_DIAGRAMS.md` (the mermaid diagrams) in the same PR.**
+
+Gate 5 already requires "docs updated", but Gate 5 was being satisfied by a `docs/STATUS.md` line alone — leaving the architecture diagrams and the counts they quote silently stale. Gate 18 makes the architecture-doc + diagram freshness explicit and separately checkable. The PR #44 review found `docs/ARCHITECTURE_DIAGRAMS.md` carrying "the architecture map will land in a follow-up wave" two waves after it had landed, and arch-test counts off by `+14`.
+
+For every WS, determine whether it touches the architecture surface, and if so:
+
+1. **New subpackage** → `ARCHITECTURE.md` §2 + `ARCHITECTURE_DIAGRAMS.md` §2 show it.
+2. **New Protocol / registry / strategy** → the relevant `ARCHITECTURE.md` section + a diagram reflect it.
+3. **New architecture test** → `ARCHITECTURE.md` §7 lists it + the `ARCHITECTURE_DIAGRAMS.md` arch-test counts (§10, §13) are bumped.
+4. **New CLI command** → `ARCHITECTURE_DIAGRAMS.md` §14 / §25 show it.
+5. **New device family** → §3 / §18 / §19 device diagrams reflect it.
+6. **New dependency-direction rule** → `ARCHITECTURE.md` §3 states it.
+
+Then verify, for every touched doc section: the prose is accurate post-change (no "will land later" for landed work, no stale module names); every **count** the docs quote (subpackage / module / test-file / arch-test / golden / device count) matches reality; the affected mermaid diagrams are updated; internal cross-links resolve.
+
+**Enforcement.** Step 8 of the `code-review` skill produces a mandatory **Docs** section. A change that touches the architecture surface without updating the diagrams is an Important finding. `tests/architecture/test_readme_freshness.py` is the mechanical backstop for `README.md` freshness; the architecture-diagram freshness is the human-judgement check the post-push / pre-push review performs.
+
 ---
 
 ## How a plan declares conformance
@@ -301,6 +351,8 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 14 (maintainability review) — pre-plan audit + post-plan re-audit; regressions block learning phase.
 - [x] Gate 15 (learning phase) — every plan ends with learning extraction to repo (skills + rules + reports + handoff guides).
 - [x] Gate 16 (execution shape) — parallel agents in worktrees, autonomous start-to-finish, on-disk state, no human gates.
+- [x] Gate 17 (abstraction reuse and genericization) — every new module/class surveyed against the existing-abstraction catalog; no reimplementation; net-new shapes justified in writing.
+- [x] Gate 18 (architecture-doc and diagram freshness) — `docs/ARCHITECTURE.md` + `docs/ARCHITECTURE_DIAGRAMS.md` updated for every architecture-surface change; quoted counts re-verified.
 
 Exceptions (with rationale):
 - (none, or list with one-line rationale each)

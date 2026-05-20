@@ -9,8 +9,8 @@
         "ghcr.io/devcontainers/features/git:1": {}
     },
 
-    "//install": "Linux-only: install libasound2-dev so python-rtmidi 1.5.8 can build its C extension (the project's hardware-pinned MIDI backend). Then install the package in editable mode with dev extras, plus just (the task runner), plus pre-commit hooks.",
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libasound2-dev && pip install -e '.[dev]' && cargo install just || curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin && pre-commit install",
+    "//install": "Linux-only: install libasound2-dev so python-rtmidi 1.5.8 can build its C extension (the project's hardware-pinned MIDI backend). Then install the package in editable mode with dev extras, plus just (the task runner), plus pre-commit hooks, plus activate the versioned git hooks under .githooks/ (core.hooksPath) so the pre-push code-review gate is live. Linux checks out symlinks natively, so the .agents/skills -> .claude/skills/learned symlink (codex skill discovery) materializes on clone with no extra step.",
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y libasound2-dev && pip install -e '.[dev]' && (command -v just || cargo install just || curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin) && pre-commit install && git config core.hooksPath .githooks",
 
     "//runtime": "Set PYTHONDONTWRITEBYTECODE so __pycache__ doesn't clutter the workspace. PYTHONUNBUFFERED makes pytest output stream live.",
     "containerEnv": {

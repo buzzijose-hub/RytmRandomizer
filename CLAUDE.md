@@ -28,7 +28,7 @@
 7. **Lazy MIDI imports.** `mido` and `python-rtmidi` import only inside `real_midi_adapter.py` and `mido_provider.py`.
 8. **Passive default.** `python -m rytm_randomizer.cli ...` never opens a real MIDI port. Only `python -m rytm_randomizer.app --arm` does.
 9. **No `--no-verify`.** Never bypass pre-commit hooks. Fix the underlying issue.
-10. **PR body must include the 16-gate conformance checklist.** See [`.claude/rules/pr-body-conformance-checklist.md`](.claude/rules/pr-body-conformance-checklist.md).
+10. **PR body must include the 18-gate conformance checklist.** See [`.claude/rules/pr-body-conformance-checklist.md`](.claude/rules/pr-body-conformance-checklist.md).
 11. **Do not pause on chained steps.** Once a multi-step task is approved, execute through to a hard stop (push, PR open, merge, force-push, dep bump, fixture regen). Hard stops are enumerated in [`.claude/rules/autonomous-agent-execution.md`](.claude/rules/autonomous-agent-execution.md).
 12. **Dispatch independent work in parallel.** Batch independent reads, searches, and subagent invocations into a single message. See [`.claude/rules/maximize-parallelization.md`](.claude/rules/maximize-parallelization.md).
 13. **On `codex/*` branches, follow the codex contribution guide.** Cascade ordering, redo-branch discipline, and PR-body provenance differ from normal feature branches. See [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md).
@@ -59,7 +59,7 @@ This repo has unusually strict invariants because it talks to physical hardware 
 
 - **685/505 distinction.** "685 parity tests" = pytest items; "505 goldens" = JSON files (parametrized).
 - **`-o addopts=''` is a 3× speed trap.** The pyproject default of `-n auto` is the fast path; don't override it.
-- **CONTRIBUTING.md's 16 plan-requirement gates** are mandatory in every PR body. The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) auto-fills the structure.
+- **CONTRIBUTING.md's 18 plan-requirement gates** are mandatory in every PR body. The PR template (`.github/PULL_REQUEST_TEMPLATE.md`) auto-fills the structure.
 - **The Strategy seam on `Device`** (PR #43) is the canonical cross-machine abstraction. The codex dual-machine cascade (PRs #21, #36-#41) is closed; PR #36 is the redo target.
 - **macOS is dropped from the PR-event CI matrix by design** (queue waits). It runs on push events. See `.github/workflows/test.yml:288-296`.
 

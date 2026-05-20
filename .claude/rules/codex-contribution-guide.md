@@ -15,7 +15,7 @@ Codex has a documented track record on this repo of producing PRs that violate a
 | Forking the Elektron envelope helpers per device family instead of reusing `snapshot/envelope.py` | [`device-protocol-strategy.md`](device-protocol-strategy.md) | PR #41 |
 | Shipping ~35k-LOC PRs with no plan document under `docs/superpowers/plans/` | [`CONTRIBUTING.md` § PR size guidance](../../CONTRIBUTING.md#pr-size-guidance) | PRs #21, #36 |
 | Misnamed device-specific subpackages (`essence/` is Rytm-specific but reads generic) | [`docs/ARCHITECTURE.md` §6](../../docs/ARCHITECTURE.md#6-where-to-put-new-work) | PR #36 |
-| Omitting the 16-gate conformance checklist from the PR body | [`pr-body-conformance-checklist.md`](pr-body-conformance-checklist.md) | PRs #21, #36 → #41 |
+| Omitting the 18-gate conformance checklist from the PR body | [`pr-body-conformance-checklist.md`](pr-body-conformance-checklist.md) | PRs #21, #36 → #41 |
 
 This rule is not a punishment list — it's a short pre-flight checklist codex (or anyone operating under the codex agent) must run before opening a PR in this repo. The patterns it enforces are exactly the ones codex has historically gotten wrong, plus the mechanical-enforcement tests that catch them.
 
@@ -30,6 +30,8 @@ Before opening any PR, codex must:
    - [`docs/CODEX_CONTRIBUTING.md`](../../docs/CODEX_CONTRIBUTING.md) — codex-specific anti-pattern map with concrete fix recipes
    - This rule + [`device-protocol-strategy.md`](device-protocol-strategy.md) + [`cascade-merge-pattern.md`](cascade-merge-pattern.md)
 
+   The repo's 12 reusable "learned skills" are auto-discovered by codex via the committed `.agents/skills` → `.claude/skills/learned` symlink — the model auto-invokes one when a task matches its `description`. If the symlink checked out as a plain file (Windows clone), run `git config core.symlinks true && git checkout -- .agents/skills`.
+
 2. **Run the architecture-test suite locally** before pushing:
    ```bash
    python -m pytest tests/architecture/ -q
@@ -43,8 +45,9 @@ Before opening any PR, codex must:
    - [ ] No fork of the Elektron envelope helpers (`unpack_elektron_7bit`, `find_kit_record`, etc.) per device.
    - [ ] No parallel device registry (only `devices/registry.py` may define `register_device`).
    - [ ] `dual_machine/` (if added or modified) consumes only `devices.all_devices()`, not concrete device families.
-   - [ ] PR body includes the 16-gate conformance checklist from `.github/PULL_REQUEST_TEMPLATE.md`. Every gate is marked `[x]` or `[ ] N/A — <reason>`. No silently-dropped gates.
+   - [ ] PR body includes the 18-gate conformance checklist from `.github/PULL_REQUEST_TEMPLATE.md`. Every gate is marked `[x]` or `[ ] N/A — <reason>`. No silently-dropped gates.
    - [ ] For any PR > 2,000 LOC OR > 30 files OR spanning ≥ 2 workstreams OR adding a new architectural surface OR touching V1.34 parity: a plan document exists at `docs/superpowers/plans/YYYY-MM-DD-<slug>.md` and is linked from the PR body.
+   - [ ] **Post-push code review.** This is automatic — codex reads [`.codex/hooks.json`](../../.codex/hooks.json) from the repo root (the codex analogue of `.claude/settings.json`). Its `PostToolUse` hook runs [`scripts/code_review_gate.py`](../../scripts/code_review_gate.py) after every `git push`: it runs the mechanical gates (lint + architecture + V1.34 parity) and, via the hook's `additionalContext` channel, re-prompts you to walk the 8-step `code-review` skill — including Step 7 (abstraction reuse) and Step 8 (architecture-doc + diagram freshness). When the hook re-prompts you, do the 8-step walk and post the Critical/Important/Minor/Abstraction/Docs verdict as a PR comment. (`.githooks/pre-push` is a second backstop — it blocks the push if the mechanical gates fail; activate it with `git config core.hooksPath .githooks`, which `just install` does for you.) You may also run `just review` on demand. See [`docs/CODE_REVIEW_HOOK_SETUP.md`](../../docs/CODE_REVIEW_HOOK_SETUP.md).
 
 4. **Use the existing abstractions, do not invent new ones:**
    - To add a device family → follow the [`device-protocol-strategy.md`](device-protocol-strategy.md) recipe.
@@ -88,9 +91,10 @@ These are the failure modes observed in past codex PRs. Each one is now a fail-f
 - [`docs/CODEX_CONTRIBUTING.md`](../../docs/CODEX_CONTRIBUTING.md) — longer codex-facing guide with concrete fix recipes per anti-pattern.
 - [`device-protocol-strategy.md`](device-protocol-strategy.md) — the device-family seam.
 - [`cascade-merge-pattern.md`](cascade-merge-pattern.md) — the no-stacked-PRs rule.
-- [`pr-body-conformance-checklist.md`](pr-body-conformance-checklist.md) — the 16-gate body requirement.
+- [`pr-body-conformance-checklist.md`](pr-body-conformance-checklist.md) — the 18-gate body requirement.
 - [`parity-fixture-discipline.md`](parity-fixture-discipline.md) — the V1.34 parity contract.
 - [`hardware-pinned-packages.md`](hardware-pinned-packages.md) — the mido/rtmidi pin.
+- [`docs/CODE_REVIEW_HOOK_SETUP.md`](../../docs/CODE_REVIEW_HOOK_SETUP.md) — the automatic post-push code review (`.codex/hooks.json`, `.githooks/pre-push`, `scripts/code_review_gate.py`).
 - [`maximize-parallelization.md`](maximize-parallelization.md) + [`autonomous-agent-execution.md`](autonomous-agent-execution.md) — execution-pattern rules.
 - [Architecture review on PR #36](https://github.com/buzzijose-hub/RytmRandomizer/pull/36#issuecomment-4490858526) — the dual-machine redo plan.
 - [`AGENTS.md`](../../AGENTS.md) — top-level agent contract.
