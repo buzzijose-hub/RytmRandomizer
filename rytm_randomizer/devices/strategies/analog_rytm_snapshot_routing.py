@@ -9,6 +9,7 @@ from typing import Final
 
 from ...data.profiles import PROFILES
 from ...data.rytm_machine_catalog import (
+    MUTABLE_V134,
     RYTM_MACHINE_PROFILES,
     RytmMachineProfile,
     get_rytm_pad_capability,
@@ -76,7 +77,7 @@ def _route_one(pad: int, machine_value: int) -> RytmSnapshotMachineRoute:
             ),
         )
 
-    if machine_profile.support_status != "mutable_v134":
+    if machine_profile.support_status != MUTABLE_V134:
         return RytmSnapshotMachineRoute(
             pad=pad,
             machine_value=machine_value,
@@ -112,7 +113,12 @@ def _route_one(pad: int, machine_value: int) -> RytmSnapshotMachineRoute:
 def route_rytm_snapshot_machine_values(
     pad_machine_values: Mapping[int, int],
 ) -> RytmSnapshotMachineRoutingResult:
-    """Route snapshot-derived Rytm machine values to V1.34 profile keys."""
+    """Route snapshot-derived Rytm machine values to V1.34 profile keys.
+
+    This is intentionally Rytm-local for now. If another device family grows
+    snapshot machine-value routing, extract the generic shape behind a
+    catalog/profile-index interface instead of widening this helper in place.
+    """
 
     if not pad_machine_values:
         return RytmSnapshotMachineRoutingResult(

@@ -64,3 +64,27 @@ def test_format_report_is_passive_and_operator_facing() -> None:
     assert "- no port opening" in lines
     assert "Source: rytm_randomizer.reports.rytm_snapshot_pad_compatibility" in lines
     assert "In-memory only: True" in lines
+
+
+def test_parse_cli_args_accepts_empty_argv() -> None:
+    from rytm_randomizer.reports import rytm_snapshot_pad_compatibility as report_mod
+
+    assert report_mod._parse_cli_args(()) == {}
+
+
+def test_parse_cli_args_rejects_extra_args() -> None:
+    from rytm_randomizer.reports import rytm_snapshot_pad_compatibility as report_mod
+
+    with pytest.raises(ValueError, match="takes no arguments"):
+        report_mod._parse_cli_args(("extra",))
+
+
+def test_handle_cli_report_writes_report(capsys: pytest.CaptureFixture[str]) -> None:
+    from rytm_randomizer.reports import rytm_snapshot_pad_compatibility as report_mod
+
+    result = report_mod._handle_cli_report()
+    captured = capsys.readouterr()
+
+    assert result == 0
+    assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
+    assert captured.out.endswith("\n")
