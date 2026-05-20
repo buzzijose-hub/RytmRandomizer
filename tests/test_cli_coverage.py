@@ -422,8 +422,42 @@ def test_main_rytm_snapshot_pad_compatibility_report_registers_cached_command_wh
     assert captured.err == ""
 
 
+def test_main_rytm_snapshot_pad_compatibility_report_lazy_imports_when_module_unloaded(capsys):
+    import sys
+
+    from rytm_randomizer import cli_registry
+
+    module_name = "rytm_randomizer.reports.rytm_snapshot_pad_compatibility"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-snapshot-pad-compatibility-report", None)
+    try:
+        rc = cli.main(["rytm-snapshot-pad-compatibility-report"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
+    assert captured.err == ""
+
+
 def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):
     rc = cli.main(["rytm-12-pad-machine-matrix-report", "--mutate"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert captured.err.strip() == cli.USAGE
+
+
+def test_main_rytm_snapshot_pad_compatibility_report_rejects_extra_args(capsys):
+    rc = cli.main(["rytm-snapshot-pad-compatibility-report", "--mutate"])
 
     captured = capsys.readouterr()
     assert rc == 2
