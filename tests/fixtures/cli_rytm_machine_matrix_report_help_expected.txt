@@ -1,0 +1,16 @@
+RytmRandomizer passive CLI: rytm-12-pad-machine-matrix-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report --help
+
+Behavior:
+  Prints the passive Analog Rytm MK2 12-pad machine compatibility matrix.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

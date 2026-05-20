@@ -15,7 +15,8 @@ USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
-    "anchor-profile-report | behavior-parity-report | inspect-command <key> | "
+    "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
+    "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "search-commands <query> | "
@@ -144,6 +145,16 @@ def test_behavior_parity_report_help_exits_zero_and_matches_fixture():
     assert result.returncode == 0
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_behavior_parity_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_rytm_machine_matrix_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("rytm-12-pad-machine-matrix-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_rytm_machine_matrix_report_help_expected.txt"
     )
     assert result.stderr == ""
 
@@ -374,6 +385,26 @@ def test_behavior_parity_report_command_exits_zero_and_matches_fixture():
         "cli_behavior_parity_report_expected.txt"
     )
     assert result.stderr == ""
+
+
+def test_rytm_machine_matrix_report_command_exits_zero_and_describes_pad_10():
+    result = run_cli("rytm-12-pad-machine-matrix-report")
+
+    output = normalize_newlines(result.stdout)
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm 12-pad machine matrix" in output
+    assert "- Pads: 12" in output
+    assert "- Allowed pad-machine slots: 116" in output
+    assert "Pad 10 / OH / Open Hihat:" in output
+    assert "OH Classic (CC15 10)" in output
+    assert result.stderr == ""
+
+
+def test_readme_mentions_rytm_machine_matrix_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "rytm-12-pad-machine-matrix-report" in text
+    assert "12-pad machine matrix" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
