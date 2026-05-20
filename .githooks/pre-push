@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# RytmRandomizer pre-push hook — the universal, tool-agnostic review backstop.
+#
+# This hook fires on EVERY `git push`, no matter what drives it: Claude Code,
+# codex, a human at a terminal, an IDE button. It runs the mechanical
+# code-review gates (lint + architecture + V1.34 parity) via the shared
+# scripts/code_review_gate.py and ABORTS the push (non-zero exit) if any gate
+# fails. Zero copy-paste, zero per-tool wiring.
+#
+# It is versioned in the repo under .githooks/ and activated by pointing
+# git at it:  git config core.hooksPath .githooks
+# `just install` and the dev container's postCreateCommand do this for you,
+# so a fresh clone is one `just install` away from having the hook live.
+#
+# This hook covers only the MECHANICAL half of the 8-step review. The two
+# judgement steps — Step 7 (abstraction reuse) and Step 8 (architecture-doc
+# + diagram freshness) — are completed by the agent's post-push hook
+# (.claude/settings.json for Claude Code; .codex/hooks.json for codex) or by
+# a manual `just review`. See docs/CODE_REVIEW_HOOK_SETUP.md.
+#
+# Emergency bypass (discouraged — CI's `architecture` job still rejects the
+# violation server-side):  git push --no-verify
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Prefer python3, fall back to python (Windows installs often expose only
+# `python`). If neither resolves, skip rather than hard-fail the push — the
+# CI `architecture` job is the server-side backstop.
+if command -v python3 >/dev/null 2>&1; then
+    PY=python3
+elif command -v python >/dev/null 2>&1; then
+    PY=python
+else
+    echo "[pre-push] python not found — skipping local gate; CI will enforce it." >&2
+    exit 0
+fi
+
+exec "$PY" "$REPO_ROOT/scripts/code_review_gate.py" --mode git-hook

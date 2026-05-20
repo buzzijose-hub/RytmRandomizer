@@ -9,7 +9,7 @@
 - [End-to-end contributor flow](#end-to-end-contributor-flow)
 - [Verification gate](#verification-gate)
 - [Linting and formatting — the exact rule set](#linting-and-formatting--the-exact-rule-set)
-- [Plan requirements — the 16 gates every PR must satisfy](#plan-requirements--the-16-gates-every-pr-must-satisfy)
+- [Plan requirements — the 18 gates every PR must satisfy](#plan-requirements--the-18-gates-every-pr-must-satisfy)
 - [Test suite structure](#test-suite-structure)
 - [Common contributor tasks](#common-contributor-tasks)
 - [Skill catalog](#skill-catalog)
@@ -42,7 +42,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 10. **No new top-level modules** — use a subpackage. Enforced by `tests/architecture/test_no_new_top_level_modules.py`.
 11. **String-literal dispatch sites must consume `data/modes.py` constants** — the allowlist is drained. Enforced by `tests/architecture/test_no_string_literal_mode_dispatch.py`.
 12. **No stacked PRs** — see [PR bundling](#pr-bundling--one-pr-per-logical-change-not-per-commit).
-13. **Conformance checklist in PR body** — the 16 gates from [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md), each marked `[x]` or `[ ] N/A — reason`.
+13. **Conformance checklist in PR body** — the 18 gates from [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md), each marked `[x]` or `[ ] N/A — reason`.
 14. **Docs updated** — `README.md`, this file, `docs/STATUS.md`, and any relevant `docs/` entries reflect the new reality (Gate 5). `README.md` freshness (every registered device named, every internal link resolves, no stale placeholders) is mechanically enforced by `tests/architecture/test_readme_freshness.py`.
 15. **No `--no-verify`** — never skip pre-commit hooks. If a hook fails, fix the cause.
 
@@ -73,7 +73,26 @@ pip install -e ".[dev]"
 
 # 5. (Optional but recommended) install the pre-commit hooks
 pre-commit install
+
+# 6. Install `just` — the task runner the rest of this guide and AGENTS.md use
+#    (`just check`, `just review`, `just pr`, ...). See the per-OS commands below.
 ```
+
+**Installing `just` (the task runner).** Every workflow command in this guide and in [`AGENTS.md`](AGENTS.md) is given as a `just <task>` invocation. `just` is not a hard dependency — the [`Justfile`](Justfile) header lists the bare command behind every recipe, so you *can* copy those directly — but installing it once makes the agent path and the human path identical and is strongly recommended:
+
+```bash
+# macOS
+brew install just
+
+# Windows
+winget install --id Casey.Just            # or: choco install just
+
+# Linux / any platform with Rust
+cargo install just                        # or the prebuilt-binary installer:
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+```
+
+Verify with `just --list` (should print the task table). If you are working in the dev container ([`.devcontainer/devcontainer.json`](.devcontainer/devcontainer.json)) or a GitHub Codespace, `just` is installed for you by `postCreateCommand` — no action needed.
 
 **Linux only:** `python-rtmidi` (a hard dependency for the real-MIDI path) may not have a wheel; install ALSA headers first:
 
@@ -149,8 +168,10 @@ The full path from idea to merged PR. Follow this even for a small change.
 
 5. Push
    └─ git push -u origin <your-branch>
-        ├─ post-push code-review hook fires automatically (Claude Code harness)
-        └─ Or run manually: /agent code-reviewer  or  /skill code-review
+        ├─ .githooks/pre-push runs the mechanical gates first (any tool; blocks on fail)
+        ├─ post-push code review fires automatically — Claude Code (.claude/settings.json)
+        │     or codex (.codex/hooks.json); both walk the 8-step review
+        └─ On demand / fallback: just review  ·  /agent code-reviewer  ·  /skill code-review
 
 6. Open PR
    ├─ gh pr create --base modularize-v1.34 \
@@ -159,7 +180,7 @@ The full path from idea to merged PR. Follow this even for a small change.
    ├─ PR body MUST include:
    │      • What changed and why
    │      • Test plan (checklist of what was verified)
-   │      • Plan-requirements conformance checklist (16 gates)
+   │      • Plan-requirements conformance checklist (18 gates)
    │      • Link to any plan doc under docs/superpowers/plans/ or docs/
    └─ Confirm CI starts (gh pr checks <PR#>)
 
@@ -337,10 +358,10 @@ There is no `mypy` / `pyright` enforcement in CI today, but new code must:
 
 The `tests/architecture/test_no_any_escape_hatches.py` test mechanically rejects new `Any` introductions outside the allowlist.
 
-## Plan requirements — the 16 gates every PR must satisfy
+## Plan requirements — the 18 gates every PR must satisfy
 
 [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) is the contract
-for **every** non-trivial PR, not just an internal "plan" PR. It defines 16
+for **every** non-trivial PR, not just an internal "plan" PR. It defines 18
 gates:
 
 | Gate | Topic |
@@ -361,13 +382,15 @@ gates:
 | 14 | Maintainability review (timing tracked, complexity bounded) |
 | 15 | Learning capture (extract `.claude/skills/learned/` + `.claude/rules/` where applicable) |
 | 16 | Execution shape (cascade-merge for autonomous multi-WS runs) |
+| 17 | Abstraction reuse and genericization (survey new code against the existing-abstraction catalog; no reimplementation; net-new shapes justified) |
+| 18 | Architecture-doc and diagram freshness (`docs/ARCHITECTURE.md` + `docs/ARCHITECTURE_DIAGRAMS.md` updated for any architecture-surface change) |
 
 **Before opening a PR**, read [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) and include a
 conformance checklist in the PR body (one line per gate, `[x]` or `[ ]
 N/A — reason`). PR #35 (the Wave-1 simplification bundle) is the canonical
 example of a fully-conformant PR body.
 
-Sub-rules under `.claude/rules/` extend the 16 gates:
+Sub-rules under `.claude/rules/` extend the 18 gates:
 
 - [`architecture.md`](.claude/rules/architecture.md) — agent-facing architecture distillation.
 - [`skill-routing.md`](.claude/rules/skill-routing.md) — which skill applies to which task.
@@ -453,8 +476,8 @@ The table there maps change types to the right module and the right skill.
 | Doc | Purpose | When to read |
 |---|---|---|
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The fixed architecture standard. §3 dependency direction rules, §5 V1.34 parity discipline, §6 "where to put new work", §6.1 Device + Strategy seam, §7 enforcement summary, §8 V1.34 parity API surface. | First read before any non-trivial change. |
-| [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) | 27 mermaid diagrams covering the package layer map, Device + Strategy stack, snapshot → plan → render lifecycle, engines / data / guardrails / observability subpackages, arch-test enforcement graph, CI pipeline, 16 plan-requirement gates, cascade-vs-bundled PR flow, future codex PR shape, and more. | Before adding a new device family, refactoring a subpackage, or trying to understand any of the major abstractions. |
-| [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) | The 16 mandatory gates every PR must satisfy. | Before opening any PR — its conformance checklist is required in the PR body. |
+| [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) | 27 mermaid diagrams covering the package layer map, Device + Strategy stack, snapshot → plan → render lifecycle, engines / data / guardrails / observability subpackages, arch-test enforcement graph, CI pipeline, 18 plan-requirement gates, cascade-vs-bundled PR flow, future codex PR shape, and more. | Before adding a new device family, refactoring a subpackage, or trying to understand any of the major abstractions. |
+| [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) | The 18 mandatory gates every PR must satisfy. | Before opening any PR — its conformance checklist is required in the PR body. |
 
 Quick links for the most common tasks:
 
@@ -499,6 +522,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`cascade-merge-pattern`](.claude/skills/learned/cascade-merge-pattern/SKILL.md) | Bundle N workstreams into one PR under approval-gated branches. |
 | [`parallel-agent-bundle`](.claude/skills/learned/parallel-agent-bundle/SKILL.md) | Dispatch N agents in parallel on disjoint file sets, then bundle. |
 | [`parallel-agents-need-git-worktrees`](.claude/skills/learned/parallel-agents-need-git-worktrees/SKILL.md) | When parallel agents must operate on separate worktrees vs. shared branches. |
+| [`multi-agent-work-collision-recovery`](.claude/skills/learned/multi-agent-work-collision-recovery/SKILL.md) | Recovering with git when a peer agent did your task and pushed first. |
 | [`rebase-after-squash-merge`](.claude/skills/learned/rebase-after-squash-merge/SKILL.md) | How to rebase a branch after the base squash-merged. |
 | [`coverage-py-blended-vs-pure-branch`](.claude/skills/learned/coverage-py-blended-vs-pure-branch/SKILL.md) | Why the ratchet uses pure-branch (not blended) coverage. |
 | [`elektron-sysex-envelope`](.claude/skills/learned/elektron-sysex-envelope/SKILL.md) | Elektron 7-bit SysEx envelope structure (Rytm + A4 + Digitakt). |
@@ -506,10 +530,13 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`github-actions-matrix-conditional`](.claude/skills/learned/github-actions-matrix-conditional/SKILL.md) | Conditional matrix expansion in `.github/workflows/test.yml`. |
 | [`github-token-no-workflow-trigger`](.claude/skills/learned/github-token-no-workflow-trigger/SKILL.md) | Pushing from a workflow without triggering recursive CI. |
 | [`branch-protection-with-path-filters`](.claude/skills/learned/branch-protection-with-path-filters/SKILL.md) | Configuring branch protection together with `paths:` filters. |
+| [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
+
+**Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 
 ### Adding a new skill
 
-When you complete work where you wish you'd had a skill at the start, extract one. Create `.claude/skills/<short-kebab-name>/SKILL.md` with the format described in the parent of any existing learned skill. Update the table above in the same PR. See Gate 15.
+When you complete work where you wish you'd had a skill at the start, extract one. Create `.claude/skills/learned/<short-kebab-name>/SKILL.md` with the format described in the parent of any existing learned skill. Update the table above in the same PR. The `.agents/skills` symlink means codex picks it up automatically — no second copy. See Gate 15.
 
 ## Preserve parity with the V1.34 reference
 
@@ -613,7 +640,7 @@ A plan document must answer:
 2. **What changes** — the file-level scope and the architectural shape (Protocols, dataclasses, registry entries).
 3. **Workstreams** — for any multi-WS plan, the explicit WS table with owns / depends-on / parallel-with.
 4. **Parity impact** — does this touch V1.34 fixtures? If yes, justify and obtain explicit approval.
-5. **Plan-requirements conformance** — pre-fill the 16-gate checklist with expected satisfaction. Gates marked N/A must be justified.
+5. **Plan-requirements conformance** — pre-fill the 18-gate checklist with expected satisfaction. Gates marked N/A must be justified.
 6. **Test plan** — how the change will be verified before opening the PR. Includes new test files and new architecture-test additions.
 7. **Rollback plan** — what reverts cleanly, what doesn't.
 8. **Done criteria** — concrete done state (e.g. "X tests pass; coverage stays ≥95%; Y allowlist drained").
@@ -714,28 +741,42 @@ The package has explicit hardware-safety boundaries that **must not regress**:
 
 ## Automated post-push code review
 
-The repo-local `.claude/settings.json` configures a `PostToolUse` hook that
-fires the `code-reviewer` agent (`.claude/agents/code-reviewer.md`) after any
-`git push` invocation made through the Claude Code harness. The agent reads
-the diff, runs the architecture gate (`pytest tests/architecture/`), and
-returns a structured Critical / Important / Minor verdict.
+An 8-step code review runs **automatically after every `git push`** — no
+manual step, for any contributor. Three mechanisms, all calling the one
+shared [`scripts/code_review_gate.py`](scripts/code_review_gate.py), make
+that true:
 
-**Harness fallback.** If your harness version does not yet support the
-`Agent` action type for hooks, the hook is silently ignored. You can run the
-same review manually:
+1. **`.claude/settings.json`** — a `PostToolUse` hook fires the
+   `code-reviewer` agent ([`.claude/agents/code-reviewer.md`](.claude/agents/code-reviewer.md))
+   after a `git push` in the Claude Code harness. The agent walks all 8
+   steps of [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md)
+   — including Step 7 (abstraction reuse) and Step 8 (architecture-doc +
+   diagram freshness) — and returns the structured Critical / Important /
+   Minor / Abstraction / Docs verdict.
+2. **`.codex/hooks.json`** — the codex analogue, also zero-setup. Its
+   `PostToolUse` hook runs the shared gate script in `codex-hook` mode; the
+   script runs the mechanical gates and re-prompts codex to walk the 8-step
+   review.
+3. **`.githooks/pre-push`** — a universal git hook that runs the mechanical
+   gates (lint + architecture + V1.34 parity) on every `git push`, by any
+   tool, and **blocks the push** if they fail. Activate it once with
+   `git config core.hooksPath .githooks` — `just install` and the dev
+   container do this for you.
 
-```
-/agent code-reviewer
-```
+You can also run the full review on demand with `just review` (it
+env-detects the agent and dispatches it — no copy-paste).
 
-or invoke the skill directly:
+**Harness fallback.** If your Claude Code version does not support the
+`Agent` hook action type, that hook is silently ignored — run the review
+manually with `/agent code-reviewer` or `/skill code-review`. The
+`.githooks/pre-push` mechanical gate and the CI `architecture` job still
+apply regardless.
 
-```
-/skill code-review
-```
-
-The hook config is committed at `.claude/settings.json`; you can override it
-locally in `.claude/settings.local.json` if you prefer a different trigger.
+**Overrides.** Don't edit a committed hook config. For Claude Code, override
+locally in `.claude/settings.local.json` (git-ignored). For codex, use
+`/hooks` in the CLI. For the git hook, `git push --no-verify` skips it once
+(emergency only — CI still rejects the violation). Full detail:
+[`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
 
 ## Releasing
 

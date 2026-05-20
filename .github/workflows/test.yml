@@ -103,11 +103,16 @@ jobs:
               - 'tests/**'
 
             # `architecture` -- any architecture-conformance test change OR
-            # any production code change. The arch tests must validate the
-            # current state of the package on every code-touching PR.
+            # any production code change OR a change to the cross-platform
+            # Python tooling under scripts/ (e.g. code_review_gate.py, the
+            # closeout/coverage scripts). The arch tests must validate the
+            # current state of the package on every code-touching PR, and
+            # the cheap fast arch job is the regression signal for scripts/
+            # tooling, which has no dedicated pytest suite.
             architecture:
               - 'rytm_randomizer/**'
               - 'tests/architecture/**'
+              - 'scripts/**'
 
             # `e2e` -- triggers the (slow) 3-OS e2e matrix. Production code
             # or anything under tests/e2e/.

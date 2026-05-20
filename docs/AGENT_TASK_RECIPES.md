@@ -374,7 +374,7 @@ All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` 
    ```bash
    git push -u origin <branch>
    ```
-3. **Draft the PR body** following `.github/PULL_REQUEST_TEMPLATE.md`. The template includes the 16-gate conformance checklist + strict-rules confirmation block. Fill them in completely; do NOT silently drop gates.
+3. **Draft the PR body** following `.github/PULL_REQUEST_TEMPLATE.md`. The template includes the 18-gate conformance checklist + strict-rules confirmation block. Fill them in completely; do NOT silently drop gates.
 4. **Open the PR:**
    ```bash
    gh pr create --base modularize-v1.34 --title "<type>: <subject>" --body-file path/to/body.md
@@ -400,6 +400,6 @@ All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` 
 - [`CLAUDE.md`](../CLAUDE.md) — Claude Code per-session system prompt
 - [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) — architecture standard
 - [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) — 27 sections, 26 mermaid diagrams
-- [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md) — 16 gates
+- [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md) — 18 gates
 - [`.claude/rules/`](../.claude/rules/) — 8 mandatory rules
 - [`.claude/skills/`](../.claude/skills/) — 19 task-specific skills
