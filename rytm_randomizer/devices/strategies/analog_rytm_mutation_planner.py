@@ -158,6 +158,31 @@ class AnalogRytmMutationPlanner:
 
         return self._plan_for_profile_keys(snapshot, depth, routing.profile_keys_by_pad)
 
+    def plan_for_snapshot_machine_facts(
+        self,
+        snapshot: RytmKitSnapshot,
+        depth: int,
+    ) -> RytmMutationPlan:
+        """Build a plan from machine facts already decoded on ``snapshot``."""
+
+        self._validate_inputs(snapshot, depth)
+        if not snapshot.machine_facts.promoted:
+            return RytmMutationPlan(
+                snapshot=snapshot,
+                depth=depth,
+                events=(),
+                ready=False,
+                readiness_reason=(
+                    "snapshot machine facts are candidate-only; promote offsets before mutation"
+                ),
+            )
+
+        machine_values: dict[int, int] = {}
+        for pad, fact in snapshot.machine_facts.facts_by_pad.items():
+            if fact.decoded_machine_value is not None:
+                machine_values[pad] = fact.decoded_machine_value
+        return self.plan_for_machine_values(snapshot, depth, machine_values)
+
     def _validate_inputs(self, snapshot: RytmKitSnapshot, depth: int) -> None:
         if not isinstance(snapshot, RytmKitSnapshot):
             raise ValueError(

@@ -19,7 +19,9 @@ Per Gate 12 the kit-record offset constants are ``Final``.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Final
 
 from ...snapshot.envelope import (
@@ -35,6 +37,29 @@ from ...snapshot.envelope import (
 
 
 @dataclass(frozen=True)
+class RytmSnapshotMachineFact:
+    """One passive machine-value fact decoded from a Rytm kit snapshot."""
+
+    pad: int
+    raw_machine_value: int
+    decoded_machine_value: int | None
+    promoted: bool
+    reason: str
+
+
+@dataclass(frozen=True)
+class RytmSnapshotMachineFacts:
+    """Passive machine facts for all decoded Rytm pads."""
+
+    facts_by_pad: Mapping[int, RytmSnapshotMachineFact]
+    promoted: bool
+
+
+def _empty_machine_facts() -> RytmSnapshotMachineFacts:
+    return RytmSnapshotMachineFacts(facts_by_pad=MappingProxyType({}), promoted=False)
+
+
+@dataclass(frozen=True)
 class RytmKitSnapshot:
     """One Analog Rytm MK2 kit captured at a moment in time.
 
@@ -47,12 +72,15 @@ class RytmKitSnapshot:
       stripping).
     * ``unpacked`` -- the 7-bit-unstuffed payload bytes the rest of the
       decoder operates on.
+    * ``machine_facts`` -- passive decoded pad-machine facts, promoted
+      only when the offsets are verified for mutation routing.
     """
 
     slot: int
     kit_name: str
     raw: bytes
     unpacked: bytes
+    machine_facts: RytmSnapshotMachineFacts = field(default_factory=_empty_machine_facts)
 
 
 # ---------------------------------------------------------------------------
@@ -75,14 +103,50 @@ class RytmKitSnapshot:
 #: sees the same byte in every Rytm kit-dump SysEx.
 RYTM_KIT_TYPE_BYTE: Final[int] = 0x07
 
-#: Byte offset of the 16-byte ASCII kit name within the kit record, after
-#: the kit-type byte itself.
-_KIT_NAME_OFFSET: Final[int] = 1
+#: Byte offset of the 16-byte ASCII kit name within the unpacked kit payload.
+#: Observed in Jose's OS 1.72 Rytm kit dumps captured via C6.
+_KIT_NAME_OFFSET: Final[int] = 8
 
 #: Fixed length of the ASCII kit-name field. Elektron pads with NULs; the
 #: ``read_ascii_name`` helper strips trailing NULs to surface the clean
 #: operator-facing name.
 _KIT_NAME_LENGTH: Final[int] = 16
+
+_TRACK_COUNT: Final[int] = 12
+_TRACK_MACHINE_VALUE_OFFSET: Final[int] = 174
+_TRACK_SOUND_STRIDE: Final[int] = 162
+_CANDIDATE_ONLY_PADS: Final[frozenset[int]] = frozenset({6, 7, 8})
+
+
+def _extract_machine_facts(unpacked: bytes) -> RytmSnapshotMachineFacts:
+    facts: dict[int, RytmSnapshotMachineFact] = {}
+    for pad in range(1, _TRACK_COUNT + 1):
+        offset = _TRACK_MACHINE_VALUE_OFFSET + (_TRACK_SOUND_STRIDE * (pad - 1))
+        if offset >= len(unpacked):
+            fact = RytmSnapshotMachineFact(
+                pad=pad,
+                raw_machine_value=-1,
+                decoded_machine_value=None,
+                promoted=False,
+                reason=f"candidate machine offset {offset} is outside snapshot payload",
+            )
+        else:
+            raw_value = unpacked[offset]
+            promoted = pad not in _CANDIDATE_ONLY_PADS
+            fact = RytmSnapshotMachineFact(
+                pad=pad,
+                raw_machine_value=raw_value,
+                decoded_machine_value=raw_value if promoted else None,
+                promoted=promoted,
+                reason=(
+                    "promoted machine fact" if promoted else "candidate-only tom-pad machine fact"
+                ),
+            )
+        facts[pad] = fact
+    return RytmSnapshotMachineFacts(
+        facts_by_pad=MappingProxyType(facts),
+        promoted=all(fact.promoted for fact in facts.values()),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -136,5 +200,12 @@ class AnalogRytmSnapshotDecoder:
         # Unpack the entire record so downstream planners see the full
         # parameter table, not just the prefix.
         unpacked = unpack_elektron_7bit(record[1:])
-        kit_name = read_ascii_name(unpacked, offset=_KIT_NAME_OFFSET - 1, length=_KIT_NAME_LENGTH)
-        return RytmKitSnapshot(slot=slot, kit_name=kit_name, raw=raw, unpacked=unpacked)
+        kit_name = read_ascii_name(unpacked, offset=_KIT_NAME_OFFSET, length=_KIT_NAME_LENGTH)
+        machine_facts = _extract_machine_facts(unpacked)
+        return RytmKitSnapshot(
+            slot=slot,
+            kit_name=kit_name,
+            raw=raw,
+            unpacked=unpacked,
+            machine_facts=machine_facts,
+        )
