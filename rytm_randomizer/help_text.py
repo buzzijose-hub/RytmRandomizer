@@ -41,7 +41,7 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
-def resolve_help_text(key):
+def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
 
