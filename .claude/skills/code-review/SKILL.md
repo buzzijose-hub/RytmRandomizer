@@ -83,7 +83,7 @@ touches, skip a dimension that is genuinely N/A:
 | **Observability** | — | 7 |
 | **Abstraction reuse / genericization** | Step 7 | 17 |
 | **Docs + diagram freshness** | Step 8 | 5, 18 |
-| **String-literal dispatch / env vars / maintainability / execution shape** | — | 10, 13, 14, 16 |
+| **String-literal dispatch / env vars / maintainability / execution shape / learning capture** | — | 10, 13, 14, 15, 16 |
 
 Each dimension agent returns a scoped finding list (Critical / Important /
 Minor for its dimension). The orchestrator then **synthesizes** all the
