@@ -24,7 +24,7 @@ def _registered_command_exit_code(args):
 
         import_module(module_name)
         if cli_registry.get(args[0]) is None:
-            raise RuntimeError(f"CLI command module did not register {args[0]!r}")
+            raise AssertionError(f"CLI command module did not register {args[0]!r}")
         command = cli_registry.get(args[0])
 
     if command is None:

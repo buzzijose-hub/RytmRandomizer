@@ -54,9 +54,9 @@ def test_format_report_is_passive_and_operator_facing() -> None:
     assert "- Blocked pads: 8" in lines
     assert "Pad 10 / OH / Open Hihat:" in text
     assert "Snapshot ready: False" in text
-    pad_10_block = text.split("Pad 10 / OH / Open Hihat:", 1)[1].split(
-        "Pad 11 / CY / Cymbal:", 1
-    )[0]
+    pad_10_block = text.split("Pad 10 / OH / Open Hihat:", 1)[1].split("Pad 11 / CY / Cymbal:", 1)[
+        0
+    ]
     assert "XT Classic" not in pad_10_block
     assert "- passive/read-only" in lines
     assert "- no MIDI sending" in lines
