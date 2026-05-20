@@ -460,6 +460,17 @@ def test_dual_machine_target_report_rejects_unknown_target(capsys) -> None:
     assert "unknown target" in err
 
 
+def test_dual_machine_target_report_requires_target_arg(capsys) -> None:
+    from rytm_randomizer.cli import main
+
+    exit_code = main(["dual-machine-target-report"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "dual-machine-target-report <rytm|a4|both>" in captured.err
+
+
 def test_report_command_is_deterministic():
     first = run_cli("report")
     second = run_cli("report")
