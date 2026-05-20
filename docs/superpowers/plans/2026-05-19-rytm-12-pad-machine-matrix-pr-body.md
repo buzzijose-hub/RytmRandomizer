@@ -6,8 +6,8 @@ Adds a passive Analog Rytm MK2 12-pad machine compatibility matrix. The new data
 
 - Added `rytm_randomizer/data/rytm_machine_catalog.py` as the passive Rytm OS 1.72 machine/pad compatibility source of truth.
 - Added `rytm_randomizer/reports/rytm_machine_matrix.py` for the passive operator report.
-- Added `python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report`.
-- Updated README/status docs and passive CLI safety coverage.
+- Added `python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report` through `cli_registry.CliCommand`.
+- Updated README/status docs, architecture diagrams, and passive CLI safety coverage.
 
 ## Why this matters
 
@@ -41,18 +41,20 @@ git diff --check
 - [x] **Gate 2** - V1.34 parity byte-identical; no fixtures regenerated.
 - [x] **Gate 3** - lint clean (ruff + black `--target-version=py311` + isort `--profile black`).
 - [x] **Gate 4** - no new dead code.
-- [x] **Gate 5** - docs updated: `README.md`, `docs/STATUS.md`, design doc, implementation plan.
-- [x] **Gate 6** - type-system hygiene: frozen dataclasses, `Final` constants, no bare `Any`.
+- [x] **Gate 5** - docs updated: `README.md`, `docs/STATUS.md`, `docs/ARCHITECTURE_DIAGRAMS.md`, design doc, implementation plan.
+- [x] **Gate 6** - type-system hygiene: frozen dataclasses, `Final` constants, explicit `TypeAlias`, no bare `Any`.
 - [ ] **Gate 7** - N/A: passive report/data path, no hot runtime path.
 - [x] **Gate 8** - test hygiene: focused fast tests with clear behavior names.
 - [x] **Gate 9** - module organization: data/report subpackages only, no new top-level package.
 - [ ] **Gate 10** - N/A: no string-literal runtime dispatch refactor.
 - [ ] **Gate 11** - N/A: no shared fixture additions.
-- [x] **Gate 12** - `Final` constants on module-level constants.
+- [x] **Gate 12** - `Final` constants on module-level constants and explicit `TypeAlias` for type aliases.
 - [ ] **Gate 13** - N/A: no env var reads.
 - [x] **Gate 14** - maintainability: scope bounded to one passive data/report/CLI surface.
 - [ ] **Gate 15** - N/A: no new reusable learned rule extracted.
 - [x] **Gate 16** - one branch/one PR against `modularize-v1.34`; no stacked PR.
+- [x] **Gate 17** - abstraction reuse: new passive command routes through `cli_registry.CliCommand`.
+- [x] **Gate 18** - architecture docs refreshed: command diagrams, reports diagram, data diagram, source table, and module/subpackage counts.
 
 ## Strict rules - non-negotiables
 

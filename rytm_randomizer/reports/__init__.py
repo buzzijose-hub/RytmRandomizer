@@ -19,11 +19,9 @@ from __future__ import annotations
 from copy import deepcopy
 
 from .formatter import passive_footer_lines, safety_section_lines
-from .rytm_machine_matrix import (
-    build_rytm_machine_matrix_report as build_rytm_machine_matrix_report,
-)
-from .rytm_machine_matrix import (
-    format_rytm_machine_matrix_report as format_rytm_machine_matrix_report,
+from .rytm_machine_matrix import (  # noqa: F401
+    build_rytm_machine_matrix_report,
+    format_rytm_machine_matrix_report,
 )
 
 # ---------------------------------------------------------------------------

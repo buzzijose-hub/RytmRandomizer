@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import sys
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
+from ..cli_registry import CliCommand, register
 from ..data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
     RYTM_PAD_CAPABILITIES,
@@ -49,8 +51,6 @@ class RytmMachineMatrixReport:
     pad_count: int
     machine_profile_count: int
     allowed_slot_count: int
-    cc15_selectable_slot_count: int
-    pending_machine_value_count: int
     pads_by_pad: Mapping[int, RytmMachineMatrixPadReport]
 
 
@@ -63,13 +63,11 @@ def build_rytm_machine_matrix_report() -> RytmMachineMatrixReport:
 
     pads_by_pad: dict[int, RytmMachineMatrixPadReport] = {}
     allowed_slot_count = 0
-    cc15_selectable_slot_count = 0
 
     for capability in RYTM_PAD_CAPABILITIES:
         profiles = allowed_machine_profiles_for_pad(capability.pad)
         machines = tuple(_machine_label(profile) for profile in profiles)
         allowed_slot_count += len(machines)
-        cc15_selectable_slot_count += sum(1 for profile in profiles if profile.machine_value >= 0)
         pads_by_pad[capability.pad] = RytmMachineMatrixPadReport(
             pad=capability.pad,
             track_code=capability.track_code,
@@ -81,8 +79,6 @@ def build_rytm_machine_matrix_report() -> RytmMachineMatrixReport:
         pad_count=len(RYTM_PAD_CAPABILITIES),
         machine_profile_count=len(RYTM_MACHINE_PROFILES),
         allowed_slot_count=allowed_slot_count,
-        cc15_selectable_slot_count=cc15_selectable_slot_count,
-        pending_machine_value_count=allowed_slot_count - cc15_selectable_slot_count,
         pads_by_pad=MappingProxyType(pads_by_pad),
     )
 
@@ -93,8 +89,6 @@ def _body_lines(report: RytmMachineMatrixReport) -> list[str]:
         f"- Pads: {report.pad_count}",
         f"- Machine profiles: {report.machine_profile_count}",
         f"- Allowed pad-machine slots: {report.allowed_slot_count}",
-        f"- CC15-selectable slots: {report.cc15_selectable_slot_count}",
-        f"- Pending machine values: {report.pending_machine_value_count}",
         "Pads:",
     ]
 
@@ -117,8 +111,31 @@ def format_rytm_machine_matrix_report(
     return passive_report_lines(_HEADER, _body_lines(source_report))
 
 
+def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    if argv:
+        raise ValueError("rytm-12-pad-machine-matrix-report takes no arguments")
+    return {}
+
+
+def _handle_cli_report() -> int:
+    sys.stdout.write("\n".join(format_rytm_machine_matrix_report()))
+    sys.stdout.write("\n")
+    return 0
+
+
+RYTM_MACHINE_MATRIX_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="rytm-12-pad-machine-matrix-report",
+    summary="Print the passive Rytm 12-pad machine matrix report.",
+    args_parser=_parse_cli_args,
+    handler=_handle_cli_report,
+)
+
+register(RYTM_MACHINE_MATRIX_CLI_COMMAND)
+
+
 __all__ = [
     "REPORT_TITLE",
+    "RYTM_MACHINE_MATRIX_CLI_COMMAND",
     "RytmMachineMatrixPadReport",
     "RytmMachineMatrixReport",
     "SAFETY_LINES",

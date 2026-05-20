@@ -4,6 +4,7 @@ import pytest
 
 pytestmark = pytest.mark.fast
 
+from rytm_randomizer.data import rytm_machine_catalog
 from rytm_randomizer.data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
     RYTM_MACHINE_PROFILES_BY_KEY,
@@ -49,6 +50,10 @@ EXPECTED_MACHINE_CC15_VALUES = {
     "sy_raw": 32,
     "hh_lab": 33,
 }
+
+
+def test_support_status_is_explicit_type_alias() -> None:
+    assert rytm_machine_catalog.__annotations__["SupportStatus"] == "TypeAlias"
 
 
 def test_machine_and_pad_catalog_sizes() -> None:

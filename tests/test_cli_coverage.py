@@ -19,6 +19,8 @@ double-burden without adding coverage value.
 
 from __future__ import annotations
 
+import sys
+
 import pytest
 
 from rytm_randomizer import cli
@@ -343,6 +345,67 @@ def test_main_rytm_machine_matrix_report_writes_report(capsys):
     assert captured.out.endswith("\n")
     assert "RytmRandomizer passive Rytm 12-pad machine matrix" in captured.out
     assert captured.err == ""
+
+
+def test_main_rytm_machine_matrix_report_dispatches_through_cli_registry(capsys):
+    from rytm_randomizer import cli_registry
+    from rytm_randomizer.cli_registry import CliCommand
+
+    def _stub_handler(*, argv):
+        sys.stdout.write(f"registry:{argv!r}\n")
+        return 0
+
+    saved = dict(cli_registry._COMMANDS)
+    cli_registry._COMMANDS.clear()
+    try:
+        cli_registry.register(
+            CliCommand(
+                name="rytm-12-pad-machine-matrix-report",
+                summary="stub report",
+                args_parser=lambda argv: {"argv": tuple(argv)},
+                handler=_stub_handler,
+            )
+        )
+
+        rc = cli.main(["rytm-12-pad-machine-matrix-report"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert captured.out == "registry:()\n"
+    assert captured.err == ""
+
+
+def test_main_rytm_machine_matrix_report_registers_cached_command_when_registry_empty(capsys):
+    from importlib import import_module
+
+    from rytm_randomizer import cli_registry
+
+    import_module("rytm_randomizer.reports.rytm_machine_matrix")
+
+    saved = dict(cli_registry._COMMANDS)
+    cli_registry._COMMANDS.clear()
+    try:
+        rc = cli.main(["rytm-12-pad-machine-matrix-report"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm 12-pad machine matrix" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):
+    rc = cli.main(["rytm-12-pad-machine-matrix-report", "--mutate"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert captured.err.strip() == cli.USAGE
 
 
 def test_main_list_commands_writes_command_list(capsys):

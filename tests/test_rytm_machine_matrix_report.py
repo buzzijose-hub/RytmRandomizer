@@ -22,8 +22,8 @@ def test_build_report_has_expected_totals() -> None:
     assert report.pad_count == 12
     assert report.machine_profile_count == 33
     assert report.allowed_slot_count == 116
-    assert report.cc15_selectable_slot_count == 116
-    assert report.pending_machine_value_count == 0
+    assert not hasattr(report, "cc15_selectable_slot_count")
+    assert not hasattr(report, "pending_machine_value_count")
 
 
 def test_build_report_marks_pad_10_as_open_hihat() -> None:
@@ -49,7 +49,8 @@ def test_format_report_includes_totals_and_pad_10_safety_boundaries() -> None:
     assert "- Pads: 12" in lines
     assert "- Machine profiles: 33" in lines
     assert "- Allowed pad-machine slots: 116" in lines
-    assert "- CC15-selectable slots: 116" in lines
+    assert not any("CC15-selectable slots" in line for line in lines)
+    assert not any("Pending machine values" in line for line in lines)
     assert "Pad 10 / OH / Open Hihat:" in text
     assert "OH Classic (CC15 10)" in text
     assert "  - XT Classic (CC15 8)" not in pad_10_lines

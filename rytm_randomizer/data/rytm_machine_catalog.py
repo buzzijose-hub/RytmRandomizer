@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, TypeAlias
 
-SupportStatus = Literal["mutable_v134", "machine_selectable"]
+SupportStatus: TypeAlias = Literal["mutable_v134", "machine_selectable"]
 
 
 @dataclass(frozen=True)
