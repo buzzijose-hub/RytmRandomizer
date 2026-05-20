@@ -61,6 +61,43 @@ A review that cannot account for all 18 gates is incomplete. When a gate
 is genuinely not applicable to the diff, say so explicitly ("Gate 7 N/A —
 no hot-path code in this change") rather than silently skipping it.
 
+## Execution model: one agent per dimension (fan out, then synthesize)
+
+**Do not run this review as one wide agent covering every dimension.** A
+single agent asked to check architecture + maintainability + observability
++ docs + abstraction + parity + security at once does each one shallowly.
+Targeted reviews go deeper.
+
+When you have the `Agent` tool, dispatch **one agent per review dimension,
+all in parallel** (a single message with multiple `Agent` tool calls).
+Each agent's prompt is scoped to ONLY its dimension and the gates that
+dimension owns. The recommended split — adjust to what the diff actually
+touches, skip a dimension that is genuinely N/A:
+
+| Dimension agent | Skill steps it runs | Gate(s) it owns |
+|---|---|---|
+| **Architecture / import-direction** | Step 1, Step 3 | 9 |
+| **House style / type hygiene** | Step 2 | 6, 12 |
+| **Parity + test hygiene** | Step 4, Step 6 | 1, 2, 3, 4, 8, 11 |
+| **Side effects / mido leakage / hardware safety** | Step 5 | 6 (import-time) + strict rules |
+| **Observability** | — | 7 |
+| **Abstraction reuse / genericization** | Step 7 | 17 |
+| **Docs + diagram freshness** | Step 8 | 5, 18 |
+| **String-literal dispatch / env vars / maintainability / execution shape** | — | 10, 13, 14, 16 |
+
+Each dimension agent returns a scoped finding list (Critical / Important /
+Minor for its dimension). The orchestrator then **synthesizes** all the
+per-dimension results into ONE consolidated report in the output format
+below — merged Critical/Important/Minor lists, plus the mandatory
+**Abstraction** section (from the abstraction agent) and **Docs** section
+(from the docs agent) — and posts ONE PR comment. The verdict is computed
+from the merged findings (any Critical → Not ready; any Important → With
+fixes; otherwise Ready to merge).
+
+If the `Agent` tool is not available (e.g. a constrained harness), fall
+back to walking the 8 steps sequentially yourself — but the per-dimension
+fan-out is the default and preferred path.
+
 ## Inputs
 
 * The diff (or list of changed files). If not provided, gather it with

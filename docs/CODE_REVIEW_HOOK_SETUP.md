@@ -34,6 +34,22 @@ gates with a script, then hand off to an agent for the judgement steps.**
 The hand-off is wired differently per environment (below) — but the
 contributor never has to do anything by hand.
 
+## One agent per review dimension
+
+The agent half of the review is **not** run as a single wide agent
+covering every step. Targeted reviews go deeper — a single agent spread
+across architecture + maintainability + observability + docs + abstraction
+does each one shallowly. So the review fans out: **one targeted agent per
+dimension, dispatched in parallel** (architecture/import-direction, house
+style/type hygiene, parity + test hygiene, side effects + mido leakage,
+observability, abstraction reuse, docs + diagram freshness), each scoped
+to only its dimension and the plan-requirement gates it owns. An
+orchestrator then **synthesizes** the per-dimension finding lists into one
+consolidated Critical/Important/Minor/Abstraction/Docs verdict and posts a
+single PR comment. The dimension→step→gate table is in
+[`code-review/SKILL.md`](../.claude/skills/code-review/SKILL.md)
+§ "Execution model". This applies to all three mechanisms below.
+
 ## One shared gate script
 
 All three mechanisms call **one** implementation of the mechanical gates:

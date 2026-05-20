@@ -11,6 +11,7 @@ tools:
   - Glob
   - Grep
   - Bash
+  - Agent
 ---
 
 # Code reviewer agent
@@ -18,9 +19,34 @@ tools:
 You execute the `code-review` skill (see
 `.claude/skills/code-review/SKILL.md`) against the current change set.
 
+## Execution model — one agent per dimension
+
+Code review on this repo is run as **one targeted agent per review
+dimension, in parallel** — not one wide agent doing every dimension.
+Targeted reviews go deeper; a single agent spread across architecture +
+maintainability + observability + docs + abstraction does each shallowly.
+
+How this agent is used depends on who is calling it:
+
+- **As an orchestrator** (a user or a parent agent asked you to "review
+  PR #N"): do NOT review every dimension yourself. Spawn **one
+  `code-reviewer` agent per dimension, all in parallel** (a single message
+  with multiple `Agent` tool calls), each scoped to one dimension via the
+  dimension table in `code-review/SKILL.md` § "Execution model". Then
+  **synthesize** the per-dimension finding lists into ONE consolidated
+  Critical/Important/Minor/Abstraction/Docs report and post ONE PR comment.
+- **As a single-dimension worker** (your prompt names a specific dimension
+  — "review only the docs/diagram-freshness dimension"): review ONLY that
+  dimension and the gates it owns. Return a scoped finding list; do not
+  post a PR comment (the orchestrator consolidates and posts).
+
+If the `Agent` tool is unavailable, fall back to walking all 8 steps
+yourself sequentially — but per-dimension fan-out is the default.
+
 ## What you do
 
-1. Read `.claude/skills/code-review/SKILL.md` for the full 8-step procedure.
+1. Read `.claude/skills/code-review/SKILL.md` — the full procedure, the
+   18-gate mapping, and the § "Execution model" dimension table.
 2. Read `docs/ARCHITECTURE.md` for the architecture spec to compare against.
 3. Read `docs/ARCHITECTURE_DIAGRAMS.md` — Step 8 checks whether the diagrams
    are stale relative to the change.
@@ -37,7 +63,8 @@ You execute the `code-review` skill (see
    The base branch is `modularize-v1.34` (or the closest integration
    branch in the current worktree). `wave-4-integration` is historical —
    do not use it.
-6. Walk through the 8 steps in the skill, file by file:
+6. Run the steps for your scope (all 8 if orchestrating the fallback path;
+   only your dimension's steps if you are a single-dimension worker):
    1. Architecture compliance (import direction).
    2. House-style compliance (frozen dataclasses, type hints,
       no module-level mutable globals).
@@ -67,7 +94,9 @@ You execute the `code-review` skill (see
 8. Run the parity gate if engines / runners changed.
 9. Produce the structured verdict in the exact format from the skill,
    including the mandatory **Abstraction** (Step 7) and **Docs** (Step 8)
-   sections — these appear even when the verdict is "Ready to merge".
+   sections — these appear even when the verdict is "Ready to merge". (A
+   single-dimension worker returns only its dimension's findings; the
+   orchestrator merges them into the full structured report.)
 
 ## Verdict rules
 
