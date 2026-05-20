@@ -12,11 +12,11 @@ labels it that way. Diagrams describing the upcoming codex dual-machine work
 
 Current baseline used while creating / refreshing this document:
 
-- Branch: `governance/enforce-abstractions-and-policy` (PR #43), built on `modularize-v1.34` at `df54b3f` (Wave-1 simplification bundle merged).
+- Branch: `codex/rytm-snapshot-mutation-routing-pr2`, built on `modularize-v1.34` at `6ceaf57` (PR #49 merged).
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 98 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 100 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43; ~6 of the original 12 diagrams were stale relative to the current subpackage layout and have been redrawn.
+- This file was audited and refreshed as part of PR #43, then updated through PR #49 and the snapshot-routing PR2 slice so the strategy-module list and counts stay current.
 
 ## Source Files Used
 
@@ -32,7 +32,7 @@ Current baseline used while creating / refreshing this document:
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm}.py`, `rytm_randomizer/devices/strategies/{analog_rytm_snapshot_decoder,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm}.py`, `rytm_randomizer/devices/strategies/{analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
 | Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
@@ -48,7 +48,7 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 98 modules)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 100 modules)"]
     Tests["Tests<br/>2370+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
@@ -131,7 +131,7 @@ flowchart TB
         DevBase["base.py<br/>Device, MidiOutbox,<br/>MessageRenderer Protocols"]
         DevRegistry["registry.py<br/>register_device, get_device, all_devices"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
-        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>mutation_planner,<br/>message_renderer}.py"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>mutation_planner,<br/>message_renderer}.py"]
     end
 
     subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
@@ -293,6 +293,12 @@ classDiagram
     class AnalogRytmMutationPlanner {
         +seed
         +plan(snapshot, depth) RytmMutationPlan
+        +plan_for_machine_values(snapshot, depth, pad_machine_values) RytmMutationPlan
+    }
+
+    class RytmSnapshotRouting {
+        <<module>>
+        +route_rytm_snapshot_machine_values(pad_machine_values) RytmSnapshotMachineRoutingResult
     }
 
     class AnalogRytmMessageRenderer {
@@ -319,6 +325,7 @@ classDiagram
     AnalogRytmDevice o-- AnalogRytmMessageRenderer : composes
 
     AnalogRytmSnapshotDecoder ..|> SnapshotDecoder : satisfies
+    AnalogRytmMutationPlanner --> RytmSnapshotRouting : routes snapshot machines
     AnalogRytmMutationPlanner ..|> MutationPlanner : satisfies
     AnalogRytmMessageRenderer ..|> MessageRenderer : satisfies
 
@@ -347,7 +354,7 @@ sequenceDiagram
     participant Decoder as AnalogRytmSnapshotDecoder
     participant Envelope as snapshot.envelope
     participant Planner as AnalogRytmMutationPlanner
-    participant Data as data/profiles.py<br/>+ PAD_PROFILE_KEY
+    participant Data as data/profiles.py<br/>+ PAD_PROFILE_KEY<br/>+ rytm_machine_catalog.py
     participant Renderer as AnalogRytmMessageRenderer
     participant Mock as MockMidiSender<br/>(or real port)
 
@@ -366,6 +373,7 @@ sequenceDiagram
     Caller->>Device: plan_mutation(snapshot, depth=3)
     Device->>Planner: mutation_planner.plan(snapshot, 3)
     Planner->>Data: read PAD_PROFILE_KEY (pad → profile_key)
+    Note over Planner,Data: Snapshot mode can instead call<br/>plan_for_machine_values(...), which routes<br/>pad+machine_value facts before planning
     Planner->>Data: read PROFILES[profile_key]["safe"] (param range table)
     Note over Planner: deterministic random.Random<br/>seeded by (seed, slot, depth)
     Planner-->>Device: RytmMutationPlan(events=(...,))<br/>ready=True
@@ -548,7 +556,8 @@ flowchart LR
     end
 
     subgraph StratView["What Strategy seam sees"]
-        AS_Planner["AnalogRytmMutationPlanner<br/>reads PROFILES + PAD_PROFILE_KEY"]
+        AS_Planner["AnalogRytmMutationPlanner<br/>reads PROFILES + PAD_PROFILE_KEY<br/>or snapshot_routing output"]
+        AS_Router["analog_rytm_snapshot_routing.py<br/>reads rytm_machine_catalog + PROFILES"]
         AS_Renderer["AnalogRytmMessageRenderer<br/>reads PROFILES[k].params (CC map)"]
     end
 
@@ -562,6 +571,7 @@ flowchart LR
 
     ParamMaps --> Profiles
     MachineCatalog -.-> StratView
+    AS_Router --> AS_Planner
     Modes -.-> EnginesView
     Modes -.-> StratView
 ```
@@ -637,6 +647,7 @@ flowchart TB
 
     subgraph RytmImpls["Rytm impls (devices/strategies/)"]
         RytmDecoder["AnalogRytmSnapshotDecoder<br/>uses envelope helpers"]
+        RytmRouter["analog_rytm_snapshot_routing.py<br/>routes pad/machine values to profile keys"]
         RytmPlanner["AnalogRytmMutationPlanner<br/>(no shared planner state needed)"]
     end
 
@@ -647,6 +658,7 @@ flowchart TB
 
     RytmDecoder -->|"depends on"| Envelope
     RytmDecoder -.satisfies.-> SD
+    RytmRouter --> RytmPlanner
     RytmPlanner -.satisfies.-> MP_proto
 
     A4Decoder -->|"MUST depend on"| Envelope
@@ -1089,7 +1101,7 @@ flowchart TB
         DevBase["devices/base.py<br/>(Device + 3 capability sub-Protocols)"]
         DevRegistry["devices/registry.py"]
         DevAR["devices/analog_rytm.py"]
-        DevAR_Strategies["devices/strategies/<br/>analog_rytm_{decoder,planner,renderer}"]
+        DevAR_Strategies["devices/strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,mutation_planner,<br/>message_renderer}"]
     end
 
     subgraph CodexRedo["Future codex PR (PR #36 redo)"]

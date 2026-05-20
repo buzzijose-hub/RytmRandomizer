@@ -19,12 +19,14 @@ WS-S6 ``MutationPlanner`` Protocol by exposing ``plan(snapshot, depth)``.
 from __future__ import annotations
 
 import random
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final
 
 from ...data.profiles import PROFILES
 from ...guardrails.validation import PAD_PROFILE_KEY
 from .analog_rytm_snapshot_decoder import RytmKitSnapshot
+from .analog_rytm_snapshot_routing import route_rytm_snapshot_machine_values
 
 # ---------------------------------------------------------------------------
 # Plan dataclasses
@@ -126,6 +128,31 @@ class AnalogRytmMutationPlanner:
                 or if ``depth`` is outside ``[0, MAX_DEPTH]``.
         """
 
+        return self._plan_for_profile_keys(snapshot, depth, PAD_PROFILE_KEY)
+
+    def plan_for_machine_values(
+        self,
+        snapshot: RytmKitSnapshot,
+        depth: int,
+        pad_machine_values: Mapping[int, int],
+    ) -> RytmMutationPlan:
+        """Build a plan from snapshot-derived ``pad -> machine_value`` facts."""
+
+        self._validate_inputs(snapshot, depth)
+
+        routing = route_rytm_snapshot_machine_values(pad_machine_values)
+        if not routing.ready:
+            return RytmMutationPlan(
+                snapshot=snapshot,
+                depth=depth,
+                events=(),
+                ready=False,
+                readiness_reason=routing.readiness_reason,
+            )
+
+        return self._plan_for_profile_keys(snapshot, depth, routing.profile_keys_by_pad)
+
+    def _validate_inputs(self, snapshot: RytmKitSnapshot, depth: int) -> None:
         if not isinstance(snapshot, RytmKitSnapshot):
             raise ValueError(
                 "AnalogRytmMutationPlanner.plan: snapshot must be a "
@@ -137,6 +164,14 @@ class AnalogRytmMutationPlanner:
                 f"got {depth}"
             )
 
+    def _plan_for_profile_keys(
+        self,
+        snapshot: RytmKitSnapshot,
+        depth: int,
+        pad_profile_keys: Mapping[int, str],
+    ) -> RytmMutationPlan:
+        self._validate_inputs(snapshot, depth)
+
         # Derive a deterministic integer seed from (seed, slot, depth) so
         # the same triple always produces the same plan. Stuff the three
         # values into a single int via bit-shifting to keep the seed
@@ -146,8 +181,8 @@ class AnalogRytmMutationPlanner:
 
         events: list[RytmPlanEvent] = []
         # Iterate pads in stable order so the plan is deterministic.
-        for pad in sorted(PAD_PROFILE_KEY):
-            profile_key = PAD_PROFILE_KEY[pad]
+        for pad in sorted(pad_profile_keys):
+            profile_key = pad_profile_keys[pad]
             profile = PROFILES.get(profile_key)
             if profile is None:
                 # Should not happen with the canonical data, but guard so a

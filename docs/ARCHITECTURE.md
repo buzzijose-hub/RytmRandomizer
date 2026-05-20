@@ -302,6 +302,7 @@ backward compatibility — they delegate to the strategies.
    - `<family>_snapshot_decoder.py` — implements `SnapshotDecoder.decode`. Use the shared `snapshot/envelope.py` helpers; do NOT fork them per family.
    - `<family>_mutation_planner.py` — implements `MutationPlanner.plan`. The plan must carry `ready: bool` and `readiness_reason: str` so the generic guarded sender can refuse on an unfinished plan without device-specific introspection.
    - `<family>_message_renderer.py` — implements `MessageRenderer.{to_mock_message, to_cc_triple}`. Looks up CC numbers through `data/profiles.py` (or the family's own param map).
+   - Family-specific pure helper modules may live beside these strategies when they support the Strategy boundary, such as `analog_rytm_snapshot_routing.py` mapping snapshot-derived machine facts into planner profile keys. These helpers must remain passive and must not become parallel registries, senders, or device packages.
 2. Create one device class at `rytm_randomizer/devices/<family>.py` that composes the three strategies in `__init__` and exposes the 9 Protocol attributes.
 3. Register at import time: `registry.register_device(<Family>Device())`.
 4. The `devices/__init__.py` must import the new module so the side-effect registration runs.

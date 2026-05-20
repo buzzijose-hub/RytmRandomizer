@@ -675,3 +675,53 @@ def test_planner_init_default_seed_is_zero() -> None:
     plan = planner.plan(snap, depth=0)
 
     assert plan.ready is True
+
+
+# ---------------------------------------------------------------------------
+# 18. Snapshot machine-value routing
+# ---------------------------------------------------------------------------
+
+
+def test_planner_can_plan_from_snapshot_machine_values_for_mutable_pads() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmMutationPlanner, RytmKitSnapshot
+
+    snapshot = RytmKitSnapshot(slot=7, kit_name="LIVE", raw=b"", unpacked=b"")
+    plan = AnalogRytmMutationPlanner(seed=1).plan_for_machine_values(
+        snapshot,
+        depth=1,
+        pad_machine_values={1: 0, 2: 3, 3: 32},
+    )
+
+    assert plan.ready is True
+    assert {event.pad for event in plan.events} == {1, 2, 3}
+    assert {event.profile_key for event in plan.events} == {"2", "10", "5"}
+
+
+def test_planner_refuses_snapshot_machine_values_with_blocked_pad() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmMutationPlanner, RytmKitSnapshot
+
+    snapshot = RytmKitSnapshot(slot=7, kit_name="LIVE", raw=b"", unpacked=b"")
+    plan = AnalogRytmMutationPlanner(seed=1).plan_for_machine_values(
+        snapshot,
+        depth=1,
+        pad_machine_values={1: 0, 10: 10},
+    )
+
+    assert plan.ready is False
+    assert plan.events == ()
+    assert "selectable-only" in plan.readiness_reason
+
+
+def test_planner_refuses_empty_snapshot_machine_values_with_reason() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmMutationPlanner, RytmKitSnapshot
+
+    snapshot = RytmKitSnapshot(slot=7, kit_name="LIVE", raw=b"", unpacked=b"")
+    plan = AnalogRytmMutationPlanner(seed=1).plan_for_machine_values(
+        snapshot,
+        depth=1,
+        pad_machine_values={},
+    )
+
+    assert plan.ready is False
+    assert plan.events == ()
+    assert plan.readiness_reason == "no snapshot machine values supplied"
