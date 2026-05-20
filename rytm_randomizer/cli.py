@@ -5,6 +5,33 @@ import sys
 from .help_text import HELP_TEXT, USAGE
 
 
+def _registered_command_exit_code(args):
+    if not args:
+        return None
+
+    from . import cli_registry
+
+    command = cli_registry.get(args[0])
+    if command is None and args[0] == "rytm-12-pad-machine-matrix-report":
+        from importlib import import_module
+
+        module = import_module("rytm_randomizer.reports.rytm_machine_matrix")
+        if cli_registry.get(args[0]) is None:
+            cli_registry.register(module.RYTM_MACHINE_MATRIX_CLI_COMMAND)
+        command = cli_registry.get(args[0])
+
+    if command is None:
+        return None
+
+    try:
+        kwargs = command.args_parser(args[1:])
+    except ValueError:
+        sys.stderr.write(f"{USAGE}\n")
+        return 2
+
+    return command.handler(**kwargs)
+
+
 def _format_list_label(metadata):
     return metadata.get("label") or metadata.get("name") or ""
 
@@ -356,6 +383,10 @@ def main(argv=None):
     if len(args) == 2 and args[1] == "--help" and args[0] in HELP_TEXT:
         sys.stdout.write(f"{HELP_TEXT[args[0]]}\n")
         return 0
+
+    registered_exit_code = _registered_command_exit_code(args)
+    if registered_exit_code is not None:
+        return registered_exit_code
 
     if args == ["report"]:
         from .reports import format_registry_report

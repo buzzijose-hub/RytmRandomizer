@@ -155,19 +155,20 @@ Pad 4 = BD Acoustic / body + accent pressure lane
 - No new machine profiles.
 - No new MIDI CC mappings.
 - No new parameter ranges.
-- No Pads 5-12 expansion yet.
+- Pads 5-12 have a passive machine matrix report; armed 12-pad runtime mutation remains gated until the follow-up runtime slice.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
 - Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
 
 ### Dual-machine target commands
 
-The passive CLI exposes the current machine target surface without opening a MIDI port:
+The passive CLI exposes the current machine target surface and passive 12-pad machine matrix without opening a MIDI port:
 
 ```bash
 python -m rytm_randomizer.cli dual-machine-target-report rytm   # Analog Rytm only
 python -m rytm_randomizer.cli dual-machine-target-report a4     # Analog Four only
 python -m rytm_randomizer.cli dual-machine-target-report both   # both registered devices
+python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm 12-pad machine compatibility matrix
 ```
 
 Aliases: `rytm-only` and `a4-only` are accepted. The report is passive: it opens no MIDI port and sends no MIDI. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.

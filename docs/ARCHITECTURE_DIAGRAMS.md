@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: `governance/enforce-abstractions-and-policy` (PR #43), built on `modularize-v1.34` at `df54b3f` (Wave-1 simplification bundle merged).
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` — 26 top-level Python files + 10 subpackages = 86 total modules. The 10 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `engines/`, `guardrails/`, `observability/`, `reports/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 98 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43; ~6 of the original 12 diagrams were stale relative to the current subpackage layout and have been redrawn.
 
@@ -24,9 +24,9 @@ Current baseline used while creating / refreshing this document:
 |---|---|
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes}.py` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
-| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/formatter.py` (subpackage; was the old top-level `reports.py`) |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,rytm_machine_matrix}.py` (subpackage; was the old top-level `reports.py`) |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
 | Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
@@ -48,7 +48,7 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(10 subpackages, 86 modules)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 98 modules)"]
     Tests["Tests<br/>2370+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
@@ -147,8 +147,9 @@ flowchart TB
     end
 
     subgraph ReportsPkg["reports/ subpackage<br/>(was reports.py)"]
-        RInit["__init__.py<br/>~9 report builders"]
+        RInit["__init__.py<br/>~10 report builders"]
         RFormatter["formatter.py<br/>PassiveReportHeader"]
+        RMatrix["rytm_machine_matrix.py<br/>12-pad machine report + CliCommand"]
     end
 
     subgraph ObservabilityPkg["observability/"]
@@ -531,6 +532,7 @@ flowchart LR
         Plans["plans.py<br/>PAD_PROFILE_PLANS, ..."]
         Scenes["scenes.py + scene_display.py"]
         Modes["modes.py<br/>IntensityMode, PageMode,<br/>MutationKind, Pad1Mode, ZoneName<br/>Literal + Final[tuple]"]
+        MachineCatalog["rytm_machine_catalog.py<br/>OS 1.72 pad-machine compatibility<br/>12 pads + 33 machine profiles"]
     end
 
     subgraph GuardrailsPkg["guardrails/ — safety/policy"]
@@ -558,6 +560,7 @@ flowchart LR
     Resolver --> EnginesView
 
     ParamMaps --> Profiles
+    MachineCatalog -.-> StratView
     Modes -.-> EnginesView
     Modes -.-> StratView
 ```
@@ -918,6 +921,7 @@ flowchart LR
         Bridge["mock-runtime-active-bridge-report"]
         Anchor["anchor-profile-report"]
         Coverage["behavior-parity-report"]
+        RytmMatrix["rytm-12-pad-machine-matrix-report"]
         QuickStatus["quick-status"]
     end
 
@@ -1177,8 +1181,9 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph ReportsPkg["reports/ subpackage"]
-        Init["__init__.py<br/>9 report builders + formatters<br/>(was reports.py before WS-S4)"]
+        Init["__init__.py<br/>10 report builders + formatters<br/>(was reports.py before WS-S4)"]
         Formatter["formatter.py<br/>PassiveReportHeader (frozen dataclass)<br/>safety_section_lines()<br/>passive_footer_lines()<br/>+ Final-annotated constants"]
+        MatrixModule["rytm_machine_matrix.py<br/>12-pad machine matrix report<br/>+ registered CliCommand"]
     end
 
     subgraph Reports["Report builders (in __init__.py)"]
@@ -1191,6 +1196,7 @@ flowchart TB
         R7["behavior_parity_coverage_report"]
         R8["project_status_report<br/>(separate top-level project_status_report.py)"]
         R9["quick_status report"]
+        R10["rytm_machine_matrix_report"]
     end
 
     subgraph CLICmds["CLI commands → reports"]
@@ -1203,6 +1209,7 @@ flowchart TB
         C7["behavior-parity-report"]
         C8["project-status (separate)"]
         C9["quick-status"]
+        C10["rytm-12-pad-machine-matrix-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1210,6 +1217,7 @@ flowchart TB
     end
 
     Reports --> Formatter
+    Reports --> MatrixModule
     Formatter --> Init
     Reports --> Init
 
@@ -1478,6 +1486,7 @@ flowchart LR
         Bridge["mock-runtime-active-bridge-report"]
         Anchor["anchor-profile-report"]
         Coverage["behavior-parity-report"]
+        RytmMatrix["rytm-12-pad-machine-matrix-report"]
         Status["project-status / quick-status"]
     end
 
@@ -1499,7 +1508,8 @@ flowchart LR
     CLI --> Browse
     CLI --> Reports
 
-    CliRegistry -.->|"future-extension seam:<br/>register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
+    CliRegistry -->|"registered passive command:<br/>rytm-12-pad-machine-matrix-report"| CLI
+    CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
     NotPresent -.->|"reachable via app.py --arm"| Armed
@@ -1509,7 +1519,7 @@ flowchart LR
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
-- `cli_registry.py` (WS-S7) is the future-extension seam. Today the cli's argparse dispatch is still in-line; future commands should register a `CliCommand` here instead of growing `cli.py`. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
+- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix command is registered there instead of growing `cli.py` with another inline report arm. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
 
