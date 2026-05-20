@@ -169,9 +169,10 @@ python -m rytm_randomizer.cli dual-machine-target-report rytm   # Analog Rytm on
 python -m rytm_randomizer.cli dual-machine-target-report a4     # Analog Four only
 python -m rytm_randomizer.cli dual-machine-target-report both   # both registered devices
 python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm 12-pad machine compatibility matrix
+python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report   # passive snapshot readiness per Rytm pad
 ```
 
-Aliases: `rytm-only` and `a4-only` are accepted. The report is passive: it opens no MIDI port and sends no MIDI. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
+Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
 
 ### Recommended quick validation flow
 

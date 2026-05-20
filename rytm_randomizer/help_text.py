@@ -11,6 +11,7 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
+    "rytm-snapshot-pad-compatibility-report | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -35,6 +36,7 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -68,6 +70,8 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   rytm-12-pad-machine-matrix-report
                      Print the passive Rytm 12-pad machine matrix report.
+  rytm-snapshot-pad-compatibility-report
+                     Print the passive Rytm snapshot-pad compatibility report.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   inspect-command    Inspect passive command metadata by key.
@@ -252,6 +256,22 @@ Usage:
 
 Behavior:
   Prints the passive Analog Rytm MK2 12-pad machine compatibility matrix.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "rytm-snapshot-pad-compatibility-report": """RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report --help
+
+Behavior:
+  Prints the passive Analog Rytm MK2 snapshot-pad compatibility report.
 
 Safety:
   passive/read-only

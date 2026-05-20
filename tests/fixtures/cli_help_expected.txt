@@ -13,6 +13,7 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -46,6 +47,8 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   rytm-12-pad-machine-matrix-report
                      Print the passive Rytm 12-pad machine matrix report.
+  rytm-snapshot-pad-compatibility-report
+                     Print the passive Rytm snapshot-pad compatibility report.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   inspect-command    Inspect passive command metadata by key.

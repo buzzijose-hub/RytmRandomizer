@@ -20,6 +20,7 @@ PASSIVE_CLI_COMMANDS = (
     ("mock-mapper-report",),
     ("active-boundary-report",),
     ("rytm-12-pad-machine-matrix-report",),
+    ("rytm-snapshot-pad-compatibility-report",),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -41,6 +42,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("mock-mapper-report",),
     ("active-boundary-report",),
     ("rytm-12-pad-machine-matrix-report",),
+    ("rytm-snapshot-pad-compatibility-report",),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",
