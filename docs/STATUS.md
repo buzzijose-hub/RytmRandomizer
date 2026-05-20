@@ -4,6 +4,8 @@ Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-19: Rytm 12-pad machine matrix checkpoint started. The implementation adds a passive OS 1.72 pad-machine compatibility catalog and report so pads 1-12 can be validated before armed 12-pad mutation. Pad 10 is explicitly treated as OH / Open Hihat, while XT Classic remains limited to LT/MT/HT tom pads. This is read-only reporting only; hardware sends and runtime mutation remain gated.
+
 - 2026-05-19: Dual-machine strategy redo branch started from merged PR #43. Rytm and Analog Four target language is operator-friendly: `rytm`, `a4`, and `both`, with aliases `rytm-only` and `a4-only`. Machine-specific behavior routes through registered `Device` Strategy capabilities. `AnalogFourDevice` is registered beside `AnalogRytmDevice`, and generic guarded/hardware senders consume the `Device` surface instead of per-device sender modules. Snapshot mode remains the primary live-performance workflow; anchor mode remains the explicit controlled baseline. Hardware validation remains manual; automated tests do not open MIDI ports.
 
 - 2026-05-19: PR #43 — governance bundle: CONTRIBUTING handbook + Device Protocol Strategy + arch-test enforcement. **CONTRIBUTING.md** rewritten as the full developer handbook (146 → 723 lines, 22 sections including the 15 strict rules, the 16 plan-requirement gates, cross-platform notes, lint specifics, PR sizes, plan-document requirements, gh CLI reference, and the catalog of all 19 skills). **Device Protocol extended with Strategy capabilities** at `rytm_randomizer/devices/base.py`: now exposes 4 new attributes (`snapshot_decoder`, `mutation_planner`, `message_renderer`, `report_header`). 3 real strategies under `rytm_randomizer/devices/strategies/` for the Analog Rytm — `AnalogRytmSnapshotDecoder` (uses snapshot/envelope.py), `AnalogRytmMutationPlanner` (produces deterministic `RytmMutationPlan` from `PROFILES`), `AnalogRytmMessageRenderer` (maps events → CC triples via `data/profiles.py`). `AnalogRytmDevice` composes the strategies; the previous `NotImplementedError` stubs are gone. **7 architecture-enforcement tests** at `tests/architecture/test_device_protocol_enforcement.py` mechanically reject device-family subpackages that bypass the registry, cross-family private imports, `dual_machine/` direct family imports, parallel registries, and Protocol-surface drift. **Closed 6 codex PRs** (#21, #37, #38, #39, #40, #41) as a 5-deep stacked cascade against the new PR-bundling rule; PR #36 kept as the redo target with an architecture-review comment. **PR #42** (early CONTRIBUTING-only) superseded by #43. 2370 tests pass + 4 skipped, 96.31% coverage on `devices/`. See PR [#43](https://github.com/buzzijose-hub/RytmRandomizer/pull/43).
@@ -60,7 +62,7 @@ Each step is locked against the V1.34 reference by characterization tests.
 
 - A more detailed `docs/ARCHITECTURE.md` map of the post-decomposition package (planned).
 - Further hardening: coverage policy, lint baseline, type-check baseline.
-- Out of scope for now: Pads 5-12, additional machines/profiles, new CC mappings, GUI/capture, SysEx, and Analog Four support.
+- Out of scope for the current runtime: armed pads 5-12 mutation, GUI/capture, audio analysis, and ungated Analog Four hardware sends.
 
 ## Reference Docs
 

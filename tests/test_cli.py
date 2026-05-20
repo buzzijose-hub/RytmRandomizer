@@ -400,6 +400,13 @@ def test_rytm_machine_matrix_report_command_exits_zero_and_describes_pad_10():
     assert result.stderr == ""
 
 
+def test_readme_mentions_rytm_machine_matrix_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "rytm-12-pad-machine-matrix-report" in text
+    assert "12-pad machine matrix" in text
+
+
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
     from rytm_randomizer.cli import main
 
