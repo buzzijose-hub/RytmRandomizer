@@ -16,6 +16,7 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
+    "rytm-snapshot-pad-compatibility-report | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -156,6 +157,28 @@ def test_rytm_machine_matrix_report_help_exits_zero_and_matches_fixture():
     assert normalize_newlines(result.stdout) == fixture_text(
         "cli_rytm_machine_matrix_report_help_expected.txt"
     )
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_pad_compatibility_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("rytm-snapshot-pad-compatibility-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_rytm_snapshot_pad_compatibility_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_pad_compatibility_help_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_snapshot_pad_compatibility import SAFETY_LINES
+
+    result = run_cli("rytm-snapshot-pad-compatibility-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
 
 
@@ -400,11 +423,31 @@ def test_rytm_machine_matrix_report_command_exits_zero_and_describes_pad_10():
     assert result.stderr == ""
 
 
+def test_rytm_snapshot_pad_compatibility_report_command_exits_zero_and_describes_pad_10():
+    result = run_cli("rytm-snapshot-pad-compatibility-report")
+
+    output = normalize_newlines(result.stdout)
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot pad compatibility" in output
+    assert "- Snapshot-ready pads: 4" in output
+    assert "- Blocked pads: 8" in output
+    assert "Pad 10 / OH / Open Hihat:" in output
+    assert "Snapshot ready: False" in output
+    assert result.stderr == ""
+
+
 def test_readme_mentions_rytm_machine_matrix_report_command():
     text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
     assert "rytm-12-pad-machine-matrix-report" in text
     assert "12-pad machine matrix" in text
+
+
+def test_readme_mentions_rytm_snapshot_pad_compatibility_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "rytm-snapshot-pad-compatibility-report" in text
+    assert "snapshot-pad compatibility" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
@@ -427,6 +470,17 @@ def test_dual_machine_target_report_rejects_unknown_target(capsys) -> None:
     err = capsys.readouterr().err
     assert exit_code == 2
     assert "unknown target" in err
+
+
+def test_dual_machine_target_report_requires_target_arg(capsys) -> None:
+    from rytm_randomizer.cli import main
+
+    exit_code = main(["dual-machine-target-report"])
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert captured.out == ""
+    assert "dual-machine-target-report <rytm|a4|both>" in captured.err
 
 
 def test_report_command_is_deterministic():
@@ -543,6 +597,17 @@ def test_anchor_profile_report_command_is_deterministic():
 def test_behavior_parity_report_command_is_deterministic():
     first = run_cli("behavior-parity-report")
     second = run_cli("behavior-parity-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_rytm_snapshot_pad_compatibility_report_command_is_deterministic():
+    first = run_cli("rytm-snapshot-pad-compatibility-report")
+    second = run_cli("rytm-snapshot-pad-compatibility-report")
 
     assert first.returncode == 0
     assert second.returncode == 0

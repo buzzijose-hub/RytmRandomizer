@@ -2,7 +2,7 @@
 
 import sys
 
-from .help_text import HELP_TEXT, USAGE
+from .help_text import HELP_TEXT, USAGE, resolve_help_text
 
 
 def _registered_command_exit_code(args):
@@ -11,13 +11,25 @@ def _registered_command_exit_code(args):
 
     from . import cli_registry
 
+    lazy_commands = {
+        "rytm-12-pad-machine-matrix-report": (
+            "rytm_randomizer.reports.rytm_machine_matrix",
+            "RYTM_MACHINE_MATRIX_CLI_COMMAND",
+        ),
+        "rytm-snapshot-pad-compatibility-report": (
+            "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
+            "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",
+        ),
+    }
     command = cli_registry.get(args[0])
-    if command is None and args[0] == "rytm-12-pad-machine-matrix-report":
+    lazy_command = lazy_commands.get(args[0])
+    if command is None and lazy_command is not None:
         from importlib import import_module
 
-        module = import_module("rytm_randomizer.reports.rytm_machine_matrix")
+        module_name, command_attr = lazy_command
+        module = import_module(module_name)
         if cli_registry.get(args[0]) is None:
-            cli_registry.register(module.RYTM_MACHINE_MATRIX_CLI_COMMAND)
+            cli_registry.register(getattr(module, command_attr))
         command = cli_registry.get(args[0])
 
     if command is None:
@@ -377,11 +389,11 @@ def main(argv=None):
     args = sys.argv[1:] if argv is None else list(argv)
 
     if args == ["--help"]:
-        sys.stdout.write(f"{HELP_TEXT['--help']}\n")
+        sys.stdout.write(f"{resolve_help_text('--help')}\n")
         return 0
 
     if len(args) == 2 and args[1] == "--help" and args[0] in HELP_TEXT:
-        sys.stdout.write(f"{HELP_TEXT[args[0]]}\n")
+        sys.stdout.write(f"{resolve_help_text(args[0])}\n")
         return 0
 
     registered_exit_code = _registered_command_exit_code(args)

@@ -147,9 +147,10 @@ flowchart TB
     end
 
     subgraph ReportsPkg["reports/ subpackage<br/>(was reports.py)"]
-        RInit["__init__.py<br/>~10 report builders"]
+        RInit["__init__.py<br/>11 report builders"]
         RFormatter["formatter.py<br/>PassiveReportHeader"]
         RMatrix["rytm_machine_matrix.py<br/>12-pad machine report + CliCommand"]
+        RSnapshot["rytm_snapshot_pad_compatibility.py<br/>snapshot-safe pad/machine report + CliCommand"]
     end
 
     subgraph ObservabilityPkg["observability/"]
@@ -922,6 +923,7 @@ flowchart LR
         Anchor["anchor-profile-report"]
         Coverage["behavior-parity-report"]
         RytmMatrix["rytm-12-pad-machine-matrix-report"]
+        RytmSnapshot["rytm-snapshot-pad-compatibility-report"]
         QuickStatus["quick-status"]
     end
 
@@ -1181,9 +1183,10 @@ sequenceDiagram
 ```mermaid
 flowchart TB
     subgraph ReportsPkg["reports/ subpackage"]
-        Init["__init__.py<br/>10 report builders + formatters<br/>(was reports.py before WS-S4)"]
+        Init["__init__.py<br/>11 report builders + formatters<br/>(was reports.py before WS-S4)"]
         Formatter["formatter.py<br/>PassiveReportHeader (frozen dataclass)<br/>safety_section_lines()<br/>passive_footer_lines()<br/>+ Final-annotated constants"]
         MatrixModule["rytm_machine_matrix.py<br/>12-pad machine matrix report<br/>+ registered CliCommand"]
+        SnapshotModule["rytm_snapshot_pad_compatibility.py<br/>snapshot-safe pad/machine report<br/>+ registered CliCommand"]
     end
 
     subgraph Reports["Report builders (in __init__.py)"]
@@ -1197,6 +1200,7 @@ flowchart TB
         R8["project_status_report<br/>(separate top-level project_status_report.py)"]
         R9["quick_status report"]
         R10["rytm_machine_matrix_report"]
+        R11["rytm_snapshot_pad_compatibility_report"]
     end
 
     subgraph CLICmds["CLI commands → reports"]
@@ -1210,6 +1214,7 @@ flowchart TB
         C8["project-status (separate)"]
         C9["quick-status"]
         C10["rytm-12-pad-machine-matrix-report"]
+        C11["rytm-snapshot-pad-compatibility-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1218,6 +1223,7 @@ flowchart TB
 
     Reports --> Formatter
     Reports --> MatrixModule
+    Reports --> SnapshotModule
     Formatter --> Init
     Reports --> Init
 
@@ -1487,6 +1493,7 @@ flowchart LR
         Anchor["anchor-profile-report"]
         Coverage["behavior-parity-report"]
         RytmMatrix["rytm-12-pad-machine-matrix-report"]
+        RytmSnapshot["rytm-snapshot-pad-compatibility-report"]
         Status["project-status / quick-status"]
     end
 
@@ -1509,6 +1516,7 @@ flowchart LR
     CLI --> Reports
 
     CliRegistry -->|"registered passive command:<br/>rytm-12-pad-machine-matrix-report"| CLI
+    CliRegistry -->|"registered passive command:<br/>rytm-snapshot-pad-compatibility-report"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent

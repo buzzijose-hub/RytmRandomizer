@@ -72,6 +72,22 @@ def test_format_registry_list_report_unknown_section_returns_not_found_block():
     assert lines[3].startswith("Message: Registry section not found.")
 
 
+def test_resolve_help_text_supports_static_and_dynamic_help_entries():
+    from rytm_randomizer.help_text import resolve_help_text
+    from rytm_randomizer.reports.rytm_snapshot_pad_compatibility import SAFETY_LINES
+
+    top_level_help = resolve_help_text("--help")
+    snapshot_help = resolve_help_text("rytm-snapshot-pad-compatibility-report")
+
+    assert top_level_help.startswith("RytmRandomizer passive CLI")
+    assert snapshot_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
+    )
+    assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
+        f"  {line}" for line in SAFETY_LINES
+    ]
+
+
 def test_format_registry_search_report_match_returns_match_line():
     lines = cli.format_registry_search_report("commands", "command search", KNOWN_COMMAND_KEY)
 
@@ -399,8 +415,65 @@ def test_main_rytm_machine_matrix_report_registers_cached_command_when_registry_
     assert captured.err == ""
 
 
+def test_main_rytm_snapshot_pad_compatibility_report_registers_cached_command_when_registry_empty(
+    capsys,
+):
+    from importlib import import_module
+
+    from rytm_randomizer import cli_registry
+
+    import_module("rytm_randomizer.reports.rytm_snapshot_pad_compatibility")
+
+    saved = dict(cli_registry._COMMANDS)
+    cli_registry._COMMANDS.clear()
+    try:
+        rc = cli.main(["rytm-snapshot-pad-compatibility-report"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_snapshot_pad_compatibility_report_lazy_imports_when_module_unloaded(capsys):
+    import sys
+
+    from rytm_randomizer import cli_registry
+
+    module_name = "rytm_randomizer.reports.rytm_snapshot_pad_compatibility"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-snapshot-pad-compatibility-report", None)
+    try:
+        rc = cli.main(["rytm-snapshot-pad-compatibility-report"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
+    assert captured.err == ""
+
+
 def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):
     rc = cli.main(["rytm-12-pad-machine-matrix-report", "--mutate"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert captured.err.strip() == cli.USAGE
+
+
+def test_main_rytm_snapshot_pad_compatibility_report_rejects_extra_args(capsys):
+    rc = cli.main(["rytm-snapshot-pad-compatibility-report", "--mutate"])
 
     captured = capsys.readouterr()
     assert rc == 2
