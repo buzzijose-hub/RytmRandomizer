@@ -170,7 +170,7 @@ The full path from idea to merged PR. Follow this even for a small change.
    └─ git push -u origin <your-branch>
         ├─ .githooks/pre-push runs the mechanical gates first (any tool; blocks on fail)
         ├─ post-push code review fires automatically — Claude Code (.claude/settings.json)
-        │     or codex (.codex/hooks.json); both walk the 8-step review
+        │     or codex (.codex/hooks.json); both fan out one agent per dimension
         └─ On demand / fallback: just review  ·  /agent code-reviewer  ·  /skill code-review
 
 6. Open PR
@@ -742,21 +742,26 @@ The package has explicit hardware-safety boundaries that **must not regress**:
 ## Automated post-push code review
 
 An 8-step code review runs **automatically after every `git push`** — no
-manual step, for any contributor. Three mechanisms, all calling the one
-shared [`scripts/code_review_gate.py`](scripts/code_review_gate.py), make
+manual step, for any contributor. Its agent half is run as **one targeted
+agent per dimension, in parallel** (not one wide agent), then synthesized
+into a single verdict — see the "Execution model" section of the
+[`code-review` skill](.claude/skills/code-review/SKILL.md). Three
+mechanisms, all calling the one shared
+[`scripts/code_review_gate.py`](scripts/code_review_gate.py), make
 that true:
 
 1. **`.claude/settings.json`** — a `PostToolUse` hook fires the
    `code-reviewer` agent ([`.claude/agents/code-reviewer.md`](.claude/agents/code-reviewer.md))
-   after a `git push` in the Claude Code harness. The agent walks all 8
-   steps of [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md)
-   — including Step 7 (abstraction reuse) and Step 8 (architecture-doc +
-   diagram freshness) — and returns the structured Critical / Important /
-   Minor / Abstraction / Docs verdict.
+   after a `git push` in the Claude Code harness. The agent orchestrates
+   the review by fanning out one agent per dimension of
+   [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md)
+   — covering all 8 steps including Step 7 (abstraction reuse) and Step 8
+   (architecture-doc + diagram freshness) — and synthesizes the structured
+   Critical / Important / Minor / Abstraction / Docs verdict.
 2. **`.codex/hooks.json`** — the codex analogue, also zero-setup. Its
    `PostToolUse` hook runs the shared gate script in `codex-hook` mode; the
-   script runs the mechanical gates and re-prompts codex to walk the 8-step
-   review.
+   script runs the mechanical gates and re-prompts codex to run the
+   per-dimension fan-out review.
 3. **`.githooks/pre-push`** — a universal git hook that runs the mechanical
    gates (lint + architecture + V1.34 parity) on every `git push`, by any
    tool, and **blocks the push** if they fail. Activate it once with

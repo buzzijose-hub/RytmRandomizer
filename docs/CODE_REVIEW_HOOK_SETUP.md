@@ -34,6 +34,25 @@ gates with a script, then hand off to an agent for the judgement steps.**
 The hand-off is wired differently per environment (below) — but the
 contributor never has to do anything by hand.
 
+## One agent per review dimension
+
+The agent half of the review is **not** run as a single wide agent
+covering every step. Targeted reviews go deeper — a single agent spread
+across architecture + maintainability + observability + docs + abstraction
+does each one shallowly. So the review fans out: **one targeted agent per
+dimension, dispatched in parallel** — one per row of the dimension table
+in the skill's "Execution model" section (architecture/import-direction,
+house style/type hygiene, parity + test hygiene, side effects + mido
+leakage, observability, abstraction reuse, docs + diagram freshness, and
+string-literal dispatch / env vars / maintainability / execution shape /
+learning capture), each scoped to only its dimension and the
+plan-requirement gates it owns. An
+orchestrator then **synthesizes** the per-dimension finding lists into one
+consolidated Critical/Important/Minor/Abstraction/Docs verdict and posts a
+single PR comment. The dimension→step→gate table is in
+[`code-review/SKILL.md`](../.claude/skills/code-review/SKILL.md)
+§ "Execution model". This applies to all three mechanisms below.
+
 ## One shared gate script
 
 All three mechanisms call **one** implementation of the mechanical gates:
@@ -50,8 +69,11 @@ drift between "what `just review` runs" and "what the hook runs".
 Claude Code reads [`.claude/settings.json`](../.claude/settings.json) from
 the repo root automatically. The `PostToolUse` hook there fires the
 `code-reviewer` agent on any Bash command matching `^\s*git\s+push`. The
-agent walks all 8 steps — including the judgement steps 7-8 — and emits the
-verdict. **Nothing to install**: clone the repo and it is live.
+agent **orchestrates the review by fanning out one targeted agent per
+dimension** (see § "One agent per review dimension" above), then
+synthesizes the per-dimension findings — covering all 8 steps including
+the judgement steps 7-8 — into one verdict. **Nothing to install**: clone
+the repo and it is live.
 
 If your Claude Code version does not support the `Agent` hook action type,
 the hook is ignored harmlessly — run the review manually with
@@ -70,8 +92,9 @@ script:
   tool call was a `git push`;
 - on a `git push`, runs the mechanical gates and writes a JSON response:
   - **pass** → `hookSpecificOutput.additionalContext` carrying an
-    instruction that re-prompts the codex model to perform the 8-step
-    review (Steps 7-8 included) and post the verdict;
+    instruction that re-prompts the codex model to perform the review as
+    one targeted agent per dimension (per the skill's "Execution model"
+    section), synthesize the findings, and post the verdict;
   - **fail** → `decision: "block"` with the failing-gate reason, so codex
     sees the failure and self-corrects instead of proceeding.
 
@@ -80,9 +103,9 @@ script:
 but *skipped*. So `.codex/hooks.json` cannot dispatch the `code-reviewer`
 agent directly the way `.claude/settings.json` can. The workaround is the
 `additionalContext` channel: the `command` hook runs the gate script, and
-the script injects the 8-step instruction back into the model's own
-context. Same review outcome, different plumbing — and still no human in
-the loop.
+the script injects the per-dimension fan-out review instruction back into
+the model's own context. Same review outcome, different plumbing — and
+still no human in the loop.
 
 ### 3. `.githooks/pre-push` — the universal backstop (every tool)
 
