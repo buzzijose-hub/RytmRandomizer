@@ -33,8 +33,10 @@ Before writing any code in this repo:
 4. **[`.claude/rules/codex-contribution-guide.md`](../.claude/rules/codex-contribution-guide.md)** — the short rule version
 5. **[`docs/ARCHITECTURE.md` §6 + §6.1](ARCHITECTURE.md#6-where-to-put-new-work)** — where to put new work + Device + Strategy seam
 6. **[`docs/ARCHITECTURE_DIAGRAMS.md` §§3, 4, 5, 18, 19](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy)** — Device + Strategy stack visualized
-7. **[`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md)** — the 16 gates the PR body must confirm
+7. **[`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md)** — the 18 gates the PR body must confirm
 8. **[`docs/AGENT_TASK_RECIPES.md`](AGENT_TASK_RECIPES.md)** — recipe 5 (add a device family) is the most likely codex task
+
+**Skills.** This repo's 12 reusable "learned skills" are in `.claude/skills/learned/`. Codex scans `$REPO_ROOT/.agents/skills/`, so the repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** — you auto-discover all of them, and the model auto-invokes one when a task matches its `description`. If the symlink checked out as a plain text file (a Windows clone with `core.symlinks=false`), run `git config core.symlinks true && git checkout -- .agents/skills`. The most codex-relevant skills: `cascade-merge-pattern`, `parallel-agent-bundle`, `multi-agent-work-collision-recovery`, `codex-hook-additionalcontext-reprompt`, `elektron-sysex-envelope`. See [`AGENTS.md` § Skills](../AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 
 ## Anti-pattern 1 — Stacked PR cascades
 
@@ -179,7 +181,7 @@ If codex needs a new shared helper that the envelope module doesn't have, **add 
 2. **What changes** — file-level scope + architectural shape (Protocols, dataclasses, registry entries)
 3. **Workstreams** — explicit WS table with owns / depends-on / parallel-with
 4. **Parity impact** — does this touch V1.34? If yes, justify and obtain explicit approval first
-5. **Plan-requirements conformance** — pre-fill the 16-gate checklist with expected satisfaction
+5. **Plan-requirements conformance** — pre-fill the 18-gate checklist with expected satisfaction
 6. **Test plan** — how the change will be verified
 7. **Rollback plan** — what reverts cleanly
 8. **Done criteria** — concrete done state
@@ -204,22 +206,22 @@ Commit the plan doc in the same branch. Reference it from the PR body. Reviewers
 
 For A4-specific code: `rytm_randomizer/devices/strategies/analog_four_*.py`. Not `rytm_randomizer/a4/` or `rytm_randomizer/four_track_synth/`.
 
-## Anti-pattern 7 — Omitting the 16-gate conformance checklist
+## Anti-pattern 7 — Omitting the 18-gate conformance checklist
 
-**What codex did:** PR #36's body included a 4-item "Verification" checklist instead of the 16-gate conformance from `docs/PLAN_REQUIREMENTS.md`. Reviewers had no way to verify whether the PR was actually compliant with project rules without reading the diff in full.
+**What codex did:** PR #36's body included a 4-item "Verification" checklist instead of the 18-gate conformance from `docs/PLAN_REQUIREMENTS.md`. Reviewers had no way to verify whether the PR was actually compliant with project rules without reading the diff in full.
 
-**Why it's wrong:** the 16 gates exist because they catch the things that are otherwise easy to miss in a large diff. Each gate has a specific test or convention attached. Filling the checklist forces the contributor to confirm each, in writing.
+**Why it's wrong:** the 18 gates exist because they catch the things that are otherwise easy to miss in a large diff. Each gate has a specific test or convention attached. Filling the checklist forces the contributor to confirm each, in writing.
 
 **Rule:** [`.claude/rules/pr-body-conformance-checklist.md`](../.claude/rules/pr-body-conformance-checklist.md).
 
-**Mechanical enforcement:** reviewer-enforced via the [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md) which auto-fills the 16-gate scaffold.
+**Mechanical enforcement:** reviewer-enforced via the [`.github/PULL_REQUEST_TEMPLATE.md`](../.github/PULL_REQUEST_TEMPLATE.md) which auto-fills the 18-gate scaffold.
 
 **Fix recipe:** when opening a PR, do not replace the template's checklist with your own truncated version. The PR template currently looks like:
 
 ```markdown
 ## Plan-requirements conformance
 
-Per `docs/PLAN_REQUIREMENTS.md` — every non-trivial PR must satisfy all 16 gates.
+Per `docs/PLAN_REQUIREMENTS.md` — every non-trivial PR must satisfy all 18 gates.
 Mark each `[x]`, or `[ ] N/A — <reason>`.
 
 - [ ] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
@@ -291,11 +293,14 @@ Before opening any PR under `codex/*`, codex must verify:
 - [ ] All new code uses existing abstractions (`Device` Protocol, `devices/strategies/`, `data/`, `cli_registry.py`, `observability/metrics`, `snapshot/envelope`, `reports/formatter`).
 - [ ] No cross-family private imports.
 - [ ] No fork of shared helpers (envelope, mock_midi, etc.).
-- [ ] PR body includes the full 16-gate conformance checklist (from `.github/PULL_REQUEST_TEMPLATE.md`).
+- [ ] PR body includes the full 18-gate conformance checklist (from `.github/PULL_REQUEST_TEMPLATE.md`).
 - [ ] If PR > 2k LOC / > 30 files / multi-WS / new architectural surface / V1.34-parity touch: a plan doc exists at `docs/superpowers/plans/`.
 - [ ] Architecture tests pass locally (`python -m pytest tests/architecture/ -q`).
 - [ ] Lint trio passes (`python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .`).
 - [ ] Full test suite passes (`python -m pytest`).
+- [ ] **Post-push code review (automatic).** Codex reads [`.codex/hooks.json`](../.codex/hooks.json) automatically — the codex analogue of `.claude/settings.json`. Its `PostToolUse` hook runs [`scripts/code_review_gate.py`](../scripts/code_review_gate.py) after every `git push`: the mechanical gates (lint + architecture + V1.34 parity) run, and the hook's `additionalContext` channel re-prompts you to walk the 8-step `code-review` skill (`.claude/skills/code-review/SKILL.md`) — including Step 7 (abstraction reuse: could the new code be generalized, or does an existing abstraction already cover it) and Step 8 (architecture-doc + diagram freshness). When the hook re-prompts you, do the 8-step walk and post the Critical/Important/Minor/Abstraction/Docs verdict as a PR comment. A second backstop, [`.githooks/pre-push`](../.githooks/pre-push), blocks the push if the mechanical gates fail (activate with `git config core.hooksPath .githooks` — `just install` does this). You may also run `just review` on demand. See [`docs/CODE_REVIEW_HOOK_SETUP.md`](CODE_REVIEW_HOOK_SETUP.md).
+
+> **`just` is the task runner.** `just review` / `just check` / `just pr` wrap the exact commands above. Installing `just` once makes codex's path identical to Claude Code's — but it is optional: every recipe's raw command is in the [`Justfile`](../Justfile) and spelled out in the bullets above. Install per-OS: `cargo install just` · `brew install just` · `winget install --id Casey.Just`. Full instructions: [`CONTRIBUTING.md` § Local development setup](../CONTRIBUTING.md#local-development-setup). In the dev container / a Codespace it is pre-installed.
 
 If any of these fail, fix the cause; do not add allowlist entries or work around the gates without explicit user approval.
 
@@ -304,8 +309,10 @@ If any of these fail, fix the cause; do not add allowlist entries or work around
 - [`.claude/rules/codex-contribution-guide.md`](../.claude/rules/codex-contribution-guide.md) — short rule version
 - [`.claude/rules/device-protocol-strategy.md`](../.claude/rules/device-protocol-strategy.md) — the seam codex must consume
 - [`.claude/rules/cascade-merge-pattern.md`](../.claude/rules/cascade-merge-pattern.md) — no stacked PRs
-- [`.claude/rules/pr-body-conformance-checklist.md`](../.claude/rules/pr-body-conformance-checklist.md) — the 16-gate body
+- [`.claude/rules/pr-body-conformance-checklist.md`](../.claude/rules/pr-body-conformance-checklist.md) — the 18-gate body
 - [`.claude/rules/parity-fixture-discipline.md`](../.claude/rules/parity-fixture-discipline.md) — V1.34 contract
+- [`docs/CODE_REVIEW_HOOK_SETUP.md`](CODE_REVIEW_HOOK_SETUP.md) — the automatic post-push code review (`.codex/hooks.json` + `.githooks/pre-push` + `scripts/code_review_gate.py`)
+- [`.claude/skills/code-review/SKILL.md`](../.claude/skills/code-review/SKILL.md) — the 8-step review procedure
 - [`.claude/rules/hardware-pinned-packages.md`](../.claude/rules/hardware-pinned-packages.md) — mido/rtmidi pin
 - [`.claude/rules/maximize-parallelization.md`](../.claude/rules/maximize-parallelization.md) — execution shape
 - [`.claude/rules/autonomous-agent-execution.md`](../.claude/rules/autonomous-agent-execution.md) — autonomy expectation

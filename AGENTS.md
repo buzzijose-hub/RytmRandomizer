@@ -9,16 +9,38 @@
 
 If you are operating under the OpenAI `codex` agent (or any agent working on a `codex/...` branch), read these **before any other action**:
 
-- [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md) — codex-specific pre-flight checklist mapping past anti-patterns (stacked PR cascades, parallel sibling subpackages, cross-family private-API imports, oversized PRs without a plan doc, missing 16-gate conformance checklist) to the rule that catches them.
+- [`.claude/rules/codex-contribution-guide.md`](.claude/rules/codex-contribution-guide.md) — codex-specific pre-flight checklist mapping past anti-patterns (stacked PR cascades, parallel sibling subpackages, cross-family private-API imports, oversized PRs without a plan doc, missing 18-gate conformance checklist) to the rule that catches them.
 - [`docs/CODEX_CONTRIBUTING.md`](docs/CODEX_CONTRIBUTING.md) — the longer codex-facing contribution guide with concrete fix recipes for each anti-pattern. (Authored separately; may not yet exist at the time you read this — check the link.)
 
 All other agents (Claude Code, etc.) follow the same rules; the codex guide simply surfaces the specific patterns codex has historically gotten wrong on this repo.
+
+### Post-push code review — automatic for codex, zero setup
+
+The 8-step code review runs **automatically after every `git push`** — no manual step. Codex reads [`.codex/hooks.json`](.codex/hooks.json) from the repo root automatically (the codex analogue of Claude Code's `.claude/settings.json`). Its `PostToolUse` hook runs [`scripts/code_review_gate.py`](scripts/code_review_gate.py), which executes the mechanical gates (lint + architecture + V1.34 parity) and then — via the hook's `additionalContext` channel — **re-prompts you to walk the 8-step review** in [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md), including Step 7 (abstraction reuse / genericization) and Step 8 (architecture-doc + diagram freshness). When the hook re-prompts you, do the 8-step walk and **post the verdict (with the Abstraction and Docs sections) as a PR comment.**
+
+A second backstop: [`.githooks/pre-push`](.githooks/pre-push) runs the mechanical gates on *every* `git push` (any tool) and blocks the push if they fail. It is activated by `git config core.hooksPath .githooks`, which `just install` and the dev container run for you — so after `just install` the gate is live.
+
+You can also run the full review on demand with `just review` (it env-detects the agent and dispatches it — no copy-paste). Full rationale, the 4-layer enforcement model, and how to disable a hook locally: [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
+
+### Skills — codex auto-discovers them from `.agents/skills/`
+
+This repo's reusable "learned skills" live in [`.claude/skills/learned/`](.claude/skills/learned/) (Claude Code's location). Codex does **not** read `.claude/skills/` — it scans `$REPO_ROOT/.agents/skills/`. So the repo ships a symlink: **`.agents/skills` → `.claude/skills/learned`**. Codex auto-discovers every learned skill through it (the `SKILL.md` + frontmatter format is identical for both agents), and the model auto-invokes a skill when your task matches its `description`. One source of truth — edit a skill in `.claude/skills/learned/`, and codex sees the change.
+
+**One-time setup if the symlink did not materialize.** The symlink is committed as a git symlink (mode `120000`). On Linux/macOS and in the dev container it checks out as a real symlink automatically. On a Windows clone with `core.symlinks=false` it may check out as a plain text file containing `../.claude/skills/learned` — if so, enable symlinks and re-check-out:
+
+```bash
+git config core.symlinks true
+git checkout -- .agents/skills      # re-materialize as a real symlink
+# (Windows may also need Developer Mode enabled, or run the shell as admin.)
+```
+
+Verify with `ls .agents/skills/` — it should list the learned-skill directories. If your environment genuinely cannot use symlinks, read the skills directly from [`.claude/skills/learned/`](.claude/skills/learned/); the catalog is in [`CONTRIBUTING.md` § Skill catalog](CONTRIBUTING.md#skill-catalog).
 
 ## Before you do anything
 
 1. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md)** — the developer handbook. It has 22 sections; the most load-bearing are:
    - § **Strict rules — non-negotiables** (15 hard rules every PR must satisfy)
-   - § **Plan requirements — the 16 gates every PR must satisfy**
+   - § **Plan requirements — the 18 gates every PR must satisfy**
    - § **PR bundling — one PR per logical change, not per commit**
    - § **Running tests fast** (the inner-loop pytest commands; **do not suppress `pytest-xdist` with `-o addopts=''`** unless you are in `PARITY_CAPTURE_MODE=1` — it's a 3× slowdown)
 2. **Skim [`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work)** — the "Where to put new work" table maps every change type to (module, skill).
@@ -28,7 +50,7 @@ All other agents (Claude Code, etc.) follow the same rules; the codex guide simp
    - §10 Architecture Test Enforcement Graph (what CI mechanically rejects)
    - §17 Cascade vs Bundled PR Flow (don't open stacked PRs)
    - §18 Future Codex PR Shape (target shape for dual-machine redo)
-4. **Inspect [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md)** — the 16 gates. Every PR body must include a conformance checklist.
+4. **Inspect [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md)** — the 18 gates. Every PR body must include a conformance checklist.
 
 ## What you must know about this codebase
 
@@ -52,7 +74,7 @@ RytmRandomizer/
 ├─ CONTRIBUTING.md                 ← developer handbook (read first)
 ├─ README.md
 ├─ CHANGELOG.md
-├─ Justfile                        ← task runner (`just check`, `just test`, `just lint`, `just pr`, `just watch`)
+├─ Justfile                        ← task runner (`just check`, `just test`, `just lint`, `just review`, `just pr`, `just watch`)
 ├─ pyproject.toml                  ← deps + pytest addopts (-n auto)
 ├─ .coveragerc                     ← coverage ratchet floor
 ├─ .pre-commit-config.yaml
@@ -92,16 +114,26 @@ RytmRandomizer/
 │
 ├─ scripts/                        ← Python cross-platform tools (preferred)
 │  ├─ closeout_check.py
+│  ├─ code_review_gate.py          ← shared mechanical review gate (cli / codex-hook / git-hook modes)
 │  ├─ coverage_check.py
 │  └─ coverage_ratchet.py
 ├─ Scripts/                        ← PowerShell-only tools (Windows legacy)
 │  └─ closeout_check.ps1
 │
+├─ .githooks/                      ← versioned git hooks (activate: git config core.hooksPath .githooks)
+│  └─ pre-push                     ← runs the mechanical review gate on every push, any tool
+│
+├─ .codex/
+│  └─ hooks.json                   ← codex PostToolUse hook — post-push code review (codex analogue of .claude/settings.json)
+│
+├─ .agents/
+│  └─ skills                       ← symlink → .claude/skills/learned (so codex auto-discovers the learned skills)
+│
 ├─ docs/
 │  ├─ README.md                    ← doc index
 │  ├─ ARCHITECTURE.md              ← architecture standard (§3 deps, §5 parity, §6 where to add, §6.1 Device+Strategy)
 │  ├─ ARCHITECTURE_DIAGRAMS.md     ← 27 mermaid diagrams
-│  ├─ PLAN_REQUIREMENTS.md         ← 16 mandatory gates
+│  ├─ PLAN_REQUIREMENTS.md         ← 18 mandatory gates
 │  ├─ STATUS.md                    ← recent cleanup log (hand-authored, never appended)
 │  ├─ OBSERVABILITY.md
 │  ├─ COVERAGE_POLICY.md
@@ -125,7 +157,7 @@ RytmRandomizer/
    │  ├─ hardware-pinned-packages.md        ← do not bump `mido==1.3.3` or `python-rtmidi==1.5.8` without hardware re-validation
    │  ├─ maximize-parallelization.md        ← dispatch independent tool calls / agents in one message, not serially
    │  ├─ parity-fixture-discipline.md       ← when/how to regenerate V1.34 fixtures (and when you absolutely must not)
-   │  ├─ pr-body-conformance-checklist.md   ← every PR body carries the 16-gate + strict-rules checklist verbatim
+   │  ├─ pr-body-conformance-checklist.md   ← every PR body carries the 18-gate + strict-rules checklist verbatim
    │  └─ skill-routing.md                   ← which skill applies to which task (consult before starting)
    ├─ settings.json                ← post-push code-reviewer hook config
    └─ skills/                      ← 19 task-specific skill files
@@ -138,7 +170,7 @@ RytmRandomizer/
       ├─ python-on-windows/SKILL.md     ← Windows PowerShell gotchas
       ├─ DataAnalysisGuardrails/SKILL.md
       ├─ MusicLibraryGuardrails/SKILL.md
-      └─ learned/                       ← skills extracted from past runs (10 entries)
+      └─ learned/                       ← skills extracted from past runs (12 entries; codex reads them via the .agents/skills symlink)
 ```
 
 ## Test commands (use these, not your own)
@@ -184,7 +216,7 @@ PARITY_CAPTURE_MODE=1 python -m pytest tests/test_engines_pad*.py tests/test_gro
 | [`DataAnalysisGuardrails`](.claude/skills/DataAnalysisGuardrails/SKILL.md) | Safe data analysis (no hardware I/O) |
 | [`MusicLibraryGuardrails`](.claude/skills/MusicLibraryGuardrails/SKILL.md) | Working with music-library data safely |
 
-10 additional "learned" skills (extracted from past runs) live under `.claude/skills/learned/` — see [`CONTRIBUTING.md` § Skill catalog](CONTRIBUTING.md#skill-catalog) for the full table.
+12 additional "learned" skills (extracted from past runs) live under `.claude/skills/learned/` — see [`CONTRIBUTING.md` § Skill catalog](CONTRIBUTING.md#skill-catalog) for the full table. Codex auto-discovers them via the `.agents/skills` → `.claude/skills/learned` symlink (see [§ Skills](#skills--codex-auto-discovers-them-from-agentsskills) above).
 
 ## How to open a PR (autonomous-agent compatible)
 
@@ -206,10 +238,17 @@ just check            # = `just test` + `just lint` (matches CI; the canonical p
 just test             # full pytest suite (with -n auto xdist parallelization)
 just lint             # ruff + black --check + isort --check-only
 
-# 4. Push + open PR with conformance checklist
+# 4. Code review — REQUIRED. Claude Code's post-push hook does this
+#    automatically; codex and other agents must run it explicitly.
+just review           # lint + architecture + V1.34 parity (the mechanical gates)
+                      # then walk the 8-step .claude/skills/code-review/SKILL.md by
+                      # hand (Steps 7-8 are judgment calls) and post the verdict on
+                      # the PR. See docs/CODE_REVIEW_HOOK_SETUP.md.
+
+# 5. Push + open PR with conformance checklist
 just pr               # pushes the current branch, opens a draft PR against modularize-v1.34,
                       # and pre-populates the body from `.github/PULL_REQUEST_TEMPLATE.md`
-                      # (the 16-gate checklist + strict-rules block)
+                      # (the 18-gate checklist + strict-rules block)
 ```
 
 If you need to fall back to raw commands (e.g., the dev container is unavailable), the underlying invocations are still:
@@ -226,7 +265,7 @@ PR body must include (enforced by `.claude/rules/pr-body-conformance-checklist.m
 
 - What changed and why
 - Test plan (checklist of what was verified)
-- Plan-requirements conformance checklist for all 16 gates (`[x]` or `[ ] Gate N — N/A: <reason>`)
+- Plan-requirements conformance checklist for all 18 gates (`[x]` or `[ ] Gate N — N/A: <reason>`)
 - Strict-rules confirmation block (6 lines, all `[x]` for a normal PR)
 - Link to any plan doc under `docs/superpowers/plans/`
 
@@ -237,7 +276,7 @@ PR body must include (enforced by `.claude/rules/pr-body-conformance-checklist.m
 | "What is this project?" | [`README.md`](README.md) |
 | "How do I contribute?" | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | "Where do I add X?" | [`docs/ARCHITECTURE.md` §6](docs/ARCHITECTURE.md#6-where-to-put-new-work) |
-| "What are the 16 mandatory gates?" | [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) |
+| "What are the 18 mandatory gates?" | [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) |
 | "What does the architecture look like?" | [`docs/ARCHITECTURE_DIAGRAMS.md`](docs/ARCHITECTURE_DIAGRAMS.md) (27 mermaid diagrams) |
 | "What's the latest project status?" | [`docs/STATUS.md`](docs/STATUS.md) |
 | "How does observability work?" | [`docs/OBSERVABILITY.md`](docs/OBSERVABILITY.md) |

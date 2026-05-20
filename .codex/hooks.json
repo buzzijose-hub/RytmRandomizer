@@ -1,0 +1,47 @@
+{
+  "//": [
+    "Repo-local Codex CLI hooks for RytmRandomizer — the codex analogue of",
+    ".claude/settings.json. Codex discovers this file automatically at",
+    "<repo>/.codex/hooks.json, so it is ZERO-SETUP: clone the repo and the",
+    "hook is live for any codex session. No copy-paste, no manual step.",
+    "",
+    "WHAT IT DOES: after every tool call, the PostToolUse hook runs",
+    "scripts/code_review_gate.py --mode codex-hook. The script reads this",
+    "hook's JSON payload on stdin, and:",
+    "  * no-ops silently unless the tool call was a `git push`;",
+    "  * on a `git push`, runs the mechanical review gates (lint +",
+    "    architecture + V1.34 parity) and writes a JSON response — on",
+    "    success an `additionalContext` instruction that re-prompts the",
+    "    codex model to perform the 8-step code review (Steps 7-8 included),",
+    "    on failure a `decision: block` carrying the failure reason.",
+    "",
+    "WHY a `command` hook and not an `agent` hook: codex currently runs only",
+    "`type: command` handlers — `prompt` and `agent` handlers are parsed but",
+    "SKIPPED. So the hook cannot dispatch the code-reviewer agent directly.",
+    "Instead the command hook injects the 8-step instruction back into the",
+    "model's context via `additionalContext`. Claude Code, by contrast, uses",
+    "a native `agent` hook in .claude/settings.json — same review, different",
+    "wiring. See docs/CODE_REVIEW_HOOK_SETUP.md for the full picture.",
+    "",
+    "The matcher fires on the Bash/shell tool name (codex matchers match the",
+    "tool name, not the command string); the script itself filters for",
+    "`git push`. The review is ALSO enforced server-side by the CI",
+    "`architecture` job, so even a disabled hook never lets a violation",
+    "merge."
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "^(Bash|shell|local_shell)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$(git rev-parse --show-toplevel)/scripts/code_review_gate.py\" --mode codex-hook",
+            "timeout": 240,
+            "statusMessage": "Running the post-push code-review gate"
+          }
+        ]
+      }
+    ]
+  }
+}

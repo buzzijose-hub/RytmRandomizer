@@ -97,7 +97,7 @@ What to suppress:
 - **BAD:** Agent finishes one of 4 parallel sub-agent tasks and asks "agent 1 is done; shall I dispatch agent 2?" (all 4 should have been dispatched together).
 - **BAD:** Agent commits a change locally and asks "shall I push now?" when the user said "commit and push".
 - **BAD:** Agent re-asks "I have CI red on coverage; shall I add a test?" when the user said "iterate to green" and the cause is obvious.
-- **BAD:** Agent stops after each gate of a 16-gate conformance check to ask if the gate was filled correctly.
+- **BAD:** Agent stops after each gate of an 18-gate conformance check to ask if the gate was filled correctly.
 
 ## How this composes with the other rules
 

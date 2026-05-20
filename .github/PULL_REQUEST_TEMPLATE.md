@@ -33,7 +33,7 @@ python -m ruff check . && python -m black --check --target-version=py311 . && py
 
 ## Plan-requirements conformance
 
-Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) — every non-trivial PR must satisfy all 16 gates. Mark each `[x]`, or `[ ] N/A — <reason>`.
+Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) — every non-trivial PR must satisfy all 18 gates. Mark each `[x]`, or `[ ] N/A — <reason>`.
 
 - [ ] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
 - [ ] **Gate 2** — V1.34 parity byte-identical (505 goldens / 685 pytest items).
@@ -51,6 +51,8 @@ Per [`docs/PLAN_REQUIREMENTS.md`](../docs/PLAN_REQUIREMENTS.md) — every non-tr
 - [ ] **Gate 14** — maintainability review (timing tracked, complexity bounded).
 - [ ] **Gate 15** — learning capture (extract `.claude/skills/learned/` + `.claude/rules/` where applicable).
 - [ ] **Gate 16** — execution shape (cascade-merge for autonomous multi-WS; no stacked PRs).
+- [ ] **Gate 17** — abstraction reuse: every new module/class surveyed against the existing-abstraction catalog (`Device` Protocol, `senders/`, `snapshot/envelope`, `cli_registry`, `data/`, `observability/metrics`, ...); no reimplementation; net-new shapes justified.
+- [ ] **Gate 18** — architecture-doc + diagram freshness: `docs/ARCHITECTURE.md` + `docs/ARCHITECTURE_DIAGRAMS.md` updated for any architecture-surface change; quoted counts re-verified.
 
 ## Strict rules — non-negotiables
 
