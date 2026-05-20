@@ -11,20 +11,25 @@ def _registered_command_exit_code(args):
 
     from . import cli_registry
 
-    lazy_command_modules = {
-        "rytm-12-pad-machine-matrix-report": "rytm_randomizer.reports.rytm_machine_matrix",
+    lazy_commands = {
+        "rytm-12-pad-machine-matrix-report": (
+            "rytm_randomizer.reports.rytm_machine_matrix",
+            "RYTM_MACHINE_MATRIX_CLI_COMMAND",
+        ),
         "rytm-snapshot-pad-compatibility-report": (
-            "rytm_randomizer.reports.rytm_snapshot_pad_compatibility"
+            "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
+            "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",
         ),
     }
     command = cli_registry.get(args[0])
-    module_name = lazy_command_modules.get(args[0])
-    if command is None and module_name is not None:
+    lazy_command = lazy_commands.get(args[0])
+    if command is None and lazy_command is not None:
         from importlib import import_module
 
-        import_module(module_name)
+        module_name, command_attr = lazy_command
+        module = import_module(module_name)
         if cli_registry.get(args[0]) is None:
-            raise AssertionError(f"CLI command module did not register {args[0]!r}")
+            cli_registry.register(getattr(module, command_attr))
         command = cli_registry.get(args[0])
 
     if command is None:

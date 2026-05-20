@@ -399,6 +399,29 @@ def test_main_rytm_machine_matrix_report_registers_cached_command_when_registry_
     assert captured.err == ""
 
 
+def test_main_rytm_snapshot_pad_compatibility_report_registers_cached_command_when_registry_empty(
+    capsys,
+):
+    from importlib import import_module
+
+    from rytm_randomizer import cli_registry
+
+    import_module("rytm_randomizer.reports.rytm_snapshot_pad_compatibility")
+
+    saved = dict(cli_registry._COMMANDS)
+    cli_registry._COMMANDS.clear()
+    try:
+        rc = cli.main(["rytm-snapshot-pad-compatibility-report"])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
+    assert captured.err == ""
+
+
 def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):
     rc = cli.main(["rytm-12-pad-machine-matrix-report", "--mutate"])
 
