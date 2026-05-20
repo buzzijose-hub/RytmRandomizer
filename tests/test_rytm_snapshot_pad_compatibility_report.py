@@ -41,7 +41,8 @@ def test_build_report_blocks_pad_10_without_tom_engine_leakage() -> None:
     assert pad_10.mutable_machine_count == 0
     assert pad_10.machine_selectable_count == 8
     assert "XT Classic" not in pad_10.machine_labels
-    assert "not snapshot-mutable yet" in pad_10.readiness_reason
+    assert "but none are snapshot-mutable yet." in pad_10.readiness_reason
+    assert "none are not snapshot-mutable" not in pad_10.readiness_reason
 
 
 def test_format_report_is_passive_and_operator_facing() -> None:

@@ -170,6 +170,18 @@ def test_rytm_snapshot_pad_compatibility_report_help_exits_zero_and_matches_fixt
     assert result.stderr == ""
 
 
+def test_rytm_snapshot_pad_compatibility_help_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_snapshot_pad_compatibility import SAFETY_LINES
+
+    result = run_cli("rytm-snapshot-pad-compatibility-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
 def test_inspect_command_help_exits_zero_and_matches_fixture():
     result = run_cli("inspect-command", "--help")
 

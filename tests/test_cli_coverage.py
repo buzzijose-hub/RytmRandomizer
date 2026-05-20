@@ -72,6 +72,22 @@ def test_format_registry_list_report_unknown_section_returns_not_found_block():
     assert lines[3].startswith("Message: Registry section not found.")
 
 
+def test_resolve_help_text_supports_static_and_dynamic_help_entries():
+    from rytm_randomizer.help_text import resolve_help_text
+    from rytm_randomizer.reports.rytm_snapshot_pad_compatibility import SAFETY_LINES
+
+    top_level_help = resolve_help_text("--help")
+    snapshot_help = resolve_help_text("rytm-snapshot-pad-compatibility-report")
+
+    assert top_level_help.startswith("RytmRandomizer passive CLI")
+    assert snapshot_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
+    )
+    assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
+        f"  {line}" for line in SAFETY_LINES
+    ]
+
+
 def test_format_registry_search_report_match_returns_match_line():
     lines = cli.format_registry_search_report("commands", "command search", KNOWN_COMMAND_KEY)
 

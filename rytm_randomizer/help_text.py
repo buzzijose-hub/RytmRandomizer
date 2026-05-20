@@ -20,6 +20,32 @@ USAGE = (
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
 )
 
+
+def _safety_block(lines):
+    return "\n".join(f"  {line}" for line in lines)
+
+
+def _rytm_snapshot_pad_compatibility_report_help():
+    from .reports.rytm_snapshot_pad_compatibility import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report --help
+
+Behavior:
+  Prints the passive Analog Rytm MK2 snapshot-pad compatibility report.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def resolve_help_text(key):
+    text = HELP_TEXT[key]
+    return text() if callable(text) else text
+
+
 HELP_TEXT = {
     "--help": """RytmRandomizer passive CLI
 
@@ -264,22 +290,7 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required""",
-    "rytm-snapshot-pad-compatibility-report": """RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report
-
-Usage:
-  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
-  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report --help
-
-Behavior:
-  Prints the passive Analog Rytm MK2 snapshot-pad compatibility report.
-
-Safety:
-  passive/read-only
-  no MIDI sending
-  no port opening
-  no command execution
-  no hardware mutation
-  no hardware required""",
+    "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:

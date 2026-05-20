@@ -22,6 +22,9 @@ SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
     "no MIDI sending",
     "no port opening",
+    "no command execution",
+    "no hardware mutation",
+    "no hardware required",
 )
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
@@ -65,10 +68,7 @@ def _readiness_reason(mutable_count: int, selectable_count: int) -> str:
             f"Snapshot-ready: {mutable_count} V1.34-backed legal machine(s); "
             f"{selectable_count} legal machine(s) are selectable only."
         )
-    return (
-        "Blocked: legal machines are selectable on this pad, but none are "
-        "not snapshot-mutable yet."
-    )
+    return "Blocked: legal machines are selectable on this pad, but none are snapshot-mutable yet."
 
 
 def _pad_report(pad: int, track_code: str, label: str) -> RytmSnapshotPadCompatibilityPadReport:

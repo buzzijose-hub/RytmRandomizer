@@ -2,7 +2,7 @@
 
 import sys
 
-from .help_text import HELP_TEXT, USAGE
+from .help_text import HELP_TEXT, USAGE, resolve_help_text
 
 
 def _registered_command_exit_code(args):
@@ -389,11 +389,11 @@ def main(argv=None):
     args = sys.argv[1:] if argv is None else list(argv)
 
     if args == ["--help"]:
-        sys.stdout.write(f"{HELP_TEXT['--help']}\n")
+        sys.stdout.write(f"{resolve_help_text('--help')}\n")
         return 0
 
     if len(args) == 2 and args[1] == "--help" and args[0] in HELP_TEXT:
-        sys.stdout.write(f"{HELP_TEXT[args[0]]}\n")
+        sys.stdout.write(f"{resolve_help_text(args[0])}\n")
         return 0
 
     registered_exit_code = _registered_command_exit_code(args)
