@@ -4,6 +4,7 @@ Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-21: Rytm style snapshot routing PR58 prepared after the passive style target vector layer. The passive preview now bridges a captured Rytm kit snapshot and a selected style target into per-pad readiness, favored zones, and legal machine candidates without rendering mutation values or sending MIDI.
 - 2026-05-21: Style target vector PR57 prepared after the passive style-profile foundation. Added a passive numeric target-vector layer for future snapshot mutation planning, with CLI/report visibility and no MIDI or hardware behavior.
 - 2026-05-21: Style profile foundation PR8 started from the clean post-PR #55 base. Added a passive techno style-profile vocabulary that maps underground aesthetics to existing scenes, Rytm focus lanes, Analog Four focus lanes, and later snapshot/audio-analysis hooks. The new style commands are metadata-only and send no MIDI.
 - 2026-05-20: Rytm snapshot mutation operator preview PR7 started from the clean post-PR #54 base. The passive snapshot mutation preview can now grow an optional event-detail mode that prints capped mock CC rows for the selected `.syx` kit slot, making the guarded snapshot planner output inspectable by pad/profile/parameter/channel/CC/value while still opening no MIDI ports and sending no hardware messages.
