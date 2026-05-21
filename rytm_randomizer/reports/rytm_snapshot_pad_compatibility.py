@@ -10,6 +10,8 @@ from typing import Final
 
 from ..cli_registry import CliCommand, register
 from ..data.rytm_machine_catalog import (
+    MACHINE_SELECTABLE,
+    MUTABLE_V134,
     RYTM_PAD_CAPABILITIES,
     RytmMachineProfile,
     allowed_machine_profiles_for_pad,
@@ -73,9 +75,9 @@ def _readiness_reason(mutable_count: int, selectable_count: int) -> str:
 
 def _pad_report(pad: int, track_code: str, label: str) -> RytmSnapshotPadCompatibilityPadReport:
     profiles = allowed_machine_profiles_for_pad(pad)
-    mutable_count = sum(1 for profile in profiles if profile.support_status == "mutable_v134")
+    mutable_count = sum(1 for profile in profiles if profile.support_status == MUTABLE_V134)
     selectable_count = sum(
-        1 for profile in profiles if profile.support_status == "machine_selectable"
+        1 for profile in profiles if profile.support_status == MACHINE_SELECTABLE
     )
     return RytmSnapshotPadCompatibilityPadReport(
         pad=pad,

@@ -1,10 +1,10 @@
 """Gate 10 — string-literal dispatch hygiene.
 
 Per ``docs/PLAN_REQUIREMENTS.md`` Gate 10, no module may dispatch on the
-canonical mode / intensity / page / mutation-kind / pad-1-machine string
-values via inline string equality. The single source of truth is
-``rytm_randomizer/data/modes.py`` (introduced by WS-M3), which exports each
-concept as both a ``Literal[...]`` type and a ``Final`` tuple of strings.
+canonical mode / intensity / page / mutation-kind / pad-1-machine /
+Rytm-machine-support-status string values via inline string equality. The
+single source of truth is the matching ``rytm_randomizer/data`` module, which
+exports each concept as a ``Literal[...]`` type and ``Final`` constants.
 
 This test walks every ``rytm_randomizer/**/*.py`` module and parses it with
 ``ast``, then fails if any ``ast.Compare`` node uses ``==`` or ``!=`` against
@@ -82,6 +82,9 @@ _GUARDED_STRINGS: Final[frozenset[str]] = frozenset(
         "hard",
         "classic",
         "fm",
+        # Rytm machine support status
+        "mutable_v134",
+        "machine_selectable",
     }
 )
 
@@ -159,7 +162,8 @@ def test_no_unallowlisted_string_literal_mode_dispatch() -> None:
     assert not violations, (
         "New string-equality dispatch on canonical mode/intensity/page/"
         "mutation-kind/pad-1-machine strings is forbidden by Gate 10. "
-        "Import the constant from ``rytm_randomizer.data.modes`` instead. "
+        "Import the constant from the matching ``rytm_randomizer.data`` "
+        "module instead. "
         "If this site is truly a legacy holdover, add it to "
         "``_KNOWN_LEGACY_SITES`` with reviewer approval.\n"
         "  Violations:\n    " + "\n    ".join(violations)

@@ -39,6 +39,11 @@ from .analog_rytm_snapshot_decoder import (
     AnalogRytmSnapshotDecoder,
     RytmKitSnapshot,
 )
+from .analog_rytm_snapshot_routing import (
+    RytmSnapshotMachineRoute,
+    RytmSnapshotMachineRoutingResult,
+    route_rytm_snapshot_machine_values,
+)
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
@@ -57,4 +62,7 @@ __all__ = [
     "RytmKitSnapshot",
     "RytmMutationPlan",
     "RytmPlanEvent",
+    "RytmSnapshotMachineRoute",
+    "RytmSnapshotMachineRoutingResult",
+    "route_rytm_snapshot_machine_values",
 ]

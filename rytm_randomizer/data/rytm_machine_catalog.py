@@ -8,6 +8,8 @@ from types import MappingProxyType
 from typing import Final, Literal, TypeAlias
 
 SupportStatus: TypeAlias = Literal["mutable_v134", "machine_selectable"]
+MUTABLE_V134: Final[SupportStatus] = "mutable_v134"
+MACHINE_SELECTABLE: Final[SupportStatus] = "machine_selectable"
 
 
 @dataclass(frozen=True)
@@ -58,55 +60,51 @@ UT_MACHINE_KEYS: Final = ("ut_noise", "ut_impulse")
 
 
 RYTM_MACHINE_PROFILES: Final = (
-    RytmMachineProfile("bd_hard", "BD Hard", "BD", 0, "mutable_v134", ("kick",)),
-    RytmMachineProfile("bd_classic", "BD Classic", "BD", 1, "mutable_v134", ("kick",)),
-    RytmMachineProfile("sd_hard", "SD Hard", "SD", 2, "mutable_v134", ("snare",)),
-    RytmMachineProfile("sd_classic", "SD Classic", "SD", 3, "mutable_v134", ("snare",)),
-    RytmMachineProfile("rs_hard", "RS Hard", "RS", 4, "machine_selectable", ("rim",)),
-    RytmMachineProfile("rs_classic", "RS Classic", "RS", 5, "machine_selectable", ("rim",)),
-    RytmMachineProfile("cp_classic", "CP Classic", "CP", 6, "machine_selectable", ("clap",)),
-    RytmMachineProfile("bt_classic", "BT Classic", "BT", 7, "machine_selectable", ("tom",)),
-    RytmMachineProfile("xt_classic", "XT Classic", "XT", 8, "machine_selectable", ("tom",)),
-    RytmMachineProfile("ch_classic", "CH Classic", "CH", 9, "machine_selectable", ("hihat",)),
-    RytmMachineProfile("oh_classic", "OH Classic", "OH", 10, "machine_selectable", ("hihat",)),
-    RytmMachineProfile("cy_classic", "CY Classic", "CY", 11, "machine_selectable", ("cymbal",)),
-    RytmMachineProfile("cb_classic", "CB Classic", "CB", 12, "machine_selectable", ("cowbell",)),
-    RytmMachineProfile("bd_fm", "BD FM", "BD", 13, "mutable_v134", ("kick", "fm")),
-    RytmMachineProfile("sd_fm", "SD FM", "SD", 14, "mutable_v134", ("snare", "fm")),
+    RytmMachineProfile("bd_hard", "BD Hard", "BD", 0, MUTABLE_V134, ("kick",)),
+    RytmMachineProfile("bd_classic", "BD Classic", "BD", 1, MUTABLE_V134, ("kick",)),
+    RytmMachineProfile("sd_hard", "SD Hard", "SD", 2, MUTABLE_V134, ("snare",)),
+    RytmMachineProfile("sd_classic", "SD Classic", "SD", 3, MUTABLE_V134, ("snare",)),
+    RytmMachineProfile("rs_hard", "RS Hard", "RS", 4, MACHINE_SELECTABLE, ("rim",)),
+    RytmMachineProfile("rs_classic", "RS Classic", "RS", 5, MACHINE_SELECTABLE, ("rim",)),
+    RytmMachineProfile("cp_classic", "CP Classic", "CP", 6, MACHINE_SELECTABLE, ("clap",)),
+    RytmMachineProfile("bt_classic", "BT Classic", "BT", 7, MACHINE_SELECTABLE, ("tom",)),
+    RytmMachineProfile("xt_classic", "XT Classic", "XT", 8, MACHINE_SELECTABLE, ("tom",)),
+    RytmMachineProfile("ch_classic", "CH Classic", "CH", 9, MACHINE_SELECTABLE, ("hihat",)),
+    RytmMachineProfile("oh_classic", "OH Classic", "OH", 10, MACHINE_SELECTABLE, ("hihat",)),
+    RytmMachineProfile("cy_classic", "CY Classic", "CY", 11, MACHINE_SELECTABLE, ("cymbal",)),
+    RytmMachineProfile("cb_classic", "CB Classic", "CB", 12, MACHINE_SELECTABLE, ("cowbell",)),
+    RytmMachineProfile("bd_fm", "BD FM", "BD", 13, MUTABLE_V134, ("kick", "fm")),
+    RytmMachineProfile("sd_fm", "SD FM", "SD", 14, MUTABLE_V134, ("snare", "fm")),
+    RytmMachineProfile("ut_noise", "UT Noise", "UT", 15, MACHINE_SELECTABLE, ("utility", "noise")),
     RytmMachineProfile(
-        "ut_noise", "UT Noise", "UT", 15, "machine_selectable", ("utility", "noise")
+        "ut_impulse", "UT Impulse", "UT", 16, MACHINE_SELECTABLE, ("utility", "impulse")
     ),
     RytmMachineProfile(
-        "ut_impulse", "UT Impulse", "UT", 16, "machine_selectable", ("utility", "impulse")
+        "ch_metallic", "CH Metallic", "CH", 17, MACHINE_SELECTABLE, ("hihat", "metallic")
     ),
     RytmMachineProfile(
-        "ch_metallic", "CH Metallic", "CH", 17, "machine_selectable", ("hihat", "metallic")
+        "oh_metallic", "OH Metallic", "OH", 18, MACHINE_SELECTABLE, ("hihat", "metallic")
     ),
     RytmMachineProfile(
-        "oh_metallic", "OH Metallic", "OH", 18, "machine_selectable", ("hihat", "metallic")
+        "cy_metallic", "CY Metallic", "CY", 19, MACHINE_SELECTABLE, ("cymbal", "metallic")
     ),
     RytmMachineProfile(
-        "cy_metallic", "CY Metallic", "CY", 19, "machine_selectable", ("cymbal", "metallic")
+        "cb_metallic", "CB Metallic", "CB", 20, MACHINE_SELECTABLE, ("cowbell", "metallic")
     ),
+    RytmMachineProfile("bd_plastic", "BD Plastic", "BD", 21, MUTABLE_V134, ("kick",)),
+    RytmMachineProfile("bd_silky", "BD Silky", "BD", 22, MUTABLE_V134, ("kick",)),
+    RytmMachineProfile("sd_natural", "SD Natural", "SD", 23, MACHINE_SELECTABLE, ("snare",)),
+    RytmMachineProfile("hh_basic", "HH Basic", "HH", 24, MACHINE_SELECTABLE, ("hihat",)),
+    RytmMachineProfile("cy_ride", "CY Ride", "CY", 25, MACHINE_SELECTABLE, ("cymbal", "ride")),
+    RytmMachineProfile("bd_sharp", "BD Sharp", "BD", 26, MUTABLE_V134, ("kick",)),
+    RytmMachineProfile("dual_vco", "SY Dual VCO", "SY", 28, MACHINE_SELECTABLE, ("synth",)),
+    RytmMachineProfile("sy_chip", "SY Chip", "SY", 29, MACHINE_SELECTABLE, ("synth",)),
+    RytmMachineProfile("bd_acoustic", "BD Acoustic", "BD", 30, MUTABLE_V134, ("kick", "acoustic")),
     RytmMachineProfile(
-        "cb_metallic", "CB Metallic", "CB", 20, "machine_selectable", ("cowbell", "metallic")
+        "sd_acoustic", "SD Acoustic", "SD", 31, MACHINE_SELECTABLE, ("snare", "acoustic")
     ),
-    RytmMachineProfile("bd_plastic", "BD Plastic", "BD", 21, "mutable_v134", ("kick",)),
-    RytmMachineProfile("bd_silky", "BD Silky", "BD", 22, "mutable_v134", ("kick",)),
-    RytmMachineProfile("sd_natural", "SD Natural", "SD", 23, "machine_selectable", ("snare",)),
-    RytmMachineProfile("hh_basic", "HH Basic", "HH", 24, "machine_selectable", ("hihat",)),
-    RytmMachineProfile("cy_ride", "CY Ride", "CY", 25, "machine_selectable", ("cymbal", "ride")),
-    RytmMachineProfile("bd_sharp", "BD Sharp", "BD", 26, "mutable_v134", ("kick",)),
-    RytmMachineProfile("dual_vco", "SY Dual VCO", "SY", 28, "machine_selectable", ("synth",)),
-    RytmMachineProfile("sy_chip", "SY Chip", "SY", 29, "machine_selectable", ("synth",)),
-    RytmMachineProfile(
-        "bd_acoustic", "BD Acoustic", "BD", 30, "mutable_v134", ("kick", "acoustic")
-    ),
-    RytmMachineProfile(
-        "sd_acoustic", "SD Acoustic", "SD", 31, "machine_selectable", ("snare", "acoustic")
-    ),
-    RytmMachineProfile("sy_raw", "SY Raw", "SY", 32, "mutable_v134", ("synth",)),
-    RytmMachineProfile("hh_lab", "HH Lab", "HH", 33, "machine_selectable", ("hihat",)),
+    RytmMachineProfile("sy_raw", "SY Raw", "SY", 32, MUTABLE_V134, ("synth",)),
+    RytmMachineProfile("hh_lab", "HH Lab", "HH", 33, MACHINE_SELECTABLE, ("hihat",)),
 )
 
 RYTM_MACHINE_PROFILES_BY_KEY: Final[Mapping[str, RytmMachineProfile]] = MappingProxyType(
