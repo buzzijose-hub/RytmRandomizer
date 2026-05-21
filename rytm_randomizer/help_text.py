@@ -25,6 +25,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
+    "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -220,6 +222,31 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _dual_machine_style_mutation_intent_report_help():
+    from .reports.dual_machine_style_mutation_intent import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: dual-machine-style-mutation-intent-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key>
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --rytm-slot N
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --a4-slot N
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --json
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report --help
+
+Behavior:
+  Reads one local Analog Rytm MK2 SysEx file and one local Analog Four MK2 SysEx
+  file, selects supported kit snapshots, and prints passive rig-level style
+  mutation intent. Detailed pad/track intent rows are included in --json for
+  future GUI/analyzer consumers, but no mutation values are rendered.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _style_profile_report_help():
     from .reports.style_profiles import SAFETY_LINES
 
@@ -286,6 +313,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli list-style-profiles
@@ -341,6 +369,8 @@ Commands:
                      Print passive Analog Four style mutation intent for a SysEx file.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
+  dual-machine-style-mutation-intent-report
+                     Print passive dual-machine style mutation intent for Rytm and A4 SysEx files.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   style-profile-report
@@ -553,6 +583,7 @@ Safety:
     "analog-four-style-snapshot-routing-report": _analog_four_style_snapshot_routing_report_help,
     "analog-four-style-mutation-intent-report": _analog_four_style_mutation_intent_report_help,
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
+    "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "style-profile-report": _style_profile_report_help,
     "style-target-report": _style_target_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
