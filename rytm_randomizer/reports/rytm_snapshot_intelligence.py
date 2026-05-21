@@ -269,6 +269,8 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
             slot = int(argv[2])
         except ValueError as exc:
             raise ValueError("--slot must be an integer") from exc
+        if slot != 0:
+            raise ValueError("--slot currently supports only 0 (first supported snapshot)")
     return {"sysex_path": sysex_path, "slot": slot}
 
 
@@ -295,11 +297,16 @@ def _handle_cli_report(*, sysex_path: Path, slot: int) -> int:
     return 0
 
 
+def _format_cli_error(exc: Exception) -> str:
+    return f"Error: {exc}"
+
+
 RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND: Final[CliCommand] = CliCommand(
     name="rytm-snapshot-intelligence-report",
     summary="Print passive Rytm snapshot intelligence for a SysEx file.",
     args_parser=_parse_cli_args,
     handler=_handle_cli_report,
+    error_formatter=_format_cli_error,
 )
 
 register(RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND)
