@@ -20,8 +20,8 @@ USAGE = (
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
-    "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
-    "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
+    "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json] | "
+    "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--json] | "
     "inspect-command <key> | "
@@ -679,6 +679,28 @@ def test_rytm_style_snapshot_routing_report_command_reads_syx_file(tmp_path):
     assert result.stderr == ""
 
 
+def test_rytm_style_snapshot_routing_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"RYTMJSON")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-snapshot-routing-report",
+        str(path),
+        "birmingham_pressure",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "RYTMJSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["pads"][0]["pad"] == 1
+    assert result.stderr == ""
+
+
 def test_rytm_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path):
     from conftest import rytm_real_layout_kit_payload
 
@@ -711,6 +733,26 @@ def test_analog_four_style_snapshot_routing_report_command_reads_syx_file(tmp_pa
     assert "Style target: industrial_dark" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_snapshot_routing_report_command_can_emit_json(tmp_path):
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4JSON".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-snapshot-routing-report",
+        str(path),
+        "industrial_dark",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "A4JSON"
+    assert parsed["style_key"] == "industrial_dark"
+    assert parsed["tracks"][0]["track"] == 1
     assert result.stderr == ""
 
 

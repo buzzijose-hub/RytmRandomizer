@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -35,7 +36,7 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     source_module=SOURCE_MODULE,
 )
 _USAGE: Final[str] = (
-    "rytm-style-snapshot-routing-report usage: " "<syx-path> <style-key> [--slot N]"
+    "rytm-style-snapshot-routing-report usage: " "<syx-path> <style-key> [--slot N] [--json]"
 )
 _DEFAULT_SLOT: Final[int] = 0
 
@@ -118,6 +119,54 @@ def format_rytm_style_snapshot_routing_report(
     return passive_report_lines(_HEADER, _body_lines(plan))
 
 
+def _candidate_json(candidate: RytmStyleMachineCandidate) -> dict[str, object]:
+    return {
+        "machine_key": candidate.machine_key,
+        "label": candidate.label,
+        "machine_value": candidate.machine_value,
+        "support_status": candidate.support_status,
+        "score": candidate.score,
+    }
+
+
+def to_rytm_style_snapshot_routing_json(
+    plan: RytmStyleSnapshotRoutingPlan,
+) -> dict[str, object]:
+    """Return deterministic machine-readable Rytm style routing data."""
+
+    return {
+        "kit_name": plan.kit_name,
+        "slot": plan.slot,
+        "style_key": plan.style_key,
+        "favored_zones": list(plan.favored_zones),
+        "ready_pad_count": plan.ready_pad_count,
+        "blocked_pad_count": plan.blocked_pad_count,
+        "partial_snapshot_mutation_ready": plan.partial_snapshot_mutation_ready,
+        "pads": [
+            {
+                "pad": pad_plan.pad,
+                "track_code": pad_plan.track_code,
+                "label": pad_plan.label,
+                "current_machine_value": pad_plan.current_machine_value,
+                "current_machine_key": pad_plan.current_machine_key,
+                "profile_key": pad_plan.profile_key,
+                "route_ready": pad_plan.route_ready,
+                "readiness_reason": pad_plan.readiness_reason,
+                "favored_zones": list(pad_plan.favored_zones),
+                "mutable_machine_candidates": [
+                    _candidate_json(candidate) for candidate in pad_plan.mutable_machine_candidates
+                ],
+                "compatible_machine_candidates": [
+                    _candidate_json(candidate)
+                    for candidate in pad_plan.compatible_machine_candidates
+                ],
+            }
+            for pad_plan in (plan.pads_by_pad[pad] for pad in sorted(plan.pads_by_pad))
+        ],
+        "safety": list(SAFETY_LINES),
+    }
+
+
 def _parse_nonnegative_int(value: str, *, option: str) -> int:
     try:
         parsed = int(value)
@@ -134,9 +183,13 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     sysex_path = Path(argv[0])
     style_key = argv[1]
     slot = _DEFAULT_SLOT
+    json_output = False
     remaining = list(argv[2:])
     while remaining:
         option = remaining.pop(0)
+        if option == "--json":
+            json_output = True
+            continue
         if len(remaining) < 1:
             raise ValueError(_USAGE)
         value = remaining.pop(0)
@@ -144,14 +197,36 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
             slot = _parse_nonnegative_int(value, option=option)
         else:
             raise ValueError(_USAGE)
-    return {"sysex_path": sysex_path, "style_key": style_key, "slot": slot}
+    return {
+        "sysex_path": sysex_path,
+        "style_key": style_key,
+        "slot": slot,
+        "json_output": json_output,
+    }
 
 
-def _handle_cli_report(*, sysex_path: Path, style_key: str, slot: int) -> int:
+def _handle_cli_report(
+    *,
+    sysex_path: Path,
+    style_key: str,
+    slot: int,
+    json_output: bool = False,
+) -> int:
     try:
         snapshots = decode_supported_rytm_snapshots_from_path(sysex_path)
         snapshot = select_supported_rytm_snapshot(sysex_path, slot, snapshots)
-        lines = format_rytm_style_snapshot_routing_report(snapshot, style_key=style_key)
+        plan = plan_rytm_style_snapshot_routes(snapshot, style_key)
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_rytm_style_snapshot_routing_json(plan),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_rytm_style_snapshot_routing_report(plan, style_key=style_key)
     except (OSError, ValueError, NotImplementedError) as exc:
         sys.stderr.write(f"Error: {exc}\n")
         return 2
@@ -180,4 +255,5 @@ __all__ = [
     "SAFETY_LINES",
     "SOURCE_MODULE",
     "format_rytm_style_snapshot_routing_report",
+    "to_rytm_style_snapshot_routing_json",
 ]

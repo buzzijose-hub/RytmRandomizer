@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -37,7 +38,7 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     source_module=SOURCE_MODULE,
 )
 _USAGE: Final[str] = (
-    "analog-four-style-snapshot-routing-report usage: " "<syx-path> <style-key> [--slot N]"
+    "analog-four-style-snapshot-routing-report usage: " "<syx-path> <style-key> [--slot N] [--json]"
 )
 _DEFAULT_SLOT: Final[int] = 0
 
@@ -95,6 +96,38 @@ def format_analog_four_style_snapshot_routing_report(
     return passive_report_lines(_HEADER, _body_lines(plan))
 
 
+def to_analog_four_style_snapshot_routing_json(
+    plan: AnalogFourStyleSnapshotRoutingPlan,
+) -> dict[str, object]:
+    """Return deterministic machine-readable Analog Four style routing data."""
+
+    return {
+        "kit_name": plan.kit_name,
+        "slot": plan.slot,
+        "style_key": plan.style_key,
+        "style_focus": list(plan.style_focus),
+        "favored_zones": list(plan.favored_zones),
+        "ready_track_count": plan.ready_track_count,
+        "blocked_track_count": plan.blocked_track_count,
+        "partial_snapshot_mutation_ready": plan.partial_snapshot_mutation_ready,
+        "tracks": [
+            {
+                "track": track_plan.track,
+                "role_key": track_plan.role_key,
+                "label": track_plan.label,
+                "route_ready": track_plan.route_ready,
+                "readiness_reason": track_plan.readiness_reason,
+                "favored_zones": list(track_plan.favored_zones),
+                "score": track_plan.score,
+            }
+            for track_plan in (
+                plan.tracks_by_track[track] for track in sorted(plan.tracks_by_track)
+            )
+        ],
+        "safety": list(SAFETY_LINES),
+    }
+
+
 def _parse_nonnegative_int(value: str, *, option: str) -> int:
     try:
         parsed = int(value)
@@ -111,9 +144,13 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     sysex_path = Path(argv[0])
     style_key = argv[1]
     slot = _DEFAULT_SLOT
+    json_output = False
     remaining = list(argv[2:])
     while remaining:
         option = remaining.pop(0)
+        if option == "--json":
+            json_output = True
+            continue
         if len(remaining) < 1:
             raise ValueError(_USAGE)
         value = remaining.pop(0)
@@ -121,7 +158,12 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
             slot = _parse_nonnegative_int(value, option=option)
         else:
             raise ValueError(_USAGE)
-    return {"sysex_path": sysex_path, "style_key": style_key, "slot": slot}
+    return {
+        "sysex_path": sysex_path,
+        "style_key": style_key,
+        "slot": slot,
+        "json_output": json_output,
+    }
 
 
 def decode_supported_analog_four_snapshots_from_path(
@@ -164,14 +206,28 @@ def select_supported_analog_four_snapshot(
     )
 
 
-def _handle_cli_report(*, sysex_path: Path, style_key: str, slot: int) -> int:
+def _handle_cli_report(
+    *,
+    sysex_path: Path,
+    style_key: str,
+    slot: int,
+    json_output: bool = False,
+) -> int:
     try:
         snapshots = decode_supported_analog_four_snapshots_from_path(sysex_path)
         snapshot = select_supported_analog_four_snapshot(sysex_path, slot, snapshots)
-        lines = format_analog_four_style_snapshot_routing_report(
-            snapshot,
-            style_key=style_key,
-        )
+        plan = plan_analog_four_style_snapshot_routes(snapshot, style_key)
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_analog_four_style_snapshot_routing_json(plan),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_analog_four_style_snapshot_routing_report(plan, style_key=style_key)
     except (OSError, ValueError, NotImplementedError) as exc:
         sys.stderr.write(f"Error: {exc}\n")
         return 2
@@ -202,4 +258,5 @@ __all__ = [
     "decode_supported_analog_four_snapshots_from_path",
     "format_analog_four_style_snapshot_routing_report",
     "select_supported_analog_four_snapshot",
+    "to_analog_four_style_snapshot_routing_json",
 ]

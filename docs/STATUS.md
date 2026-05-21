@@ -4,6 +4,7 @@ Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-21: Style routing JSON payloads prepared locally. The Rytm, Analog Four, and dual-machine style-routing reports can now emit deterministic `--json` payloads for future GUI/audio-analyzer consumers while preserving the passive text reports and keeping mutation/hardware paths gated.
 - 2026-05-21: Dual-machine style routing report prepared locally. One passive CLI command can now read a Rytm kit dump plus an Analog Four kit dump, apply a shared style target, and summarize whole-rig readiness as operator text or deterministic `--json` while keeping the detailed mutation and hardware paths gated.
 - 2026-05-21: Analog Four style routing report prepared locally. The passive CLI can now read a local Analog Four kit dump and print track-level style-routing readiness for a selected style target while keeping A4 offsets candidate-only and sending no MIDI.
 - 2026-05-21: Analog Four style snapshot routing foundation prepared locally after the Rytm style-routing bridge. A new passive strategy maps an A4 kit snapshot plus style target into four track roles, favored sound-design zones, and readiness state while preserving the existing candidate-only offset block for real mutation.

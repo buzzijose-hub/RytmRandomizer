@@ -1,3 +1,4 @@
+import json
 from types import MappingProxyType
 
 import pytest
@@ -169,6 +170,30 @@ def test_style_snapshot_routing_report_is_operator_facing_and_passive():
     assert "In-memory only: True" in lines
 
 
+def test_style_snapshot_routing_report_serializes_json_contract():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
+        plan_rytm_style_snapshot_routes,
+    )
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import (
+        to_rytm_style_snapshot_routing_json,
+    )
+
+    plan = plan_rytm_style_snapshot_routes(_style_snapshot(), "birmingham_pressure")
+
+    payload = to_rytm_style_snapshot_routing_json(plan)
+
+    assert payload["style_key"] == "birmingham_pressure"
+    assert payload["kit_name"] == "STYLEKIT"
+    assert payload["ready_pad_count"] == 3
+    assert payload["blocked_pad_count"] == 1
+    assert payload["pads"][0]["pad"] == 1
+    assert payload["pads"][0]["route_ready"] is True
+    assert payload["pads"][0]["mutable_machine_candidates"][0]["machine_key"] == "bd_fm"
+    assert payload["pads"][3]["pad"] == 10
+    assert payload["pads"][3]["mutable_machine_candidates"] == []
+    assert payload["safety"][0] == "passive/read-only"
+
+
 def test_style_snapshot_routing_report_rejects_unknown_style_safely():
     from rytm_randomizer.reports.rytm_style_snapshot_routing import (
         format_rytm_style_snapshot_routing_report,
@@ -233,11 +258,13 @@ def test_style_snapshot_routing_cli_parser_accepts_slot():
         "sysex_path": Path("kit.syx"),
         "style_key": "birmingham_pressure",
         "slot": 0,
+        "json_output": False,
     }
-    assert _parse_cli_args(["kit.syx", "warehouse_peak", "--slot", "3"]) == {
+    assert _parse_cli_args(["kit.syx", "warehouse_peak", "--slot", "3", "--json"]) == {
         "sysex_path": Path("kit.syx"),
         "style_key": "warehouse_peak",
         "slot": 3,
+        "json_output": True,
     }
 
 
@@ -284,6 +311,35 @@ def test_style_snapshot_routing_cli_handler_reports_plan(
     assert "RytmRandomizer passive Rytm style snapshot routing" in captured.out
     assert "Kit: STYLE" in captured.out
     assert "Style target: birmingham_pressure" in captured.out
+    assert captured.err == ""
+
+
+def test_style_snapshot_routing_cli_handler_reports_json(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import _handle_cli_report
+
+    payload = rytm_real_layout_kit_payload(name=b"JSONSTYLE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    rc = _handle_cli_report(
+        sysex_path=path,
+        style_key="birmingham_pressure",
+        slot=0,
+        json_output=True,
+    )
+
+    captured = capsys.readouterr()
+    result = json.loads(captured.out)
+    assert rc == 0
+    assert result["kit_name"] == "JSONSTYLE"
+    assert result["style_key"] == "birmingham_pressure"
+    assert result["pads"][0]["pad"] == 1
+    assert "RytmRandomizer passive Rytm" not in captured.out
     assert captured.err == ""
 
 

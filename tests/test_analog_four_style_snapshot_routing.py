@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from types import MappingProxyType
 
 import pytest
@@ -131,6 +132,30 @@ def test_analog_four_style_routing_report_is_operator_facing_and_passive():
     assert "- no port opening" in lines
 
 
+def test_analog_four_style_routing_report_serializes_json_contract():
+    from rytm_randomizer.devices.strategies import plan_analog_four_style_snapshot_routes
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import (
+        to_analog_four_style_snapshot_routing_json,
+    )
+
+    plan = plan_analog_four_style_snapshot_routes(
+        _snapshot(offsets_promoted=False),
+        "industrial_dark",
+    )
+
+    payload = to_analog_four_style_snapshot_routing_json(plan)
+
+    assert payload["style_key"] == "industrial_dark"
+    assert payload["kit_name"] == "A4STYLE"
+    assert payload["ready_track_count"] == 0
+    assert payload["blocked_track_count"] == 4
+    assert payload["tracks"][0]["track"] == 1
+    assert payload["tracks"][0]["role_key"] == "bass_foundation"
+    assert payload["tracks"][0]["route_ready"] is False
+    assert "candidate-only" in payload["tracks"][0]["readiness_reason"]
+    assert payload["safety"][0] == "passive/read-only"
+
+
 def test_analog_four_style_routing_report_accepts_prebuilt_empty_plan():
     from rytm_randomizer.devices.strategies import (
         AnalogFourStyleSnapshotRoutingPlan,
@@ -181,11 +206,13 @@ def test_analog_four_style_routing_cli_parser_accepts_slot():
         "sysex_path": Path("kit.syx"),
         "style_key": "industrial_dark",
         "slot": 0,
+        "json_output": False,
     }
-    assert _parse_cli_args(["kit.syx", "mills_hypnotic", "--slot", "2"]) == {
+    assert _parse_cli_args(["kit.syx", "mills_hypnotic", "--slot", "2", "--json"]) == {
         "sysex_path": Path("kit.syx"),
         "style_key": "mills_hypnotic",
         "slot": 2,
+        "json_output": True,
     }
 
 
@@ -223,6 +250,32 @@ def test_analog_four_style_routing_cli_handler_reports_plan(
     assert "RytmRandomizer passive Analog Four style snapshot routing" in captured.out
     assert "Kit: A4LIVE" in captured.out
     assert "Style target: industrial_dark" in captured.out
+    assert captured.err == ""
+
+
+def test_analog_four_style_routing_cli_handler_reports_json(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import _handle_cli_report
+
+    path = tmp_path / "a4.syx"
+    path.write_bytes(_framed_a4_payload(b"A4JSON"))
+
+    rc = _handle_cli_report(
+        sysex_path=path,
+        style_key="industrial_dark",
+        slot=0,
+        json_output=True,
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["kit_name"] == "A4JSON"
+    assert payload["style_key"] == "industrial_dark"
+    assert payload["tracks"][0]["track"] == 1
+    assert "RytmRandomizer passive Analog Four" not in captured.out
     assert captured.err == ""
 
 

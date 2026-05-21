@@ -1,14 +1,14 @@
 # Summary
 
-Adds the passive style-target-to-snapshot bridge: style profile data now has normalized target vectors, operators can inspect those targets from the passive CLI, a mock-safe Rytm style snapshot routing report explains which pads in a captured kit are ready to mutate toward a style goal, Analog Four gains the matching passive track-role routing foundation plus an operator-facing report command, and a dual-machine report summarizes whole-rig readiness for one Rytm dump plus one A4 dump with optional JSON output. No MIDI is sent and no hardware is touched.
+Adds the passive style-target-to-snapshot bridge: style profile data now has normalized target vectors, operators can inspect those targets from the passive CLI, a mock-safe Rytm style snapshot routing report explains which pads in a captured kit are ready to mutate toward a style goal, Analog Four gains the matching passive track-role routing foundation plus an operator-facing report command, and the Rytm/A4/dual-machine reports can emit deterministic JSON for future GUI/audio-analyzer consumers. No MIDI is sent and no hardware is touched.
 
 ## What Changed
 
 - Added style target vectors and passive style-target report/inspection CLI surfaces.
 - Added a pure Rytm style snapshot routing strategy under `devices/strategies/` that combines snapshot machine facts, pad-machine compatibility, and style target emphasis.
-- Added a passive `rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N]` CLI command for operator-facing snapshot readiness.
+- Added a passive `rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]` CLI command for operator-facing and machine-readable snapshot readiness.
 - Added a pure Analog Four style snapshot routing strategy that maps a candidate kit snapshot and style target into four A4 track roles, favored zones, and explicit candidate-offset readiness.
-- Added a passive `analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N]` CLI command for operator-facing A4 track readiness.
+- Added a passive `analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]` CLI command for operator-facing and machine-readable A4 track readiness.
 - Added a passive `dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--json]` CLI command for rig-level style readiness.
 - Updated README, status notes, architecture diagrams, CLI help fixtures, and plan docs for the new passive surface.
 - Covered the new report and routing branches, including CLI parsing/error behavior and empty-plan formatting.
@@ -40,10 +40,10 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
 python scripts/code_review_gate.py --mode cli
 ```
 
-- [x] Local pytest passes: 2707 passed, 4 skipped.
+- [x] Local pytest passes: 2713 passed, 4 skipped.
 - [x] `tests/architecture/` passes: 255 passed, 1 skipped.
 - [x] Lint trio clean: ruff, black, isort.
-- [x] Coverage stays >=95% pure-branch: whole package 98.19%; new Rytm/A4/dual-machine routing reports have focused coverage.
+- [x] Coverage stays >=95% pure-branch: whole package 98.20%; new Rytm/A4/dual-machine routing reports have focused coverage.
 - [x] 685/685 V1.34 parity items byte-identical via `scripts/code_review_gate.py --mode cli`.
 - [x] No new dead code: vulture clean on touched style/Rytm/A4 routing modules and tests.
 - [ ] CI matrix green on all 3 OSes - N/A until this local branch is pushed after PR #56 lands.
@@ -88,11 +88,12 @@ Per `docs/PLAN_REQUIREMENTS.md`:
 - `docs/superpowers/plans/2026-05-21-analog-four-style-snapshot-routing-pr59.md`
 - `docs/superpowers/plans/2026-05-21-analog-four-style-routing-report-pr60.md`
 - `docs/superpowers/plans/2026-05-21-dual-machine-style-routing-report-pr61.md`
+- `docs/superpowers/plans/2026-05-21-style-routing-json-payloads-pr62.md`
 
 ## Reviewer Notes
 
 - This remains passive/mock-safe. It plans and reports readiness only; parameter mutation and MIDI rendering remain future slices.
 - Analog Four style routing intentionally stays blocked for real mutation while A4 offsets are candidate-only; the report exposes that state clearly for operators.
-- The dual-machine report is a compact rig-level summary with optional JSON; detailed per-pad/per-track rows remain in the single-machine reports.
+- The single-machine reports now expose detailed per-pad/per-track JSON; the dual-machine report remains the compact rig-level summary with optional JSON.
 - Local `python -m pyright ...` could not run because `pyright` is not installed in this environment.
 - PR #56 is still blocking publish at the time this body was drafted, so CI status is intentionally left N/A until this branch can be pushed from a clean base.
