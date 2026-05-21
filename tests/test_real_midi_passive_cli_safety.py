@@ -31,6 +31,7 @@ PASSIVE_CLI_COMMANDS = (
     ("dual-machine-style-kit-selection-report", "--help"),
     ("dual-machine-style-selection-mock-preview-report", "--help"),
     ("dual-machine-style-live-audition-report", "--help"),
+    ("dual-machine-style-performance-set-plan-report", "--help"),
     ("dual-machine-style-mutation-mock-preview-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
@@ -64,6 +65,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("dual-machine-style-kit-selection-report", "--help"),
     ("dual-machine-style-selection-mock-preview-report", "--help"),
     ("dual-machine-style-live-audition-report", "--help"),
+    ("dual-machine-style-performance-set-plan-report", "--help"),
     ("dual-machine-style-mutation-mock-preview-report", "--help"),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (

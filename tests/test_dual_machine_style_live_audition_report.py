@@ -159,35 +159,6 @@ def test_live_audition_formats_single_machine_scopes_and_event_limit_variants(
     assert "- No mock rows available because the selected preview is not ready." in a4_lines
 
 
-def test_live_audition_formats_analog_four_mock_event_row():
-    from rytm_randomizer.devices.strategies.analog_four_style_mutation_mock_preview import (
-        AnalogFourStyleMutationMockPreviewEvent,
-    )
-    from rytm_randomizer.reports.dual_machine_style_live_audition import (
-        _format_analog_four_event_row,
-    )
-
-    line = _format_analog_four_event_row(
-        AnalogFourStyleMutationMockPreviewEvent(
-            track=2,
-            role_key="lead",
-            zone="filter",
-            parameter="Filter 1 Frequency",
-            channel=1,
-            control=18,
-            value=93,
-            target_bias=18,
-            mutation_depth="groove",
-            target_direction="higher",
-        )
-    )
-
-    assert line == (
-        "- Analog Four Track 2 | lead | filter | Filter 1 Frequency | "
-        "ch 1 | CC18 -> 93 | bias 18 | depth groove | direction higher"
-    )
-
-
 def test_live_audition_formats_operator_report_with_event_details(tmp_path: Path):
     from rytm_randomizer.reports.dual_machine_style_live_audition import (
         build_dual_machine_style_live_audition_report,

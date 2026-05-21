@@ -96,6 +96,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.dual_machine_style_live_audition",
             "DUAL_MACHINE_STYLE_LIVE_AUDITION_CLI_COMMAND",
         ),
+        "dual-machine-style-performance-set-plan-report": (
+            "rytm_randomizer.reports.dual_machine_style_performance_set_plan",
+            "DUAL_MACHINE_STYLE_PERFORMANCE_SET_PLAN_CLI_COMMAND",
+        ),
         "style-profile-report": (
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",

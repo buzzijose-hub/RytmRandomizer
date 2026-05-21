@@ -14,12 +14,6 @@ from ..data.style_discovery import (
     DEFAULT_STYLE_DISCOVERY_AMOUNT,
     style_discovery_policy,
 )
-from ..devices.strategies.analog_four_style_mutation_mock_preview import (
-    AnalogFourStyleMutationMockPreviewEvent,
-)
-from ..devices.strategies.analog_rytm_style_mutation_mock_preview import (
-    RytmStyleMutationMockPreviewEvent,
-)
 from .dual_machine_style_kit_selection import normalize_selection_scope
 from .dual_machine_style_selection_mock_preview import (
     SAFETY_LINES as SELECTION_MOCK_PREVIEW_SAFETY_LINES,
@@ -27,6 +21,7 @@ from .dual_machine_style_selection_mock_preview import (
 from .dual_machine_style_selection_mock_preview import (
     DualMachineStyleSelectionMockPreviewPlan,
     build_dual_machine_style_selection_mock_preview_report,
+    format_dual_machine_style_selection_mock_preview_event_rows,
     to_dual_machine_style_selection_mock_preview_json,
 )
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
@@ -174,40 +169,6 @@ def build_dual_machine_style_live_audition_report(
     )
 
 
-def _format_rytm_event_row(row: RytmStyleMutationMockPreviewEvent) -> str:
-    return (
-        f"- Rytm Pad {row.pad} | profile {row.profile_key} | {row.zone} | "
-        f"{row.parameter} | ch {row.channel} | CC{row.control} -> {row.value} | "
-        f"window {row.window_low}-{row.window_high} | depth {row.mutation_depth} | "
-        f"direction {row.target_direction}"
-    )
-
-
-def _format_analog_four_event_row(row: AnalogFourStyleMutationMockPreviewEvent) -> str:
-    return (
-        f"- Analog Four Track {row.track} | {row.role_key} | {row.zone} | "
-        f"{row.parameter} | ch {row.channel} | CC{row.control} -> {row.value} | "
-        f"bias {row.target_bias} | depth {row.mutation_depth} | "
-        f"direction {row.target_direction}"
-    )
-
-
-def _event_rows(plan: DualMachineStyleSelectionMockPreviewPlan) -> tuple[str, ...]:
-    rytm_rows = (
-        ()
-        if plan.rytm_preview is None
-        else tuple(_format_rytm_event_row(row) for row in plan.rytm_preview.event_rows)
-    )
-    analog_four_rows = (
-        ()
-        if plan.analog_four_preview is None
-        else tuple(
-            _format_analog_four_event_row(row) for row in plan.analog_four_preview.event_rows
-        )
-    )
-    return rytm_rows + analog_four_rows
-
-
 def _event_preview_lines(
     entry: DualMachineStyleLiveAuditionEntry,
     *,
@@ -216,7 +177,7 @@ def _event_preview_lines(
     if event_limit < 0:
         raise ValueError("event_limit must be >= 0")
 
-    rows = _event_rows(entry.preview_plan)
+    rows = format_dual_machine_style_selection_mock_preview_event_rows(entry.preview_plan)
     lines = [f"Event preview for {entry.style_key}:"]
     if not rows:
         lines.append("- No mock rows available because the selected preview is not ready.")

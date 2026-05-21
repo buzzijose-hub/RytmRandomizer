@@ -53,6 +53,11 @@ USAGE = (
     "--rytm <syx-path> [--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
+    "dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] "
+    "--rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -456,6 +461,23 @@ def test_dual_machine_style_live_audition_report_help_exits_zero_and_safety_matc
     assert "RytmRandomizer passive CLI: dual-machine-style-live-audition-report" in help_text
     assert "<style-key> [<style-key> ...]" in help_text
     assert "--rank N" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_performance_set_plan_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_performance_set_plan import (
+        SAFETY_LINES,
+    )
+
+    result = run_cli("dual-machine-style-performance-set-plan-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-performance-set-plan-report" in help_text
+    assert "--total-minutes N" in help_text
+    assert "--discovery-start N" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -1653,6 +1675,13 @@ def test_readme_mentions_dual_machine_style_live_audition_report_command():
 
     assert "dual-machine-style-live-audition-report" in text
     assert "live audition" in text
+
+
+def test_readme_mentions_dual_machine_style_performance_set_plan_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "dual-machine-style-performance-set-plan-report" in text
+    assert "performance set plan" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

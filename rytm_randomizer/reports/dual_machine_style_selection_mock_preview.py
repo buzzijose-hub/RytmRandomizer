@@ -264,6 +264,14 @@ def _event_rows(plan: DualMachineStyleSelectionMockPreviewPlan) -> tuple[str, ..
     return rytm_rows + analog_four_rows
 
 
+def format_dual_machine_style_selection_mock_preview_event_rows(
+    plan: DualMachineStyleSelectionMockPreviewPlan,
+) -> tuple[str, ...]:
+    """Return deterministic event rows shared by selection-based reports."""
+
+    return _event_rows(plan)
+
+
 def _event_preview_lines(
     plan: DualMachineStyleSelectionMockPreviewPlan,
     *,
@@ -592,5 +600,6 @@ __all__ = [
     "SOURCE_MODULE",
     "build_dual_machine_style_selection_mock_preview_report",
     "format_dual_machine_style_selection_mock_preview_report",
+    "format_dual_machine_style_selection_mock_preview_event_rows",
     "to_dual_machine_style_selection_mock_preview_json",
 ]

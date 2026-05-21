@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -254,6 +255,50 @@ def test_selection_mock_preview_formats_analog_four_mock_event_row():
         "- Analog Four Track 1 | bassline | filter | Filter 1 Frequency | "
         "ch 0 | CC18 -> 96 | bias 22 | depth groove | direction higher"
     )
+
+
+def test_selection_mock_preview_formats_shared_event_rows(tmp_path: Path):
+    from rytm_randomizer.devices.strategies.analog_four_style_mutation_mock_preview import (
+        AnalogFourStyleMutationMockPreviewEvent,
+    )
+    from rytm_randomizer.reports.dual_machine_style_selection_mock_preview import (
+        build_dual_machine_style_selection_mock_preview_report,
+        format_dual_machine_style_selection_mock_preview_event_rows,
+    )
+
+    rytm_path, a4_path = _bank_files(tmp_path)
+    plan = build_dual_machine_style_selection_mock_preview_report(
+        "jose_core_techno",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert plan.analog_four_preview is not None
+    analog_four_preview = replace(
+        plan.analog_four_preview,
+        event_rows=(
+            AnalogFourStyleMutationMockPreviewEvent(
+                track=1,
+                role_key="bassline",
+                zone="filter",
+                parameter="Filter 1 Frequency",
+                channel=0,
+                control=18,
+                value=96,
+                target_bias=22,
+                mutation_depth="groove",
+                target_direction="higher",
+            ),
+        ),
+    )
+    plan = replace(plan, analog_four_preview=analog_four_preview)
+
+    rows = format_dual_machine_style_selection_mock_preview_event_rows(plan)
+
+    assert any(row.startswith("- Rytm Pad 1 |") for row in rows)
+    assert (
+        "- Analog Four Track 1 | bassline | filter | Filter 1 Frequency | "
+        "ch 0 | CC18 -> 96 | bias 22 | depth groove | direction higher"
+    ) in rows
 
 
 def test_selection_mock_preview_serializes_json_contract(tmp_path: Path):
