@@ -1305,23 +1305,50 @@ def _live_session_launch_checklist(
     )
 
 
-def _live_session_suggested_commands() -> tuple[str, ...]:
+def _live_session_machine_path_flags(scope: str) -> str:
+    if scope == "analog-four-only":
+        return "--analog-four <analog-four-syx-path> --scope analog-four-only"
+    if scope == "rytm-only":
+        return "--rytm <rytm-syx-path> --scope rytm-only"
+    return "--rytm <rytm-syx-path> --analog-four <analog-four-syx-path> --scope dual"
+
+
+def _live_session_plan_flags(plan: DualMachineStylePerformanceSetPlan) -> str:
+    return (
+        f"--rank {plan.selection_rank} --total-minutes {plan.total_minutes} "
+        f"--discovery-start {plan.discovery_start} --discovery-end {plan.discovery_end}"
+    )
+
+
+def _live_session_suggested_commands(
+    manifest: StylePerformanceArcRehearsalManifestReport,
+) -> tuple[str, ...]:
+    arc_key = manifest.selected_entry.arc.key
+    plan = manifest.selected_set_plan
+    base_args = (
+        f"{arc_key} {_live_session_machine_path_flags(plan.scope)} "
+        f"{_live_session_plan_flags(plan)}"
+    )
     return (
         (
             "python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report "
-            "--rytm <syx-path> [--analog-four <syx-path>] --events --limit 8"
+            f"{base_args} --events --limit 8"
         ),
         (
             "python -m rytm_randomizer.cli style-performance-arc-rehearsal-manifest-report "
-            "--rytm <syx-path> [--analog-four <syx-path>] --events --limit 8"
+            f"{base_args} --events --limit 8"
         ),
         (
             "python -m rytm_randomizer.cli style-performance-arc-audition-packet-report "
-            "--rytm <syx-path> [--analog-four <syx-path>] --events --limit 8"
+            f"{base_args} --events --limit 8"
         ),
         (
             "python -m rytm_randomizer.cli style-performance-arc-readiness-report "
-            "--rytm <syx-path> [--analog-four <syx-path>] --limit 8"
+            f"{base_args} --limit 8"
+        ),
+        (
+            "python -m rytm_randomizer.cli style-performance-arc-set-plan-report "
+            f"{base_args} --events --limit 8"
         ),
     )
 
@@ -1400,7 +1427,7 @@ def build_style_performance_arc_live_session_packet_report(
     return StylePerformanceArcLiveSessionPacketReport(
         rehearsal_manifest=manifest,
         launch_checklist=_live_session_launch_checklist(manifest),
-        suggested_commands=_live_session_suggested_commands(),
+        suggested_commands=_live_session_suggested_commands(manifest),
         segments=tuple(
             _live_session_segment_from_rehearsal(segment) for segment in manifest.segments
         ),
@@ -1566,9 +1593,9 @@ def _parse_positive_int(value: str, *, option: str) -> int:
     return parsed
 
 
-def _pop_option_value(remaining: list[str]) -> str:
+def _pop_option_value(remaining: list[str], *, usage: str = _SET_PLAN_USAGE) -> str:
     if not remaining:
-        raise ValueError(_SET_PLAN_USAGE)
+        raise ValueError(usage)
     return remaining.pop(0)
 
 
@@ -1600,7 +1627,7 @@ def _parse_arc_set_plan_cli_args(argv: Sequence[str]) -> dict[str, object]:
             continue
         if option not in _SET_PLAN_OPTIONS:
             raise ValueError(_SET_PLAN_USAGE)
-        value = _pop_option_value(remaining)
+        value = _pop_option_value(remaining, usage=_SET_PLAN_USAGE)
         if option == "--rytm":
             rytm_sysex_path = Path(value)
         elif option == "--analog-four":
@@ -1659,7 +1686,7 @@ def _parse_arc_readiness_cli_args(argv: Sequence[str]) -> dict[str, object]:
             continue
         if option not in _READINESS_OPTIONS:
             raise ValueError(_READINESS_USAGE)
-        value = _pop_option_value(remaining)
+        value = _pop_option_value(remaining, usage=_READINESS_USAGE)
         if option == "--rytm":
             rytm_sysex_path = Path(value)
         elif option == "--analog-four":
@@ -1721,7 +1748,7 @@ def _parse_arc_audition_packet_cli_args(argv: Sequence[str]) -> dict[str, object
             continue
         if option not in _AUDITION_PACKET_OPTIONS:
             raise ValueError(_AUDITION_PACKET_USAGE)
-        value = _pop_option_value(remaining)
+        value = _pop_option_value(remaining, usage=_AUDITION_PACKET_USAGE)
         if option == "--rytm":
             rytm_sysex_path = Path(value)
         elif option == "--analog-four":
@@ -1784,7 +1811,7 @@ def _parse_arc_rehearsal_manifest_cli_args(argv: Sequence[str]) -> dict[str, obj
             continue
         if option not in _REHEARSAL_MANIFEST_OPTIONS:
             raise ValueError(_REHEARSAL_MANIFEST_USAGE)
-        value = _pop_option_value(remaining)
+        value = _pop_option_value(remaining, usage=_REHEARSAL_MANIFEST_USAGE)
         if option == "--rytm":
             rytm_sysex_path = Path(value)
         elif option == "--analog-four":
@@ -1847,7 +1874,7 @@ def _parse_arc_live_session_packet_cli_args(argv: Sequence[str]) -> dict[str, ob
             continue
         if option not in _LIVE_SESSION_PACKET_OPTIONS:
             raise ValueError(_LIVE_SESSION_PACKET_USAGE)
-        value = _pop_option_value(remaining)
+        value = _pop_option_value(remaining, usage=_LIVE_SESSION_PACKET_USAGE)
         if option == "--rytm":
             rytm_sysex_path = Path(value)
         elif option == "--analog-four":
