@@ -238,6 +238,44 @@ def test_build_report_rejects_non_rytm_snapshot() -> None:
         build_rytm_snapshot_intelligence_report(object())
 
 
+def test_rytm_snapshot_intelligence_cli_arg_parser_accepts_slot_zero() -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _parse_cli_args
+
+    defaulted = _parse_cli_args(["kit.syx"])
+    parsed = _parse_cli_args(["kit.syx", "--slot", "0"])
+
+    assert defaulted["sysex_path"] == Path("kit.syx")
+    assert defaulted["slot"] == 0
+    assert parsed["sysex_path"] == Path("kit.syx")
+    assert parsed["slot"] == 0
+
+
+def test_rytm_snapshot_intelligence_cli_error_formatter_is_operator_facing() -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _format_cli_error
+
+    assert _format_cli_error(ValueError("bad slot")) == "Error: bad slot"
+
+
+@pytest.mark.parametrize(
+    ("argv", "message"),
+    [
+        ([], "requires <syx-path>"),
+        (["kit.syx", "--slot"], "usage"),
+        (["kit.syx", "--bank", "0"], "usage"),
+        (["kit.syx", "--slot", "not-int"], "must be an integer"),
+        (["kit.syx", "--slot", "1"], "supports only 0"),
+    ],
+)
+def test_rytm_snapshot_intelligence_cli_arg_parser_rejects_invalid_args(
+    argv: list[str],
+    message: str,
+) -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _parse_cli_args
+
+    with pytest.raises(ValueError, match=message):
+        _parse_cli_args(argv)
+
+
 def test_rytm_snapshot_intelligence_cli_handler_reads_first_supported_frame(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -272,3 +310,21 @@ def test_rytm_snapshot_intelligence_cli_handler_reports_expected_errors(
     assert captured.out == ""
     assert "SysEx file does not exist" in captured.err
     assert "Traceback" not in captured.err
+
+
+def test_rytm_snapshot_intelligence_cli_handler_reports_when_no_supported_frame(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
+
+    path = tmp_path / "not-rytm.syx"
+    path.write_bytes(bytes([0xF0, 0x00, 0x20, 0x3C, 0x05, 0x00, 0xF7]))
+
+    rc = _handle_cli_report(sysex_path=path, slot=0)
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "No supported Analog Rytm kit snapshot found" in captured.err
+    assert "frame 1:" in captured.err

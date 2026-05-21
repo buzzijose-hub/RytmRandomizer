@@ -44,11 +44,25 @@ def test_extract_sysex_payloads_rejects_empty_input() -> None:
         extract_sysex_payloads(b"")
 
 
+def test_extract_sysex_payloads_rejects_empty_frame() -> None:
+    from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
+
+    with pytest.raises(ValueError, match="empty payload"):
+        extract_sysex_payloads(bytes([0xF0, 0xF7]))
+
+
 def test_extract_sysex_payloads_rejects_unclosed_frame() -> None:
     from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
 
     with pytest.raises(ValueError, match="without a closing F7"):
         extract_sysex_payloads(bytes([0xF0, 0x00, 0x20, 0x3C]))
+
+
+def test_extract_sysex_payloads_rejects_incomplete_end_framing() -> None:
+    from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
+
+    with pytest.raises(ValueError, match="framing is incomplete"):
+        extract_sysex_payloads(bytes([0x00, 0x20, 0x3C, 0xF7]))
 
 
 def test_read_sysex_payloads_from_path_rejects_missing_file(tmp_path: Path) -> None:
@@ -63,6 +77,24 @@ def test_read_sysex_payloads_from_path_rejects_directory(tmp_path: Path) -> None
 
     with pytest.raises(ValueError, match="not a file"):
         read_sysex_payloads_from_path(tmp_path)
+
+
+def test_read_sysex_payloads_from_path_wraps_read_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.snapshot.sysex_file import read_sysex_payloads_from_path
+
+    path = tmp_path / "kit.syx"
+    path.write_bytes(b"not reached")
+
+    def _raise_os_error(self: Path) -> bytes:
+        raise OSError("permission denied")
+
+    monkeypatch.setattr(Path, "read_bytes", _raise_os_error)
+
+    with pytest.raises(ValueError, match="Could not read SysEx file"):
+        read_sysex_payloads_from_path(path)
 
 
 def test_read_sysex_payloads_from_path_reads_payloads(tmp_path: Path) -> None:
