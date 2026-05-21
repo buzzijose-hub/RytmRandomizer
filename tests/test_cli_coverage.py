@@ -97,6 +97,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
         "dual-machine-style-mutation-mock-preview-report"
     )
     dual_style_kit_readiness_help = resolve_help_text("dual-machine-style-kit-readiness-report")
+    dual_style_kit_selection_help = resolve_help_text("dual-machine-style-kit-selection-report")
     style_target_help = resolve_help_text("style-target-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
@@ -150,6 +151,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert dual_style_kit_readiness_help.startswith(
         "RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report"
+    )
+    assert dual_style_kit_selection_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-kit-selection-report"
     )
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
@@ -805,6 +809,50 @@ def test_main_dual_machine_style_kit_readiness_report_lazy_imports_when_unloaded
     assert "RytmRandomizer passive dual-machine style kit readiness" in captured.out
     assert "PAIRRYTM" in captured.out
     assert "PAIRA4" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_kit_selection_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"SELECTRY")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_kit_selection"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-kit-selection-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-kit-selection-report",
+                "jose_core_techno",
+                "--rytm",
+                str(rytm_path),
+                "--scope",
+                "rytm-only",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style kit selection" in captured.out
+    assert "SELECTRY" in captured.out
+    assert "leave Analog Four unchanged" in captured.out
     assert captured.err == ""
 
 

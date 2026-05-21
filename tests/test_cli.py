@@ -41,6 +41,10 @@ USAGE = (
     "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--discovery N] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -397,6 +401,20 @@ def test_dual_machine_style_kit_readiness_report_help_exits_zero_and_safety_matc
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_selection_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_kit_selection import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-kit-selection-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-kit-selection-report" in help_text
+    assert "--scope dual|rytm-only|analog-four-only|a4-only" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
