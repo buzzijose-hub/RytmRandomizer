@@ -190,6 +190,7 @@ python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report "G:
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --json   # machine-readable Analog Four mock-preview readiness for future GUI/analyzer use
 python -m rytm_randomizer.cli analog-four-kit-catalog-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --limit 16   # passive Analog Four decoded kit catalog
 python -m rytm_randomizer.cli analog-four-kit-catalog-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --json   # machine-readable Analog Four kit catalog for future GUI/analyzer use
+python -m rytm_randomizer.cli analog-four-style-kit-readiness-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --limit 16   # passive per-kit Analog Four style-readiness sweep
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0 --discovery 45   # passive rig-level style routing
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --discovery 95 --json   # machine-readable rig style routing for future GUI/analyzer use
 python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --rytm-slot 7 --a4-slot 0 --discovery 45   # passive rig-level mutation intent
@@ -225,6 +226,8 @@ The Analog Four style snapshot routing report mirrors that bridge for the A4 sid
 The Analog Four style mutation mock-preview report can now intake real saved-kit SysEx frames from `.syx` dumps, unpack the shared Elektron payload, and display the decoded kit name while still keeping A4 offsets candidate-only. Once offsets are promoted, the same path turns A4 style-intent rows into mock CC rows for CC-safe zones such as oscillator level, filter frequency, envelope decay, modulation speed, and send level. NRPN-only drive rows are listed as deferred instead of pretending they can be rendered as CC. It remains passive and opens no MIDI port.
 
 The Analog Four kit catalog report is the operator-friendly intake view for full C6 kit dumps. It lists decoded kit slots and names, distinguishes saved-kit from candidate layouts, shows raw/unpacked byte counts, and marks every decoded kit as candidate-only until offset promotion is validated. Use `--limit N` for a quick stage-readiness scan or `--json` for future GUI/audio-analyzer consumers.
+
+The Analog Four style kit-readiness report layers style intent over that catalog. It scans every decoded kit in an A4 dump for a style target such as `jose_core_techno`, reports per-kit preview readiness, and explains which kits remain blocked by candidate-only offsets before any real mutation path is enabled.
 
 The dual-machine style snapshot routing report sits above the two single-machine reports. It reads one Rytm kit dump and one Analog Four kit dump, applies the same style target to both, and summarizes whole-rig readiness so a future live workflow can decide whether the Rytm, the A4, or both machines can safely move toward the selected techno aesthetic.
 
