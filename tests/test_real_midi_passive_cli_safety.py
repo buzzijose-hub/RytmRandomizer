@@ -24,7 +24,10 @@ PASSIVE_CLI_COMMANDS = (
     ("rytm-snapshot-intelligence-report", "--help"),
     ("rytm-snapshot-mutation-preview-report", "--help"),
     ("rytm-style-mutation-mock-preview-report", "--help"),
+    ("rytm-style-kit-readiness-report", "--help"),
     ("analog-four-style-mutation-mock-preview-report", "--help"),
+    ("analog-four-style-kit-readiness-report", "--help"),
+    ("dual-machine-style-kit-readiness-report", "--help"),
     ("dual-machine-style-mutation-mock-preview-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
@@ -51,7 +54,10 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("rytm-snapshot-intelligence-report", "--help"),
     ("rytm-snapshot-mutation-preview-report", "--help"),
     ("rytm-style-mutation-mock-preview-report", "--help"),
+    ("rytm-style-kit-readiness-report", "--help"),
     ("analog-four-style-mutation-mock-preview-report", "--help"),
+    ("analog-four-style-kit-readiness-report", "--help"),
+    ("dual-machine-style-kit-readiness-report", "--help"),
     ("dual-machine-style-mutation-mock-preview-report", "--help"),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (

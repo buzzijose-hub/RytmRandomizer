@@ -60,6 +60,7 @@ from .analog_rytm_snapshot_decoder import (
     RytmKitSnapshot,
     RytmSnapshotMachineFact,
     RytmSnapshotMachineFacts,
+    rytm_snapshot_payload_fingerprint,
 )
 from .analog_rytm_snapshot_routing import (
     RytmSnapshotMachineRoute,
@@ -141,4 +142,5 @@ __all__ = [
     "plan_rytm_style_mutation_render_plan",
     "plan_rytm_style_snapshot_routes",
     "route_rytm_snapshot_machine_values",
+    "rytm_snapshot_payload_fingerprint",
 ]

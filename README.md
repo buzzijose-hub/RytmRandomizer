@@ -182,6 +182,8 @@ python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report "G:\ANALOG 
 python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --discovery 95 --json   # machine-readable Rytm style render-plan metadata
 python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" jose_core_techno --slot 7 --discovery 45 --events --limit 24   # passive Rytm style mock CC rows; no MIDI send
 python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" jose_core_techno --json   # machine-readable Rytm style mock preview for future GUI/analyzer use
+python -m rytm_randomizer.cli rytm-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" jose_core_techno --limit 16   # passive per-kit Rytm style-readiness sweep
+python -m rytm_randomizer.cli rytm-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" jose_core_techno --json   # machine-readable Rytm kit readiness for future GUI/analyzer use
 python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --slot 0 --discovery 50   # passive balanced Analog Four style routing
 python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --discovery 95 --json   # machine-readable Analog Four wild-discovery routing
 python -m rytm_randomizer.cli analog-four-style-mutation-intent-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --slot 0 --discovery 45   # passive Analog Four track/zone intent
@@ -191,6 +193,8 @@ python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report "G:
 python -m rytm_randomizer.cli analog-four-kit-catalog-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --limit 16   # passive Analog Four decoded kit catalog
 python -m rytm_randomizer.cli analog-four-kit-catalog-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --json   # machine-readable Analog Four kit catalog for future GUI/analyzer use
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --limit 16   # passive per-kit Analog Four style-readiness sweep
+python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --limit 16   # passive ranked Rytm+A4 kit-pair readiness sweep
+python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --json   # machine-readable rig kit readiness for future GUI/analyzer use
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0 --discovery 45   # passive rig-level style routing
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --discovery 95 --json   # machine-readable rig style routing for future GUI/analyzer use
 python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --rytm-slot 7 --a4-slot 0 --discovery 45   # passive rig-level mutation intent
@@ -227,7 +231,11 @@ The Analog Four style mutation mock-preview report can now intake real saved-kit
 
 The Analog Four kit catalog report is the operator-friendly intake view for full C6 kit dumps. It lists decoded kit slots and names, distinguishes saved-kit from candidate layouts, shows stable payload fingerprints plus raw/unpacked byte counts, and marks every decoded kit as candidate-only until offset promotion is validated. Use `--limit N` for a quick stage-readiness scan or `--json` for future GUI/audio-analyzer consumers.
 
+The Rytm style kit-readiness report layers style intent over every decoded Rytm kit in a dump. It runs the existing passive style/mock preview readiness path per kit, carries a stable payload fingerprint for exact kit-state comparison, and reports preview-ready versus blocked kits plus planned pads/mock-row counts before any armed path exists.
+
 The Analog Four style kit-readiness report layers style intent over that catalog. It scans every decoded kit in an A4 dump for a style target such as `jose_core_techno`, reports per-kit preview readiness, carries the same payload fingerprint for kit-state comparison, and explains which kits remain blocked by candidate-only offsets before any real mutation path is enabled.
+
+The dual-machine style kit-readiness report combines the Rytm and Analog Four sweeps into a ranked rig-level pairing table. It reads both kit banks, applies the same style target and discovery amount, scores every Rytm+A4 pairing as ready, partial, or blocked, and exposes fingerprints for both sides so future GUI/audio-analyzer/live workflows can choose a promising rig state before sending MIDI.
 
 The dual-machine style snapshot routing report sits above the two single-machine reports. It reads one Rytm kit dump and one Analog Four kit dump, applies the same style target to both, and summarizes whole-rig readiness so a future live workflow can decide whether the Rytm, the A4, or both machines can safely move toward the selected techno aesthetic.
 

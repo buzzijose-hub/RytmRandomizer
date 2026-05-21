@@ -28,6 +28,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "rytm-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
+    "rytm-style-kit-readiness-report <syx-path> <style-key> "
+    "[--discovery N] [--limit N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-intent-report <syx-path> <style-key> "
@@ -37,6 +39,8 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--discovery N] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -359,6 +363,19 @@ def test_analog_four_kit_catalog_report_help_exits_zero_and_safety_matches_repor
     assert result.stderr == ""
 
 
+def test_rytm_style_kit_readiness_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_kit_readiness import SAFETY_LINES
+
+    result = run_cli("rytm-style-kit-readiness-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-kit-readiness-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
 def test_analog_four_style_kit_readiness_report_help_exits_zero_and_safety_matches_report_source():
     from rytm_randomizer.reports.analog_four_style_kit_readiness import SAFETY_LINES
 
@@ -367,6 +384,19 @@ def test_analog_four_style_kit_readiness_report_help_exits_zero_and_safety_match
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: analog-four-style-kit-readiness-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_readiness_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_kit_readiness import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-kit-readiness-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -1292,6 +1322,126 @@ def test_analog_four_style_kit_readiness_report_command_can_emit_json(tmp_path):
     assert parsed["truncated_count"] == 1
     assert parsed["entries"][0]["kit_name"] == "A4ONE"
     assert parsed["entries"][0]["preview_ready"] is False
+    assert result.stderr == ""
+
+
+def test_rytm_style_kit_readiness_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    path = tmp_path / "rytm-readiness.syx"
+    path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"RYTMREADY") + bytes([0xF7])
+    )
+
+    result = run_cli("rytm-style-kit-readiness-report", str(path), "jose_core_techno")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style kit readiness" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Supported kits: 1" in result.stdout
+    assert "Preview-ready kits: 1" in result.stdout
+    assert "Blocked kits: 0" in result.stdout
+    assert "Slot 0 | RYTMREADY | preview_ready True" in result.stdout
+    assert "- style/mock preview only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_kit_readiness_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    first_payload = rytm_real_layout_kit_payload(name=b"RYTMONE")
+    second_payload = rytm_real_layout_kit_payload(name=b"RYTMTWO")
+    path = tmp_path / "rytm-readiness.syx"
+    path.write_bytes(
+        bytes([0xF0])
+        + first_payload
+        + bytes([0xF7])
+        + bytes([0xF0])
+        + second_payload
+        + bytes([0xF7])
+    )
+
+    result = run_cli(
+        "rytm-style-kit-readiness-report",
+        str(path),
+        "jose_core_techno",
+        "--limit",
+        "1",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["kit_count"] == 2
+    assert parsed["shown_count"] == 1
+    assert parsed["truncated_count"] == 1
+    assert parsed["entries"][0]["kit_name"] == "RYTMONE"
+    assert parsed["entries"][0]["preview_ready"] is True
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_readiness_report_command_reads_syx_files(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"PAIRRYTM") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"PAIRA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-kit-readiness-report",
+        str(rytm_path),
+        str(a4_path),
+        "jose_core_techno",
+        "--limit",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive dual-machine style kit readiness" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Rytm kits: 1" in result.stdout
+    assert "Analog Four kits: 1" in result.stdout
+    assert "Pairings: 1" in result.stdout
+    assert "Rytm slot 0 PAIRRYTM + A4 slot 0 PAIRA4" in result.stdout
+    assert "readiness partial" in result.stdout
+    assert "- rig-level kit-bank readiness only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_kit_readiness_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"PAIRJSON") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4PAIR".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-kit-readiness-report",
+        str(rytm_path),
+        str(a4_path),
+        "jose_core_techno",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["pairing_count"] == 1
+    assert parsed["entries"][0]["rig_readiness"] == "partial"
+    assert parsed["entries"][0]["rytm"]["kit_name"] == "PAIRJSON"
+    assert parsed["entries"][0]["analog_four"]["kit_name"] == "A4PAIR"
     assert result.stderr == ""
 
 
