@@ -51,6 +51,32 @@ def _snapshot_with_machine_facts():
     )
 
 
+def _promoted_snapshot_with_values(raw_values: dict[int, int]):
+    from rytm_randomizer.devices.strategies import (
+        RytmKitSnapshot,
+        RytmSnapshotMachineFact,
+        RytmSnapshotMachineFacts,
+    )
+
+    facts = {
+        pad: RytmSnapshotMachineFact(
+            pad=pad,
+            raw_machine_value=value,
+            decoded_machine_value=value,
+            promoted=True,
+            reason="promoted machine fact",
+        )
+        for pad, value in raw_values.items()
+    }
+    return RytmKitSnapshot(
+        slot=4,
+        kit_name="PROMOTED KIT",
+        raw=b"raw",
+        unpacked=b"unpacked",
+        machine_facts=RytmSnapshotMachineFacts(facts_by_pad=facts, promoted=True),
+    )
+
+
 def test_build_report_summarizes_snapshot_machine_fact_readiness() -> None:
     from rytm_randomizer.reports.rytm_snapshot_intelligence import (
         build_rytm_snapshot_intelligence_report,
@@ -68,6 +94,23 @@ def test_build_report_summarizes_snapshot_machine_fact_readiness() -> None:
     assert report.full_snapshot_mutation_ready is False
     assert report.partial_snapshot_mutation_ready is True
     assert "candidate-only machine facts" in report.readiness_reason
+
+
+def test_build_report_marks_missing_snapshot_machine_facts() -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import (
+        build_rytm_snapshot_intelligence_report,
+    )
+
+    snapshot = _promoted_snapshot_with_values({1: 0})
+
+    report = build_rytm_snapshot_intelligence_report(snapshot)
+
+    assert report.promoted_fact_count == 1
+    assert report.candidate_fact_count == 11
+    assert report.full_snapshot_mutation_ready is False
+    assert report.pads_by_pad[2].raw_machine_value == -1
+    assert report.pads_by_pad[2].decoded_machine_value is None
+    assert report.pads_by_pad[2].route_reason == "missing snapshot machine fact"
 
 
 def test_build_report_marks_candidate_only_tom_pads() -> None:
@@ -105,6 +148,56 @@ def test_build_report_routes_promoted_snapshot_machine_values() -> None:
     assert pad_10.profile_key is None
     assert pad_10.route_ready is False
     assert "selectable-only" in pad_10.route_reason
+
+
+def test_build_report_uses_routing_reason_when_all_facts_are_promoted_but_blocked() -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import (
+        build_rytm_snapshot_intelligence_report,
+    )
+
+    snapshot = _promoted_snapshot_with_values(
+        {
+            1: 0,
+            2: 3,
+            3: 32,
+            4: 30,
+            5: 7,
+            6: 8,
+            7: 8,
+            8: 8,
+            9: 9,
+            10: 10,
+            11: 11,
+            12: 12,
+        }
+    )
+
+    report = build_rytm_snapshot_intelligence_report(snapshot)
+
+    assert report.candidate_fact_count == 0
+    assert report.full_snapshot_mutation_ready is False
+    assert "selectable-only" in report.readiness_reason
+
+
+def test_readiness_reason_marks_ready_and_empty_edge_cases() -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _readiness_reason
+
+    assert (
+        _readiness_reason(
+            candidate_fact_count=0,
+            route_ready_count=1,
+            route_readiness_reason="",
+        )
+        == "snapshot machine facts route to mutable V1.34 profiles"
+    )
+    assert (
+        _readiness_reason(
+            candidate_fact_count=0,
+            route_ready_count=0,
+            route_readiness_reason="",
+        )
+        == "snapshot has no promoted machine facts"
+    )
 
 
 def test_format_report_is_operator_facing_and_passive() -> None:

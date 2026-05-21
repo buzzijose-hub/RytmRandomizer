@@ -802,3 +802,35 @@ def test_planner_uses_promoted_snapshot_machine_facts() -> None:
 
     assert plan.ready is True
     assert {event.pad for event in plan.events} == {1, 2, 3}
+
+
+def test_planner_ignores_promoted_snapshot_machine_facts_without_decoded_value() -> None:
+    from rytm_randomizer.devices.strategies import (
+        AnalogRytmMutationPlanner,
+        RytmKitSnapshot,
+        RytmSnapshotMachineFact,
+        RytmSnapshotMachineFacts,
+    )
+
+    facts = RytmSnapshotMachineFacts(
+        facts_by_pad={
+            1: RytmSnapshotMachineFact(1, 0, 0, True, "promoted"),
+            6: RytmSnapshotMachineFact(6, 8, None, True, "offset not promoted"),
+        },
+        promoted=True,
+    )
+    snapshot = RytmKitSnapshot(
+        slot=7,
+        kit_name="LIVE",
+        raw=b"",
+        unpacked=b"",
+        machine_facts=facts,
+    )
+
+    plan = AnalogRytmMutationPlanner(seed=1).plan_for_snapshot_machine_facts(
+        snapshot,
+        depth=1,
+    )
+
+    assert plan.ready is True
+    assert {event.pad for event in plan.events} == {1}

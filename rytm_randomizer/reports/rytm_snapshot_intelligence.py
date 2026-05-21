@@ -176,7 +176,8 @@ def build_rytm_snapshot_intelligence_report(
         routing.ready_pad_count,
         routing.readiness_reason,
     )
-    full_ready = snapshot.machine_facts.promoted and routing.ready
+    all_pads_promoted = promoted_fact_count == _RYTM_PAD_COUNT and candidate_fact_count == 0
+    full_ready = snapshot.machine_facts.promoted and all_pads_promoted and routing.ready
     return RytmSnapshotIntelligenceReport(
         kit_name=snapshot.kit_name,
         slot=snapshot.slot,
