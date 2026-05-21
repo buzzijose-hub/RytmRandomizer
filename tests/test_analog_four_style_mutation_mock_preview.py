@@ -17,9 +17,60 @@ def _snapshot(*, offsets_promoted: bool = True):
     )
 
 
+def _saved_kit_snapshot():
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+    from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
+        A4_SNAPSHOT_LAYOUT_SAVED_KIT,
+    )
+
+    return AnalogFourKitSnapshot(
+        slot=4,
+        kit_name="REAL A4",
+        raw=b"\x00\x20\x3c\x06",
+        offsets_promoted=False,
+        unpacked=b"\x52\x01\x01",
+        snapshot_layout=A4_SNAPSHOT_LAYOUT_SAVED_KIT,
+    )
+
+
 def _framed_a4_payload(name: bytes = b"A4MOCK") -> bytes:
     padded_name = name[:16].ljust(16, b"\x00")
     payload = bytes([0x00, 0x20, 0x3C, 0x07]) + padded_name + bytes([0x01, 0x02])
+    return bytes([0xF0]) + payload + bytes([0xF7])
+
+
+def _pack_elektron_7bit(unpacked: bytes) -> bytes:
+    packed = bytearray()
+    for cursor in range(0, len(unpacked), 7):
+        group = unpacked[cursor : cursor + 7]
+        header = 0
+        data = bytearray()
+        for bit_index, byte in enumerate(group):
+            header |= ((byte >> 7) & 0x01) << bit_index
+            data.append(byte & 0x7F)
+        packed.append(header)
+        packed.extend(data)
+    return bytes(packed)
+
+
+def _framed_a4_saved_kit_payload(name: bytes = b"REAL A4") -> bytes:
+    from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
+        A4_FAMILY_BYTE,
+        A4_KIT_NAME_LENGTH,
+        A4_KIT_NAME_OFFSET,
+        A4_KIT_OBJECT_BYTE,
+    )
+    from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
+
+    unpacked = bytearray(A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH + 8)
+    unpacked[0] = A4_KIT_OBJECT_BYTE
+    unpacked[1] = 0x01
+    unpacked[2] = 0x01
+    unpacked[7] = 0x0A
+    unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
+        :A4_KIT_NAME_LENGTH
+    ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
+    payload = ELEKTRON_MFR_ID + bytes([A4_FAMILY_BYTE]) + _pack_elektron_7bit(bytes(unpacked))
     return bytes([0xF0]) + payload + bytes([0xF7])
 
 
@@ -109,6 +160,27 @@ def test_analog_four_style_mutation_mock_preview_blocks_candidate_offsets():
     assert {row.reason for row in preview.deferred_rows} == {
         "Analog Four offsets are candidate-only"
     }
+
+
+def test_analog_four_style_mutation_mock_preview_explains_decoded_saved_kit_block():
+    from rytm_randomizer.devices.strategies.analog_four_style_mutation_mock_preview import (
+        build_analog_four_style_mutation_mock_preview,
+    )
+
+    preview = build_analog_four_style_mutation_mock_preview(
+        _saved_kit_snapshot(),
+        "jose_core_techno",
+        discovery_amount=45,
+    )
+
+    assert preview.preview_ready is False
+    assert preview.snapshot_layout == "saved_kit"
+    assert preview.readiness_reason == (
+        "Analog Four saved-kit SysEx decoded; offsets remain candidate-only; "
+        "promote offsets before mock CC preview"
+    )
+    assert preview.event_rows == ()
+    assert preview.deferred_row_count == 12
 
 
 def test_analog_four_style_mutation_mock_preview_rejects_bad_mock_metadata():
@@ -203,6 +275,7 @@ def test_analog_four_style_mutation_mock_preview_report_is_operator_facing_and_p
 
     assert lines[0] == "RytmRandomizer passive Analog Four style mutation mock preview"
     assert "Kit: A4MOCK" in lines
+    assert "Snapshot layout: candidate" in lines
     assert "Style target: jose_core_techno" in lines
     assert "Preview ready: True" in lines
     assert "- Mock messages: 8" in lines
@@ -281,6 +354,7 @@ def test_analog_four_style_mutation_mock_preview_json_contract_is_deterministic(
     payload = to_analog_four_style_mutation_mock_preview_json(preview)
 
     assert payload["kit_name"] == "A4MOCK"
+    assert payload["snapshot_layout"] == "candidate"
     assert payload["style_key"] == "jose_core_techno"
     assert payload["preview_ready"] is True
     assert payload["mock_message_count"] == 8
@@ -428,6 +502,35 @@ def test_analog_four_style_mutation_mock_preview_cli_handler_reports_candidate_t
     assert "Kit: A4TEXT" in captured.out
     assert "Preview ready: False" in captured.out
     assert "candidate-only" in captured.out
+    assert "- no MIDI sending" in captured.out
+    assert "- no port opening" in captured.out
+    assert captured.err == ""
+
+
+def test_analog_four_style_mutation_mock_preview_cli_handler_reports_saved_kit_text(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.analog_four_style_mutation_mock_preview import _handle_cli_report
+
+    path = tmp_path / "a4-saved-kit.syx"
+    path.write_bytes(_framed_a4_saved_kit_payload(b"REAL A4"))
+
+    rc = _handle_cli_report(
+        sysex_path=path,
+        style_key="jose_core_techno",
+        slot=0,
+        discovery_amount=45,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "Kit: REAL A4" in captured.out
+    assert "Snapshot layout: saved_kit" in captured.out
+    assert "saved-kit SysEx decoded" in captured.out
     assert "- no MIDI sending" in captured.out
     assert "- no port opening" in captured.out
     assert captured.err == ""

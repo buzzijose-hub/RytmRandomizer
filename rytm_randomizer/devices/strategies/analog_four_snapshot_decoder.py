@@ -5,11 +5,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name
+from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name, unpack_elektron_7bit
+from .analog_four_offset_manifest import (
+    A4_CANDIDATE_KIT_TYPE_BYTE,
+    A4_FAMILY_BYTE,
+    A4_KIT_NAME_LENGTH,
+    A4_KIT_NAME_OFFSET,
+    A4_KIT_OBJECT_BYTE,
+    A4_PACKED_PAYLOAD_OFFSET,
+    A4_SNAPSHOT_LAYOUT_CANDIDATE,
+    A4_SNAPSHOT_LAYOUT_SAVED_KIT,
+)
 
-A4_CANDIDATE_KIT_TYPE_BYTE: Final[int] = 0x07
-_KIT_NAME_OFFSET: Final[int] = 4
-_KIT_NAME_LENGTH: Final[int] = 16
+_CANDIDATE_KIT_NAME_OFFSET: Final[int] = 4
 
 
 @dataclass(frozen=True)
@@ -20,6 +28,8 @@ class AnalogFourKitSnapshot:
     kit_name: str
     raw: bytes
     offsets_promoted: bool = False
+    unpacked: bytes = b""
+    snapshot_layout: str = A4_SNAPSHOT_LAYOUT_CANDIDATE
 
 
 class AnalogFourSnapshotDecoder:
@@ -29,8 +39,9 @@ class AnalogFourSnapshotDecoder:
         """Decode ``raw`` into an :class:`AnalogFourKitSnapshot`.
 
         The Analog Four offset map is candidate-level at this stage. This
-        strategy validates the shared Elektron envelope and preserves the raw
-        bytes; promoted field extraction belongs to the later offset-promotion
+        strategy validates the shared Elektron envelope, recognizes the real
+        saved-kit SysEx frame shape, and preserves both raw and unpacked bytes.
+        Promoted parameter extraction belongs to a later offset-promotion
         workstream.
         """
 
@@ -38,17 +49,88 @@ class AnalogFourSnapshotDecoder:
             raise ValueError("AnalogFourSnapshotDecoder.decode: slot must be non-negative")
         if not raw.startswith(ELEKTRON_MFR_ID):
             raise ValueError("AnalogFourSnapshotDecoder.decode: missing Elektron manufacturer id")
-        if len(raw) < _KIT_NAME_OFFSET + _KIT_NAME_LENGTH:
-            raise ValueError("AnalogFourSnapshotDecoder.decode: payload too short for kit name")
-        if raw[3] != A4_CANDIDATE_KIT_TYPE_BYTE:
+        if len(raw) <= len(ELEKTRON_MFR_ID):
             raise ValueError(
-                "AnalogFourSnapshotDecoder.decode: candidate kit type byte 0x07 not present"
+                "AnalogFourSnapshotDecoder.decode: payload too short for family/type byte"
             )
 
-        kit_name = read_ascii_name(raw, offset=_KIT_NAME_OFFSET, length=_KIT_NAME_LENGTH)
-        return AnalogFourKitSnapshot(
-            slot=slot,
-            kit_name=kit_name,
-            raw=bytes(raw),
-            offsets_promoted=False,
+        family_or_type = raw[3]
+        if family_or_type == A4_CANDIDATE_KIT_TYPE_BYTE:
+            return _decode_candidate_payload(raw, slot=slot)
+        if family_or_type == A4_FAMILY_BYTE:
+            return _decode_saved_kit_payload(raw, slot=slot)
+        raise ValueError(
+            "AnalogFourSnapshotDecoder.decode: candidate kit type byte 0x07 "
+            "or Analog Four family byte 0x06 not present"
         )
+
+
+def _decode_candidate_payload(raw: bytes, *, slot: int) -> AnalogFourKitSnapshot:
+    if len(raw) < _CANDIDATE_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH:
+        raise ValueError("AnalogFourSnapshotDecoder.decode: payload too short for kit name")
+    if raw[3] != A4_CANDIDATE_KIT_TYPE_BYTE:
+        raise ValueError(
+            "AnalogFourSnapshotDecoder.decode: candidate kit type byte 0x07 not present"
+        )
+
+    kit_name = read_ascii_name(
+        raw,
+        offset=_CANDIDATE_KIT_NAME_OFFSET,
+        length=A4_KIT_NAME_LENGTH,
+    )
+    return AnalogFourKitSnapshot(
+        slot=slot,
+        kit_name=kit_name,
+        raw=bytes(raw),
+        offsets_promoted=False,
+        unpacked=bytes(raw),
+        snapshot_layout=A4_SNAPSHOT_LAYOUT_CANDIDATE,
+    )
+
+
+def _clean_saved_kit_name(name: str) -> str:
+    cleaned: list[str] = []
+    previous_was_nul = False
+    for char in name:
+        if char == "\x00":
+            if cleaned and cleaned[-1] != " ":
+                cleaned.append(" ")
+            previous_was_nul = True
+            continue
+        if previous_was_nul and char == " " and cleaned and cleaned[-1] == " ":
+            previous_was_nul = False
+            continue
+        cleaned.append(char)
+        previous_was_nul = False
+    return "".join(cleaned).strip()
+
+
+def _decode_saved_kit_payload(raw: bytes, *, slot: int) -> AnalogFourKitSnapshot:
+    if len(raw) <= A4_PACKED_PAYLOAD_OFFSET:
+        raise ValueError("AnalogFourSnapshotDecoder.decode: payload too short for saved kit")
+
+    unpacked = unpack_elektron_7bit(raw[A4_PACKED_PAYLOAD_OFFSET:])
+    if len(unpacked) < A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH:
+        raise ValueError(
+            "AnalogFourSnapshotDecoder.decode: unpacked payload too short for kit name"
+        )
+    if unpacked[0] != A4_KIT_OBJECT_BYTE:
+        raise ValueError(
+            "AnalogFourSnapshotDecoder.decode: Analog Four kit object byte 0x52 not present"
+        )
+
+    kit_name = _clean_saved_kit_name(
+        read_ascii_name(
+            unpacked,
+            offset=A4_KIT_NAME_OFFSET,
+            length=A4_KIT_NAME_LENGTH,
+        )
+    )
+    return AnalogFourKitSnapshot(
+        slot=slot,
+        kit_name=kit_name,
+        raw=bytes(raw),
+        offsets_promoted=False,
+        unpacked=unpacked,
+        snapshot_layout=A4_SNAPSHOT_LAYOUT_SAVED_KIT,
+    )

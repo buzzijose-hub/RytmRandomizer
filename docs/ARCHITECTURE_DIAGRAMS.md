@@ -12,11 +12,11 @@ labels it that way. Diagrams describing the upcoming codex dual-machine work
 
 Current baseline used while creating / refreshing this document:
 
-- Branch: Dual-machine style mutation mock-preview slice, built on the passive style profile/target/routing/render-plan foundation.
+- Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
 - Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 125 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, and dual-machine style mutation mock-preview slices so the strategy/report-module list and counts stay current.
+- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, and Analog Four saved-kit SysEx readiness-intake slices so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
 
@@ -32,7 +32,7 @@ Current baseline used while creating / refreshing this document:
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
-| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
+| Devices (cross-machine boundary) | `rytm_randomizer/devices/{base,registry,analog_rytm,analog_four}.py`, `rytm_randomizer/devices/strategies/{analog_four_offset_manifest,analog_four_snapshot_decoder,analog_four_style_snapshot_routing,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_mutation_planner,analog_four_message_renderer,analog_rytm_snapshot_decoder,analog_rytm_snapshot_routing,analog_rytm_style_snapshot_routing,analog_rytm_style_mutation_intent,analog_rytm_style_mutation_mock_preview,analog_rytm_style_mutation_render_plan,analog_rytm_mutation_planner,analog_rytm_message_renderer}.py` |
 | Snapshot Protocols + envelope | `rytm_randomizer/snapshot/{envelope,decoder,planner,mock_runtime,sysex_file}.py` |
 | Guardrails | `rytm_randomizer/guardrails/{resolver,store,schema,validation}.py` |
 | Observability | `rytm_randomizer/observability/{logging,tracing,metrics,errors}.py` |
@@ -135,7 +135,7 @@ flowchart TB
         DevRegistry["registry.py<br/>register_device, get_device, all_devices"]
         DevAR["analog_rytm.py<br/>AnalogRytmDevice"]
         DevA4["analog_four.py<br/>AnalogFourDevice"]
-        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{snapshot_decoder,<br/>style_snapshot_routing,<br/>mutation_planner,<br/>message_renderer}.py"]
+        DevStrategies["strategies/<br/>analog_rytm_{snapshot_decoder,<br/>snapshot_routing,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_render_plan,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py<br/>analog_four_{offset_manifest,<br/>snapshot_decoder,<br/>style_snapshot_routing,<br/>style_mutation_intent,<br/>style_mutation_mock_preview,<br/>mutation_planner,<br/>message_renderer}.py"]
     end
 
     subgraph SnapshotPkg["snapshot/ subpackage<br/>(WS-S6 envelope + 3 Protocols)"]
@@ -1148,13 +1148,13 @@ flowchart TB
 
     subgraph CodexRedo["Future codex PR (PR #36 redo)"]
         DevA4["devices/analog_four.py<br/>(NEW: AnalogFourDevice<br/>composes 3 A4 strategies,<br/>registers at import)"]
-        DevA4_Strategies["devices/strategies/<br/>analog_four_snapshot_decoder<br/>analog_four_mutation_planner<br/>(ready=False while manifest-gated)<br/>analog_four_message_renderer"]
+        DevA4_Strategies["devices/strategies/<br/>analog_four_offset_manifest<br/>analog_four_snapshot_decoder<br/>analog_four_style_snapshot_routing<br/>analog_four_style_mutation_intent<br/>analog_four_style_mutation_mock_preview<br/>analog_four_mutation_planner<br/>(ready=False while manifest-gated)<br/>analog_four_message_renderer"]
 
         Senders["NEW: senders/<br/>guarded.py<br/>hardware.py<br/>(generic, consume Device.message_renderer;<br/>collapses 8 per-device sender files)"]
 
         DualMachine["dual_machine/ (simplified)<br/>orchestrates over Mapping[str, Device]<br/>NO direct imports from devices/analog_*<br/>fans out to devices.all_devices()"]
 
-        Manifest["devices/analog_four_offset_manifest.py<br/>(saved-offset mapping + promotion + validation;<br/>A4-specific, not in dual_machine/)"]
+        Manifest["devices/strategies/analog_four_offset_manifest.py<br/>(saved-kit intake constants now;<br/>saved-offset mapping + promotion later;<br/>A4-specific, not in dual_machine/)"]
     end
 
     subgraph Deleted["Deleted from PR #36 (LOC reduction)"]

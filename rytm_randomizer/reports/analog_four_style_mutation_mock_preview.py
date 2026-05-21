@@ -118,6 +118,7 @@ def _body_lines(
     lines = [
         f"Kit: {preview.kit_name}",
         f"Slot: {preview.slot}",
+        f"Snapshot layout: {preview.snapshot_layout}",
         f"Style target: {preview.style_key}",
         f"Discovery amount: {preview.discovery_amount}",
         f"Discovery band: {preview.discovery_band}",
@@ -200,6 +201,7 @@ def to_analog_four_style_mutation_mock_preview_json(
     return {
         "kit_name": preview.kit_name,
         "slot": preview.slot,
+        "snapshot_layout": preview.snapshot_layout,
         "style_key": preview.style_key,
         "discovery_amount": preview.discovery_amount,
         "discovery_band": preview.discovery_band,
