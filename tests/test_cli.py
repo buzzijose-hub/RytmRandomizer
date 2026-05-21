@@ -32,6 +32,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-intent-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -320,6 +322,19 @@ def test_analog_four_style_mutation_intent_report_help_exits_zero_and_safety_mat
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: analog-four-style-mutation-intent-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_mock_preview_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_style_mutation_mock_preview import SAFETY_LINES
+
+    result = run_cli("analog-four-style-mutation-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -1072,6 +1087,63 @@ def test_analog_four_style_mutation_intent_report_unknown_style_fails_safely(tmp
     path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
 
     result = run_cli("analog-four-style-mutation-intent-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_analog_four_style_mutation_mock_preview_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4MOCK".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--events",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four style mutation mock preview" in result.stdout
+    assert "Kit: A4MOCK" in result.stdout
+    assert "Style target: jose_core_techno" in result.stdout
+    assert "Preview ready: False" in result.stdout
+    assert "candidate-only" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_mock_preview_report_command_can_emit_json(tmp_path):
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4MJSON".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "A4MJSON"
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["preview_ready"] is False
+    assert parsed["mock_message_count"] == 0
+    assert "candidate-only" in parsed["readiness_reason"]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_mock_preview_report_unknown_style_fails_safely(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4MOCK".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-style-mutation-mock-preview-report", str(path), "ghost_style")
 
     assert result.returncode == 2
     assert result.stdout == ""

@@ -27,6 +27,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-intent-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -252,6 +254,34 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _analog_four_style_mutation_mock_preview_report_help():
+    from .reports.analog_four_style_mutation_mock_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> --events
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> --events --limit N
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report --help
+
+Behavior:
+  Reads a local Analog Four MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware mock CC rows for the selected style target.
+  Decoded A4 SysEx snapshots are candidate-only until offset promotion, so
+  those reports clearly show why mock CC rows are blocked. Promoted snapshots
+  can render CC-safe zones; NRPN-only zones are listed as deferred. Use --events
+  to include mock CC rows; --limit N caps rows and N=0 prints all rows. Use
+  --json for a deterministic machine-readable payload for future GUI/analyzer
+  consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _dual_machine_style_snapshot_routing_report_help():
     from .reports.dual_machine_style_snapshot_routing import SAFETY_LINES
 
@@ -368,6 +398,7 @@ Usage:
   python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
@@ -427,6 +458,8 @@ Commands:
                      Print passive Analog Four style snapshot routing for a SysEx file.
   analog-four-style-mutation-intent-report
                      Print passive Analog Four style mutation intent for a SysEx file.
+  analog-four-style-mutation-mock-preview-report
+                     Print passive Analog Four style mutation mock-preview rows for a SysEx file.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
   dual-machine-style-mutation-intent-report
@@ -644,6 +677,9 @@ Safety:
     "rytm-style-mutation-mock-preview-report": _rytm_style_mutation_mock_preview_report_help,
     "analog-four-style-snapshot-routing-report": _analog_four_style_snapshot_routing_report_help,
     "analog-four-style-mutation-intent-report": _analog_four_style_mutation_intent_report_help,
+    "analog-four-style-mutation-mock-preview-report": (
+        _analog_four_style_mutation_mock_preview_report_help
+    ),
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
     "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "style-profile-report": _style_profile_report_help,

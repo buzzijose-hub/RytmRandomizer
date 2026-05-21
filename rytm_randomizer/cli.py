@@ -52,6 +52,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.analog_four_style_mutation_intent",
             "ANALOG_FOUR_STYLE_MUTATION_INTENT_CLI_COMMAND",
         ),
+        "analog-four-style-mutation-mock-preview-report": (
+            "rytm_randomizer.reports.analog_four_style_mutation_mock_preview",
+            "ANALOG_FOUR_STYLE_MUTATION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
         "dual-machine-style-snapshot-routing-report": (
             "rytm_randomizer.reports.dual_machine_style_snapshot_routing",
             "DUAL_MACHINE_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",

@@ -33,6 +33,12 @@ from .analog_four_style_mutation_intent import (
     AnalogFourStyleMutationTrackIntent,
     plan_analog_four_style_mutation_intent,
 )
+from .analog_four_style_mutation_mock_preview import (
+    AnalogFourStyleMutationMockPreview,
+    AnalogFourStyleMutationMockPreviewDeferredRow,
+    AnalogFourStyleMutationMockPreviewEvent,
+    build_analog_four_style_mutation_mock_preview,
+)
 from .analog_four_style_snapshot_routing import (
     ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS,
     AnalogFourStyleSnapshotRoutingPlan,
@@ -97,6 +103,9 @@ __all__ = [
     "AnalogFourSnapshotDecoder",
     "AnalogFourStyleMutationIntentPlan",
     "AnalogFourStyleMutationIntentRow",
+    "AnalogFourStyleMutationMockPreview",
+    "AnalogFourStyleMutationMockPreviewDeferredRow",
+    "AnalogFourStyleMutationMockPreviewEvent",
     "AnalogFourStyleMutationTrackIntent",
     "AnalogFourStyleSnapshotRoutingPlan",
     "AnalogFourStyleTrackPlan",
@@ -122,6 +131,7 @@ __all__ = [
     "RytmStyleSnapshotPadPlan",
     "RytmStyleSnapshotRoutingPlan",
     "analog_four_style_zone_bias",
+    "build_analog_four_style_mutation_mock_preview",
     "build_rytm_style_mutation_mock_preview",
     "plan_analog_four_style_mutation_intent",
     "plan_analog_four_style_snapshot_routes",
