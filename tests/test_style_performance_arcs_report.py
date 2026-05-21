@@ -360,6 +360,109 @@ def test_style_performance_arc_audition_packet_selects_best_arc_and_embeds_plan(
     assert payload["safety"][0] == "passive/read-only"
 
 
+def test_style_performance_arc_rehearsal_manifest_builds_operator_runbook(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_rehearsal_manifest_report,
+        format_style_performance_arc_rehearsal_manifest_report,
+        to_style_performance_arc_rehearsal_manifest_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    report = build_style_performance_arc_rehearsal_manifest_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+
+    assert report.selected_entry is report.audition_packet.selected_entry
+    assert report.selected_set_plan is report.audition_packet.selected_set_plan
+    assert report.segment_count == report.selected_set_plan.segment_count
+    assert report.ready_segment_count == report.selected_set_plan.ready_segment_count
+    assert report.partial_segment_count == report.selected_set_plan.partial_segment_count
+    assert report.blocked_segment_count == report.selected_set_plan.blocked_segment_count
+    assert report.segments
+
+    first_segment = report.segments[0]
+    first_plan_segment = report.selected_set_plan.segments[0]
+    assert first_segment.position == 1
+    assert first_segment.style_key == first_plan_segment.style_key
+    assert first_segment.time_window == first_plan_segment.time_window
+    assert first_segment.discovery_amount == first_plan_segment.discovery_amount
+    assert first_segment.readiness == first_plan_segment.selection_readiness
+    assert first_segment.event_row_count == first_plan_segment.event_row_count
+    assert first_segment.mock_message_count == first_plan_segment.mock_message_count
+    assert "slot" in first_segment.rytm_preview_summary
+    assert "slot" in first_segment.analog_four_preview_summary
+
+    lines = format_style_performance_arc_rehearsal_manifest_report(
+        report,
+        include_events=True,
+        event_limit=1,
+    )
+    text = "\n".join(lines)
+    assert lines[0] == "RytmRandomizer passive style performance arc rehearsal manifest"
+    assert "Selected arc:" in lines
+    assert "Preflight checklist:" in lines
+    assert "- Confirm the saved Rytm kit bank before rehearsal." in lines
+    assert "- Confirm the saved Analog Four kit bank before rehearsal." in lines
+    assert "Segment runbook:" in lines
+    assert "- 1. 00:00-" in text
+    assert "Rytm preview:" in text
+    assert "Analog Four preview:" in text
+    assert "Event preview for segment" in text
+    assert "- reference arc rehearsal manifest" in lines
+    assert "- no MIDI sending" in lines
+
+    payload = to_style_performance_arc_rehearsal_manifest_json(report)
+    assert payload["selected"]["arc"]["key"] == report.selected_entry.arc.key
+    assert payload["manifest"]["totals"]["segments"] == report.segment_count
+    assert payload["manifest"]["segments"][0]["style_key"] == first_segment.style_key
+    assert payload["manifest"]["segments"][0]["rytm_preview"] == (
+        first_segment.rytm_preview_summary
+    )
+    assert payload["manifest"]["preflight"][0] == (
+        "Confirm the saved Rytm kit bank before rehearsal."
+    )
+    assert payload["audition_packet"]["selected"]["arc"]["key"] == (report.selected_entry.arc.key)
+    assert payload["safety"][0] == "passive/read-only"
+
+
+def test_style_performance_arc_rehearsal_manifest_covers_single_machine_edges(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_rehearsal_manifest_report,
+        format_style_performance_arc_rehearsal_manifest_report,
+    )
+
+    _, a4_path = _arc_bank_files(tmp_path)
+    report = build_style_performance_arc_rehearsal_manifest_report(
+        ("jose_warehouse_five_hour",),
+        analog_four_sysex_path=a4_path,
+        scope="analog-four-only",
+    )
+
+    assert report.selected_set_plan.scope == "analog-four-only"
+    assert report.segments[0].rytm_preview_summary == "unchanged by scope"
+    assert "Rytm is unchanged by this scope; leave its current kit alone." in (
+        report.preflight_steps
+    )
+    assert "Confirm the saved Analog Four kit bank before rehearsal." in (report.preflight_steps)
+
+    lines = format_style_performance_arc_rehearsal_manifest_report(report)
+    text = "\n".join(lines)
+    assert "Event previews:" not in lines
+    assert "Rytm preview: unchanged by scope" in text
+    assert "Analog Four preview: slot" in text
+
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_rehearsal_manifest_report(
+            report,
+            event_limit=-1,
+        )
+
+
 def test_style_performance_arc_audition_packet_rejects_empty_readiness(
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -565,13 +668,54 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     from rytm_randomizer.reports.style_performance_arcs import (
         _handle_style_performance_arc_audition_packet_report,
         _handle_style_performance_arc_readiness_report,
+        _handle_style_performance_arc_rehearsal_manifest_report,
         _parse_arc_audition_packet_cli_args,
         _parse_arc_readiness_cli_args,
+        _parse_arc_rehearsal_manifest_cli_args,
     )
 
     rytm_path, a4_path = _arc_bank_files(tmp_path)
 
     assert _parse_arc_audition_packet_cli_args(
+        [
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "dual",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "240",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "90",
+            "--events",
+            "--limit",
+            "1",
+            "--json",
+        ]
+    ) == {
+        "arc_keys": ("jose_warehouse_five_hour",),
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "dual",
+        "selection_rank": 2,
+        "total_minutes": 240,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 90,
+        "include_events": True,
+        "event_limit": 1,
+        "json_output": True,
+    }
+
+    assert _parse_arc_rehearsal_manifest_cli_args(
         [
             "jose_warehouse_five_hour",
             "--rytm",
@@ -749,7 +893,69 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     assert payload["selected_set_plan"]["performance_plan"]["scope"] == "rytm-only"
     assert captured.err == ""
 
+    rc = _handle_style_performance_arc_rehearsal_manifest_report(
+        arc_keys=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc rehearsal manifest" in captured.out
+    assert "Preflight checklist:" in captured.out
+    assert "Segment runbook:" in captured.out
+    assert "Event preview for segment" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_rehearsal_manifest_report(
+        arc_keys=("jose_warehouse_five_hour",),
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=None,
+        scope="rytm-only",
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=20,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["selected"]["arc"]["key"] == "jose_warehouse_five_hour"
+    assert payload["manifest"]["scope"] == "rytm-only"
+    assert captured.err == ""
+
     rc = _handle_style_performance_arc_audition_packet_report(
+        arc_keys=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=24,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "requires --rytm" in captured.err
+
+    rc = _handle_style_performance_arc_rehearsal_manifest_report(
         arc_keys=None,
         rytm_sysex_path=None,
         analog_four_sysex_path=None,
@@ -775,6 +981,7 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
         _parse_arc_audition_packet_cli_args,
         _parse_arc_key,
         _parse_arc_readiness_cli_args,
+        _parse_arc_rehearsal_manifest_cli_args,
         _parse_arc_set_plan_cli_args,
         _parse_no_args,
         _parse_query,
@@ -822,6 +1029,17 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     for argv, message in audition_bad_cases:
         with pytest.raises(ValueError, match=message):
             _parse_arc_audition_packet_cli_args(argv)
+
+    rehearsal_bad_cases = [
+        (["--json"], "usage"),
+        (["jose_warehouse_five_hour", "--rytm"], "usage"),
+        (["jose_warehouse_five_hour", "--bogus"], "usage"),
+        (["jose_warehouse_five_hour", "--limit", "-1"], ">= 0"),
+        (["jose_warehouse_five_hour", "--rank", "0"], ">= 1"),
+    ]
+    for argv, message in rehearsal_bad_cases:
+        with pytest.raises(ValueError, match=message):
+            _parse_arc_rehearsal_manifest_cli_args(argv)
 
 
 def test_style_performance_arc_cli_dispatch_and_help(
@@ -913,12 +1131,32 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "RytmRandomizer passive style performance arc audition packet" in captured.out
     assert "Selected set plan:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-rehearsal-manifest-report",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc rehearsal manifest" in captured.out
+    assert "Segment runbook:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
     assert "style-performance-arc-set-plan-report <arc-key>" in help_text
     assert "style-performance-arc-readiness-report" in help_text
     assert "style-performance-arc-audition-packet-report" in help_text
+    assert "style-performance-arc-rehearsal-manifest-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -933,3 +1171,8 @@ def test_style_performance_arc_cli_dispatch_and_help(
         audition_help
     )
     assert "Builds a passive best-arc audition packet from saved kit banks." in (audition_help)
+    rehearsal_help = resolve_help_text("style-performance-arc-rehearsal-manifest-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-rehearsal-manifest-report" in (
+        rehearsal_help
+    )
+    assert "Builds a passive rehearsal manifest from saved kit banks." in (rehearsal_help)
