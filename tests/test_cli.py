@@ -22,6 +22,8 @@ USAGE = (
     "[--events] [--limit N] | "
     "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
+    "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -254,6 +256,19 @@ def test_analog_four_style_snapshot_routing_report_help_exits_zero_and_safety_ma
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.dual_machine_style_snapshot_routing import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-snapshot-routing-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: dual-machine-style-snapshot-routing-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -712,6 +727,58 @@ def test_analog_four_style_snapshot_routing_report_unknown_style_fails_safely(tm
     assert "Traceback" not in result.stderr
 
 
+def test_dual_machine_style_snapshot_routing_report_command_reads_syx_files(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"DUORYTM") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"DUOA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-snapshot-routing-report",
+        str(rytm_path),
+        str(a4_path),
+        "industrial_dark",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive dual-machine style snapshot routing" in result.stdout
+    assert "Style target: industrial_dark" in result.stdout
+    assert "- Kit: DUORYTM" in result.stdout
+    assert "- Kit: DUOA4" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"DUORYTM") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"DUOA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-snapshot-routing-report",
+        str(rytm_path),
+        str(a4_path),
+        "ghost_style",
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_readme_mentions_rytm_machine_matrix_report_command():
     text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
@@ -753,6 +820,13 @@ def test_readme_mentions_analog_four_style_snapshot_routing_report_command():
 
     assert "analog-four-style-snapshot-routing-report" in text
     assert "Analog Four style snapshot routing" in text
+
+
+def test_readme_mentions_dual_machine_style_snapshot_routing_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "dual-machine-style-snapshot-routing-report" in text
+    assert "dual-machine style snapshot routing" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
