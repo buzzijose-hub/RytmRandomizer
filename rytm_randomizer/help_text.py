@@ -87,6 +87,11 @@ USAGE = (
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-session-packet-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -749,6 +754,30 @@ Safety:
 {_safety_block(REHEARSAL_MANIFEST_SAFETY_LINES)}"""
 
 
+def _style_performance_arc_live_session_packet_report_help():
+    from .reports.style_performance_arcs import LIVE_SESSION_PACKET_SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-session-packet-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report <arc-key> <arc-key> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm <syx-path> --scope rytm-only
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm <syx-path> --events --limit N
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm <syx-path> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --help
+
+Behavior:
+  Builds a passive live rehearsal session packet from saved kit banks.
+  With no arc keys it evaluates every curated reference arc, chooses the
+  highest-ranked ready or partial arc, and turns the selected rehearsal
+  manifest into a launch checklist, passive command list, and segment cards.
+
+Safety:
+{_safety_block(LIVE_SESSION_PACKET_SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -811,6 +840,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-readiness-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--limit N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-audition-packet-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-rehearsal-manifest-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -915,6 +945,8 @@ Commands:
                      Build passive best-arc audition packets from saved kit banks.
   style-performance-arc-rehearsal-manifest-report
                      Build passive reference-arc rehearsal manifests from saved kit banks.
+  style-performance-arc-live-session-packet-report
+                     Build passive live rehearsal session packets from saved kit banks.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1144,6 +1176,9 @@ Safety:
     ),
     "style-performance-arc-rehearsal-manifest-report": (
         _style_performance_arc_rehearsal_manifest_report_help
+    ),
+    "style-performance-arc-live-session-packet-report": (
+        _style_performance_arc_live_session_packet_report_help
     ),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
