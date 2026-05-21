@@ -174,15 +174,41 @@ python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7   # passive intelligence for one supported Rytm kit snapshot
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2   # passive snapshot mutation preview; mock-only, no MIDI send
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2 --events --limit 24   # include capped mock CC event rows
+python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7 --discovery 10   # passive reference-close Rytm style routing
+python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --discovery 95 --json   # machine-readable wild-discovery Rytm style routing
+python -m rytm_randomizer.cli rytm-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7 --discovery 75   # passive Rytm style zone/parameter intent
+python -m rytm_randomizer.cli rytm-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --discovery 95 --json   # machine-readable Rytm style mutation intent
+python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --slot 0 --discovery 50   # passive balanced Analog Four style routing
+python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --discovery 95 --json   # machine-readable Analog Four wild-discovery routing
+python -m rytm_randomizer.cli analog-four-style-mutation-intent-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --slot 0 --discovery 75   # passive Analog Four track/zone intent
+python -m rytm_randomizer.cli analog-four-style-mutation-intent-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --discovery 95 --json   # machine-readable Analog Four style mutation intent
+python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0 --discovery 75   # passive rig-level style routing
+python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --discovery 95 --json   # machine-readable rig style routing for future GUI/analyzer use
+python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --rytm-slot 7 --a4-slot 0 --discovery 75   # passive rig-level mutation intent
+python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --discovery 95 --json   # machine-readable rig mutation intent for future GUI/analyzer use
 python -m rytm_randomizer.cli style-profile-report   # passive techno style profiles for later snapshot/audio-analysis routing
 python -m rytm_randomizer.cli list-style-profiles   # list available style profiles
 python -m rytm_randomizer.cli inspect-style-profile birmingham_pressure   # inspect one passive style profile
 python -m rytm_randomizer.cli search-style-profiles hardgroove   # search style profiles by tag, summary, scene, or focus
+python -m rytm_randomizer.cli style-target-report   # passive numeric style target vectors for future snapshot planning
+python -m rytm_randomizer.cli inspect-style-target birmingham_pressure   # inspect one passive target vector
 ```
 
 Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The snapshot intelligence report reads a local `.syx` file, scans framed C6-style dumps for supported Rytm kit snapshots, can list those slots, and prints decoded machine facts plus mutation readiness for the selected slot. The snapshot mutation preview report takes the selected snapshot slot one step further: it routes snapshot machine facts into the guarded mutation planner and renders the would-be mock message count/readiness without sending anything to hardware. Add `--events` to include capped mock CC event rows (`--limit 0` prints all rows) showing pad, profile, parameter, channel, CC, and value. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
 
-The style profiles are passive sound-design intent, not artist cloning. They name reusable underground-techno aesthetics such as Detroit minimal, hardgroove, Birmingham pressure, industrial dark, deep dark hypnosis, and warehouse peak so future snapshot and audio-analyzer work can choose scenes, machine tendencies, and parameter emphasis from a stable vocabulary before any hardware message is sent.
+The style profiles are passive sound-design intent, not artist cloning. They name reusable underground-techno aesthetics such as Detroit minimal, hardgroove, Birmingham pressure, industrial dark, deep dark hypnosis, and warehouse peak so future snapshot and audio-analyzer work can choose scenes, machine tendencies, and parameter emphasis from a stable vocabulary before any hardware message is sent. The Rytm mutation-intent report now maps ready pads to safe profile parameters with style bias/direction metadata, and the Analog Four mutation-intent report maps tracks to favored sound-design zones with the same style pressure while clearly blocking real mutation until A4 offsets are promoted.
+
+Style target vectors turn those profiles into bounded 0-100 planning axes such as low-end weight, transient density, darkness, metallicity, grit, motion, hypnosis, and warehouse intensity. They are passive numeric intent only: they do not choose machines, mutate snapshots, send MIDI, or touch hardware.
+
+The style-routing reports also accept `--discovery N` where `N` is 0-100. Low values stay close to the captured kit snapshot, balanced values widen zone movement, and high values expose broader legal discovery candidates while still obeying Rytm pad compatibility and Analog Four readiness gates.
+
+The Rytm style snapshot routing report is the first bridge from style intent to captured-kit planning. It reads a local Rytm kit dump, applies one style target vector, and reports favored mutation zones, route-ready pads, blocked pads, and legal machine candidates. It remains metadata-only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
+
+The Rytm style mutation intent report takes that one passive step closer to the live tool: for each route-ready pad, it maps the chosen style and discovery band to safe profile parameters such as grit, body, amp, filter, LFO, and morph targets, then annotates each row with a style bias and direction such as higher, lower, shorter, longer, or center. It still renders no CC values and sends no MIDI; it is the machine-readable contract the future snapshot mutation renderer can consume.
+
+The Analog Four style snapshot routing report mirrors that bridge for the A4 side of the rig. It reads a local Analog Four kit dump, applies one style target vector, and reports track-level favored zones while the low-level A4 parameter offsets remain candidate-only. It is still passive metadata only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
+
+The dual-machine style snapshot routing report sits above the two single-machine reports. It reads one Rytm kit dump and one Analog Four kit dump, applies the same style target to both, and summarizes whole-rig readiness so a future live workflow can decide whether the Rytm, the A4, or both machines can safely move toward the selected techno aesthetic.
 
 ### Recommended quick validation flow
 

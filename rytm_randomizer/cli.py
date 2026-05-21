@@ -28,6 +28,30 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_snapshot_mutation_preview",
             "RYTM_SNAPSHOT_MUTATION_PREVIEW_CLI_COMMAND",
         ),
+        "rytm-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.rytm_style_snapshot_routing",
+            "RYTM_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
+        "rytm-style-mutation-intent-report": (
+            "rytm_randomizer.reports.rytm_style_mutation_intent",
+            "RYTM_STYLE_MUTATION_INTENT_CLI_COMMAND",
+        ),
+        "analog-four-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.analog_four_style_snapshot_routing",
+            "ANALOG_FOUR_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
+        "analog-four-style-mutation-intent-report": (
+            "rytm_randomizer.reports.analog_four_style_mutation_intent",
+            "ANALOG_FOUR_STYLE_MUTATION_INTENT_CLI_COMMAND",
+        ),
+        "dual-machine-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.dual_machine_style_snapshot_routing",
+            "DUAL_MACHINE_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
+        "dual-machine-style-mutation-intent-report": (
+            "rytm_randomizer.reports.dual_machine_style_mutation_intent",
+            "DUAL_MACHINE_STYLE_MUTATION_INTENT_CLI_COMMAND",
+        ),
         "style-profile-report": (
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",
@@ -43,6 +67,14 @@ def _registered_command_exit_code(args):
         "search-style-profiles": (
             "rytm_randomizer.reports.style_profiles",
             "SEARCH_STYLE_PROFILES_CLI_COMMAND",
+        ),
+        "style-target-report": (
+            "rytm_randomizer.reports.style_targets",
+            "STYLE_TARGET_REPORT_CLI_COMMAND",
+        ),
+        "inspect-style-target": (
+            "rytm_randomizer.reports.style_targets",
+            "INSPECT_STYLE_TARGET_CLI_COMMAND",
         ),
     }
     command = cli_registry.get(args[0])

@@ -15,11 +15,23 @@ USAGE = (
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
+    "rytm-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
+    "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
-    "search-style-profiles <query> | "
+    "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -89,6 +101,152 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _rytm_style_snapshot_routing_report_help():
+    from .reports.rytm_style_snapshot_routing import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: rytm-style-snapshot-routing-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report --help
+
+Behavior:
+  Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware routing readiness for the selected style target.
+  The report shows favored zones, route-ready pads, blocked pads, and legal
+  machine candidates without rendering mutation values.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _rytm_style_mutation_intent_report_help():
+    from .reports.rytm_style_mutation_intent import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: rytm-style-mutation-intent-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report --help
+
+Behavior:
+  Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware mutation intent rows for the selected style target.
+  The report shows which ready pads, zones, safe profile parameters, style
+  biases, and directions future style mutation can target without rendering CC
+  values or sending MIDI.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_style_snapshot_routing_report_help():
+    from .reports.analog_four_style_snapshot_routing import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report --help
+
+Behavior:
+  Reads a local Analog Four MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware routing readiness for the selected style target.
+  The report shows favored zones and track readiness while A4 offsets remain
+  candidate-only, so no mutation values are rendered.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_four_style_mutation_intent_report_help():
+    from .reports.analog_four_style_mutation_intent import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-style-mutation-intent-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report --help
+
+Behavior:
+  Reads a local Analog Four MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware track/zone mutation intent rows for the
+  selected style target. The report shows zone biases and directions while A4
+  offsets remain candidate-only, so no mutation values are rendered.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _dual_machine_style_snapshot_routing_report_help():
+    from .reports.dual_machine_style_snapshot_routing import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: dual-machine-style-snapshot-routing-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key>
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --rytm-slot N
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --a4-slot N
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --json
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report --help
+
+Behavior:
+  Reads one local Analog Rytm MK2 SysEx file and one local Analog Four MK2 SysEx
+  file, selects supported kit snapshots, and prints passive rig-level style
+  routing readiness. Detailed pad/track rows remain in the single-machine reports.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _dual_machine_style_mutation_intent_report_help():
+    from .reports.dual_machine_style_mutation_intent import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: dual-machine-style-mutation-intent-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key>
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --rytm-slot N
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --a4-slot N
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> --json
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report --help
+
+Behavior:
+  Reads one local Analog Rytm MK2 SysEx file and one local Analog Four MK2 SysEx
+  file, selects supported kit snapshots, and prints passive rig-level style
+  mutation intent. Detailed pad/track intent rows are included in --json for
+  future GUI/analyzer consumers, but no mutation values are rendered.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _style_profile_report_help():
     from .reports.style_profiles import SAFETY_LINES
 
@@ -100,6 +258,22 @@ Usage:
 
 Behavior:
   Prints the passive style-profile catalog for techno design intent.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_target_report_help():
+    from .reports.style_targets import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-target-report
+
+Usage:
+  python -m rytm_randomizer.cli style-target-report
+  python -m rytm_randomizer.cli style-target-report --help
+
+Behavior:
+  Prints passive numeric style target vectors for future snapshot planning.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -134,11 +308,19 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
   python -m rytm_randomizer.cli search-style-profiles <query>
+  python -m rytm_randomizer.cli style-target-report
+  python -m rytm_randomizer.cli inspect-style-target <key>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -177,6 +359,18 @@ Commands:
                      Print passive Rytm snapshot intelligence for a SysEx file.
   rytm-snapshot-mutation-preview-report
                      Print passive Rytm snapshot mutation preview for a SysEx file.
+  rytm-style-snapshot-routing-report
+                     Print passive Rytm style snapshot routing for a SysEx file.
+  rytm-style-mutation-intent-report
+                     Print passive Rytm style mutation intent for a SysEx file.
+  analog-four-style-snapshot-routing-report
+                     Print passive Analog Four style snapshot routing for a SysEx file.
+  analog-four-style-mutation-intent-report
+                     Print passive Analog Four style mutation intent for a SysEx file.
+  dual-machine-style-snapshot-routing-report
+                     Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
+  dual-machine-style-mutation-intent-report
+                     Print passive dual-machine style mutation intent for Rytm and A4 SysEx files.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   style-profile-report
@@ -187,6 +381,10 @@ Commands:
                      Inspect passive style profile metadata by key.
   search-style-profiles
                      Search passive style profile metadata.
+  style-target-report
+                     Print the passive style target vector report.
+  inspect-style-target
+                     Inspect passive style target vector metadata by key.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -380,7 +578,14 @@ Safety:
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
+    "rytm-style-snapshot-routing-report": _rytm_style_snapshot_routing_report_help,
+    "rytm-style-mutation-intent-report": _rytm_style_mutation_intent_report_help,
+    "analog-four-style-snapshot-routing-report": _analog_four_style_snapshot_routing_report_help,
+    "analog-four-style-mutation-intent-report": _analog_four_style_mutation_intent_report_help,
+    "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
+    "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "style-profile-report": _style_profile_report_help,
+    "style-target-report": _style_target_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:
@@ -487,6 +692,23 @@ Usage:
 
 Behavior:
   Searches passive style profile metadata.
+
+Safety:
+  passive/read-only
+  metadata only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "inspect-style-target": """RytmRandomizer passive CLI: inspect-style-target
+
+Usage:
+  python -m rytm_randomizer.cli inspect-style-target <key>
+  python -m rytm_randomizer.cli inspect-style-target --help
+
+Behavior:
+  Displays passive numeric style target vector metadata for an existing key.
 
 Safety:
   passive/read-only

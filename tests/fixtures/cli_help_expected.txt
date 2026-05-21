@@ -21,11 +21,19 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
   python -m rytm_randomizer.cli search-style-profiles <query>
+  python -m rytm_randomizer.cli style-target-report
+  python -m rytm_randomizer.cli inspect-style-target <key>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -64,6 +72,18 @@ Commands:
                      Print passive Rytm snapshot intelligence for a SysEx file.
   rytm-snapshot-mutation-preview-report
                      Print passive Rytm snapshot mutation preview for a SysEx file.
+  rytm-style-snapshot-routing-report
+                     Print passive Rytm style snapshot routing for a SysEx file.
+  rytm-style-mutation-intent-report
+                     Print passive Rytm style mutation intent for a SysEx file.
+  analog-four-style-snapshot-routing-report
+                     Print passive Analog Four style snapshot routing for a SysEx file.
+  analog-four-style-mutation-intent-report
+                     Print passive Analog Four style mutation intent for a SysEx file.
+  dual-machine-style-snapshot-routing-report
+                     Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
+  dual-machine-style-mutation-intent-report
+                     Print passive dual-machine style mutation intent for Rytm and A4 SysEx files.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   style-profile-report
@@ -74,6 +94,10 @@ Commands:
                      Inspect passive style profile metadata by key.
   search-style-profiles
                      Search passive style profile metadata.
+  style-target-report
+                     Print the passive style target vector report.
+  inspect-style-target
+                     Inspect passive style target vector metadata by key.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
