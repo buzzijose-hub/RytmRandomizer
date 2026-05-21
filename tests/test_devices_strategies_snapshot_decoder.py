@@ -33,20 +33,49 @@ if str(PROJECT_ROOT) not in sys.path:
 def _kit_payload(name: bytes = b"") -> bytes:
     """Build a Rytm kit-dump body. ``name`` is up to 16 ASCII bytes for the kit name."""
 
+    return _real_layout_kit_payload(name=name)
+
+
+def _pack_elektron_7bit(unpacked: bytes) -> bytes:
+    out = bytearray()
+    for start in range(0, len(unpacked), 7):
+        group = unpacked[start : start + 7]
+        header = 0
+        for index, byte in enumerate(group):
+            header |= ((byte >> 7) & 0x01) << index
+        out.append(header)
+        out.extend(byte & 0x7F for byte in group)
+    return bytes(out)
+
+
+def _real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
+    """Build a packed Rytm kit body that matches the observed real dump header."""
+
     from rytm_randomizer.devices.strategies.analog_rytm_snapshot_decoder import (
         RYTM_KIT_TYPE_BYTE,
     )
 
-    padded = name.ljust(16, b"\x00")
-    # 3 wire groups of (1 header + 7 data) = enough payload for the name field
-    # and avoid the lone-trailing-header rejection from the envelope unpacker.
-    # Group 1: header=0 + 7 of the padded name.
-    # Group 2: header=0 + next 7 of the padded name (8..14).
-    # Group 3: header=0 + 7 NUL pad data bytes.
-    group_1 = bytes([0x00]) + padded[0:7]
-    group_2 = bytes([0x00]) + padded[7:14]
-    group_3 = bytes([0x00]) + padded[14:16] + bytes([0x00] * 5)
-    return bytes([0x00, 0x20, 0x3C, RYTM_KIT_TYPE_BYTE]) + group_1 + group_2 + group_3
+    unpacked = bytearray(bytes([0x52, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06]))
+    unpacked.extend(name.ljust(16, b"\x00"))
+    unpacked.extend(bytes([0x00] * 2600))
+    machine_values = {
+        1: 0,
+        2: 2,
+        3: 4,
+        4: 6,
+        5: 7,
+        6: 30,
+        7: 0,
+        8: 0,
+        9: 9,
+        10: 10,
+        11: 11,
+        12: 12,
+    }
+    for pad, value in machine_values.items():
+        unpacked[174 + (162 * (pad - 1))] = value
+    packed = _pack_elektron_7bit(bytes(unpacked))
+    return bytes([0x00, 0x20, 0x3C, RYTM_KIT_TYPE_BYTE]) + packed
 
 
 def _bad_prefix_payload() -> bytes:
@@ -84,6 +113,15 @@ def test_decode_extracts_kit_name_from_payload() -> None:
     assert snap.kit_name == "BD01"
 
 
+def test_decode_extracts_kit_name_from_real_layout_offset() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    decoder = AnalogRytmSnapshotDecoder()
+    snap = decoder.decode(_real_layout_kit_payload(name=b"KIT 12"), slot=11)
+
+    assert snap.kit_name == "KIT 12"
+
+
 def test_decode_strips_trailing_nuls_from_kit_name() -> None:
     """Elektron pads kit names with NULs; the decoded string must be clean."""
 
@@ -114,9 +152,51 @@ def test_decode_unpacks_payload_so_planner_can_slice_it() -> None:
     decoder = AnalogRytmSnapshotDecoder()
     snap = decoder.decode(_kit_payload(name=b"X"), slot=0)
 
-    # 3 wire groups of 8 bytes = 24 wire bytes -> 21 unpacked data bytes
-    # (one header byte per group is consumed).
-    assert len(snap.unpacked) == 21
+    assert len(snap.unpacked) >= 174 + (162 * 11) + 1
+
+
+def test_snapshot_exports_machine_fact_types() -> None:
+    from rytm_randomizer.devices.strategies import (
+        RytmSnapshotMachineFact,
+        RytmSnapshotMachineFacts,
+    )
+
+    fact = RytmSnapshotMachineFact(
+        pad=1,
+        raw_machine_value=0,
+        decoded_machine_value=0,
+        promoted=True,
+        reason="promoted",
+    )
+    facts = RytmSnapshotMachineFacts(facts_by_pad={1: fact}, promoted=False)
+
+    assert facts.facts_by_pad[1] is fact
+    assert facts.promoted is False
+
+
+def test_decode_extracts_candidate_machine_facts_from_real_layout() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    payload = _real_layout_kit_payload(name=b"LIVE")
+    snap = AnalogRytmSnapshotDecoder().decode(payload, slot=0)
+
+    assert snap.machine_facts.facts_by_pad[1].raw_machine_value == 0
+    assert snap.machine_facts.facts_by_pad[2].raw_machine_value == 2
+    assert snap.machine_facts.facts_by_pad[3].raw_machine_value == 4
+    assert snap.machine_facts.facts_by_pad[10].raw_machine_value == 10
+    assert snap.machine_facts.facts_by_pad[12].raw_machine_value == 12
+    assert snap.machine_facts.promoted is False
+
+
+def test_decode_marks_tom_pads_candidate_only_until_verified() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    snap = AnalogRytmSnapshotDecoder().decode(_real_layout_kit_payload(), slot=0)
+
+    for pad in (6, 7, 8):
+        fact = snap.machine_facts.facts_by_pad[pad]
+        assert fact.promoted is False
+        assert "candidate-only" in fact.reason
 
 
 # ---------------------------------------------------------------------------

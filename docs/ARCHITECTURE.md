@@ -127,7 +127,7 @@ on one line for an existing module, you probably need a new module instead.
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
 | `app.py`              | Top-of-stack entry point. `--arm` wires the `mido_provider` into `shell`.       |
-| `reports.py`          | Consolidated passive in-memory report dispatcher.                               |
+| `reports/`            | Passive in-memory report package + shared formatter.                            |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 
 ### Frozen reference (NOT in the layered graph)
@@ -262,7 +262,7 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add a new V1.34-equivalent command   | `shell.py` (dispatch) + relevant runner/engine.        | `add-pad-command`         |
 | Add new fact table                   | A new module under `data/` + re-export in `__init__`.  | `extend-data-layer`       |
 | Change MIDI primitives               | `midi_io.py`. Keep `mido` lazy.                        | (architecture review)     |
-| Add new passive report               | `reports.py` (or `inspection.py`) + CLI wire-up.       | (none, follow existing)   |
+| Add new passive report               | A module under `reports/` + CLI wire-up only when it becomes an operator command. | (none, follow existing)   |
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
 | **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
