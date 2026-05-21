@@ -307,7 +307,9 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     return {"sysex_path": sysex_path, "slot": slot, "list_slots": list_slots}
 
 
-def _decode_supported_snapshots(sysex_path: Path) -> tuple[RytmKitSnapshot, ...]:
+def decode_supported_rytm_snapshots_from_path(sysex_path: Path) -> tuple[RytmKitSnapshot, ...]:
+    """Return supported Analog Rytm kit snapshots from a framed SysEx file."""
+
     decoder = AnalogRytmSnapshotDecoder()
     errors: list[str] = []
     snapshots: list[RytmKitSnapshot] = []
@@ -339,14 +341,28 @@ def _slot_out_of_range_message(
     )
 
 
+def select_supported_rytm_snapshot(
+    sysex_path: Path,
+    slot: int,
+    snapshots: Sequence[RytmKitSnapshot],
+) -> RytmKitSnapshot:
+    """Return the supported snapshot for ``slot`` or raise an operator error."""
+
+    if slot < len(snapshots):
+        return snapshots[slot]
+    raise ValueError(_slot_out_of_range_message(sysex_path, slot, snapshots))
+
+
+def _decode_supported_snapshots(sysex_path: Path) -> tuple[RytmKitSnapshot, ...]:
+    return decode_supported_rytm_snapshots_from_path(sysex_path)
+
+
 def _select_supported_snapshot(
     sysex_path: Path,
     slot: int,
     snapshots: Sequence[RytmKitSnapshot],
 ) -> RytmKitSnapshot:
-    if slot < len(snapshots):
-        return snapshots[slot]
-    raise ValueError(_slot_out_of_range_message(sysex_path, slot, snapshots))
+    return select_supported_rytm_snapshot(sysex_path, slot, snapshots)
 
 
 def _handle_cli_report(*, sysex_path: Path, slot: int, list_slots: bool = False) -> int:
@@ -391,6 +407,8 @@ __all__ = [
     "SAFETY_LINES",
     "SOURCE_MODULE",
     "build_rytm_snapshot_intelligence_report",
+    "decode_supported_rytm_snapshots_from_path",
     "format_rytm_snapshot_file_catalog_report",
     "format_rytm_snapshot_intelligence_report",
+    "select_supported_rytm_snapshot",
 ]

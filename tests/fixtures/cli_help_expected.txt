@@ -17,6 +17,9 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path>
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -54,6 +57,8 @@ Commands:
                      Print the passive Rytm snapshot-pad compatibility report.
   rytm-snapshot-intelligence-report
                      Print passive Rytm snapshot intelligence for a SysEx file.
+  rytm-snapshot-mutation-preview-report
+                     Print passive Rytm snapshot mutation preview for a SysEx file.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   inspect-command    Inspect passive command metadata by key.

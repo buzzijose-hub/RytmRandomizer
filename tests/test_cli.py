@@ -18,6 +18,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "rytm-snapshot-pad-compatibility-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
+    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -197,6 +198,28 @@ def test_rytm_snapshot_intelligence_help_safety_matches_report_source():
     from rytm_randomizer.reports.rytm_snapshot_intelligence import SAFETY_LINES
 
     result = run_cli("rytm-snapshot-intelligence-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("rytm-snapshot-mutation-preview-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_rytm_snapshot_mutation_preview_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_help_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_snapshot_mutation_preview import SAFETY_LINES
+
+    result = run_cli("rytm-snapshot-mutation-preview-report", "--help")
 
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
@@ -521,6 +544,37 @@ def test_rytm_snapshot_intelligence_report_command_lists_supported_slots(tmp_pat
     assert result.stderr == ""
 
 
+def test_rytm_snapshot_mutation_preview_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVIEW")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("rytm-snapshot-mutation-preview-report", str(path), "--depth", "2")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot mutation preview" in result.stdout
+    assert "Kit: PREVIEW" in result.stdout
+    assert "Depth: 2" in result.stdout
+    assert "- Plan ready: False" in result.stdout
+    assert "- Mock messages: 0" in result.stdout
+    assert "candidate-only" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_command_rejects_missing_file(tmp_path):
+    result = run_cli(
+        "rytm-snapshot-mutation-preview-report",
+        str(tmp_path / "missing.syx"),
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "SysEx file does not exist" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_readme_mentions_rytm_machine_matrix_report_command():
     text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
 
@@ -540,6 +594,13 @@ def test_readme_mentions_rytm_snapshot_intelligence_report_command():
 
     assert "rytm-snapshot-intelligence-report" in text
     assert "snapshot intelligence" in text
+
+
+def test_readme_mentions_rytm_snapshot_mutation_preview_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "rytm-snapshot-mutation-preview-report" in text
+    assert "snapshot mutation preview" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
@@ -716,6 +777,22 @@ def test_rytm_snapshot_intelligence_report_command_is_deterministic(tmp_path):
     path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
     first = run_cli("rytm-snapshot-intelligence-report", str(path))
     second = run_cli("rytm-snapshot-intelligence-report", str(path))
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_rytm_snapshot_mutation_preview_report_command_is_deterministic(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVDET")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    first = run_cli("rytm-snapshot-mutation-preview-report", str(path), "--depth", "2")
+    second = run_cli("rytm-snapshot-mutation-preview-report", str(path), "--depth", "2")
 
     assert first.returncode == 0
     assert second.returncode == 0

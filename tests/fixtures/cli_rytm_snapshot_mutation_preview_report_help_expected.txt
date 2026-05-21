@@ -1,0 +1,21 @@
+RytmRandomizer passive CLI: rytm-snapshot-mutation-preview-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path>
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N --depth N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report --help
+
+Behavior:
+  Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
+  and prints a passive/mock-only mutation preview from snapshot machine facts.
+
+Safety:
+  passive/read-only
+  mock-only preview
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required
