@@ -475,6 +475,7 @@ def test_main_rytm_snapshot_intelligence_report_lazy_imports_when_module_unloade
     import sys
 
     from conftest import rytm_real_layout_kit_payload
+
     from rytm_randomizer import cli_registry
 
     payload = rytm_real_layout_kit_payload(name=b"COVERAGE")
