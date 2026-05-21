@@ -15,7 +15,8 @@ Usage:
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
-  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot 0
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot N
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>

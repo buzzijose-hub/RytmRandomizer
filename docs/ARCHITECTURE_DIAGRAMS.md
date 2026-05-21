@@ -1230,7 +1230,7 @@ flowchart TB
         C9["quick-status"]
         C10["rytm-12-pad-machine-matrix-report"]
         C11["rytm-snapshot-pad-compatibility-report"]
-        C12["rytm-snapshot-intelligence-report <syx-path> [--slot 0]"]
+        C12["rytm-snapshot-intelligence-report <syx-path> [--slot N|--list]"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1511,7 +1511,7 @@ flowchart LR
         Coverage["behavior-parity-report"]
         RytmMatrix["rytm-12-pad-machine-matrix-report"]
         RytmSnapshot["rytm-snapshot-pad-compatibility-report"]
-        RytmSnapshotIntel["rytm-snapshot-intelligence-report <syx-path> [--slot 0]"]
+        RytmSnapshotIntel["rytm-snapshot-intelligence-report <syx-path> [--slot N|--list]"]
         Status["project-status / quick-status"]
     end
 

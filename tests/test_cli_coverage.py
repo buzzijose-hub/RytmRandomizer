@@ -512,12 +512,12 @@ def test_main_rytm_snapshot_intelligence_report_returns_two_for_missing_file(cap
 
 
 def test_main_rytm_snapshot_intelligence_report_formats_parse_errors(capsys):
-    rc = cli.main(["rytm-snapshot-intelligence-report", "kit.syx", "--slot", "1"])
+    rc = cli.main(["rytm-snapshot-intelligence-report", "kit.syx", "--slot", "-1"])
 
     captured = capsys.readouterr()
     assert rc == 2
     assert captured.out == ""
-    assert "--slot currently supports only 0" in captured.err
+    assert "--slot must be >= 0" in captured.err
 
 
 def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):

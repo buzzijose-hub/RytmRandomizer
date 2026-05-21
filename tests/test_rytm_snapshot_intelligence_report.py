@@ -9,6 +9,10 @@ import pytest
 pytestmark = pytest.mark.fast
 
 
+def _framed_sysex(payload: bytes) -> bytes:
+    return bytes([0xF0]) + payload + bytes([0xF7])
+
+
 def _snapshot_with_machine_facts():
     from rytm_randomizer.devices.strategies import (
         RytmKitSnapshot,
@@ -248,6 +252,22 @@ def test_rytm_snapshot_intelligence_cli_arg_parser_accepts_slot_zero() -> None:
     assert defaulted["slot"] == 0
     assert parsed["sysex_path"] == Path("kit.syx")
     assert parsed["slot"] == 0
+    assert defaulted["list_slots"] is False
+    assert parsed["list_slots"] is False
+
+
+def test_rytm_snapshot_intelligence_cli_arg_parser_accepts_nonzero_slot_and_list() -> None:
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _parse_cli_args
+
+    selected = _parse_cli_args(["kit.syx", "--slot", "17"])
+    listed = _parse_cli_args(["kit.syx", "--list"])
+
+    assert selected["sysex_path"] == Path("kit.syx")
+    assert selected["slot"] == 17
+    assert selected["list_slots"] is False
+    assert listed["sysex_path"] == Path("kit.syx")
+    assert listed["slot"] == 0
+    assert listed["list_slots"] is True
 
 
 def test_rytm_snapshot_intelligence_cli_error_formatter_is_operator_facing() -> None:
@@ -263,7 +283,8 @@ def test_rytm_snapshot_intelligence_cli_error_formatter_is_operator_facing() -> 
         (["kit.syx", "--slot"], "usage"),
         (["kit.syx", "--bank", "0"], "usage"),
         (["kit.syx", "--slot", "not-int"], "must be an integer"),
-        (["kit.syx", "--slot", "1"], "supports only 0"),
+        (["kit.syx", "--slot", "-1"], "must be >= 0"),
+        (["kit.syx", "--list", "--slot", "1"], "usage"),
     ],
 )
 def test_rytm_snapshot_intelligence_cli_arg_parser_rejects_invalid_args(
@@ -287,9 +308,9 @@ def test_rytm_snapshot_intelligence_cli_handler_reads_first_supported_frame(
     bad_frame = bytes([0xF0, 0x00, 0x20, 0x3C, 0x05, 0x00, 0xF7])
     good_payload = rytm_real_layout_kit_payload(name=b"LIVECLI")
     path = tmp_path / "bank.syx"
-    path.write_bytes(bad_frame + bytes([0xF0]) + good_payload + bytes([0xF7]))
+    path.write_bytes(bad_frame + _framed_sysex(good_payload))
 
-    rc = _handle_cli_report(sysex_path=path, slot=0)
+    rc = _handle_cli_report(sysex_path=path, slot=0, list_slots=False)
 
     captured = capsys.readouterr()
     assert rc == 0
@@ -298,13 +319,82 @@ def test_rytm_snapshot_intelligence_cli_handler_reads_first_supported_frame(
     assert captured.err == ""
 
 
+def test_rytm_snapshot_intelligence_cli_handler_reads_requested_supported_slot(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
+
+    first_payload = rytm_real_layout_kit_payload(name=b"FIRSTKIT")
+    second_payload = rytm_real_layout_kit_payload(name=b"SECONDKIT")
+    path = tmp_path / "bank.syx"
+    path.write_bytes(_framed_sysex(first_payload) + _framed_sysex(second_payload))
+
+    rc = _handle_cli_report(sysex_path=path, slot=1, list_slots=False)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "Kit: SECONDKIT" in captured.out
+    assert "Slot: 1" in captured.out
+    assert "Kit: FIRSTKIT" not in captured.out
+    assert captured.err == ""
+
+
+def test_rytm_snapshot_intelligence_cli_handler_lists_supported_slots(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
+
+    first_payload = rytm_real_layout_kit_payload(name=b"FIRSTKIT")
+    second_payload = rytm_real_layout_kit_payload(name=b"SECONDKIT")
+    path = tmp_path / "bank.syx"
+    path.write_bytes(_framed_sysex(first_payload) + _framed_sysex(second_payload))
+
+    rc = _handle_cli_report(sysex_path=path, slot=0, list_slots=True)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot file catalog" in captured.out
+    assert "Supported Rytm kit snapshots: 2" in captured.out
+    assert "Slot 0: FIRSTKIT" in captured.out
+    assert "Slot 1: SECONDKIT" in captured.out
+    assert "- no MIDI sending" in captured.out
+    assert captured.err == ""
+
+
+def test_rytm_snapshot_intelligence_cli_handler_reports_out_of_range_slot(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
+
+    path = tmp_path / "bank.syx"
+    path.write_bytes(_framed_sysex(rytm_real_layout_kit_payload(name=b"ONLYKIT")))
+
+    rc = _handle_cli_report(sysex_path=path, slot=1, list_slots=False)
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "Requested --slot 1" in captured.err
+    assert "only 1 supported Analog Rytm kit snapshot" in captured.err
+    assert "Slot 0: ONLYKIT" in captured.err
+
+
 def test_rytm_snapshot_intelligence_cli_handler_reports_expected_errors(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
 
-    rc = _handle_cli_report(sysex_path=tmp_path / "missing.syx", slot=0)
+    rc = _handle_cli_report(sysex_path=tmp_path / "missing.syx", slot=0, list_slots=False)
 
     captured = capsys.readouterr()
     assert rc == 2
@@ -322,7 +412,7 @@ def test_rytm_snapshot_intelligence_cli_handler_reports_when_no_supported_frame(
     path = tmp_path / "not-rytm.syx"
     path.write_bytes(bytes([0xF0, 0x00, 0x20, 0x3C, 0x05, 0x00, 0xF7]))
 
-    rc = _handle_cli_report(sysex_path=path, slot=0)
+    rc = _handle_cli_report(sysex_path=path, slot=0, list_slots=False)
 
     captured = capsys.readouterr()
     assert rc == 2

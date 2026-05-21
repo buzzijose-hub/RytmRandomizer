@@ -17,7 +17,7 @@ USAGE = (
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "rytm-snapshot-pad-compatibility-report | "
-    "rytm-snapshot-intelligence-report <syx-path> [--slot 0] | "
+    "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -484,7 +484,7 @@ def test_rytm_snapshot_intelligence_report_command_rejects_missing_file(tmp_path
     assert "Traceback" not in result.stderr
 
 
-def test_rytm_snapshot_intelligence_report_command_rejects_unsupported_slot(tmp_path):
+def test_rytm_snapshot_intelligence_report_command_reports_out_of_range_slot(tmp_path):
     from conftest import rytm_real_layout_kit_payload
 
     payload = rytm_real_layout_kit_payload(name=b"SLOT0")
@@ -495,8 +495,30 @@ def test_rytm_snapshot_intelligence_report_command_rejects_unsupported_slot(tmp_
 
     assert result.returncode == 2
     assert result.stdout == ""
-    assert "--slot currently supports only 0" in result.stderr
+    assert "Requested --slot 1" in result.stderr
+    assert "only 1 supported Analog Rytm kit snapshot" in result.stderr
+    assert "Slot 0: SLOT0" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_rytm_snapshot_intelligence_report_command_lists_supported_slots(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    first_payload = rytm_real_layout_kit_payload(name=b"FIRST")
+    second_payload = rytm_real_layout_kit_payload(name=b"SECOND")
+    path = tmp_path / "bank.syx"
+    path.write_bytes(
+        bytes([0xF0]) + first_payload + bytes([0xF7, 0xF0]) + second_payload + bytes([0xF7])
+    )
+
+    result = run_cli("rytm-snapshot-intelligence-report", str(path), "--list")
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot file catalog" in result.stdout
+    assert "Supported Rytm kit snapshots: 2" in result.stdout
+    assert "Slot 0: FIRST" in result.stdout
+    assert "Slot 1: SECOND" in result.stdout
+    assert result.stderr == ""
 
 
 def test_readme_mentions_rytm_machine_matrix_report_command():

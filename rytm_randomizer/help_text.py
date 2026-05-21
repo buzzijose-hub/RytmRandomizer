@@ -12,7 +12,7 @@ USAGE = (
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "rytm-snapshot-pad-compatibility-report | "
-    "rytm-snapshot-intelligence-report <syx-path> [--slot 0] | "
+    "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -49,12 +49,13 @@ def _rytm_snapshot_intelligence_report_help():
 
 Usage:
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
-  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot 0
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report --help
 
 Behavior:
   Reads a local Analog Rytm MK2 SysEx file and prints passive snapshot intelligence
-  for the first supported kit snapshot.
+  for a supported kit snapshot. Use --list to see supported kit slots in a dump.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -83,7 +84,8 @@ Usage:
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
-  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot 0
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot N
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
