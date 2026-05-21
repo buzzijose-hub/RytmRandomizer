@@ -1,4 +1,4 @@
-# Analog Four SysEx Readiness Intake PR14
+# Analog Four Snapshot Style Readiness Bundle PR15
 
 ## Why
 
@@ -8,8 +8,8 @@ step. Jose supplied real Analog Four kit and project dumps; read-only analysis
 showed saved-kit frames use Elektron family byte `0x06`, object byte `0x52`,
 and a 7-bit-packed payload with the kit name in the unpacked record.
 
-This slice makes that real file shape decodable while keeping A4 mutation
-blocked until offsets are validated.
+This bundled PR makes that real file shape decodable, operator-visible, and
+style-sweepable while keeping A4 mutation blocked until offsets are validated.
 
 ## Scope
 
