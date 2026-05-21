@@ -11,6 +11,7 @@ from ...data.style_discovery import DEFAULT_STYLE_DISCOVERY_AMOUNT
 from ...mock_midi import MidiMessage
 from .analog_four_message_renderer import AnalogFourMessageRenderer
 from .analog_four_mutation_planner import AnalogFourMutationPlan, AnalogFourPlanEvent
+from .analog_four_offset_manifest import A4_SNAPSHOT_LAYOUT_SAVED_KIT
 from .analog_four_snapshot_decoder import AnalogFourKitSnapshot
 from .analog_four_style_mutation_intent import (
     AnalogFourStyleMutationIntentPlan,
@@ -40,6 +41,10 @@ _NRPN_ONLY_REASON: Final[str] = "NRPN-only A4 zone; no CC mock row rendered"
 _CANDIDATE_ONLY_REASON: Final[str] = "Analog Four offsets are candidate-only"
 _CANDIDATE_PREVIEW_REASON: Final[str] = (
     "Analog Four offsets are candidate-only; promote offsets before mock CC preview"
+)
+_SAVED_KIT_PREVIEW_REASON: Final[str] = (
+    "Analog Four saved-kit SysEx decoded; offsets remain candidate-only; "
+    "promote offsets before mock CC preview"
 )
 
 
@@ -78,6 +83,7 @@ class AnalogFourStyleMutationMockPreview:
 
     kit_name: str
     slot: int
+    snapshot_layout: str
     style_key: str
     discovery_amount: int
     discovery_band: str
@@ -252,6 +258,12 @@ def _render_mock_rows(
     )
 
 
+def _candidate_preview_reason(snapshot: AnalogFourKitSnapshot) -> str:
+    if snapshot.snapshot_layout == A4_SNAPSHOT_LAYOUT_SAVED_KIT:
+        return _SAVED_KIT_PREVIEW_REASON
+    return _CANDIDATE_PREVIEW_REASON
+
+
 def build_analog_four_style_mutation_mock_preview(
     snapshot: AnalogFourKitSnapshot,
     style_key: str,
@@ -279,10 +291,11 @@ def build_analog_four_style_mutation_mock_preview(
     preview_ready = bool(rows)
     readiness_reason = "ready" if preview_ready else "no CC-renderable style zones available"
     if blocked_reason is not None:
-        readiness_reason = _CANDIDATE_PREVIEW_REASON
+        readiness_reason = _candidate_preview_reason(snapshot)
     return AnalogFourStyleMutationMockPreview(
         kit_name=intent_plan.kit_name,
         slot=intent_plan.slot,
+        snapshot_layout=snapshot.snapshot_layout,
         style_key=intent_plan.style_key,
         discovery_amount=intent_plan.discovery_amount,
         discovery_band=intent_plan.discovery_band,
