@@ -33,6 +33,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
@@ -105,6 +106,8 @@ Commands:
                      Print passive dual-machine style readiness across Rytm and A4 kit banks.
   dual-machine-style-kit-selection-report
                      Print passive style kit selections for Rytm, A4, or both machines.
+  dual-machine-style-selection-mock-preview-report
+                     Print passive mock previews from ranked style kit selections.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
   dual-machine-style-mutation-intent-report

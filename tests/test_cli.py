@@ -45,6 +45,10 @@ USAGE = (
     "[--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -415,6 +419,24 @@ def test_dual_machine_style_kit_selection_report_help_exits_zero_and_safety_matc
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: dual-machine-style-kit-selection-report" in help_text
     assert "--scope dual|rytm-only|analog-four-only|a4-only" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_selection_mock_preview_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_selection_mock_preview import (
+        SAFETY_LINES,
+    )
+
+    result = run_cli("dual-machine-style-selection-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert (
+        "RytmRandomizer passive CLI: dual-machine-style-selection-mock-preview-report" in help_text
+    )
+    assert "--rank N" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -1598,6 +1620,13 @@ def test_readme_mentions_dual_machine_style_snapshot_routing_report_command():
 
     assert "dual-machine-style-snapshot-routing-report" in text
     assert "dual-machine style snapshot routing" in text
+
+
+def test_readme_mentions_dual_machine_style_selection_mock_preview_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "dual-machine-style-selection-mock-preview-report" in text
+    assert "selection mock preview" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

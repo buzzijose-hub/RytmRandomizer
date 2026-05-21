@@ -40,6 +40,10 @@ USAGE = (
     "[--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -421,6 +425,30 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _dual_machine_style_selection_mock_preview_report_help():
+    from .reports.dual_machine_style_selection_mock_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: dual-machine-style-selection-mock-preview-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> --scope rytm-only
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --analog-four <syx-path> --scope analog-four-only
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --scope dual|rytm-only|analog-four-only|a4-only
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--rank N] [--discovery N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report --help
+
+Behavior:
+  Reads local Analog Rytm MK2 and/or Analog Four MK2 SysEx kit banks, selects a
+  ranked style kit candidate, and prints the passive/mock-only mutation preview
+  for that selection. Use --rank N to audition a lower-ranked candidate without
+  manually copying slots between reports. Single-machine scopes leave the other
+  machine unchanged.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _dual_machine_style_snapshot_routing_report_help():
     from .reports.dual_machine_style_snapshot_routing import SAFETY_LINES
 
@@ -571,6 +599,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
@@ -643,6 +672,8 @@ Commands:
                      Print passive dual-machine style readiness across Rytm and A4 kit banks.
   dual-machine-style-kit-selection-report
                      Print passive style kit selections for Rytm, A4, or both machines.
+  dual-machine-style-selection-mock-preview-report
+                     Print passive mock previews from ranked style kit selections.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
   dual-machine-style-mutation-intent-report
@@ -870,6 +901,9 @@ Safety:
     "analog-four-style-kit-readiness-report": _analog_four_style_kit_readiness_report_help,
     "dual-machine-style-kit-readiness-report": _dual_machine_style_kit_readiness_report_help,
     "dual-machine-style-kit-selection-report": _dual_machine_style_kit_selection_report_help,
+    "dual-machine-style-selection-mock-preview-report": (
+        _dual_machine_style_selection_mock_preview_report_help
+    ),
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
     "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "dual-machine-style-mutation-mock-preview-report": (
