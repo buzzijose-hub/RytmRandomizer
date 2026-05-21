@@ -51,12 +51,19 @@ def test_style_target_vectors_encode_expected_musical_intent():
     detroit = STYLE_TARGET_VECTORS["detroit_minimal"]
     industrial = STYLE_TARGET_VECTORS["industrial_dark"]
     hardgroove = STYLE_TARGET_VECTORS["hardgroove_percussive"]
+    jose_core = STYLE_TARGET_VECTORS["jose_core_techno"]
 
     assert birmingham.drive_pressure >= 85
     assert industrial.noise_grit == 100
     assert hardgroove.percussive_density >= 85
     assert detroit.minimal_restraint >= 85
     assert detroit.space_depth < industrial.space_depth
+    assert jose_core.drive_pressure >= 90
+    assert jose_core.repetition_hypnosis >= 90
+    assert jose_core.darkness >= 80
+    assert jose_core.metallicity >= 75
+    assert jose_core.industrial_edge >= 85
+    assert jose_core.warehouse_intensity >= 90
 
 
 def test_style_target_catalog_report_is_detached_from_source_mapping():

@@ -289,6 +289,25 @@ _STYLE_TARGET_VECTOR_ITEMS: Final[tuple[StyleTargetVector, ...]] = (
         minimal_restraint=35,
         warehouse_intensity=100,
     ),
+    _target(
+        "jose_core_techno",
+        low_end_weight=90,
+        transient_density=85,
+        attack_sharpness=85,
+        decay_tail=35,
+        darkness=85,
+        metallicity=80,
+        noise_grit=85,
+        drive_pressure=95,
+        space_depth=45,
+        motion_amount=85,
+        repetition_hypnosis=95,
+        percussive_density=85,
+        tonal_center_weight=45,
+        industrial_edge=90,
+        minimal_restraint=60,
+        warehouse_intensity=95,
+    ),
 )
 
 STYLE_TARGET_VECTORS: Final[Mapping[str, StyleTargetVector]] = MappingProxyType(

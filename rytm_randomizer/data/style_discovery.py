@@ -7,7 +7,7 @@ from typing import Final
 
 STYLE_DISCOVERY_AMOUNT_MIN: Final[int] = 0
 STYLE_DISCOVERY_AMOUNT_MAX: Final[int] = 100
-DEFAULT_STYLE_DISCOVERY_AMOUNT: Final[int] = 75
+DEFAULT_STYLE_DISCOVERY_AMOUNT: Final[int] = 45
 
 
 @dataclass(frozen=True)

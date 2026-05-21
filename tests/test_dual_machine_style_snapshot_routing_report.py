@@ -95,9 +95,9 @@ def test_dual_machine_style_routing_formats_operator_report():
 
     assert lines[0] == "RytmRandomizer passive dual-machine style snapshot routing"
     assert "Style target: birmingham_pressure" in lines
-    assert "Discovery amount: 75" in lines
-    assert "Discovery band: discovery" in lines
-    assert "Machine switching allowed: True" in lines
+    assert "Discovery amount: 45" in lines
+    assert "Discovery band: balanced" in lines
+    assert "Machine switching allowed: False" in lines
     assert "Rig readiness: partial" in lines
     assert "Rytm:" in lines
     assert "- Kit: RYTMSTYLE" in lines
@@ -125,9 +125,9 @@ def test_dual_machine_style_routing_serializes_json_contract():
     payload = to_dual_machine_style_snapshot_routing_json(plan)
 
     assert payload["style_key"] == "industrial_dark"
-    assert payload["discovery_amount"] == 75
-    assert payload["discovery_band"] == "discovery"
-    assert payload["machine_switching_allowed"] is True
+    assert payload["discovery_amount"] == 45
+    assert payload["discovery_band"] == "balanced"
+    assert payload["machine_switching_allowed"] is False
     assert payload["rig_readiness"] == "partial"
     assert payload["machines"] == {
         "analog_four": {
@@ -285,7 +285,7 @@ def test_dual_machine_style_routing_cli_parser_accepts_slots():
         "style_key": "industrial_dark",
         "rytm_slot": 0,
         "analog_four_slot": 0,
-        "discovery_amount": 75,
+        "discovery_amount": 45,
         "json_output": False,
     }
     assert _parse_cli_args(

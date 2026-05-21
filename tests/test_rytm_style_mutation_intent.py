@@ -378,7 +378,7 @@ def test_style_mutation_intent_cli_parser_accepts_slot_discovery_and_json():
         "sysex_path": Path("kit.syx"),
         "style_key": "birmingham_pressure",
         "slot": 0,
-        "discovery_amount": 75,
+        "discovery_amount": 45,
         "json_output": False,
     }
     assert _parse_cli_args(
