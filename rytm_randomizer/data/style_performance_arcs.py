@@ -1,0 +1,237 @@
+"""Passive reference performance arcs for long-form techno set planning."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from dataclasses import dataclass
+from types import MappingProxyType
+from typing import Final
+
+from .style_discovery import STYLE_DISCOVERY_AMOUNT_MAX, STYLE_DISCOVERY_AMOUNT_MIN
+from .style_profiles import STYLE_PROFILES
+
+
+@dataclass(frozen=True)
+class StylePerformanceArc:
+    """Passive reference arc that expands into a style-key performance plan."""
+
+    key: str
+    name: str
+    summary: str
+    references: tuple[str, ...]
+    tags: tuple[str, ...]
+    style_keys: tuple[str, ...]
+    default_scope: str
+    default_total_minutes: int
+    default_selection_rank: int
+    default_discovery_start: int
+    default_discovery_end: int
+    operator_notes: tuple[str, ...]
+
+
+_STYLE_PERFORMANCE_ARC_ITEMS: Final[tuple[StylePerformanceArc, ...]] = (
+    StylePerformanceArc(
+        key="jose_warehouse_five_hour",
+        name="Jose Warehouse Five Hour",
+        summary=(
+            "A five-hour warehouse arc that starts with Jose's core pressure, "
+            "moves through Mills/Mulero hypnosis, peaks in Birmingham/Stigmata "
+            "industrial drive, then resets into stripped hard minimal control."
+        ),
+        references=(
+            "Jeff Mills",
+            "Oscar Mulero",
+            "Chris Liebing & Andre Walter Stigmata 1-10",
+            "Glenn Wilson / The Nightshift",
+            "Thomas Krome - Bitches from Hell",
+            "Kay D Smith early era",
+            "Regis",
+            "Surgeon",
+        ),
+        tags=(
+            "jose",
+            "warehouse",
+            "five_hour",
+            "jeff_mills",
+            "oscar_mulero",
+            "stigmata",
+            "birmingham",
+            "industrial",
+            "hard_loop",
+            "hypnotic",
+        ),
+        style_keys=(
+            "jose_core_techno",
+            "mills_hypnotic",
+            "deep_dark_hypnosis",
+            "birmingham_pressure",
+            "industrial_dark",
+            "warehouse_peak",
+            "hood_stripped",
+        ),
+        default_scope="dual",
+        default_total_minutes=300,
+        default_selection_rank=1,
+        default_discovery_start=30,
+        default_discovery_end=85,
+        operator_notes=(
+            "Keep Rytm Pad 1 as the protected kick foundation while density rises.",
+            "Use Analog Four Track 1 for bassline pressure and Track 2 for leads/stabs.",
+            "Let Tracks 3-4 become percussive texture, pad, drone, or second-lead roles.",
+        ),
+    ),
+    StylePerformanceArc(
+        key="mills_mulero_tunnel",
+        name="Mills Mulero Tunnel",
+        summary=(
+            "A shorter hypnotic tunnel arc centered on futuristic Mills motion and "
+            "Oscar Mulero darkness, with deep pressure before the peak."
+        ),
+        references=(
+            "Jeff Mills",
+            "Oscar Mulero",
+            "Robert Hood",
+            "Underground Resistance",
+        ),
+        tags=(
+            "jeff_mills",
+            "oscar_mulero",
+            "detroit",
+            "dark",
+            "hypnotic",
+            "tunnel",
+        ),
+        style_keys=(
+            "mills_hypnotic",
+            "deep_dark_hypnosis",
+            "warehouse_peak",
+            "hood_stripped",
+        ),
+        default_scope="dual",
+        default_total_minutes=180,
+        default_selection_rank=1,
+        default_discovery_start=35,
+        default_discovery_end=75,
+        operator_notes=(
+            "Favor bell partials, moving metallic accents, and patient low-end pressure.",
+            "Use lower discovery when the room needs hypnotic restraint.",
+        ),
+    ),
+    StylePerformanceArc(
+        key="stigmata_birmingham_assault",
+        name="Stigmata Birmingham Assault",
+        summary=(
+            "A hard-edged pressure arc for Stigmata, Birmingham, Regis, Surgeon, "
+            "Glenn Wilson, Thomas Krome, and early Kay D Smith references."
+        ),
+        references=(
+            "Chris Liebing & Andre Walter Stigmata 1-10",
+            "Regis",
+            "Surgeon",
+            "Glenn Wilson / The Nightshift",
+            "Thomas Krome - Bitches from Hell",
+            "Kay D Smith early era",
+        ),
+        tags=(
+            "stigmata",
+            "birmingham",
+            "regis",
+            "surgeon",
+            "glenn_wilson",
+            "thomas_krome",
+            "kay_d_smith",
+            "industrial",
+            "hard",
+        ),
+        style_keys=(
+            "birmingham_pressure",
+            "industrial_dark",
+            "warehouse_peak",
+            "jose_core_techno",
+        ),
+        default_scope="dual",
+        default_total_minutes=150,
+        default_selection_rank=1,
+        default_discovery_start=55,
+        default_discovery_end=95,
+        operator_notes=(
+            "Let grit and drive rise quickly, but keep the kick foundation bounded.",
+            "Use Analog Four for overdriven monotone stabs, alarms, and dark filter stress.",
+        ),
+    ),
+    StylePerformanceArc(
+        key="hardgroove_detroit_machine_funk",
+        name="Hardgroove Detroit Machine Funk",
+        summary=(
+            "A funkier pressure arc balancing hardgroove percussion with Detroit "
+            "machine funk and stripped minimal drive."
+        ),
+        references=(
+            "Underground Resistance",
+            "Robert Hood",
+            "Jeff Mills",
+            "hardgroove",
+        ),
+        tags=(
+            "hardgroove",
+            "detroit",
+            "machine_funk",
+            "minimal",
+            "rolling",
+            "percussive",
+        ),
+        style_keys=(
+            "hardgroove_percussive",
+            "ur_machine_funk",
+            "detroit_minimal",
+            "hood_stripped",
+        ),
+        default_scope="dual",
+        default_total_minutes=180,
+        default_selection_rank=1,
+        default_discovery_start=30,
+        default_discovery_end=70,
+        operator_notes=(
+            "Keep percussion rolling while giving the Analog Four short stab support.",
+            "Use this arc when the room wants funk and forward motion before the harder peak.",
+        ),
+    ),
+)
+
+
+def _validated_arcs(
+    arcs: tuple[StylePerformanceArc, ...],
+) -> Mapping[str, StylePerformanceArc]:
+    for arc in arcs:
+        if arc.default_total_minutes < 1:
+            raise ValueError(f"{arc.key} default_total_minutes must be >= 1")
+        if arc.default_selection_rank < 1:
+            raise ValueError(f"{arc.key} default_selection_rank must be >= 1")
+        if (
+            not STYLE_DISCOVERY_AMOUNT_MIN
+            <= arc.default_discovery_start
+            <= STYLE_DISCOVERY_AMOUNT_MAX
+        ):
+            raise ValueError(f"{arc.key} default_discovery_start is out of range")
+        if (
+            not STYLE_DISCOVERY_AMOUNT_MIN
+            <= arc.default_discovery_end
+            <= STYLE_DISCOVERY_AMOUNT_MAX
+        ):
+            raise ValueError(f"{arc.key} default_discovery_end is out of range")
+        missing_styles = tuple(
+            style_key for style_key in arc.style_keys if style_key not in STYLE_PROFILES
+        )
+        if missing_styles:
+            raise ValueError(f"{arc.key} references unknown styles: {missing_styles}")
+    return MappingProxyType({arc.key: arc for arc in arcs})
+
+
+STYLE_PERFORMANCE_ARCS: Final[Mapping[str, StylePerformanceArc]] = _validated_arcs(
+    _STYLE_PERFORMANCE_ARC_ITEMS
+)
+
+__all__ = [
+    "STYLE_PERFORMANCE_ARCS",
+    "StylePerformanceArc",
+]
