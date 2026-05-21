@@ -24,7 +24,7 @@ USAGE = (
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
-    "search-style-profiles <query> | "
+    "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -949,6 +949,45 @@ def test_missing_inspect_style_profile_key_fails_safely():
 
 def test_missing_search_style_profile_query_fails_safely():
     result = run_cli("search-style-profiles")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_style_target_report_command_exits_zero_and_is_passive():
+    result = run_cli("style-target-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style target vector report" in output
+    assert "- Targets: 9" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_target_known_key_exits_zero():
+    result = run_cli("inspect-style-target", "birmingham_pressure")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style target vector inspection" in output
+    assert "Key: birmingham_pressure" in output
+    assert "drive_pressure: 95" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_target_unknown_key_fails_safely():
+    result = run_cli("inspect-style-target", "ghost_style")
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "Style target not found" in result.stderr
+    assert "No MIDI was sent" in result.stderr
+
+
+def test_style_target_report_rejects_unknown_argument():
+    result = run_cli("style-target-report", "--mutate")
 
     assert result.returncode == 2
     assert result.stdout == ""

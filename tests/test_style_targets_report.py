@@ -112,3 +112,76 @@ def test_style_target_inspection_unknown_key_reports_no_send_path():
     assert "Found: False" in lines
     assert "Message: Style target not found. No MIDI was sent. No command executed." in lines
     assert "- no MIDI sending" in lines
+
+
+def test_style_target_cli_command_parsers_accept_expected_arguments():
+    from rytm_randomizer.reports.style_targets import (
+        INSPECT_STYLE_TARGET_CLI_COMMAND,
+        STYLE_TARGET_REPORT_CLI_COMMAND,
+    )
+
+    assert STYLE_TARGET_REPORT_CLI_COMMAND.args_parser([]) == {}
+    assert INSPECT_STYLE_TARGET_CLI_COMMAND.args_parser(["detroit_minimal"]) == {
+        "key": "detroit_minimal"
+    }
+
+
+@pytest.mark.parametrize(
+    ("command_name", "argv", "message"),
+    [
+        ("STYLE_TARGET_REPORT_CLI_COMMAND", ["extra"], "command takes no arguments"),
+        ("INSPECT_STYLE_TARGET_CLI_COMMAND", [], "command requires exactly one key"),
+        (
+            "INSPECT_STYLE_TARGET_CLI_COMMAND",
+            ["one", "two"],
+            "command requires exactly one key",
+        ),
+    ],
+)
+def test_style_target_cli_command_parsers_reject_bad_arguments(
+    command_name,
+    argv,
+    message,
+):
+    import rytm_randomizer.reports.style_targets as style_targets
+
+    command = getattr(style_targets, command_name)
+    with pytest.raises(ValueError, match=message):
+        command.args_parser(argv)
+
+
+def test_style_target_report_handler_writes_stdout(capsys):
+    from rytm_randomizer.reports.style_targets import STYLE_TARGET_REPORT_CLI_COMMAND
+
+    assert STYLE_TARGET_REPORT_CLI_COMMAND.handler() == 0
+    captured = capsys.readouterr()
+
+    assert "RytmRandomizer passive style target vector report" in captured.out
+    assert "- no MIDI sending" in captured.out
+    assert captured.err == ""
+
+
+def test_style_target_inspect_handler_routes_known_key_to_stdout(capsys):
+    from rytm_randomizer.reports.style_targets import INSPECT_STYLE_TARGET_CLI_COMMAND
+
+    kwargs = INSPECT_STYLE_TARGET_CLI_COMMAND.args_parser(["detroit_minimal"])
+
+    assert INSPECT_STYLE_TARGET_CLI_COMMAND.handler(**kwargs) == 0
+    captured = capsys.readouterr()
+
+    assert "Found: True" in captured.out
+    assert "minimal_restraint:" in captured.out
+    assert captured.err == ""
+
+
+def test_style_target_inspect_handler_routes_unknown_key_to_stderr(capsys):
+    from rytm_randomizer.reports.style_targets import INSPECT_STYLE_TARGET_CLI_COMMAND
+
+    kwargs = INSPECT_STYLE_TARGET_CLI_COMMAND.args_parser(["ghost_style"])
+
+    assert INSPECT_STYLE_TARGET_CLI_COMMAND.handler(**kwargs) == 1
+    captured = capsys.readouterr()
+
+    assert captured.out == ""
+    assert "Found: False" in captured.err
+    assert "No MIDI was sent" in captured.err

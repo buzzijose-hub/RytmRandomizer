@@ -44,6 +44,14 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.style_profiles",
             "SEARCH_STYLE_PROFILES_CLI_COMMAND",
         ),
+        "style-target-report": (
+            "rytm_randomizer.reports.style_targets",
+            "STYLE_TARGET_REPORT_CLI_COMMAND",
+        ),
+        "inspect-style-target": (
+            "rytm_randomizer.reports.style_targets",
+            "INSPECT_STYLE_TARGET_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

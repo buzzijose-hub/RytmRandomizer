@@ -19,7 +19,7 @@ USAGE = (
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
-    "search-style-profiles <query> | "
+    "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -105,6 +105,22 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_target_report_help():
+    from .reports.style_targets import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-target-report
+
+Usage:
+  python -m rytm_randomizer.cli style-target-report
+  python -m rytm_randomizer.cli style-target-report --help
+
+Behavior:
+  Prints passive numeric style target vectors for future snapshot planning.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -139,6 +155,8 @@ Usage:
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
   python -m rytm_randomizer.cli search-style-profiles <query>
+  python -m rytm_randomizer.cli style-target-report
+  python -m rytm_randomizer.cli inspect-style-target <key>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -187,6 +205,10 @@ Commands:
                      Inspect passive style profile metadata by key.
   search-style-profiles
                      Search passive style profile metadata.
+  style-target-report
+                     Print the passive style target vector report.
+  inspect-style-target
+                     Inspect passive style target vector metadata by key.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -381,6 +403,7 @@ Safety:
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
     "style-profile-report": _style_profile_report_help,
+    "style-target-report": _style_target_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:
@@ -487,6 +510,23 @@ Usage:
 
 Behavior:
   Searches passive style profile metadata.
+
+Safety:
+  passive/read-only
+  metadata only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "inspect-style-target": """RytmRandomizer passive CLI: inspect-style-target
+
+Usage:
+  python -m rytm_randomizer.cli inspect-style-target <key>
+  python -m rytm_randomizer.cli inspect-style-target --help
+
+Behavior:
+  Displays passive numeric style target vector metadata for an existing key.
 
 Safety:
   passive/read-only

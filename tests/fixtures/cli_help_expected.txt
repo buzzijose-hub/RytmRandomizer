@@ -26,6 +26,8 @@ Usage:
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
   python -m rytm_randomizer.cli search-style-profiles <query>
+  python -m rytm_randomizer.cli style-target-report
+  python -m rytm_randomizer.cli inspect-style-target <key>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -74,6 +76,10 @@ Commands:
                      Inspect passive style profile metadata by key.
   search-style-profiles
                      Search passive style profile metadata.
+  style-target-report
+                     Print the passive style target vector report.
+  inspect-style-target
+                     Inspect passive style target vector metadata by key.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
