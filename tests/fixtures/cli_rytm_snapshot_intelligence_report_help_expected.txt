@@ -2,12 +2,13 @@ RytmRandomizer passive CLI: rytm-snapshot-intelligence-report
 
 Usage:
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
-  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot 0
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report --help
 
 Behavior:
   Reads a local Analog Rytm MK2 SysEx file and prints passive snapshot intelligence
-  for the first supported kit snapshot.
+  for a supported kit snapshot. Use --list to see supported kit slots in a dump.
 
 Safety:
   passive/read-only

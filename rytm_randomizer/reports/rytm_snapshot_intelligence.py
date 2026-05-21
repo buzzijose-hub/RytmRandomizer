@@ -22,6 +22,7 @@ from ..snapshot.sysex_file import read_sysex_payloads_from_path
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive Rytm snapshot intelligence"
+CATALOG_REPORT_TITLE: Final[str] = "RytmRandomizer passive Rytm snapshot file catalog"
 SOURCE_MODULE: Final[str] = "reports.rytm_snapshot_intelligence"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -35,7 +36,12 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
     source_module=SOURCE_MODULE,
 )
+_CATALOG_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
+    title=CATALOG_REPORT_TITLE,
+    source_module=SOURCE_MODULE,
+)
 _RYTM_PAD_COUNT: Final[int] = 12
+_USAGE: Final[str] = "rytm-snapshot-intelligence-report usage: <syx-path> [--slot N|--list]"
 
 
 @dataclass(frozen=True)
@@ -253,40 +259,106 @@ def format_rytm_snapshot_intelligence_report(
     return passive_report_lines(_HEADER, _body_lines(report))
 
 
+def _catalog_body_lines(
+    sysex_path: Path,
+    snapshots: Sequence[RytmKitSnapshot],
+) -> list[str]:
+    lines = [
+        f"File: {sysex_path}",
+        f"Supported Rytm kit snapshots: {len(snapshots)}",
+        "Slots:",
+    ]
+    lines.extend(f"Slot {snapshot.slot}: {snapshot.kit_name}" for snapshot in snapshots)
+    lines.append(SAFETY_SECTION_HEADER)
+    lines.extend(f"- {line}" for line in SAFETY_LINES)
+    return lines
+
+
+def format_rytm_snapshot_file_catalog_report(
+    sysex_path: Path,
+    snapshots: Sequence[RytmKitSnapshot],
+) -> list[str]:
+    """Return deterministic operator-facing lines for supported kit snapshots."""
+
+    return passive_report_lines(_CATALOG_HEADER, _catalog_body_lines(sysex_path, snapshots))
+
+
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     if not argv:
         raise ValueError("rytm-snapshot-intelligence-report requires <syx-path>")
-    if len(argv) not in (1, 3):
-        raise ValueError("rytm-snapshot-intelligence-report usage: <syx-path> [--slot 0]")
+    if len(argv) not in (1, 2, 3):
+        raise ValueError(_USAGE)
     sysex_path = Path(argv[0])
     slot = 0
+    list_slots = False
+    if len(argv) == 2:
+        if argv[1] != "--list":
+            raise ValueError(_USAGE)
+        list_slots = True
     if len(argv) == 3:
         if argv[1] != "--slot":
-            raise ValueError("rytm-snapshot-intelligence-report usage: <syx-path> [--slot 0]")
+            raise ValueError(_USAGE)
         try:
             slot = int(argv[2])
         except ValueError as exc:
             raise ValueError("--slot must be an integer") from exc
-        if slot != 0:
-            raise ValueError("--slot currently supports only 0 (first supported snapshot)")
-    return {"sysex_path": sysex_path, "slot": slot}
+        if slot < 0:
+            raise ValueError("--slot must be >= 0")
+    return {"sysex_path": sysex_path, "slot": slot, "list_slots": list_slots}
 
 
-def _decode_first_supported_snapshot(sysex_path: Path, slot: int) -> RytmKitSnapshot:
+def _decode_supported_snapshots(sysex_path: Path) -> tuple[RytmKitSnapshot, ...]:
     decoder = AnalogRytmSnapshotDecoder()
     errors: list[str] = []
+    snapshots: list[RytmKitSnapshot] = []
     for index, payload in enumerate(read_sysex_payloads_from_path(sysex_path), start=1):
         try:
-            return decoder.decode(payload, slot=slot)
+            snapshots.append(decoder.decode(payload, slot=len(snapshots)))
         except (NotImplementedError, ValueError) as exc:
             errors.append(f"frame {index}: {exc}")
+    if snapshots:
+        return tuple(snapshots)
     detail = "; ".join(errors) if errors else "no SysEx payloads found"
     raise ValueError(f"No supported Analog Rytm kit snapshot found in {sysex_path}: {detail}")
 
 
-def _handle_cli_report(*, sysex_path: Path, slot: int) -> int:
+def _available_slot_lines(snapshots: Sequence[RytmKitSnapshot]) -> tuple[str, ...]:
+    return tuple(f"Slot {snapshot.slot}: {snapshot.kit_name}" for snapshot in snapshots)
+
+
+def _slot_out_of_range_message(
+    sysex_path: Path,
+    slot: int,
+    snapshots: Sequence[RytmKitSnapshot],
+) -> str:
+    snapshot_noun = "snapshot" if len(snapshots) == 1 else "snapshots"
+    available = "; ".join(_available_slot_lines(snapshots))
+    return (
+        f"Requested --slot {slot}, but only {len(snapshots)} supported Analog Rytm "
+        f"kit {snapshot_noun} found in {sysex_path}. Available slots: {available}"
+    )
+
+
+def _select_supported_snapshot(
+    sysex_path: Path,
+    slot: int,
+    snapshots: Sequence[RytmKitSnapshot],
+) -> RytmKitSnapshot:
+    if slot < len(snapshots):
+        return snapshots[slot]
+    raise ValueError(_slot_out_of_range_message(sysex_path, slot, snapshots))
+
+
+def _handle_cli_report(*, sysex_path: Path, slot: int, list_slots: bool = False) -> int:
     try:
-        snapshot = _decode_first_supported_snapshot(sysex_path, slot)
+        snapshots = _decode_supported_snapshots(sysex_path)
+        if list_slots:
+            sys.stdout.write(
+                "\n".join(format_rytm_snapshot_file_catalog_report(sysex_path, snapshots))
+            )
+            sys.stdout.write("\n")
+            return 0
+        snapshot = _select_supported_snapshot(sysex_path, slot, snapshots)
     except (OSError, ValueError, NotImplementedError) as exc:
         sys.stderr.write(f"Error: {exc}\n")
         return 2
@@ -311,6 +383,7 @@ register(RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND)
 
 
 __all__ = [
+    "CATALOG_REPORT_TITLE",
     "REPORT_TITLE",
     "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
     "RytmSnapshotIntelligencePadReport",
@@ -318,5 +391,6 @@ __all__ = [
     "SAFETY_LINES",
     "SOURCE_MODULE",
     "build_rytm_snapshot_intelligence_report",
+    "format_rytm_snapshot_file_catalog_report",
     "format_rytm_snapshot_intelligence_report",
 ]
