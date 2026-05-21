@@ -296,7 +296,7 @@ STYLE_TARGET_VECTORS: Final[Mapping[str, StyleTargetVector]] = MappingProxyType(
 )
 
 if set(STYLE_TARGET_VECTORS) != set(STYLE_PROFILES):
-    raise RuntimeError("style target vectors must cover every style profile")
+    raise ValueError("style target vectors must cover every style profile")
 
 __all__ = [
     "STYLE_TARGET_VECTOR_AXES",

@@ -116,11 +116,7 @@ from .rytm_machine_catalog import (
 )
 from .scenes import SCENE_PRESETS
 from .style_profiles import STYLE_PROFILES
-from .style_targets import (
-    STYLE_TARGET_VECTOR_AXES,
-    STYLE_TARGET_VECTORS,
-    StyleTargetVector,
-)
+from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
     "RYTM_MACHINE_PROFILES",
@@ -130,7 +126,6 @@ __all__ = [
     "STYLE_PROFILES",
     "STYLE_TARGET_VECTOR_AXES",
     "STYLE_TARGET_VECTORS",
-    "StyleTargetVector",
     "MACHINE_CC",
     "BD_SHARP_PARAMS",
     "BD_HARD_PARAMS",
