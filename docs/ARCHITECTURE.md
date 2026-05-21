@@ -22,7 +22,7 @@ flowchart TD
     sceneRunner["scene_runner.py"]
     groupRunner["group_runner.py"]
     engines["engines/pad{1,2,3,4}.py"]
-    reports["reports.py + inspection.py<br/>(passive read-only formatters)"]
+    reports["reports/ + inspection.py<br/>(passive read-only formatters)"]
     midi["midi_io.py + randomization.py"]
     realAdapter["real_midi_adapter.py - Protocol boundary"]
     midoProvider["mido_provider.py - lazy mido provider"]
