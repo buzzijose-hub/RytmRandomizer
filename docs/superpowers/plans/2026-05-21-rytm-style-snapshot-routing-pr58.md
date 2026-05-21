@@ -676,12 +676,11 @@ def _candidate_lines(
     title: str,
     candidates: Sequence[RytmStyleMachineCandidate],
 ) -> list[str]:
-    lines = [f"  {title}:"]
     if not candidates:
-        lines.append("    - none")
-        return lines
-    lines.extend(f"    - {_candidate_text(candidate)}" for candidate in candidates)
-    return lines
+        return [f"  {title}: none"]
+    return [f"  {title}:"] + [
+        f"    - {_candidate_text(candidate)}" for candidate in candidates
+    ]
 
 
 def _body_lines(plan: RytmStyleSnapshotRoutingPlan) -> list[str]:

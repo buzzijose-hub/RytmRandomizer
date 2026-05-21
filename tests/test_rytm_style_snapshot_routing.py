@@ -135,3 +135,44 @@ def test_style_snapshot_routing_blocks_candidate_only_machine_facts():
     assert plan.pads_by_pad[6].track_code == "LT"
     assert plan.pads_by_pad[6].route_ready is False
     assert "candidate-only" in plan.pads_by_pad[6].readiness_reason
+
+
+def test_style_snapshot_routing_report_is_operator_facing_and_passive():
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import (
+        format_rytm_style_snapshot_routing_report,
+    )
+
+    lines = format_rytm_style_snapshot_routing_report(
+        _style_snapshot(),
+        style_key="birmingham_pressure",
+    )
+    text = "\n".join(lines)
+
+    assert lines[0] == "RytmRandomizer passive Rytm style snapshot routing"
+    assert "Kit: STYLEKIT" in lines
+    assert "Slot: 4" in lines
+    assert "Style target: birmingham_pressure" in lines
+    assert "- Ready pads: 3" in lines
+    assert "- Blocked pads: 1" in lines
+    assert "Favored zones: grit, body, amp" in text
+    assert "Pad 10 / OH / Open Hihat:" in text
+    assert "  Current machine: oh_classic / CC15 10" in text
+    assert "  Route ready: False" in text
+    assert "  Mutable candidates: none" in text
+    assert "  Compatible candidates:" in text
+    assert "oh_metallic" in text
+    assert "xt_classic" not in text
+    assert "- passive/read-only" in lines
+    assert "- no MIDI sending" in lines
+    assert "- no port opening" in lines
+    assert "Source: rytm_randomizer.reports.rytm_style_snapshot_routing" in lines
+    assert "In-memory only: True" in lines
+
+
+def test_style_snapshot_routing_report_rejects_unknown_style_safely():
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import (
+        format_rytm_style_snapshot_routing_report,
+    )
+
+    with pytest.raises(ValueError, match="Unknown style target key: ghost_style"):
+        format_rytm_style_snapshot_routing_report(_style_snapshot(), style_key="ghost_style")
