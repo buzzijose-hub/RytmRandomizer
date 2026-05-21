@@ -4,7 +4,7 @@ Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
-- 2026-05-21: Dual-machine style routing report prepared locally. One passive CLI command can now read a Rytm kit dump plus an Analog Four kit dump, apply a shared style target, and summarize whole-rig readiness while keeping the detailed mutation and hardware paths gated.
+- 2026-05-21: Dual-machine style routing report prepared locally. One passive CLI command can now read a Rytm kit dump plus an Analog Four kit dump, apply a shared style target, and summarize whole-rig readiness as operator text or deterministic `--json` while keeping the detailed mutation and hardware paths gated.
 - 2026-05-21: Analog Four style routing report prepared locally. The passive CLI can now read a local Analog Four kit dump and print track-level style-routing readiness for a selected style target while keeping A4 offsets candidate-only and sending no MIDI.
 - 2026-05-21: Analog Four style snapshot routing foundation prepared locally after the Rytm style-routing bridge. A new passive strategy maps an A4 kit snapshot plus style target into four track roles, favored sound-design zones, and readiness state while preserving the existing candidate-only offset block for real mutation.
 - 2026-05-21: Rytm style snapshot routing PR58 prepared after the passive style target vector layer. The passive preview now bridges a captured Rytm kit snapshot and a selected style target into per-pad readiness, favored zones, and legal machine candidates without rendering mutation values or sending MIDI.

@@ -23,7 +23,7 @@ USAGE = (
     "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
-    "<style-key> [--rytm-slot N] [--a4-slot N] | "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -752,6 +752,34 @@ def test_dual_machine_style_snapshot_routing_report_command_reads_syx_files(tmp_
     assert "- Kit: DUOA4" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_snapshot_routing_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"DUOJSON") + bytes([0xF7])
+    )
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4JSON".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "dual-machine-style-snapshot-routing-report",
+        str(rytm_path),
+        str(a4_path),
+        "industrial_dark",
+        "--json",
+    )
+
+    payload = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert payload["style_key"] == "industrial_dark"
+    assert payload["machines"]["rytm"]["kit_name"] == "DUOJSON"
+    assert payload["machines"]["analog_four"]["kit_name"] == "A4JSON"
+    assert payload["safety"][0] == "passive/read-only"
     assert result.stderr == ""
 
 

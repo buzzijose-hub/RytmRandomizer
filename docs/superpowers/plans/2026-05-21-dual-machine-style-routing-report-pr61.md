@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a passive report and CLI command that summarizes style-aware snapshot routing across one Analog Rytm kit dump and one Analog Four kit dump.
+**Goal:** Add a passive report and CLI command that summarizes style-aware snapshot routing across one Analog Rytm kit dump and one Analog Four kit dump, with optional machine-readable JSON output for future GUI/analyzer consumers.
 
-**Architecture:** Keep this as a report-layer composition over the existing Rytm and A4 style routing strategies. The new report decodes each local SysEx file, selects one supported snapshot per machine, asks the existing strategy layer for per-machine routing plans, and renders a compact rig-level readiness summary. It does not render parameter values, promote A4 offsets, open MIDI ports, or send hardware messages.
+**Architecture:** Keep this as a report-layer composition over the existing Rytm and A4 style routing strategies. The new report decodes each local SysEx file, selects one supported snapshot per machine, asks the existing strategy layer for per-machine routing plans, and renders a compact rig-level readiness summary as text or JSON. It does not render parameter values, promote A4 offsets, open MIDI ports, or send hardware messages.
 
 **Tech Stack:** Existing `CliCommand`, passive report formatter, Rytm/A4 SysEx decode helpers, Rytm/A4 style-routing strategy plans, pytest, architecture tests, and CLI help fixtures.
 
@@ -12,11 +12,11 @@
 
 ## Scope
 
-This slice gives operators one command to answer: "If I aim this captured Rytm kit and this captured A4 kit at a style target, what is ready and what remains blocked?" It intentionally stays metadata-only and delegates detailed per-pad/per-track rows to the existing single-machine reports.
+This slice gives operators one command to answer: "If I aim this captured Rytm kit and this captured A4 kit at a style target, what is ready and what remains blocked?" It intentionally stays metadata-only, delegates detailed per-pad/per-track rows to the existing single-machine reports, and exposes JSON for downstream UI/audio-analysis tools without forcing them to scrape text.
 
 ## File Structure
 
-- Create `rytm_randomizer/reports/dual_machine_style_snapshot_routing.py`: passive dual-machine report builder, CLI parser, handler, and registered `CliCommand`.
+- Create `rytm_randomizer/reports/dual_machine_style_snapshot_routing.py`: passive dual-machine report builder, JSON serializer, CLI parser, handler, and registered `CliCommand`.
 - Modify `rytm_randomizer/cli.py`: lazy-load the new command.
 - Modify `rytm_randomizer/help_text.py`: top-level usage/help text and safety block.
 - Modify `tests/test_dual_machine_style_snapshot_routing_report.py`: report, parser, handler, and branch coverage.
@@ -121,6 +121,48 @@ python scripts/code_review_gate.py --mode cli
 
 Expected: focused report coverage reaches 100%, architecture/lint/test/coverage/review gates pass.
 
+### Task 4: Machine-Readable JSON Payload
+
+**Files:**
+- Modify: `rytm_randomizer/reports/dual_machine_style_snapshot_routing.py`
+- Modify: `rytm_randomizer/help_text.py`
+- Modify: `tests/fixtures/cli_help_expected.txt`
+- Modify: `tests/test_dual_machine_style_snapshot_routing_report.py`
+- Modify: `tests/test_cli.py`
+- Modify: `README.md`, `docs/STATUS.md`, and this plan.
+
+- [x] **Step 1: Write failing tests**
+
+Cover:
+- A deterministic JSON contract with style key, rig readiness, per-machine kit/slot/ready/blocked counts, A4 candidate-only state, and safety metadata.
+- CLI parser support for `--json`.
+- CLI handler and subprocess command output valid JSON without text headers.
+
+Red run:
+
+```bash
+python -m pytest tests/test_dual_machine_style_snapshot_routing_report.py tests/test_cli.py -n 0 -k "dual_machine_style_snapshot_routing or cli_help"
+```
+
+Expected before implementation: 4 failures for missing serializer, parser flag, handler argument, and JSON output.
+
+- [x] **Step 2: Implement `--json`**
+
+Add:
+- `to_dual_machine_style_snapshot_routing_json(plan)`
+- `--json` parser flag.
+- JSON branch in `_handle_cli_report(...)` using sorted, indented output.
+
+- [x] **Step 3: Focused verification**
+
+Run:
+
+```bash
+python -m pytest tests/test_dual_machine_style_snapshot_routing_report.py tests/test_cli.py -n 0 -k "dual_machine_style_snapshot_routing or cli_help"
+```
+
+Expected: focused text + JSON command coverage passes.
+
 ## Plan-Requirements Conformance
 
 Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
@@ -138,8 +180,8 @@ Per docs/PLAN_REQUIREMENTS.md, this plan commits to:
 - [x] Gate 11 - test helpers reuse existing Rytm fixture payloads and tiny local A4 framed payloads.
 - [x] Gate 12 - module constants use `Final`.
 - [ ] Gate 13 - N/A: no environment variables.
-- [x] Gate 14 - bounded scope: rig-level report only, no mutation rendering.
+- [x] Gate 14 - bounded scope: rig-level report/JSON only, no mutation rendering.
 - [ ] Gate 15 - N/A: no reusable learned skill/rule needed.
 - [x] Gate 16 - isolated local worktree; no push/PR while PR #56 is open.
-- [x] Gate 17 - reuses existing Rytm/A4 routing strategies, report formatter, SysEx readers, and CLI registry.
+- [x] Gate 17 - reuses existing Rytm/A4 routing strategies, report formatter, SysEx readers, JSON stdlib, and CLI registry.
 - [x] Gate 18 - architecture diagrams refreshed for the new report and CLI surface.

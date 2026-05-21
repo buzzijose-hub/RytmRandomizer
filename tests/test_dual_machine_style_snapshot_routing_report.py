@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from types import MappingProxyType
 
 import pytest
@@ -100,6 +101,42 @@ def test_dual_machine_style_routing_formats_operator_report():
     assert "- Candidate-only A4 offsets: True" in lines
     assert "- no MIDI sending" in lines
     assert "- no port opening" in lines
+
+
+def test_dual_machine_style_routing_serializes_json_contract():
+    from rytm_randomizer.reports.dual_machine_style_snapshot_routing import (
+        build_dual_machine_style_snapshot_routing_report,
+        to_dual_machine_style_snapshot_routing_json,
+    )
+
+    plan = build_dual_machine_style_snapshot_routing_report(
+        _rytm_snapshot(),
+        _analog_four_snapshot(offsets_promoted=False),
+        style_key="industrial_dark",
+    )
+
+    payload = to_dual_machine_style_snapshot_routing_json(plan)
+
+    assert payload["style_key"] == "industrial_dark"
+    assert payload["rig_readiness"] == "partial"
+    assert payload["machines"] == {
+        "analog_four": {
+            "blocked_track_count": 4,
+            "candidate_only_offsets": True,
+            "kit_name": "A4STYLE",
+            "partial_snapshot_mutation_ready": False,
+            "ready_track_count": 0,
+            "slot": 2,
+        },
+        "rytm": {
+            "blocked_pad_count": 1,
+            "kit_name": "RYTMSTYLE",
+            "partial_snapshot_mutation_ready": True,
+            "ready_pad_count": 3,
+            "slot": 4,
+        },
+    }
+    assert payload["safety"][0] == "passive/read-only"
 
 
 def test_dual_machine_style_routing_marks_fully_ready_when_both_machines_ready():
@@ -226,15 +263,26 @@ def test_dual_machine_style_routing_cli_parser_accepts_slots():
         "style_key": "industrial_dark",
         "rytm_slot": 0,
         "analog_four_slot": 0,
+        "json_output": False,
     }
     assert _parse_cli_args(
-        ["rytm.syx", "a4.syx", "mills_hypnotic", "--rytm-slot", "2", "--a4-slot", "1"]
+        [
+            "rytm.syx",
+            "a4.syx",
+            "mills_hypnotic",
+            "--rytm-slot",
+            "2",
+            "--a4-slot",
+            "1",
+            "--json",
+        ]
     ) == {
         "rytm_sysex_path": Path("rytm.syx"),
         "analog_four_sysex_path": Path("a4.syx"),
         "style_key": "mills_hypnotic",
         "rytm_slot": 2,
         "analog_four_slot": 1,
+        "json_output": True,
     }
 
 
@@ -299,6 +347,42 @@ def test_dual_machine_style_routing_cli_handler_reports_plan(
     assert "- Kit: RIGRYTM" in captured.out
     assert "- Kit: RIGA4" in captured.out
     assert "Style target: industrial_dark" in captured.out
+    assert captured.err == ""
+
+
+def test_dual_machine_style_routing_cli_handler_reports_json(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer.reports.dual_machine_style_snapshot_routing import (
+        _handle_cli_report,
+    )
+
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(
+        bytes([0xF0]) + rytm_real_layout_kit_payload(name=b"JSONRYTM") + bytes([0xF7])
+    )
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(_framed_a4_payload(b"JSONA4"))
+
+    rc = _handle_cli_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        style_key="industrial_dark",
+        rytm_slot=0,
+        analog_four_slot=0,
+        json_output=True,
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["style_key"] == "industrial_dark"
+    assert payload["machines"]["rytm"]["kit_name"] == "JSONRYTM"
+    assert payload["machines"]["analog_four"]["kit_name"] == "JSONA4"
+    assert "RytmRandomizer passive dual-machine" not in captured.out
     assert captured.err == ""
 
 

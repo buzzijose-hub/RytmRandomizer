@@ -177,6 +177,7 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG R
 python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7   # passive style-aware Rytm snapshot routing
 python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --slot 0   # passive style-aware Analog Four snapshot routing
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0   # passive rig-level style routing
+python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --json   # machine-readable rig style routing for future GUI/analyzer use
 python -m rytm_randomizer.cli style-profile-report   # passive techno style profiles for later snapshot/audio-analysis routing
 python -m rytm_randomizer.cli list-style-profiles   # list available style profiles
 python -m rytm_randomizer.cli inspect-style-profile birmingham_pressure   # inspect one passive style profile

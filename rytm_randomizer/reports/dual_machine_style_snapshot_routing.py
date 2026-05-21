@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -49,7 +50,7 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
 )
 _USAGE: Final[str] = (
     "dual-machine-style-snapshot-routing-report usage: "
-    "<rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N]"
+    "<rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--json]"
 )
 _DEFAULT_SLOT: Final[int] = 0
 
@@ -186,6 +187,38 @@ def format_dual_machine_style_snapshot_routing_report(
     return passive_report_lines(_HEADER, _body_lines(plan))
 
 
+def to_dual_machine_style_snapshot_routing_json(
+    plan: DualMachineStyleSnapshotRoutingPlan,
+) -> dict[str, object]:
+    """Return a deterministic machine-readable payload for future UI/analyzer use."""
+
+    return {
+        "style_key": plan.style_key,
+        "rig_readiness": plan.rig_readiness,
+        "favored_zones": list(plan.favored_zones),
+        "machines": {
+            "analog_four": {
+                "blocked_track_count": plan.analog_four_blocked_track_count,
+                "candidate_only_offsets": plan.analog_four_candidate_only,
+                "kit_name": plan.analog_four_kit_name,
+                "partial_snapshot_mutation_ready": (
+                    plan.analog_four_partial_snapshot_mutation_ready
+                ),
+                "ready_track_count": plan.analog_four_ready_track_count,
+                "slot": plan.analog_four_slot,
+            },
+            "rytm": {
+                "blocked_pad_count": plan.rytm_blocked_pad_count,
+                "kit_name": plan.rytm_kit_name,
+                "partial_snapshot_mutation_ready": plan.rytm_partial_snapshot_mutation_ready,
+                "ready_pad_count": plan.rytm_ready_pad_count,
+                "slot": plan.rytm_slot,
+            },
+        },
+        "safety": list(SAFETY_LINES),
+    }
+
+
 def _parse_nonnegative_int(value: str, *, option: str) -> int:
     try:
         parsed = int(value)
@@ -204,9 +237,13 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     style_key = argv[2]
     rytm_slot = _DEFAULT_SLOT
     analog_four_slot = _DEFAULT_SLOT
+    json_output = False
     remaining = list(argv[3:])
     while remaining:
         option = remaining.pop(0)
+        if option == "--json":
+            json_output = True
+            continue
         if len(remaining) < 1:
             raise ValueError(_USAGE)
         value = remaining.pop(0)
@@ -222,6 +259,7 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
         "style_key": style_key,
         "rytm_slot": rytm_slot,
         "analog_four_slot": analog_four_slot,
+        "json_output": json_output,
     }
 
 
@@ -232,6 +270,7 @@ def _handle_cli_report(
     style_key: str,
     rytm_slot: int,
     analog_four_slot: int,
+    json_output: bool = False,
 ) -> int:
     try:
         rytm_snapshots = decode_supported_rytm_snapshots_from_path(rytm_sysex_path)
@@ -253,6 +292,16 @@ def _handle_cli_report(
             analog_four_snapshot,
             style_key=style_key,
         )
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_dual_machine_style_snapshot_routing_json(plan),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
         lines = format_dual_machine_style_snapshot_routing_report(plan)
     except (OSError, ValueError, NotImplementedError) as exc:
         sys.stderr.write(f"Error: {exc}\n")
@@ -284,4 +333,5 @@ __all__ = [
     "SOURCE_MODULE",
     "build_dual_machine_style_snapshot_routing_report",
     "format_dual_machine_style_snapshot_routing_report",
+    "to_dual_machine_style_snapshot_routing_json",
 ]
