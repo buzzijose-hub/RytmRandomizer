@@ -48,6 +48,11 @@ USAGE = (
     "--rytm <syx-path> [--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--discovery N] [--events] [--limit N] [--json] | "
+    "dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] "
+    "--rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -477,6 +482,31 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _dual_machine_style_performance_set_plan_report_help():
+    from .reports.dual_machine_style_performance_set_plan import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: dual-machine-style-performance-set-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] --rytm <syx-path> --scope rytm-only
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] --analog-four <syx-path> --scope analog-four-only
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] --scope dual|rytm-only|analog-four-only|a4-only
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report --help
+
+Behavior:
+  Reads local Analog Rytm MK2 and/or Analog Four MK2 SysEx kit banks, runs the
+  ranked style selection mock preview for each requested style, and prints a
+  timed passive performance set plan. Use --total-minutes N for an evenly
+  divided full set, --segment-minutes N for fixed segment lengths, and
+  --discovery-start/--discovery-end to ramp the reference/discovery pressure
+  across the set. Single-machine scopes leave the other machine unchanged.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _dual_machine_style_snapshot_routing_report_help():
     from .reports.dual_machine_style_snapshot_routing import SAFETY_LINES
 
@@ -629,6 +659,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-style-kit-selection-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report <style-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-live-audition-report <style-key> [<style-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--discovery N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report <style-key> [<style-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
@@ -705,6 +736,8 @@ Commands:
                      Print passive mock previews from ranked style kit selections.
   dual-machine-style-live-audition-report
                      Print passive live-audition plans from multiple style selections.
+  dual-machine-style-performance-set-plan-report
+                     Print passive timed performance set plans from style selections.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
   dual-machine-style-mutation-intent-report
@@ -936,6 +969,9 @@ Safety:
         _dual_machine_style_selection_mock_preview_report_help
     ),
     "dual-machine-style-live-audition-report": _dual_machine_style_live_audition_report_help,
+    "dual-machine-style-performance-set-plan-report": (
+        _dual_machine_style_performance_set_plan_report_help
+    ),
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
     "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "dual-machine-style-mutation-mock-preview-report": (
