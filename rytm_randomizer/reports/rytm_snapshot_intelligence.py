@@ -262,9 +262,7 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     slot = 0
     if len(argv) == 3:
         if argv[1] != "--slot":
-            raise ValueError(
-                "rytm-snapshot-intelligence-report usage: <syx-path> [--slot 0]"
-            )
+            raise ValueError("rytm-snapshot-intelligence-report usage: <syx-path> [--slot 0]")
         try:
             slot = int(argv[2])
         except ValueError as exc:
