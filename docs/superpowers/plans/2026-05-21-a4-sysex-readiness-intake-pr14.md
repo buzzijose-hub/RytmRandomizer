@@ -28,6 +28,9 @@ blocked until offsets are validated.
 - Add a passive A4 style kit-readiness sweep so every decoded kit in a dump can
   be evaluated against one style target and surfaced as preview-ready versus
   blocked metadata for future GUI/audio-analyzer kit selection.
+- Add stable short payload fingerprints to the A4 catalog and style-readiness
+  sweep so future GUI/audio-analyzer consumers can compare exact kit states
+  across dumps without relying on kit names alone.
 - Update status, README, and architecture diagrams for the new strategy helper.
 
 ## Out Of Scope
@@ -47,10 +50,12 @@ blocked until offsets are validated.
    error handling.
 4. Add failing A4 style kit-readiness sweep tests for text, JSON, CLI parsing,
    and passive error handling.
-5. Implement the manifest, decoder, mock-preview, kit-catalog, and readiness
+5. Add failing A4 payload-fingerprint expectations for catalog/readiness text
+   and JSON.
+6. Implement the manifest, decoder, mock-preview, kit-catalog, and readiness
    sweep changes
    minimally.
-6. Run focused tests, real-file passive CLI smoke checks, architecture, fast,
+7. Run focused tests, real-file passive CLI smoke checks, architecture, fast,
    full, coverage, lint, and review gates before any push.
 
 ## Plan-Requirements Conformance
@@ -90,7 +95,7 @@ blocked until offsets are validated.
 
 - Real Analog Four kit dumps decode to operator-readable kit names.
 - Operators can list decoded A4 kit slots/names from a dump without choosing a
-  style target.
+  style target, including stable payload fingerprints for kit-state comparison.
 - Operators can sweep all decoded A4 kits in a dump against one style target and
   see which kits are blocked by candidate-only offsets before choosing a slot.
 - A4 mock-preview report says decoded saved-kit SysEx is still candidate-only.

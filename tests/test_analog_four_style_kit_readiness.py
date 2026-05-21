@@ -36,6 +36,8 @@ def test_analog_four_style_kit_readiness_builds_slot_sweep(tmp_path: Path):
     assert report.entries[0].preview_ready is False
     assert report.entries[0].blocked_track_count == 4
     assert report.entries[0].deferred_row_count > 0
+    assert len(report.entries[0].payload_fingerprint) == 16
+    assert int(report.entries[0].payload_fingerprint, 16) >= 0
     assert report.entries[0].readiness_reason == (
         "Analog Four offsets are candidate-only; promote offsets before mock CC preview"
     )
@@ -64,6 +66,7 @@ def test_analog_four_style_kit_readiness_text_is_operator_facing_and_limited(
     assert "Shown kits: 1" in lines
     assert "Truncated kits: 1" in lines
     assert "- Slot 0 | A4 ONE | layout candidate | preview_ready False" in text
+    assert "fingerprint " in text
     assert "A4 TWO" not in text
     assert "- style/mock preview only" in lines
     assert "- no MIDI sending" in lines
@@ -142,6 +145,7 @@ def test_analog_four_style_kit_readiness_json_is_deterministic(tmp_path: Path):
             "intent_row_count": report.entries[0].intent_row_count,
             "mock_message_count": 0,
             "deferred_row_count": report.entries[0].deferred_row_count,
+            "payload_fingerprint": report.entries[0].payload_fingerprint,
             "readiness_reason": report.entries[0].readiness_reason,
         }
     ]

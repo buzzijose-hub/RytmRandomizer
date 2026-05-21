@@ -15,6 +15,9 @@ from ..devices.strategies.analog_four_offset_manifest import (
     A4_SNAPSHOT_LAYOUT_CANDIDATE,
     A4_SNAPSHOT_LAYOUT_SAVED_KIT,
 )
+from ..devices.strategies.analog_four_snapshot_decoder import (
+    analog_four_snapshot_payload_fingerprint,
+)
 from .analog_four_style_snapshot_routing import (
     decode_supported_analog_four_snapshots_from_path,
 )
@@ -50,6 +53,7 @@ class AnalogFourKitCatalogEntry:
     offsets_promoted: bool
     mutation_ready: bool
     readiness_reason: str
+    payload_fingerprint: str
     raw_byte_count: int
     unpacked_byte_count: int
 
@@ -89,6 +93,7 @@ def _entry_from_snapshot(snapshot: AnalogFourKitSnapshot) -> AnalogFourKitCatalo
         offsets_promoted=snapshot.offsets_promoted,
         mutation_ready=mutation_ready,
         readiness_reason=_readiness_reason(snapshot),
+        payload_fingerprint=analog_four_snapshot_payload_fingerprint(snapshot),
         raw_byte_count=len(snapshot.raw),
         unpacked_byte_count=len(snapshot.unpacked),
     )
@@ -131,7 +136,8 @@ def _visible_entries(
 def _entry_line(entry: AnalogFourKitCatalogEntry) -> str:
     return (
         f"- Slot {entry.slot} | {entry.kit_name} | layout {entry.snapshot_layout} | "
-        f"offsets {entry.offset_status} | raw {entry.raw_byte_count} bytes | "
+        f"offsets {entry.offset_status} | fingerprint {entry.payload_fingerprint} | "
+        f"raw {entry.raw_byte_count} bytes | "
         f"unpacked {entry.unpacked_byte_count} bytes | {entry.readiness_reason}"
     )
 
@@ -185,6 +191,7 @@ def _entry_json(entry: AnalogFourKitCatalogEntry) -> dict[str, object]:
         "offsets_promoted": entry.offsets_promoted,
         "mutation_ready": entry.mutation_ready,
         "readiness_reason": entry.readiness_reason,
+        "payload_fingerprint": entry.payload_fingerprint,
         "raw_byte_count": entry.raw_byte_count,
         "unpacked_byte_count": entry.unpacked_byte_count,
     }

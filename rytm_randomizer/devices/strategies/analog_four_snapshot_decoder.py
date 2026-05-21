@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from hashlib import sha256
 from typing import Final
 
 from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name, unpack_elektron_7bit
@@ -63,6 +64,13 @@ class AnalogFourSnapshotDecoder:
             "AnalogFourSnapshotDecoder.decode: candidate kit type byte 0x07 "
             "or Analog Four family byte 0x06 not present"
         )
+
+
+def analog_four_snapshot_payload_fingerprint(snapshot: AnalogFourKitSnapshot) -> str:
+    """Return a stable short digest for the decoded A4 kit payload."""
+
+    payload = snapshot.unpacked or snapshot.raw
+    return sha256(payload).hexdigest()[:16]
 
 
 def _decode_candidate_payload(raw: bytes, *, slot: int) -> AnalogFourKitSnapshot:

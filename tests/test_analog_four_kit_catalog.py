@@ -1,4 +1,5 @@
 import json
+from hashlib import sha256
 from pathlib import Path
 
 import pytest
@@ -81,6 +82,8 @@ def test_analog_four_kit_catalog_builds_saved_and_candidate_summary(tmp_path: Pa
     assert report.entries[1].snapshot_layout == A4_SNAPSHOT_LAYOUT_CANDIDATE
     assert report.entries[0].raw_byte_count > 0
     assert report.entries[0].unpacked_byte_count > 0
+    assert len(report.entries[0].payload_fingerprint) == 16
+    assert int(report.entries[0].payload_fingerprint, 16) >= 0
     assert report.entries[0].offset_status == "candidate-only"
     assert report.entries[0].mutation_ready is False
     assert report.entries[0].readiness_reason == (
@@ -106,6 +109,7 @@ def test_analog_four_kit_catalog_text_is_operator_facing_and_limited(tmp_path: P
     assert "Shown kits: 2" in lines
     assert "Truncated kits: 1" in lines
     assert "- Slot 0 | KIT ONE | layout saved_kit | offsets candidate-only" in text
+    assert "fingerprint " in text
     assert "- Slot 1 | CANDIDATE | layout candidate | offsets candidate-only" in text
     assert "KIT TWO" not in text
     assert "- SysEx decode only" in lines
@@ -155,6 +159,7 @@ def test_analog_four_kit_catalog_entry_marks_promoted_offsets_ready():
     assert entry.offset_status == "promoted"
     assert entry.mutation_ready is True
     assert entry.readiness_reason == "ready for promoted-offset planning"
+    assert entry.payload_fingerprint == sha256(b"\x52\x01\x01").hexdigest()[:16]
 
 
 def test_analog_four_kit_catalog_json_is_deterministic(tmp_path: Path):
@@ -180,6 +185,7 @@ def test_analog_four_kit_catalog_json_is_deterministic(tmp_path: Path):
             "readiness_reason": (
                 "saved-kit decoded; offset promotion required before mutation preview"
             ),
+            "payload_fingerprint": report.entries[0].payload_fingerprint,
             "raw_byte_count": report.entries[0].raw_byte_count,
             "unpacked_byte_count": report.entries[0].unpacked_byte_count,
         }

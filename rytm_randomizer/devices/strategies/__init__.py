@@ -26,6 +26,7 @@ from .analog_four_snapshot_decoder import (
     A4_CANDIDATE_KIT_TYPE_BYTE,
     AnalogFourKitSnapshot,
     AnalogFourSnapshotDecoder,
+    analog_four_snapshot_payload_fingerprint,
 )
 from .analog_four_style_mutation_intent import (
     AnalogFourStyleMutationIntentPlan,
@@ -130,6 +131,7 @@ __all__ = [
     "RytmStyleMutationRenderPlan",
     "RytmStyleSnapshotPadPlan",
     "RytmStyleSnapshotRoutingPlan",
+    "analog_four_snapshot_payload_fingerprint",
     "analog_four_style_zone_bias",
     "build_analog_four_style_mutation_mock_preview",
     "build_rytm_style_mutation_mock_preview",

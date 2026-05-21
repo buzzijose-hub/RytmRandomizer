@@ -14,6 +14,10 @@ from ..data.style_discovery import (
     DEFAULT_STYLE_DISCOVERY_AMOUNT,
     style_discovery_policy,
 )
+from ..devices.strategies.analog_four_snapshot_decoder import (
+    AnalogFourKitSnapshot,
+    analog_four_snapshot_payload_fingerprint,
+)
 from ..devices.strategies.analog_four_style_mutation_mock_preview import (
     AnalogFourStyleMutationMockPreview,
     build_analog_four_style_mutation_mock_preview,
@@ -61,6 +65,7 @@ class AnalogFourStyleKitReadinessEntry:
     intent_row_count: int
     mock_message_count: int
     deferred_row_count: int
+    payload_fingerprint: str
     readiness_reason: str
 
 
@@ -78,6 +83,7 @@ class AnalogFourStyleKitReadinessReport:
 
 
 def _entry_from_preview(
+    snapshot: AnalogFourKitSnapshot,
     preview: AnalogFourStyleMutationMockPreview,
 ) -> AnalogFourStyleKitReadinessEntry:
     return AnalogFourStyleKitReadinessEntry(
@@ -92,6 +98,7 @@ def _entry_from_preview(
         intent_row_count=preview.intent_row_count,
         mock_message_count=preview.mock_message_count,
         deferred_row_count=preview.deferred_row_count,
+        payload_fingerprint=analog_four_snapshot_payload_fingerprint(snapshot),
         readiness_reason=preview.readiness_reason,
     )
 
@@ -108,11 +115,12 @@ def build_analog_four_style_kit_readiness_report(
     snapshots = decode_supported_analog_four_snapshots_from_path(sysex_path)
     entries = tuple(
         _entry_from_preview(
+            snapshot,
             build_analog_four_style_mutation_mock_preview(
                 snapshot,
                 style_key,
                 discovery_amount=discovery_amount,
-            )
+            ),
         )
         for snapshot in snapshots
     )
@@ -145,7 +153,8 @@ def _entry_line(entry: AnalogFourStyleKitReadinessEntry) -> str:
         f"- Slot {entry.slot} | {entry.kit_name} | layout {entry.snapshot_layout} | "
         f"preview_ready {entry.preview_ready} | ready tracks {entry.ready_track_count} | "
         f"blocked tracks {entry.blocked_track_count} | mock rows {entry.mock_message_count} | "
-        f"deferred rows {entry.deferred_row_count} | {entry.readiness_reason}"
+        f"deferred rows {entry.deferred_row_count} | fingerprint {entry.payload_fingerprint} | "
+        f"{entry.readiness_reason}"
     )
 
 
@@ -202,6 +211,7 @@ def _entry_json(entry: AnalogFourStyleKitReadinessEntry) -> dict[str, object]:
         "intent_row_count": entry.intent_row_count,
         "mock_message_count": entry.mock_message_count,
         "deferred_row_count": entry.deferred_row_count,
+        "payload_fingerprint": entry.payload_fingerprint,
         "readiness_reason": entry.readiness_reason,
     }
 
