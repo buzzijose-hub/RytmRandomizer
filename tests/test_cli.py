@@ -20,6 +20,7 @@ USAGE = (
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
+    "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -226,6 +227,19 @@ def test_rytm_snapshot_mutation_preview_help_safety_matches_report_source():
 
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_snapshot_routing_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import SAFETY_LINES
+
+    result = run_cli("rytm-style-snapshot-routing-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-snapshot-routing-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -611,6 +625,43 @@ def test_rytm_snapshot_mutation_preview_report_command_rejects_missing_file(tmp_
     assert result.returncode == 2
     assert result.stdout == ""
     assert "SysEx file does not exist" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_rytm_style_snapshot_routing_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-snapshot-routing-report",
+        str(path),
+        "birmingham_pressure",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style snapshot routing" in result.stdout
+    assert "Kit: STYLE" in result.stdout
+    assert "Style target: birmingham_pressure" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("rytm-style-snapshot-routing-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
     assert "Traceback" not in result.stderr
 
 
