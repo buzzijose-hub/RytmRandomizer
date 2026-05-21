@@ -27,9 +27,17 @@ from .analog_four_snapshot_decoder import (
     AnalogFourKitSnapshot,
     AnalogFourSnapshotDecoder,
 )
+from .analog_four_style_mutation_intent import (
+    AnalogFourStyleMutationIntentPlan,
+    AnalogFourStyleMutationIntentRow,
+    AnalogFourStyleMutationTrackIntent,
+    plan_analog_four_style_mutation_intent,
+)
 from .analog_four_style_snapshot_routing import (
+    ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS,
     AnalogFourStyleSnapshotRoutingPlan,
     AnalogFourStyleTrackPlan,
+    analog_four_style_zone_bias,
     plan_analog_four_style_snapshot_routes,
 )
 from .analog_rytm_message_renderer import AnalogRytmMessageRenderer
@@ -66,6 +74,7 @@ from .analog_rytm_style_snapshot_routing import (
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
+    "ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS",
     "MAX_A4_DEPTH",
     "MAX_DEPTH",
     "RYTM_KIT_TYPE_BYTE",
@@ -75,6 +84,9 @@ __all__ = [
     "AnalogFourPlanEvent",
     "AnalogFourMessageRenderer",
     "AnalogFourSnapshotDecoder",
+    "AnalogFourStyleMutationIntentPlan",
+    "AnalogFourStyleMutationIntentRow",
+    "AnalogFourStyleMutationTrackIntent",
     "AnalogFourStyleSnapshotRoutingPlan",
     "AnalogFourStyleTrackPlan",
     "AnalogRytmMessageRenderer",
@@ -93,6 +105,8 @@ __all__ = [
     "RytmStyleMutationPadIntent",
     "RytmStyleSnapshotPadPlan",
     "RytmStyleSnapshotRoutingPlan",
+    "analog_four_style_zone_bias",
+    "plan_analog_four_style_mutation_intent",
     "plan_analog_four_style_snapshot_routes",
     "plan_rytm_style_mutation_intent",
     "plan_rytm_style_snapshot_routes",

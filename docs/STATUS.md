@@ -4,6 +4,7 @@ Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-21: Analog Four style mutation intent prepared locally. The passive A4 path can now turn a kit snapshot plus style target and `--discovery N` amount into track/zone intent rows with style bias and direction metadata, while explicitly keeping real A4 mutation blocked until candidate offsets are promoted.
 - 2026-05-21: Rytm style mutation bias prepared locally. The passive mutation-intent rows now include style-target bias and direction metadata, so future renderers can tell whether a safe parameter should generally move higher, lower, shorter, longer, or stay centered without rendering CC values or sending MIDI.
 - 2026-05-21: Rytm style mutation intent prepared locally. The passive Rytm style path can now map a captured kit snapshot plus style target and `--discovery N` amount into route-ready pad/zone/parameter intent rows for future style-aware mutation rendering, while still sending no MIDI and opening no ports.
 - 2026-05-21: Reference/discovery slider routing prepared locally. The passive Rytm, Analog Four, and dual-machine style-routing reports now accept `--discovery N` (0-100), expose reference/balanced/discovery/wild-discovery bands in text and JSON, and keep all mutation and hardware paths gated.

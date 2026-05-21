@@ -1,6 +1,6 @@
 # Summary
 
-Adds the passive style-target-to-snapshot bridge: style profile data now has normalized target vectors, operators can inspect those targets from the passive CLI, a mock-safe Rytm style snapshot routing report explains which pads in a captured kit are ready to mutate toward a style goal, Analog Four gains the matching passive track-role routing foundation plus an operator-facing report command, the Rytm/A4/dual-machine reports can emit deterministic JSON for future GUI/audio-analyzer consumers, `--discovery N` exposes the reference-to-discovery slider semantics Jose wanted for live snapshot mode, and the Rytm path now produces passive zone/parameter mutation-intent rows with style bias/direction metadata for future renderers. No MIDI is sent and no hardware is touched.
+Adds the passive style-target-to-snapshot bridge: style profile data now has normalized target vectors, operators can inspect those targets from the passive CLI, a mock-safe Rytm style snapshot routing report explains which pads in a captured kit are ready to mutate toward a style goal, Analog Four gains the matching passive track-role routing foundation plus operator-facing report commands, the Rytm/A4/dual-machine reports can emit deterministic JSON for future GUI/audio-analyzer consumers, `--discovery N` exposes the reference-to-discovery slider semantics Jose wanted for live snapshot mode, and the Rytm/A4 paths now produce passive mutation-intent rows with style bias/direction metadata for future renderers. No MIDI is sent and no hardware is touched.
 
 ## What Changed
 
@@ -9,6 +9,7 @@ Adds the passive style-target-to-snapshot bridge: style profile data now has nor
 - Added a passive `rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]` CLI command for operator-facing and machine-readable snapshot readiness.
 - Added a pure Analog Four style snapshot routing strategy that maps a candidate kit snapshot and style target into four A4 track roles, favored zones, and explicit candidate-offset readiness.
 - Added a passive `analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]` CLI command for operator-facing and machine-readable A4 track readiness.
+- Added a passive `analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]` CLI command that maps A4 tracks to favored zone-intent rows with style-target bias and direction metadata, while still blocking real mutation until A4 offsets are promoted.
 - Added a passive `dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]` CLI command for rig-level style readiness.
 - Added a shared passive discovery policy that maps 0-100 into reference, balanced, discovery, and wild-discovery bands and threads that policy through Rytm, A4, and dual-machine style-routing text/JSON.
 - Added a passive `rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]` CLI command that maps route-ready Rytm pads to safe zone/parameter intent rows with style-target bias and direction metadata, without rendering CC values.
@@ -19,7 +20,7 @@ Adds the passive style-target-to-snapshot bridge: style profile data now has nor
 
 This is the first concrete bridge between the artist/style intelligence layer and live-kit snapshot mode. It does not mutate parameters yet; it tells the next mutation slice which pads, machines, zones, and discovery band are legal and musically relevant for a chosen style.
 
-The newest local slices take that one step closer to the live workflow by spelling out which safe profile parameters each ready Rytm pad can target for the selected style and discovery pressure, plus whether each parameter should generally move higher, lower, shorter, longer, or stay centered, while still keeping the actual value renderer and MIDI sender deferred.
+The newest local slices take that one step closer to the live workflow by spelling out which safe profile parameters each ready Rytm pad can target for the selected style and discovery pressure, plus whether each parameter should generally move higher, lower, shorter, longer, or stay centered. Analog Four now gets the matching track/zone pressure map, but it still refuses to imply real mutation until A4 offsets are promoted.
 
 ## Test Plan
 
@@ -31,6 +32,7 @@ python -m pytest tests/test_analog_four_style_snapshot_routing.py tests/test_cli
 python -m pytest tests/test_dual_machine_style_snapshot_routing_report.py tests/test_cli.py -n 0 -k "dual_machine_style_snapshot_routing or cli_help"
 python -m pytest tests/test_data_layer.py tests/test_rytm_style_snapshot_routing.py tests/test_analog_four_style_snapshot_routing.py tests/test_dual_machine_style_snapshot_routing_report.py tests/test_cli.py -n 0 -k "style_discovery or style_snapshot_routing or analog_four_style_snapshot_routing or dual_machine_style_snapshot_routing or cli_help"
 python -m pytest tests/test_rytm_style_mutation_intent.py tests/test_cli.py -n 0 -k "style_mutation_intent or top_level_help"
+python -m pytest tests/test_analog_four_style_mutation_intent.py tests/test_cli.py -n 0 -k "analog_four_style_mutation_intent"
 python -m pytest tests/test_rytm_style_snapshot_routing.py --cov=rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_rytm_style_snapshot_routing.py --cov=rytm_randomizer.reports.rytm_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_analog_four_style_snapshot_routing.py --cov=rytm_randomizer.devices.strategies.analog_four_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
@@ -39,7 +41,9 @@ python -m pytest tests/test_dual_machine_style_snapshot_routing_report.py --cov=
 python -m pytest tests/test_data_layer.py --cov=rytm_randomizer.data.style_discovery --cov-branch --cov-report=term-missing -n 0 -k "style_discovery"
 python -m pytest tests/test_rytm_style_mutation_intent.py --cov=rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_rytm_style_mutation_intent.py --cov=rytm_randomizer.reports.rytm_style_mutation_intent --cov-branch --cov-report=term-missing -n 0
-python -m vulture rytm_randomizer\data\style_discovery.py rytm_randomizer\data\style_profiles.py rytm_randomizer\data\style_targets.py rytm_randomizer\reports\style_profiles.py rytm_randomizer\reports\style_targets.py rytm_randomizer\reports\rytm_style_snapshot_routing.py rytm_randomizer\reports\rytm_style_mutation_intent.py rytm_randomizer\reports\analog_four_style_snapshot_routing.py rytm_randomizer\reports\dual_machine_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_rytm_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_rytm_style_mutation_intent.py rytm_randomizer\devices\strategies\analog_four_style_snapshot_routing.py tests\test_style_profiles_report.py tests\test_style_targets_report.py tests\test_rytm_style_snapshot_routing.py tests\test_rytm_style_mutation_intent.py tests\test_analog_four_style_snapshot_routing.py tests\test_dual_machine_style_snapshot_routing_report.py tests\test_data_layer.py --min-confidence 80
+python -m pytest tests/test_analog_four_style_mutation_intent.py --cov=rytm_randomizer.devices.strategies.analog_four_style_mutation_intent --cov-branch --cov-report=term-missing -n 0
+python -m pytest tests/test_analog_four_style_mutation_intent.py --cov=rytm_randomizer.reports.analog_four_style_mutation_intent --cov-branch --cov-report=term-missing -n 0
+python -m vulture rytm_randomizer\data\style_discovery.py rytm_randomizer\data\style_profiles.py rytm_randomizer\data\style_targets.py rytm_randomizer\reports\style_profiles.py rytm_randomizer\reports\style_targets.py rytm_randomizer\reports\rytm_style_snapshot_routing.py rytm_randomizer\reports\rytm_style_mutation_intent.py rytm_randomizer\reports\analog_four_style_snapshot_routing.py rytm_randomizer\reports\analog_four_style_mutation_intent.py rytm_randomizer\reports\dual_machine_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_rytm_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_rytm_style_mutation_intent.py rytm_randomizer\devices\strategies\analog_four_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_four_style_mutation_intent.py tests\test_style_profiles_report.py tests\test_style_targets_report.py tests\test_rytm_style_snapshot_routing.py tests\test_rytm_style_mutation_intent.py tests\test_analog_four_style_snapshot_routing.py tests\test_analog_four_style_mutation_intent.py tests\test_dual_machine_style_snapshot_routing_report.py tests\test_data_layer.py --min-confidence 80
 python -m pytest tests/architecture/ -q
 python -m ruff check .
 python -m black --check --target-version=py311 .
@@ -50,10 +54,10 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
 python scripts/code_review_gate.py --mode cli
 ```
 
-- [x] Local pytest passes: 2765 passed, 4 skipped.
+- [x] Local pytest passes: 2795 passed, 4 skipped.
 - [x] `tests/architecture/` passes: 260 passed, 1 skipped.
 - [x] Lint trio clean: ruff, black, isort.
-- [x] Coverage stays >=95% pure-branch: whole package 98.25%; new Rytm/A4/dual-machine routing reports, mutation-intent report, mutation-intent strategy, style bias/direction metadata, and the discovery policy have focused coverage.
+- [x] Coverage stays >=95% pure-branch: whole package 98.25%; new Rytm/A4/dual-machine routing reports, mutation-intent reports, mutation-intent strategies, style bias/direction metadata, and the discovery policy have focused coverage.
 - [x] 685/685 V1.34 parity items byte-identical via `scripts/code_review_gate.py --mode cli`.
 - [x] No new dead code: vulture clean on touched style/Rytm/A4 routing modules and tests.
 - [ ] CI matrix green on all 3 OSes - N/A until this local branch is pushed after PR #56 lands.
@@ -102,13 +106,14 @@ Per `docs/PLAN_REQUIREMENTS.md`:
 - `docs/superpowers/plans/2026-05-21-reference-discovery-slider-routing-pr63.md`
 - `docs/superpowers/plans/2026-05-21-rytm-style-mutation-intent-pr64.md`
 - `docs/superpowers/plans/2026-05-21-rytm-style-mutation-bias-pr65.md`
+- `docs/superpowers/plans/2026-05-21-analog-four-style-mutation-intent-pr66.md`
 
 ## Reviewer Notes
 
 - This remains passive/mock-safe. It plans and reports readiness only; parameter mutation and MIDI rendering remain future slices.
 - `--discovery N` is passive planning pressure only. It does not authorize real machine switching or parameter sends.
 - `rytm-style-mutation-intent-report` exposes zone/parameter intent plus bias/direction metadata only. It does not render final CC target values and does not call any guarded sender.
-- Analog Four style routing intentionally stays blocked for real mutation while A4 offsets are candidate-only; the report exposes that state clearly for operators.
+- Analog Four style routing and mutation-intent reports intentionally stay blocked for real mutation while A4 offsets are candidate-only; the reports expose that state clearly for operators.
 - The single-machine reports now expose detailed per-pad/per-track JSON; the dual-machine report remains the compact rig-level summary with optional JSON.
 - Local `python -m pyright ...` could not run because `pyright` is not installed in this environment.
 - PR #56 is still blocking publish at the time this body was drafted, so CI status is intentionally left N/A until this branch can be pushed from a clean base.

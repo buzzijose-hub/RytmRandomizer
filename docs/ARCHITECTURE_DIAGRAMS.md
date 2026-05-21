@@ -955,6 +955,7 @@ flowchart LR
         StyleTargetReport["style-target-report"]
         StyleSnapshotRoutingReport["rytm-style-snapshot-routing-report"]
         A4StyleSnapshotRoutingReport["analog-four-style-snapshot-routing-report"]
+        A4StyleMutationIntentReport["analog-four-style-mutation-intent-report"]
         DualStyleSnapshotRoutingReport["dual-machine-style-snapshot-routing-report"]
         QuickStatus["quick-status"]
     end
@@ -1273,7 +1274,8 @@ flowchart TB
         C17["rytm-style-snapshot-routing-report"]
         C18["rytm-style-mutation-intent-report"]
         C19["analog-four-style-snapshot-routing-report"]
-        C20["dual-machine-style-snapshot-routing-report"]
+        C20["analog-four-style-mutation-intent-report"]
+        C21["dual-machine-style-snapshot-routing-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1288,6 +1290,7 @@ flowchart TB
     Reports --> StyleSnapshotRoutingModule
     Reports --> StyleMutationIntentModule
     Reports --> A4StyleSnapshotRoutingModule
+    Reports --> A4StyleMutationIntentModule
     Reports --> DualStyleSnapshotRoutingModule
     Reports --> StyleProfileModule
     Reports --> StyleTargetModule
@@ -1573,6 +1576,7 @@ flowchart LR
         StyleSnapshotRouting["rytm-style-snapshot-routing-report"]
         StyleMutationIntent["rytm-style-mutation-intent-report"]
         A4StyleSnapshotRouting["analog-four-style-snapshot-routing-report"]
+        A4StyleMutationIntent["analog-four-style-mutation-intent-report"]
         DualStyleSnapshotRouting["dual-machine-style-snapshot-routing-report"]
         Status["project-status / quick-status"]
     end
@@ -1604,6 +1608,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>rytm-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>rytm-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-snapshot-routing-report"| CLI
+    CliRegistry -->|"registered passive command:<br/>analog-four-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-snapshot-routing-report"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
@@ -1615,7 +1620,7 @@ flowchart LR
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
-- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent, style-profile, and style-target commands are registered there instead of growing `cli.py` with more inline report arms. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
+- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent, Analog Four style routing/intent, style-profile, and style-target commands are registered there instead of growing `cli.py` with more inline report arms. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
 

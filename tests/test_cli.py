@@ -26,6 +26,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "inspect-command <key> | "
@@ -273,6 +275,19 @@ def test_analog_four_style_snapshot_routing_report_help_exits_zero_and_safety_ma
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_intent_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_four_style_mutation_intent import SAFETY_LINES
+
+    result = run_cli("analog-four-style-mutation-intent-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: analog-four-style-mutation-intent-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -845,6 +860,67 @@ def test_analog_four_style_snapshot_routing_report_unknown_style_fails_safely(tm
     path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
 
     result = run_cli("analog-four-style-snapshot-routing-report", str(path), "ghost_style")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Unknown style target key: ghost_style" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_analog_four_style_mutation_intent_report_command_reads_syx_file(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4INTENT".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "75",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Four style mutation intent" in result.stdout
+    assert "Kit: A4INTENT" in result.stdout
+    assert "Style target: birmingham_pressure" in result.stdout
+    assert "Mutation depth: strong" in result.stdout
+    assert "bias 94" in result.stdout
+    assert "direction higher" in result.stdout
+    assert "- no MIDI rendering" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_intent_report_command_can_emit_json(tmp_path):
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4JSON".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+
+    result = run_cli(
+        "analog-four-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "75",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "A4JSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["mutation_depth"] == "strong"
+    assert parsed["tracks"][0]["intent_rows"][0]["target_bias"] == 94
+    assert result.stderr == ""
+
+
+def test_analog_four_style_mutation_intent_report_unknown_style_fails_safely(tmp_path):
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4INTENT".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli("analog-four-style-mutation-intent-report", str(path), "ghost_style")
 
     assert result.returncode == 2
     assert result.stdout == ""

@@ -16,7 +16,7 @@ from ...data.style_profiles import STYLE_PROFILES
 from ...data.style_targets import STYLE_TARGET_VECTORS, StyleTargetVector
 from .analog_four_snapshot_decoder import AnalogFourKitSnapshot
 
-_ZONE_AXIS_WEIGHTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
     {
         "drive": (
             "drive_pressure",
@@ -127,13 +127,25 @@ def _axis_sum(target: StyleTargetVector, axes: tuple[str, ...]) -> int:
     return sum(values[axis] for axis in axes)
 
 
+def analog_four_style_zone_bias(target: StyleTargetVector, zone: str) -> int:
+    """Return a 0-100 style bias score for an Analog Four sound-design zone."""
+
+    axes = ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS.get(zone)
+    if axes is None:
+        return 50
+    return round(_axis_sum(target, axes) / len(axes))
+
+
 def _favored_zones(
     target: StyleTargetVector,
     *,
     policy: StyleDiscoveryPolicy,
 ) -> tuple[str, ...]:
     scored = sorted(
-        ((zone, _axis_sum(target, axes)) for zone, axes in _ZONE_AXIS_WEIGHTS.items()),
+        (
+            (zone, _axis_sum(target, axes))
+            for zone, axes in ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS.items()
+        ),
         key=lambda item: (-item[1], item[0]),
     )
     return tuple(zone for zone, score in scored if score >= 150)[
@@ -215,7 +227,9 @@ def plan_analog_four_style_snapshot_routes(
 
 
 __all__ = [
+    "ANALOG_FOUR_STYLE_ZONE_AXIS_WEIGHTS",
     "AnalogFourStyleSnapshotRoutingPlan",
     "AnalogFourStyleTrackPlan",
+    "analog_four_style_zone_bias",
     "plan_analog_four_style_snapshot_routes",
 ]
