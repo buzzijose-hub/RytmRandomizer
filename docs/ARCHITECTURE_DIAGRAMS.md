@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Style target + Rytm/A4 style snapshot routing draft, built on the passive style profile foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 110 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 111 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, and Analog Four style snapshot routing slices so the strategy/report-module list and counts stay current.
 
@@ -26,7 +26,7 @@ Current baseline used while creating / refreshing this document:
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
 | Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog,style_profiles,style_targets}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
-| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_snapshot_routing,style_profiles,style_targets}.py` (subpackage; was the old top-level `reports.py`) |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,analog_four_style_snapshot_routing,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_snapshot_routing,style_profiles,style_targets}.py` (subpackage; was the old top-level `reports.py`) |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
 | Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
@@ -157,6 +157,7 @@ flowchart TB
         RSnapshotIntel["rytm_snapshot_intelligence.py<br/>decoded/routed/file-backed snapshot readiness report<br/>+ registered CliCommand"]
         RSnapshotPreview["rytm_snapshot_mutation_preview.py<br/>passive snapshot mutation preview + event rows<br/>+ registered CliCommand"]
         RStyleRouting["rytm_style_snapshot_routing.py<br/>passive style-to-snapshot routing report<br/>+ registered CliCommand"]
+        RA4StyleRouting["analog_four_style_snapshot_routing.py<br/>passive A4 style-to-snapshot routing report<br/>+ registered CliCommand"]
         RStyleProfiles["style_profiles.py<br/>passive techno style profile catalog<br/>+ registered CliCommand"]
         RStyleTargets["style_targets.py<br/>passive numeric target-vector catalog<br/>+ registered CliCommand"]
     end
@@ -950,6 +951,7 @@ flowchart LR
         StyleReport["style-profile-report"]
         StyleTargetReport["style-target-report"]
         StyleSnapshotRoutingReport["rytm-style-snapshot-routing-report"]
+        A4StyleSnapshotRoutingReport["analog-four-style-snapshot-routing-report"]
         QuickStatus["quick-status"]
     end
 
@@ -1225,6 +1227,7 @@ flowchart TB
         SnapshotIntelModule["rytm_snapshot_intelligence.py<br/>decoded/routed/file-backed snapshot readiness report<br/>+ registered CliCommand"]
         SnapshotPreviewModule["rytm_snapshot_mutation_preview.py<br/>snapshot mutation preview + event rows<br/>+ registered CliCommand"]
         StyleSnapshotRoutingModule["rytm_style_snapshot_routing.py<br/>style target to snapshot routing report<br/>+ registered CliCommand"]
+        A4StyleSnapshotRoutingModule["analog_four_style_snapshot_routing.py<br/>A4 style target to snapshot routing report<br/>+ registered CliCommand"]
         StyleProfileModule["style_profiles.py<br/>style intent catalog/list/inspect/search<br/>+ registered CliCommand"]
         StyleTargetModule["style_targets.py<br/>numeric target-vector report/inspect<br/>+ registered CliCommand"]
     end
@@ -1262,6 +1265,7 @@ flowchart TB
         C15["list-style-profiles / inspect-style-profile / search-style-profiles"]
         C16["style-target-report / inspect-style-target"]
         C17["rytm-style-snapshot-routing-report"]
+        C18["analog-four-style-snapshot-routing-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1273,6 +1277,8 @@ flowchart TB
     Reports --> SnapshotModule
     Reports --> SnapshotIntelModule
     Reports --> SnapshotPreviewModule
+    Reports --> StyleSnapshotRoutingModule
+    Reports --> A4StyleSnapshotRoutingModule
     Reports --> StyleProfileModule
     Reports --> StyleTargetModule
     Formatter --> Init
@@ -1553,6 +1559,7 @@ flowchart LR
         StyleProfiles["style-profile-report"]
         StyleTargets["style-target-report"]
         StyleSnapshotRouting["rytm-style-snapshot-routing-report"]
+        A4StyleSnapshotRouting["analog-four-style-snapshot-routing-report"]
         Status["project-status / quick-status"]
     end
 
@@ -1581,6 +1588,7 @@ flowchart LR
     CliRegistry -->|"registered passive commands:<br/>style-profile-report + list/search/inspect"| CLI
     CliRegistry -->|"registered passive commands:<br/>style-target-report + inspect-style-target"| CLI
     CliRegistry -->|"registered passive command:<br/>rytm-style-snapshot-routing-report"| CLI
+    CliRegistry -->|"registered passive command:<br/>analog-four-style-snapshot-routing-report"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent

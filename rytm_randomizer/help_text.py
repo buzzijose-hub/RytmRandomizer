@@ -16,6 +16,7 @@ USAGE = (
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
     "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
+    "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -110,6 +111,26 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _analog_four_style_snapshot_routing_report_help():
+    from .reports.analog_four_style_snapshot_routing import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report --help
+
+Behavior:
+  Reads a local Analog Four MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware routing readiness for the selected style target.
+  The report shows favored zones and track readiness while A4 offsets remain
+  candidate-only, so no mutation values are rendered.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _style_profile_report_help():
     from .reports.style_profiles import SAFETY_LINES
 
@@ -172,6 +193,7 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key>
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli list-style-profiles
@@ -219,6 +241,8 @@ Commands:
                      Print passive Rytm snapshot mutation preview for a SysEx file.
   rytm-style-snapshot-routing-report
                      Print passive Rytm style snapshot routing for a SysEx file.
+  analog-four-style-snapshot-routing-report
+                     Print passive Analog Four style snapshot routing for a SysEx file.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   style-profile-report
@@ -427,6 +451,7 @@ Safety:
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
     "rytm-style-snapshot-routing-report": _rytm_style_snapshot_routing_report_help,
+    "analog-four-style-snapshot-routing-report": _analog_four_style_snapshot_routing_report_help,
     "style-profile-report": _style_profile_report_help,
     "style-target-report": _style_target_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report

@@ -32,6 +32,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_style_snapshot_routing",
             "RYTM_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
         ),
+        "analog-four-style-snapshot-routing-report": (
+            "rytm_randomizer.reports.analog_four_style_snapshot_routing",
+            "ANALOG_FOUR_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",
+        ),
         "style-profile-report": (
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",

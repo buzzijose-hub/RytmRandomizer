@@ -20,6 +20,12 @@ def _snapshot(*, offsets_promoted: bool = False):
     )
 
 
+def _framed_a4_payload(name: bytes = b"A4STYLE") -> bytes:
+    padded_name = name[:16].ljust(16, b"\x00")
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + padded_name + bytes([0x01, 0x02])
+    return bytes([0xF0]) + payload + bytes([0xF7])
+
+
 def test_analog_four_style_routes_block_candidate_only_offsets():
     from rytm_randomizer.devices.strategies import plan_analog_four_style_snapshot_routes
 
@@ -100,3 +106,183 @@ def test_analog_four_style_routes_are_deterministic_and_read_only():
     assert isinstance(first.tracks_by_track, MappingProxyType)
     with pytest.raises(TypeError):
         first.tracks_by_track[5] = first.tracks_by_track[1]
+
+
+def test_analog_four_style_routing_report_is_operator_facing_and_passive():
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import (
+        format_analog_four_style_snapshot_routing_report,
+    )
+
+    lines = format_analog_four_style_snapshot_routing_report(
+        _snapshot(offsets_promoted=False),
+        style_key="industrial_dark",
+    )
+
+    assert lines[0] == "RytmRandomizer passive Analog Four style snapshot routing"
+    assert "Kit: A4STYLE" in lines
+    assert "Style target: industrial_dark" in lines
+    assert "- Ready tracks: 0" in lines
+    assert "Analog Four focus:" in lines
+    assert "- metallic FM-like bite" in lines
+    assert "Track 1 / bass_foundation / Bass / low pulse:" in lines
+    assert "  Route ready: False" in lines
+    assert "candidate-only" in "\n".join(lines)
+    assert "- no MIDI sending" in lines
+    assert "- no port opening" in lines
+
+
+def test_analog_four_style_routing_report_accepts_prebuilt_empty_plan():
+    from rytm_randomizer.devices.strategies import (
+        AnalogFourStyleSnapshotRoutingPlan,
+        AnalogFourStyleTrackPlan,
+    )
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import (
+        format_analog_four_style_snapshot_routing_report,
+    )
+
+    track = AnalogFourStyleTrackPlan(
+        track=1,
+        role_key="bass_foundation",
+        label="Bass / low pulse",
+        route_ready=True,
+        readiness_reason="",
+        favored_zones=(),
+        score=0,
+    )
+    plan = AnalogFourStyleSnapshotRoutingPlan(
+        kit_name="EMPTY",
+        slot=1,
+        style_key="detroit_minimal",
+        style_focus=(),
+        favored_zones=(),
+        ready_track_count=1,
+        blocked_track_count=0,
+        partial_snapshot_mutation_ready=True,
+        tracks_by_track=MappingProxyType({1: track}),
+    )
+
+    lines = format_analog_four_style_snapshot_routing_report(
+        plan,
+        style_key="ignored_for_prebuilt_plan",
+    )
+
+    assert "Kit: EMPTY" in lines
+    assert "Favored zones: none" in lines
+    assert "  Reason: ready for promoted-offset planning" in lines
+    assert "  Favored zones: none" in lines
+
+
+def test_analog_four_style_routing_cli_parser_accepts_slot():
+    from pathlib import Path
+
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import _parse_cli_args
+
+    assert _parse_cli_args(["kit.syx", "industrial_dark"]) == {
+        "sysex_path": Path("kit.syx"),
+        "style_key": "industrial_dark",
+        "slot": 0,
+    }
+    assert _parse_cli_args(["kit.syx", "mills_hypnotic", "--slot", "2"]) == {
+        "sysex_path": Path("kit.syx"),
+        "style_key": "mills_hypnotic",
+        "slot": 2,
+    }
+
+
+@pytest.mark.parametrize(
+    ("argv", "message"),
+    [
+        ([], "usage"),
+        (["kit.syx"], "usage"),
+        (["kit.syx", "industrial_dark", "--slot"], "usage"),
+        (["kit.syx", "industrial_dark", "--bank", "1"], "usage"),
+        (["kit.syx", "industrial_dark", "--slot", "bad"], "--slot must be an integer"),
+        (["kit.syx", "industrial_dark", "--slot", "-1"], "--slot must be >= 0"),
+    ],
+)
+def test_analog_four_style_routing_cli_parser_rejects_bad_args(argv, message):
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import _parse_cli_args
+
+    with pytest.raises(ValueError, match=message):
+        _parse_cli_args(argv)
+
+
+def test_analog_four_style_routing_cli_handler_reports_plan(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import _handle_cli_report
+
+    path = tmp_path / "a4.syx"
+    path.write_bytes(_framed_a4_payload(b"A4LIVE"))
+
+    rc = _handle_cli_report(sysex_path=path, style_key="industrial_dark", slot=0)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Analog Four style snapshot routing" in captured.out
+    assert "Kit: A4LIVE" in captured.out
+    assert "Style target: industrial_dark" in captured.out
+    assert captured.err == ""
+
+
+def test_analog_four_style_routing_decode_reports_unsupported_frames(tmp_path):
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import (
+        decode_supported_analog_four_snapshots_from_path,
+    )
+
+    unsupported_path = tmp_path / "unsupported.syx"
+    unsupported_path.write_bytes(bytes([0xF0, 0x01, 0x02, 0x03, 0xF7]))
+    with pytest.raises(ValueError, match="frame 1"):
+        decode_supported_analog_four_snapshots_from_path(unsupported_path)
+
+
+def test_analog_four_style_routing_decode_reports_no_payloads(monkeypatch, tmp_path):
+    from rytm_randomizer.reports import analog_four_style_snapshot_routing as report
+
+    monkeypatch.setattr(report, "read_sysex_payloads_from_path", lambda _path: ())
+
+    path = tmp_path / "empty.syx"
+    with pytest.raises(ValueError, match="no SysEx payloads found"):
+        report.decode_supported_analog_four_snapshots_from_path(path)
+
+
+def test_analog_four_style_routing_slot_selection_reports_available_slots(tmp_path):
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import (
+        select_supported_analog_four_snapshot,
+    )
+
+    sysex_path = tmp_path / "a4.syx"
+    sysex_path.write_bytes(_framed_a4_payload())
+    snapshots = (_snapshot(),)
+
+    with pytest.raises(ValueError, match="only 1 supported Analog Four kit snapshot"):
+        select_supported_analog_four_snapshot(sysex_path, 1, snapshots)
+
+    with pytest.raises(ValueError, match="only 2 supported Analog Four kit snapshots"):
+        select_supported_analog_four_snapshot(sysex_path, 2, (snapshots[0], snapshots[0]))
+
+
+def test_analog_four_style_routing_cli_error_formatter_is_stable():
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import _format_cli_error
+
+    assert _format_cli_error(ValueError("bad args")) == "Error: bad args"
+
+
+def test_analog_four_style_routing_cli_handler_reports_errors(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.analog_four_style_snapshot_routing import _handle_cli_report
+
+    rc = _handle_cli_report(
+        sysex_path=tmp_path / "missing.syx",
+        style_key="industrial_dark",
+        slot=0,
+    )
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "SysEx file does not exist" in captured.err
+    assert "Traceback" not in captured.err
