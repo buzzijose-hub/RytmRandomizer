@@ -13,6 +13,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "rytm-snapshot-pad-compatibility-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
+    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -61,6 +62,26 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _rytm_snapshot_mutation_preview_report_help():
+    from .reports.rytm_snapshot_mutation_preview import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: rytm-snapshot-mutation-preview-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path>
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N --depth N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report --help
+
+Behavior:
+  Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
+  and prints a passive/mock-only mutation preview from snapshot machine facts.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -86,6 +107,9 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path>
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -123,6 +147,8 @@ Commands:
                      Print the passive Rytm snapshot-pad compatibility report.
   rytm-snapshot-intelligence-report
                      Print passive Rytm snapshot intelligence for a SysEx file.
+  rytm-snapshot-mutation-preview-report
+                     Print passive Rytm snapshot mutation preview for a SysEx file.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   inspect-command    Inspect passive command metadata by key.
@@ -317,6 +343,7 @@ Safety:
   no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
+    "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:

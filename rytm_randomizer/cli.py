@@ -24,6 +24,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_snapshot_intelligence",
             "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
         ),
+        "rytm-snapshot-mutation-preview-report": (
+            "rytm_randomizer.reports.rytm_snapshot_mutation_preview",
+            "RYTM_SNAPSHOT_MUTATION_PREVIEW_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
