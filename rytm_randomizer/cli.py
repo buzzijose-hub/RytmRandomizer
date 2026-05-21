@@ -84,6 +84,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.dual_machine_style_kit_readiness",
             "DUAL_MACHINE_STYLE_KIT_READINESS_CLI_COMMAND",
         ),
+        "dual-machine-style-kit-selection-report": (
+            "rytm_randomizer.reports.dual_machine_style_kit_selection",
+            "DUAL_MACHINE_STYLE_KIT_SELECTION_CLI_COMMAND",
+        ),
         "style-profile-report": (
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",
