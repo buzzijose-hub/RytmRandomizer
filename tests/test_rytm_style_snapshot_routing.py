@@ -63,6 +63,36 @@ def _candidate_only_snapshot():
     )
 
 
+def _unknown_machine_snapshot():
+    from rytm_randomizer.devices.strategies import (
+        RytmKitSnapshot,
+        RytmSnapshotMachineFact,
+        RytmSnapshotMachineFacts,
+    )
+
+    facts = RytmSnapshotMachineFacts(
+        facts_by_pad=MappingProxyType(
+            {
+                1: RytmSnapshotMachineFact(
+                    1,
+                    127,
+                    None,
+                    False,
+                    "unknown machine value",
+                ),
+            }
+        ),
+        promoted=True,
+    )
+    return RytmKitSnapshot(
+        slot=6,
+        kit_name="UNKNOWN",
+        raw=b"raw",
+        unpacked=b"unpacked",
+        machine_facts=facts,
+    )
+
+
 def test_style_snapshot_routing_requires_known_style_key():
     from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
         plan_rytm_style_snapshot_routes,
@@ -155,6 +185,15 @@ def test_style_snapshot_routing_rejects_bad_discovery_amount():
         )
 
 
+def test_style_snapshot_routing_rejects_wrong_snapshot_type():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
+        plan_rytm_style_snapshot_routes,
+    )
+
+    with pytest.raises(ValueError, match="RytmKitSnapshot"):
+        plan_rytm_style_snapshot_routes("not a snapshot", "birmingham_pressure")
+
+
 def test_style_snapshot_routing_ranks_legal_machine_candidates_per_pad():
     from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
         plan_rytm_style_snapshot_routes,
@@ -170,6 +209,18 @@ def test_style_snapshot_routing_ranks_legal_machine_candidates_per_pad():
     assert "oh_metallic" in pad_10_candidates
     assert "xt_classic" not in pad_10_candidates
     assert plan.pads_by_pad[10].mutable_machine_candidates == ()
+
+
+def test_style_snapshot_routing_preserves_unknown_machine_without_guessing():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
+        plan_rytm_style_snapshot_routes,
+    )
+
+    plan = plan_rytm_style_snapshot_routes(_unknown_machine_snapshot(), "detroit_minimal")
+
+    assert plan.pads_by_pad[1].current_machine_value == 127
+    assert plan.pads_by_pad[1].current_machine_key is None
+    assert plan.pads_by_pad[1].route_ready is False
 
 
 def test_style_snapshot_routing_blocks_candidate_only_machine_facts():

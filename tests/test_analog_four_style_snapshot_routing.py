@@ -105,6 +105,16 @@ def test_analog_four_style_routes_apply_reference_discovery_slider():
     assert all(track.discovery_band == "wild_discovery" for track in wild.tracks_by_track.values())
 
 
+def test_analog_four_style_zone_bias_uses_neutral_score_for_unknown_zone():
+    from rytm_randomizer.data.style_targets import STYLE_TARGET_VECTORS
+    from rytm_randomizer.devices.strategies.analog_four_style_snapshot_routing import (
+        analog_four_style_zone_bias,
+    )
+
+    assert analog_four_style_zone_bias(STYLE_TARGET_VECTORS["industrial_dark"], "drive") == 95
+    assert analog_four_style_zone_bias(STYLE_TARGET_VECTORS["industrial_dark"], "ghost") == 50
+
+
 def test_analog_four_style_routes_reject_bad_discovery_amount():
     from rytm_randomizer.devices.strategies import plan_analog_four_style_snapshot_routes
 

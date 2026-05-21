@@ -189,6 +189,33 @@ def test_style_profiles_are_complete_passive_design_records():
             assert 0 <= score <= 10
 
 
+def test_style_target_vectors_import_guard_rejects_profile_mismatch():
+    source_path = PROJECT_ROOT / "rytm_randomizer" / "data" / "style_targets.py"
+    source = source_path.read_text(encoding="utf-8").replace(
+        "from .style_profiles import STYLE_PROFILES",
+        "STYLE_PROFILES = {}",
+    )
+    module_name = "rytm_randomizer.data._style_targets_guard_probe"
+    probe_module = type(sys)(module_name)
+    probe_module.__dict__.update(
+        {
+            "__builtins__": __builtins__,
+            "__name__": module_name,
+            "__package__": "rytm_randomizer.data",
+        }
+    )
+    sys.modules[module_name] = probe_module
+
+    try:
+        with pytest.raises(ValueError, match="style target vectors must cover every style profile"):
+            exec(  # noqa: S102 - local source probe covers the import-time catalog guard.
+                compile(source, str(source_path), "exec"),
+                probe_module.__dict__,
+            )
+    finally:
+        sys.modules.pop(module_name, None)
+
+
 def test_style_discovery_policy_maps_reference_to_wild_bands():
     from rytm_randomizer.data.style_discovery import (
         DEFAULT_STYLE_DISCOVERY_AMOUNT,
