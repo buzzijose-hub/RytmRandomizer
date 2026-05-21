@@ -14,9 +14,9 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 125 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 126 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, and Analog Four saved-kit SysEx readiness-intake slices so the strategy/report-module list and counts stay current.
+- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, and Analog Four kit-catalog slices so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
 
@@ -26,7 +26,7 @@ Current baseline used while creating / refreshing this document:
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
 | Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog,style_discovery,style_profiles,style_targets}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
-| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_snapshot_routing,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_profiles,style_targets}.py` (subpackage; was the old top-level `reports.py`) |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,analog_four_kit_catalog,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_snapshot_routing,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_profiles,style_targets}.py` (subpackage; was the old top-level `reports.py`) |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
 | Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
@@ -164,6 +164,7 @@ flowchart TB
         RA4StyleRouting["analog_four_style_snapshot_routing.py<br/>passive A4 style-to-snapshot routing report<br/>+ registered CliCommand"]
         RA4StyleIntent["analog_four_style_mutation_intent.py<br/>passive A4 style mutation intent report<br/>+ registered CliCommand"]
         RA4StyleMockPreview["analog_four_style_mutation_mock_preview.py<br/>passive A4 style mock/deferred rows<br/>+ registered CliCommand"]
+        RA4KitCatalog["analog_four_kit_catalog.py<br/>passive A4 decoded kit catalog<br/>+ registered CliCommand"]
         RDualStyleRouting["dual_machine_style_snapshot_routing.py<br/>passive rig-level style routing report<br/>+ registered CliCommand"]
         RDualStyleIntent["dual_machine_style_mutation_intent.py<br/>passive rig-level style mutation intent report<br/>+ registered CliCommand"]
         RDualStyleMockPreview["dual_machine_style_mutation_mock_preview.py<br/>passive rig-level style mock-preview report<br/>+ registered CliCommand"]
@@ -966,6 +967,7 @@ flowchart LR
         A4StyleSnapshotRoutingReport["analog-four-style-snapshot-routing-report"]
         A4StyleMutationIntentReport["analog-four-style-mutation-intent-report"]
         A4StyleMutationMockPreviewReport["analog-four-style-mutation-mock-preview-report"]
+        A4KitCatalogReport["analog-four-kit-catalog-report"]
         DualStyleSnapshotRoutingReport["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntentReport["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreviewReport["dual-machine-style-mutation-mock-preview-report"]
@@ -1250,6 +1252,7 @@ flowchart TB
         A4StyleSnapshotRoutingModule["analog_four_style_snapshot_routing.py<br/>A4 style target to snapshot routing report<br/>+ registered CliCommand"]
         A4StyleMutationIntentModule["analog_four_style_mutation_intent.py<br/>A4 style target to mutation-intent report<br/>+ registered CliCommand"]
         A4StyleMutationMockPreviewModule["analog_four_style_mutation_mock_preview.py<br/>A4 style intent to mock CC/deferred rows<br/>+ registered CliCommand"]
+        A4KitCatalogModule["analog_four_kit_catalog.py<br/>A4 decoded kit catalog report<br/>+ registered CliCommand"]
         DualStyleSnapshotRoutingModule["dual_machine_style_snapshot_routing.py<br/>rig-level style routing report<br/>+ registered CliCommand"]
         DualStyleMutationIntentModule["dual_machine_style_mutation_intent.py<br/>rig-level style mutation-intent report<br/>+ registered CliCommand"]
         DualStyleMutationMockPreviewModule["dual_machine_style_mutation_mock_preview.py<br/>rig-level style mock-preview report<br/>+ registered CliCommand"]
@@ -1298,6 +1301,7 @@ flowchart TB
         C23["rytm-style-mutation-mock-preview-report"]
         C24["analog-four-style-mutation-mock-preview-report"]
         C25["dual-machine-style-mutation-mock-preview-report"]
+        C26["analog-four-kit-catalog-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1316,6 +1320,7 @@ flowchart TB
     Reports --> A4StyleSnapshotRoutingModule
     Reports --> A4StyleMutationIntentModule
     Reports --> A4StyleMutationMockPreviewModule
+    Reports --> A4KitCatalogModule
     Reports --> DualStyleSnapshotRoutingModule
     Reports --> DualStyleMutationIntentModule
     Reports --> DualStyleMutationMockPreviewModule
@@ -1607,6 +1612,7 @@ flowchart LR
         A4StyleSnapshotRouting["analog-four-style-snapshot-routing-report"]
         A4StyleMutationIntent["analog-four-style-mutation-intent-report"]
         A4StyleMutationMockPreview["analog-four-style-mutation-mock-preview-report"]
+        A4KitCatalog["analog-four-kit-catalog-report"]
         DualStyleSnapshotRouting["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntent["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreview["dual-machine-style-mutation-mock-preview-report"]
@@ -1644,6 +1650,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>analog-four-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-style-mutation-mock-preview-report"| CLI
+    CliRegistry -->|"registered passive command:<br/>analog-four-kit-catalog-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-mock-preview-report"| CLI
@@ -1657,7 +1664,7 @@ flowchart LR
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
-- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview, dual-machine style routing/intent/mock-preview, style-profile, and style-target commands are registered there instead of growing `cli.py` with more inline report arms. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
+- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog, dual-machine style routing/intent/mock-preview, style-profile, and style-target commands are registered there instead of growing `cli.py` with more inline report arms. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
 

@@ -29,6 +29,7 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
+    "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -285,6 +286,28 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _analog_four_kit_catalog_report_help():
+    from .reports.analog_four_kit_catalog import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-four-kit-catalog-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path>
+  python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> --limit N
+  python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> --json
+  python -m rytm_randomizer.cli analog-four-kit-catalog-report --help
+
+Behavior:
+  Reads a local Analog Four MK2 SysEx file and prints a passive kit catalog
+  for every supported decoded kit snapshot. The report shows slot, kit name,
+  SysEx layout, byte counts, and whether mutation remains blocked by
+  candidate-only offsets. Use --limit N to cap displayed rows; N=0 displays
+  all rows. Use --json for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _dual_machine_style_snapshot_routing_report_help():
     from .reports.dual_machine_style_snapshot_routing import SAFETY_LINES
 
@@ -430,6 +453,7 @@ Usage:
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
@@ -492,6 +516,8 @@ Commands:
                      Print passive Analog Four style mutation intent for a SysEx file.
   analog-four-style-mutation-mock-preview-report
                      Print passive Analog Four style mutation mock-preview rows for a SysEx file.
+  analog-four-kit-catalog-report
+                     Print passive Analog Four kit catalog metadata for a SysEx file.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
   dual-machine-style-mutation-intent-report
@@ -714,6 +740,7 @@ Safety:
     "analog-four-style-mutation-mock-preview-report": (
         _analog_four_style_mutation_mock_preview_report_help
     ),
+    "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
     "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "dual-machine-style-mutation-mock-preview-report": (

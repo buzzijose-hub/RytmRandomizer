@@ -22,6 +22,9 @@ blocked until offsets are validated.
 - Surface the saved-kit/candidate layout in the A4 mutation mock-preview report
   and JSON so operators can tell the difference between synthetic candidate
   data and a decoded real file.
+- Add a passive A4 kit catalog report so full C6 kit dumps can be scanned for
+  decoded slots, names, layouts, byte counts, and candidate-only readiness
+  before any offset-promotion work begins.
 - Update status, README, and architecture diagrams for the new strategy helper.
 
 ## Out Of Scope
@@ -37,8 +40,11 @@ blocked until offsets are validated.
    cleanup.
 2. Add failing mock-preview tests for the new saved-kit readiness message and
    JSON/text layout field.
-3. Implement the manifest and decoder/report changes minimally.
-4. Run focused tests, real-file passive CLI smoke checks, architecture, fast,
+3. Add failing A4 kit-catalog tests for text, JSON, CLI parsing, and passive
+   error handling.
+4. Implement the manifest, decoder, mock-preview, and kit-catalog changes
+   minimally.
+5. Run focused tests, real-file passive CLI smoke checks, architecture, fast,
    full, coverage, lint, and review gates before any push.
 
 ## Plan-Requirements Conformance
@@ -77,6 +83,8 @@ blocked until offsets are validated.
 ## Done Criteria
 
 - Real Analog Four kit dumps decode to operator-readable kit names.
+- Operators can list decoded A4 kit slots/names from a dump without choosing a
+  style target.
 - A4 mock-preview report says decoded saved-kit SysEx is still candidate-only.
 - No hardware behavior changes.
 - PR opens only after #61 is no longer blocking or when explicitly approved as
