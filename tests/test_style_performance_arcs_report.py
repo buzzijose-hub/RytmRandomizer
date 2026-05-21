@@ -487,6 +487,25 @@ def test_style_performance_arc_live_session_packet_builds_operator_packet(
     assert packet.launch_checklist
     assert packet.suggested_commands
     assert packet.segments
+    suggested_commands = "\n".join(packet.suggested_commands)
+    selected_arc_key = packet.selected_entry.arc.key
+    selected_plan = packet.selected_set_plan
+    assert f"style-performance-arc-live-session-packet-report {selected_arc_key}" in (
+        suggested_commands
+    )
+    assert f"style-performance-arc-rehearsal-manifest-report {selected_arc_key}" in (
+        suggested_commands
+    )
+    assert f"style-performance-arc-audition-packet-report {selected_arc_key}" in (
+        suggested_commands
+    )
+    assert f"style-performance-arc-readiness-report {selected_arc_key}" in (suggested_commands)
+    assert f"style-performance-arc-set-plan-report {selected_arc_key}" in (suggested_commands)
+    assert f"--scope {selected_plan.scope}" in suggested_commands
+    assert f"--rank {selected_plan.selection_rank}" in suggested_commands
+    assert f"--total-minutes {selected_plan.total_minutes}" in suggested_commands
+    assert f"--discovery-start {selected_plan.discovery_start}" in suggested_commands
+    assert f"--discovery-end {selected_plan.discovery_end}" in suggested_commands
 
     first_segment = packet.segments[0]
     first_manifest_segment = packet.rehearsal_manifest.segments[0]
@@ -552,6 +571,9 @@ def test_style_performance_arc_live_session_packet_covers_single_machine_edges(
     assert packet.selected_set_plan.scope == "analog-four-only"
     assert "Rytm is unchanged by this scope; leave its current kit alone." in (
         packet.launch_checklist
+    )
+    assert "--analog-four <analog-four-syx-path> --scope analog-four-only" in (
+        "\n".join(packet.suggested_commands)
     )
     assert packet.segments[0].rytm_preview_summary == "unchanged by scope"
     assert "Analog Four preview: slot" in "\n".join(
@@ -1249,7 +1271,7 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
 
     live_session_bad_cases = [
         (["--json"], "usage"),
-        (["jose_warehouse_five_hour", "--rytm"], "usage"),
+        (["jose_warehouse_five_hour", "--rytm"], "live-session-packet-report usage"),
         (["jose_warehouse_five_hour", "--bogus"], "usage"),
         (["jose_warehouse_five_hour", "--limit", "-1"], ">= 0"),
         (["jose_warehouse_five_hour", "--rank", "0"], ">= 1"),
