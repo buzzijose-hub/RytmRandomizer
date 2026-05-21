@@ -35,8 +35,7 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     source_module=SOURCE_MODULE,
 )
 _USAGE: Final[str] = (
-    "rytm-style-snapshot-routing-report usage: "
-    "<syx-path> <style-key> [--slot N]"
+    "rytm-style-snapshot-routing-report usage: " "<syx-path> <style-key> [--slot N]"
 )
 _DEFAULT_SLOT: Final[int] = 0
 
@@ -60,9 +59,7 @@ def _candidate_lines(
 ) -> list[str]:
     if not candidates:
         return [f"  {title}: none"]
-    return [f"  {title}:"] + [
-        f"    - {_candidate_text(candidate)}" for candidate in candidates
-    ]
+    return [f"  {title}:"] + [f"    - {_candidate_text(candidate)}" for candidate in candidates]
 
 
 def _body_lines(plan: RytmStyleSnapshotRoutingPlan) -> list[str]:
