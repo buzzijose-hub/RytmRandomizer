@@ -28,6 +28,22 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_snapshot_mutation_preview",
             "RYTM_SNAPSHOT_MUTATION_PREVIEW_CLI_COMMAND",
         ),
+        "style-profile-report": (
+            "rytm_randomizer.reports.style_profiles",
+            "STYLE_PROFILE_REPORT_CLI_COMMAND",
+        ),
+        "list-style-profiles": (
+            "rytm_randomizer.reports.style_profiles",
+            "LIST_STYLE_PROFILES_CLI_COMMAND",
+        ),
+        "inspect-style-profile": (
+            "rytm_randomizer.reports.style_profiles",
+            "INSPECT_STYLE_PROFILE_CLI_COMMAND",
+        ),
+        "search-style-profiles": (
+            "rytm_randomizer.reports.style_profiles",
+            "SEARCH_STYLE_PROFILES_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

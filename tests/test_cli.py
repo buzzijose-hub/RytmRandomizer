@@ -23,6 +23,8 @@ USAGE = (
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
+    "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
+    "search-style-profiles <query> | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -224,6 +226,19 @@ def test_rytm_snapshot_mutation_preview_help_safety_matches_report_source():
 
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_style_profile_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.style_profiles import SAFETY_LINES
+
+    result = run_cli("style-profile-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: style-profile-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -628,6 +643,13 @@ def test_readme_mentions_rytm_snapshot_mutation_preview_report_command():
     assert "--events" in text
 
 
+def test_readme_mentions_style_profile_commands():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-profile-report" in text
+    assert "style profiles" in text
+
+
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
     from rytm_randomizer.cli import main
 
@@ -824,6 +846,113 @@ def test_rytm_snapshot_mutation_preview_report_command_is_deterministic(tmp_path
     assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
     assert first.stderr == ""
     assert second.stderr == ""
+
+
+def test_style_profile_report_command_exits_zero_and_describes_foundation():
+    result = run_cli("style-profile-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile report" in output
+    assert "- Profiles: 9" in output
+    assert "Detroit Minimal" in output
+    assert "Birmingham Pressure" in output
+    assert "Analyzer hooks:" in output
+    assert "- passive/read-only" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_style_profile_report_command_is_deterministic():
+    first = run_cli("style-profile-report")
+    second = run_cli("style-profile-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_list_style_profiles_exits_zero_and_lists_keys():
+    result = run_cli("list-style-profiles")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile list" in output
+    assert "- birmingham_pressure: Birmingham Pressure" in output
+    assert "- warehouse_peak: Warehouse Peak" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_profile_known_key_exits_zero_and_describes_routing():
+    result = run_cli("inspect-style-profile", "birmingham_pressure")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile inspection" in output
+    assert "Key: birmingham_pressure" in output
+    assert "Found: True" in output
+    assert "Scenes: s3b, s4a, s4b" in output
+    assert "Rytm focus:" in output
+    assert "Analog Four focus:" in output
+    assert result.stderr == ""
+
+
+def test_inspect_style_profile_unknown_key_fails_safely():
+    result = run_cli("inspect-style-profile", "DOES_NOT_EXIST")
+
+    assert result.returncode == 1
+    assert result.stdout == ""
+    assert "RytmRandomizer passive style profile inspection" in result.stderr
+    assert "Found: False" in result.stderr
+    assert "No MIDI was sent." in result.stderr
+
+
+def test_search_style_profiles_known_query_exits_zero():
+    result = run_cli("search-style-profiles", "hardgroove")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style profile search" in output
+    assert "Query: hardgroove" in output
+    assert "Match count: 1" in output
+    assert "- hardgroove_percussive: Hardgroove Percussive" in output
+    assert result.stderr == ""
+
+
+def test_search_style_profiles_no_match_exits_zero():
+    result = run_cli("search-style-profiles", "NO_MATCH")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "Match count: 0" in output
+    assert "- no matches found. No MIDI was sent. No command executed." in output
+    assert result.stderr == ""
+
+
+def test_unknown_style_profile_report_arguments_fail_safely():
+    result = run_cli("style-profile-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_missing_inspect_style_profile_key_fails_safely():
+    result = run_cli("inspect-style-profile")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_missing_search_style_profile_query_fails_safely():
+    result = run_cli("search-style-profiles")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
 
 
 def test_top_level_help_exposes_no_active_execution_commands():

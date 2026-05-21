@@ -1,9 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-20. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-21: Style profile foundation PR8 started from the clean post-PR #55 base. Added a passive techno style-profile vocabulary that maps underground aesthetics to existing scenes, Rytm focus lanes, Analog Four focus lanes, and later snapshot/audio-analysis hooks. The new style commands are metadata-only and send no MIDI.
 - 2026-05-20: Rytm snapshot mutation operator preview PR7 started from the clean post-PR #54 base. The passive snapshot mutation preview can now grow an optional event-detail mode that prints capped mock CC rows for the selected `.syx` kit slot, making the guarded snapshot planner output inspectable by pad/profile/parameter/channel/CC/value while still opening no MIDI ports and sending no hardware messages.
 - 2026-05-20: Rytm snapshot mutation preview PR6 started from the clean post-PR #53 base. The passive CLI can now read a selected supported kit snapshot from a `.syx` dump, route its decoded machine facts into the guarded Rytm mutation planner, and print the would-be mutation-plan/mock-message readiness without opening MIDI ports or sending hardware messages. Candidate-only tom-pad offsets still block full snapshot mutation until promoted, which keeps the live-performance snapshot path honest while exposing the next concrete blocker.
 - 2026-05-20: Rytm snapshot kit-slot selection PR5 started from the clean post-PR #52 base. The passive snapshot-intelligence CLI can now list supported Rytm kit snapshots in a multi-kit `.syx` dump and select a specific supported slot for the existing readiness report. This remains file-only analysis: no MIDI ports are opened, no hardware messages are sent, and runtime mutation from snapshots remains a follow-up.

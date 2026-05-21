@@ -115,12 +115,14 @@ from .rytm_machine_catalog import (
     RYTM_PAD_CAPABILITIES_BY_PAD,
 )
 from .scenes import SCENE_PRESETS
+from .style_profiles import STYLE_PROFILES
 
 __all__ = [
     "RYTM_MACHINE_PROFILES",
     "RYTM_MACHINE_PROFILES_BY_KEY",
     "RYTM_PAD_CAPABILITIES",
     "RYTM_PAD_CAPABILITIES_BY_PAD",
+    "STYLE_PROFILES",
     "MACHINE_CC",
     "BD_SHARP_PARAMS",
     "BD_HARD_PARAMS",

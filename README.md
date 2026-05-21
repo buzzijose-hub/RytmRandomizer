@@ -174,9 +174,15 @@ python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7   # passive intelligence for one supported Rytm kit snapshot
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2   # passive snapshot mutation preview; mock-only, no MIDI send
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2 --events --limit 24   # include capped mock CC event rows
+python -m rytm_randomizer.cli style-profile-report   # passive techno style profiles for later snapshot/audio-analysis routing
+python -m rytm_randomizer.cli list-style-profiles   # list available style profiles
+python -m rytm_randomizer.cli inspect-style-profile birmingham_pressure   # inspect one passive style profile
+python -m rytm_randomizer.cli search-style-profiles hardgroove   # search style profiles by tag, summary, scene, or focus
 ```
 
 Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The snapshot intelligence report reads a local `.syx` file, scans framed C6-style dumps for supported Rytm kit snapshots, can list those slots, and prints decoded machine facts plus mutation readiness for the selected slot. The snapshot mutation preview report takes the selected snapshot slot one step further: it routes snapshot machine facts into the guarded mutation planner and renders the would-be mock message count/readiness without sending anything to hardware. Add `--events` to include capped mock CC event rows (`--limit 0` prints all rows) showing pad, profile, parameter, channel, CC, and value. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
+
+The style profiles are passive sound-design intent, not artist cloning. They name reusable underground-techno aesthetics such as Detroit minimal, hardgroove, Birmingham pressure, industrial dark, deep dark hypnosis, and warehouse peak so future snapshot and audio-analyzer work can choose scenes, machine tendencies, and parameter emphasis from a stable vocabulary before any hardware message is sent.
 
 ### Recommended quick validation flow
 
