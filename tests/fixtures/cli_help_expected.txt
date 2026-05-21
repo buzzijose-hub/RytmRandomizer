@@ -21,9 +21,9 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
-  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]
-  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]
-  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--json]
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli list-style-profiles

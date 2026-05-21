@@ -20,10 +20,12 @@ USAGE = (
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
-    "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json] | "
-    "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json] | "
+    "rytm-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
-    "<style-key> [--rytm-slot N] [--a4-slot N] [--json] | "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -668,12 +670,15 @@ def test_rytm_style_snapshot_routing_report_command_reads_syx_file(tmp_path):
         "rytm-style-snapshot-routing-report",
         str(path),
         "birmingham_pressure",
+        "--discovery",
+        "10",
     )
 
     assert result.returncode == 0
     assert "RytmRandomizer passive Rytm style snapshot routing" in result.stdout
     assert "Kit: STYLE" in result.stdout
     assert "Style target: birmingham_pressure" in result.stdout
+    assert "Discovery band: reference" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no port opening" in result.stdout
     assert result.stderr == ""
@@ -690,6 +695,8 @@ def test_rytm_style_snapshot_routing_report_command_can_emit_json(tmp_path):
         "rytm-style-snapshot-routing-report",
         str(path),
         "birmingham_pressure",
+        "--discovery",
+        "95",
         "--json",
     )
 
@@ -697,6 +704,8 @@ def test_rytm_style_snapshot_routing_report_command_can_emit_json(tmp_path):
     assert result.returncode == 0
     assert parsed["kit_name"] == "RYTMJSON"
     assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["discovery_amount"] == 95
+    assert parsed["discovery_band"] == "wild_discovery"
     assert parsed["pads"][0]["pad"] == 1
     assert result.stderr == ""
 
@@ -725,12 +734,15 @@ def test_analog_four_style_snapshot_routing_report_command_reads_syx_file(tmp_pa
         "analog-four-style-snapshot-routing-report",
         str(path),
         "industrial_dark",
+        "--discovery",
+        "10",
     )
 
     assert result.returncode == 0
     assert "RytmRandomizer passive Analog Four style snapshot routing" in result.stdout
     assert "Kit: A4STYLE" in result.stdout
     assert "Style target: industrial_dark" in result.stdout
+    assert "Discovery band: reference" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no port opening" in result.stdout
     assert result.stderr == ""
@@ -745,6 +757,8 @@ def test_analog_four_style_snapshot_routing_report_command_can_emit_json(tmp_pat
         "analog-four-style-snapshot-routing-report",
         str(path),
         "industrial_dark",
+        "--discovery",
+        "95",
         "--json",
     )
 
@@ -752,6 +766,8 @@ def test_analog_four_style_snapshot_routing_report_command_can_emit_json(tmp_pat
     assert result.returncode == 0
     assert parsed["kit_name"] == "A4JSON"
     assert parsed["style_key"] == "industrial_dark"
+    assert parsed["discovery_amount"] == 95
+    assert parsed["discovery_band"] == "wild_discovery"
     assert parsed["tracks"][0]["track"] == 1
     assert result.stderr == ""
 
@@ -785,6 +801,8 @@ def test_dual_machine_style_snapshot_routing_report_command_reads_syx_files(tmp_
         str(rytm_path),
         str(a4_path),
         "industrial_dark",
+        "--discovery",
+        "10",
     )
 
     assert result.returncode == 0
@@ -792,6 +810,7 @@ def test_dual_machine_style_snapshot_routing_report_command_reads_syx_files(tmp_
     assert "Style target: industrial_dark" in result.stdout
     assert "- Kit: DUORYTM" in result.stdout
     assert "- Kit: DUOA4" in result.stdout
+    assert "Discovery band: reference" in result.stdout
     assert "- no MIDI sending" in result.stdout
     assert "- no port opening" in result.stdout
     assert result.stderr == ""
@@ -813,12 +832,16 @@ def test_dual_machine_style_snapshot_routing_report_command_can_emit_json(tmp_pa
         str(rytm_path),
         str(a4_path),
         "industrial_dark",
+        "--discovery",
+        "95",
         "--json",
     )
 
     payload = json.loads(result.stdout)
     assert result.returncode == 0
     assert payload["style_key"] == "industrial_dark"
+    assert payload["discovery_amount"] == 95
+    assert payload["discovery_band"] == "wild_discovery"
     assert payload["machines"]["rytm"]["kit_name"] == "DUOJSON"
     assert payload["machines"]["analog_four"]["kit_name"] == "A4JSON"
     assert payload["safety"][0] == "passive/read-only"

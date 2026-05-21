@@ -15,10 +15,12 @@ USAGE = (
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
-    "rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json] | "
-    "analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json] | "
+    "rytm-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
+    "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
-    "<style-key> [--rytm-slot N] [--a4-slot N] [--json] | "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -101,6 +103,7 @@ def _rytm_style_snapshot_routing_report_help():
 Usage:
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key>
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> --discovery N
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> --json
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report --help
 
@@ -109,6 +112,7 @@ Behavior:
   and prints passive style-aware routing readiness for the selected style target.
   The report shows favored zones, route-ready pads, blocked pads, and legal
   machine candidates without rendering mutation values.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
   Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
 
 Safety:
@@ -123,6 +127,7 @@ def _analog_four_style_snapshot_routing_report_help():
 Usage:
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key>
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --discovery N
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> --json
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report --help
 
@@ -131,6 +136,7 @@ Behavior:
   and prints passive style-aware routing readiness for the selected style target.
   The report shows favored zones and track readiness while A4 offsets remain
   candidate-only, so no mutation values are rendered.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
   Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
 
 Safety:
@@ -146,6 +152,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key>
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --rytm-slot N
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --a4-slot N
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --discovery N
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> --json
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report --help
 
@@ -153,6 +160,7 @@ Behavior:
   Reads one local Analog Rytm MK2 SysEx file and one local Analog Four MK2 SysEx
   file, selects supported kit snapshots, and prints passive rig-level style
   routing readiness. Detailed pad/track rows remain in the single-machine reports.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
   Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
 
 Safety:
@@ -220,9 +228,9 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
-  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]
-  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]
-  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--json]
+  python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
   python -m rytm_randomizer.cli list-style-profiles

@@ -14,6 +14,11 @@ from ...data.rytm_machine_catalog import (
     allowed_machine_profiles_for_pad,
     get_rytm_pad_capability,
 )
+from ...data.style_discovery import (
+    DEFAULT_STYLE_DISCOVERY_AMOUNT,
+    StyleDiscoveryPolicy,
+    style_discovery_policy,
+)
 from ...data.style_targets import STYLE_TARGET_VECTORS, StyleTargetVector
 from .analog_rytm_snapshot_decoder import RytmKitSnapshot
 from .analog_rytm_snapshot_routing import (
@@ -102,6 +107,8 @@ class RytmStyleSnapshotPadPlan:
     profile_key: str | None
     route_ready: bool
     readiness_reason: str
+    discovery_band: str
+    machine_switching_allowed: bool
     favored_zones: tuple[str, ...]
     compatible_machine_candidates: tuple[RytmStyleMachineCandidate, ...]
     mutable_machine_candidates: tuple[RytmStyleMachineCandidate, ...]
@@ -114,6 +121,9 @@ class RytmStyleSnapshotRoutingPlan:
     kit_name: str
     slot: int
     style_key: str
+    discovery_amount: int
+    discovery_band: str
+    machine_switching_allowed: bool
     favored_zones: tuple[str, ...]
     ready_pad_count: int
     blocked_pad_count: int
@@ -126,12 +136,16 @@ def _axis_sum(target: StyleTargetVector, axes: tuple[str, ...]) -> int:
     return sum(values[axis] for axis in axes)
 
 
-def _favored_zones(target: StyleTargetVector) -> tuple[str, ...]:
+def _favored_zones(
+    target: StyleTargetVector,
+    *,
+    policy: StyleDiscoveryPolicy,
+) -> tuple[str, ...]:
     scored = sorted(
         ((zone, _axis_sum(target, axes)) for zone, axes in _ZONE_AXIS_WEIGHTS.items()),
         key=lambda item: (-item[1], item[0]),
     )
-    return tuple(zone for zone, score in scored if score >= 150)[:4]
+    return tuple(zone for zone, score in scored if score >= 150)[: policy.zone_limit]
 
 
 def _candidate_score(
@@ -170,6 +184,8 @@ def _candidate(
 def _ranked_candidates(
     pad: int,
     target: StyleTargetVector,
+    *,
+    limit: int,
 ) -> tuple[RytmStyleMachineCandidate, ...]:
     primary_family = get_rytm_pad_capability(pad).track_code
     candidates = [
@@ -184,7 +200,7 @@ def _ranked_candidates(
                 candidate.support_status != MUTABLE_V134,
                 candidate.machine_key,
             ),
-        )[:_MAX_CANDIDATES]
+        )[: min(limit, _MAX_CANDIDATES)]
     )
 
 
@@ -202,10 +218,19 @@ def _pad_plan(
     pad: int,
     route: RytmSnapshotMachineRoute,
     target: StyleTargetVector,
+    policy: StyleDiscoveryPolicy,
     favored_zones: tuple[str, ...],
 ) -> RytmStyleSnapshotPadPlan:
     capability = get_rytm_pad_capability(pad)
-    candidates = _ranked_candidates(pad, target)
+    if policy.band == "reference" and route.machine_key is not None:
+        profile = RYTM_MACHINE_PROFILES_BY_KEY.get(route.machine_key)
+        candidates = (
+            ()
+            if profile is None
+            else (_candidate(profile, target, primary_family=capability.track_code),)
+        )
+    else:
+        candidates = _ranked_candidates(pad, target, limit=policy.candidate_limit)
     mutable_candidates = tuple(
         candidate for candidate in candidates if candidate.support_status == MUTABLE_V134
     )
@@ -218,6 +243,8 @@ def _pad_plan(
         profile_key=route.profile_key,
         route_ready=route.ready,
         readiness_reason=route.reason,
+        discovery_band=policy.band,
+        machine_switching_allowed=policy.machine_switching_allowed,
         favored_zones=favored_zones,
         compatible_machine_candidates=candidates,
         mutable_machine_candidates=mutable_candidates,
@@ -227,6 +254,8 @@ def _pad_plan(
 def plan_rytm_style_snapshot_routes(
     snapshot: RytmKitSnapshot,
     style_key: str,
+    *,
+    discovery_amount: int = DEFAULT_STYLE_DISCOVERY_AMOUNT,
 ) -> RytmStyleSnapshotRoutingPlan:
     """Return a passive style-aware routing preview for one Rytm snapshot."""
 
@@ -240,7 +269,8 @@ def plan_rytm_style_snapshot_routes(
     if target is None:
         raise ValueError(f"Unknown style target key: {style_key}")
 
-    favored_zones = _favored_zones(target)
+    policy = style_discovery_policy(discovery_amount)
+    favored_zones = _favored_zones(target, policy=policy)
     pads: dict[int, RytmStyleSnapshotPadPlan] = {}
     for pad, fact in sorted(snapshot.machine_facts.facts_by_pad.items()):
         if fact.decoded_machine_value is None:
@@ -260,6 +290,7 @@ def plan_rytm_style_snapshot_routes(
             pad=pad,
             route=route,
             target=target,
+            policy=policy,
             favored_zones=favored_zones,
         )
 
@@ -268,6 +299,9 @@ def plan_rytm_style_snapshot_routes(
         kit_name=snapshot.kit_name,
         slot=snapshot.slot,
         style_key=normalized_key,
+        discovery_amount=policy.amount,
+        discovery_band=policy.band,
+        machine_switching_allowed=policy.machine_switching_allowed,
         favored_zones=favored_zones,
         ready_pad_count=ready_count,
         blocked_pad_count=len(pads) - ready_count,

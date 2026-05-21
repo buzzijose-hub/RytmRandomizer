@@ -106,6 +106,55 @@ def test_style_snapshot_routing_uses_style_vector_for_favored_zones():
     assert "lfo" in deep.favored_zones
 
 
+def test_style_snapshot_routing_applies_reference_discovery_slider():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
+        plan_rytm_style_snapshot_routes,
+    )
+
+    reference = plan_rytm_style_snapshot_routes(
+        _style_snapshot(),
+        "birmingham_pressure",
+        discovery_amount=10,
+    )
+    wild = plan_rytm_style_snapshot_routes(
+        _style_snapshot(),
+        "birmingham_pressure",
+        discovery_amount=95,
+    )
+
+    assert reference.discovery_amount == 10
+    assert reference.discovery_band == "reference"
+    assert reference.machine_switching_allowed is False
+    assert reference.favored_zones == ("grit", "body")
+    assert tuple(
+        candidate.machine_key
+        for candidate in reference.pads_by_pad[1].compatible_machine_candidates
+    ) == ("bd_hard",)
+    assert reference.pads_by_pad[1].mutable_machine_candidates[0].machine_key == "bd_hard"
+
+    assert wild.discovery_amount == 95
+    assert wild.discovery_band == "wild_discovery"
+    assert wild.machine_switching_allowed is True
+    assert len(wild.favored_zones) > len(reference.favored_zones)
+    assert any(
+        candidate.machine_key == "bd_fm"
+        for candidate in wild.pads_by_pad[1].compatible_machine_candidates
+    )
+
+
+def test_style_snapshot_routing_rejects_bad_discovery_amount():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
+        plan_rytm_style_snapshot_routes,
+    )
+
+    with pytest.raises(ValueError, match="discovery amount must be between 0 and 100"):
+        plan_rytm_style_snapshot_routes(
+            _style_snapshot(),
+            "birmingham_pressure",
+            discovery_amount=101,
+        )
+
+
 def test_style_snapshot_routing_ranks_legal_machine_candidates_per_pad():
     from rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing import (
         plan_rytm_style_snapshot_routes,
@@ -153,6 +202,9 @@ def test_style_snapshot_routing_report_is_operator_facing_and_passive():
     assert "Kit: STYLEKIT" in lines
     assert "Slot: 4" in lines
     assert "Style target: birmingham_pressure" in lines
+    assert "Discovery amount: 75" in lines
+    assert "Discovery band: discovery" in lines
+    assert "Machine switching allowed: True" in lines
     assert "- Ready pads: 3" in lines
     assert "- Blocked pads: 1" in lines
     assert "Favored zones: grit, body, amp" in text
@@ -184,6 +236,9 @@ def test_style_snapshot_routing_report_serializes_json_contract():
 
     assert payload["style_key"] == "birmingham_pressure"
     assert payload["kit_name"] == "STYLEKIT"
+    assert payload["discovery_amount"] == 75
+    assert payload["discovery_band"] == "discovery"
+    assert payload["machine_switching_allowed"] is True
     assert payload["ready_pad_count"] == 3
     assert payload["blocked_pad_count"] == 1
     assert payload["pads"][0]["pad"] == 1
@@ -216,6 +271,9 @@ def test_style_snapshot_routing_report_formats_explicit_empty_plan():
         kit_name="EMPTY",
         slot=9,
         style_key="detroit_minimal",
+        discovery_amount=75,
+        discovery_band="discovery",
+        machine_switching_allowed=True,
         favored_zones=(),
         ready_pad_count=0,
         blocked_pad_count=1,
@@ -231,6 +289,8 @@ def test_style_snapshot_routing_report_formats_explicit_empty_plan():
                     profile_key=None,
                     route_ready=False,
                     readiness_reason="missing machine fact",
+                    discovery_band="discovery",
+                    machine_switching_allowed=True,
                     favored_zones=(),
                     compatible_machine_candidates=(),
                     mutable_machine_candidates=(),
@@ -258,12 +318,16 @@ def test_style_snapshot_routing_cli_parser_accepts_slot():
         "sysex_path": Path("kit.syx"),
         "style_key": "birmingham_pressure",
         "slot": 0,
+        "discovery_amount": 75,
         "json_output": False,
     }
-    assert _parse_cli_args(["kit.syx", "warehouse_peak", "--slot", "3", "--json"]) == {
+    assert _parse_cli_args(
+        ["kit.syx", "warehouse_peak", "--slot", "3", "--discovery", "10", "--json"]
+    ) == {
         "sysex_path": Path("kit.syx"),
         "style_key": "warehouse_peak",
         "slot": 3,
+        "discovery_amount": 10,
         "json_output": True,
     }
 
@@ -274,9 +338,18 @@ def test_style_snapshot_routing_cli_parser_accepts_slot():
         ([], "usage"),
         (["kit.syx"], "usage"),
         (["kit.syx", "birmingham_pressure", "--slot"], "usage"),
+        (["kit.syx", "birmingham_pressure", "--discovery"], "usage"),
         (["kit.syx", "birmingham_pressure", "--bank", "1"], "usage"),
         (["kit.syx", "birmingham_pressure", "--slot", "not-int"], "--slot must be an integer"),
         (["kit.syx", "birmingham_pressure", "--slot", "-1"], "--slot must be >= 0"),
+        (
+            ["kit.syx", "birmingham_pressure", "--discovery", "not-int"],
+            "--discovery must be an integer",
+        ),
+        (
+            ["kit.syx", "birmingham_pressure", "--discovery", "101"],
+            "discovery amount must be between 0 and 100",
+        ),
     ],
 )
 def test_style_snapshot_routing_cli_parser_rejects_bad_args(argv, message):
@@ -311,6 +384,7 @@ def test_style_snapshot_routing_cli_handler_reports_plan(
     assert "RytmRandomizer passive Rytm style snapshot routing" in captured.out
     assert "Kit: STYLE" in captured.out
     assert "Style target: birmingham_pressure" in captured.out
+    assert "Discovery band: discovery" in captured.out
     assert captured.err == ""
 
 
@@ -330,6 +404,7 @@ def test_style_snapshot_routing_cli_handler_reports_json(
         sysex_path=path,
         style_key="birmingham_pressure",
         slot=0,
+        discovery_amount=10,
         json_output=True,
     )
 
@@ -338,6 +413,8 @@ def test_style_snapshot_routing_cli_handler_reports_json(
     assert rc == 0
     assert result["kit_name"] == "JSONSTYLE"
     assert result["style_key"] == "birmingham_pressure"
+    assert result["discovery_amount"] == 10
+    assert result["discovery_band"] == "reference"
     assert result["pads"][0]["pad"] == 1
     assert "RytmRandomizer passive Rytm" not in captured.out
     assert captured.err == ""

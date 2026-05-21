@@ -7,6 +7,11 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final
 
+from ...data.style_discovery import (
+    DEFAULT_STYLE_DISCOVERY_AMOUNT,
+    StyleDiscoveryPolicy,
+    style_discovery_policy,
+)
 from ...data.style_profiles import STYLE_PROFILES
 from ...data.style_targets import STYLE_TARGET_VECTORS, StyleTargetVector
 from .analog_four_snapshot_decoder import AnalogFourKitSnapshot
@@ -94,6 +99,7 @@ class AnalogFourStyleTrackPlan:
     label: str
     route_ready: bool
     readiness_reason: str
+    discovery_band: str
     favored_zones: tuple[str, ...]
     score: int
 
@@ -106,6 +112,9 @@ class AnalogFourStyleSnapshotRoutingPlan:
     slot: int
     style_key: str
     style_focus: tuple[str, ...]
+    discovery_amount: int
+    discovery_band: str
+    machine_switching_allowed: bool
     favored_zones: tuple[str, ...]
     ready_track_count: int
     blocked_track_count: int
@@ -118,12 +127,18 @@ def _axis_sum(target: StyleTargetVector, axes: tuple[str, ...]) -> int:
     return sum(values[axis] for axis in axes)
 
 
-def _favored_zones(target: StyleTargetVector) -> tuple[str, ...]:
+def _favored_zones(
+    target: StyleTargetVector,
+    *,
+    policy: StyleDiscoveryPolicy,
+) -> tuple[str, ...]:
     scored = sorted(
         ((zone, _axis_sum(target, axes)) for zone, axes in _ZONE_AXIS_WEIGHTS.items()),
         key=lambda item: (-item[1], item[0]),
     )
-    return tuple(zone for zone, score in scored if score >= 150)[:_MAX_FAVORED_ZONES]
+    return tuple(zone for zone, score in scored if score >= 150)[
+        : min(policy.zone_limit, _MAX_FAVORED_ZONES)
+    ]
 
 
 def _track_score(role_key: str, target: StyleTargetVector) -> int:
@@ -134,6 +149,7 @@ def _track_plan(
     *,
     track: int,
     target: StyleTargetVector,
+    policy: StyleDiscoveryPolicy,
     favored_zones: tuple[str, ...],
     offsets_promoted: bool,
 ) -> AnalogFourStyleTrackPlan:
@@ -144,6 +160,7 @@ def _track_plan(
         label=label,
         route_ready=offsets_promoted,
         readiness_reason=("" if offsets_promoted else "Analog Four offsets are candidate-only"),
+        discovery_band=policy.band,
         favored_zones=favored_zones,
         score=_track_score(role_key, target),
     )
@@ -152,6 +169,8 @@ def _track_plan(
 def plan_analog_four_style_snapshot_routes(
     snapshot: AnalogFourKitSnapshot,
     style_key: str,
+    *,
+    discovery_amount: int = DEFAULT_STYLE_DISCOVERY_AMOUNT,
 ) -> AnalogFourStyleSnapshotRoutingPlan:
     """Return a passive style-aware routing preview for one Analog Four snapshot."""
 
@@ -166,11 +185,13 @@ def plan_analog_four_style_snapshot_routes(
     if target is None or profile is None:
         raise ValueError(f"Unknown style target key: {style_key}")
 
-    favored_zones = _favored_zones(target)
+    policy = style_discovery_policy(discovery_amount)
+    favored_zones = _favored_zones(target, policy=policy)
     tracks = {
         track: _track_plan(
             track=track,
             target=target,
+            policy=policy,
             favored_zones=favored_zones,
             offsets_promoted=snapshot.offsets_promoted,
         )
@@ -182,6 +203,9 @@ def plan_analog_four_style_snapshot_routes(
         slot=snapshot.slot,
         style_key=normalized_key,
         style_focus=profile.analog_four_focus,
+        discovery_amount=policy.amount,
+        discovery_band=policy.band,
+        machine_switching_allowed=policy.machine_switching_allowed,
         favored_zones=favored_zones,
         ready_track_count=ready_count,
         blocked_track_count=len(tracks) - ready_count,

@@ -14,9 +14,9 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Style target + Rytm/A4 style snapshot routing draft, built on the passive style profile foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 112 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 113 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, and dual-machine style routing slices so the strategy/report-module list and counts stay current.
+- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, and reference/discovery slider slices so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
 
@@ -24,7 +24,7 @@ Current baseline used while creating / refreshing this document:
 |---|---|
 | Package entry points | `rytm_randomizer/app.py`, `rytm_randomizer/cli.py`, `rytm_randomizer/shell.py`, `rytm_randomizer/__init__.py` |
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
-| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog,style_profiles,style_targets}.py` |
+| Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog,style_discovery,style_profiles,style_targets}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
 | Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,analog_four_style_snapshot_routing,dual_machine_style_snapshot_routing,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_snapshot_routing,style_profiles,style_targets}.py` (subpackage; was the old top-level `reports.py`) |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
@@ -48,7 +48,7 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 110 modules)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 113 modules)"]
     Tests["Tests<br/>2370+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
@@ -97,6 +97,7 @@ flowchart TB
         DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
         DataStyleProfiles["data/style_profiles.py<br/>passive techno style intent catalog"]
         DataStyleTargets["data/style_targets.py<br/>passive numeric style target vectors"]
+        DataStyleDiscovery["data/style_discovery.py<br/>reference/discovery slider policy"]
     end
 
     subgraph PassiveMetadata["Passive metadata"]
@@ -1311,6 +1312,7 @@ flowchart TB
         DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
         DataStyleProfiles["data/style_profiles.py<br/>STYLE_PROFILES"]
         DataStyleTargets["data/style_targets.py<br/>STYLE_TARGET_VECTORS"]
+        DataStyleDiscovery["data/style_discovery.py<br/>STYLE_DISCOVERY_BANDS"]
     end
 
     subgraph TopLevel["Top-level passive surfaces"]
@@ -1334,6 +1336,7 @@ flowchart TB
 
     DataPM --> DataProfiles
     DataStyleProfiles --> DataStyleTargets
+    DataStyleTargets --> DataStyleDiscovery
     DataProfiles --> Profiles
     DataScenes --> Scenes
     DataPM -.-> Constants

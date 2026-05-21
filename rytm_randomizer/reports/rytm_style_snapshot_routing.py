@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import Final
 
 from ..cli_registry import CliCommand, register
+from ..data.style_discovery import (
+    DEFAULT_STYLE_DISCOVERY_AMOUNT,
+    style_discovery_policy,
+)
 from ..devices.strategies import RytmKitSnapshot, RytmStyleSnapshotRoutingPlan
 from ..devices.strategies.analog_rytm_style_snapshot_routing import (
     RytmStyleMachineCandidate,
@@ -36,7 +40,8 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     source_module=SOURCE_MODULE,
 )
 _USAGE: Final[str] = (
-    "rytm-style-snapshot-routing-report usage: " "<syx-path> <style-key> [--slot N] [--json]"
+    "rytm-style-snapshot-routing-report usage: "
+    "<syx-path> <style-key> [--slot N] [--discovery N] [--json]"
 )
 _DEFAULT_SLOT: Final[int] = 0
 
@@ -68,6 +73,9 @@ def _body_lines(plan: RytmStyleSnapshotRoutingPlan) -> list[str]:
         f"Kit: {plan.kit_name}",
         f"Slot: {plan.slot}",
         f"Style target: {plan.style_key}",
+        f"Discovery amount: {plan.discovery_amount}",
+        f"Discovery band: {plan.discovery_band}",
+        f"Machine switching allowed: {plan.machine_switching_allowed}",
         "Summary:",
         f"- Ready pads: {plan.ready_pad_count}",
         f"- Blocked pads: {plan.blocked_pad_count}",
@@ -89,6 +97,8 @@ def _body_lines(plan: RytmStyleSnapshotRoutingPlan) -> list[str]:
                 f"  Profile key: {pad_plan.profile_key or 'none'}",
                 f"  Route ready: {pad_plan.route_ready}",
                 f"  Reason: {pad_plan.readiness_reason}",
+                f"  Discovery band: {pad_plan.discovery_band}",
+                f"  Machine switching allowed: {pad_plan.machine_switching_allowed}",
                 f"  Favored zones: {_join(pad_plan.favored_zones)}",
             ]
         )
@@ -108,13 +118,18 @@ def format_rytm_style_snapshot_routing_report(
     snapshot_or_plan: RytmKitSnapshot | RytmStyleSnapshotRoutingPlan,
     *,
     style_key: str,
+    discovery_amount: int = DEFAULT_STYLE_DISCOVERY_AMOUNT,
 ) -> list[str]:
     """Return deterministic operator-facing lines for style snapshot routing."""
 
     plan = (
         snapshot_or_plan
         if isinstance(snapshot_or_plan, RytmStyleSnapshotRoutingPlan)
-        else plan_rytm_style_snapshot_routes(snapshot_or_plan, style_key)
+        else plan_rytm_style_snapshot_routes(
+            snapshot_or_plan,
+            style_key,
+            discovery_amount=discovery_amount,
+        )
     )
     return passive_report_lines(_HEADER, _body_lines(plan))
 
@@ -138,6 +153,9 @@ def to_rytm_style_snapshot_routing_json(
         "kit_name": plan.kit_name,
         "slot": plan.slot,
         "style_key": plan.style_key,
+        "discovery_amount": plan.discovery_amount,
+        "discovery_band": plan.discovery_band,
+        "machine_switching_allowed": plan.machine_switching_allowed,
         "favored_zones": list(plan.favored_zones),
         "ready_pad_count": plan.ready_pad_count,
         "blocked_pad_count": plan.blocked_pad_count,
@@ -152,6 +170,8 @@ def to_rytm_style_snapshot_routing_json(
                 "profile_key": pad_plan.profile_key,
                 "route_ready": pad_plan.route_ready,
                 "readiness_reason": pad_plan.readiness_reason,
+                "discovery_band": pad_plan.discovery_band,
+                "machine_switching_allowed": pad_plan.machine_switching_allowed,
                 "favored_zones": list(pad_plan.favored_zones),
                 "mutable_machine_candidates": [
                     _candidate_json(candidate) for candidate in pad_plan.mutable_machine_candidates
@@ -177,12 +197,22 @@ def _parse_nonnegative_int(value: str, *, option: str) -> int:
     return parsed
 
 
+def _parse_discovery_amount(value: str, *, option: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{option} must be an integer") from exc
+    style_discovery_policy(parsed)
+    return parsed
+
+
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     if len(argv) < 2:
         raise ValueError(_USAGE)
     sysex_path = Path(argv[0])
     style_key = argv[1]
     slot = _DEFAULT_SLOT
+    discovery_amount = DEFAULT_STYLE_DISCOVERY_AMOUNT
     json_output = False
     remaining = list(argv[2:])
     while remaining:
@@ -195,12 +225,15 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
         value = remaining.pop(0)
         if option == "--slot":
             slot = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery":
+            discovery_amount = _parse_discovery_amount(value, option=option)
         else:
             raise ValueError(_USAGE)
     return {
         "sysex_path": sysex_path,
         "style_key": style_key,
         "slot": slot,
+        "discovery_amount": discovery_amount,
         "json_output": json_output,
     }
 
@@ -210,12 +243,17 @@ def _handle_cli_report(
     sysex_path: Path,
     style_key: str,
     slot: int,
+    discovery_amount: int = DEFAULT_STYLE_DISCOVERY_AMOUNT,
     json_output: bool = False,
 ) -> int:
     try:
         snapshots = decode_supported_rytm_snapshots_from_path(sysex_path)
         snapshot = select_supported_rytm_snapshot(sysex_path, slot, snapshots)
-        plan = plan_rytm_style_snapshot_routes(snapshot, style_key)
+        plan = plan_rytm_style_snapshot_routes(
+            snapshot,
+            style_key,
+            discovery_amount=discovery_amount,
+        )
         if json_output:
             sys.stdout.write(
                 json.dumps(
@@ -226,7 +264,11 @@ def _handle_cli_report(
             )
             sys.stdout.write("\n")
             return 0
-        lines = format_rytm_style_snapshot_routing_report(plan, style_key=style_key)
+        lines = format_rytm_style_snapshot_routing_report(
+            plan,
+            style_key=style_key,
+            discovery_amount=discovery_amount,
+        )
     except (OSError, ValueError, NotImplementedError) as exc:
         sys.stderr.write(f"Error: {exc}\n")
         return 2

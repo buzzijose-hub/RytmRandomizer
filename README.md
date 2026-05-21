@@ -174,12 +174,12 @@ python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7   # passive intelligence for one supported Rytm kit snapshot
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2   # passive snapshot mutation preview; mock-only, no MIDI send
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2 --events --limit 24   # include capped mock CC event rows
-python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7   # passive style-aware Rytm snapshot routing
-python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --json   # machine-readable Rytm style routing
-python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --slot 0   # passive style-aware Analog Four snapshot routing
-python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --json   # machine-readable Analog Four style routing
-python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0   # passive rig-level style routing
-python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --json   # machine-readable rig style routing for future GUI/analyzer use
+python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7 --discovery 10   # passive reference-close Rytm style routing
+python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --discovery 95 --json   # machine-readable wild-discovery Rytm style routing
+python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --slot 0 --discovery 50   # passive balanced Analog Four style routing
+python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --discovery 95 --json   # machine-readable Analog Four wild-discovery routing
+python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0 --discovery 75   # passive rig-level style routing
+python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --discovery 95 --json   # machine-readable rig style routing for future GUI/analyzer use
 python -m rytm_randomizer.cli style-profile-report   # passive techno style profiles for later snapshot/audio-analysis routing
 python -m rytm_randomizer.cli list-style-profiles   # list available style profiles
 python -m rytm_randomizer.cli inspect-style-profile birmingham_pressure   # inspect one passive style profile
@@ -193,6 +193,8 @@ Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they o
 The style profiles are passive sound-design intent, not artist cloning. They name reusable underground-techno aesthetics such as Detroit minimal, hardgroove, Birmingham pressure, industrial dark, deep dark hypnosis, and warehouse peak so future snapshot and audio-analyzer work can choose scenes, machine tendencies, and parameter emphasis from a stable vocabulary before any hardware message is sent.
 
 Style target vectors turn those profiles into bounded 0-100 planning axes such as low-end weight, transient density, darkness, metallicity, grit, motion, hypnosis, and warehouse intensity. They are passive numeric intent only: they do not choose machines, mutate snapshots, send MIDI, or touch hardware.
+
+The style-routing reports also accept `--discovery N` where `N` is 0-100. Low values stay close to the captured kit snapshot, balanced values widen zone movement, and high values expose broader legal discovery candidates while still obeying Rytm pad compatibility and Analog Four readiness gates.
 
 The Rytm style snapshot routing report is the first bridge from style intent to captured-kit planning. It reads a local Rytm kit dump, applies one style target vector, and reports favored mutation zones, route-ready pads, blocked pads, and legal machine candidates. It remains metadata-only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
 

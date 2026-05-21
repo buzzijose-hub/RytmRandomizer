@@ -1,21 +1,22 @@
 # Summary
 
-Adds the passive style-target-to-snapshot bridge: style profile data now has normalized target vectors, operators can inspect those targets from the passive CLI, a mock-safe Rytm style snapshot routing report explains which pads in a captured kit are ready to mutate toward a style goal, Analog Four gains the matching passive track-role routing foundation plus an operator-facing report command, and the Rytm/A4/dual-machine reports can emit deterministic JSON for future GUI/audio-analyzer consumers. No MIDI is sent and no hardware is touched.
+Adds the passive style-target-to-snapshot bridge: style profile data now has normalized target vectors, operators can inspect those targets from the passive CLI, a mock-safe Rytm style snapshot routing report explains which pads in a captured kit are ready to mutate toward a style goal, Analog Four gains the matching passive track-role routing foundation plus an operator-facing report command, the Rytm/A4/dual-machine reports can emit deterministic JSON for future GUI/audio-analyzer consumers, and `--discovery N` exposes the reference-to-discovery slider semantics Jose wanted for live snapshot mode. No MIDI is sent and no hardware is touched.
 
 ## What Changed
 
 - Added style target vectors and passive style-target report/inspection CLI surfaces.
 - Added a pure Rytm style snapshot routing strategy under `devices/strategies/` that combines snapshot machine facts, pad-machine compatibility, and style target emphasis.
-- Added a passive `rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]` CLI command for operator-facing and machine-readable snapshot readiness.
+- Added a passive `rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]` CLI command for operator-facing and machine-readable snapshot readiness.
 - Added a pure Analog Four style snapshot routing strategy that maps a candidate kit snapshot and style target into four A4 track roles, favored zones, and explicit candidate-offset readiness.
-- Added a passive `analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--json]` CLI command for operator-facing and machine-readable A4 track readiness.
-- Added a passive `dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--json]` CLI command for rig-level style readiness.
+- Added a passive `analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]` CLI command for operator-facing and machine-readable A4 track readiness.
+- Added a passive `dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]` CLI command for rig-level style readiness.
+- Added a shared passive discovery policy that maps 0-100 into reference, balanced, discovery, and wild-discovery bands and threads that policy through Rytm, A4, and dual-machine style-routing text/JSON.
 - Updated README, status notes, architecture diagrams, CLI help fixtures, and plan docs for the new passive surface.
 - Covered the new report and routing branches, including CLI parsing/error behavior and empty-plan formatting.
 
 ## Why This Matters
 
-This is the first concrete bridge between the artist/style intelligence layer and live-kit snapshot mode. It does not mutate parameters yet; it tells the next mutation slice which pads, machines, and zones are legal and musically relevant for a chosen style.
+This is the first concrete bridge between the artist/style intelligence layer and live-kit snapshot mode. It does not mutate parameters yet; it tells the next mutation slice which pads, machines, zones, and discovery band are legal and musically relevant for a chosen style.
 
 ## Test Plan
 
@@ -25,11 +26,14 @@ python -m pytest tests/test_analog_four_style_snapshot_routing.py -n 0
 python -m pytest tests/test_rytm_style_snapshot_routing.py tests/test_cli.py -n 0 -k "style_snapshot_routing or rytm_style_snapshot_routing or cli_help"
 python -m pytest tests/test_analog_four_style_snapshot_routing.py tests/test_cli.py -n 0 -k "analog_four_style_snapshot_routing or cli_help"
 python -m pytest tests/test_dual_machine_style_snapshot_routing_report.py tests/test_cli.py -n 0 -k "dual_machine_style_snapshot_routing or cli_help"
+python -m pytest tests/test_data_layer.py tests/test_rytm_style_snapshot_routing.py tests/test_analog_four_style_snapshot_routing.py tests/test_dual_machine_style_snapshot_routing_report.py tests/test_cli.py -n 0 -k "style_discovery or style_snapshot_routing or analog_four_style_snapshot_routing or dual_machine_style_snapshot_routing or cli_help"
+python -m pytest tests/test_rytm_style_snapshot_routing.py --cov=rytm_randomizer.devices.strategies.analog_rytm_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_rytm_style_snapshot_routing.py --cov=rytm_randomizer.reports.rytm_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_analog_four_style_snapshot_routing.py --cov=rytm_randomizer.devices.strategies.analog_four_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_analog_four_style_snapshot_routing.py --cov=rytm_randomizer.reports.analog_four_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
 python -m pytest tests/test_dual_machine_style_snapshot_routing_report.py --cov=rytm_randomizer.reports.dual_machine_style_snapshot_routing --cov-branch --cov-report=term-missing -n 0
-python -m vulture rytm_randomizer\data\style_profiles.py rytm_randomizer\data\style_targets.py rytm_randomizer\reports\style_profiles.py rytm_randomizer\reports\style_targets.py rytm_randomizer\reports\rytm_style_snapshot_routing.py rytm_randomizer\reports\analog_four_style_snapshot_routing.py rytm_randomizer\reports\dual_machine_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_rytm_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_four_style_snapshot_routing.py tests\test_style_profiles_report.py tests\test_style_targets_report.py tests\test_rytm_style_snapshot_routing.py tests\test_analog_four_style_snapshot_routing.py tests\test_dual_machine_style_snapshot_routing_report.py --min-confidence 80
+python -m pytest tests/test_data_layer.py --cov=rytm_randomizer.data.style_discovery --cov-branch --cov-report=term-missing -n 0 -k "style_discovery"
+python -m vulture rytm_randomizer\data\style_discovery.py rytm_randomizer\data\style_profiles.py rytm_randomizer\data\style_targets.py rytm_randomizer\reports\style_profiles.py rytm_randomizer\reports\style_targets.py rytm_randomizer\reports\rytm_style_snapshot_routing.py rytm_randomizer\reports\analog_four_style_snapshot_routing.py rytm_randomizer\reports\dual_machine_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_rytm_style_snapshot_routing.py rytm_randomizer\devices\strategies\analog_four_style_snapshot_routing.py tests\test_style_profiles_report.py tests\test_style_targets_report.py tests\test_rytm_style_snapshot_routing.py tests\test_analog_four_style_snapshot_routing.py tests\test_dual_machine_style_snapshot_routing_report.py tests\test_data_layer.py --min-confidence 80
 python -m pytest tests/architecture/ -q
 python -m ruff check .
 python -m black --check --target-version=py311 .
@@ -40,10 +44,10 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
 python scripts/code_review_gate.py --mode cli
 ```
 
-- [x] Local pytest passes: 2713 passed, 4 skipped.
-- [x] `tests/architecture/` passes: 255 passed, 1 skipped.
+- [x] Local pytest passes: 2733 passed, 4 skipped.
+- [x] `tests/architecture/` passes: 258 passed, 1 skipped.
 - [x] Lint trio clean: ruff, black, isort.
-- [x] Coverage stays >=95% pure-branch: whole package 98.20%; new Rytm/A4/dual-machine routing reports have focused coverage.
+- [x] Coverage stays >=95% pure-branch: whole package 98.22%; new Rytm/A4/dual-machine routing reports and the discovery policy have focused coverage.
 - [x] 685/685 V1.34 parity items byte-identical via `scripts/code_review_gate.py --mode cli`.
 - [x] No new dead code: vulture clean on touched style/Rytm/A4 routing modules and tests.
 - [ ] CI matrix green on all 3 OSes - N/A until this local branch is pushed after PR #56 lands.
@@ -65,7 +69,7 @@ Per `docs/PLAN_REQUIREMENTS.md`:
 - [x] Gate 11 - shared fixtures: snapshot fixture payload comes from `tests/conftest.py`.
 - [x] Gate 12 - module-level constants use `Final`.
 - [ ] Gate 13 - N/A: no new environment variables.
-- [x] Gate 14 - maintainability review: plan docs define the small passive bridge and keep mutation sending deferred.
+- [x] Gate 14 - maintainability review: plan docs define the small passive bridge, reference/discovery policy, and keep mutation sending deferred.
 - [ ] Gate 15 - N/A: no new reusable learned skill or project rule required for this narrow bridge.
 - [x] Gate 16 - execution shape: work isolated in a local worktree; not pushed/opened while PR #56 is open.
 - [x] Gate 17 - abstraction reuse: uses `data/`, `snapshot/sysex_file`, `Device` strategy package, `reports/formatter`, and CLI registry patterns.
@@ -89,10 +93,12 @@ Per `docs/PLAN_REQUIREMENTS.md`:
 - `docs/superpowers/plans/2026-05-21-analog-four-style-routing-report-pr60.md`
 - `docs/superpowers/plans/2026-05-21-dual-machine-style-routing-report-pr61.md`
 - `docs/superpowers/plans/2026-05-21-style-routing-json-payloads-pr62.md`
+- `docs/superpowers/plans/2026-05-21-reference-discovery-slider-routing-pr63.md`
 
 ## Reviewer Notes
 
 - This remains passive/mock-safe. It plans and reports readiness only; parameter mutation and MIDI rendering remain future slices.
+- `--discovery N` is passive planning pressure only. It does not authorize real machine switching or parameter sends.
 - Analog Four style routing intentionally stays blocked for real mutation while A4 offsets are candidate-only; the report exposes that state clearly for operators.
 - The single-machine reports now expose detailed per-pad/per-track JSON; the dual-machine report remains the compact rig-level summary with optional JSON.
 - Local `python -m pyright ...` could not run because `pyright` is not installed in this environment.

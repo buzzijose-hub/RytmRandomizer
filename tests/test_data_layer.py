@@ -189,6 +189,44 @@ def test_style_profiles_are_complete_passive_design_records():
             assert 0 <= score <= 10
 
 
+def test_style_discovery_policy_maps_reference_to_wild_bands():
+    from rytm_randomizer.data.style_discovery import (
+        DEFAULT_STYLE_DISCOVERY_AMOUNT,
+        STYLE_DISCOVERY_AMOUNT_MAX,
+        STYLE_DISCOVERY_AMOUNT_MIN,
+        style_discovery_policy,
+    )
+
+    assert STYLE_DISCOVERY_AMOUNT_MIN == 0
+    assert STYLE_DISCOVERY_AMOUNT_MAX == 100
+    assert DEFAULT_STYLE_DISCOVERY_AMOUNT == 75
+    assert style_discovery_policy(0).band == "reference"
+    assert style_discovery_policy(20).band == "reference"
+    assert style_discovery_policy(21).band == "balanced"
+    assert style_discovery_policy(60).band == "balanced"
+    assert style_discovery_policy(61).band == "discovery"
+    assert style_discovery_policy(85).band == "discovery"
+    assert style_discovery_policy(86).band == "wild_discovery"
+    assert style_discovery_policy(100).band == "wild_discovery"
+
+
+@pytest.mark.parametrize("amount", [-1, 101])
+def test_style_discovery_policy_rejects_out_of_range_amounts(amount):
+    from rytm_randomizer.data.style_discovery import style_discovery_policy
+
+    with pytest.raises(ValueError, match="discovery amount must be between 0 and 100"):
+        style_discovery_policy(amount)
+
+
+def test_style_discovery_policy_reports_internal_band_gap(monkeypatch):
+    from rytm_randomizer.data import style_discovery
+
+    monkeypatch.setattr(style_discovery, "STYLE_DISCOVERY_BANDS", ())
+
+    with pytest.raises(ValueError, match="no discovery band covers amount 50"):
+        style_discovery.style_discovery_policy(50)
+
+
 def test_group_layout_maps_four_pads_to_known_profiles():
     assert set(data.GROUP_LAYOUT) == {1, 2, 3, 4}
     assert data.GROUP_LAYOUT[1]["profile"] == "2"

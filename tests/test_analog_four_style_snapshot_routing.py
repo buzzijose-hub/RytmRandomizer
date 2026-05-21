@@ -78,6 +78,44 @@ def test_analog_four_style_routes_promoted_offsets_to_four_ready_tracks():
     assert plan.tracks_by_track[4].score > plan.tracks_by_track[2].score
 
 
+def test_analog_four_style_routes_apply_reference_discovery_slider():
+    from rytm_randomizer.devices.strategies import plan_analog_four_style_snapshot_routes
+
+    reference = plan_analog_four_style_snapshot_routes(
+        _snapshot(offsets_promoted=True),
+        "industrial_dark",
+        discovery_amount=10,
+    )
+    wild = plan_analog_four_style_snapshot_routes(
+        _snapshot(offsets_promoted=True),
+        "industrial_dark",
+        discovery_amount=95,
+    )
+
+    assert reference.discovery_amount == 10
+    assert reference.discovery_band == "reference"
+    assert reference.machine_switching_allowed is False
+    assert reference.favored_zones == ("drive", "oscillator")
+    assert all(track.discovery_band == "reference" for track in reference.tracks_by_track.values())
+
+    assert wild.discovery_amount == 95
+    assert wild.discovery_band == "wild_discovery"
+    assert wild.machine_switching_allowed is True
+    assert len(wild.favored_zones) > len(reference.favored_zones)
+    assert all(track.discovery_band == "wild_discovery" for track in wild.tracks_by_track.values())
+
+
+def test_analog_four_style_routes_reject_bad_discovery_amount():
+    from rytm_randomizer.devices.strategies import plan_analog_four_style_snapshot_routes
+
+    with pytest.raises(ValueError, match="discovery amount must be between 0 and 100"):
+        plan_analog_four_style_snapshot_routes(
+            _snapshot(),
+            "industrial_dark",
+            discovery_amount=-1,
+        )
+
+
 def test_analog_four_style_routes_reject_unknown_style_key():
     from rytm_randomizer.devices.strategies import plan_analog_four_style_snapshot_routes
 
@@ -122,6 +160,9 @@ def test_analog_four_style_routing_report_is_operator_facing_and_passive():
     assert lines[0] == "RytmRandomizer passive Analog Four style snapshot routing"
     assert "Kit: A4STYLE" in lines
     assert "Style target: industrial_dark" in lines
+    assert "Discovery amount: 75" in lines
+    assert "Discovery band: discovery" in lines
+    assert "Machine switching allowed: True" in lines
     assert "- Ready tracks: 0" in lines
     assert "Analog Four focus:" in lines
     assert "- metallic FM-like bite" in lines
@@ -147,6 +188,9 @@ def test_analog_four_style_routing_report_serializes_json_contract():
 
     assert payload["style_key"] == "industrial_dark"
     assert payload["kit_name"] == "A4STYLE"
+    assert payload["discovery_amount"] == 75
+    assert payload["discovery_band"] == "discovery"
+    assert payload["machine_switching_allowed"] is True
     assert payload["ready_track_count"] == 0
     assert payload["blocked_track_count"] == 4
     assert payload["tracks"][0]["track"] == 1
@@ -172,6 +216,7 @@ def test_analog_four_style_routing_report_accepts_prebuilt_empty_plan():
         route_ready=True,
         readiness_reason="",
         favored_zones=(),
+        discovery_band="discovery",
         score=0,
     )
     plan = AnalogFourStyleSnapshotRoutingPlan(
@@ -179,6 +224,9 @@ def test_analog_four_style_routing_report_accepts_prebuilt_empty_plan():
         slot=1,
         style_key="detroit_minimal",
         style_focus=(),
+        discovery_amount=75,
+        discovery_band="discovery",
+        machine_switching_allowed=True,
         favored_zones=(),
         ready_track_count=1,
         blocked_track_count=0,
@@ -206,12 +254,16 @@ def test_analog_four_style_routing_cli_parser_accepts_slot():
         "sysex_path": Path("kit.syx"),
         "style_key": "industrial_dark",
         "slot": 0,
+        "discovery_amount": 75,
         "json_output": False,
     }
-    assert _parse_cli_args(["kit.syx", "mills_hypnotic", "--slot", "2", "--json"]) == {
+    assert _parse_cli_args(
+        ["kit.syx", "mills_hypnotic", "--slot", "2", "--discovery", "95", "--json"]
+    ) == {
         "sysex_path": Path("kit.syx"),
         "style_key": "mills_hypnotic",
         "slot": 2,
+        "discovery_amount": 95,
         "json_output": True,
     }
 
@@ -222,9 +274,15 @@ def test_analog_four_style_routing_cli_parser_accepts_slot():
         ([], "usage"),
         (["kit.syx"], "usage"),
         (["kit.syx", "industrial_dark", "--slot"], "usage"),
+        (["kit.syx", "industrial_dark", "--discovery"], "usage"),
         (["kit.syx", "industrial_dark", "--bank", "1"], "usage"),
         (["kit.syx", "industrial_dark", "--slot", "bad"], "--slot must be an integer"),
         (["kit.syx", "industrial_dark", "--slot", "-1"], "--slot must be >= 0"),
+        (["kit.syx", "industrial_dark", "--discovery", "bad"], "--discovery must be an integer"),
+        (
+            ["kit.syx", "industrial_dark", "--discovery", "-1"],
+            "discovery amount must be between 0 and 100",
+        ),
     ],
 )
 def test_analog_four_style_routing_cli_parser_rejects_bad_args(argv, message):
@@ -250,6 +308,7 @@ def test_analog_four_style_routing_cli_handler_reports_plan(
     assert "RytmRandomizer passive Analog Four style snapshot routing" in captured.out
     assert "Kit: A4LIVE" in captured.out
     assert "Style target: industrial_dark" in captured.out
+    assert "Discovery band: discovery" in captured.out
     assert captured.err == ""
 
 
@@ -266,6 +325,7 @@ def test_analog_four_style_routing_cli_handler_reports_json(
         sysex_path=path,
         style_key="industrial_dark",
         slot=0,
+        discovery_amount=95,
         json_output=True,
     )
 
@@ -274,6 +334,8 @@ def test_analog_four_style_routing_cli_handler_reports_json(
     assert rc == 0
     assert payload["kit_name"] == "A4JSON"
     assert payload["style_key"] == "industrial_dark"
+    assert payload["discovery_amount"] == 95
+    assert payload["discovery_band"] == "wild_discovery"
     assert payload["tracks"][0]["track"] == 1
     assert "RytmRandomizer passive Analog Four" not in captured.out
     assert captured.err == ""

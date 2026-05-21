@@ -10,6 +10,10 @@ from pathlib import Path
 from typing import Final
 
 from ..cli_registry import CliCommand, register
+from ..data.style_discovery import (
+    DEFAULT_STYLE_DISCOVERY_AMOUNT,
+    style_discovery_policy,
+)
 from ..devices.strategies import (
     AnalogFourKitSnapshot,
     AnalogFourStyleSnapshotRoutingPlan,
@@ -50,7 +54,8 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
 )
 _USAGE: Final[str] = (
     "dual-machine-style-snapshot-routing-report usage: "
-    "<rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--json]"
+    "<rytm-syx-path> <a4-syx-path> <style-key> "
+    "[--rytm-slot N] [--a4-slot N] [--discovery N] [--json]"
 )
 _DEFAULT_SLOT: Final[int] = 0
 
@@ -60,6 +65,9 @@ class DualMachineStyleSnapshotRoutingPlan:
     """Rig-level passive style-routing summary for Rytm plus Analog Four."""
 
     style_key: str
+    discovery_amount: int
+    discovery_band: str
+    machine_switching_allowed: bool
     favored_zones: tuple[str, ...]
     rig_readiness: str
     rytm_kit_name: str
@@ -97,11 +105,16 @@ def _as_rytm_plan(
     snapshot_or_plan: RytmKitSnapshot | RytmStyleSnapshotRoutingPlan,
     *,
     style_key: str,
+    discovery_amount: int,
 ) -> RytmStyleSnapshotRoutingPlan:
     return (
         snapshot_or_plan
         if isinstance(snapshot_or_plan, RytmStyleSnapshotRoutingPlan)
-        else plan_rytm_style_snapshot_routes(snapshot_or_plan, style_key)
+        else plan_rytm_style_snapshot_routes(
+            snapshot_or_plan,
+            style_key,
+            discovery_amount=discovery_amount,
+        )
     )
 
 
@@ -109,11 +122,16 @@ def _as_analog_four_plan(
     snapshot_or_plan: AnalogFourKitSnapshot | AnalogFourStyleSnapshotRoutingPlan,
     *,
     style_key: str,
+    discovery_amount: int,
 ) -> AnalogFourStyleSnapshotRoutingPlan:
     return (
         snapshot_or_plan
         if isinstance(snapshot_or_plan, AnalogFourStyleSnapshotRoutingPlan)
-        else plan_analog_four_style_snapshot_routes(snapshot_or_plan, style_key)
+        else plan_analog_four_style_snapshot_routes(
+            snapshot_or_plan,
+            style_key,
+            discovery_amount=discovery_amount,
+        )
     )
 
 
@@ -122,13 +140,20 @@ def build_dual_machine_style_snapshot_routing_report(
     analog_four_snapshot_or_plan: AnalogFourKitSnapshot | AnalogFourStyleSnapshotRoutingPlan,
     *,
     style_key: str,
+    discovery_amount: int = DEFAULT_STYLE_DISCOVERY_AMOUNT,
 ) -> DualMachineStyleSnapshotRoutingPlan:
     """Return a passive rig-level style-routing summary."""
 
-    rytm_plan = _as_rytm_plan(rytm_snapshot_or_plan, style_key=style_key)
+    policy = style_discovery_policy(discovery_amount)
+    rytm_plan = _as_rytm_plan(
+        rytm_snapshot_or_plan,
+        style_key=style_key,
+        discovery_amount=policy.amount,
+    )
     analog_four_plan = _as_analog_four_plan(
         analog_four_snapshot_or_plan,
         style_key=style_key,
+        discovery_amount=policy.amount,
     )
     ready_count = rytm_plan.ready_pad_count + analog_four_plan.ready_track_count
     blocked_count = rytm_plan.blocked_pad_count + analog_four_plan.blocked_track_count
@@ -137,6 +162,9 @@ def build_dual_machine_style_snapshot_routing_report(
     )
     return DualMachineStyleSnapshotRoutingPlan(
         style_key=rytm_plan.style_key,
+        discovery_amount=policy.amount,
+        discovery_band=policy.band,
+        machine_switching_allowed=policy.machine_switching_allowed,
         favored_zones=favored_zones,
         rig_readiness=_rig_readiness(ready_count=ready_count, blocked_count=blocked_count),
         rytm_kit_name=rytm_plan.kit_name,
@@ -158,6 +186,9 @@ def build_dual_machine_style_snapshot_routing_report(
 def _body_lines(plan: DualMachineStyleSnapshotRoutingPlan) -> list[str]:
     lines = [
         f"Style target: {plan.style_key}",
+        f"Discovery amount: {plan.discovery_amount}",
+        f"Discovery band: {plan.discovery_band}",
+        f"Machine switching allowed: {plan.machine_switching_allowed}",
         f"Rig readiness: {plan.rig_readiness}",
         f"Favored zones: {_join(plan.favored_zones)}",
         "Rytm:",
@@ -194,6 +225,9 @@ def to_dual_machine_style_snapshot_routing_json(
 
     return {
         "style_key": plan.style_key,
+        "discovery_amount": plan.discovery_amount,
+        "discovery_band": plan.discovery_band,
+        "machine_switching_allowed": plan.machine_switching_allowed,
         "rig_readiness": plan.rig_readiness,
         "favored_zones": list(plan.favored_zones),
         "machines": {
@@ -229,6 +263,15 @@ def _parse_nonnegative_int(value: str, *, option: str) -> int:
     return parsed
 
 
+def _parse_discovery_amount(value: str, *, option: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{option} must be an integer") from exc
+    style_discovery_policy(parsed)
+    return parsed
+
+
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     if len(argv) < 3:
         raise ValueError(_USAGE)
@@ -237,6 +280,7 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     style_key = argv[2]
     rytm_slot = _DEFAULT_SLOT
     analog_four_slot = _DEFAULT_SLOT
+    discovery_amount = DEFAULT_STYLE_DISCOVERY_AMOUNT
     json_output = False
     remaining = list(argv[3:])
     while remaining:
@@ -251,6 +295,8 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
             rytm_slot = _parse_nonnegative_int(value, option=option)
         elif option == "--a4-slot":
             analog_four_slot = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery":
+            discovery_amount = _parse_discovery_amount(value, option=option)
         else:
             raise ValueError(_USAGE)
     return {
@@ -259,6 +305,7 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
         "style_key": style_key,
         "rytm_slot": rytm_slot,
         "analog_four_slot": analog_four_slot,
+        "discovery_amount": discovery_amount,
         "json_output": json_output,
     }
 
@@ -270,6 +317,7 @@ def _handle_cli_report(
     style_key: str,
     rytm_slot: int,
     analog_four_slot: int,
+    discovery_amount: int = DEFAULT_STYLE_DISCOVERY_AMOUNT,
     json_output: bool = False,
 ) -> int:
     try:
@@ -291,6 +339,7 @@ def _handle_cli_report(
             rytm_snapshot,
             analog_four_snapshot,
             style_key=style_key,
+            discovery_amount=discovery_amount,
         )
         if json_output:
             sys.stdout.write(
