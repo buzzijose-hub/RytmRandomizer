@@ -297,6 +297,7 @@ _ROLE_AXIS_WEIGHTS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
 )
 
 _MAX_CANDIDATES: Final[int] = 5
+_PRIMARY_FAMILY_BONUS: Final[int] = 40
 
 
 @dataclass(frozen=True)
@@ -357,24 +358,36 @@ def _favored_zones(target: StyleTargetVector) -> tuple[str, ...]:
     return tuple(zone for zone, score in scored if score >= 150)[:4]
 
 
-def _candidate_score(profile: RytmMachineProfile, target: StyleTargetVector) -> int:
+def _candidate_score(
+    profile: RytmMachineProfile,
+    target: StyleTargetVector,
+    *,
+    primary_family: str,
+) -> int:
     score = 0
     for tag in profile.role_tags:
         axes = _ROLE_AXIS_WEIGHTS.get(tag)
         if axes is not None:
             score += _axis_sum(target, axes)
+    if profile.family == primary_family:
+        score += _PRIMARY_FAMILY_BONUS
     if profile.support_status == MUTABLE_V134:
         score += 25
     return score
 
 
-def _candidate(profile: RytmMachineProfile, target: StyleTargetVector) -> RytmStyleMachineCandidate:
+def _candidate(
+    profile: RytmMachineProfile,
+    target: StyleTargetVector,
+    *,
+    primary_family: str,
+) -> RytmStyleMachineCandidate:
     return RytmStyleMachineCandidate(
         machine_key=profile.key,
         label=profile.label,
         machine_value=profile.machine_value,
         support_status=profile.support_status,
-        score=_candidate_score(profile, target),
+        score=_candidate_score(profile, target, primary_family=primary_family),
     )
 
 
@@ -382,7 +395,11 @@ def _ranked_candidates(
     pad: int,
     target: StyleTargetVector,
 ) -> tuple[RytmStyleMachineCandidate, ...]:
-    candidates = [_candidate(profile, target) for profile in allowed_machine_profiles_for_pad(pad)]
+    primary_family = get_rytm_pad_capability(pad).track_code
+    candidates = [
+        _candidate(profile, target, primary_family=primary_family)
+        for profile in allowed_machine_profiles_for_pad(pad)
+    ]
     return tuple(
         sorted(
             candidates,

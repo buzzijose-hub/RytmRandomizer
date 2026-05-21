@@ -46,6 +46,12 @@ from .analog_rytm_snapshot_routing import (
     RytmSnapshotMachineRoutingResult,
     route_rytm_snapshot_machine_values,
 )
+from .analog_rytm_style_snapshot_routing import (
+    RytmStyleMachineCandidate,
+    RytmStyleSnapshotPadPlan,
+    RytmStyleSnapshotRoutingPlan,
+    plan_rytm_style_snapshot_routes,
+)
 
 __all__ = [
     "A4_CANDIDATE_KIT_TYPE_BYTE",
@@ -68,5 +74,9 @@ __all__ = [
     "RytmSnapshotMachineFacts",
     "RytmSnapshotMachineRoute",
     "RytmSnapshotMachineRoutingResult",
+    "RytmStyleMachineCandidate",
+    "RytmStyleSnapshotPadPlan",
+    "RytmStyleSnapshotRoutingPlan",
+    "plan_rytm_style_snapshot_routes",
     "route_rytm_snapshot_machine_values",
 ]
