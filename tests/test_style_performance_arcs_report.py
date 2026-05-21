@@ -194,6 +194,130 @@ def test_style_performance_arc_set_plan_expands_to_dual_machine_plan(tmp_path: P
     assert payload["safety"][0] == "passive/read-only"
 
 
+def test_style_performance_arc_readiness_matrix_ranks_all_arcs_against_saved_banks(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_readiness_report,
+        format_style_performance_arc_readiness_report,
+        to_style_performance_arc_readiness_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    report = build_style_performance_arc_readiness_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+
+    assert report.scope == "dual"
+    assert report.arc_count == 4
+    assert len(report.entries) == 4
+    assert report.ready_arc_count == 0
+    assert report.partial_arc_count == 4
+    assert report.blocked_arc_count == 0
+    assert report.total_segment_count == sum(entry.plan.segment_count for entry in report.entries)
+    assert report.total_event_row_count == sum(
+        entry.plan.total_event_row_count for entry in report.entries
+    )
+
+    jose_entry = next(
+        entry for entry in report.entries if entry.arc.key == "jose_warehouse_five_hour"
+    )
+    assert jose_entry.readiness == "partial"
+    assert jose_entry.plan.segment_count == len(jose_entry.arc.style_keys)
+    assert jose_entry.average_selection_score > 0
+    assert "audition" in jose_entry.operator_action
+
+    lines = format_style_performance_arc_readiness_report(report)
+    text = "\n".join(lines)
+    assert lines[0] == "RytmRandomizer passive style performance arc readiness matrix"
+    assert "Scope: dual" in lines
+    assert "Arc count: 4" in lines
+    assert "Partial arcs: 4" in lines
+    assert "Arc readiness matrix:" in lines
+    assert "jose_warehouse_five_hour | Jose Warehouse Five Hour | partial" in text
+    assert "Average selection score:" in text
+    assert "- reference arc readiness matrix" in lines
+    assert "- no MIDI sending" in lines
+    assert "- no port opening" in lines
+
+    payload = to_style_performance_arc_readiness_json(report)
+    assert payload["scope"] == "dual"
+    assert payload["totals"]["arcs"] == 4
+    assert payload["totals"]["partial"] == 4
+    assert payload["entries"][0]["arc"]["key"]
+    assert payload["entries"][0]["readiness"] == "partial"
+    assert payload["entries"][0]["performance_plan"]["totals"]["segments"] >= 1
+
+
+def test_style_performance_arc_readiness_covers_blocked_and_empty_plan_edges(
+    tmp_path: Path,
+):
+    from rytm_randomizer.data.style_performance_arcs import STYLE_PERFORMANCE_ARCS
+    from rytm_randomizer.reports.dual_machine_style_performance_set_plan import (
+        DualMachineStylePerformanceSetPlan,
+    )
+    from rytm_randomizer.reports.style_performance_arcs import (
+        StylePerformanceArcReadinessReport,
+        _readiness_entry_from_set_plan,
+        build_style_performance_arc_readiness_report,
+        format_style_performance_arc_readiness_report,
+        to_style_performance_arc_readiness_json,
+    )
+
+    rytm_path, _ = _arc_bank_files(tmp_path)
+    rytm_only_report = build_style_performance_arc_readiness_report(
+        ("jose_warehouse_five_hour",),
+        rytm_sysex_path=rytm_path,
+    )
+    assert rytm_only_report.scope == "rytm-only"
+
+    with pytest.raises(ValueError, match="requires at least one arc"):
+        build_style_performance_arc_readiness_report((), rytm_sysex_path=rytm_path)
+
+    arc = STYLE_PERFORMANCE_ARCS["jose_warehouse_five_hour"]
+    blocked_plan = DualMachineStylePerformanceSetPlan(
+        style_keys=arc.style_keys,
+        scope="dual",
+        total_minutes=0,
+        discovery_start=30,
+        discovery_end=85,
+        selection_rank=1,
+        segment_count=1,
+        ready_segment_count=0,
+        partial_segment_count=0,
+        blocked_segment_count=1,
+        total_event_row_count=0,
+        total_mock_message_count=0,
+        total_deferred_row_count=0,
+        segments=(),
+    )
+    entry = _readiness_entry_from_set_plan(arc=arc, plan=blocked_plan)
+    report = StylePerformanceArcReadinessReport(
+        scope="dual",
+        arc_count=1,
+        ready_arc_count=0,
+        partial_arc_count=0,
+        blocked_arc_count=1,
+        total_segment_count=1,
+        total_event_row_count=0,
+        total_mock_message_count=0,
+        total_deferred_row_count=0,
+        entries=(entry,),
+    )
+
+    lines = format_style_performance_arc_readiness_report(report, entry_limit=0)
+    payload = to_style_performance_arc_readiness_json(report)
+
+    assert entry.readiness == "blocked"
+    assert entry.average_selection_score == 0
+    assert "Blocked for this kit-bank" in entry.operator_action
+    assert "Blocked arcs: 1" in lines
+    assert payload["entries"][0]["operator_action"] == entry.operator_action
+    with pytest.raises(ValueError, match="entry_limit"):
+        format_style_performance_arc_readiness_report(report, entry_limit=-1)
+
+
 def test_style_performance_arc_set_plan_auto_scopes_a4_only(tmp_path: Path):
     from rytm_randomizer.reports.style_performance_arcs import (
         build_style_performance_arc_set_plan_report,
@@ -365,10 +489,120 @@ def test_style_performance_arc_set_plan_parser_and_handlers(
     assert "requires --rytm" in captured.err
 
 
+def test_style_performance_arc_readiness_parser_and_handlers(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        _handle_style_performance_arc_readiness_report,
+        _parse_arc_readiness_cli_args,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    assert _parse_arc_readiness_cli_args(
+        [
+            "jose_warehouse_five_hour",
+            "mills_mulero_tunnel",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "dual",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "240",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "90",
+            "--limit",
+            "0",
+            "--json",
+        ]
+    ) == {
+        "arc_keys": ("jose_warehouse_five_hour", "mills_mulero_tunnel"),
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "dual",
+        "selection_rank": 2,
+        "total_minutes": 240,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 90,
+        "entry_limit": 0,
+        "json_output": True,
+    }
+
+    rc = _handle_style_performance_arc_readiness_report(
+        arc_keys=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        entry_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc readiness matrix" in captured.out
+    assert "Arc readiness matrix:" in captured.out
+    assert "Average selection score:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_readiness_report(
+        arc_keys=("jose_warehouse_five_hour",),
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=None,
+        scope="rytm-only",
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=20,
+        discovery_start=None,
+        discovery_end=None,
+        entry_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["scope"] == "rytm-only"
+    assert payload["totals"]["arcs"] == 1
+    assert payload["entries"][0]["arc"]["key"] == "jose_warehouse_five_hour"
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_readiness_report(
+        arc_keys=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        entry_limit=24,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "requires --rytm" in captured.err
+
+
 def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     from rytm_randomizer.reports.style_performance_arcs import (
         _format_cli_error,
         _parse_arc_key,
+        _parse_arc_readiness_cli_args,
         _parse_arc_set_plan_cli_args,
         _parse_no_args,
         _parse_query,
@@ -394,6 +628,17 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     with pytest.raises(ValueError, match="exactly one"):
         _parse_query([])
     assert _format_cli_error(ValueError("nope")) == "Error: nope"
+
+    readiness_bad_cases = [
+        (["--json"], "usage"),
+        (["jose_warehouse_five_hour", "--rytm"], "usage"),
+        (["jose_warehouse_five_hour", "--bogus"], "usage"),
+        (["jose_warehouse_five_hour", "--limit", "-1"], ">= 0"),
+        (["jose_warehouse_five_hour", "--rank", "0"], ">= 1"),
+    ]
+    for argv, message in readiness_bad_cases:
+        with pytest.raises(ValueError, match=message):
+            _parse_arc_readiness_cli_args(argv)
 
 
 def test_style_performance_arc_cli_dispatch_and_help(
@@ -448,10 +693,32 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Jose Warehouse Five Hour" in captured.out
     assert "Embedded performance set plan:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-readiness-report",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc readiness matrix" in captured.out
+    assert "Arc readiness matrix:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
     assert "style-performance-arc-set-plan-report <arc-key>" in help_text
+    assert "style-performance-arc-readiness-report" in help_text
     arc_help = resolve_help_text("style-performance-arc-set-plan-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-set-plan-report" in arc_help
     assert "Expands a named passive reference arc into a timed performance set plan." in arc_help
+    readiness_help = resolve_help_text("style-performance-arc-readiness-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-readiness-report" in (readiness_help)
+    assert "Ranks named passive reference arcs against saved kit banks." in readiness_help

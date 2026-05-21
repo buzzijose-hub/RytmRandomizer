@@ -26,6 +26,7 @@ LIST_TITLE: Final[str] = "RytmRandomizer passive style performance arc list"
 INSPECT_TITLE: Final[str] = "RytmRandomizer passive style performance arc inspection"
 SEARCH_TITLE: Final[str] = "RytmRandomizer passive style performance arc search"
 SET_PLAN_TITLE: Final[str] = "RytmRandomizer passive style performance arc set plan"
+READINESS_TITLE: Final[str] = "RytmRandomizer passive style performance arc readiness matrix"
 SOURCE_MODULE: Final[str] = "reports.style_performance_arcs"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -56,12 +57,23 @@ _SET_PLAN_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=SET_PLAN_TITLE,
     source_module=SOURCE_MODULE,
 )
+_READINESS_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
+    title=READINESS_TITLE,
+    source_module=SOURCE_MODULE,
+)
 _SET_PLAN_USAGE: Final[str] = (
     "style-performance-arc-set-plan-report usage: "
     "<arc-key> --rytm <syx-path> [--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"
+)
+_READINESS_USAGE: Final[str] = (
+    "style-performance-arc-readiness-report usage: "
+    "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--limit N] [--json]"
 )
 _SET_PLAN_OPTIONS: Final[tuple[str, ...]] = (
     "--rytm",
@@ -76,7 +88,26 @@ _SET_PLAN_OPTIONS: Final[tuple[str, ...]] = (
     "--limit",
     "--json",
 )
+_READINESS_OPTIONS: Final[tuple[str, ...]] = (
+    "--rytm",
+    "--analog-four",
+    "--scope",
+    "--rank",
+    "--total-minutes",
+    "--segment-minutes",
+    "--discovery-start",
+    "--discovery-end",
+    "--limit",
+    "--json",
+)
 _DEFAULT_EVENT_LIMIT: Final[int] = 24
+_READINESS_SORT_ORDER: Final[Mapping[str, int]] = MappingProxyType(
+    {
+        "ready": 0,
+        "partial": 1,
+        "blocked": 2,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -93,6 +124,34 @@ class StylePerformanceArcSetPlanReport:
 
     arc: StylePerformanceArc
     plan: DualMachineStylePerformanceSetPlan
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcReadinessEntry:
+    """One ranked arc readiness row derived from an expanded set plan."""
+
+    position: int
+    arc: StylePerformanceArc
+    readiness: str
+    average_selection_score: int
+    operator_action: str
+    plan: DualMachineStylePerformanceSetPlan
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcReadinessReport:
+    """Passive readiness matrix across reference arcs and saved kit banks."""
+
+    scope: str
+    arc_count: int
+    ready_arc_count: int
+    partial_arc_count: int
+    blocked_arc_count: int
+    total_segment_count: int
+    total_event_row_count: int
+    total_mock_message_count: int
+    total_deferred_row_count: int
+    entries: tuple[StylePerformanceArcReadinessEntry, ...]
 
 
 def _join(values: Sequence[str]) -> str:
@@ -121,6 +180,15 @@ def _arc_or_raise(key: str) -> StylePerformanceArc:
     if arc is None:
         raise KeyError(f"unknown style performance arc: {normalized_key}")
     return arc
+
+
+def _selected_arc_keys(arc_keys: Sequence[str] | None) -> tuple[str, ...]:
+    if arc_keys is None:
+        return tuple(sorted(STYLE_PERFORMANCE_ARCS))
+    normalized = tuple(_normalized_arc_key(key.strip()) for key in arc_keys if key.strip())
+    if not normalized:
+        raise ValueError("readiness matrix requires at least one arc key")
+    return normalized
 
 
 def _search_text(arc: StylePerformanceArc) -> str:
@@ -393,6 +461,244 @@ def to_style_performance_arc_set_plan_json(
     }
 
 
+def _readiness_for_plan(plan: DualMachineStylePerformanceSetPlan) -> str:
+    if plan.blocked_segment_count:
+        return "blocked"
+    if plan.partial_segment_count:
+        return "partial"
+    return "ready"
+
+
+def _average_selection_score(plan: DualMachineStylePerformanceSetPlan) -> int:
+    if not plan.segments:
+        return 0
+    return round(sum(segment.selection_score for segment in plan.segments) / len(plan.segments))
+
+
+def _readiness_operator_action(
+    *,
+    readiness: str,
+    plan: DualMachineStylePerformanceSetPlan,
+) -> str:
+    if readiness == "ready":
+        return "Ready for live audition with all segments route-ready."
+    if readiness == "partial":
+        return (
+            "Live-audition candidate with caveats: review partial segments, "
+            f"{plan.total_deferred_row_count} deferred rows, and keep hardware unchanged "
+            "until the mock preview is acceptable."
+        )
+    return (
+        "Blocked for this kit-bank/scope combination: choose another arc, change scope, "
+        "or load a different saved-kit bank before audition."
+    )
+
+
+def _readiness_entry_from_set_plan(
+    *,
+    arc: StylePerformanceArc,
+    plan: DualMachineStylePerformanceSetPlan,
+) -> StylePerformanceArcReadinessEntry:
+    readiness = _readiness_for_plan(plan)
+    return StylePerformanceArcReadinessEntry(
+        position=0,
+        arc=arc,
+        readiness=readiness,
+        average_selection_score=_average_selection_score(plan),
+        operator_action=_readiness_operator_action(readiness=readiness, plan=plan),
+        plan=plan,
+    )
+
+
+def _ranked_readiness_entry(
+    *,
+    position: int,
+    entry: StylePerformanceArcReadinessEntry,
+) -> StylePerformanceArcReadinessEntry:
+    return StylePerformanceArcReadinessEntry(
+        position=position,
+        arc=entry.arc,
+        readiness=entry.readiness,
+        average_selection_score=entry.average_selection_score,
+        operator_action=entry.operator_action,
+        plan=entry.plan,
+    )
+
+
+def _readiness_sort_key(
+    entry: StylePerformanceArcReadinessEntry,
+) -> tuple[int, int, str]:
+    return (
+        _READINESS_SORT_ORDER[entry.readiness],
+        -entry.average_selection_score,
+        entry.arc.key,
+    )
+
+
+def _readiness_count(
+    entries: Sequence[StylePerformanceArcReadinessEntry],
+    readiness: str,
+) -> int:
+    return sum(1 for entry in entries if entry.readiness == readiness)
+
+
+def build_style_performance_arc_readiness_report(
+    arc_keys: Sequence[str] | None = None,
+    *,
+    rytm_sysex_path: Path | None = None,
+    analog_four_sysex_path: Path | None = None,
+    scope: str | None = None,
+    selection_rank: int | None = None,
+    total_minutes: int | None = None,
+    segment_minutes: int | None = None,
+    discovery_start: int | None = None,
+    discovery_end: int | None = None,
+) -> StylePerformanceArcReadinessReport:
+    """Rank passive reference arcs against saved kit banks and scope."""
+
+    raw_entries = []
+    for arc_key in _selected_arc_keys(arc_keys):
+        set_plan = build_style_performance_arc_set_plan_report(
+            arc_key,
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+        )
+        raw_entries.append(
+            _readiness_entry_from_set_plan(
+                arc=set_plan.arc,
+                plan=set_plan.plan,
+            )
+        )
+    sorted_entries = tuple(sorted(raw_entries, key=_readiness_sort_key))
+    entries = tuple(
+        _ranked_readiness_entry(position=index + 1, entry=entry)
+        for index, entry in enumerate(sorted_entries)
+    )
+    return StylePerformanceArcReadinessReport(
+        scope=entries[0].plan.scope,
+        arc_count=len(entries),
+        ready_arc_count=_readiness_count(entries, "ready"),
+        partial_arc_count=_readiness_count(entries, "partial"),
+        blocked_arc_count=_readiness_count(entries, "blocked"),
+        total_segment_count=sum(entry.plan.segment_count for entry in entries),
+        total_event_row_count=sum(entry.plan.total_event_row_count for entry in entries),
+        total_mock_message_count=sum(entry.plan.total_mock_message_count for entry in entries),
+        total_deferred_row_count=sum(entry.plan.total_deferred_row_count for entry in entries),
+        entries=entries,
+    )
+
+
+def _readiness_entry_lines(entry: StylePerformanceArcReadinessEntry) -> list[str]:
+    plan = entry.plan
+    arc = entry.arc
+    return [
+        f"- {entry.position}. {arc.key} | {arc.name} | {entry.readiness}",
+        f"  Average selection score: {entry.average_selection_score}",
+        (
+            f"  Segments: {plan.segment_count} total / {plan.ready_segment_count} ready / "
+            f"{plan.partial_segment_count} partial / {plan.blocked_segment_count} blocked"
+        ),
+        (
+            f"  Rows: {plan.total_event_row_count} events / "
+            f"{plan.total_mock_message_count} mock messages / "
+            f"{plan.total_deferred_row_count} deferred"
+        ),
+        (
+            f"  Defaults: {arc.default_total_minutes} min / "
+            f"discovery {arc.default_discovery_start}->{arc.default_discovery_end}"
+        ),
+        f"  Style sequence: {_sequence(arc.style_keys)}",
+        f"  Action: {entry.operator_action}",
+    ]
+
+
+def _limited_readiness_entries(
+    report: StylePerformanceArcReadinessReport,
+    *,
+    entry_limit: int,
+) -> tuple[StylePerformanceArcReadinessEntry, ...]:
+    if entry_limit < 0:
+        raise ValueError("entry_limit must be >= 0")
+    if entry_limit == 0 or entry_limit >= len(report.entries):
+        return report.entries
+    return report.entries[:entry_limit]
+
+
+def format_style_performance_arc_readiness_report(
+    report: StylePerformanceArcReadinessReport,
+    *,
+    entry_limit: int = _DEFAULT_EVENT_LIMIT,
+) -> list[str]:
+    """Return deterministic operator-facing reference arc readiness lines."""
+
+    selected_entries = _limited_readiness_entries(report, entry_limit=entry_limit)
+    lines = [
+        f"Scope: {report.scope}",
+        f"Arc count: {report.arc_count}",
+        f"Ready arcs: {report.ready_arc_count}",
+        f"Partial arcs: {report.partial_arc_count}",
+        f"Blocked arcs: {report.blocked_arc_count}",
+        f"Total segments: {report.total_segment_count}",
+        f"Total event rows: {report.total_event_row_count}",
+        f"Total mock messages: {report.total_mock_message_count}",
+        f"Total deferred rows: {report.total_deferred_row_count}",
+        "Arc readiness matrix:",
+    ]
+    if len(selected_entries) == len(report.entries):
+        lines.append("- Showing all arcs")
+    else:
+        lines.append(f"- Showing first {entry_limit} of {len(report.entries)} arcs")
+    for entry in selected_entries:
+        lines.extend(_readiness_entry_lines(entry))
+    lines.append(SAFETY_SECTION_HEADER)
+    lines.append("- reference arc readiness matrix")
+    lines.extend(f"- {line}" for line in SAFETY_LINES)
+    return passive_report_lines(_READINESS_HEADER, lines)
+
+
+def _readiness_totals_json(report: StylePerformanceArcReadinessReport) -> dict[str, object]:
+    return {
+        "arcs": report.arc_count,
+        "ready": report.ready_arc_count,
+        "partial": report.partial_arc_count,
+        "blocked": report.blocked_arc_count,
+        "segments": report.total_segment_count,
+        "event_rows": report.total_event_row_count,
+        "mock_messages": report.total_mock_message_count,
+        "deferred_rows": report.total_deferred_row_count,
+    }
+
+
+def _readiness_entry_json(entry: StylePerformanceArcReadinessEntry) -> dict[str, object]:
+    return {
+        "position": entry.position,
+        "arc": to_style_performance_arc_json(entry.arc),
+        "readiness": entry.readiness,
+        "average_selection_score": entry.average_selection_score,
+        "operator_action": entry.operator_action,
+        "performance_plan": to_dual_machine_style_performance_set_plan_json(entry.plan),
+    }
+
+
+def to_style_performance_arc_readiness_json(
+    report: StylePerformanceArcReadinessReport,
+) -> dict[str, object]:
+    """Return deterministic JSON-ready reference arc readiness metadata."""
+
+    return {
+        "scope": report.scope,
+        "totals": _readiness_totals_json(report),
+        "entries": [_readiness_entry_json(entry) for entry in report.entries],
+        "safety": list(SAFETY_LINES),
+    }
+
+
 def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
     if argv:
         raise ValueError("command takes no arguments")
@@ -497,6 +803,64 @@ def _parse_arc_set_plan_cli_args(argv: Sequence[str]) -> dict[str, object]:
     }
 
 
+def _parse_arc_readiness_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    remaining = list(argv)
+    arc_keys: list[str] = []
+    while remaining and not remaining[0].startswith("--"):
+        arc_keys.append(remaining.pop(0))
+    if remaining and remaining[0] == "--json" and not arc_keys:
+        raise ValueError(_READINESS_USAGE)
+    rytm_sysex_path: Path | None = None
+    analog_four_sysex_path: Path | None = None
+    scope: str | None = None
+    selection_rank: int | None = None
+    total_minutes: int | None = None
+    segment_minutes: int | None = None
+    discovery_start: int | None = None
+    discovery_end: int | None = None
+    entry_limit = _DEFAULT_EVENT_LIMIT
+    json_output = False
+    while remaining:
+        option = remaining.pop(0)
+        if option == "--json":
+            json_output = True
+            continue
+        if option not in _READINESS_OPTIONS:
+            raise ValueError(_READINESS_USAGE)
+        value = _pop_option_value(remaining)
+        if option == "--rytm":
+            rytm_sysex_path = Path(value)
+        elif option == "--analog-four":
+            analog_four_sysex_path = Path(value)
+        elif option == "--scope":
+            scope = normalize_selection_scope(value)
+        elif option == "--rank":
+            selection_rank = _parse_positive_int(value, option=option)
+        elif option == "--total-minutes":
+            total_minutes = _parse_positive_int(value, option=option)
+        elif option == "--segment-minutes":
+            segment_minutes = _parse_positive_int(value, option=option)
+        elif option == "--discovery-start":
+            discovery_start = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery-end":
+            discovery_end = _parse_nonnegative_int(value, option=option)
+        else:
+            entry_limit = _parse_nonnegative_int(value, option=option)
+    return {
+        "arc_keys": None if not arc_keys else tuple(arc_keys),
+        "rytm_sysex_path": rytm_sysex_path,
+        "analog_four_sysex_path": analog_four_sysex_path,
+        "scope": scope,
+        "selection_rank": selection_rank,
+        "total_minutes": total_minutes,
+        "segment_minutes": segment_minutes,
+        "discovery_start": discovery_start,
+        "discovery_end": discovery_end,
+        "entry_limit": entry_limit,
+        "json_output": json_output,
+    }
+
+
 def _write_lines(lines: Sequence[str]) -> int:
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
@@ -573,6 +937,52 @@ def _handle_style_performance_arc_set_plan_report(
     return _write_lines(lines)
 
 
+def _handle_style_performance_arc_readiness_report(
+    *,
+    arc_keys: Sequence[str] | None,
+    rytm_sysex_path: Path | None,
+    analog_four_sysex_path: Path | None,
+    scope: str | None,
+    selection_rank: int | None,
+    total_minutes: int | None,
+    segment_minutes: int | None,
+    discovery_start: int | None,
+    discovery_end: int | None,
+    entry_limit: int,
+    json_output: bool,
+) -> int:
+    try:
+        report = build_style_performance_arc_readiness_report(
+            arc_keys,
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+        )
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_style_performance_arc_readiness_json(report),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_style_performance_arc_readiness_report(
+            report,
+            entry_limit=entry_limit,
+        )
+    except (OSError, ValueError, NotImplementedError, TypeError, KeyError) as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 2
+    return _write_lines(lines)
+
+
 def _format_cli_error(exc: Exception) -> str:
     return f"Error: {exc}"
 
@@ -608,12 +1018,20 @@ STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND: Final[CliCommand] = CliCommand(
     handler=_handle_style_performance_arc_set_plan_report,
     error_formatter=_format_cli_error,
 )
+STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="style-performance-arc-readiness-report",
+    summary="Rank passive reference arcs against saved kit banks.",
+    args_parser=_parse_arc_readiness_cli_args,
+    handler=_handle_style_performance_arc_readiness_report,
+    error_formatter=_format_cli_error,
+)
 
 register(STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND)
 register(LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
 register(INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND)
 register(SEARCH_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND)
+register(STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND)
 
 __all__ = [
     "INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND",
@@ -624,16 +1042,22 @@ __all__ = [
     "SET_PLAN_TITLE",
     "SOURCE_MODULE",
     "STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND",
+    "STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND",
     "StylePerformanceArcCatalogReport",
+    "StylePerformanceArcReadinessEntry",
+    "StylePerformanceArcReadinessReport",
     "StylePerformanceArcSetPlanReport",
     "build_style_performance_arc_catalog_report",
+    "build_style_performance_arc_readiness_report",
     "build_style_performance_arc_set_plan_report",
+    "format_style_performance_arc_readiness_report",
     "format_style_performance_arc_inspection",
     "format_style_performance_arc_list",
     "format_style_performance_arc_report",
     "format_style_performance_arc_search",
     "format_style_performance_arc_set_plan_report",
     "to_style_performance_arc_json",
+    "to_style_performance_arc_readiness_json",
     "to_style_performance_arc_set_plan_json",
 ]
