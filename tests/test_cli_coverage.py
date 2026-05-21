@@ -20,6 +20,7 @@ double-burden without adding coverage value.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -78,10 +79,14 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
 
     top_level_help = resolve_help_text("--help")
     snapshot_help = resolve_help_text("rytm-snapshot-pad-compatibility-report")
+    intelligence_help = resolve_help_text("rytm-snapshot-intelligence-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
+    )
+    assert intelligence_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-intelligence-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
@@ -461,6 +466,58 @@ def test_main_rytm_snapshot_pad_compatibility_report_lazy_imports_when_module_un
     assert rc == 0
     assert "RytmRandomizer passive Rytm snapshot pad compatibility" in captured.out
     assert captured.err == ""
+
+
+def test_main_rytm_snapshot_intelligence_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"COVERAGE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_snapshot_intelligence"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-snapshot-intelligence-report", None)
+    try:
+        rc = cli.main(["rytm-snapshot-intelligence-report", str(path)])
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm snapshot intelligence" in captured.out
+    assert "Kit: COVERAGE" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_snapshot_intelligence_report_returns_two_for_missing_file(capsys):
+    rc = cli.main(["rytm-snapshot-intelligence-report", "missing-file.syx"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "SysEx file does not exist" in captured.err
+
+
+def test_main_rytm_snapshot_intelligence_report_formats_parse_errors(capsys):
+    rc = cli.main(["rytm-snapshot-intelligence-report", "kit.syx", "--slot", "1"])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "--slot currently supports only 0" in captured.err
 
 
 def test_main_rytm_machine_matrix_report_rejects_extra_args(capsys):

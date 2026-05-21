@@ -21,6 +21,7 @@ PASSIVE_CLI_COMMANDS = (
     ("active-boundary-report",),
     ("rytm-12-pad-machine-matrix-report",),
     ("rytm-snapshot-pad-compatibility-report",),
+    ("rytm-snapshot-intelligence-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -43,6 +44,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("active-boundary-report",),
     ("rytm-12-pad-machine-matrix-report",),
     ("rytm-snapshot-pad-compatibility-report",),
+    ("rytm-snapshot-intelligence-report", "--help"),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",

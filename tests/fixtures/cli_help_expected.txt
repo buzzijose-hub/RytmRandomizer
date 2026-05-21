@@ -14,6 +14,8 @@ Usage:
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
+  python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --slot 0
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
@@ -49,6 +51,8 @@ Commands:
                      Print the passive Rytm 12-pad machine matrix report.
   rytm-snapshot-pad-compatibility-report
                      Print the passive Rytm snapshot-pad compatibility report.
+  rytm-snapshot-intelligence-report
+                     Print passive Rytm snapshot intelligence for a SysEx file.
   dual-machine-target-report
                      Print the passive dual-machine target report.
   inspect-command    Inspect passive command metadata by key.

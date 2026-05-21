@@ -2,16 +2,23 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import sys
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
-from ..devices.strategies.analog_rytm_snapshot_decoder import RytmKitSnapshot
+from ..cli_registry import CliCommand, register
+from ..devices.strategies.analog_rytm_snapshot_decoder import (
+    AnalogRytmSnapshotDecoder,
+    RytmKitSnapshot,
+)
 from ..devices.strategies.analog_rytm_snapshot_routing import (
     RytmSnapshotMachineRoute,
     route_rytm_snapshot_machine_values,
 )
+from ..snapshot.sysex_file import read_sysex_payloads_from_path
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive Rytm snapshot intelligence"
@@ -246,8 +253,66 @@ def format_rytm_snapshot_intelligence_report(
     return passive_report_lines(_HEADER, _body_lines(report))
 
 
+def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    if not argv:
+        raise ValueError("rytm-snapshot-intelligence-report requires <syx-path>")
+    if len(argv) not in (1, 3):
+        raise ValueError("rytm-snapshot-intelligence-report usage: <syx-path> [--slot 0]")
+    sysex_path = Path(argv[0])
+    slot = 0
+    if len(argv) == 3:
+        if argv[1] != "--slot":
+            raise ValueError("rytm-snapshot-intelligence-report usage: <syx-path> [--slot 0]")
+        try:
+            slot = int(argv[2])
+        except ValueError as exc:
+            raise ValueError("--slot must be an integer") from exc
+        if slot != 0:
+            raise ValueError("--slot currently supports only 0 (first supported snapshot)")
+    return {"sysex_path": sysex_path, "slot": slot}
+
+
+def _decode_first_supported_snapshot(sysex_path: Path, slot: int) -> RytmKitSnapshot:
+    decoder = AnalogRytmSnapshotDecoder()
+    errors: list[str] = []
+    for index, payload in enumerate(read_sysex_payloads_from_path(sysex_path), start=1):
+        try:
+            return decoder.decode(payload, slot=slot)
+        except (NotImplementedError, ValueError) as exc:
+            errors.append(f"frame {index}: {exc}")
+    detail = "; ".join(errors) if errors else "no SysEx payloads found"
+    raise ValueError(f"No supported Analog Rytm kit snapshot found in {sysex_path}: {detail}")
+
+
+def _handle_cli_report(*, sysex_path: Path, slot: int) -> int:
+    try:
+        snapshot = _decode_first_supported_snapshot(sysex_path, slot)
+    except (OSError, ValueError, NotImplementedError) as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 2
+    sys.stdout.write("\n".join(format_rytm_snapshot_intelligence_report(snapshot)))
+    sys.stdout.write("\n")
+    return 0
+
+
+def _format_cli_error(exc: Exception) -> str:
+    return f"Error: {exc}"
+
+
+RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="rytm-snapshot-intelligence-report",
+    summary="Print passive Rytm snapshot intelligence for a SysEx file.",
+    args_parser=_parse_cli_args,
+    handler=_handle_cli_report,
+    error_formatter=_format_cli_error,
+)
+
+register(RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND)
+
+
 __all__ = [
     "REPORT_TITLE",
+    "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
     "RytmSnapshotIntelligencePadReport",
     "RytmSnapshotIntelligenceReport",
     "SAFETY_LINES",

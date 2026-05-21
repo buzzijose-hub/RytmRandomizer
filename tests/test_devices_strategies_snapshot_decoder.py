@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from conftest import rytm_real_layout_kit_payload
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.
@@ -36,46 +37,10 @@ def _kit_payload(name: bytes = b"") -> bytes:
     return _real_layout_kit_payload(name=name)
 
 
-def _pack_elektron_7bit(unpacked: bytes) -> bytes:
-    out = bytearray()
-    for start in range(0, len(unpacked), 7):
-        group = unpacked[start : start + 7]
-        header = 0
-        for index, byte in enumerate(group):
-            header |= ((byte >> 7) & 0x01) << index
-        out.append(header)
-        out.extend(byte & 0x7F for byte in group)
-    return bytes(out)
-
-
 def _real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
     """Build a packed Rytm kit body that matches the observed real dump header."""
 
-    from rytm_randomizer.devices.strategies.analog_rytm_snapshot_decoder import (
-        RYTM_KIT_TYPE_BYTE,
-    )
-
-    unpacked = bytearray(bytes([0x52, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06]))
-    unpacked.extend(name.ljust(16, b"\x00"))
-    unpacked.extend(bytes([0x00] * 2600))
-    machine_values = {
-        1: 0,
-        2: 2,
-        3: 4,
-        4: 6,
-        5: 7,
-        6: 30,
-        7: 0,
-        8: 0,
-        9: 9,
-        10: 10,
-        11: 11,
-        12: 12,
-    }
-    for pad, value in machine_values.items():
-        unpacked[174 + (162 * (pad - 1))] = value
-    packed = _pack_elektron_7bit(bytes(unpacked))
-    return bytes([0x00, 0x20, 0x3C, RYTM_KIT_TYPE_BYTE]) + packed
+    return rytm_real_layout_kit_payload(name=name)
 
 
 def _bad_prefix_payload() -> bytes:

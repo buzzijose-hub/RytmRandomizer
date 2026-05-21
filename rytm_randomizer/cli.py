@@ -20,6 +20,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
             "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",
         ),
+        "rytm-snapshot-intelligence-report": (
+            "rytm_randomizer.reports.rytm_snapshot_intelligence",
+            "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
@@ -37,8 +41,11 @@ def _registered_command_exit_code(args):
 
     try:
         kwargs = command.args_parser(args[1:])
-    except ValueError:
-        sys.stderr.write(f"{USAGE}\n")
+    except ValueError as exc:
+        if command.error_formatter is None:
+            sys.stderr.write(f"{USAGE}\n")
+        else:
+            sys.stderr.write(f"{command.error_formatter(exc)}\n")
         return 2
 
     return command.handler(**kwargs)
