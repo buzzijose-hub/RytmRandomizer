@@ -26,7 +26,8 @@
   - Defines `StyleTargetVector`, the axis names, and `STYLE_TARGET_VECTORS`.
   - Depends only on standard library and `data.style_profiles`.
 - Modify `rytm_randomizer/data/__init__.py`
-  - Re-export `STYLE_TARGET_VECTOR_AXES`, `STYLE_TARGET_VECTORS`, and `StyleTargetVector`.
+  - Re-export `STYLE_TARGET_VECTOR_AXES` and `STYLE_TARGET_VECTORS` only.
+  - Do not re-export `StyleTargetVector`; the data namespace architecture gate only permits upper-snake constants in `data.__all__`.
 - Create `rytm_randomizer/reports/style_targets.py`
   - Builds and formats passive target-vector catalog and inspection reports.
   - Registers `style-target-report` and `inspect-style-target`.
@@ -438,12 +439,11 @@ STYLE_TARGET_VECTORS: Final[Mapping[str, StyleTargetVector]] = MappingProxyType(
 )
 
 if set(STYLE_TARGET_VECTORS) != set(STYLE_PROFILES):
-    raise RuntimeError("style target vectors must cover every style profile")
+    raise ValueError("style target vectors must cover every style profile")
 
 __all__ = [
     "STYLE_TARGET_VECTOR_AXES",
     "STYLE_TARGET_VECTORS",
-    "StyleTargetVector",
 ]
 ```
 
@@ -452,7 +452,7 @@ __all__ = [
 Add imports in `rytm_randomizer/data/__init__.py`:
 
 ```python
-from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS, StyleTargetVector
+from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 ```
 
 Add these entries to `__all__` near `STYLE_PROFILES`:
@@ -460,7 +460,6 @@ Add these entries to `__all__` near `STYLE_PROFILES`:
 ```python
     "STYLE_TARGET_VECTOR_AXES",
     "STYLE_TARGET_VECTORS",
-    "StyleTargetVector",
 ```
 
 - [ ] **Step 3: Run data tests**
