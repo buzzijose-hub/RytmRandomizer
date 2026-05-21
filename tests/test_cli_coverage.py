@@ -83,6 +83,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     mutation_preview_help = resolve_help_text("rytm-snapshot-mutation-preview-report")
     style_mock_preview_help = resolve_help_text("rytm-style-mutation-mock-preview-report")
     a4_style_mock_preview_help = resolve_help_text("analog-four-style-mutation-mock-preview-report")
+    dual_style_mock_preview_help = resolve_help_text(
+        "dual-machine-style-mutation-mock-preview-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -99,6 +102,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert a4_style_mock_preview_help.startswith(
         "RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report"
+    )
+    assert dual_style_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-mutation-mock-preview-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
@@ -623,6 +629,51 @@ def test_main_analog_four_style_mutation_mock_preview_report_lazy_imports_when_m
     assert rc == 0
     assert "RytmRandomizer passive Analog Four style mutation mock preview" in captured.out
     assert "Kit: A4COV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_mutation_mock_preview_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"DUALRYTM")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"DUALA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_mutation_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-mutation-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-mutation-mock-preview-report",
+                str(rytm_path),
+                str(a4_path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style mutation mock preview" in captured.out
+    assert "Kit: DUALRYTM" in captured.out
+    assert "Kit: DUALA4" in captured.out
     assert captured.err == ""
 
 

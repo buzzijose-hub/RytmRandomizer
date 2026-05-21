@@ -192,6 +192,8 @@ python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANA
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --discovery 95 --json   # machine-readable rig style routing for future GUI/analyzer use
 python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --rytm-slot 7 --a4-slot 0 --discovery 45   # passive rig-level mutation intent
 python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" birmingham_pressure --discovery 95 --json   # machine-readable rig mutation intent for future GUI/analyzer use
+python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --rytm-slot 7 --a4-slot 0 --discovery 45 --events --limit 24   # passive rig-level mock CC rows and A4 deferred rows
+python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" jose_core_techno --json   # machine-readable rig mock preview for future GUI/analyzer use
 python -m rytm_randomizer.cli style-profile-report   # passive techno style profiles for later snapshot/audio-analysis routing
 python -m rytm_randomizer.cli list-style-profiles   # list available style profiles
 python -m rytm_randomizer.cli inspect-style-profile birmingham_pressure   # inspect one passive style profile
@@ -221,6 +223,8 @@ The Analog Four style snapshot routing report mirrors that bridge for the A4 sid
 The Analog Four style mutation mock-preview report turns promoted A4 style-intent rows into mock CC rows for CC-safe zones such as oscillator level, filter frequency, envelope decay, modulation speed, and send level. Decoded A4 SysEx snapshots still report candidate-only until the A4 offset map is promoted, and NRPN-only drive rows are listed as deferred instead of pretending they can be rendered as CC. It remains passive and opens no MIDI port.
 
 The dual-machine style snapshot routing report sits above the two single-machine reports. It reads one Rytm kit dump and one Analog Four kit dump, applies the same style target to both, and summarizes whole-rig readiness so a future live workflow can decide whether the Rytm, the A4, or both machines can safely move toward the selected techno aesthetic.
+
+The dual-machine style mutation mock-preview report combines those two passive mock-preview layers into one rig-level view. It reads one Rytm kit dump and one Analog Four kit dump, applies the same style target and discovery amount, totals rendered mock CC rows, lists A4 deferred/blocked rows, and can emit combined event rows with `--events` before any armed live path exists.
 
 ### Recommended quick validation flow
 

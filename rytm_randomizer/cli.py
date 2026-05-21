@@ -64,6 +64,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.dual_machine_style_mutation_intent",
             "DUAL_MACHINE_STYLE_MUTATION_INTENT_CLI_COMMAND",
         ),
+        "dual-machine-style-mutation-mock-preview-report": (
+            "rytm_randomizer.reports.dual_machine_style_mutation_mock_preview",
+            "DUAL_MACHINE_STYLE_MUTATION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
         "style-profile-report": (
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",

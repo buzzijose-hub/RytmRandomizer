@@ -38,6 +38,9 @@ USAGE = (
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
+    "dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] "
+    "[--events] [--limit N] [--json] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -361,6 +364,21 @@ def test_dual_machine_style_mutation_intent_report_help_exits_zero_and_safety_ma
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: dual-machine-style-mutation-intent-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_dual_machine_style_mutation_mock_preview_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.dual_machine_style_mutation_mock_preview import SAFETY_LINES
+
+    result = run_cli("dual-machine-style-mutation-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert (
+        "RytmRandomizer passive CLI: dual-machine-style-mutation-mock-preview-report" in help_text
+    )
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
