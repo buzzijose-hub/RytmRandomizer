@@ -18,6 +18,8 @@ USAGE = (
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
+    "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
+    "search-style-profiles <query> | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -87,6 +89,22 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_profile_report_help():
+    from .reports.style_profiles import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-profile-report
+
+Usage:
+  python -m rytm_randomizer.cli style-profile-report
+  python -m rytm_randomizer.cli style-profile-report --help
+
+Behavior:
+  Prints the passive style-profile catalog for techno design intent.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -117,6 +135,10 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
+  python -m rytm_randomizer.cli style-profile-report
+  python -m rytm_randomizer.cli list-style-profiles
+  python -m rytm_randomizer.cli inspect-style-profile <key>
+  python -m rytm_randomizer.cli search-style-profiles <query>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -157,6 +179,14 @@ Commands:
                      Print passive Rytm snapshot mutation preview for a SysEx file.
   dual-machine-target-report
                      Print the passive dual-machine target report.
+  style-profile-report
+                     Print the passive style profile report.
+  list-style-profiles
+                     List passive style profile keys and names.
+  inspect-style-profile
+                     Inspect passive style profile metadata by key.
+  search-style-profiles
+                     Search passive style profile metadata.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -350,6 +380,7 @@ Safety:
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
+    "style-profile-report": _style_profile_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:
@@ -409,6 +440,57 @@ Behavior:
 
 Safety:
   passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "list-style-profiles": """RytmRandomizer passive CLI: list-style-profiles
+
+Usage:
+  python -m rytm_randomizer.cli list-style-profiles
+  python -m rytm_randomizer.cli list-style-profiles --help
+
+Behavior:
+  Lists passive style profile keys and names.
+
+Safety:
+  passive/read-only
+  metadata only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "inspect-style-profile": """RytmRandomizer passive CLI: inspect-style-profile
+
+Usage:
+  python -m rytm_randomizer.cli inspect-style-profile <key>
+  python -m rytm_randomizer.cli inspect-style-profile --help
+
+Behavior:
+  Displays passive style profile metadata for an existing key.
+
+Safety:
+  passive/read-only
+  metadata only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "search-style-profiles": """RytmRandomizer passive CLI: search-style-profiles
+
+Usage:
+  python -m rytm_randomizer.cli search-style-profiles <query>
+  python -m rytm_randomizer.cli search-style-profiles --help
+
+Behavior:
+  Searches passive style profile metadata.
+
+Safety:
+  passive/read-only
+  metadata only
   no MIDI sending
   no port opening
   no command execution

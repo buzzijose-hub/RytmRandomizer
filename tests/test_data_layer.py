@@ -144,6 +144,51 @@ def test_scene_presets_has_14_entries_with_known_keys():
     assert data.SCENE_PRESETS["s5"]["action"] == "clean"
 
 
+def test_style_profiles_cover_core_techno_aesthetic_targets():
+    assert set(data.STYLE_PROFILES) == {
+        "detroit_minimal",
+        "mills_hypnotic",
+        "hood_stripped",
+        "ur_machine_funk",
+        "hardgroove_percussive",
+        "birmingham_pressure",
+        "industrial_dark",
+        "deep_dark_hypnosis",
+        "warehouse_peak",
+    }
+    assert data.STYLE_PROFILES["detroit_minimal"].name == "Detroit Minimal"
+    assert data.STYLE_PROFILES["birmingham_pressure"].scores.grit == 9
+    assert "snapshot" in data.STYLE_PROFILES["warehouse_peak"].analyzer_targets
+
+
+def test_style_profiles_reference_existing_scene_presets():
+    for profile in data.STYLE_PROFILES.values():
+        assert profile.scene_keys
+        for scene_key in profile.scene_keys:
+            assert scene_key in data.SCENE_PRESETS
+
+
+def test_style_profiles_are_complete_passive_design_records():
+    for profile in data.STYLE_PROFILES.values():
+        assert profile.key
+        assert profile.name
+        assert profile.summary
+        assert profile.tags
+        assert profile.rytm_focus
+        assert profile.analog_four_focus
+        assert profile.analyzer_targets
+        for score in (
+            profile.scores.energy,
+            profile.scores.density,
+            profile.scores.darkness,
+            profile.scores.grit,
+            profile.scores.groove,
+            profile.scores.hypnosis,
+            profile.scores.space,
+        ):
+            assert 0 <= score <= 10
+
+
 def test_group_layout_maps_four_pads_to_known_profiles():
     assert set(data.GROUP_LAYOUT) == {1, 2, 3, 4}
     assert data.GROUP_LAYOUT[1]["profile"] == "2"
