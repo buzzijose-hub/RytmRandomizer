@@ -170,9 +170,9 @@ def test_analog_four_style_routing_report_is_operator_facing_and_passive():
     assert lines[0] == "RytmRandomizer passive Analog Four style snapshot routing"
     assert "Kit: A4STYLE" in lines
     assert "Style target: industrial_dark" in lines
-    assert "Discovery amount: 75" in lines
-    assert "Discovery band: discovery" in lines
-    assert "Machine switching allowed: True" in lines
+    assert "Discovery amount: 45" in lines
+    assert "Discovery band: balanced" in lines
+    assert "Machine switching allowed: False" in lines
     assert "- Ready tracks: 0" in lines
     assert "Analog Four focus:" in lines
     assert "- metallic FM-like bite" in lines
@@ -198,9 +198,9 @@ def test_analog_four_style_routing_report_serializes_json_contract():
 
     assert payload["style_key"] == "industrial_dark"
     assert payload["kit_name"] == "A4STYLE"
-    assert payload["discovery_amount"] == 75
-    assert payload["discovery_band"] == "discovery"
-    assert payload["machine_switching_allowed"] is True
+    assert payload["discovery_amount"] == 45
+    assert payload["discovery_band"] == "balanced"
+    assert payload["machine_switching_allowed"] is False
     assert payload["ready_track_count"] == 0
     assert payload["blocked_track_count"] == 4
     assert payload["tracks"][0]["track"] == 1
@@ -264,7 +264,7 @@ def test_analog_four_style_routing_cli_parser_accepts_slot():
         "sysex_path": Path("kit.syx"),
         "style_key": "industrial_dark",
         "slot": 0,
-        "discovery_amount": 75,
+        "discovery_amount": 45,
         "json_output": False,
     }
     assert _parse_cli_args(
@@ -318,7 +318,7 @@ def test_analog_four_style_routing_cli_handler_reports_plan(
     assert "RytmRandomizer passive Analog Four style snapshot routing" in captured.out
     assert "Kit: A4LIVE" in captured.out
     assert "Style target: industrial_dark" in captured.out
-    assert "Discovery band: discovery" in captured.out
+    assert "Discovery band: balanced" in captured.out
     assert captured.err == ""
 
 

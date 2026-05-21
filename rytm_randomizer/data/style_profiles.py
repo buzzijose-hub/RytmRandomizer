@@ -307,6 +307,59 @@ _STYLE_PROFILE_ITEMS: Final[tuple[StyleProfile, ...]] = (
             space=5,
         ),
     ),
+    StyleProfile(
+        key="jose_core_techno",
+        name="Jose Core Techno",
+        summary=(
+            "Hard loop pressure, Jeff Mills hypnosis, Oscar Mulero tunnel darkness, "
+            "and Birmingham/Stigmata industrial drive."
+        ),
+        tags=(
+            "jose",
+            "core",
+            "jeff_mills",
+            "oscar_mulero",
+            "stigmata",
+            "glenn_wilson",
+            "nightshift",
+            "regis",
+            "surgeon",
+            "birmingham",
+            "industrial",
+            "hard_loop",
+            "warehouse",
+        ),
+        scene_keys=("s1b", "s3a", "s3b", "s4a"),
+        rytm_focus=(
+            "disciplined kick foundation",
+            "metallic hat and rim pressure",
+            "hard loop-tool percussion density",
+            "controlled grit without collapsing the groove",
+        ),
+        analog_four_focus=(
+            "A4 Track 1 bassline pressure",
+            "A4 Track 2 lead/stab/alarm motion",
+            "A4 Track 3 adaptive rhythmic texture or second lead",
+            "A4 Track 4 atmosphere, pad, drone, or weird motion",
+        ),
+        analyzer_targets=(
+            "low_end",
+            "transient",
+            "motion",
+            "darkness",
+            "spectral_peaks",
+            "snapshot",
+        ),
+        scores=_scores(
+            energy=9,
+            density=8,
+            darkness=9,
+            grit=9,
+            groove=8,
+            hypnosis=10,
+            space=5,
+        ),
+    ),
 )
 
 STYLE_PROFILES: Final[Mapping[str, StyleProfile]] = MappingProxyType(

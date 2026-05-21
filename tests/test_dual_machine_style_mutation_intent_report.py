@@ -270,7 +270,7 @@ def test_dual_machine_style_mutation_intent_cli_parser_accepts_slots_and_json():
         "style_key": "industrial_dark",
         "rytm_slot": 0,
         "analog_four_slot": 0,
-        "discovery_amount": 75,
+        "discovery_amount": 45,
         "json_output": False,
     }
     assert _parse_cli_args(

@@ -253,9 +253,9 @@ def test_style_snapshot_routing_report_is_operator_facing_and_passive():
     assert "Kit: STYLEKIT" in lines
     assert "Slot: 4" in lines
     assert "Style target: birmingham_pressure" in lines
-    assert "Discovery amount: 75" in lines
-    assert "Discovery band: discovery" in lines
-    assert "Machine switching allowed: True" in lines
+    assert "Discovery amount: 45" in lines
+    assert "Discovery band: balanced" in lines
+    assert "Machine switching allowed: False" in lines
     assert "- Ready pads: 3" in lines
     assert "- Blocked pads: 1" in lines
     assert "Favored zones: grit, body, amp" in text
@@ -287,9 +287,9 @@ def test_style_snapshot_routing_report_serializes_json_contract():
 
     assert payload["style_key"] == "birmingham_pressure"
     assert payload["kit_name"] == "STYLEKIT"
-    assert payload["discovery_amount"] == 75
-    assert payload["discovery_band"] == "discovery"
-    assert payload["machine_switching_allowed"] is True
+    assert payload["discovery_amount"] == 45
+    assert payload["discovery_band"] == "balanced"
+    assert payload["machine_switching_allowed"] is False
     assert payload["ready_pad_count"] == 3
     assert payload["blocked_pad_count"] == 1
     assert payload["pads"][0]["pad"] == 1
@@ -369,7 +369,7 @@ def test_style_snapshot_routing_cli_parser_accepts_slot():
         "sysex_path": Path("kit.syx"),
         "style_key": "birmingham_pressure",
         "slot": 0,
-        "discovery_amount": 75,
+        "discovery_amount": 45,
         "json_output": False,
     }
     assert _parse_cli_args(
@@ -435,7 +435,7 @@ def test_style_snapshot_routing_cli_handler_reports_plan(
     assert "RytmRandomizer passive Rytm style snapshot routing" in captured.out
     assert "Kit: STYLE" in captured.out
     assert "Style target: birmingham_pressure" in captured.out
-    assert "Discovery band: discovery" in captured.out
+    assert "Discovery band: balanced" in captured.out
     assert captured.err == ""
 
 

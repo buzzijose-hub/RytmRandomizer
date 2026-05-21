@@ -26,6 +26,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "rytm-style-mutation-render-plan-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-mock-preview-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-intent-report <syx-path> <style-key> "
@@ -279,6 +281,19 @@ def test_rytm_style_mutation_render_plan_report_help_exits_zero_and_safety_match
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: rytm-style-mutation-render-plan-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_mock_preview_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_mutation_mock_preview import SAFETY_LINES
+
+    result = run_cli("rytm-style-mutation-mock-preview-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-mutation-mock-preview-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -890,6 +905,59 @@ def test_rytm_style_mutation_render_plan_report_command_can_emit_json(tmp_path):
     assert result.stderr == ""
 
 
+def test_rytm_style_mutation_mock_preview_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"MOCKPREV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--discovery",
+        "45",
+        "--events",
+        "--limit",
+        "1",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style mutation mock preview" in result.stdout
+    assert "Kit: MOCKPREV" in result.stdout
+    assert "Preview ready: True" in result.stdout
+    assert "CC" in result.stdout
+    assert "- mock-only preview" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_mock_preview_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"MOCKJS")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-mock-preview-report",
+        str(path),
+        "jose_core_techno",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "MOCKJS"
+    assert parsed["style_key"] == "jose_core_techno"
+    assert parsed["discovery_amount"] == 45
+    assert parsed["preview_ready"] is True
+    assert parsed["events"][0]["control"] >= 0
+    assert result.stderr == ""
+
+
 def test_analog_four_style_snapshot_routing_report_command_reads_syx_file(tmp_path):
     payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4STYLE".ljust(16, b"\x00")
     path = tmp_path / "a4.syx"
@@ -1352,9 +1420,10 @@ def test_style_profile_report_command_exits_zero_and_describes_foundation():
 
     assert result.returncode == 0
     assert "RytmRandomizer passive style profile report" in output
-    assert "- Profiles: 9" in output
+    assert "- Profiles: 10" in output
     assert "Detroit Minimal" in output
     assert "Birmingham Pressure" in output
+    assert "Jose Core Techno" in output
     assert "Analyzer hooks:" in output
     assert "- passive/read-only" in output
     assert "- no MIDI sending" in output
@@ -1459,7 +1528,7 @@ def test_style_target_report_command_exits_zero_and_is_passive():
 
     assert result.returncode == 0
     assert "RytmRandomizer passive style target vector report" in output
-    assert "- Targets: 9" in output
+    assert "- Targets: 10" in output
     assert "- no MIDI sending" in output
     assert result.stderr == ""
 

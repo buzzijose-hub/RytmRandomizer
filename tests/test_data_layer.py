@@ -155,9 +155,16 @@ def test_style_profiles_cover_core_techno_aesthetic_targets():
         "industrial_dark",
         "deep_dark_hypnosis",
         "warehouse_peak",
+        "jose_core_techno",
     }
     assert data.STYLE_PROFILES["detroit_minimal"].name == "Detroit Minimal"
     assert data.STYLE_PROFILES["birmingham_pressure"].scores.grit == 9
+    assert data.STYLE_PROFILES["jose_core_techno"].name == "Jose Core Techno"
+    assert "jeff_mills" in data.STYLE_PROFILES["jose_core_techno"].tags
+    assert "oscar_mulero" in data.STYLE_PROFILES["jose_core_techno"].tags
+    assert (
+        "A4 Track 1 bassline pressure" in data.STYLE_PROFILES["jose_core_techno"].analog_four_focus
+    )
     assert "snapshot" in data.STYLE_PROFILES["warehouse_peak"].analyzer_targets
 
 
@@ -226,7 +233,7 @@ def test_style_discovery_policy_maps_reference_to_wild_bands():
 
     assert STYLE_DISCOVERY_AMOUNT_MIN == 0
     assert STYLE_DISCOVERY_AMOUNT_MAX == 100
-    assert DEFAULT_STYLE_DISCOVERY_AMOUNT == 75
+    assert DEFAULT_STYLE_DISCOVERY_AMOUNT == 45
     assert style_discovery_policy(0).band == "reference"
     assert style_discovery_policy(20).band == "reference"
     assert style_discovery_policy(21).band == "balanced"

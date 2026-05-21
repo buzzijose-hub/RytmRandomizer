@@ -40,6 +40,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_style_mutation_render_plan",
             "RYTM_STYLE_MUTATION_RENDER_PLAN_CLI_COMMAND",
         ),
+        "rytm-style-mutation-mock-preview-report": (
+            "rytm_randomizer.reports.rytm_style_mutation_mock_preview",
+            "RYTM_STYLE_MUTATION_MOCK_PREVIEW_CLI_COMMAND",
+        ),
         "analog-four-style-snapshot-routing-report": (
             "rytm_randomizer.reports.analog_four_style_snapshot_routing",
             "ANALOG_FOUR_STYLE_SNAPSHOT_ROUTING_CLI_COMMAND",

@@ -81,6 +81,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     snapshot_help = resolve_help_text("rytm-snapshot-pad-compatibility-report")
     intelligence_help = resolve_help_text("rytm-snapshot-intelligence-report")
     mutation_preview_help = resolve_help_text("rytm-snapshot-mutation-preview-report")
+    style_mock_preview_help = resolve_help_text("rytm-style-mutation-mock-preview-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -91,6 +92,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert mutation_preview_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-mutation-preview-report"
+    )
+    assert style_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-mutation-mock-preview-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
@@ -537,6 +541,46 @@ def test_main_rytm_snapshot_mutation_preview_report_lazy_imports_when_module_unl
     assert rc == 0
     assert "RytmRandomizer passive Rytm snapshot mutation preview" in captured.out
     assert "Kit: PREVCOV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_rytm_style_mutation_mock_preview_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLECOV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_style_mutation_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-style-mutation-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "rytm-style-mutation-mock-preview-report",
+                str(path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm style mutation mock preview" in captured.out
+    assert "Kit: STYLECOV" in captured.out
     assert captured.err == ""
 
 
