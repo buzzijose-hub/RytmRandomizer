@@ -27,9 +27,20 @@ INSPECT_TITLE: Final[str] = "RytmRandomizer passive style performance arc inspec
 SEARCH_TITLE: Final[str] = "RytmRandomizer passive style performance arc search"
 SET_PLAN_TITLE: Final[str] = "RytmRandomizer passive style performance arc set plan"
 READINESS_TITLE: Final[str] = "RytmRandomizer passive style performance arc readiness matrix"
+AUDITION_PACKET_TITLE: Final[str] = "RytmRandomizer passive style performance arc audition packet"
 SOURCE_MODULE: Final[str] = "reports.style_performance_arcs"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
+    "metadata and plan expansion only",
+    "no MIDI sending",
+    "no port opening",
+    "no command execution",
+    "no hardware mutation",
+    "no hardware required",
+)
+AUDITION_PACKET_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "passive/read-only",
+    "reference arc audition packet",
     "metadata and plan expansion only",
     "no MIDI sending",
     "no port opening",
@@ -61,6 +72,10 @@ _READINESS_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=READINESS_TITLE,
     source_module=SOURCE_MODULE,
 )
+_AUDITION_PACKET_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
+    title=AUDITION_PACKET_TITLE,
+    source_module=SOURCE_MODULE,
+)
 _SET_PLAN_USAGE: Final[str] = (
     "style-performance-arc-set-plan-report usage: "
     "<arc-key> --rytm <syx-path> [--analog-four <syx-path>] "
@@ -74,6 +89,13 @@ _READINESS_USAGE: Final[str] = (
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--limit N] [--json]"
+)
+_AUDITION_PACKET_USAGE: Final[str] = (
+    "style-performance-arc-audition-packet-report usage: "
+    "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"
 )
 _SET_PLAN_OPTIONS: Final[tuple[str, ...]] = (
     "--rytm",
@@ -97,6 +119,19 @@ _READINESS_OPTIONS: Final[tuple[str, ...]] = (
     "--segment-minutes",
     "--discovery-start",
     "--discovery-end",
+    "--limit",
+    "--json",
+)
+_AUDITION_PACKET_OPTIONS: Final[tuple[str, ...]] = (
+    "--rytm",
+    "--analog-four",
+    "--scope",
+    "--rank",
+    "--total-minutes",
+    "--segment-minutes",
+    "--discovery-start",
+    "--discovery-end",
+    "--events",
     "--limit",
     "--json",
 )
@@ -154,6 +189,20 @@ class StylePerformanceArcReadinessReport:
     entries: tuple[StylePerformanceArcReadinessEntry, ...]
 
 
+@dataclass(frozen=True)
+class StylePerformanceArcAuditionPacketReport:
+    """Passive best-arc audition packet derived from a readiness matrix."""
+
+    readiness_report: StylePerformanceArcReadinessReport
+    selected_entry: StylePerformanceArcReadinessEntry
+
+    @property
+    def selected_set_plan(self) -> DualMachineStylePerformanceSetPlan:
+        """Return the selected timed set plan for operator preview."""
+
+        return self.selected_entry.plan
+
+
 def _join(values: Sequence[str]) -> str:
     return ", ".join(values)
 
@@ -164,6 +213,13 @@ def _sequence(values: Sequence[str]) -> str:
 
 def _safety_lines() -> list[str]:
     return [SAFETY_SECTION_HEADER, *[f"- {line}" for line in SAFETY_LINES]]
+
+
+def _audition_packet_safety_lines() -> list[str]:
+    return [
+        SAFETY_SECTION_HEADER,
+        *[f"- {line}" for line in AUDITION_PACKET_SAFETY_LINES],
+    ]
 
 
 def _arcs_by_key() -> Mapping[str, StylePerformanceArc]:
@@ -699,6 +755,110 @@ def to_style_performance_arc_readiness_json(
     }
 
 
+def build_style_performance_arc_audition_packet_report(
+    arc_keys: Sequence[str] | None = None,
+    *,
+    rytm_sysex_path: Path | None = None,
+    analog_four_sysex_path: Path | None = None,
+    scope: str | None = None,
+    selection_rank: int | None = None,
+    total_minutes: int | None = None,
+    segment_minutes: int | None = None,
+    discovery_start: int | None = None,
+    discovery_end: int | None = None,
+) -> StylePerformanceArcAuditionPacketReport:
+    """Return the highest-ranked passive reference arc audition packet."""
+
+    readiness_report = build_style_performance_arc_readiness_report(
+        arc_keys,
+        rytm_sysex_path=rytm_sysex_path,
+        analog_four_sysex_path=analog_four_sysex_path,
+        scope=scope,
+        selection_rank=selection_rank,
+        total_minutes=total_minutes,
+        segment_minutes=segment_minutes,
+        discovery_start=discovery_start,
+        discovery_end=discovery_end,
+    )
+    if not readiness_report.entries:
+        raise ValueError("audition packet requires at least one readiness entry")
+    return StylePerformanceArcAuditionPacketReport(
+        readiness_report=readiness_report,
+        selected_entry=readiness_report.entries[0],
+    )
+
+
+def _selected_set_plan_report(
+    report: StylePerformanceArcAuditionPacketReport,
+) -> StylePerformanceArcSetPlanReport:
+    return StylePerformanceArcSetPlanReport(
+        arc=report.selected_entry.arc,
+        plan=report.selected_entry.plan,
+    )
+
+
+def format_style_performance_arc_audition_packet_report(
+    report: StylePerformanceArcAuditionPacketReport,
+    *,
+    include_events: bool = False,
+    event_limit: int = _DEFAULT_EVENT_LIMIT,
+) -> list[str]:
+    """Return deterministic operator-facing best-arc audition packet lines."""
+
+    selected = report.selected_entry
+    readiness = report.readiness_report
+    set_plan_lines = format_style_performance_arc_set_plan_report(
+        _selected_set_plan_report(report),
+        include_events=include_events,
+        event_limit=event_limit,
+    )
+    lines = [
+        "Summary:",
+        f"- Scope: {readiness.scope}",
+        f"- Evaluated arcs: {readiness.arc_count}",
+        (
+            "- Readiness totals: "
+            f"{readiness.ready_arc_count} ready, "
+            f"{readiness.partial_arc_count} partial, "
+            f"{readiness.blocked_arc_count} blocked"
+        ),
+        "Selected arc:",
+        f"- Position: {selected.position}",
+        f"- Key: {selected.arc.key}",
+        f"- Name: {selected.arc.name}",
+        f"- Readiness: {selected.readiness}",
+        f"- Average selection score: {selected.average_selection_score}",
+        f"- Operator action: {selected.operator_action}",
+        "Readiness matrix:",
+        *[
+            (
+                f"- #{entry.position}: {entry.arc.key} | {entry.readiness} | "
+                f"score {entry.average_selection_score}"
+            )
+            for entry in readiness.entries
+        ],
+        "Selected set plan:",
+        *[f"  {line}" for line in set_plan_lines],
+        *_audition_packet_safety_lines(),
+    ]
+    return passive_report_lines(_AUDITION_PACKET_HEADER, lines)
+
+
+def to_style_performance_arc_audition_packet_json(
+    report: StylePerformanceArcAuditionPacketReport,
+) -> dict[str, object]:
+    """Return deterministic JSON data for the selected reference arc packet."""
+
+    return {
+        "selected": _readiness_entry_json(report.selected_entry),
+        "readiness_matrix": to_style_performance_arc_readiness_json(report.readiness_report),
+        "selected_set_plan": to_style_performance_arc_set_plan_json(
+            _selected_set_plan_report(report)
+        ),
+        "safety": list(AUDITION_PACKET_SAFETY_LINES),
+    }
+
+
 def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
     if argv:
         raise ValueError("command takes no arguments")
@@ -861,6 +1021,69 @@ def _parse_arc_readiness_cli_args(argv: Sequence[str]) -> dict[str, object]:
     }
 
 
+def _parse_arc_audition_packet_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    remaining = list(argv)
+    arc_keys: list[str] = []
+    while remaining and not remaining[0].startswith("--"):
+        arc_keys.append(remaining.pop(0))
+    if remaining and remaining[0] == "--json" and not arc_keys:
+        raise ValueError(_AUDITION_PACKET_USAGE)
+    rytm_sysex_path: Path | None = None
+    analog_four_sysex_path: Path | None = None
+    scope: str | None = None
+    selection_rank: int | None = None
+    total_minutes: int | None = None
+    segment_minutes: int | None = None
+    discovery_start: int | None = None
+    discovery_end: int | None = None
+    include_events = False
+    event_limit = _DEFAULT_EVENT_LIMIT
+    json_output = False
+    while remaining:
+        option = remaining.pop(0)
+        if option == "--events":
+            include_events = True
+            continue
+        if option == "--json":
+            json_output = True
+            continue
+        if option not in _AUDITION_PACKET_OPTIONS:
+            raise ValueError(_AUDITION_PACKET_USAGE)
+        value = _pop_option_value(remaining)
+        if option == "--rytm":
+            rytm_sysex_path = Path(value)
+        elif option == "--analog-four":
+            analog_four_sysex_path = Path(value)
+        elif option == "--scope":
+            scope = normalize_selection_scope(value)
+        elif option == "--rank":
+            selection_rank = _parse_positive_int(value, option=option)
+        elif option == "--total-minutes":
+            total_minutes = _parse_positive_int(value, option=option)
+        elif option == "--segment-minutes":
+            segment_minutes = _parse_positive_int(value, option=option)
+        elif option == "--discovery-start":
+            discovery_start = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery-end":
+            discovery_end = _parse_nonnegative_int(value, option=option)
+        else:
+            event_limit = _parse_nonnegative_int(value, option=option)
+    return {
+        "arc_keys": None if not arc_keys else tuple(arc_keys),
+        "rytm_sysex_path": rytm_sysex_path,
+        "analog_four_sysex_path": analog_four_sysex_path,
+        "scope": scope,
+        "selection_rank": selection_rank,
+        "total_minutes": total_minutes,
+        "segment_minutes": segment_minutes,
+        "discovery_start": discovery_start,
+        "discovery_end": discovery_end,
+        "include_events": include_events,
+        "event_limit": event_limit,
+        "json_output": json_output,
+    }
+
+
 def _write_lines(lines: Sequence[str]) -> int:
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
@@ -983,6 +1206,54 @@ def _handle_style_performance_arc_readiness_report(
     return _write_lines(lines)
 
 
+def _handle_style_performance_arc_audition_packet_report(
+    *,
+    arc_keys: Sequence[str] | None,
+    rytm_sysex_path: Path | None,
+    analog_four_sysex_path: Path | None,
+    scope: str | None,
+    selection_rank: int | None,
+    total_minutes: int | None,
+    segment_minutes: int | None,
+    discovery_start: int | None,
+    discovery_end: int | None,
+    include_events: bool,
+    event_limit: int,
+    json_output: bool,
+) -> int:
+    try:
+        report = build_style_performance_arc_audition_packet_report(
+            arc_keys,
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+        )
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_style_performance_arc_audition_packet_json(report),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_style_performance_arc_audition_packet_report(
+            report,
+            include_events=include_events,
+            event_limit=event_limit,
+        )
+    except (OSError, ValueError, NotImplementedError, TypeError, KeyError) as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 2
+    return _write_lines(lines)
+
+
 def _format_cli_error(exc: Exception) -> str:
     return f"Error: {exc}"
 
@@ -1025,6 +1296,13 @@ STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND: Final[CliCommand] = CliCommand(
     handler=_handle_style_performance_arc_readiness_report,
     error_formatter=_format_cli_error,
 )
+STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="style-performance-arc-audition-packet-report",
+    summary="Build passive best-arc audition packets from saved kit banks.",
+    args_parser=_parse_arc_audition_packet_cli_args,
+    handler=_handle_style_performance_arc_audition_packet_report,
+    error_formatter=_format_cli_error,
+)
 
 register(STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND)
 register(LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
@@ -1032,8 +1310,11 @@ register(INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND)
 register(SEARCH_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND)
+register(STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND)
 
 __all__ = [
+    "AUDITION_PACKET_SAFETY_LINES",
+    "AUDITION_PACKET_TITLE",
     "INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND",
     "LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
     "REPORT_TITLE",
@@ -1041,22 +1322,27 @@ __all__ = [
     "SEARCH_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
     "SET_PLAN_TITLE",
     "SOURCE_MODULE",
+    "STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND",
+    "StylePerformanceArcAuditionPacketReport",
     "StylePerformanceArcCatalogReport",
     "StylePerformanceArcReadinessEntry",
     "StylePerformanceArcReadinessReport",
     "StylePerformanceArcSetPlanReport",
+    "build_style_performance_arc_audition_packet_report",
     "build_style_performance_arc_catalog_report",
     "build_style_performance_arc_readiness_report",
     "build_style_performance_arc_set_plan_report",
+    "format_style_performance_arc_audition_packet_report",
     "format_style_performance_arc_readiness_report",
     "format_style_performance_arc_inspection",
     "format_style_performance_arc_list",
     "format_style_performance_arc_report",
     "format_style_performance_arc_search",
     "format_style_performance_arc_set_plan_report",
+    "to_style_performance_arc_audition_packet_json",
     "to_style_performance_arc_json",
     "to_style_performance_arc_readiness_json",
     "to_style_performance_arc_set_plan_json",

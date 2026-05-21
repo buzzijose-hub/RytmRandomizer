@@ -148,6 +148,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.style_performance_arcs",
             "STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND",
         ),
+        "style-performance-arc-audition-packet-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
