@@ -13,7 +13,8 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "rytm-snapshot-pad-compatibility-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
-    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] | "
+    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
+    "[--events] [--limit N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -72,11 +73,15 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N --depth N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events --limit N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report --help
 
 Behavior:
   Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
   and prints a passive/mock-only mutation preview from snapshot machine facts.
+  Use --events to include mock CC event rows. Use --limit N to cap rows; N=0
+  prints all event rows.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -110,6 +115,7 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --slot N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
+  python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>

@@ -18,7 +18,8 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "rytm-snapshot-pad-compatibility-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
-    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] | "
+    "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
+    "[--events] [--limit N] | "
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
@@ -563,6 +564,29 @@ def test_rytm_snapshot_mutation_preview_report_command_reads_syx_file(tmp_path):
     assert result.stderr == ""
 
 
+def test_rytm_snapshot_mutation_preview_report_command_can_show_event_section(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"PREVIEW")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-snapshot-mutation-preview-report",
+        str(path),
+        "--events",
+        "--limit",
+        "3",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm snapshot mutation preview" in result.stdout
+    assert "Event preview:" in result.stdout
+    assert "- No event rows available because the plan is not ready." in result.stdout
+    assert "candidate-only" in result.stdout
+    assert result.stderr == ""
+
+
 def test_rytm_snapshot_mutation_preview_report_command_rejects_missing_file(tmp_path):
     result = run_cli(
         "rytm-snapshot-mutation-preview-report",
@@ -601,6 +625,7 @@ def test_readme_mentions_rytm_snapshot_mutation_preview_report_command():
 
     assert "rytm-snapshot-mutation-preview-report" in text
     assert "snapshot mutation preview" in text
+    assert "--events" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
