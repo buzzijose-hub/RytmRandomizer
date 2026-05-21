@@ -68,6 +68,10 @@ def _candidate_only_snapshot():
     )
 
 
+def _row_by_parameter(plan, *, pad: int, parameter: str):
+    return next(row for row in plan.pads_by_pad[pad].intent_rows if row.parameter == parameter)
+
+
 def test_style_mutation_intent_maps_ready_pads_to_zone_parameter_rows():
     from rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent import (
         plan_rytm_style_mutation_intent,
@@ -103,6 +107,89 @@ def test_style_mutation_intent_maps_ready_pads_to_zone_parameter_rows():
     assert pad_10.route_ready is False
     assert pad_10.intent_rows == ()
     assert "selectable-only" in pad_10.readiness_reason
+
+
+def test_style_mutation_intent_adds_grit_bias_and_higher_direction():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent import (
+        plan_rytm_style_mutation_intent,
+    )
+
+    plan = plan_rytm_style_mutation_intent(
+        _style_snapshot(),
+        "birmingham_pressure",
+        discovery_amount=75,
+    )
+
+    row = _row_by_parameter(plan, pad=1, parameter="SRC Snap")
+    assert row.target_bias == 86
+    assert row.target_direction == "higher"
+
+
+def test_style_mutation_intent_pulls_dark_filter_frequency_lower():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent import (
+        plan_rytm_style_mutation_intent,
+    )
+
+    plan = plan_rytm_style_mutation_intent(
+        _style_snapshot(),
+        "deep_dark_hypnosis",
+        discovery_amount=75,
+    )
+
+    row = _row_by_parameter(plan, pad=1, parameter="FLT Frequency")
+    assert row.target_bias == 82
+    assert row.target_direction == "lower"
+
+
+def test_style_mutation_intent_marks_short_and_long_tail_decay_directions():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent import (
+        plan_rytm_style_mutation_intent,
+    )
+
+    short_tail = plan_rytm_style_mutation_intent(
+        _style_snapshot(),
+        "birmingham_pressure",
+        discovery_amount=75,
+    )
+    long_tail = plan_rytm_style_mutation_intent(
+        _style_snapshot(),
+        "deep_dark_hypnosis",
+        discovery_amount=75,
+    )
+
+    assert _row_by_parameter(short_tail, pad=1, parameter="SRC Decay").target_direction == "shorter"
+    assert _row_by_parameter(long_tail, pad=1, parameter="SRC Decay").target_direction == "longer"
+
+
+def test_style_mutation_intent_marks_motion_heavy_lfo_direction():
+    from rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent import (
+        plan_rytm_style_mutation_intent,
+    )
+
+    plan = plan_rytm_style_mutation_intent(
+        _style_snapshot(),
+        "mills_hypnotic",
+        discovery_amount=75,
+    )
+
+    row = _row_by_parameter(plan, pad=3, parameter="LFO Speed")
+    assert row.target_bias == 83
+    assert row.target_direction == "higher"
+
+
+def test_style_mutation_intent_direction_helpers_cover_neutral_edges():
+    from dataclasses import replace
+
+    import rytm_randomizer.devices.strategies.analog_rytm_style_mutation_intent as intent
+    from rytm_randomizer.data.style_targets import STYLE_TARGET_VECTORS
+
+    neutral = STYLE_TARGET_VECTORS["detroit_minimal"]
+    bright = replace(neutral, darkness=20)
+
+    assert intent._zone_bias(neutral, "unknown-zone") == 50
+    assert intent._parameter_direction("FLT Frequency", zone="filter", target=bright) == "higher"
+    assert intent._parameter_direction("FLT Frequency", zone="filter", target=neutral) == "center"
+    assert intent._parameter_direction("SRC Decay", zone="body", target=neutral) == "center"
 
 
 def test_style_mutation_intent_scales_depth_from_discovery_band():
@@ -276,6 +363,8 @@ def test_style_mutation_intent_report_serializes_json_contract():
         "low": 8,
         "high": 55,
         "mutation_depth": "strong",
+        "target_bias": 86,
+        "target_direction": "higher",
     }
     assert payload["pads"][3]["pad"] == 10
     assert payload["pads"][3]["intent_rows"] == []
@@ -384,6 +473,8 @@ def test_style_mutation_intent_cli_handler_reports_text(
     assert "RytmRandomizer passive Rytm style mutation intent" in captured.out
     assert "Kit: INTEXT" in captured.out
     assert "Discovery band: reference" in captured.out
+    assert "bias 86" in captured.out
+    assert "direction higher" in captured.out
     assert captured.err == ""
 
 

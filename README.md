@@ -200,7 +200,7 @@ The style-routing reports also accept `--discovery N` where `N` is 0-100. Low va
 
 The Rytm style snapshot routing report is the first bridge from style intent to captured-kit planning. It reads a local Rytm kit dump, applies one style target vector, and reports favored mutation zones, route-ready pads, blocked pads, and legal machine candidates. It remains metadata-only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
 
-The Rytm style mutation intent report takes that one passive step closer to the live tool: for each route-ready pad, it maps the chosen style and discovery band to safe profile parameters such as grit, body, amp, filter, LFO, and morph targets. It still renders no CC values and sends no MIDI; it is the machine-readable contract the future snapshot mutation renderer can consume.
+The Rytm style mutation intent report takes that one passive step closer to the live tool: for each route-ready pad, it maps the chosen style and discovery band to safe profile parameters such as grit, body, amp, filter, LFO, and morph targets, then annotates each row with a style bias and direction such as higher, lower, shorter, longer, or center. It still renders no CC values and sends no MIDI; it is the machine-readable contract the future snapshot mutation renderer can consume.
 
 The Analog Four style snapshot routing report mirrors that bridge for the A4 side of the rig. It reads a local Analog Four kit dump, applies one style target vector, and reports track-level favored zones while the low-level A4 parameter offsets remain candidate-only. It is still passive metadata only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
 

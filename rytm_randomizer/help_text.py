@@ -136,8 +136,9 @@ Usage:
 Behavior:
   Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
   and prints passive style-aware mutation intent rows for the selected style target.
-  The report shows which ready pads, zones, and safe profile parameters future
-  style mutation can target without rendering CC values or sending MIDI.
+  The report shows which ready pads, zones, safe profile parameters, style
+  biases, and directions future style mutation can target without rendering CC
+  values or sending MIDI.
   Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
   Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
 

@@ -57,7 +57,8 @@ def _join(values: Sequence[str]) -> str:
 def _row_text(row: RytmStyleMutationIntentRow) -> str:
     return (
         f"    - {row.zone} | {row.parameter} | safe {row.low}-{row.high} "
-        f"| depth {row.mutation_depth}"
+        f"| depth {row.mutation_depth} | bias {row.target_bias} "
+        f"| direction {row.target_direction}"
     )
 
 
@@ -124,6 +125,8 @@ def _row_json(row: RytmStyleMutationIntentRow) -> dict[str, object]:
         "low": row.low,
         "high": row.high,
         "mutation_depth": row.mutation_depth,
+        "target_bias": row.target_bias,
+        "target_direction": row.target_direction,
     }
 
 
