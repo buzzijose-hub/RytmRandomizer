@@ -65,6 +65,13 @@ USAGE = (
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
     "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
+    "style-performance-arc-report | list-style-performance-arcs | "
+    "inspect-style-performance-arc <key> | search-style-performance-arcs <query> | "
+    "style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -616,6 +623,45 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_performance_arc_report_help():
+    from .reports.style_performance_arcs import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-report
+  python -m rytm_randomizer.cli style-performance-arc-report --help
+
+Behavior:
+  Prints passive reference/performance arc presets for long-form set planning.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_set_plan_report_help():
+    from .reports.style_performance_arcs import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-set-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> --scope rytm-only
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> --analog-four <syx-path> --events --limit N
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> --json
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report --help
+
+Behavior:
+  Expands a named passive reference arc into a timed performance set plan.
+  The command reuses the dual-machine style performance planner, so it can
+  rank saved kits, apply the arc's default discovery ramp, and show optional
+  mock event rows without opening a MIDI port or sending MIDI.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -670,6 +716,11 @@ Usage:
   python -m rytm_randomizer.cli search-style-profiles <query>
   python -m rytm_randomizer.cli style-target-report
   python -m rytm_randomizer.cli inspect-style-target <key>
+  python -m rytm_randomizer.cli style-performance-arc-report
+  python -m rytm_randomizer.cli list-style-performance-arcs
+  python -m rytm_randomizer.cli inspect-style-performance-arc <key>
+  python -m rytm_randomizer.cli search-style-performance-arcs <query>
+  python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -758,6 +809,16 @@ Commands:
                      Print the passive style target vector report.
   inspect-style-target
                      Inspect passive style target vector metadata by key.
+  style-performance-arc-report
+                     Print the passive style performance arc report.
+  list-style-performance-arcs
+                     List passive style performance arc keys and names.
+  inspect-style-performance-arc
+                     Inspect passive style performance arc metadata by key.
+  search-style-performance-arcs
+                     Search passive style performance arc metadata.
+  style-performance-arc-set-plan-report
+                     Print passive timed performance set plans from a reference arc.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -979,6 +1040,8 @@ Safety:
     ),
     "style-profile-report": _style_profile_report_help,
     "style-target-report": _style_target_report_help,
+    "style-performance-arc-report": _style_performance_arc_report_help,
+    "style-performance-arc-set-plan-report": _style_performance_arc_set_plan_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:
@@ -1089,6 +1152,57 @@ Behavior:
 Safety:
   passive/read-only
   metadata only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "list-style-performance-arcs": """RytmRandomizer passive CLI: list-style-performance-arcs
+
+Usage:
+  python -m rytm_randomizer.cli list-style-performance-arcs
+  python -m rytm_randomizer.cli list-style-performance-arcs --help
+
+Behavior:
+  Lists passive reference/performance arc preset keys and names.
+
+Safety:
+  passive/read-only
+  metadata and plan expansion only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "inspect-style-performance-arc": """RytmRandomizer passive CLI: inspect-style-performance-arc
+
+Usage:
+  python -m rytm_randomizer.cli inspect-style-performance-arc <key>
+  python -m rytm_randomizer.cli inspect-style-performance-arc --help
+
+Behavior:
+  Displays passive reference/performance arc metadata for an existing key.
+
+Safety:
+  passive/read-only
+  metadata and plan expansion only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "search-style-performance-arcs": """RytmRandomizer passive CLI: search-style-performance-arcs
+
+Usage:
+  python -m rytm_randomizer.cli search-style-performance-arcs <query>
+  python -m rytm_randomizer.cli search-style-performance-arcs --help
+
+Behavior:
+  Searches passive reference/performance arc metadata.
+
+Safety:
+  passive/read-only
+  metadata and plan expansion only
   no MIDI sending
   no port opening
   no command execution

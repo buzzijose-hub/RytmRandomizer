@@ -124,6 +124,26 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.style_targets",
             "INSPECT_STYLE_TARGET_CLI_COMMAND",
         ),
+        "style-performance-arc-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND",
+        ),
+        "list-style-performance-arcs": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
+        ),
+        "inspect-style-performance-arc": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND",
+        ),
+        "search-style-performance-arcs": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "SEARCH_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
+        ),
+        "style-performance-arc-set-plan-report": (
+            "rytm_randomizer.reports.style_performance_arcs",
+            "STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

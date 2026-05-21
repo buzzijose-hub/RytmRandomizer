@@ -121,6 +121,7 @@ from .style_discovery import (
     STYLE_DISCOVERY_AMOUNT_MIN,
     STYLE_DISCOVERY_BANDS,
 )
+from .style_performance_arcs import STYLE_PERFORMANCE_ARCS
 from .style_profiles import STYLE_PROFILES
 from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
@@ -133,6 +134,7 @@ __all__ = [
     "STYLE_DISCOVERY_AMOUNT_MAX",
     "STYLE_DISCOVERY_AMOUNT_MIN",
     "STYLE_DISCOVERY_BANDS",
+    "STYLE_PERFORMANCE_ARCS",
     "STYLE_PROFILES",
     "STYLE_TARGET_VECTOR_AXES",
     "STYLE_TARGET_VECTORS",
