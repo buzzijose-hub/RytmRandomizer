@@ -27,6 +27,11 @@ from .analog_four_snapshot_decoder import (
     AnalogFourKitSnapshot,
     AnalogFourSnapshotDecoder,
 )
+from .analog_four_style_snapshot_routing import (
+    AnalogFourStyleSnapshotRoutingPlan,
+    AnalogFourStyleTrackPlan,
+    plan_analog_four_style_snapshot_routes,
+)
 from .analog_rytm_message_renderer import AnalogRytmMessageRenderer
 from .analog_rytm_mutation_planner import (
     MAX_DEPTH,
@@ -64,6 +69,8 @@ __all__ = [
     "AnalogFourPlanEvent",
     "AnalogFourMessageRenderer",
     "AnalogFourSnapshotDecoder",
+    "AnalogFourStyleSnapshotRoutingPlan",
+    "AnalogFourStyleTrackPlan",
     "AnalogRytmMessageRenderer",
     "AnalogRytmMutationPlanner",
     "AnalogRytmSnapshotDecoder",
@@ -77,6 +84,7 @@ __all__ = [
     "RytmStyleMachineCandidate",
     "RytmStyleSnapshotPadPlan",
     "RytmStyleSnapshotRoutingPlan",
+    "plan_analog_four_style_snapshot_routes",
     "plan_rytm_style_snapshot_routes",
     "route_rytm_snapshot_machine_values",
 ]
