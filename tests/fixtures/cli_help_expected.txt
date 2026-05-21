@@ -23,6 +23,7 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
@@ -76,6 +77,8 @@ Commands:
                      Print passive Rytm style snapshot routing for a SysEx file.
   rytm-style-mutation-intent-report
                      Print passive Rytm style mutation intent for a SysEx file.
+  rytm-style-mutation-render-plan-report
+                     Print passive Rytm style mutation render-plan metadata for a SysEx file.
   analog-four-style-snapshot-routing-report
                      Print passive Analog Four style snapshot routing for a SysEx file.
   analog-four-style-mutation-intent-report

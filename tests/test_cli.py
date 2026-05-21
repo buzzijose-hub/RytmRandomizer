@@ -24,6 +24,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "rytm-style-mutation-intent-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-render-plan-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-intent-report <syx-path> <style-key> "
@@ -264,6 +266,19 @@ def test_rytm_style_mutation_intent_report_help_exits_zero_and_safety_matches_re
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: rytm-style-mutation-intent-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_render_plan_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_mutation_render_plan import SAFETY_LINES
+
+    result = run_cli("rytm-style-mutation-render-plan-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-mutation-render-plan-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -819,6 +834,59 @@ def test_rytm_style_mutation_intent_report_command_can_emit_json(tmp_path):
     assert parsed["discovery_band"] == "wild_discovery"
     assert parsed["mutation_depth"] == "wild"
     assert "RytmRandomizer passive Rytm" not in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_render_plan_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"RENDER")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-render-plan-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "75",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style mutation render plan" in result.stdout
+    assert "Kit: RENDER" in result.stdout
+    assert "Render ready: True" in result.stdout
+    assert "target" in result.stdout
+    assert "window" in result.stdout
+    assert "- no MIDI rendering" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_render_plan_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"RENJSON")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-render-plan-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "RENJSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["mutation_depth"] == "wild"
+    assert parsed["render_ready"] is True
+    assert parsed["pads"][0]["render_events"][0]["target_value"] >= 0
     assert result.stderr == ""
 
 

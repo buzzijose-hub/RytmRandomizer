@@ -65,6 +65,12 @@ from .analog_rytm_style_mutation_intent import (
     RytmStyleMutationPadIntent,
     plan_rytm_style_mutation_intent,
 )
+from .analog_rytm_style_mutation_render_plan import (
+    RytmStyleMutationRenderEvent,
+    RytmStyleMutationRenderPadPlan,
+    RytmStyleMutationRenderPlan,
+    plan_rytm_style_mutation_render_plan,
+)
 from .analog_rytm_style_snapshot_routing import (
     RytmStyleMachineCandidate,
     RytmStyleSnapshotPadPlan,
@@ -103,12 +109,16 @@ __all__ = [
     "RytmStyleMutationIntentPlan",
     "RytmStyleMutationIntentRow",
     "RytmStyleMutationPadIntent",
+    "RytmStyleMutationRenderEvent",
+    "RytmStyleMutationRenderPadPlan",
+    "RytmStyleMutationRenderPlan",
     "RytmStyleSnapshotPadPlan",
     "RytmStyleSnapshotRoutingPlan",
     "analog_four_style_zone_bias",
     "plan_analog_four_style_mutation_intent",
     "plan_analog_four_style_snapshot_routes",
     "plan_rytm_style_mutation_intent",
+    "plan_rytm_style_mutation_render_plan",
     "plan_rytm_style_snapshot_routes",
     "route_rytm_snapshot_machine_values",
 ]
