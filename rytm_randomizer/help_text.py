@@ -72,6 +72,11 @@ USAGE = (
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-readiness-report [<arc-key> ...] --rytm <syx-path> "
+    "[--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--limit N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -662,6 +667,30 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_performance_arc_readiness_report_help():
+    from .reports.style_performance_arcs import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report <arc-key> <arc-key> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report --rytm <syx-path> --scope rytm-only
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report --rytm <syx-path> --limit N
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report --rytm <syx-path> --json
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report --help
+
+Behavior:
+  Ranks named passive reference arcs against saved kit banks.
+  With no arc keys it ranks every curated reference arc. The report reuses
+  the dual-machine performance planner to summarize ready, partial, and
+  blocked arcs before any armed live path exists.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -721,6 +750,7 @@ Usage:
   python -m rytm_randomizer.cli inspect-style-performance-arc <key>
   python -m rytm_randomizer.cli search-style-performance-arcs <query>
   python -m rytm_randomizer.cli style-performance-arc-set-plan-report <arc-key> --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-readiness-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--limit N] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -819,6 +849,8 @@ Commands:
                      Search passive style performance arc metadata.
   style-performance-arc-set-plan-report
                      Print passive timed performance set plans from a reference arc.
+  style-performance-arc-readiness-report
+                     Rank passive reference arcs against saved kit banks.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1042,6 +1074,7 @@ Safety:
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,
     "style-performance-arc-set-plan-report": _style_performance_arc_set_plan_report_help,
+    "style-performance-arc-readiness-report": (_style_performance_arc_readiness_report_help),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:
