@@ -12,11 +12,11 @@ labels it that way. Diagrams describing the upcoming codex dual-machine work
 
 Current baseline used while creating / refreshing this document:
 
-- Branch: `codex/rytm-snapshot-mutation-routing-pr2`, built on `modularize-v1.34` at `6ceaf57` (PR #49 merged).
+- Branch: `codex/rytm-snapshot-intelligence-pr3`, built on `modularize-v1.34` at `acd58b4` (PR #50 merged).
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 100 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 101 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43, then updated through PR #49 and the snapshot-routing PR2 slice so the strategy-module list and counts stay current.
+- This file was audited and refreshed as part of PR #43, then updated through PR #50 and the snapshot-intelligence PR3 slice so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
 
@@ -26,7 +26,7 @@ Current baseline used while creating / refreshing this document:
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
 | Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
-| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,rytm_machine_matrix}.py` (subpackage; was the old top-level `reports.py`) |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence}.py` (subpackage; was the old top-level `reports.py`) |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
 | Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
@@ -151,6 +151,7 @@ flowchart TB
         RFormatter["formatter.py<br/>PassiveReportHeader"]
         RMatrix["rytm_machine_matrix.py<br/>12-pad machine report + CliCommand"]
         RSnapshot["rytm_snapshot_pad_compatibility.py<br/>snapshot-safe pad/machine report + CliCommand"]
+        RSnapshotIntel["rytm_snapshot_intelligence.py<br/>decoded/routed snapshot readiness report<br/>(passive, direct import)"]
     end
 
     subgraph ObservabilityPkg["observability/"]
@@ -222,7 +223,7 @@ flowchart TB
     ReportsPkg --> BehaviorPkg
 ```
 
-**Subpackage count (audit baseline):** 10 (`behavior/`, `data/`, `devices/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `snapshot/`, `state/`, `style_analysis/`). Plus `devices/strategies/` as a nested subpackage under `devices/`. The architecture test `test_no_new_top_level_modules.py` mechanically rejects new top-level modules (Gate 9).
+**Subpackage count (audit baseline):** 12 (`behavior/`, `data/`, `devices/`, `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`). Plus `devices/strategies/` as a nested subpackage under `devices/`. The architecture test `test_no_new_top_level_modules.py` mechanically rejects new top-level modules (Gate 9).
 
 ---
 
@@ -1199,6 +1200,7 @@ flowchart TB
         Formatter["formatter.py<br/>PassiveReportHeader (frozen dataclass)<br/>safety_section_lines()<br/>passive_footer_lines()<br/>+ Final-annotated constants"]
         MatrixModule["rytm_machine_matrix.py<br/>12-pad machine matrix report<br/>+ registered CliCommand"]
         SnapshotModule["rytm_snapshot_pad_compatibility.py<br/>snapshot-safe pad/machine report<br/>+ registered CliCommand"]
+        SnapshotIntelModule["rytm_snapshot_intelligence.py<br/>decoded/routed snapshot readiness report<br/>(passive, direct import)"]
     end
 
     subgraph Reports["Report builders (in __init__.py)"]
@@ -1236,6 +1238,7 @@ flowchart TB
     Reports --> Formatter
     Reports --> MatrixModule
     Reports --> SnapshotModule
+    Reports --> SnapshotIntelModule
     Formatter --> Init
     Reports --> Init
 
