@@ -176,3 +176,131 @@ def test_style_snapshot_routing_report_rejects_unknown_style_safely():
 
     with pytest.raises(ValueError, match="Unknown style target key: ghost_style"):
         format_rytm_style_snapshot_routing_report(_style_snapshot(), style_key="ghost_style")
+
+
+def test_style_snapshot_routing_report_formats_explicit_empty_plan():
+    from rytm_randomizer.devices.strategies import (
+        RytmStyleSnapshotPadPlan,
+        RytmStyleSnapshotRoutingPlan,
+    )
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import (
+        format_rytm_style_snapshot_routing_report,
+    )
+
+    plan = RytmStyleSnapshotRoutingPlan(
+        kit_name="EMPTY",
+        slot=9,
+        style_key="detroit_minimal",
+        favored_zones=(),
+        ready_pad_count=0,
+        blocked_pad_count=1,
+        partial_snapshot_mutation_ready=False,
+        pads_by_pad=MappingProxyType(
+            {
+                12: RytmStyleSnapshotPadPlan(
+                    pad=12,
+                    track_code="CB",
+                    label="Cow Bell",
+                    current_machine_value=None,
+                    current_machine_key=None,
+                    profile_key=None,
+                    route_ready=False,
+                    readiness_reason="missing machine fact",
+                    favored_zones=(),
+                    compatible_machine_candidates=(),
+                    mutable_machine_candidates=(),
+                )
+            }
+        ),
+    )
+
+    lines = format_rytm_style_snapshot_routing_report(plan, style_key="ignored")
+
+    assert "Kit: EMPTY" in lines
+    assert "Favored zones: none" in lines
+    assert "  Current machine: unknown" in lines
+    assert "  Profile key: none" in lines
+    assert "  Mutable candidates: none" in lines
+    assert "  Compatible candidates: none" in lines
+
+
+def test_style_snapshot_routing_cli_parser_accepts_slot():
+    from pathlib import Path
+
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import _parse_cli_args
+
+    assert _parse_cli_args(["kit.syx", "birmingham_pressure"]) == {
+        "sysex_path": Path("kit.syx"),
+        "style_key": "birmingham_pressure",
+        "slot": 0,
+    }
+    assert _parse_cli_args(["kit.syx", "warehouse_peak", "--slot", "3"]) == {
+        "sysex_path": Path("kit.syx"),
+        "style_key": "warehouse_peak",
+        "slot": 3,
+    }
+
+
+@pytest.mark.parametrize(
+    ("argv", "message"),
+    [
+        ([], "usage"),
+        (["kit.syx"], "usage"),
+        (["kit.syx", "birmingham_pressure", "--slot"], "usage"),
+        (["kit.syx", "birmingham_pressure", "--bank", "1"], "usage"),
+        (["kit.syx", "birmingham_pressure", "--slot", "not-int"], "--slot must be an integer"),
+        (["kit.syx", "birmingham_pressure", "--slot", "-1"], "--slot must be >= 0"),
+    ],
+)
+def test_style_snapshot_routing_cli_parser_rejects_bad_args(argv, message):
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import _parse_cli_args
+
+    with pytest.raises(ValueError, match=message):
+        _parse_cli_args(argv)
+
+
+def test_style_snapshot_routing_cli_error_formatter_is_operator_facing():
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import _format_cli_error
+
+    assert _format_cli_error(ValueError("bad style")) == "Error: bad style"
+
+
+def test_style_snapshot_routing_cli_handler_reports_plan(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import _handle_cli_report
+
+    payload = rytm_real_layout_kit_payload(name=b"STYLE")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    rc = _handle_cli_report(sysex_path=path, style_key="birmingham_pressure", slot=0)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm style snapshot routing" in captured.out
+    assert "Kit: STYLE" in captured.out
+    assert "Style target: birmingham_pressure" in captured.out
+    assert captured.err == ""
+
+
+def test_style_snapshot_routing_cli_handler_reports_errors(
+    tmp_path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.rytm_style_snapshot_routing import _handle_cli_report
+
+    rc = _handle_cli_report(
+        sysex_path=tmp_path / "missing.syx",
+        style_key="birmingham_pressure",
+        slot=0,
+    )
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "SysEx file does not exist" in captured.err
+    assert "Traceback" not in captured.err
