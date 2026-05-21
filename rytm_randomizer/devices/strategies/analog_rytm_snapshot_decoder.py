@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from hashlib import sha256
 from types import MappingProxyType
 from typing import Final
 
@@ -81,6 +82,13 @@ class RytmKitSnapshot:
     raw: bytes
     unpacked: bytes
     machine_facts: RytmSnapshotMachineFacts = field(default_factory=_empty_machine_facts)
+
+
+def rytm_snapshot_payload_fingerprint(snapshot: RytmKitSnapshot) -> str:
+    """Return a stable short digest for the decoded Rytm kit payload."""
+
+    payload = snapshot.unpacked or snapshot.raw
+    return sha256(payload).hexdigest()[:16]
 
 
 # ---------------------------------------------------------------------------

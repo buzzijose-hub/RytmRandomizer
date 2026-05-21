@@ -4,6 +4,7 @@ Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-21: Dual-machine style kit-readiness sweep prepared locally. The passive CLI can now scan every decoded Rytm kit and every decoded Analog Four kit, run shared style/mock readiness with stable payload fingerprints, and rank Rytm+A4 kit pairings as ready/partial/blocked for future GUI/audio-analyzer/live snapshot selection without opening ports or sending hardware messages.
 - 2026-05-21: Dual-machine style mutation mock preview prepared locally. The passive rig path can now combine one Rytm kit snapshot and one Analog Four kit snapshot with a shared style target, summarize total mock CC rows plus A4 deferred rows, and emit combined capped event previews for future GUI/audio-analyzer/live-renderer work without opening ports or sending hardware messages.
 - 2026-05-21: Analog Four kit identity fingerprints prepared locally. The passive A4 kit catalog and style-readiness sweep now expose stable short payload fingerprints for each decoded kit so future GUI/audio-analyzer flows can compare exact kit states across dumps without relying on names alone.
 - 2026-05-21: Analog Four style kit-readiness sweep prepared locally. The passive CLI can now scan every decoded A4 kit in a `.syx` dump against a style target, summarize preview-ready versus blocked kits, and emit deterministic JSON for future GUI/audio-analyzer kit selection while still avoiding MIDI rendering, port opening, and hardware sends.

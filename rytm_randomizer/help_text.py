@@ -23,6 +23,8 @@ USAGE = (
     "[--slot N] [--discovery N] [--json] | "
     "rytm-style-mutation-mock-preview-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--events] [--limit N] [--json] | "
+    "rytm-style-kit-readiness-report <syx-path> <style-key> "
+    "[--discovery N] [--limit N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-mutation-intent-report <syx-path> <style-key> "
@@ -32,6 +34,8 @@ USAGE = (
     "analog-four-kit-catalog-report <syx-path> [--limit N] [--json] | "
     "analog-four-style-kit-readiness-report <syx-path> <style-key> "
     "[--discovery N] [--limit N] [--json] | "
+    "dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> "
+    "<style-key> [--discovery N] [--limit N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
     "<style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json] | "
     "dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> "
@@ -212,6 +216,31 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _rytm_style_kit_readiness_report_help():
+    from .reports.rytm_style_kit_readiness import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: rytm-style-kit-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-style-kit-readiness-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli rytm-style-kit-readiness-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli rytm-style-kit-readiness-report <syx-path> <style-key> --limit N
+  python -m rytm_randomizer.cli rytm-style-kit-readiness-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli rytm-style-kit-readiness-report --help
+
+Behavior:
+  Reads a local Analog Rytm MK2 SysEx file, runs the passive style/mock preview
+  readiness path for every supported decoded kit snapshot, and prints a per-kit
+  table. The report shows which kits are preview-ready, stable payload
+  fingerprints, planned pads, and how many mock rows each kit would produce.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or
+  wild-discovery planning pressure. Use --limit N to cap displayed rows; N=0
+  displays all rows. Use --json for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def _analog_four_style_snapshot_routing_report_help():
     from .reports.analog_four_style_snapshot_routing import SAFETY_LINES
 
@@ -327,6 +356,32 @@ Behavior:
   readiness path for every supported decoded kit snapshot, and prints a per-kit
   table. The report shows which kits are preview-ready, which remain blocked by
   candidate-only offsets, and how many mock/deferred rows each kit would produce.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or
+  wild-discovery planning pressure. Use --limit N to cap displayed rows; N=0
+  displays all rows. Use --json for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _dual_machine_style_kit_readiness_report_help():
+    from .reports.dual_machine_style_kit_readiness import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key>
+  python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> --limit N
+  python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> --json
+  python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report --help
+
+Behavior:
+  Reads one local Analog Rytm MK2 SysEx file and one local Analog Four MK2 SysEx
+  file, runs the passive style/mock preview readiness path across every decoded
+  kit, and ranks Rytm + A4 pairings for the selected style target. The report
+  shows ready, partial, and blocked rig pairings with stable fingerprints so a
+  future GUI/live workflow can choose a kit pair before any armed path exists.
   Use --discovery N (0-100) to choose reference, balanced, discovery, or
   wild-discovery planning pressure. Use --limit N to cap displayed rows; N=0
   displays all rows. Use --json for future GUI/analyzer consumers.
@@ -477,11 +532,13 @@ Usage:
   python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli rytm-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report <syx-path> <style-key> [--slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-kit-catalog-report <syx-path> [--limit N] [--json]
   python -m rytm_randomizer.cli analog-four-style-kit-readiness-report <syx-path> <style-key> [--discovery N] [--limit N] [--json]
+  python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report <rytm-syx-path> <a4-syx-path> <style-key> [--discovery N] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
@@ -538,6 +595,8 @@ Commands:
                      Print passive Rytm style mutation render-plan metadata for a SysEx file.
   rytm-style-mutation-mock-preview-report
                      Print passive Rytm style mutation mock-preview rows for a SysEx file.
+  rytm-style-kit-readiness-report
+                     Print passive Rytm style readiness for every decoded kit.
   analog-four-style-snapshot-routing-report
                      Print passive Analog Four style snapshot routing for a SysEx file.
   analog-four-style-mutation-intent-report
@@ -548,6 +607,8 @@ Commands:
                      Print passive Analog Four kit catalog metadata for a SysEx file.
   analog-four-style-kit-readiness-report
                      Print passive Analog Four style readiness for every decoded kit.
+  dual-machine-style-kit-readiness-report
+                     Print passive dual-machine style readiness across Rytm and A4 kit banks.
   dual-machine-style-snapshot-routing-report
                      Print passive dual-machine style snapshot routing for Rytm and A4 SysEx files.
   dual-machine-style-mutation-intent-report
@@ -765,6 +826,7 @@ Safety:
     "rytm-style-mutation-intent-report": _rytm_style_mutation_intent_report_help,
     "rytm-style-mutation-render-plan-report": _rytm_style_mutation_render_plan_report_help,
     "rytm-style-mutation-mock-preview-report": _rytm_style_mutation_mock_preview_report_help,
+    "rytm-style-kit-readiness-report": _rytm_style_kit_readiness_report_help,
     "analog-four-style-snapshot-routing-report": _analog_four_style_snapshot_routing_report_help,
     "analog-four-style-mutation-intent-report": _analog_four_style_mutation_intent_report_help,
     "analog-four-style-mutation-mock-preview-report": (
@@ -772,6 +834,7 @@ Safety:
     ),
     "analog-four-kit-catalog-report": _analog_four_kit_catalog_report_help,
     "analog-four-style-kit-readiness-report": _analog_four_style_kit_readiness_report_help,
+    "dual-machine-style-kit-readiness-report": _dual_machine_style_kit_readiness_report_help,
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
     "dual-machine-style-mutation-intent-report": _dual_machine_style_mutation_intent_report_help,
     "dual-machine-style-mutation-mock-preview-report": (

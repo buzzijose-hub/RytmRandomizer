@@ -81,11 +81,23 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     snapshot_help = resolve_help_text("rytm-snapshot-pad-compatibility-report")
     intelligence_help = resolve_help_text("rytm-snapshot-intelligence-report")
     mutation_preview_help = resolve_help_text("rytm-snapshot-mutation-preview-report")
+    style_routing_help = resolve_help_text("rytm-style-snapshot-routing-report")
+    style_intent_help = resolve_help_text("rytm-style-mutation-intent-report")
+    style_render_plan_help = resolve_help_text("rytm-style-mutation-render-plan-report")
     style_mock_preview_help = resolve_help_text("rytm-style-mutation-mock-preview-report")
+    style_kit_readiness_help = resolve_help_text("rytm-style-kit-readiness-report")
+    a4_style_routing_help = resolve_help_text("analog-four-style-snapshot-routing-report")
+    a4_style_intent_help = resolve_help_text("analog-four-style-mutation-intent-report")
     a4_style_mock_preview_help = resolve_help_text("analog-four-style-mutation-mock-preview-report")
+    a4_kit_catalog_help = resolve_help_text("analog-four-kit-catalog-report")
+    a4_style_kit_readiness_help = resolve_help_text("analog-four-style-kit-readiness-report")
+    dual_style_routing_help = resolve_help_text("dual-machine-style-snapshot-routing-report")
+    dual_style_intent_help = resolve_help_text("dual-machine-style-mutation-intent-report")
     dual_style_mock_preview_help = resolve_help_text(
         "dual-machine-style-mutation-mock-preview-report"
     )
+    dual_style_kit_readiness_help = resolve_help_text("dual-machine-style-kit-readiness-report")
+    style_target_help = resolve_help_text("style-target-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -97,15 +109,49 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert mutation_preview_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-mutation-preview-report"
     )
+    assert style_routing_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-snapshot-routing-report"
+    )
+    assert style_intent_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-mutation-intent-report"
+    )
+    assert style_render_plan_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-mutation-render-plan-report"
+    )
     assert style_mock_preview_help.startswith(
         "RytmRandomizer passive CLI: rytm-style-mutation-mock-preview-report"
+    )
+    assert style_kit_readiness_help.startswith(
+        "RytmRandomizer passive CLI: rytm-style-kit-readiness-report"
+    )
+    assert a4_style_routing_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report"
+    )
+    assert a4_style_intent_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-mutation-intent-report"
     )
     assert a4_style_mock_preview_help.startswith(
         "RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report"
     )
+    assert a4_kit_catalog_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-kit-catalog-report"
+    )
+    assert a4_style_kit_readiness_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-kit-readiness-report"
+    )
+    assert dual_style_routing_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-snapshot-routing-report"
+    )
+    assert dual_style_intent_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-mutation-intent-report"
+    )
     assert dual_style_mock_preview_help.startswith(
         "RytmRandomizer passive CLI: dual-machine-style-mutation-mock-preview-report"
     )
+    assert dual_style_kit_readiness_help.startswith(
+        "RytmRandomizer passive CLI: dual-machine-style-kit-readiness-report"
+    )
+    assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
     ]
@@ -594,6 +640,46 @@ def test_main_rytm_style_mutation_mock_preview_report_lazy_imports_when_module_u
     assert captured.err == ""
 
 
+def test_main_rytm_style_kit_readiness_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer import cli_registry
+
+    payload = rytm_real_layout_kit_payload(name=b"RYTMKITCOV")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.rytm_style_kit_readiness"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("rytm-style-kit-readiness-report", None)
+    try:
+        rc = cli.main(
+            [
+                "rytm-style-kit-readiness-report",
+                str(path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Rytm style kit readiness" in captured.out
+    assert "RYTMKITCOV" in captured.out
+    assert captured.err == ""
+
+
 def test_main_analog_four_style_mutation_mock_preview_report_lazy_imports_when_module_unloaded(
     tmp_path: Path,
     capsys,
@@ -674,6 +760,51 @@ def test_main_dual_machine_style_mutation_mock_preview_report_lazy_imports_when_
     assert "RytmRandomizer passive dual-machine style mutation mock preview" in captured.out
     assert "Kit: DUALRYTM" in captured.out
     assert "Kit: DUALA4" in captured.out
+    assert captured.err == ""
+
+
+def test_main_dual_machine_style_kit_readiness_report_lazy_imports_when_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from conftest import rytm_real_layout_kit_payload
+
+    from rytm_randomizer import cli_registry
+
+    rytm_payload = rytm_real_layout_kit_payload(name=b"PAIRRYTM")
+    rytm_path = tmp_path / "rytm.syx"
+    rytm_path.write_bytes(bytes([0xF0]) + rytm_payload + bytes([0xF7]))
+    a4_payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"PAIRA4".ljust(16, b"\x00")
+    a4_path = tmp_path / "a4.syx"
+    a4_path.write_bytes(bytes([0xF0]) + a4_payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.dual_machine_style_kit_readiness"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("dual-machine-style-kit-readiness-report", None)
+    try:
+        rc = cli.main(
+            [
+                "dual-machine-style-kit-readiness-report",
+                str(rytm_path),
+                str(a4_path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive dual-machine style kit readiness" in captured.out
+    assert "PAIRRYTM" in captured.out
+    assert "PAIRA4" in captured.out
     assert captured.err == ""
 
 

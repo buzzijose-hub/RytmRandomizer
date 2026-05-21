@@ -51,6 +51,7 @@ PASSIVE_FOOTER: Final[tuple[str, str]] = (
     PASSIVE_FOOTER_SOURCE_TEMPLATE,
     PASSIVE_FOOTER_MEMORY_LINE,
 )
+_OPERATOR_CONSOLE_ENCODING: Final[str] = "cp1252"
 
 
 @dataclass(frozen=True)
@@ -95,6 +96,13 @@ def passive_footer_lines(source_module: str, *, include_memory_line: bool = True
     return lines
 
 
+def _operator_console_safe_text(text: str) -> str:
+    encoded = text.encode(_OPERATOR_CONSOLE_ENCODING, errors="replace").decode(
+        _OPERATOR_CONSOLE_ENCODING
+    )
+    return "".join(char if char == "\t" or char.isprintable() else "?" for char in encoded)
+
+
 def passive_report_lines(
     header: PassiveReportHeader,
     body_lines: Iterable[str],
@@ -105,11 +113,13 @@ def passive_report_lines(
     ``header.source_module`` is set) the standard 1-or-2-line passive footer.
     """
 
-    lines: list[str] = [header.title, *body_lines]
+    lines: list[str] = [_operator_console_safe_text(header.title)]
+    lines.extend(_operator_console_safe_text(line) for line in body_lines)
     if header.source_module is not None:
         lines.extend(
-            passive_footer_lines(
-                header.source_module,
+            _operator_console_safe_text(line)
+            for line in passive_footer_lines(
+                _operator_console_safe_text(header.source_module),
                 include_memory_line=header.include_memory_line,
             )
         )

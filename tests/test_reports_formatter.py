@@ -377,6 +377,14 @@ class TestRenderPassiveReport:
         body_start = result.index("first")
         assert result[body_start : body_start + 3] == ["first", "second", "third"]
 
+    def test_passive_report_lines_makes_body_lines_windows_console_safe(self) -> None:
+        mod = _import_formatter()
+        header = self._make_header(mod)
+
+        result = mod.passive_report_lines(header, ["kit\x00name\ufffd\u2603"])
+
+        assert result[1] == "kit?name??"
+
 
 # ---------------------------------------------------------------------------
 # 7. Import safety — no mido/rtmidi; no _logger at module level
