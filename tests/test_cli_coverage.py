@@ -82,6 +82,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     intelligence_help = resolve_help_text("rytm-snapshot-intelligence-report")
     mutation_preview_help = resolve_help_text("rytm-snapshot-mutation-preview-report")
     style_mock_preview_help = resolve_help_text("rytm-style-mutation-mock-preview-report")
+    a4_style_mock_preview_help = resolve_help_text("analog-four-style-mutation-mock-preview-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -95,6 +96,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert style_mock_preview_help.startswith(
         "RytmRandomizer passive CLI: rytm-style-mutation-mock-preview-report"
+    )
+    assert a4_style_mock_preview_help.startswith(
+        "RytmRandomizer passive CLI: analog-four-style-mutation-mock-preview-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
@@ -581,6 +585,44 @@ def test_main_rytm_style_mutation_mock_preview_report_lazy_imports_when_module_u
     assert rc == 0
     assert "RytmRandomizer passive Rytm style mutation mock preview" in captured.out
     assert "Kit: STYLECOV" in captured.out
+    assert captured.err == ""
+
+
+def test_main_analog_four_style_mutation_mock_preview_report_lazy_imports_when_module_unloaded(
+    tmp_path: Path,
+    capsys,
+):
+    import sys
+
+    from rytm_randomizer import cli_registry
+
+    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + b"A4COV".ljust(16, b"\x00")
+    path = tmp_path / "a4.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+    module_name = "rytm_randomizer.reports.analog_four_style_mutation_mock_preview"
+    saved_commands = dict(cli_registry._COMMANDS)
+    saved_module = sys.modules.pop(module_name, None)
+    cli_registry._COMMANDS.pop("analog-four-style-mutation-mock-preview-report", None)
+    try:
+        rc = cli.main(
+            [
+                "analog-four-style-mutation-mock-preview-report",
+                str(path),
+                "jose_core_techno",
+            ]
+        )
+    finally:
+        cli_registry._COMMANDS.clear()
+        cli_registry._COMMANDS.update(saved_commands)
+        if saved_module is not None:
+            sys.modules[module_name] = saved_module
+        else:
+            sys.modules.pop(module_name, None)
+
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive Analog Four style mutation mock preview" in captured.out
+    assert "Kit: A4COV" in captured.out
     assert captured.err == ""
 
 
