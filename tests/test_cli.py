@@ -22,6 +22,8 @@ USAGE = (
     "[--events] [--limit N] | "
     "rytm-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
@@ -245,6 +247,19 @@ def test_rytm_style_snapshot_routing_report_help_exits_zero_and_safety_matches_r
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: rytm-style-snapshot-routing-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_intent_report_help_exits_zero_and_safety_matches_report_source():
+    from rytm_randomizer.reports.rytm_style_mutation_intent import SAFETY_LINES
+
+    result = run_cli("rytm-style-mutation-intent-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: rytm-style-mutation-intent-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -723,6 +738,58 @@ def test_rytm_style_snapshot_routing_report_unknown_style_fails_safely(tmp_path)
     assert result.stdout == ""
     assert "Unknown style target key: ghost_style" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_rytm_style_mutation_intent_report_command_reads_syx_file(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"INTENT")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "10",
+    )
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Rytm style mutation intent" in result.stdout
+    assert "Kit: INTENT" in result.stdout
+    assert "Style target: birmingham_pressure" in result.stdout
+    assert "Discovery band: reference" in result.stdout
+    assert "Mutation depth: micro" in result.stdout
+    assert "- no MIDI sending" in result.stdout
+    assert "- no port opening" in result.stdout
+    assert result.stderr == ""
+
+
+def test_rytm_style_mutation_intent_report_command_can_emit_json(tmp_path):
+    from conftest import rytm_real_layout_kit_payload
+
+    payload = rytm_real_layout_kit_payload(name=b"INTJSON")
+    path = tmp_path / "kit.syx"
+    path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+
+    result = run_cli(
+        "rytm-style-mutation-intent-report",
+        str(path),
+        "birmingham_pressure",
+        "--discovery",
+        "95",
+        "--json",
+    )
+
+    parsed = json.loads(result.stdout)
+    assert result.returncode == 0
+    assert parsed["kit_name"] == "INTJSON"
+    assert parsed["style_key"] == "birmingham_pressure"
+    assert parsed["discovery_band"] == "wild_discovery"
+    assert parsed["mutation_depth"] == "wild"
+    assert "RytmRandomizer passive Rytm" not in result.stdout
+    assert result.stderr == ""
 
 
 def test_analog_four_style_snapshot_routing_report_command_reads_syx_file(tmp_path):

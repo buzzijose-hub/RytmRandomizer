@@ -176,6 +176,8 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG R
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --slot 7 --depth 2 --events --limit 24   # include capped mock CC event rows
 python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7 --discovery 10   # passive reference-close Rytm style routing
 python -m rytm_randomizer.cli rytm-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --discovery 95 --json   # machine-readable wild-discovery Rytm style routing
+python -m rytm_randomizer.cli rytm-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --slot 7 --discovery 75   # passive Rytm style zone/parameter intent
+python -m rytm_randomizer.cli rytm-style-mutation-intent-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" birmingham_pressure --discovery 95 --json   # machine-readable Rytm style mutation intent
 python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --slot 0 --discovery 50   # passive balanced Analog Four style routing
 python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" industrial_dark --discovery 95 --json   # machine-readable Analog Four wild-discovery routing
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" warehouse_peak --rytm-slot 7 --a4-slot 0 --discovery 75   # passive rig-level style routing
@@ -197,6 +199,8 @@ Style target vectors turn those profiles into bounded 0-100 planning axes such a
 The style-routing reports also accept `--discovery N` where `N` is 0-100. Low values stay close to the captured kit snapshot, balanced values widen zone movement, and high values expose broader legal discovery candidates while still obeying Rytm pad compatibility and Analog Four readiness gates.
 
 The Rytm style snapshot routing report is the first bridge from style intent to captured-kit planning. It reads a local Rytm kit dump, applies one style target vector, and reports favored mutation zones, route-ready pads, blocked pads, and legal machine candidates. It remains metadata-only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
+
+The Rytm style mutation intent report takes that one passive step closer to the live tool: for each route-ready pad, it maps the chosen style and discovery band to safe profile parameters such as grit, body, amp, filter, LFO, and morph targets. It still renders no CC values and sends no MIDI; it is the machine-readable contract the future snapshot mutation renderer can consume.
 
 The Analog Four style snapshot routing report mirrors that bridge for the A4 side of the rig. It reads a local Analog Four kit dump, applies one style target vector, and reports track-level favored zones while the low-level A4 parameter offsets remain candidate-only. It is still passive metadata only: no mutation values are rendered, no MIDI port is opened, and no hardware message is sent.
 

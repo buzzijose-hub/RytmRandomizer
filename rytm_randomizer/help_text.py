@@ -17,6 +17,8 @@ USAGE = (
     "[--events] [--limit N] | "
     "rytm-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
+    "rytm-style-mutation-intent-report <syx-path> <style-key> "
+    "[--slot N] [--discovery N] [--json] | "
     "analog-four-style-snapshot-routing-report <syx-path> <style-key> "
     "[--slot N] [--discovery N] [--json] | "
     "dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> "
@@ -112,6 +114,30 @@ Behavior:
   and prints passive style-aware routing readiness for the selected style target.
   The report shows favored zones, route-ready pads, blocked pads, and legal
   machine candidates without rendering mutation values.
+  Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
+  Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _rytm_style_mutation_intent_report_help():
+    from .reports.rytm_style_mutation_intent import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: rytm-style-mutation-intent-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key>
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> --slot N
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> --discovery N
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> --json
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report --help
+
+Behavior:
+  Reads a local Analog Rytm MK2 SysEx file, selects a supported kit snapshot,
+  and prints passive style-aware mutation intent rows for the selected style target.
+  The report shows which ready pads, zones, and safe profile parameters future
+  style mutation can target without rendering CC values or sending MIDI.
   Use --discovery N (0-100) to choose reference, balanced, discovery, or wild-discovery planning pressure.
   Use --json for a deterministic machine-readable payload for future GUI/analyzer consumers.
 
@@ -229,6 +255,7 @@ Usage:
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --depth N
   python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report <syx-path> --events
   python -m rytm_randomizer.cli rytm-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
+  python -m rytm_randomizer.cli rytm-style-mutation-intent-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report <syx-path> <style-key> [--slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
@@ -278,6 +305,8 @@ Commands:
                      Print passive Rytm snapshot mutation preview for a SysEx file.
   rytm-style-snapshot-routing-report
                      Print passive Rytm style snapshot routing for a SysEx file.
+  rytm-style-mutation-intent-report
+                     Print passive Rytm style mutation intent for a SysEx file.
   analog-four-style-snapshot-routing-report
                      Print passive Analog Four style snapshot routing for a SysEx file.
   dual-machine-style-snapshot-routing-report
@@ -490,6 +519,7 @@ Safety:
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
     "rytm-style-snapshot-routing-report": _rytm_style_snapshot_routing_report_help,
+    "rytm-style-mutation-intent-report": _rytm_style_mutation_intent_report_help,
     "analog-four-style-snapshot-routing-report": _analog_four_style_snapshot_routing_report_help,
     "dual-machine-style-snapshot-routing-report": _dual_machine_style_snapshot_routing_report_help,
     "style-profile-report": _style_profile_report_help,
