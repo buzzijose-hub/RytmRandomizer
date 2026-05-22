@@ -192,6 +192,10 @@ python -m rytm_randomizer.cli style-performance-arc-live-set-cockpit-report \
 python -m rytm_randomizer.cli style-performance-arc-live-show-export-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-live-transition-timeline-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -220,6 +224,11 @@ show handoff shape: a deterministic export id, machine handoff manifest, cue
 launch script, recovery script, replayable passive commands, and JSON for the
 future GUI/live-performance surface. Despite the export name it writes no
 files, opens no ports, and sends no MIDI.
+The live transition timeline report consumes that export and arranges each cue
+into operator-facing prep windows, transition cards, launch/hold/recovery
+prompts, machine handoff summaries, passive replay commands, and optional
+capped event previews. It is the rehearsal timeline shape for the future GUI;
+it writes no files, opens no ports, and sends no MIDI.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,

@@ -2484,12 +2484,14 @@ def test_style_performance_arc_live_set_cockpit_sources_edges_and_parser(
 def test_style_performance_arc_live_show_export_builds_show_handoff_packet(
     tmp_path: Path,
 ):
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
     from rytm_randomizer.reports.live_show_export import (
         _parse_cli_args,
         build_style_performance_arc_live_show_export_report,
         format_style_performance_arc_live_show_export_report,
         to_style_performance_arc_live_show_export_json,
     )
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
 
     rytm_path, a4_path = _arc_bank_files(tmp_path)
 
@@ -2511,6 +2513,51 @@ def test_style_performance_arc_live_show_export_builds_show_handoff_packet(
     assert report.packet_version == "live-show-export-v1"
     assert report.export_id == rebuilt.export_id
     assert len(report.export_id) == 12
+
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=138.0,
+        tempo_stability=0.94,
+        kick_density=0.88,
+        percussion_density=0.9,
+        low_end_weight=0.84,
+        spectral_brightness=0.24,
+        texture_noise=0.82,
+        energy_arc=(0.32, 0.42, 0.53, 0.66, 0.8, 0.93, 0.91, 0.86),
+        content_hash="",
+        derived_at="2026-05-22T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+    later_feature_report = replace(
+        feature_report,
+        content_hash="",
+        derived_at="2026-05-22T12:00:05Z",
+    )
+    later_feature_report = replace(
+        later_feature_report,
+        content_hash=compute_feature_report_hash(later_feature_report),
+    )
+    feature_export = build_style_performance_arc_live_show_export_report(
+        feature_report=feature_report,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+    later_feature_export = build_style_performance_arc_live_show_export_report(
+        feature_report=later_feature_report,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+    assert feature_report.content_hash != later_feature_report.content_hash
+    assert feature_export.export_id == later_feature_export.export_id
+
     assert report.selected_arc_key == "mills_mulero_tunnel"
     assert report.go_no_go == "rehearse"
     assert report.show_summary.startswith("mills_mulero_tunnel /")
@@ -2808,6 +2855,353 @@ def test_style_performance_arc_live_show_export_sources_edges_parser_and_cli(
     assert feature_state.selection_source == "feature-report"
     assert feature_state.source_reference == feature_report.content_hash
     assert "--feature-report" not in feature_state.suggested_commands[0]
+
+
+def test_style_performance_arc_live_transition_timeline_builds_operator_timeline(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_show_export import (
+        build_style_performance_arc_live_show_export_report,
+    )
+    from rytm_randomizer.reports.live_transition_timeline import (
+        build_style_performance_arc_live_transition_timeline_from_export,
+        build_style_performance_arc_live_transition_timeline_report,
+        format_style_performance_arc_live_transition_timeline_report,
+        to_style_performance_arc_live_transition_timeline_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    show_export = build_style_performance_arc_live_show_export_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+    report = build_style_performance_arc_live_transition_timeline_from_export(show_export)
+    rebuilt = build_style_performance_arc_live_transition_timeline_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+
+    assert report.timeline_version == "live-transition-timeline-v1"
+    assert report.timeline_id == rebuilt.timeline_id
+    assert report.timeline_id.startswith(show_export.export_id)
+    assert report.selected_arc_key == "mills_mulero_tunnel"
+    assert report.go_no_go == show_export.go_no_go
+    assert len(report.transition_cards) == len(show_export.cue_steps)
+    first = report.transition_cards[0]
+    assert first.transition_number == 1
+    assert first.cue_number == show_export.cue_steps[0].cue_number
+    assert first.phase == "soundcheck"
+    assert first.prep_window == "before show"
+    assert "Confirm machine focus" in first.prep_actions[0]
+    assert first.launch_action.startswith("Cue 1")
+    assert "Hold current machines" in first.hold_action
+    assert first.machine_handoff.startswith("Rytm:")
+    assert "--description 'Jeff Mills Oscar Mulero tunnel'" in first.passive_command
+    assert report.operator_timeline[0].startswith("Transition 1")
+    assert any("cue 1" in step.lower() for step in report.rehearsal_loop)
+
+    apostrophe_report = build_style_performance_arc_live_transition_timeline_report(
+        description="King's Hall Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+    assert "--description 'King''s Hall Jeff Mills Oscar Mulero tunnel'" in (
+        apostrophe_report.suggested_commands[0]
+    )
+    assert "--description 'King''s Hall Jeff Mills Oscar Mulero tunnel'" in (
+        apostrophe_report.transition_cards[0].passive_command
+    )
+
+    base_cue = show_export.cue_steps[0]
+    go_export = replace(
+        show_export,
+        machine_exports=(),
+        cue_steps=(
+            replace(
+                base_cue,
+                go_no_go="go",
+                blocker_summary="none",
+                event_preview_rows=("row one", "row two"),
+            ),
+        ),
+    )
+    go_report = build_style_performance_arc_live_transition_timeline_from_export(go_export)
+    go_card = go_report.transition_cards[0]
+    assert go_card.phase == "launch"
+    assert go_card.hold_action.startswith("Hold the groove")
+    assert go_card.machine_handoff == "none"
+    assert "Resolve blockers" not in "\n".join(go_card.prep_actions)
+    assert "Transition event preview:" not in "\n".join(
+        format_style_performance_arc_live_transition_timeline_report(go_report)
+    )
+    limited_text = "\n".join(
+        format_style_performance_arc_live_transition_timeline_report(
+            go_report,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "Showing first 1 of 2" in limited_text
+
+    blocked_export = replace(
+        show_export,
+        cue_steps=(
+            replace(
+                base_cue,
+                go_no_go="do-not-arm",
+                blocker_summary="A4 offsets are deferred",
+                event_preview_rows=(),
+            ),
+        ),
+    )
+    blocked_report = build_style_performance_arc_live_transition_timeline_from_export(
+        blocked_export
+    )
+    blocked_card = blocked_report.transition_cards[0]
+    assert blocked_card.phase == "rescue"
+    assert blocked_card.hold_action.startswith("Hold current machine state")
+    assert any("Resolve blockers" in action for action in blocked_card.prep_actions)
+    no_rows_text = "\n".join(
+        format_style_performance_arc_live_transition_timeline_report(
+            blocked_report,
+            include_events=True,
+        )
+    )
+    assert "No mock rows available" in no_rows_text
+
+    review_export = replace(
+        show_export,
+        cue_steps=(replace(base_cue, go_no_go="manual-review"),),
+    )
+    review_report = build_style_performance_arc_live_transition_timeline_from_export(review_export)
+    assert review_report.transition_cards[0].phase == "review"
+    assert "manual-review" in review_report.transition_cards[0].hold_action
+
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
+    from rytm_randomizer.style_analysis.feature_report import Confidence, SourceType
+
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=138.0,
+        tempo_stability=0.92,
+        kick_density=0.85,
+        percussion_density=0.82,
+        low_end_weight=0.88,
+        spectral_brightness=0.18,
+        texture_noise=0.9,
+        energy_arc=(0.35, 0.45, 0.55, 0.7, 0.85, 0.95, 0.92, 0.88),
+        content_hash="",
+        derived_at="2026-05-22T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+    feature_timeline = build_style_performance_arc_live_transition_timeline_report(
+        feature_report=feature_report,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert feature_timeline.selection_source == "feature-report"
+    assert f"--arc {feature_timeline.selected_arc_key}" in feature_timeline.suggested_commands[0]
+
+    text = "\n".join(
+        format_style_performance_arc_live_transition_timeline_report(
+            report,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "RytmRandomizer passive style performance arc live transition timeline" in text
+    assert "Transition timeline summary:" in text
+    assert "Transition cards:" in text
+    assert "Operator timeline:" in text
+    assert "Rehearsal loop:" in text
+    assert "Transition event preview:" in text
+    assert "- live transition timeline only" in text
+    assert "- no MIDI sending" in text
+    assert "- no port opening" in text
+
+    payload = to_style_performance_arc_live_transition_timeline_json(report)
+    timeline_payload = payload["live_transition_timeline"]
+    assert timeline_payload["timeline_version"] == "live-transition-timeline-v1"
+    assert timeline_payload["timeline_id"] == report.timeline_id
+    assert timeline_payload["selected_arc_key"] == "mills_mulero_tunnel"
+    assert timeline_payload["transition_cards"][0]["phase"] == "soundcheck"
+    assert payload["live_show_export"]["export_id"] == show_export.export_id
+    assert payload["safety"][-1] == "no hardware required"
+
+
+def test_style_performance_arc_live_transition_timeline_parser_cli_and_edges(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.live_transition_timeline import (
+        _format_cli_error,
+        _handle_cli_report,
+        _parse_cli_args,
+        _transition_phase,
+        build_style_performance_arc_live_transition_timeline_report,
+        format_style_performance_arc_live_transition_timeline_report,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    assert _transition_phase("go") == "launch"
+    assert _transition_phase("rehearse") == "soundcheck"
+    assert _transition_phase("do-not-arm") == "rescue"
+    assert _transition_phase("custom") == "review"
+    parsed = _parse_cli_args(
+        [
+            "--arc",
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "a4-only",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "120",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "80",
+            "--events",
+            "--limit",
+            "0",
+            "--json",
+        ]
+    )
+    assert parsed == {
+        "arc_key": "jose_warehouse_five_hour",
+        "description": None,
+        "audio_path": None,
+        "library_path": None,
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "analog-four-only",
+        "selection_rank": 2,
+        "total_minutes": 120,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 80,
+        "include_events": True,
+        "event_limit": 0,
+        "json_output": True,
+    }
+    assert _parse_cli_args(["--audio", "track.wav"])["audio_path"] == Path("track.wav")
+    assert _parse_cli_args(["--library", "library-root"])["library_path"] == Path("library-root")
+    for argv, message in (
+        ([], "usage"),
+        (["--arc"], "usage"),
+        (["--arc", "x", "--bogus"], "usage"),
+        (["--arc", "x", "--limit", "oops"], "must be an integer"),
+        (["--arc", "x", "--limit", "-1"], ">= 0"),
+        (["--arc", "x", "--rank", "0"], ">= 1"),
+        (["--arc", "x", "--description", "Jeff Mills"], "usage"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            _parse_cli_args(argv)
+
+    report = build_style_performance_arc_live_transition_timeline_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=30,
+        segment_minutes=15,
+    )
+    assert "Showing all events" in "\n".join(
+        format_style_performance_arc_live_transition_timeline_report(
+            report,
+            include_events=True,
+            event_limit=0,
+        )
+    )
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_live_transition_timeline_report(report, event_limit=-1)
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc live transition timeline" in captured.out
+    assert "Transition timeline summary:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["live_transition_timeline"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description=None,
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "live transition timeline requires exactly one selection source" in captured.err
+    assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
 
 
 def test_style_performance_arc_reference_match_summarizes_snapshot_preview(
@@ -4677,6 +5071,29 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Show export summary:" in captured.out
     assert "Cue launch script:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-transition-timeline-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live transition timeline" in (captured.out)
+    assert "mills_mulero_tunnel" in captured.out
+    assert "Transition timeline summary:" in captured.out
+    assert "Transition cards:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -4693,6 +5110,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-stage-rehearsal-state-report" in help_text
     assert "style-performance-arc-live-set-cockpit-report" in help_text
     assert "style-performance-arc-live-show-export-report" in help_text
+    assert "style-performance-arc-live-transition-timeline-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -4790,4 +5208,18 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "machine handoff manifest" in live_show_export_help
     assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
         live_show_export_help
+    )
+    live_transition_timeline_help = resolve_help_text(
+        "style-performance-arc-live-transition-timeline-report"
+    )
+    assert (
+        "RytmRandomizer passive CLI: style-performance-arc-live-transition-timeline-report"
+        in live_transition_timeline_help
+    )
+    assert "Builds a passive live transition timeline from an arc or reference." in (
+        live_transition_timeline_help
+    )
+    assert "operator-facing transition cards" in live_transition_timeline_help
+    assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
+        live_transition_timeline_help
     )

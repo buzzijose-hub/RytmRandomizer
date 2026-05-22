@@ -76,6 +76,7 @@ _CLI_OPTIONS: Final[tuple[str, ...]] = (
     "--limit",
     "--json",
 )
+_VOLATILE_FEATURE_REPORT_KEYS: Final[frozenset[str]] = frozenset(("content_hash", "derived_at"))
 
 
 @dataclass(frozen=True)
@@ -324,9 +325,25 @@ def _recovery_script(cockpit: StylePerformanceArcLiveSetCockpitReport) -> tuple[
 
 
 def _deterministic_export_id(cockpit: StylePerformanceArcLiveSetCockpitReport) -> str:
-    cockpit_json = to_style_performance_arc_live_set_cockpit_json(cockpit)
+    cockpit_json = _stable_export_id_payload(
+        to_style_performance_arc_live_set_cockpit_json(cockpit)
+    )
     encoded = json.dumps(cockpit_json, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()[:12]
+
+
+def _stable_export_id_payload(value: object) -> object:
+    if isinstance(value, dict):
+        omit_source_reference = value.get("selection_source") == "feature-report"
+        return {
+            str(key): _stable_export_id_payload(item)
+            for key, item in value.items()
+            if str(key) not in _VOLATILE_FEATURE_REPORT_KEYS
+            and not (omit_source_reference and str(key) == "source_reference")
+        }
+    if isinstance(value, list):
+        return [_stable_export_id_payload(item) for item in value]
+    return value
 
 
 def build_style_performance_arc_live_show_export_from_cockpit(
