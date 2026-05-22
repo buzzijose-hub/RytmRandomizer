@@ -180,6 +180,10 @@ python -m rytm_randomizer.cli style-performance-arc-reference-match-report \
 python -m rytm_randomizer.cli style-performance-arc-stage-routing-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-stage-rehearsal-state-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -205,6 +209,13 @@ planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,
 A4 deferred/candidate rows, blocker summaries, and the live rescue
 sequence. It is still a passive report; it opens no ports and sends no
 MIDI.
+The stage-rehearsal-state report is the next passive handoff: it consumes
+those route cards and produces go/rehearse/do-not-arm cue states, aggregate
+Rytm and Analog Four machine states, rehearsal steps, operator prompts,
+capped event previews, and recovery cues. It is meant for show-day or studio
+soundcheck: green cues can be practiced as ready, rehearse cues stay in
+soundcheck until deferred/candidate rows are resolved, and blocked cues are
+explicitly kept out of armed use.
 Together they are the current handoff shape for the future
 GUI/audio-analyzer planner: the analyzer can choose or bias a reference
 arc later, and these reports already show which segment-level machine

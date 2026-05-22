@@ -631,7 +631,7 @@ def test_to_json_primitive_rejects_unsupported_value():
         _to_json_primitive(object())
 
 
-def test_save_emits_a_log_record(tmp_path, caplog):
+def test_save_emits_a_log_record(tmp_path):
     # The package logger has ``propagate = False`` once configured -- attach
     # a probe handler directly so a log record from ``store.save`` is
     # observable here.
