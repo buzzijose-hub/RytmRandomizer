@@ -176,6 +176,10 @@ python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report \
 python -m rytm_randomizer.cli style-performance-arc-reference-match-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-stage-routing-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -195,6 +199,12 @@ tracks, and passive operator action. The same saved-kit path also emits a
 stage packet: compact cue cards with the selected arc, scope, readiness,
 planned pads/tracks, risk labels, hands-on move, listening target, and
 recovery action for each segment.
+The stage-routing report turns the runbook into the show-day handoff:
+cue-by-cue route cards with saved-kit slots, payload fingerprints,
+planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,
+A4 deferred/candidate rows, blocker summaries, and the live rescue
+sequence. It is still a passive report; it opens no ports and sends no
+MIDI.
 Together they are the current handoff shape for the future
 GUI/audio-analyzer planner: the analyzer can choose or bias a reference
 arc later, and these reports already show which segment-level machine
