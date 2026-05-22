@@ -155,6 +155,30 @@ direction".
 This is the **influence not replica** rule, lifted unchanged from the
 pre-schema `MusicLibraryGuardrails` skill.
 
+## Reference arcs to live render bundles
+
+The current passive bridge from influence language to machine-planning
+metadata is the style-profile / style-target / performance-arc report
+stack. Reference arcs such as `jose_warehouse_five_hour` remain
+high-level planning narratives; they do not copy arrangements, melodies,
+or patches from Jeff Mills, Oscar Mulero, Glenn Wilson, Stigmata,
+Regis, Surgeon, or other references.
+
+For live rehearsal, the most complete passive surface is:
+
+```bash
+python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+```
+
+That command selects the best ready or partial reference arc for the
+saved kit banks, embeds the live-session packet, then exposes each
+segment's mock render preview rows and Analog Four deferred rows. It is
+the current handoff shape for the future GUI/audio-analyzer planner:
+the analyzer can choose or bias a reference arc later, and this bundle
+already shows which segment-level machine rows would be available
+without opening ports or sending MIDI.
+
 ## See also
 
 - `GUARDRAILS_DESIGN_SPEC.md` - the full four-layer design.

@@ -587,6 +587,183 @@ def test_style_performance_arc_live_session_packet_covers_single_machine_edges(
         )
 
 
+def test_style_performance_arc_live_render_bundle_builds_segment_mock_packet(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_live_render_bundle_report,
+        format_style_performance_arc_live_render_bundle_report,
+        to_style_performance_arc_live_render_bundle_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    bundle = build_style_performance_arc_live_render_bundle_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+
+    assert bundle.live_session_packet.selected_set_plan is bundle.selected_set_plan
+    assert bundle.segment_count == bundle.selected_set_plan.segment_count
+    assert bundle.total_event_row_count == bundle.selected_set_plan.total_event_row_count
+    assert bundle.total_mock_message_count == bundle.selected_set_plan.total_mock_message_count
+    assert bundle.total_deferred_row_count == bundle.selected_set_plan.total_deferred_row_count
+    assert bundle.suggested_commands
+    assert bundle.segments
+
+    first_segment = bundle.segments[0]
+    first_live_segment = bundle.live_session_packet.segments[0]
+    first_set_segment = bundle.selected_set_plan.segments[0]
+    assert first_segment.live_segment is first_live_segment
+    assert first_segment.set_plan_segment is first_set_segment
+    assert first_segment.position == first_live_segment.position
+    assert first_segment.style_key == first_live_segment.style_key
+    assert first_segment.time_window == first_live_segment.time_window
+    assert first_segment.event_preview_rows
+    assert first_segment.deferred_rows
+    assert first_segment.preview_json["style_key"] == first_segment.style_key
+    assert first_segment.preview_json["machines"]["rytm"] is not None
+    assert first_segment.preview_json["machines"]["analog_four"] is not None
+    assert "slot" in first_segment.rytm_preview_summary
+    assert "slot" in first_segment.analog_four_preview_summary
+
+    suggested_commands = "\n".join(bundle.suggested_commands)
+    selected_arc_key = bundle.selected_entry.arc.key
+    assert f"style-performance-arc-live-render-bundle-report {selected_arc_key}" in (
+        suggested_commands
+    )
+    assert "style-performance-arc-live-session-packet-report" in suggested_commands
+    assert "style-performance-arc-rehearsal-manifest-report" in suggested_commands
+
+    lines = format_style_performance_arc_live_render_bundle_report(
+        bundle,
+        include_events=True,
+        event_limit=1,
+    )
+    text = "\n".join(lines)
+    assert lines[0] == "RytmRandomizer passive style performance arc live render bundle"
+    assert "Render bundle summary:" in lines
+    assert "Replayable passive commands:" in lines
+    assert "Segment render bundles:" in lines
+    assert "Mock render preview:" in text
+    assert "Deferred rows:" in text
+    assert "Event preview for segment" in text
+    assert "- live render bundle" in lines
+    assert "- mock render preview only" in lines
+    assert "- no real MIDI rendering" in lines
+    assert "- no MIDI sending" in lines
+
+    all_event_lines = format_style_performance_arc_live_render_bundle_report(
+        bundle,
+        include_events=True,
+        event_limit=0,
+    )
+    assert "  - Showing all events" in "\n".join(all_event_lines)
+
+    sized_event_lines = format_style_performance_arc_live_render_bundle_report(
+        bundle,
+        include_events=True,
+        event_limit=len(first_segment.event_preview_rows),
+    )
+    assert "  - Showing all events" in "\n".join(sized_event_lines)
+
+    empty_event_bundle = replace(
+        bundle,
+        segments=(replace(first_segment, event_preview_rows=()),),
+    )
+    empty_event_lines = format_style_performance_arc_live_render_bundle_report(
+        empty_event_bundle,
+        include_events=True,
+        event_limit=1,
+    )
+    assert "No mock rows available because the selected preview is not ready" in "\n".join(
+        empty_event_lines
+    )
+
+    payload = to_style_performance_arc_live_render_bundle_json(bundle)
+    assert payload["selected"]["arc"]["key"] == bundle.selected_entry.arc.key
+    assert payload["live_session_packet"]["selected"]["arc"]["key"] == (
+        bundle.selected_entry.arc.key
+    )
+    assert payload["render_bundle"]["scope"] == bundle.selected_set_plan.scope
+    assert payload["render_bundle"]["totals"]["segments"] == bundle.segment_count
+    assert payload["render_bundle"]["segments"][0]["style_key"] == first_segment.style_key
+    assert payload["render_bundle"]["segments"][0]["event_preview_rows"] == list(
+        first_segment.event_preview_rows
+    )
+    assert payload["render_bundle"]["segments"][0]["deferred_rows"] == list(
+        first_segment.deferred_rows
+    )
+    assert payload["render_bundle"]["segments"][0]["preview"]["style_key"] == (
+        first_segment.style_key
+    )
+    assert payload["safety"][0] == "passive/read-only"
+
+
+def test_style_performance_arc_live_render_bundle_covers_single_machine_scope(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_live_render_bundle_report,
+        format_style_performance_arc_live_render_bundle_report,
+        to_style_performance_arc_live_render_bundle_json,
+    )
+
+    _, a4_path = _arc_bank_files(tmp_path)
+    bundle = build_style_performance_arc_live_render_bundle_report(
+        ("jose_warehouse_five_hour",),
+        analog_four_sysex_path=a4_path,
+        scope="analog-four-only",
+    )
+
+    assert bundle.selected_set_plan.scope == "analog-four-only"
+    assert "--analog-four <analog-four-syx-path> --scope analog-four-only" in (
+        "\n".join(bundle.suggested_commands)
+    )
+    first_segment = bundle.segments[0]
+    assert first_segment.rytm_preview_summary == "unchanged by scope"
+    assert first_segment.preview_json["machines"]["rytm"] is None
+    assert first_segment.preview_json["machines"]["analog_four"] is not None
+
+    text = "\n".join(format_style_performance_arc_live_render_bundle_report(bundle))
+    assert "Rytm preview: unchanged by scope" in text
+    assert "Analog Four preview: slot" in text
+
+    payload = to_style_performance_arc_live_render_bundle_json(bundle)
+    assert payload["render_bundle"]["scope"] == "analog-four-only"
+    assert payload["render_bundle"]["segments"][0]["preview"]["machines"]["rytm"] is None
+
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_live_render_bundle_report(
+            bundle,
+            event_limit=-1,
+        )
+
+
+def test_style_performance_arc_live_render_bundle_rejects_mismatched_segments(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import rytm_randomizer.reports.style_performance_arcs as report_module
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    packet = report_module.build_style_performance_arc_live_session_packet_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    mismatched_packet = replace(packet, segments=packet.segments[:-1])
+    monkeypatch.setattr(
+        report_module,
+        "build_style_performance_arc_live_session_packet_report",
+        lambda *_args, **_kwargs: mismatched_packet,
+    )
+
+    with pytest.raises(ValueError, match="matching live-session and set-plan"):
+        report_module.build_style_performance_arc_live_render_bundle_report(
+            rytm_sysex_path=rytm_path,
+            analog_four_sysex_path=a4_path,
+        )
+
+
 def test_style_performance_arc_audition_packet_rejects_empty_readiness(
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -604,10 +781,14 @@ def test_style_performance_arc_audition_packet_rejects_empty_readiness(
         total_deferred_row_count=0,
         entries=(),
     )
+
+    def fake_readiness_report(*_args: object, **_kwargs: object):
+        return empty_readiness
+
     monkeypatch.setattr(
         report_module,
         "build_style_performance_arc_readiness_report",
-        lambda *args, **kwargs: empty_readiness,
+        fake_readiness_report,
     )
 
     with pytest.raises(ValueError, match="requires at least one readiness entry"):
@@ -791,10 +972,12 @@ def test_style_performance_arc_readiness_parser_and_handlers(
 ):
     from rytm_randomizer.reports.style_performance_arcs import (
         _handle_style_performance_arc_audition_packet_report,
+        _handle_style_performance_arc_live_render_bundle_report,
         _handle_style_performance_arc_live_session_packet_report,
         _handle_style_performance_arc_readiness_report,
         _handle_style_performance_arc_rehearsal_manifest_report,
         _parse_arc_audition_packet_cli_args,
+        _parse_arc_live_render_bundle_cli_args,
         _parse_arc_live_session_packet_cli_args,
         _parse_arc_readiness_cli_args,
         _parse_arc_rehearsal_manifest_cli_args,
@@ -881,6 +1064,45 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     }
 
     assert _parse_arc_live_session_packet_cli_args(
+        [
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "dual",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "240",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "90",
+            "--events",
+            "--limit",
+            "1",
+            "--json",
+        ]
+    ) == {
+        "arc_keys": ("jose_warehouse_five_hour",),
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "dual",
+        "selection_rank": 2,
+        "total_minutes": 240,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 90,
+        "include_events": True,
+        "event_limit": 1,
+        "json_output": True,
+    }
+
+    assert _parse_arc_live_render_bundle_cli_args(
         [
             "jose_warehouse_five_hour",
             "--rytm",
@@ -1201,12 +1423,75 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     assert captured.out == ""
     assert "requires --rytm" in captured.err
 
+    rc = _handle_style_performance_arc_live_render_bundle_report(
+        arc_keys=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc live render bundle" in captured.out
+    assert "Render bundle summary:" in captured.out
+    assert "Segment render bundles:" in captured.out
+    assert "Mock render preview:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_live_render_bundle_report(
+        arc_keys=("jose_warehouse_five_hour",),
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=None,
+        scope="rytm-only",
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=20,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["selected"]["arc"]["key"] == "jose_warehouse_five_hour"
+    assert payload["render_bundle"]["scope"] == "rytm-only"
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_live_render_bundle_report(
+        arc_keys=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=24,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "requires --rytm" in captured.err
+
 
 def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     from rytm_randomizer.reports.style_performance_arcs import (
         _format_cli_error,
         _parse_arc_audition_packet_cli_args,
         _parse_arc_key,
+        _parse_arc_live_render_bundle_cli_args,
         _parse_arc_live_session_packet_cli_args,
         _parse_arc_readiness_cli_args,
         _parse_arc_rehearsal_manifest_cli_args,
@@ -1279,6 +1564,17 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     for argv, message in live_session_bad_cases:
         with pytest.raises(ValueError, match=message):
             _parse_arc_live_session_packet_cli_args(argv)
+
+    live_render_bad_cases = [
+        (["--json"], "usage"),
+        (["jose_warehouse_five_hour", "--rytm"], "live-render-bundle-report usage"),
+        (["jose_warehouse_five_hour", "--bogus"], "usage"),
+        (["jose_warehouse_five_hour", "--limit", "-1"], ">= 0"),
+        (["jose_warehouse_five_hour", "--rank", "0"], ">= 1"),
+    ]
+    for argv, message in live_render_bad_cases:
+        with pytest.raises(ValueError, match=message):
+            _parse_arc_live_render_bundle_cli_args(argv)
 
 
 def test_style_performance_arc_cli_dispatch_and_help(
@@ -1408,6 +1704,25 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "RytmRandomizer passive style performance arc live session packet" in captured.out
     assert "Segment cards:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-render-bundle-report",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live render bundle" in captured.out
+    assert "Segment render bundles:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -1416,6 +1731,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-audition-packet-report" in help_text
     assert "style-performance-arc-rehearsal-manifest-report" in help_text
     assert "style-performance-arc-live-session-packet-report" in help_text
+    assert "style-performance-arc-live-render-bundle-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -1442,3 +1758,8 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Builds a passive live rehearsal session packet from saved kit banks." in (
         live_session_help
     )
+    live_render_help = resolve_help_text("style-performance-arc-live-render-bundle-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-render-bundle-report" in (
+        live_render_help
+    )
+    assert "Builds a passive live render bundle from saved kit banks." in (live_render_help)
