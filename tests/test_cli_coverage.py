@@ -107,6 +107,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     style_target_help = resolve_help_text("style-target-report")
     live_runbook_help = resolve_help_text("style-performance-arc-live-runbook-report")
+    stage_routing_help = resolve_help_text("style-performance-arc-stage-routing-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -175,6 +176,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"
+    )
+    assert stage_routing_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-stage-routing-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES

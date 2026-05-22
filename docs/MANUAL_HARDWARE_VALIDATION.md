@@ -117,6 +117,28 @@ These checks are manual only. Do not add them to CI.
 6. Confirm both devices are listed.
 7. Do not run armed hardware sends until the A4 readiness report says the plan is ready.
 
+## Live-Show Passive Preflight
+
+These checks are manual only. They are safe to run before a live rehearsal because
+no MIDI is sent, no port is opened, and no hardware is mutated.
+
+1. Run a passive stage-routing report against the saved kit banks you plan to use:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-stage-routing-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+2. Confirm the report prints `Live set card:` and `Route cards:`.
+3. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+   Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
+4. Treat the current validated Rytm live flow as:
+   ```
+   SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
+   ```
+5. Keep volume moderate before `S3B` and `S4B`.
+6. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+7. Remember that the passive report is only a route card. Armed runtime
+   mutation remains the validated four-pad Rytm surface until a later runtime
+   slice promotes more live sends.
+
 ## What to do if a step fails
 
 - **Scene does not audibly change the Rytm**: confirm the MIDI cable, the
