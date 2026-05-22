@@ -108,6 +108,12 @@ USAGE = (
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-live-runbook-report "
+    "(--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -875,6 +881,35 @@ Safety:
 {_safety_block(REFERENCE_MATCH_SAFETY_LINES)}"""
 
 
+def _style_performance_arc_live_runbook_report_help():
+    from .reports.live_performance_runbook import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-runbook-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --arc <arc-key> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --description <text> --rytm <syx-path> --analog-four <syx-path> --events --limit N
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --description <text> --rytm <syx-path> --analog-four <syx-path> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report --help
+
+Arguments:
+  --arc <arc-key>|--description <text>|--audio <path>|--library <dir>
+
+Behavior:
+  Builds a passive live performance runbook from an arc or reference.
+  Direct arc mode consumes the selected live cue sheet. Reference mode ranks
+  description, audio, or library evidence first, then embeds the selected cue
+  sheet and stage packet. The output is a show-facing checklist with a launch
+  brief, replayable passive commands, stage packet, timeline cards, optional
+  capped cue event previews, recovery cues, and JSON for future GUI routing.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -941,6 +976,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report [<arc-key> ...] [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-reference-match-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-runbook-report (--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -1053,6 +1089,8 @@ Commands:
                      Build passive live performance cue sheets from saved kit banks.
   style-performance-arc-reference-match-report
                      Match references to arcs, cue sheets, snapshot previews, and stage packets.
+  style-performance-arc-live-runbook-report
+                     Build passive live performance runbooks from arcs or references.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1295,6 +1333,7 @@ Safety:
     "style-performance-arc-reference-match-report": (
         _style_performance_arc_reference_match_report_help
     ),
+    "style-performance-arc-live-runbook-report": (_style_performance_arc_live_runbook_report_help),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:

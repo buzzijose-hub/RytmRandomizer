@@ -1043,6 +1043,398 @@ def test_style_performance_arc_reference_match_ranks_description_and_embeds_cue_
     assert payload["safety"][0] == "passive/read-only"
 
 
+def test_style_performance_arc_live_runbook_builds_direct_arc_packet(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_performance_runbook import (
+        build_style_performance_arc_live_runbook_report,
+        format_style_performance_arc_live_runbook_report,
+        to_style_performance_arc_live_runbook_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    runbook = build_style_performance_arc_live_runbook_report(
+        arc_key="jose_warehouse_five_hour",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+
+    assert runbook.selection_source == "arc"
+    assert runbook.source_reference == "jose_warehouse_five_hour"
+    assert runbook.reference_match is None
+    assert runbook.selected_arc_key == "jose_warehouse_five_hour"
+    assert runbook.stage_packet is runbook.live_cue_sheet.stage_packet
+    assert runbook.show_mode == "dual-machine"
+    assert runbook.launch_brief
+    assert runbook.timeline_cards
+    assert runbook.suggested_commands == runbook.live_cue_sheet.suggested_commands
+
+    text = "\n".join(
+        format_style_performance_arc_live_runbook_report(
+            runbook,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "RytmRandomizer passive style performance arc live runbook" in text
+    assert "Runbook summary:" in text
+    assert "Launch brief:" in text
+    assert "Replayable passive commands:" in text
+    assert "Stage packet:" in text
+    assert "Timeline cards:" in text
+    assert "Cue event preview:" in text
+    assert "Recovery cues:" in text
+    assert "- no MIDI sending" in text
+    assert "- no port opening" in text
+
+    payload = to_style_performance_arc_live_runbook_json(runbook)
+    assert payload["live_runbook"]["selection_source"] == "arc"
+    assert payload["live_runbook"]["selected_arc_key"] == "jose_warehouse_five_hour"
+    assert payload["live_runbook"]["show_mode"] == "dual-machine"
+    assert payload["live_runbook"]["stage_packet"]["selected_arc_key"] == (
+        "jose_warehouse_five_hour"
+    )
+    assert payload["live_runbook"]["timeline_cards"][0]["cue_number"] == 1
+    assert payload["cue_sheet"]["selected"]["arc"]["key"] == "jose_warehouse_five_hour"
+    assert payload["reference_match"] is None
+    assert payload["safety"][0] == "passive/read-only"
+
+
+def test_style_performance_arc_live_runbook_builds_reference_matched_packet(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_performance_runbook import (
+        build_style_performance_arc_live_runbook_report,
+        format_style_performance_arc_live_runbook_report,
+        to_style_performance_arc_live_runbook_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    runbook = build_style_performance_arc_live_runbook_report(
+        description="Jeff Mills Oscar Mulero tunnel bells",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+
+    assert runbook.selection_source == "description"
+    assert runbook.reference_match is not None
+    assert runbook.selected_arc_key == "mills_mulero_tunnel"
+    assert runbook.reference_match.stage_packet is runbook.stage_packet
+
+    text = "\n".join(format_style_performance_arc_live_runbook_report(runbook))
+    assert "Reference match:" in text
+    assert "mills_mulero_tunnel" in text
+    assert "Matched terms:" in text
+
+    payload = to_style_performance_arc_live_runbook_json(runbook)
+    assert payload["live_runbook"]["selection_source"] == "description"
+    assert payload["live_runbook"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert payload["reference_match"]["reference_match"]["selected"]["arc"]["key"] == (
+        "mills_mulero_tunnel"
+    )
+
+
+def test_style_performance_arc_live_runbook_rejects_bad_sources(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_performance_runbook import (
+        _source_reference,
+        _string_sequence,
+        build_style_performance_arc_live_runbook_report,
+        format_style_performance_arc_live_runbook_report,
+    )
+
+    rytm_path, _ = _arc_bank_files(tmp_path)
+
+    with pytest.raises(ValueError, match="exactly one selection source"):
+        build_style_performance_arc_live_runbook_report(rytm_sysex_path=rytm_path)
+
+    with pytest.raises(ValueError, match="exactly one selection source"):
+        build_style_performance_arc_live_runbook_report(
+            arc_key="jose_warehouse_five_hour",
+            description="Jeff Mills",
+            rytm_sysex_path=rytm_path,
+        )
+
+    with pytest.raises(ValueError, match="saved-kit source"):
+        build_style_performance_arc_live_runbook_report(description="Jeff Mills")
+
+    runbook = build_style_performance_arc_live_runbook_report(
+        arc_key="jose_warehouse_five_hour",
+        rytm_sysex_path=rytm_path,
+        scope="rytm-only",
+    )
+    with pytest.raises(ValueError, match="event_limit must be >= 0"):
+        format_style_performance_arc_live_runbook_report(runbook, event_limit=-1)
+
+    with pytest.raises(ValueError, match="exactly one selection source"):
+        _source_reference(
+            arc_key=None,
+            description=None,
+            feature_report=None,
+            audio_path=None,
+            library_path=None,
+        )
+    assert _string_sequence(()) == "none"
+
+
+def test_style_performance_arc_live_runbook_covers_single_machine_and_event_edges(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_performance_runbook import (
+        build_style_performance_arc_live_runbook_report,
+        format_style_performance_arc_live_runbook_report,
+        to_style_performance_arc_live_runbook_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    rytm_runbook = build_style_performance_arc_live_runbook_report(
+        arc_key="jose_warehouse_five_hour",
+        rytm_sysex_path=rytm_path,
+        scope="rytm-only",
+        total_minutes=60,
+        segment_minutes=30,
+    )
+    a4_runbook = build_style_performance_arc_live_runbook_report(
+        arc_key="jose_warehouse_five_hour",
+        analog_four_sysex_path=a4_path,
+        scope="a4-only",
+        total_minutes=60,
+        segment_minutes=30,
+    )
+
+    assert rytm_runbook.show_mode == "Rytm only"
+    assert a4_runbook.show_mode == "Analog Four only"
+
+    rytm_text = "\n".join(
+        format_style_performance_arc_live_runbook_report(
+            rytm_runbook,
+            include_events=True,
+            event_limit=0,
+        )
+    )
+    assert "- Planned Analog Four tracks: none" in rytm_text
+    assert "  - Showing all events" in rytm_text
+    assert (
+        to_style_performance_arc_live_runbook_json(rytm_runbook)["live_runbook"]["show_mode"]
+        == "Rytm only"
+    )
+
+    a4_text = "\n".join(format_style_performance_arc_live_runbook_report(a4_runbook))
+    assert "- Planned Rytm pads: none" in a4_text
+
+    empty_card = replace(rytm_runbook.timeline_cards[0], event_preview_rows=())
+    empty_runbook = replace(rytm_runbook, timeline_cards=(empty_card,))
+    empty_text = "\n".join(
+        format_style_performance_arc_live_runbook_report(
+            empty_runbook,
+            include_events=True,
+        )
+    )
+    assert "No mock rows available because the selected preview is not ready." in empty_text
+
+    custom_stage_packet = replace(rytm_runbook.stage_packet, scope="custom")
+    custom_cue_sheet = replace(
+        rytm_runbook.live_cue_sheet,
+        stage_packet=custom_stage_packet,
+    )
+    custom_runbook = replace(rytm_runbook, live_cue_sheet=custom_cue_sheet)
+    assert custom_runbook.show_mode == "custom"
+
+
+def test_style_performance_arc_live_runbook_supports_reference_sources(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+):
+    import rytm_randomizer.style_analysis as style_analysis
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.reports.live_performance_runbook import (
+        build_style_performance_arc_live_runbook_report,
+        format_style_performance_arc_live_runbook_report,
+    )
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=138.0,
+        tempo_stability=0.92,
+        kick_density=0.85,
+        percussion_density=0.82,
+        low_end_weight=0.88,
+        spectral_brightness=0.18,
+        texture_noise=0.9,
+        energy_arc=(0.35, 0.45, 0.55, 0.7, 0.85, 0.95, 0.92, 0.88),
+        content_hash="",
+        derived_at="2026-05-21T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+
+    feature_runbook = build_style_performance_arc_live_runbook_report(
+        feature_report=feature_report,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert feature_runbook.selection_source == "feature-report"
+    assert feature_runbook.source_reference == feature_report.content_hash
+    assert feature_runbook.reference_match is not None
+    assert feature_runbook.reference_match.source_kind == "feature-report"
+
+    def fake_audio_report(path: Path) -> FeatureReport:
+        assert path == Path("track.wav")
+        return feature_report
+
+    def fake_library_report(path: Path) -> FeatureReport:
+        assert path == Path("library")
+        return feature_report
+
+    monkeypatch.setattr(style_analysis, "extract_from_audio", fake_audio_report)
+    monkeypatch.setattr(style_analysis, "analyze_library", fake_library_report)
+
+    audio_runbook = build_style_performance_arc_live_runbook_report(
+        audio_path=Path("track.wav"),
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert audio_runbook.selection_source == "audio"
+    assert audio_runbook.source_reference == "track.wav"
+    assert audio_runbook.reference_match is not None
+    assert audio_runbook.reference_match.source_reference == "track.wav"
+    assert "- Source reference: track.wav" in "\n".join(
+        format_style_performance_arc_live_runbook_report(audio_runbook)
+    )
+
+    library_runbook = build_style_performance_arc_live_runbook_report(
+        library_path=Path("library"),
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert library_runbook.selection_source == "library"
+    assert library_runbook.source_reference == "library"
+
+
+def test_style_performance_arc_live_runbook_parser_and_handlers(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.live_performance_runbook import (
+        _format_cli_error,
+        _handle_cli_report,
+        _parse_cli_args,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    parsed = _parse_cli_args(
+        [
+            "--arc",
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "a4-only",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "120",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "80",
+            "--events",
+            "--limit",
+            "0",
+            "--json",
+        ]
+    )
+    assert parsed == {
+        "arc_key": "jose_warehouse_five_hour",
+        "description": None,
+        "audio_path": None,
+        "library_path": None,
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "analog-four-only",
+        "selection_rank": 2,
+        "total_minutes": 120,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 80,
+        "include_events": True,
+        "event_limit": 0,
+        "json_output": True,
+    }
+
+    assert _parse_cli_args(["--description", "Jeff Mills"])["description"] == "Jeff Mills"
+    assert _parse_cli_args(["--audio", "track.wav"])["audio_path"] == Path("track.wav")
+    assert _parse_cli_args(["--library", "library"])["library_path"] == Path("library")
+
+    for argv, message in (
+        ([], "usage"),
+        (["--arc"], "usage"),
+        (["--arc", "x", "--bogus"], "usage"),
+        (["--arc", "x", "--limit", "oops"], "must be an integer"),
+        (["--arc", "x", "--limit", "-1"], ">= 0"),
+        (["--arc", "x", "--rank", "0"], ">= 1"),
+        (["--arc", "x", "--description", "Jeff Mills"], "usage"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            _parse_cli_args(argv)
+
+    rc = _handle_cli_report(
+        arc_key="jose_warehouse_five_hour",
+        description=None,
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["live_runbook"]["selected_arc_key"] == "jose_warehouse_five_hour"
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description=None,
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "live runbook requires exactly one selection source" in captured.err
+    assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
+
+
 def test_style_performance_arc_reference_match_summarizes_snapshot_preview(
     tmp_path: Path,
 ):
@@ -2792,6 +3184,30 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "RytmRandomizer passive style performance arc reference match" in captured.out
     assert "mills_mulero_tunnel" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-runbook-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live runbook" in captured.out
+    assert "mills_mulero_tunnel" in captured.out
+    assert "Launch brief:" in captured.out
+    assert "Timeline cards:" in captured.out
+    assert "Stage packet:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -2803,6 +3219,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-live-render-bundle-report" in help_text
     assert "style-performance-arc-live-cue-sheet-report" in help_text
     assert "style-performance-arc-reference-match-report" in help_text
+    assert "style-performance-arc-live-runbook-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -2851,3 +3268,13 @@ def test_style_performance_arc_cli_dispatch_and_help(
         reference_match_help
     )
     assert "stage packet with compact cue cards" in reference_match_help
+    live_runbook_help = resolve_help_text("style-performance-arc-live-runbook-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report" in (
+        live_runbook_help
+    )
+    assert "Builds a passive live performance runbook from an arc or reference." in (
+        live_runbook_help
+    )
+    assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
+        live_runbook_help
+    )
