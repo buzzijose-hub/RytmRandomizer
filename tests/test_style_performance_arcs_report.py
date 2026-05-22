@@ -9,30 +9,9 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from conftest import dual_machine_reference_bank_files as _arc_bank_files
 
 pytestmark = pytest.mark.fast
-
-
-def _arc_framed(payload: bytes) -> bytes:
-    return bytes([0xF0]) + payload + bytes([0xF7])
-
-
-def _arc_a4_payload(name: bytes) -> bytes:
-    payload = bytes([0x00, 0x20, 0x3C, 0x07]) + name[:16].ljust(16, b"\x00")
-    return _arc_framed(payload)
-
-
-def _arc_bank_files(tmp_path: Path) -> tuple[Path, Path]:
-    from conftest import rytm_real_layout_kit_payload
-
-    rytm_path = tmp_path / "rytm-reference-arc-bank.syx"
-    rytm_path.write_bytes(
-        _arc_framed(rytm_real_layout_kit_payload(name=b"ARC RYTM ONE"))
-        + _arc_framed(rytm_real_layout_kit_payload(name=b"ARC RYTM TWO"))
-    )
-    a4_path = tmp_path / "a4-reference-arc-bank.syx"
-    a4_path.write_bytes(_arc_a4_payload(b"ARC A4 ONE") + _arc_a4_payload(b"ARC A4 TWO"))
-    return rytm_path, a4_path
 
 
 def test_style_performance_arc_catalog_contains_jose_reference_arc():
@@ -5864,6 +5843,30 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Live state summary:" in captured.out
     assert "Current GUI state:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-readiness-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--cue",
+                "2",
+                "--lookahead",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live readiness" in captured.out
+    assert "mills_mulero_tunnel" in captured.out
+    assert "Readiness summary:" in captured.out
+    assert "Audio analyzer handoff:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -5883,6 +5886,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-live-transition-timeline-report" in help_text
     assert "style-performance-arc-live-command-deck-report" in help_text
     assert "style-performance-arc-live-state-report" in help_text
+    assert "style-performance-arc-live-readiness-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -6007,6 +6011,14 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "GUI-ready" in live_state_help
     assert "--cue N --lookahead N" in live_state_help
     assert "no MIDI sending" in live_state_help
+    live_readiness_help = resolve_help_text("style-performance-arc-live-readiness-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-readiness-report" in (
+        live_readiness_help
+    )
+    assert "GUI/audio-analyzer readiness" in live_readiness_help
+    assert "audio analyzer preview only" in live_readiness_help
+    assert "--cue N --lookahead N" in live_readiness_help
+    assert "no MIDI sending" in live_readiness_help
     assert "Builds a passive live command deck from an arc or reference." in (
         live_command_deck_help
     )
