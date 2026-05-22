@@ -115,6 +115,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
         "style-performance-arc-live-transition-timeline-report"
     )
     live_command_deck_help = resolve_help_text("style-performance-arc-live-command-deck-report")
+    live_state_help = resolve_help_text("style-performance-arc-live-state-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -201,6 +202,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert live_command_deck_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-command-deck-report"
+    )
+    assert live_state_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-state-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
