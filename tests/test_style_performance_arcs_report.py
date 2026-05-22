@@ -764,6 +764,192 @@ def test_style_performance_arc_live_render_bundle_rejects_mismatched_segments(
         )
 
 
+def test_style_performance_arc_live_cue_sheet_builds_operator_cues(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_live_cue_sheet_report,
+        format_style_performance_arc_live_cue_sheet_report,
+        to_style_performance_arc_live_cue_sheet_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    cue_sheet = build_style_performance_arc_live_cue_sheet_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+
+    assert cue_sheet.live_render_bundle.selected_set_plan is cue_sheet.selected_set_plan
+    assert cue_sheet.segment_count == cue_sheet.selected_set_plan.segment_count
+    assert cue_sheet.cue_count == cue_sheet.segment_count
+    assert cue_sheet.total_event_row_count == (cue_sheet.selected_set_plan.total_event_row_count)
+    assert cue_sheet.total_deferred_row_count == (
+        cue_sheet.selected_set_plan.total_deferred_row_count
+    )
+    assert cue_sheet.preflight_cues
+    assert cue_sheet.recovery_cues
+    assert cue_sheet.cues
+
+    first_cue = cue_sheet.cues[0]
+    first_render_segment = cue_sheet.live_render_bundle.segments[0]
+    assert first_cue.render_segment is first_render_segment
+    assert first_cue.position == first_render_segment.position
+    assert first_cue.time_window == first_render_segment.time_window
+    assert first_cue.style_key == first_render_segment.style_key
+    assert first_cue.risk_level in {"green", "amber", "red"}
+    assert first_cue.operator_move
+    assert first_cue.recovery_action
+    assert first_cue.render_row_summary == (
+        f"{first_render_segment.event_row_count} event row(s), "
+        f"{first_render_segment.deferred_row_count} deferred row(s)"
+    )
+
+    text = "\n".join(
+        format_style_performance_arc_live_cue_sheet_report(
+            cue_sheet,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "RytmRandomizer passive style performance arc live cue sheet" in text
+    assert "Cue sheet summary:" in text
+    assert "Preflight cues:" in text
+    assert "Performance cues:" in text
+    assert "Hands-on move:" in text
+    assert "Risk:" in text
+    assert "Recovery:" in text
+    assert "Mock render row preview:" in text
+    assert "- operator cue sheet only" in text
+    assert "- no MIDI sending" in text
+
+    payload = to_style_performance_arc_live_cue_sheet_json(cue_sheet)
+    assert payload["selected"]["arc"]["key"] == cue_sheet.selected_entry.arc.key
+    assert payload["live_render_bundle"]["selected"]["arc"]["key"] == (
+        cue_sheet.selected_entry.arc.key
+    )
+    assert payload["cue_sheet"]["scope"] == cue_sheet.selected_set_plan.scope
+    assert payload["cue_sheet"]["totals"]["cues"] == cue_sheet.cue_count
+    assert payload["cue_sheet"]["cues"][0]["style_key"] == first_cue.style_key
+    assert payload["cue_sheet"]["cues"][0]["risk_level"] == first_cue.risk_level
+    assert payload["safety"][0] == "passive/read-only"
+
+
+def test_style_performance_arc_live_cue_sheet_covers_single_machine_scope(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_live_cue_sheet_report,
+        format_style_performance_arc_live_cue_sheet_report,
+        to_style_performance_arc_live_cue_sheet_json,
+    )
+
+    _, a4_path = _arc_bank_files(tmp_path)
+    cue_sheet = build_style_performance_arc_live_cue_sheet_report(
+        ("jose_warehouse_five_hour",),
+        analog_four_sysex_path=a4_path,
+        scope="analog-four-only",
+    )
+
+    assert cue_sheet.selected_set_plan.scope == "analog-four-only"
+    assert "--analog-four <analog-four-syx-path> --scope analog-four-only" in (
+        "\n".join(cue_sheet.suggested_commands)
+    )
+    assert cue_sheet.cues[0].render_segment.rytm_preview_summary == "unchanged by scope"
+
+    text = "\n".join(format_style_performance_arc_live_cue_sheet_report(cue_sheet))
+    assert "Scope: analog-four-only" in text
+    assert "Leave Rytm unchanged" in text
+
+    payload = to_style_performance_arc_live_cue_sheet_json(cue_sheet)
+    assert payload["cue_sheet"]["scope"] == "analog-four-only"
+    assert payload["cue_sheet"]["cues"][0]["machine_focus"] == "Analog Four only"
+
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_live_cue_sheet_report(
+            cue_sheet,
+            event_limit=-1,
+        )
+
+
+def test_style_performance_arc_live_cue_sheet_covers_focus_and_risk_edges(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        _live_cue_from_segment,
+        _live_cue_lines,
+        build_style_performance_arc_live_cue_sheet_report,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    cue_sheet = build_style_performance_arc_live_cue_sheet_report(
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    segment = cue_sheet.live_render_bundle.segments[0]
+
+    rytm_scope_cue = _live_cue_from_segment(segment, scope="rytm-only")
+    assert rytm_scope_cue.machine_focus == "Rytm only"
+    assert "leave Analog Four unchanged" in rytm_scope_cue.operator_move
+
+    dual_a4_only_cue = _live_cue_from_segment(
+        replace(
+            segment,
+            live_segment=replace(segment.live_segment, rytm_preview_summary="unchanged by scope"),
+        ),
+        scope="dual",
+    )
+    assert dual_a4_only_cue.machine_focus == "Analog Four only"
+
+    dual_rytm_only_cue = _live_cue_from_segment(
+        replace(
+            segment,
+            live_segment=replace(
+                segment.live_segment,
+                analog_four_preview_summary="unchanged by scope",
+            ),
+        ),
+        scope="dual",
+    )
+    assert dual_rytm_only_cue.machine_focus == "Rytm only"
+
+    green_cue = _live_cue_from_segment(
+        replace(
+            segment,
+            live_segment=replace(
+                segment.live_segment,
+                readiness="ready",
+                event_row_count=1,
+                deferred_row_count=0,
+            ),
+            event_preview_rows=("  - mock event",),
+        ),
+        scope="dual",
+    )
+    assert green_cue.risk_level == "green"
+    assert "If the room drifts" in green_cue.recovery_action
+    assert "Showing all events" in "\n".join(
+        _live_cue_lines(green_cue, include_events=True, event_limit=1)
+    )
+
+    red_cue = _live_cue_from_segment(
+        replace(
+            segment,
+            live_segment=replace(
+                segment.live_segment,
+                readiness="blocked",
+                event_row_count=0,
+            ),
+            event_preview_rows=(),
+        ),
+        scope="dual",
+    )
+    assert red_cue.risk_level == "red"
+    assert "Skip this cue" in red_cue.recovery_action
+    assert "No mock rows available" in "\n".join(
+        _live_cue_lines(red_cue, include_events=True, event_limit=8)
+    )
+
+
 def test_style_performance_arc_audition_packet_rejects_empty_readiness(
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -972,11 +1158,13 @@ def test_style_performance_arc_readiness_parser_and_handlers(
 ):
     from rytm_randomizer.reports.style_performance_arcs import (
         _handle_style_performance_arc_audition_packet_report,
+        _handle_style_performance_arc_live_cue_sheet_report,
         _handle_style_performance_arc_live_render_bundle_report,
         _handle_style_performance_arc_live_session_packet_report,
         _handle_style_performance_arc_readiness_report,
         _handle_style_performance_arc_rehearsal_manifest_report,
         _parse_arc_audition_packet_cli_args,
+        _parse_arc_live_cue_sheet_cli_args,
         _parse_arc_live_render_bundle_cli_args,
         _parse_arc_live_session_packet_cli_args,
         _parse_arc_readiness_cli_args,
@@ -1103,6 +1291,45 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     }
 
     assert _parse_arc_live_render_bundle_cli_args(
+        [
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "dual",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "240",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "90",
+            "--events",
+            "--limit",
+            "1",
+            "--json",
+        ]
+    ) == {
+        "arc_keys": ("jose_warehouse_five_hour",),
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "dual",
+        "selection_rank": 2,
+        "total_minutes": 240,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 90,
+        "include_events": True,
+        "event_limit": 1,
+        "json_output": True,
+    }
+
+    assert _parse_arc_live_cue_sheet_cli_args(
         [
             "jose_warehouse_five_hour",
             "--rytm",
@@ -1466,6 +1693,68 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     assert payload["render_bundle"]["scope"] == "rytm-only"
     assert captured.err == ""
 
+    rc = _handle_style_performance_arc_live_cue_sheet_report(
+        arc_keys=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc live cue sheet" in captured.out
+    assert "Cue sheet summary:" in captured.out
+    assert "Performance cues:" in captured.out
+    assert "Mock render row preview:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_live_cue_sheet_report(
+        arc_keys=("jose_warehouse_five_hour",),
+        rytm_sysex_path=None,
+        analog_four_sysex_path=a4_path,
+        scope="analog-four-only",
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=20,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["selected"]["arc"]["key"] == "jose_warehouse_five_hour"
+    assert payload["cue_sheet"]["scope"] == "analog-four-only"
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_live_cue_sheet_report(
+        arc_keys=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=24,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "requires --rytm" in captured.err
+
     rc = _handle_style_performance_arc_live_render_bundle_report(
         arc_keys=None,
         rytm_sysex_path=None,
@@ -1491,6 +1780,7 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
         _format_cli_error,
         _parse_arc_audition_packet_cli_args,
         _parse_arc_key,
+        _parse_arc_live_cue_sheet_cli_args,
         _parse_arc_live_render_bundle_cli_args,
         _parse_arc_live_session_packet_cli_args,
         _parse_arc_readiness_cli_args,
@@ -1575,6 +1865,17 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     for argv, message in live_render_bad_cases:
         with pytest.raises(ValueError, match=message):
             _parse_arc_live_render_bundle_cli_args(argv)
+
+    live_cue_bad_cases = [
+        (["--json"], "usage"),
+        (["jose_warehouse_five_hour", "--rytm"], "live-cue-sheet-report usage"),
+        (["jose_warehouse_five_hour", "--bogus"], "usage"),
+        (["jose_warehouse_five_hour", "--limit", "-1"], ">= 0"),
+        (["jose_warehouse_five_hour", "--rank", "0"], ">= 1"),
+    ]
+    for argv, message in live_cue_bad_cases:
+        with pytest.raises(ValueError, match=message):
+            _parse_arc_live_cue_sheet_cli_args(argv)
 
 
 def test_style_performance_arc_cli_dispatch_and_help(
@@ -1723,6 +2024,25 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "RytmRandomizer passive style performance arc live render bundle" in captured.out
     assert "Segment render bundles:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-cue-sheet-report",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live cue sheet" in captured.out
+    assert "Performance cues:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -1732,6 +2052,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-rehearsal-manifest-report" in help_text
     assert "style-performance-arc-live-session-packet-report" in help_text
     assert "style-performance-arc-live-render-bundle-report" in help_text
+    assert "style-performance-arc-live-cue-sheet-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -1763,3 +2084,8 @@ def test_style_performance_arc_cli_dispatch_and_help(
         live_render_help
     )
     assert "Builds a passive live render bundle from saved kit banks." in (live_render_help)
+    live_cue_help = resolve_help_text("style-performance-arc-live-cue-sheet-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-cue-sheet-report" in (
+        live_cue_help
+    )
+    assert "Builds a passive live performance cue sheet from saved kit banks." in (live_cue_help)

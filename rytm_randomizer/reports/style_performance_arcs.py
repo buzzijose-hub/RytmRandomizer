@@ -42,6 +42,7 @@ LIVE_SESSION_PACKET_TITLE: Final[str] = (
 LIVE_RENDER_BUNDLE_TITLE: Final[str] = (
     "RytmRandomizer passive style performance arc live render bundle"
 )
+LIVE_CUE_SHEET_TITLE: Final[str] = "RytmRandomizer passive style performance arc live cue sheet"
 SOURCE_MODULE: Final[str] = "reports.style_performance_arcs"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -97,6 +98,20 @@ LIVE_RENDER_BUNDLE_SAFETY_LINES: Final[tuple[str, ...]] = (
     "no hardware mutation",
     "no hardware required",
 )
+LIVE_CUE_SHEET_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "passive/read-only",
+    "live cue sheet",
+    "operator cue sheet only",
+    "uses live render bundle mock rows",
+    "existing saved-kit snapshots only",
+    "metadata and plan expansion only",
+    "no real MIDI rendering",
+    "no MIDI sending",
+    "no port opening",
+    "no command execution",
+    "no hardware mutation",
+    "no hardware required",
+)
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
     source_module=SOURCE_MODULE,
@@ -137,6 +152,10 @@ _LIVE_RENDER_BUNDLE_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=LIVE_RENDER_BUNDLE_TITLE,
     source_module=SOURCE_MODULE,
 )
+_LIVE_CUE_SHEET_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
+    title=LIVE_CUE_SHEET_TITLE,
+    source_module=SOURCE_MODULE,
+)
 _SET_PLAN_USAGE: Final[str] = (
     "style-performance-arc-set-plan-report usage: "
     "<arc-key> --rytm <syx-path> [--analog-four <syx-path>] "
@@ -174,6 +193,13 @@ _LIVE_SESSION_PACKET_USAGE: Final[str] = (
 )
 _LIVE_RENDER_BUNDLE_USAGE: Final[str] = (
     "style-performance-arc-live-render-bundle-report usage: "
+    "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"
+)
+_LIVE_CUE_SHEET_USAGE: Final[str] = (
+    "style-performance-arc-live-cue-sheet-report usage: "
     "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
@@ -220,6 +246,7 @@ _AUDITION_PACKET_OPTIONS: Final[tuple[str, ...]] = (
 _REHEARSAL_MANIFEST_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _LIVE_SESSION_PACKET_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _LIVE_RENDER_BUNDLE_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
+_LIVE_CUE_SHEET_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _DEFAULT_EVENT_LIMIT: Final[int] = 24
 _READINESS_SORT_ORDER: Final[Mapping[str, int]] = MappingProxyType(
     {
@@ -589,6 +616,121 @@ class StylePerformanceArcLiveRenderBundleReport:
         return self.selected_set_plan.total_deferred_row_count
 
 
+@dataclass(frozen=True)
+class StylePerformanceArcLiveCue:
+    """One operator-facing live cue derived from a render segment."""
+
+    render_segment: StylePerformanceArcLiveRenderSegment
+    machine_focus: str
+    operator_move: str
+    risk_level: str
+    recovery_action: str
+
+    @property
+    def position(self) -> int:
+        """Return the segment position."""
+
+        return self.render_segment.position
+
+    @property
+    def style_key(self) -> str:
+        """Return the segment style key."""
+
+        return self.render_segment.style_key
+
+    @property
+    def time_window(self) -> str:
+        """Return the segment time window."""
+
+        return self.render_segment.time_window
+
+    @property
+    def readiness(self) -> str:
+        """Return the segment readiness."""
+
+        return self.render_segment.readiness
+
+    @property
+    def render_row_summary(self) -> str:
+        """Return a compact render/deferred row summary."""
+
+        return (
+            f"{self.render_segment.event_row_count} event row(s), "
+            f"{self.render_segment.deferred_row_count} deferred row(s)"
+        )
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcLiveCueSheetReport:
+    """Passive live-performance cue sheet derived from a render bundle."""
+
+    live_render_bundle: StylePerformanceArcLiveRenderBundleReport
+    suggested_commands: tuple[str, ...]
+    preflight_cues: tuple[str, ...]
+    recovery_cues: tuple[str, ...]
+    cues: tuple[StylePerformanceArcLiveCue, ...]
+
+    @property
+    def selected_entry(self) -> StylePerformanceArcReadinessEntry:
+        """Return the selected reference arc readiness entry."""
+
+        return self.live_render_bundle.selected_entry
+
+    @property
+    def selected_set_plan(self) -> DualMachineStylePerformanceSetPlan:
+        """Return the selected timed set plan."""
+
+        return self.live_render_bundle.selected_set_plan
+
+    @property
+    def segment_count(self) -> int:
+        """Return the selected segment count."""
+
+        return self.live_render_bundle.segment_count
+
+    @property
+    def cue_count(self) -> int:
+        """Return the number of generated cue rows."""
+
+        return len(self.cues)
+
+    @property
+    def ready_segment_count(self) -> int:
+        """Return ready segment count."""
+
+        return self.live_render_bundle.ready_segment_count
+
+    @property
+    def partial_segment_count(self) -> int:
+        """Return partial segment count."""
+
+        return self.live_render_bundle.partial_segment_count
+
+    @property
+    def blocked_segment_count(self) -> int:
+        """Return blocked segment count."""
+
+        return self.live_render_bundle.blocked_segment_count
+
+    @property
+    def total_event_row_count(self) -> int:
+        """Return total event rows."""
+
+        return self.live_render_bundle.total_event_row_count
+
+    @property
+    def total_mock_message_count(self) -> int:
+        """Return total mock messages."""
+
+        return self.live_render_bundle.total_mock_message_count
+
+    @property
+    def total_deferred_row_count(self) -> int:
+        """Return total deferred rows."""
+
+        return self.live_render_bundle.total_deferred_row_count
+
+
 def _join(values: Sequence[str]) -> str:
     return ", ".join(values)
 
@@ -626,6 +768,13 @@ def _live_render_bundle_safety_lines() -> list[str]:
     return [
         SAFETY_SECTION_HEADER,
         *[f"- {line}" for line in LIVE_RENDER_BUNDLE_SAFETY_LINES],
+    ]
+
+
+def _live_cue_sheet_safety_lines() -> list[str]:
+    return [
+        SAFETY_SECTION_HEADER,
+        *[f"- {line}" for line in LIVE_CUE_SHEET_SAFETY_LINES],
     ]
 
 
@@ -2030,6 +2179,311 @@ def to_style_performance_arc_live_render_bundle_json(
     }
 
 
+def _live_cue_sheet_suggested_commands(
+    bundle: StylePerformanceArcLiveRenderBundleReport,
+) -> tuple[str, ...]:
+    arc_key = bundle.selected_entry.arc.key
+    plan = bundle.selected_set_plan
+    base_args = (
+        f"{arc_key} {_live_session_machine_path_flags(plan.scope)} "
+        f"{_live_session_plan_flags(plan)}"
+    )
+    return (
+        (
+            "python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report "
+            f"{base_args} --events --limit 8"
+        ),
+        *bundle.suggested_commands,
+    )
+
+
+def _live_cue_machine_focus(
+    segment: StylePerformanceArcLiveRenderSegment,
+    *,
+    scope: str,
+) -> str:
+    if scope == "analog-four-only":
+        return "Analog Four only"
+    if scope == "rytm-only":
+        return "Rytm only"
+    if segment.rytm_preview_summary == "unchanged by scope":
+        return "Analog Four only"
+    if segment.analog_four_preview_summary == "unchanged by scope":
+        return "Rytm only"
+    return "Rytm + Analog Four"
+
+
+def _live_cue_operator_move(
+    segment: StylePerformanceArcLiveRenderSegment,
+    *,
+    machine_focus: str,
+) -> str:
+    if machine_focus == "Analog Four only":
+        return (
+            "Leave Rytm unchanged; cue Analog Four movement while listening for "
+            f"{segment.listen_for}."
+        )
+    if machine_focus == "Rytm only":
+        return (
+            "Cue Rytm movement and leave Analog Four unchanged; listen for "
+            f"{segment.listen_for}."
+        )
+    return "Cue both machines from the passive render rows; listen for " f"{segment.listen_for}."
+
+
+def _live_cue_risk_level(segment: StylePerformanceArcLiveRenderSegment) -> str:
+    if segment.readiness == "blocked" or segment.event_row_count == 0:
+        return "red"
+    if segment.readiness == "partial" or segment.deferred_row_count:
+        return "amber"
+    return "green"
+
+
+def _live_cue_recovery_action(
+    segment: StylePerformanceArcLiveRenderSegment,
+    *,
+    risk_level: str,
+) -> str:
+    if risk_level == "red":
+        return f"Skip this cue if uncertain, then recover with: {segment.reset_cue}"
+    if risk_level == "amber":
+        return f"Keep one hand on recovery and use: {segment.reset_cue}"
+    return f"If the room drifts, recover with: {segment.reset_cue}"
+
+
+def _live_cue_from_segment(
+    segment: StylePerformanceArcLiveRenderSegment,
+    *,
+    scope: str,
+) -> StylePerformanceArcLiveCue:
+    machine_focus = _live_cue_machine_focus(segment, scope=scope)
+    risk_level = _live_cue_risk_level(segment)
+    return StylePerformanceArcLiveCue(
+        render_segment=segment,
+        machine_focus=machine_focus,
+        operator_move=_live_cue_operator_move(
+            segment,
+            machine_focus=machine_focus,
+        ),
+        risk_level=risk_level,
+        recovery_action=_live_cue_recovery_action(
+            segment,
+            risk_level=risk_level,
+        ),
+    )
+
+
+def _live_cue_sheet_preflight_cues(
+    bundle: StylePerformanceArcLiveRenderBundleReport,
+) -> tuple[str, ...]:
+    plan = bundle.selected_set_plan
+    return (
+        f"Load saved-kit source scope: {plan.scope}.",
+        f"Confirm {bundle.segment_count} planned segment cue(s) before launch.",
+        f"Keep the live render bundle nearby for mock row detail: {bundle.selected_entry.arc.key}.",
+        *bundle.live_session_packet.launch_checklist,
+    )
+
+
+def _live_cue_sheet_recovery_cues(
+    cues: Sequence[StylePerformanceArcLiveCue],
+) -> tuple[str, ...]:
+    recovery_rows: list[str] = []
+    seen: set[str] = set()
+    for cue in cues:
+        if cue.recovery_action in seen:
+            continue
+        seen.add(cue.recovery_action)
+        recovery_rows.append(cue.recovery_action)
+    return tuple(recovery_rows)
+
+
+def build_style_performance_arc_live_cue_sheet_report(
+    arc_keys: Sequence[str] | None = None,
+    *,
+    rytm_sysex_path: Path | None = None,
+    analog_four_sysex_path: Path | None = None,
+    scope: str | None = None,
+    selection_rank: int | None = None,
+    total_minutes: int | None = None,
+    segment_minutes: int | None = None,
+    discovery_start: int | None = None,
+    discovery_end: int | None = None,
+) -> StylePerformanceArcLiveCueSheetReport:
+    """Return an operator-facing passive live cue sheet."""
+
+    bundle = build_style_performance_arc_live_render_bundle_report(
+        arc_keys,
+        rytm_sysex_path=rytm_sysex_path,
+        analog_four_sysex_path=analog_four_sysex_path,
+        scope=scope,
+        selection_rank=selection_rank,
+        total_minutes=total_minutes,
+        segment_minutes=segment_minutes,
+        discovery_start=discovery_start,
+        discovery_end=discovery_end,
+    )
+    cues = tuple(
+        _live_cue_from_segment(segment, scope=bundle.selected_set_plan.scope)
+        for segment in bundle.segments
+    )
+    return StylePerformanceArcLiveCueSheetReport(
+        live_render_bundle=bundle,
+        suggested_commands=_live_cue_sheet_suggested_commands(bundle),
+        preflight_cues=_live_cue_sheet_preflight_cues(bundle),
+        recovery_cues=_live_cue_sheet_recovery_cues(cues),
+        cues=cues,
+    )
+
+
+def _live_cue_lines(
+    cue: StylePerformanceArcLiveCue,
+    *,
+    include_events: bool,
+    event_limit: int,
+) -> list[str]:
+    segment = cue.render_segment
+    lines = [
+        (
+            f"- {cue.position}. {cue.time_window} | {cue.style_key} | "
+            f"{cue.machine_focus} | readiness {cue.readiness}"
+        ),
+        f"  Risk: {cue.risk_level}",
+        f"  Hands-on move: {cue.operator_move}",
+        f"  Listen for: {segment.listen_for}",
+        f"  Go/no-go: {segment.go_no_go_cue}",
+        f"  Recovery: {cue.recovery_action}",
+        f"  Rytm: {segment.rytm_preview_summary}",
+        f"  Analog Four: {segment.analog_four_preview_summary}",
+        f"  Render rows: {cue.render_row_summary}",
+    ]
+    if include_events:
+        lines.append("  Mock render row preview:")
+        if not segment.event_preview_rows:
+            lines.append("  - No mock rows available because the selected preview is not ready.")
+        else:
+            selected_rows = _limited_event_rows(
+                segment.event_preview_rows,
+                event_limit=event_limit,
+            )
+            if len(selected_rows) == len(segment.event_preview_rows):
+                lines.append("  - Showing all events")
+            else:
+                lines.append(
+                    f"  - Showing first {event_limit} of {len(segment.event_preview_rows)} events"
+                )
+            lines.extend(f"  {row}" for row in selected_rows)
+    return lines
+
+
+def format_style_performance_arc_live_cue_sheet_report(
+    report: StylePerformanceArcLiveCueSheetReport,
+    *,
+    include_events: bool = False,
+    event_limit: int = _DEFAULT_EVENT_LIMIT,
+) -> list[str]:
+    """Return deterministic live cue-sheet lines."""
+
+    if event_limit < 0:
+        raise ValueError("event_limit must be >= 0")
+
+    selected = report.selected_entry
+    plan = report.selected_set_plan
+    lines = [
+        "Cue sheet summary:",
+        f"- Scope: {plan.scope}",
+        f"- Total duration minutes: {plan.total_minutes}",
+        f"- Cue count: {report.cue_count}",
+        (
+            "- Segment readiness: "
+            f"{report.ready_segment_count} ready, "
+            f"{report.partial_segment_count} partial, "
+            f"{report.blocked_segment_count} blocked"
+        ),
+        f"- Total event rows: {report.total_event_row_count}",
+        f"- Total deferred rows: {report.total_deferred_row_count}",
+        "Selected arc:",
+        f"- Position: {selected.position}",
+        f"- Key: {selected.arc.key}",
+        f"- Name: {selected.arc.name}",
+        "Replayable passive commands:",
+        *[f"- {command}" for command in report.suggested_commands],
+        "Preflight cues:",
+        *[f"- {cue}" for cue in report.preflight_cues],
+        "Performance cues:",
+    ]
+    for cue in report.cues:
+        lines.extend(
+            _live_cue_lines(
+                cue,
+                include_events=include_events,
+                event_limit=event_limit,
+            )
+        )
+    lines.extend(["Recovery cues:", *[f"- {cue}" for cue in report.recovery_cues]])
+    lines.extend(_live_cue_sheet_safety_lines())
+    return passive_report_lines(_LIVE_CUE_SHEET_HEADER, lines)
+
+
+def _live_cue_json(cue: StylePerformanceArcLiveCue) -> dict[str, object]:
+    segment = cue.render_segment
+    return {
+        "position": cue.position,
+        "time_window": cue.time_window,
+        "style_key": cue.style_key,
+        "readiness": cue.readiness,
+        "machine_focus": cue.machine_focus,
+        "operator_move": cue.operator_move,
+        "risk_level": cue.risk_level,
+        "recovery_action": cue.recovery_action,
+        "listen_for": segment.listen_for,
+        "go_no_go_cue": segment.go_no_go_cue,
+        "reset_cue": segment.reset_cue,
+        "rytm_preview": segment.rytm_preview_summary,
+        "analog_four_preview": segment.analog_four_preview_summary,
+        "event_row_count": segment.event_row_count,
+        "mock_message_count": segment.mock_message_count,
+        "deferred_row_count": segment.deferred_row_count,
+        "render_row_summary": cue.render_row_summary,
+    }
+
+
+def to_style_performance_arc_live_cue_sheet_json(
+    report: StylePerformanceArcLiveCueSheetReport,
+) -> dict[str, object]:
+    """Return deterministic JSON data for a live cue sheet."""
+
+    plan = report.selected_set_plan
+    return {
+        "selected": _readiness_entry_json(report.selected_entry),
+        "live_render_bundle": to_style_performance_arc_live_render_bundle_json(
+            report.live_render_bundle
+        ),
+        "cue_sheet": {
+            "scope": plan.scope,
+            "total_minutes": plan.total_minutes,
+            "selection_rank": plan.selection_rank,
+            "discovery_start": plan.discovery_start,
+            "discovery_end": plan.discovery_end,
+            "suggested_commands": list(report.suggested_commands),
+            "preflight_cues": list(report.preflight_cues),
+            "recovery_cues": list(report.recovery_cues),
+            "totals": {
+                "cues": report.cue_count,
+                "segments": report.segment_count,
+                "ready": report.ready_segment_count,
+                "partial": report.partial_segment_count,
+                "blocked": report.blocked_segment_count,
+                "event_rows": report.total_event_row_count,
+                "mock_messages": report.total_mock_message_count,
+                "deferred_rows": report.total_deferred_row_count,
+            },
+            "cues": [_live_cue_json(cue) for cue in report.cues],
+        },
+        "safety": list(LIVE_CUE_SHEET_SAFETY_LINES),
+    }
+
+
 def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
     if argv:
         raise ValueError("command takes no arguments")
@@ -2444,6 +2898,69 @@ def _parse_arc_live_render_bundle_cli_args(argv: Sequence[str]) -> dict[str, obj
     }
 
 
+def _parse_arc_live_cue_sheet_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    remaining = list(argv)
+    arc_keys: list[str] = []
+    while remaining and not remaining[0].startswith("--"):
+        arc_keys.append(remaining.pop(0))
+    if remaining and remaining[0] == "--json" and not arc_keys:
+        raise ValueError(_LIVE_CUE_SHEET_USAGE)
+    rytm_sysex_path: Path | None = None
+    analog_four_sysex_path: Path | None = None
+    scope: str | None = None
+    selection_rank: int | None = None
+    total_minutes: int | None = None
+    segment_minutes: int | None = None
+    discovery_start: int | None = None
+    discovery_end: int | None = None
+    include_events = False
+    event_limit = _DEFAULT_EVENT_LIMIT
+    json_output = False
+    while remaining:
+        option = remaining.pop(0)
+        if option == "--events":
+            include_events = True
+            continue
+        if option == "--json":
+            json_output = True
+            continue
+        if option not in _LIVE_CUE_SHEET_OPTIONS:
+            raise ValueError(_LIVE_CUE_SHEET_USAGE)
+        value = _pop_option_value(remaining, usage=_LIVE_CUE_SHEET_USAGE)
+        if option == "--rytm":
+            rytm_sysex_path = Path(value)
+        elif option == "--analog-four":
+            analog_four_sysex_path = Path(value)
+        elif option == "--scope":
+            scope = normalize_selection_scope(value)
+        elif option == "--rank":
+            selection_rank = _parse_positive_int(value, option=option)
+        elif option == "--total-minutes":
+            total_minutes = _parse_positive_int(value, option=option)
+        elif option == "--segment-minutes":
+            segment_minutes = _parse_positive_int(value, option=option)
+        elif option == "--discovery-start":
+            discovery_start = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery-end":
+            discovery_end = _parse_nonnegative_int(value, option=option)
+        else:
+            event_limit = _parse_nonnegative_int(value, option=option)
+    return {
+        "arc_keys": None if not arc_keys else tuple(arc_keys),
+        "rytm_sysex_path": rytm_sysex_path,
+        "analog_four_sysex_path": analog_four_sysex_path,
+        "scope": scope,
+        "selection_rank": selection_rank,
+        "total_minutes": total_minutes,
+        "segment_minutes": segment_minutes,
+        "discovery_start": discovery_start,
+        "discovery_end": discovery_end,
+        "include_events": include_events,
+        "event_limit": event_limit,
+        "json_output": json_output,
+    }
+
+
 def _write_lines(lines: Sequence[str]) -> int:
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
@@ -2758,6 +3275,54 @@ def _handle_style_performance_arc_live_render_bundle_report(
     return _write_lines(lines)
 
 
+def _handle_style_performance_arc_live_cue_sheet_report(
+    *,
+    arc_keys: Sequence[str] | None,
+    rytm_sysex_path: Path | None,
+    analog_four_sysex_path: Path | None,
+    scope: str | None,
+    selection_rank: int | None,
+    total_minutes: int | None,
+    segment_minutes: int | None,
+    discovery_start: int | None,
+    discovery_end: int | None,
+    include_events: bool,
+    event_limit: int,
+    json_output: bool,
+) -> int:
+    try:
+        report = build_style_performance_arc_live_cue_sheet_report(
+            arc_keys,
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+        )
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_style_performance_arc_live_cue_sheet_json(report),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_style_performance_arc_live_cue_sheet_report(
+            report,
+            include_events=include_events,
+            event_limit=event_limit,
+        )
+    except (OSError, ValueError, NotImplementedError, TypeError, KeyError) as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 2
+    return _write_lines(lines)
+
+
 def _format_cli_error(exc: Exception) -> str:
     return f"Error: {exc}"
 
@@ -2828,6 +3393,13 @@ STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND: Final[CliCommand] = CliCom
     handler=_handle_style_performance_arc_live_render_bundle_report,
     error_formatter=_format_cli_error,
 )
+STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="style-performance-arc-live-cue-sheet-report",
+    summary="Build passive live performance cue sheets from saved kit banks.",
+    args_parser=_parse_arc_live_cue_sheet_cli_args,
+    handler=_handle_style_performance_arc_live_cue_sheet_report,
+    error_formatter=_format_cli_error,
+)
 
 register(STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND)
 register(LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
@@ -2839,12 +3411,15 @@ register(STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND)
+register(STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND)
 
 __all__ = [
     "AUDITION_PACKET_SAFETY_LINES",
     "AUDITION_PACKET_TITLE",
     "INSPECT_STYLE_PERFORMANCE_ARC_CLI_COMMAND",
     "LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
+    "LIVE_CUE_SHEET_SAFETY_LINES",
+    "LIVE_CUE_SHEET_TITLE",
     "LIVE_SESSION_PACKET_SAFETY_LINES",
     "LIVE_SESSION_PACKET_TITLE",
     "LIVE_RENDER_BUNDLE_SAFETY_LINES",
@@ -2857,6 +3432,7 @@ __all__ = [
     "SET_PLAN_TITLE",
     "SOURCE_MODULE",
     "STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND",
+    "STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND",
@@ -2865,6 +3441,8 @@ __all__ = [
     "STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND",
     "StylePerformanceArcAuditionPacketReport",
     "StylePerformanceArcCatalogReport",
+    "StylePerformanceArcLiveCue",
+    "StylePerformanceArcLiveCueSheetReport",
     "StylePerformanceArcLiveRenderBundleReport",
     "StylePerformanceArcLiveRenderSegment",
     "StylePerformanceArcLiveSessionPacketReport",
@@ -2876,12 +3454,14 @@ __all__ = [
     "StylePerformanceArcSetPlanReport",
     "build_style_performance_arc_audition_packet_report",
     "build_style_performance_arc_catalog_report",
+    "build_style_performance_arc_live_cue_sheet_report",
     "build_style_performance_arc_live_session_packet_report",
     "build_style_performance_arc_live_render_bundle_report",
     "build_style_performance_arc_rehearsal_manifest_report",
     "build_style_performance_arc_readiness_report",
     "build_style_performance_arc_set_plan_report",
     "format_style_performance_arc_audition_packet_report",
+    "format_style_performance_arc_live_cue_sheet_report",
     "format_style_performance_arc_live_session_packet_report",
     "format_style_performance_arc_live_render_bundle_report",
     "format_style_performance_arc_rehearsal_manifest_report",
@@ -2893,6 +3473,7 @@ __all__ = [
     "format_style_performance_arc_set_plan_report",
     "to_style_performance_arc_audition_packet_json",
     "to_style_performance_arc_json",
+    "to_style_performance_arc_live_cue_sheet_json",
     "to_style_performance_arc_live_session_packet_json",
     "to_style_performance_arc_live_render_bundle_json",
     "to_style_performance_arc_rehearsal_manifest_json",

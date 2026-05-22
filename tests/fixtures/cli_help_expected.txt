@@ -56,6 +56,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-rehearsal-manifest-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report [<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -164,6 +165,8 @@ Commands:
                      Build passive live rehearsal session packets from saved kit banks.
   style-performance-arc-live-render-bundle-report
                      Build passive live render bundles from saved kit banks.
+  style-performance-arc-live-cue-sheet-report
+                     Build passive live performance cue sheets from saved kit banks.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
