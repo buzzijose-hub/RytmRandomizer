@@ -184,6 +184,13 @@ USAGE = (
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] "
     "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-analyzer-targets-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1881,6 +1888,14 @@ def test_readme_mentions_style_performance_arc_live_analyzer_handoff_report_comm
     assert "style-performance-arc-live-analyzer-handoff-report" in text
     assert "analyzer handoff" in text
     assert "FeatureReport meters" in text
+
+
+def test_readme_mentions_style_performance_arc_live_analyzer_targets_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-analyzer-targets-report" in text
+    assert "analyzer target" in text
+    assert "future live analyzer comparison" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

@@ -179,6 +179,13 @@ USAGE = (
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] "
     "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-analyzer-targets-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1253,6 +1260,31 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_performance_arc_live_analyzer_targets_report_help():
+    from .reports.live_analyzer_targets import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-analyzer-targets-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --description <text> --rytm <syx-path> --analog-four <syx-path> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+
+Behavior:
+  Builds passive rehearsal targets from the live analyzer handoff. The report
+  exposes target bands, cue checkpoints, calibration steps, warning thresholds,
+  and replayable passive commands for future live analyzer comparison.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -1330,6 +1362,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-readiness-report (--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-control-surface-report (--arc <arc-key>|--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-analyzer-handoff-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -1464,6 +1497,8 @@ Commands:
                      Build passive GUI/audio-analyzer control surfaces from live readiness.
   style-performance-arc-live-analyzer-handoff-report
                      Build passive audio analyzer handoffs from reference evidence.
+  style-performance-arc-live-analyzer-targets-report
+                     Build passive rehearsal targets for future live analyzer comparison.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1734,6 +1769,9 @@ Safety:
     ),
     "style-performance-arc-live-analyzer-handoff-report": (
         _style_performance_arc_live_analyzer_handoff_report_help
+    ),
+    "style-performance-arc-live-analyzer-targets-report": (
+        _style_performance_arc_live_analyzer_targets_report_help
     ),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

@@ -250,6 +250,11 @@ The live command deck and live state packet are the current UI handoff
 surfaces: the deck answers "what should I do right now?", and the state
 packet answers "what should a screen render right now?" without opening
 ports or sending MIDI.
+The live analyzer handoff and target reports are the current audio-analyzer
+handoff surfaces: the handoff answers "what reference evidence and GUI state
+should the analyzer see?", and the target packet answers "what bands,
+checkpoints, calibration steps, and warning thresholds should a rehearsal
+capture compare against?" without opening ports or sending MIDI.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,
