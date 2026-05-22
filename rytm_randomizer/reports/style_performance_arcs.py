@@ -223,7 +223,7 @@ _LIVE_RENDER_BUNDLE_USAGE: Final[str] = (
 )
 _LIVE_CUE_SHEET_USAGE: Final[str] = (
     "style-performance-arc-live-cue-sheet-report usage: "
-    "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
+    "[<arc-key> ...] [--rytm <syx-path>] [--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"

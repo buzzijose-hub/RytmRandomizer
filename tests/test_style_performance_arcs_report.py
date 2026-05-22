@@ -2839,6 +2839,10 @@ def test_style_performance_arc_cli_dispatch_and_help(
         live_cue_help
     )
     assert "Builds a passive live performance cue sheet from saved kit banks." in (live_cue_help)
+    assert (
+        "style-performance-arc-live-cue-sheet-report --analog-four <syx-path> "
+        "--scope analog-four-only"
+    ) in live_cue_help
     reference_match_help = resolve_help_text("style-performance-arc-reference-match-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-reference-match-report" in (
         reference_match_help

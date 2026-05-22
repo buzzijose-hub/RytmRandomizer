@@ -184,7 +184,7 @@ python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing
 python scripts/code_review_gate.py --mode cli
 ```
 
-- [ ] **Step 3: Commit, push, PR**
+- [x] **Step 3: Commit, push, PR**
 
 Stage only intended files, commit with:
 

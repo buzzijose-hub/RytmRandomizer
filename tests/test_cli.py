@@ -102,7 +102,7 @@ USAGE = (
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
-    "style-performance-arc-live-cue-sheet-report [<arc-key> ...] --rytm <syx-path> "
+    "style-performance-arc-live-cue-sheet-report [<arc-key> ...] [--rytm <syx-path>] "
     "[--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
