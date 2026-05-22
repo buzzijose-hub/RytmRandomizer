@@ -25,6 +25,8 @@ Public surface:
   into a single newline-separated string.
 * ``passive_report_lines(header, body_lines)`` -- list-returning sibling of
   ``render_passive_report``.
+* ``powershell_literal_arg(value)`` -- render a replay-command argument for the
+  PowerShell-first operator console.
 
 Per Gate 12, every module-level constant is annotated ``Final``.
 """
@@ -52,6 +54,9 @@ PASSIVE_FOOTER: Final[tuple[str, str]] = (
     PASSIVE_FOOTER_MEMORY_LINE,
 )
 _OPERATOR_CONSOLE_ENCODING: Final[str] = "cp1252"
+_POWERSHELL_BARE_ARG_CHARS: Final[frozenset[str]] = frozenset(
+    "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789" "-_./\\:+=,@%"
+)
 
 
 @dataclass(frozen=True)
@@ -126,6 +131,14 @@ def passive_report_lines(
     return lines
 
 
+def powershell_literal_arg(value: str) -> str:
+    """Return a PowerShell-safe literal command argument."""
+
+    if value and all(char in _POWERSHELL_BARE_ARG_CHARS for char in value):
+        return value
+    return "'" + value.replace("'", "''") + "'"
+
+
 def render_passive_report(
     header: PassiveReportHeader,
     body_lines: Iterable[str],
@@ -143,6 +156,7 @@ __all__ = [
     "SAFETY_SECTION_HEADER",
     "passive_footer_lines",
     "passive_report_lines",
+    "powershell_literal_arg",
     "render_passive_report",
     "safety_section_lines",
 ]

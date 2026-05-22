@@ -18,7 +18,12 @@ from .dual_machine_style_kit_selection import (
 from .dual_machine_style_selection_mock_preview import (
     DualMachineStyleSelectionMockPreviewPlan,
 )
-from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
+from .formatter import (
+    SAFETY_SECTION_HEADER,
+    PassiveReportHeader,
+    passive_report_lines,
+    powershell_literal_arg,
+)
 from .live_performance_runbook import (
     StylePerformanceArcLiveRunbookReport,
     build_style_performance_arc_live_runbook_report,
@@ -350,15 +355,15 @@ def _live_set_card(report: StylePerformanceArcLiveRunbookReport) -> tuple[str, .
 def _stage_routing_command(report: StylePerformanceArcLiveRunbookReport) -> str:
     source = report.source_reference or report.selected_arc_key
     if report.selection_source == "arc":
-        selector = f"--arc {source}"
+        selector = f"--arc {powershell_literal_arg(source)}"
     elif report.selection_source == "description":
-        selector = f"--description {source}"
+        selector = f"--description {powershell_literal_arg(source)}"
     elif report.selection_source == "feature-report":
-        selector = f"--description {report.selected_arc_name}"
+        selector = f"--description {powershell_literal_arg(report.selected_arc_name)}"
     elif report.selection_source == "audio":
-        selector = f"--audio {source}"
+        selector = f"--audio {powershell_literal_arg(source)}"
     else:
-        selector = f"--library {source}"
+        selector = f"--library {powershell_literal_arg(source)}"
     return (
         "python -m rytm_randomizer.cli style-performance-arc-stage-routing-report "
         f"{selector} --scope {report.scope} --events --limit 8"

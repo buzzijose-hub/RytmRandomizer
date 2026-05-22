@@ -127,7 +127,7 @@ on one line for an existing module, you probably need a new module instead.
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
 | `app.py`              | Top-of-stack entry point. `--arm` wires the `mido_provider` into `shell`.       |
-| `reports/`            | Passive in-memory report package + shared formatter, including the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, and live set cockpit dashboard. |
+| `reports/`            | Passive in-memory report package + shared formatter, including the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, and live show export packet. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 
 ### Frozen reference (NOT in the layered graph)

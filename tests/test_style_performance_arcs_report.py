@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
@@ -2480,6 +2481,335 @@ def test_style_performance_arc_live_set_cockpit_sources_edges_and_parser(
     assert "--feature-report" not in feature_state.suggested_commands[0]
 
 
+def test_style_performance_arc_live_show_export_builds_show_handoff_packet(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_show_export import (
+        _parse_cli_args,
+        build_style_performance_arc_live_show_export_report,
+        format_style_performance_arc_live_show_export_report,
+        to_style_performance_arc_live_show_export_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    report = build_style_performance_arc_live_show_export_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+    rebuilt = build_style_performance_arc_live_show_export_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+
+    assert report.packet_version == "live-show-export-v1"
+    assert report.export_id == rebuilt.export_id
+    assert len(report.export_id) == 12
+    assert report.selected_arc_key == "mills_mulero_tunnel"
+    assert report.go_no_go == "rehearse"
+    assert report.show_summary.startswith("mills_mulero_tunnel /")
+    assert len(report.cue_steps) == report.cockpit.cue_count
+    assert report.cue_steps[0].cue_number == 1
+    assert report.cue_steps[0].launch_line.startswith("Cue 1")
+    assert "machine focus" in report.cue_steps[0].preflight_check
+    assert report.cue_steps[0].passive_command.startswith("python -m rytm_randomizer.cli")
+    for command in report.suggested_commands:
+        command_args = shlex.split(command)
+        if "--description" in command_args:
+            description_index = command_args.index("--description") + 1
+            assert command_args[description_index] == "Jeff Mills Oscar Mulero tunnel"
+        if command_args[3] == "style-performance-arc-live-show-export-report":
+            assert (
+                _parse_cli_args(command_args[4:])["description"] == "Jeff Mills Oscar Mulero tunnel"
+            )
+    cue_command = report.cue_steps[0].passive_command.split(" # cue ", 1)[0]
+    cue_command_args = shlex.split(cue_command)[4:]
+    assert _parse_cli_args(cue_command_args)["description"] == "Jeff Mills Oscar Mulero tunnel"
+    assert {machine.label for machine in report.machine_exports} == {"Rytm", "Analog Four"}
+    assert any("do not arm" in line.lower() for line in report.recovery_script)
+
+    apostrophe_report = build_style_performance_arc_live_show_export_report(
+        description="King's Hall Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+    apostrophe_command = apostrophe_report.suggested_commands[0]
+    assert "--description 'King''s Hall Jeff Mills Oscar Mulero tunnel'" in (apostrophe_command)
+    assert "--description 'King''s Hall Jeff Mills Oscar Mulero tunnel'" in (
+        apostrophe_report.cue_steps[0].passive_command
+    )
+
+    text = "\n".join(
+        format_style_performance_arc_live_show_export_report(
+            report,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "RytmRandomizer passive style performance arc live show export" in text
+    assert "Show export summary:" in text
+    assert "Machine handoff manifest:" in text
+    assert "Cue launch script:" in text
+    assert "Cue event preview:" in text
+    assert "Recovery script:" in text
+    assert "Replayable passive commands:" in text
+    assert "- live show export packet only" in text
+    assert "- no file writing" in text
+    assert "- no MIDI sending" in text
+    assert "- no port opening" in text
+
+    payload = to_style_performance_arc_live_show_export_json(report)
+    export_payload = payload["live_show_export"]
+    assert export_payload["packet_version"] == "live-show-export-v1"
+    assert export_payload["export_id"] == report.export_id
+    assert export_payload["selected_arc_key"] == "mills_mulero_tunnel"
+    assert export_payload["cue_steps"][0]["launch_line"].startswith("Cue 1")
+    assert export_payload["machine_exports"][0]["label"] == "Rytm"
+    assert payload["live_set_cockpit"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert payload["stage_rehearsal_state"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert payload["safety"][-1] == "no hardware required"
+
+
+def test_style_performance_arc_live_show_export_sources_edges_parser_and_cli(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.reports.live_set_cockpit import (
+        build_style_performance_arc_live_set_cockpit_report,
+    )
+    from rytm_randomizer.reports.live_show_export import (
+        _format_cli_error,
+        _handle_cli_report,
+        _machine_export,
+        _parse_cli_args,
+        _status_action,
+        _step_status_light,
+        _string_sequence,
+        build_style_performance_arc_live_show_export_from_cockpit,
+        build_style_performance_arc_live_show_export_report,
+        format_style_performance_arc_live_show_export_report,
+    )
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    cockpit = build_style_performance_arc_live_set_cockpit_report(
+        arc_key="jose_warehouse_five_hour",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope="rytm-only",
+        total_minutes=30,
+        segment_minutes=15,
+    )
+    from_cockpit = build_style_performance_arc_live_show_export_from_cockpit(cockpit)
+    assert from_cockpit.selected_arc_key == cockpit.selected_arc_key
+    assert "Analog Four unchanged-by-scope" in from_cockpit.cue_steps[0].machine_focus
+
+    assert _string_sequence(()) == "none"
+    assert _string_sequence(("kick", "hat")) == "kick, hat"
+    assert _status_action("go") == "launch-ready"
+    assert _status_action("rehearse") == "rehearse-before-arm"
+    assert _status_action("do-not-arm") == "skip-and-recover"
+    assert _status_action("custom") == "review"
+    assert _step_status_light("go") == "GREEN"
+    assert _step_status_light("rehearse") == "AMBER"
+    assert _step_status_light("do-not-arm") == "RED"
+    assert _step_status_light("custom") == "WHITE"
+    blocked_export = _machine_export(replace(cockpit.machine_panels[0], status="blocked"))
+    assert blocked_export.status_action == "do-not-arm"
+
+    no_event_text = "\n".join(format_style_performance_arc_live_show_export_report(from_cockpit))
+    assert "Cue event preview:" not in no_event_text
+    assert "Showing all events" in "\n".join(
+        format_style_performance_arc_live_show_export_report(
+            from_cockpit,
+            include_events=True,
+            event_limit=0,
+        )
+    )
+    a4_only = build_style_performance_arc_live_show_export_report(
+        arc_key="jose_warehouse_five_hour",
+        analog_four_sysex_path=a4_path,
+        scope="a4-only",
+        total_minutes=30,
+        segment_minutes=15,
+    )
+    assert (
+        "No mock rows available because the selected cue has no ready mock preview."
+        in "\n".join(
+            format_style_performance_arc_live_show_export_report(
+                a4_only,
+                include_events=True,
+                event_limit=0,
+            )
+        )
+    )
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_live_show_export_report(from_cockpit, event_limit=-1)
+
+    parsed = _parse_cli_args(
+        [
+            "--arc",
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "a4-only",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "120",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "80",
+            "--events",
+            "--limit",
+            "0",
+            "--json",
+        ]
+    )
+    assert parsed == {
+        "arc_key": "jose_warehouse_five_hour",
+        "description": None,
+        "audio_path": None,
+        "library_path": None,
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "analog-four-only",
+        "selection_rank": 2,
+        "total_minutes": 120,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 80,
+        "include_events": True,
+        "event_limit": 0,
+        "json_output": True,
+    }
+    assert _parse_cli_args(["--audio", "track.wav"])["audio_path"] == Path("track.wav")
+    assert _parse_cli_args(["--library", "library-root"])["library_path"] == Path("library-root")
+    for argv, message in (
+        ([], "usage"),
+        (["--arc"], "usage"),
+        (["--arc", "x", "--bogus"], "usage"),
+        (["--arc", "x", "--limit", "oops"], "must be an integer"),
+        (["--arc", "x", "--limit", "-1"], ">= 0"),
+        (["--arc", "x", "--rank", "0"], ">= 1"),
+        (["--arc", "x", "--description", "Jeff Mills"], "usage"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            _parse_cli_args(argv)
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc live show export" in captured.out
+    assert "Show export summary:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["live_show_export"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description=None,
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "live show export requires exactly one selection source" in captured.err
+    assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
+
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=138.0,
+        tempo_stability=0.92,
+        kick_density=0.85,
+        percussion_density=0.82,
+        low_end_weight=0.88,
+        spectral_brightness=0.18,
+        texture_noise=0.9,
+        energy_arc=(0.35, 0.45, 0.55, 0.7, 0.85, 0.95, 0.92, 0.88),
+        content_hash="",
+        derived_at="2026-05-22T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+    feature_state = build_style_performance_arc_live_show_export_report(
+        feature_report=feature_report,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert feature_state.selection_source == "feature-report"
+    assert feature_state.source_reference == feature_report.content_hash
+    assert "--feature-report" not in feature_state.suggested_commands[0]
+
+
 def test_style_performance_arc_reference_match_summarizes_snapshot_preview(
     tmp_path: Path,
 ):
@@ -4324,6 +4654,29 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Cockpit summary:" in captured.out
     assert "Cue cockpit cards:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-show-export-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live show export" in captured.out
+    assert "mills_mulero_tunnel" in captured.out
+    assert "Show export summary:" in captured.out
+    assert "Cue launch script:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -4339,6 +4692,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-stage-routing-report" in help_text
     assert "style-performance-arc-stage-rehearsal-state-report" in help_text
     assert "style-performance-arc-live-set-cockpit-report" in help_text
+    assert "style-performance-arc-live-show-export-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -4425,4 +4779,15 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Cue cockpit cards" in live_set_cockpit_help
     assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
         live_set_cockpit_help
+    )
+    live_show_export_help = resolve_help_text("style-performance-arc-live-show-export-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-show-export-report" in (
+        live_show_export_help
+    )
+    assert "Builds a passive live show export packet from an arc or reference." in (
+        live_show_export_help
+    )
+    assert "machine handoff manifest" in live_show_export_help
+    assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
+        live_show_export_help
     )

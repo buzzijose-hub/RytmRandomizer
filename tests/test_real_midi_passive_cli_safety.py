@@ -49,6 +49,7 @@ PASSIVE_CLI_COMMANDS = (
     ("style-performance-arc-stage-routing-report", "--help"),
     ("style-performance-arc-stage-rehearsal-state-report", "--help"),
     ("style-performance-arc-live-set-cockpit-report", "--help"),
+    ("style-performance-arc-live-show-export-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -99,6 +100,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("style-performance-arc-stage-routing-report", "--help"),
     ("style-performance-arc-stage-rehearsal-state-report", "--help"),
     ("style-performance-arc-live-set-cockpit-report", "--help"),
+    ("style-performance-arc-live-show-export-report", "--help"),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",
