@@ -790,9 +790,14 @@ def test_style_performance_arc_live_cue_sheet_builds_operator_cues(
     assert cue_sheet.preflight_cues
     assert cue_sheet.recovery_cues
     assert cue_sheet.cues
+    assert cue_sheet.stage_packet.selected_arc_key == cue_sheet.selected_entry.arc.key
+    assert cue_sheet.stage_packet.scope == cue_sheet.selected_set_plan.scope
+    assert cue_sheet.stage_packet.cue_count == cue_sheet.cue_count
+    assert cue_sheet.stage_packet.stage_cards
 
     first_cue = cue_sheet.cues[0]
     first_render_segment = cue_sheet.live_render_bundle.segments[0]
+    first_stage_card = cue_sheet.stage_packet.stage_cards[0]
     assert first_cue.render_segment is first_render_segment
     assert first_cue.position == first_render_segment.position
     assert first_cue.time_window == first_render_segment.time_window
@@ -804,6 +809,14 @@ def test_style_performance_arc_live_cue_sheet_builds_operator_cues(
         f"{first_render_segment.event_row_count} event row(s), "
         f"{first_render_segment.deferred_row_count} deferred row(s)"
     )
+    assert first_stage_card.cue_number == first_cue.position
+    assert first_stage_card.time_window == first_cue.time_window
+    assert first_stage_card.style_key == first_cue.style_key
+    assert first_stage_card.machine_focus == first_cue.machine_focus
+    assert first_stage_card.risk_level == first_cue.risk_level
+    assert first_stage_card.planned_rytm_pads
+    assert first_stage_card.planned_analog_four_tracks
+    assert first_stage_card.render_row_summary == first_cue.render_row_summary
 
     text = "\n".join(
         format_style_performance_arc_live_cue_sheet_report(
@@ -816,10 +829,14 @@ def test_style_performance_arc_live_cue_sheet_builds_operator_cues(
     assert "Cue sheet summary:" in text
     assert "Preflight cues:" in text
     assert "Performance cues:" in text
+    assert "Stage packet:" in text
+    assert "Stage cards:" in text
     assert "Hands-on move:" in text
     assert "Risk:" in text
     assert "Recovery:" in text
     assert "Mock render row preview:" in text
+    assert "Planned Rytm pads:" in text
+    assert "Planned Analog Four tracks:" in text
     assert "- operator cue sheet only" in text
     assert "- no MIDI sending" in text
 
@@ -832,6 +849,15 @@ def test_style_performance_arc_live_cue_sheet_builds_operator_cues(
     assert payload["cue_sheet"]["totals"]["cues"] == cue_sheet.cue_count
     assert payload["cue_sheet"]["cues"][0]["style_key"] == first_cue.style_key
     assert payload["cue_sheet"]["cues"][0]["risk_level"] == first_cue.risk_level
+    stage_packet = payload["cue_sheet"]["stage_packet"]
+    assert stage_packet["selected_arc_key"] == cue_sheet.selected_entry.arc.key
+    assert stage_packet["stage_cards"][0]["cue_number"] == first_cue.position
+    assert stage_packet["stage_cards"][0]["planned_rytm_pads"] == list(
+        first_stage_card.planned_rytm_pads
+    )
+    assert stage_packet["stage_cards"][0]["planned_analog_four_tracks"] == list(
+        first_stage_card.planned_analog_four_tracks
+    )
     assert payload["safety"][0] == "passive/read-only"
 
 
@@ -856,6 +882,10 @@ def test_style_performance_arc_live_cue_sheet_covers_single_machine_scope(
         "\n".join(cue_sheet.suggested_commands)
     )
     assert cue_sheet.cues[0].render_segment.rytm_preview_summary == "unchanged by scope"
+    assert cue_sheet.stage_packet.planned_rytm_pads == ()
+    assert cue_sheet.stage_packet.planned_analog_four_tracks
+    assert cue_sheet.stage_packet.stage_cards[0].planned_rytm_pads == ()
+    assert cue_sheet.stage_packet.stage_cards[0].planned_analog_four_tracks
 
     text = "\n".join(format_style_performance_arc_live_cue_sheet_report(cue_sheet))
     assert "Scope: analog-four-only" in text
@@ -864,6 +894,7 @@ def test_style_performance_arc_live_cue_sheet_covers_single_machine_scope(
     payload = to_style_performance_arc_live_cue_sheet_json(cue_sheet)
     assert payload["cue_sheet"]["scope"] == "analog-four-only"
     assert payload["cue_sheet"]["cues"][0]["machine_focus"] == "Analog Four only"
+    assert payload["cue_sheet"]["stage_packet"]["planned_rytm_pads"] == []
 
     with pytest.raises(ValueError, match="event_limit"):
         format_style_performance_arc_live_cue_sheet_report(
@@ -978,6 +1009,7 @@ def test_style_performance_arc_reference_match_ranks_description_and_embeds_cue_
     assert report.selected_match.arc.key == "mills_mulero_tunnel"
     assert report.live_cue_sheet is not None
     assert report.live_cue_sheet.selected_entry.arc.key == "mills_mulero_tunnel"
+    assert report.stage_packet is report.live_cue_sheet.stage_packet
     assert report.matches[0].score >= report.matches[1].score
     assert "jeff mills" in report.selected_match.matched_terms
     assert "oscar mulero" in report.selected_match.matched_terms
@@ -993,8 +1025,10 @@ def test_style_performance_arc_reference_match_ranks_description_and_embeds_cue_
     assert "- Source kind: description" in text
     assert "- Selected arc: mills_mulero_tunnel / Mills Mulero Tunnel" in text
     assert "Ranked arc matches:" in text
+    assert "Reference-selected stage packet:" in text
     assert "Embedded live cue sheet:" in text
     assert "Cue sheet summary:" in text
+    assert "Stage cards:" in text
     assert "Mock render row preview:" in text
     assert "- no MIDI sending" in lines
     assert "- no port opening" in lines
@@ -1004,6 +1038,7 @@ def test_style_performance_arc_reference_match_ranks_description_and_embeds_cue_
     assert payload["reference_match"]["source_reference"] is None
     assert payload["reference_match"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
     assert payload["reference_match"]["embedded_live_cue_sheet"] is True
+    assert payload["reference_match"]["stage_packet"]["selected_arc_key"] == ("mills_mulero_tunnel")
     assert payload["live_cue_sheet"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
     assert payload["safety"][0] == "passive/read-only"
 
@@ -1069,13 +1104,13 @@ def test_style_performance_arc_reference_match_has_no_snapshot_preview_without_s
     )
 
     assert report.snapshot_preview is None
+    assert report.stage_packet is None
     assert "Reference-selected snapshot preview: none" in "\n".join(
         format_style_performance_arc_reference_match_report(report)
     )
-    assert (
-        to_style_performance_arc_reference_match_json(report)["reference_match"]["snapshot_preview"]
-        is None
-    )
+    payload = to_style_performance_arc_reference_match_json(report)
+    assert payload["reference_match"]["snapshot_preview"] is None
+    assert payload["reference_match"]["stage_packet"] is None
 
 
 def test_style_performance_arc_reference_match_snapshot_preview_edges():
@@ -2811,3 +2846,4 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Matches a reference description or FeatureReport to performance arcs." in (
         reference_match_help
     )
+    assert "stage packet with compact cue cards" in reference_match_help

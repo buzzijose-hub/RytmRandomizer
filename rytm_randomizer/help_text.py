@@ -864,7 +864,9 @@ Behavior:
   selected live cue sheet when saved-kit paths are supplied. When snapshots
   are present, it also summarizes the reference-selected snapshot preview:
   selected arc, readiness, mock/deferred totals, planned Rytm pads, planned
-  Analog Four tracks, and passive operator action. This is an
+  Analog Four tracks, and passive operator action. Saved-kit references also
+  expose a stage packet with compact cue cards, planned pads/tracks, risk
+  labels, recovery actions, and a passive operator handoff. This is an
   influence-not-replica reference-match report for future GUI/audio-analyzer
   routing.
 
@@ -1049,7 +1051,7 @@ Commands:
   style-performance-arc-live-cue-sheet-report
                      Build passive live performance cue sheets from saved kit banks.
   style-performance-arc-reference-match-report
-                     Match references to arcs, cue sheets, and snapshot previews.
+                     Match references to arcs, cue sheets, snapshot previews, and stage packets.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile

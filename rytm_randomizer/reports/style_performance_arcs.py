@@ -123,7 +123,7 @@ REFERENCE_MATCH_SAFETY_LINES: Final[tuple[str, ...]] = (
     "influence-not-replica scoring",
     "metadata and plan expansion only",
     "description-only path has no audio dependency",
-    "optional live cue sheet uses saved-kit snapshots only",
+    "optional live cue sheet and stage packet use saved-kit snapshots only",
     "no real MIDI rendering",
     "no MIDI sending",
     "no port opening",
@@ -410,6 +410,14 @@ class StylePerformanceArcReferenceMatchReport:
         """Return ranked match count."""
 
         return len(self.matches)
+
+    @property
+    def stage_packet(self) -> StylePerformanceArcStagePacket | None:
+        """Return the reference-selected stage packet when saved kits are present."""
+
+        if self.live_cue_sheet is None:
+            return None
+        return self.live_cue_sheet.stage_packet
 
 
 @dataclass(frozen=True)
@@ -772,6 +780,46 @@ class StylePerformanceArcLiveCue:
 
 
 @dataclass(frozen=True)
+class StylePerformanceArcStageCard:
+    """Compact show-day handoff card derived from one live cue."""
+
+    cue_number: int
+    time_window: str
+    style_key: str
+    machine_focus: str
+    readiness: str
+    risk_level: str
+    operator_move: str
+    listen_for: str
+    recovery_action: str
+    planned_rytm_pads: tuple[int, ...]
+    planned_analog_four_tracks: tuple[int, ...]
+    event_row_count: int
+    mock_message_count: int
+    deferred_row_count: int
+    render_row_summary: str
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcStagePacket:
+    """Passive stage handoff packet for the selected live cue sheet."""
+
+    selected_arc_key: str
+    selected_arc_name: str
+    scope: str
+    readiness: str
+    total_minutes: int
+    cue_count: int
+    total_event_row_count: int
+    total_mock_message_count: int
+    total_deferred_row_count: int
+    planned_rytm_pads: tuple[int, ...]
+    planned_analog_four_tracks: tuple[int, ...]
+    operator_action: str
+    stage_cards: tuple[StylePerformanceArcStageCard, ...]
+
+
+@dataclass(frozen=True)
 class StylePerformanceArcLiveCueSheetReport:
     """Passive live-performance cue sheet derived from a render bundle."""
 
@@ -779,6 +827,7 @@ class StylePerformanceArcLiveCueSheetReport:
     suggested_commands: tuple[str, ...]
     preflight_cues: tuple[str, ...]
     recovery_cues: tuple[str, ...]
+    stage_packet: StylePerformanceArcStagePacket
     cues: tuple[StylePerformanceArcLiveCue, ...]
 
     @property
@@ -2409,6 +2458,108 @@ def _live_cue_sheet_recovery_cues(
     return tuple(recovery_rows)
 
 
+def _readiness_from_counts(
+    *,
+    blocked_segment_count: int,
+    partial_segment_count: int,
+    total_deferred_row_count: int,
+    total_event_row_count: int,
+) -> str:
+    if blocked_segment_count:
+        return "blocked"
+    if partial_segment_count or total_deferred_row_count:
+        return "partial"
+    if total_event_row_count:
+        return "ready"
+    return "empty"
+
+
+def _cue_sheet_readiness(cue_sheet: StylePerformanceArcLiveCueSheetReport) -> str:
+    return _readiness_from_counts(
+        blocked_segment_count=cue_sheet.blocked_segment_count,
+        partial_segment_count=cue_sheet.partial_segment_count,
+        total_deferred_row_count=cue_sheet.total_deferred_row_count,
+        total_event_row_count=cue_sheet.total_event_row_count,
+    )
+
+
+def _stage_card_planned_rytm_pads(
+    segment: StylePerformanceArcLiveRenderSegment,
+) -> tuple[int, ...]:
+    preview = segment.set_plan_segment.preview_plan.rytm_preview
+    return tuple(sorted(getattr(preview, "planned_pads", ())))
+
+
+def _stage_card_planned_analog_four_tracks(
+    segment: StylePerformanceArcLiveRenderSegment,
+) -> tuple[int, ...]:
+    preview = segment.set_plan_segment.preview_plan.analog_four_preview
+    tracks = set(getattr(preview, "planned_tracks", ()))
+    tracks.update(row.track for row in getattr(preview, "deferred_rows", ()))
+    return tuple(sorted(tracks))
+
+
+def _stage_card_from_live_cue(
+    cue: StylePerformanceArcLiveCue,
+) -> StylePerformanceArcStageCard:
+    segment = cue.render_segment
+    return StylePerformanceArcStageCard(
+        cue_number=cue.position,
+        time_window=cue.time_window,
+        style_key=cue.style_key,
+        machine_focus=cue.machine_focus,
+        readiness=cue.readiness,
+        risk_level=cue.risk_level,
+        operator_move=cue.operator_move,
+        listen_for=segment.listen_for,
+        recovery_action=cue.recovery_action,
+        planned_rytm_pads=_stage_card_planned_rytm_pads(segment),
+        planned_analog_four_tracks=_stage_card_planned_analog_four_tracks(segment),
+        event_row_count=segment.event_row_count,
+        mock_message_count=segment.mock_message_count,
+        deferred_row_count=segment.deferred_row_count,
+        render_row_summary=cue.render_row_summary,
+    )
+
+
+def _stage_packet_operator_action(cue_count: int) -> str:
+    return (
+        "Keep this passive stage packet beside the machines; rehearse "
+        f"{cue_count} cue(s) before arming hardware. No MIDI is sent."
+    )
+
+
+def _stage_packet_from_live_cues(
+    bundle: StylePerformanceArcLiveRenderBundleReport,
+    cues: Sequence[StylePerformanceArcLiveCue],
+) -> StylePerformanceArcStagePacket:
+    stage_cards = tuple(_stage_card_from_live_cue(cue) for cue in cues)
+    planned_rytm_pads = sorted({pad for card in stage_cards for pad in card.planned_rytm_pads})
+    planned_analog_four_tracks = sorted(
+        {track for card in stage_cards for track in card.planned_analog_four_tracks}
+    )
+    return StylePerformanceArcStagePacket(
+        selected_arc_key=bundle.selected_entry.arc.key,
+        selected_arc_name=bundle.selected_entry.arc.name,
+        scope=bundle.selected_set_plan.scope,
+        readiness=_readiness_from_counts(
+            blocked_segment_count=bundle.blocked_segment_count,
+            partial_segment_count=bundle.partial_segment_count,
+            total_deferred_row_count=bundle.total_deferred_row_count,
+            total_event_row_count=bundle.total_event_row_count,
+        ),
+        total_minutes=bundle.selected_set_plan.total_minutes,
+        cue_count=len(stage_cards),
+        total_event_row_count=bundle.total_event_row_count,
+        total_mock_message_count=bundle.total_mock_message_count,
+        total_deferred_row_count=bundle.total_deferred_row_count,
+        planned_rytm_pads=tuple(planned_rytm_pads),
+        planned_analog_four_tracks=tuple(planned_analog_four_tracks),
+        operator_action=_stage_packet_operator_action(len(stage_cards)),
+        stage_cards=stage_cards,
+    )
+
+
 def build_style_performance_arc_live_cue_sheet_report(
     arc_keys: Sequence[str] | None = None,
     *,
@@ -2438,11 +2589,13 @@ def build_style_performance_arc_live_cue_sheet_report(
         _live_cue_from_segment(segment, scope=bundle.selected_set_plan.scope)
         for segment in bundle.segments
     )
+    stage_packet = _stage_packet_from_live_cues(bundle, cues)
     return StylePerformanceArcLiveCueSheetReport(
         live_render_bundle=bundle,
         suggested_commands=_live_cue_sheet_suggested_commands(bundle),
         preflight_cues=_live_cue_sheet_preflight_cues(bundle),
         recovery_cues=_live_cue_sheet_recovery_cues(cues),
+        stage_packet=stage_packet,
         cues=cues,
     )
 
@@ -2487,6 +2640,48 @@ def _live_cue_lines(
     return lines
 
 
+def _stage_card_lines(card: StylePerformanceArcStageCard) -> list[str]:
+    return [
+        (
+            f"- Cue {card.cue_number}. {card.time_window} | {card.style_key} | "
+            f"{card.machine_focus}"
+        ),
+        f"  Readiness: {card.readiness}",
+        f"  Risk: {card.risk_level}",
+        f"  Hands-on move: {card.operator_move}",
+        f"  Listen for: {card.listen_for}",
+        f"  Recovery: {card.recovery_action}",
+        f"  Planned Rytm pads: {_number_sequence(card.planned_rytm_pads)}",
+        f"  Planned Analog Four tracks: {_number_sequence(card.planned_analog_four_tracks)}",
+        f"  Render rows: {card.render_row_summary}",
+    ]
+
+
+def _stage_packet_lines(
+    packet: StylePerformanceArcStagePacket,
+    *,
+    header: str,
+) -> list[str]:
+    lines = [
+        header,
+        f"- Selected arc: {packet.selected_arc_key} / {packet.selected_arc_name}",
+        f"- Scope: {packet.scope}",
+        f"- Readiness: {packet.readiness}",
+        f"- Total duration minutes: {packet.total_minutes}",
+        f"- Cue count: {packet.cue_count}",
+        f"- Total event rows: {packet.total_event_row_count}",
+        f"- Total mock messages: {packet.total_mock_message_count}",
+        f"- Total deferred rows: {packet.total_deferred_row_count}",
+        f"- Planned Rytm pads: {_number_sequence(packet.planned_rytm_pads)}",
+        f"- Planned Analog Four tracks: {_number_sequence(packet.planned_analog_four_tracks)}",
+        f"- Operator action: {packet.operator_action}",
+        "Stage cards:",
+    ]
+    for card in packet.stage_cards:
+        lines.extend(_stage_card_lines(card))
+    return lines
+
+
 def format_style_performance_arc_live_cue_sheet_report(
     report: StylePerformanceArcLiveCueSheetReport,
     *,
@@ -2521,6 +2716,7 @@ def format_style_performance_arc_live_cue_sheet_report(
         *[f"- {command}" for command in report.suggested_commands],
         "Preflight cues:",
         *[f"- {cue}" for cue in report.preflight_cues],
+        *_stage_packet_lines(report.stage_packet, header="Stage packet:"),
         "Performance cues:",
     ]
     for cue in report.cues:
@@ -2559,6 +2755,44 @@ def _live_cue_json(cue: StylePerformanceArcLiveCue) -> dict[str, object]:
     }
 
 
+def _stage_card_json(card: StylePerformanceArcStageCard) -> dict[str, object]:
+    return {
+        "cue_number": card.cue_number,
+        "time_window": card.time_window,
+        "style_key": card.style_key,
+        "machine_focus": card.machine_focus,
+        "readiness": card.readiness,
+        "risk_level": card.risk_level,
+        "operator_move": card.operator_move,
+        "listen_for": card.listen_for,
+        "recovery_action": card.recovery_action,
+        "planned_rytm_pads": list(card.planned_rytm_pads),
+        "planned_analog_four_tracks": list(card.planned_analog_four_tracks),
+        "event_row_count": card.event_row_count,
+        "mock_message_count": card.mock_message_count,
+        "deferred_row_count": card.deferred_row_count,
+        "render_row_summary": card.render_row_summary,
+    }
+
+
+def _stage_packet_json(packet: StylePerformanceArcStagePacket) -> dict[str, object]:
+    return {
+        "selected_arc_key": packet.selected_arc_key,
+        "selected_arc_name": packet.selected_arc_name,
+        "scope": packet.scope,
+        "readiness": packet.readiness,
+        "total_minutes": packet.total_minutes,
+        "cue_count": packet.cue_count,
+        "total_event_row_count": packet.total_event_row_count,
+        "total_mock_message_count": packet.total_mock_message_count,
+        "total_deferred_row_count": packet.total_deferred_row_count,
+        "planned_rytm_pads": list(packet.planned_rytm_pads),
+        "planned_analog_four_tracks": list(packet.planned_analog_four_tracks),
+        "operator_action": packet.operator_action,
+        "stage_cards": [_stage_card_json(card) for card in packet.stage_cards],
+    }
+
+
 def to_style_performance_arc_live_cue_sheet_json(
     report: StylePerformanceArcLiveCueSheetReport,
 ) -> dict[str, object]:
@@ -2589,6 +2823,7 @@ def to_style_performance_arc_live_cue_sheet_json(
                 "mock_messages": report.total_mock_message_count,
                 "deferred_rows": report.total_deferred_row_count,
             },
+            "stage_packet": _stage_packet_json(report.stage_packet),
             "cues": [_live_cue_json(cue) for cue in report.cues],
         },
         "safety": list(LIVE_CUE_SHEET_SAFETY_LINES),
@@ -2985,13 +3220,7 @@ def _rank_reference_matches(
 def _reference_snapshot_preview_readiness(
     cue_sheet: StylePerformanceArcLiveCueSheetReport,
 ) -> str:
-    if cue_sheet.blocked_segment_count:
-        return "blocked"
-    if cue_sheet.partial_segment_count or cue_sheet.total_deferred_row_count:
-        return "partial"
-    if cue_sheet.total_event_row_count:
-        return "ready"
-    return "empty"
+    return _cue_sheet_readiness(cue_sheet)
 
 
 def _reference_snapshot_preview_operator_action(
@@ -3265,6 +3494,9 @@ def to_style_performance_arc_reference_match_json(
                 if report.snapshot_preview is None
                 else _reference_snapshot_preview_json(report.snapshot_preview)
             ),
+            "stage_packet": (
+                None if report.stage_packet is None else _stage_packet_json(report.stage_packet)
+            ),
         },
         "live_cue_sheet": (
             None
@@ -3301,6 +3533,14 @@ def _reference_snapshot_preview_lines(
     ]
 
 
+def _reference_stage_packet_lines(
+    packet: StylePerformanceArcStagePacket | None,
+) -> list[str]:
+    if packet is None:
+        return ["Reference-selected stage packet: none"]
+    return _stage_packet_lines(packet, header="Reference-selected stage packet:")
+
+
 def _reference_match_lines(report: StylePerformanceArcReferenceMatchReport) -> list[str]:
     selected = report.selected_match
     confidence = report.feature_report.confidence.value
@@ -3315,6 +3555,7 @@ def _reference_match_lines(report: StylePerformanceArcReferenceMatchReport) -> l
         f"- Selected score: {selected.score}",
         f"- Selected action: {selected.operator_action}",
         *_reference_snapshot_preview_lines(report.snapshot_preview),
+        *_reference_stage_packet_lines(report.stage_packet),
         "Axis evidence:",
         *[f"- {axis}: {score}" for axis, score in report.axis_scores.items()],
         "Matched terms:",
@@ -4421,7 +4662,7 @@ STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND: Final[CliCommand] = CliCommand
 )
 STYLE_PERFORMANCE_ARC_REFERENCE_MATCH_CLI_COMMAND: Final[CliCommand] = CliCommand(
     name="style-performance-arc-reference-match-report",
-    summary="Match references to passive performance arcs and optional cue sheets.",
+    summary="Match references to arcs, cue sheets, snapshot previews, and stage packets.",
     args_parser=_parse_arc_reference_match_cli_args,
     handler=_handle_style_performance_arc_reference_match_report,
     error_formatter=_format_cli_error,
@@ -4483,6 +4724,8 @@ __all__ = [
     "StylePerformanceArcReadinessEntry",
     "StylePerformanceArcReadinessReport",
     "StylePerformanceArcSetPlanReport",
+    "StylePerformanceArcStageCard",
+    "StylePerformanceArcStagePacket",
     "build_style_performance_arc_audition_packet_report",
     "build_style_performance_arc_catalog_report",
     "build_style_performance_arc_live_cue_sheet_report",

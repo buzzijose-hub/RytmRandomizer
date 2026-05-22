@@ -30,6 +30,7 @@ The text report emits:
 - Selected arc metadata and replayable passive commands.
 - Preflight cues derived from the live-session packet launch checklist.
 - Performance cues: time window, style key, machine focus, readiness, risk label, hands-on move, listen-for cue, go/no-go cue, recovery action, machine summaries, and render row counts.
+- Stage packet: compact show-day cue cards with selected arc, scope, readiness, planned pads/tracks, risk labels, hands-on moves, listening targets, recovery actions, and mock/deferred row totals.
 - Optional capped mock render row previews per segment.
 - Recovery cues deduplicated across the selected segments.
 - Safety block with explicit passive/read-only language.
@@ -46,6 +47,8 @@ The JSON report emits deterministic data for future GUI/audio-analyzer/live-work
 Add frozen dataclasses in `rytm_randomizer/reports/style_performance_arcs.py`:
 
 - `StylePerformanceArcLiveCue`: wraps a live render segment with operator-facing machine focus, risk level, hands-on move, and recovery action.
+- `StylePerformanceArcStageCard`: a compact per-cue handoff row for show-day operation.
+- `StylePerformanceArcStagePacket`: the selected-arc handoff packet for the live cue sheet and reference-match report.
 - `StylePerformanceArcLiveCueSheetReport`: wraps the selected live render bundle with suggested commands, preflight cues, recovery cues, and generated cues.
 
 ## Safety

@@ -191,7 +191,10 @@ and style-axis scores, and can embed the selected cue sheet when saved-kit
 paths are present. When saved-kit snapshots are supplied, the same report
 also exposes a reference-selected snapshot preview with readiness,
 mock/deferred totals, kit names, planned Rytm pads, planned Analog Four
-tracks, and passive operator action.
+tracks, and passive operator action. The same saved-kit path also emits a
+stage packet: compact cue cards with the selected arc, scope, readiness,
+planned pads/tracks, risk labels, hands-on move, listening target, and
+recovery action for each segment.
 Together they are the current handoff shape for the future
 GUI/audio-analyzer planner: the analyzer can choose or bias a reference
 arc later, and these reports already show which segment-level machine

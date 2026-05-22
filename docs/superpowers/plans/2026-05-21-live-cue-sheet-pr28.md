@@ -193,3 +193,45 @@ feat: add live performance cue sheet
 ```
 
 Open a PR against `modularize-v1.34` with the required 18-gate checklist and link to this plan.
+
+### Task 7: Reference-Selected Stage Packet Extension
+
+**Files:**
+- Modify: `rytm_randomizer/reports/style_performance_arcs.py`
+- Modify: `tests/test_style_performance_arcs_report.py`
+- Modify: `rytm_randomizer/help_text.py`
+- Modify: `tests/fixtures/cli_help_expected.txt`
+- Modify: `README.md`
+- Modify: `docs/STYLE_ANALYSIS.md`
+- Modify: `docs/STATUS.md`
+- Modify: `docs/ARCHITECTURE.md`
+- Modify: `docs/ARCHITECTURE_DIAGRAMS.md`
+
+- [x] **Step 1: RED tests**
+
+Extend the live cue sheet and reference-match tests to require a passive
+stage packet with selected arc, scope, readiness, cue count, planned Rytm
+pads, planned Analog Four tracks, compact stage cards, JSON output, and
+formatted text output.
+
+- [x] **Step 2: Implement stage packet data model**
+
+Add frozen stage-card and stage-packet dataclasses derived from the existing
+live cue sheet. Keep the packet passive and reuse saved-kit mock/deferred rows
+without adding any MIDI send path.
+
+- [x] **Step 3: Wire formatter and JSON**
+
+Expose the stage packet under the live cue sheet JSON, the reference-match
+JSON, the live cue sheet text output, and the reference-match summary.
+
+- [x] **Step 4: Refresh operator-facing docs**
+
+Update CLI help summaries, README, STYLE_ANALYSIS, STATUS, architecture docs,
+and the top-level help fixture to describe the stage-packet handoff.
+
+- [x] **Step 5: Re-run verification and push**
+
+Run focused tests, touched-module coverage, CLI/help safety tests,
+architecture, fast/full suites, coverage, and review gate before staging only
+the intended files and pushing the PR update.
