@@ -188,7 +188,10 @@ bridge from text/audio/library influence evidence into arc selection:
 it rejects blank/no-evidence references, ranks curated arcs, preserves
 audio/library source paths for traceability, explains the matched terms
 and style-axis scores, and can embed the selected cue sheet when saved-kit
-paths are present.
+paths are present. When saved-kit snapshots are supplied, the same report
+also exposes a reference-selected snapshot preview with readiness,
+mock/deferred totals, kit names, planned Rytm pads, planned Analog Four
+tracks, and passive operator action.
 Together they are the current handoff shape for the future
 GUI/audio-analyzer planner: the analyzer can choose or bias a reference
 arc later, and these reports already show which segment-level machine

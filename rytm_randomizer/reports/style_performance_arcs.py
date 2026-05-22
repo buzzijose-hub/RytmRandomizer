@@ -364,6 +364,28 @@ class StylePerformanceArcReferenceMatchEntry:
 
 
 @dataclass(frozen=True)
+class StylePerformanceArcReferenceSnapshotPreview:
+    """Flattened passive snapshot preview selected by reference matching."""
+
+    selected_arc_key: str
+    scope: str
+    style_keys: tuple[str, ...]
+    readiness: str
+    segment_count: int
+    ready_segment_count: int
+    partial_segment_count: int
+    blocked_segment_count: int
+    total_event_row_count: int
+    total_mock_message_count: int
+    total_deferred_row_count: int
+    rytm_kit_names: tuple[str, ...]
+    analog_four_kit_names: tuple[str, ...]
+    planned_rytm_pads: tuple[int, ...]
+    planned_analog_four_tracks: tuple[int, ...]
+    operator_action: str
+
+
+@dataclass(frozen=True)
 class StylePerformanceArcReferenceMatchReport:
     """Passive reference description/feature match against curated arcs."""
 
@@ -375,6 +397,7 @@ class StylePerformanceArcReferenceMatchReport:
     matched_terms: tuple[str, ...]
     matches: tuple[StylePerformanceArcReferenceMatchEntry, ...]
     live_cue_sheet: StylePerformanceArcLiveCueSheetReport | None
+    snapshot_preview: StylePerformanceArcReferenceSnapshotPreview | None
 
     @property
     def selected_match(self) -> StylePerformanceArcReferenceMatchEntry:
@@ -2959,6 +2982,90 @@ def _rank_reference_matches(
     )
 
 
+def _reference_snapshot_preview_readiness(
+    cue_sheet: StylePerformanceArcLiveCueSheetReport,
+) -> str:
+    if cue_sheet.blocked_segment_count:
+        return "blocked"
+    if cue_sheet.partial_segment_count or cue_sheet.total_deferred_row_count:
+        return "partial"
+    if cue_sheet.total_event_row_count:
+        return "ready"
+    return "empty"
+
+
+def _reference_snapshot_preview_operator_action(
+    preview: StylePerformanceArcReferenceSnapshotPreview,
+) -> str:
+    prefix = "This is still a passive preview; no MIDI is sent."
+    if preview.readiness == "blocked":
+        return f"{prefix} Resolve blocked segments before using this arc live."
+    if preview.total_deferred_row_count:
+        return f"{prefix} Review deferred Analog Four rows before arming hardware."
+    if preview.total_event_row_count:
+        return f"{prefix} Use these mock rows as the rehearsal checklist."
+    return f"{prefix} Use the selected arc as planning guidance only."
+
+
+def _reference_snapshot_preview_from_cue_sheet(
+    cue_sheet: StylePerformanceArcLiveCueSheetReport,
+) -> StylePerformanceArcReferenceSnapshotPreview:
+    rytm_kit_names: set[str] = set()
+    analog_four_kit_names: set[str] = set()
+    planned_rytm_pads: set[int] = set()
+    planned_analog_four_tracks: set[int] = set()
+
+    for segment in cue_sheet.live_render_bundle.segments:
+        preview = segment.set_plan_segment.preview_plan
+        if preview.rytm_preview is not None:
+            rytm_kit_names.add(preview.rytm_preview.kit_name)
+            planned_rytm_pads.update(preview.rytm_preview.planned_pads)
+        if preview.analog_four_preview is not None:
+            analog_four_kit_names.add(preview.analog_four_preview.kit_name)
+            planned_analog_four_tracks.update(preview.analog_four_preview.planned_tracks)
+            planned_analog_four_tracks.update(
+                row.track for row in preview.analog_four_preview.deferred_rows
+            )
+
+    readiness = _reference_snapshot_preview_readiness(cue_sheet)
+    operator_preview = StylePerformanceArcReferenceSnapshotPreview(
+        selected_arc_key=cue_sheet.selected_entry.arc.key,
+        scope=cue_sheet.selected_set_plan.scope,
+        style_keys=cue_sheet.selected_entry.arc.style_keys,
+        readiness=readiness,
+        segment_count=cue_sheet.segment_count,
+        ready_segment_count=cue_sheet.ready_segment_count,
+        partial_segment_count=cue_sheet.partial_segment_count,
+        blocked_segment_count=cue_sheet.blocked_segment_count,
+        total_event_row_count=cue_sheet.total_event_row_count,
+        total_mock_message_count=cue_sheet.total_mock_message_count,
+        total_deferred_row_count=cue_sheet.total_deferred_row_count,
+        rytm_kit_names=tuple(sorted(rytm_kit_names)),
+        analog_four_kit_names=tuple(sorted(analog_four_kit_names)),
+        planned_rytm_pads=tuple(sorted(planned_rytm_pads)),
+        planned_analog_four_tracks=tuple(sorted(planned_analog_four_tracks)),
+        operator_action="",
+    )
+    return StylePerformanceArcReferenceSnapshotPreview(
+        selected_arc_key=operator_preview.selected_arc_key,
+        scope=operator_preview.scope,
+        style_keys=operator_preview.style_keys,
+        readiness=operator_preview.readiness,
+        segment_count=operator_preview.segment_count,
+        ready_segment_count=operator_preview.ready_segment_count,
+        partial_segment_count=operator_preview.partial_segment_count,
+        blocked_segment_count=operator_preview.blocked_segment_count,
+        total_event_row_count=operator_preview.total_event_row_count,
+        total_mock_message_count=operator_preview.total_mock_message_count,
+        total_deferred_row_count=operator_preview.total_deferred_row_count,
+        rytm_kit_names=operator_preview.rytm_kit_names,
+        analog_four_kit_names=operator_preview.analog_four_kit_names,
+        planned_rytm_pads=operator_preview.planned_rytm_pads,
+        planned_analog_four_tracks=operator_preview.planned_analog_four_tracks,
+        operator_action=_reference_snapshot_preview_operator_action(operator_preview),
+    )
+
+
 def _source_count(
     *,
     description: str | None,
@@ -3051,6 +3158,11 @@ def build_style_performance_arc_reference_match_report(
             discovery_start=discovery_start,
             discovery_end=discovery_end,
         )
+    snapshot_preview = (
+        None
+        if live_cue_sheet is None
+        else _reference_snapshot_preview_from_cue_sheet(live_cue_sheet)
+    )
     return StylePerformanceArcReferenceMatchReport(
         source_kind=source_kind,
         source_reference=source_reference,
@@ -3060,6 +3172,7 @@ def build_style_performance_arc_reference_match_report(
         matched_terms=terms,
         matches=matches,
         live_cue_sheet=live_cue_sheet,
+        snapshot_preview=snapshot_preview,
     )
 
 
@@ -3096,6 +3209,41 @@ def _reference_match_entry_json(
     }
 
 
+def _number_sequence(values: Sequence[int]) -> str:
+    if not values:
+        return "none"
+    return ", ".join(str(value) for value in values)
+
+
+def _string_sequence(values: Sequence[str]) -> str:
+    if not values:
+        return "none"
+    return ", ".join(values)
+
+
+def _reference_snapshot_preview_json(
+    preview: StylePerformanceArcReferenceSnapshotPreview,
+) -> dict[str, object]:
+    return {
+        "selected_arc_key": preview.selected_arc_key,
+        "scope": preview.scope,
+        "style_keys": list(preview.style_keys),
+        "readiness": preview.readiness,
+        "segment_count": preview.segment_count,
+        "ready_segment_count": preview.ready_segment_count,
+        "partial_segment_count": preview.partial_segment_count,
+        "blocked_segment_count": preview.blocked_segment_count,
+        "total_event_row_count": preview.total_event_row_count,
+        "total_mock_message_count": preview.total_mock_message_count,
+        "total_deferred_row_count": preview.total_deferred_row_count,
+        "rytm_kit_names": list(preview.rytm_kit_names),
+        "analog_four_kit_names": list(preview.analog_four_kit_names),
+        "planned_rytm_pads": list(preview.planned_rytm_pads),
+        "planned_analog_four_tracks": list(preview.planned_analog_four_tracks),
+        "operator_action": preview.operator_action,
+    }
+
+
 def to_style_performance_arc_reference_match_json(
     report: StylePerformanceArcReferenceMatchReport,
 ) -> dict[str, object]:
@@ -3112,6 +3260,11 @@ def to_style_performance_arc_reference_match_json(
             "selected": _reference_match_entry_json(report.selected_match),
             "matches": [_reference_match_entry_json(entry) for entry in report.matches],
             "embedded_live_cue_sheet": report.live_cue_sheet is not None,
+            "snapshot_preview": (
+                None
+                if report.snapshot_preview is None
+                else _reference_snapshot_preview_json(report.snapshot_preview)
+            ),
         },
         "live_cue_sheet": (
             None
@@ -3120,6 +3273,32 @@ def to_style_performance_arc_reference_match_json(
         ),
         "safety": list(REFERENCE_MATCH_SAFETY_LINES),
     }
+
+
+def _reference_snapshot_preview_lines(
+    preview: StylePerformanceArcReferenceSnapshotPreview | None,
+) -> list[str]:
+    if preview is None:
+        return ["Reference-selected snapshot preview: none"]
+    return [
+        "Reference-selected snapshot preview:",
+        f"- Selected arc: {preview.selected_arc_key}",
+        f"- Scope: {preview.scope}",
+        f"- Style path: {_string_sequence(preview.style_keys)}",
+        f"- Readiness: {preview.readiness}",
+        f"- Segments: {preview.segment_count}",
+        f"- Ready segments: {preview.ready_segment_count}",
+        f"- Partial segments: {preview.partial_segment_count}",
+        f"- Blocked segments: {preview.blocked_segment_count}",
+        f"- Total event rows: {preview.total_event_row_count}",
+        f"- Total mock messages: {preview.total_mock_message_count}",
+        f"- Total deferred rows: {preview.total_deferred_row_count}",
+        f"- Rytm kits: {_string_sequence(preview.rytm_kit_names)}",
+        f"- Analog Four kits: {_string_sequence(preview.analog_four_kit_names)}",
+        f"- Planned Rytm pads: {_number_sequence(preview.planned_rytm_pads)}",
+        f"- Planned Analog Four tracks: {_number_sequence(preview.planned_analog_four_tracks)}",
+        f"- Operator action: {preview.operator_action}",
+    ]
 
 
 def _reference_match_lines(report: StylePerformanceArcReferenceMatchReport) -> list[str]:
@@ -3135,6 +3314,7 @@ def _reference_match_lines(report: StylePerformanceArcReferenceMatchReport) -> l
         f"- Selected arc: {selected.arc.key} / {selected.arc.name}",
         f"- Selected score: {selected.score}",
         f"- Selected action: {selected.operator_action}",
+        *_reference_snapshot_preview_lines(report.snapshot_preview),
         "Axis evidence:",
         *[f"- {axis}: {score}" for axis, score in report.axis_scores.items()],
         "Matched terms:",
@@ -4297,6 +4477,7 @@ __all__ = [
     "StylePerformanceArcLiveSessionSegment",
     "StylePerformanceArcReferenceMatchEntry",
     "StylePerformanceArcReferenceMatchReport",
+    "StylePerformanceArcReferenceSnapshotPreview",
     "StylePerformanceArcRehearsalManifestReport",
     "StylePerformanceArcRehearsalSegment",
     "StylePerformanceArcReadinessEntry",

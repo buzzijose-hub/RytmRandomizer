@@ -169,7 +169,7 @@ Commands:
   style-performance-arc-live-cue-sheet-report
                      Build passive live performance cue sheets from saved kit banks.
   style-performance-arc-reference-match-report
-                     Match references to passive performance arcs and cue sheets.
+                     Match references to arcs, cue sheets, and snapshot previews.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile

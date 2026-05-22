@@ -861,7 +861,10 @@ Behavior:
   Matches a reference description or FeatureReport to performance arcs.
   The report converts description, audio, or library features into bounded
   style-axis evidence, ranks curated performance arcs, and can embed the
-  selected live cue sheet when saved-kit paths are supplied. This is an
+  selected live cue sheet when saved-kit paths are supplied. When snapshots
+  are present, it also summarizes the reference-selected snapshot preview:
+  selected arc, readiness, mock/deferred totals, planned Rytm pads, planned
+  Analog Four tracks, and passive operator action. This is an
   influence-not-replica reference-match report for future GUI/audio-analyzer
   routing.
 
@@ -1046,7 +1049,7 @@ Commands:
   style-performance-arc-live-cue-sheet-report
                      Build passive live performance cue sheets from saved kit banks.
   style-performance-arc-reference-match-report
-                     Match references to passive performance arcs and cue sheets.
+                     Match references to arcs, cue sheets, and snapshot previews.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile

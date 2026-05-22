@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -1005,6 +1006,207 @@ def test_style_performance_arc_reference_match_ranks_description_and_embeds_cue_
     assert payload["reference_match"]["embedded_live_cue_sheet"] is True
     assert payload["live_cue_sheet"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
     assert payload["safety"][0] == "passive/read-only"
+
+
+def test_style_performance_arc_reference_match_summarizes_snapshot_preview(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_reference_match_report,
+        format_style_performance_arc_reference_match_report,
+        to_style_performance_arc_reference_match_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    report = build_style_performance_arc_reference_match_report(
+        description="Stigmata Birmingham Regis Surgeon Glenn Wilson warehouse pressure",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        include_live_cue_sheet=True,
+    )
+
+    assert report.snapshot_preview is not None
+    assert report.snapshot_preview.selected_arc_key == report.selected_match.arc.key
+    assert report.snapshot_preview.scope == report.live_cue_sheet.selected_set_plan.scope
+    assert report.snapshot_preview.style_keys == report.selected_match.arc.style_keys
+    assert report.snapshot_preview.total_event_row_count == (
+        report.live_cue_sheet.total_event_row_count
+    )
+    assert report.snapshot_preview.total_deferred_row_count == (
+        report.live_cue_sheet.total_deferred_row_count
+    )
+    assert report.snapshot_preview.planned_rytm_pads
+    assert report.snapshot_preview.planned_analog_four_tracks
+    assert "no MIDI" in report.snapshot_preview.operator_action
+
+    text = "\n".join(format_style_performance_arc_reference_match_report(report))
+    assert "Reference-selected snapshot preview:" in text
+    assert f"- Scope: {report.snapshot_preview.scope}" in text
+    planned_rytm_pads = ", ".join(str(pad) for pad in report.snapshot_preview.planned_rytm_pads)
+    assert f"- Planned Rytm pads: {planned_rytm_pads}" in text
+    assert "Analog Four kits:" in text
+    assert "This is still a passive preview; no MIDI is sent." in text
+
+    payload = to_style_performance_arc_reference_match_json(report)
+    preview = payload["reference_match"]["snapshot_preview"]
+    assert preview["selected_arc_key"] == report.selected_match.arc.key
+    assert preview["planned_rytm_pads"] == list(report.snapshot_preview.planned_rytm_pads)
+    assert preview["planned_analog_four_tracks"] == list(
+        report.snapshot_preview.planned_analog_four_tracks
+    )
+    assert preview["total_mock_message_count"] == report.snapshot_preview.total_mock_message_count
+
+
+def test_style_performance_arc_reference_match_has_no_snapshot_preview_without_saved_kits():
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_reference_match_report,
+        format_style_performance_arc_reference_match_report,
+        to_style_performance_arc_reference_match_json,
+    )
+
+    report = build_style_performance_arc_reference_match_report(
+        description="Jeff Mills Oscar Mulero tunnel hypnosis",
+    )
+
+    assert report.snapshot_preview is None
+    assert "Reference-selected snapshot preview: none" in "\n".join(
+        format_style_performance_arc_reference_match_report(report)
+    )
+    assert (
+        to_style_performance_arc_reference_match_json(report)["reference_match"]["snapshot_preview"]
+        is None
+    )
+
+
+def test_style_performance_arc_reference_match_snapshot_preview_edges():
+    from rytm_randomizer.reports.style_performance_arcs import (
+        StylePerformanceArcReferenceSnapshotPreview,
+        _reference_snapshot_preview_lines,
+        _reference_snapshot_preview_operator_action,
+    )
+
+    blocked_preview = StylePerformanceArcReferenceSnapshotPreview(
+        selected_arc_key="arc",
+        scope="dual",
+        style_keys=("industrial_dark",),
+        readiness="blocked",
+        segment_count=1,
+        ready_segment_count=0,
+        partial_segment_count=0,
+        blocked_segment_count=1,
+        total_event_row_count=0,
+        total_mock_message_count=0,
+        total_deferred_row_count=0,
+        rytm_kit_names=(),
+        analog_four_kit_names=(),
+        planned_rytm_pads=(),
+        planned_analog_four_tracks=(),
+        operator_action="",
+    )
+    assert "Resolve blocked segments" in _reference_snapshot_preview_operator_action(
+        blocked_preview
+    )
+    blocked_lines = _reference_snapshot_preview_lines(
+        replace(
+            blocked_preview,
+            operator_action=_reference_snapshot_preview_operator_action(blocked_preview),
+        )
+    )
+    assert "- Rytm kits: none" in blocked_lines
+    assert "- Planned Analog Four tracks: none" in blocked_lines
+
+    ready_preview = replace(
+        blocked_preview,
+        readiness="ready",
+        blocked_segment_count=0,
+        ready_segment_count=1,
+        total_event_row_count=4,
+        total_mock_message_count=4,
+        planned_rytm_pads=(1, 9),
+    )
+    assert "rehearsal checklist" in _reference_snapshot_preview_operator_action(ready_preview)
+
+    empty_preview = replace(
+        blocked_preview,
+        readiness="empty",
+        blocked_segment_count=0,
+    )
+    assert "planning guidance" in _reference_snapshot_preview_operator_action(empty_preview)
+
+
+def test_style_performance_arc_reference_match_snapshot_preview_helper_edges():
+    from rytm_randomizer.reports.style_performance_arcs import (
+        _reference_snapshot_preview_from_cue_sheet,
+        _reference_snapshot_preview_readiness,
+    )
+
+    def cue_counts(
+        *,
+        blocked: int = 0,
+        partial: int = 0,
+        deferred: int = 0,
+        events: int = 0,
+    ):
+        return SimpleNamespace(
+            blocked_segment_count=blocked,
+            partial_segment_count=partial,
+            total_deferred_row_count=deferred,
+            total_event_row_count=events,
+        )
+
+    assert _reference_snapshot_preview_readiness(cue_counts(blocked=1)) == "blocked"
+    assert _reference_snapshot_preview_readiness(cue_counts(partial=1)) == "partial"
+    assert _reference_snapshot_preview_readiness(cue_counts(events=1)) == "ready"
+    assert _reference_snapshot_preview_readiness(cue_counts()) == "empty"
+
+    rytm_preview = SimpleNamespace(kit_name="ONLY RYTM", planned_pads=(1, 9))
+    a4_preview = SimpleNamespace(
+        kit_name="ONLY A4",
+        planned_tracks=(1,),
+        deferred_rows=(SimpleNamespace(track=4),),
+    )
+    cue_sheet = SimpleNamespace(
+        live_render_bundle=SimpleNamespace(
+            segments=(
+                SimpleNamespace(
+                    set_plan_segment=SimpleNamespace(
+                        preview_plan=SimpleNamespace(
+                            rytm_preview=None,
+                            analog_four_preview=a4_preview,
+                        )
+                    )
+                ),
+                SimpleNamespace(
+                    set_plan_segment=SimpleNamespace(
+                        preview_plan=SimpleNamespace(
+                            rytm_preview=rytm_preview,
+                            analog_four_preview=None,
+                        )
+                    )
+                ),
+            )
+        ),
+        selected_entry=SimpleNamespace(
+            arc=SimpleNamespace(key="edge_arc", style_keys=("industrial_dark",))
+        ),
+        selected_set_plan=SimpleNamespace(scope="dual"),
+        segment_count=2,
+        ready_segment_count=1,
+        partial_segment_count=1,
+        blocked_segment_count=0,
+        total_event_row_count=2,
+        total_mock_message_count=2,
+        total_deferred_row_count=1,
+    )
+
+    preview = _reference_snapshot_preview_from_cue_sheet(cue_sheet)
+
+    assert preview.readiness == "partial"
+    assert preview.rytm_kit_names == ("ONLY RYTM",)
+    assert preview.analog_four_kit_names == ("ONLY A4",)
+    assert preview.planned_rytm_pads == (1, 9)
+    assert preview.planned_analog_four_tracks == (1, 4)
+    assert "Review deferred Analog Four rows" in preview.operator_action
 
 
 def test_style_performance_arc_reference_match_scores_feature_report_without_text():
