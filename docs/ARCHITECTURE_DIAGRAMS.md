@@ -972,7 +972,7 @@ flowchart LR
         DualStyleSnapshotRoutingReport["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntentReport["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreviewReport["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/reference-match(+stage-packet)"]
         QuickStatus["quick-status"]
     end
 
@@ -1620,7 +1620,7 @@ flowchart LR
         DualStyleSnapshotRouting["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntent["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreview["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/reference-match(+stage-packet)"]
         Status["project-status / quick-status"]
     end
 
@@ -1660,7 +1660,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-mock-preview-report"| CLI
-    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render"| CLI
+    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/reference-match(+stage-packet)"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
@@ -1671,7 +1671,7 @@ flowchart LR
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
-- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/readiness, dual-machine style routing/intent/mock-preview, style-profile, style-target, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the live render bundle reuses existing segment mock previews and deferred A4 rows. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
+- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/readiness, dual-machine style routing/intent/mock-preview, style-profile, style-target, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the live render bundle reuses existing segment mock previews and deferred A4 rows, the live cue sheet converts that bundle into operator risk/move/recovery cues plus compact stage cards, and the reference-match report turns a description/audio/library/FeatureReport reference into a ranked arc plus optional embedded cue sheet, snapshot preview, and stage packet projection. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
 

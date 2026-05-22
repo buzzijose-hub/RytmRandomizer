@@ -43,6 +43,8 @@ PASSIVE_CLI_COMMANDS = (
     ("style-performance-arc-rehearsal-manifest-report", "--help"),
     ("style-performance-arc-live-session-packet-report", "--help"),
     ("style-performance-arc-live-render-bundle-report", "--help"),
+    ("style-performance-arc-live-cue-sheet-report", "--help"),
+    ("style-performance-arc-reference-match-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -87,6 +89,8 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("style-performance-arc-rehearsal-manifest-report", "--help"),
     ("style-performance-arc-live-session-packet-report", "--help"),
     ("style-performance-arc-live-render-bundle-report", "--help"),
+    ("style-performance-arc-live-cue-sheet-report", "--help"),
+    ("style-performance-arc-reference-match-report", "--help"),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",

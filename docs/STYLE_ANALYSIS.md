@@ -155,7 +155,7 @@ direction".
 This is the **influence not replica** rule, lifted unchanged from the
 pre-schema `MusicLibraryGuardrails` skill.
 
-## Reference arcs to live render bundles
+## Reference arcs to live render bundles and cue sheets
 
 The current passive bridge from influence language to machine-planning
 metadata is the style-profile / style-target / performance-arc report
@@ -164,20 +164,42 @@ high-level planning narratives; they do not copy arrangements, melodies,
 or patches from Jeff Mills, Oscar Mulero, Glenn Wilson, Stigmata,
 Regis, Surgeon, or other references.
 
-For live rehearsal, the most complete passive surface is:
+For live rehearsal, the most complete passive surfaces are:
 
 ```bash
 python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-reference-match-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
 ```
 
-That command selects the best ready or partial reference arc for the
-saved kit banks, embeds the live-session packet, then exposes each
-segment's mock render preview rows and Analog Four deferred rows. It is
-the current handoff shape for the future GUI/audio-analyzer planner:
-the analyzer can choose or bias a reference arc later, and this bundle
-already shows which segment-level machine rows would be available
-without opening ports or sending MIDI.
+The live render bundle selects the best ready or partial reference arc
+for the saved kit banks, embeds the live-session packet, then exposes
+each segment's mock render preview rows and Analog Four deferred rows.
+The live cue sheet consumes that bundle and turns it into operator cues:
+preflight checks, per-segment risk labels, hands-on moves, go/no-go
+cues, and recovery actions. The reference-match report is the passive
+bridge from text/audio/library influence evidence into arc selection:
+it rejects blank/no-evidence references, ranks curated arcs, preserves
+audio/library source paths for traceability, explains the matched terms
+and style-axis scores, and can embed the selected cue sheet when saved-kit
+paths are present. When saved-kit snapshots are supplied, the same report
+also exposes a reference-selected snapshot preview with readiness,
+mock/deferred totals, kit names, planned Rytm pads, planned Analog Four
+tracks, and passive operator action. The same saved-kit path also emits a
+stage packet: compact cue cards with the selected arc, scope, readiness,
+planned pads/tracks, risk labels, hands-on move, listening target, and
+recovery action for each segment.
+Together they are the current handoff shape for the future
+GUI/audio-analyzer planner: the analyzer can choose or bias a reference
+arc later, and these reports already show which segment-level machine
+rows and operator actions would be available without opening ports or
+sending MIDI.
 
 ## See also
 
