@@ -184,6 +184,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_stage_rehearsal_state",
             "STYLE_PERFORMANCE_ARC_STAGE_REHEARSAL_STATE_CLI_COMMAND",
         ),
+        "style-performance-arc-live-set-cockpit-report": (
+            "rytm_randomizer.reports.live_set_cockpit",
+            "STYLE_PERFORMANCE_ARC_LIVE_SET_COCKPIT_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

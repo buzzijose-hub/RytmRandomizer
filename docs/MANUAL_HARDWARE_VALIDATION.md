@@ -130,17 +130,21 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-stage-rehearsal-state-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
    ```
-3. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, and `Cue states:`.
-4. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+3. Run the passive live set cockpit report for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-set-cockpit-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+4. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, and `Cue cockpit cards:`.
+5. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-5. Confirm rehearsal state marks each cue as `go`, `rehearse`, or `do-not-arm`.
-6. Treat the current validated Rytm live flow as:
+6. Confirm rehearsal/cockpit state marks each cue as `go`, `rehearse`, or `do-not-arm`.
+7. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-7. Keep volume moderate before `S3B` and `S4B`.
-8. If the set gets too hot, use `S5`, then `Z`, then `Q`.
-9. Remember that the passive reports are route/rehearsal cards only. Armed runtime
+8. Keep volume moderate before `S3B` and `S4B`.
+9. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+10. Remember that the passive reports are route/rehearsal/cockpit cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.
 
