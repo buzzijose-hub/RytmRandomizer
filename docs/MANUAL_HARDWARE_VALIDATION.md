@@ -126,16 +126,21 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-stage-routing-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
    ```
-2. Confirm the report prints `Live set card:` and `Route cards:`.
-3. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+2. Run the passive stage rehearsal state report for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-stage-rehearsal-state-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+3. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, and `Cue states:`.
+4. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-4. Treat the current validated Rytm live flow as:
+5. Confirm rehearsal state marks each cue as `go`, `rehearse`, or `do-not-arm`.
+6. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-5. Keep volume moderate before `S3B` and `S4B`.
-6. If the set gets too hot, use `S5`, then `Z`, then `Q`.
-7. Remember that the passive report is only a route card. Armed runtime
+7. Keep volume moderate before `S3B` and `S4B`.
+8. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+9. Remember that the passive reports are route/rehearsal cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.
 
