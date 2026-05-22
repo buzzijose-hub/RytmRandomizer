@@ -1,9 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-22. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-22: PR reviewer-request automation prepared locally. New `scripts/create_pr.py` wraps `gh pr create` so `edward-rosado` is requested automatically on future PRs, with fast tests plus updated agent/human PR-opening guidance to avoid manual GitHub reviewer-click drift.
 - 2026-05-21: Reference performance arc stage packet prepared locally. The passive reference-match and live cue sheet reports now expose compact show-day cue cards with selected arc, scope, readiness, planned Rytm pads, planned Analog Four tracks, risk labels, hands-on moves, listening targets, recovery actions, and mock/deferred row totals without real MIDI rendering, port opening, or hardware sends.
 - 2026-05-21: Reference performance arc reference-match report prepared locally. The passive CLI can now rank curated live-performance arcs from a text, audio, or library reference, reject blank/no-evidence references, expose source paths for audio/library intake, matched terms, and bounded style-axis evidence, and optionally embed the selected live cue sheet plus a reference-selected snapshot preview from saved Rytm/A4 kit banks without real MIDI rendering, port opening, or hardware sends.
 - 2026-05-21: Reference performance arc live cue sheet prepared locally. The passive CLI can now consume the selected live render bundle and produce an operator-facing cue sheet with preflight cues, per-segment risk labels, hands-on moves, go/no-go listening cues, recovery actions, capped mock row previews, and JSON for future GUI/audio-analyzer live workflows without real MIDI rendering, port opening, or hardware sends.

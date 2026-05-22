@@ -1,3 +1,4 @@
 # Default owner for everything in this repo.
-# PRs automatically request review from the repo owner.
+# CODEOWNERS gates owner approval; scripts/create_pr.py also requests
+# edward-rosado so collaborator review is not left as a manual GitHub click.
 * @buzzijose-hub

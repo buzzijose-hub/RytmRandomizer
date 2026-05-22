@@ -174,7 +174,11 @@ The full path from idea to merged PR. Follow this even for a small change.
         └─ On demand / fallback: just review  ·  /agent code-reviewer  ·  /skill code-review
 
 6. Open PR
-   ├─ gh pr create --base modularize-v1.34 \
+   ├─ python scripts/create_pr.py \
+   │      --title "<conventional-commit-style title>" \
+   │      --body-file <path-to-prepared-body>
+   ├─ Raw fallback: gh pr create --base modularize-v1.34 \
+   │      --reviewer edward-rosado \
    │      --title "<conventional-commit-style title>" \
    │      --body-file <path-to-prepared-body>
    ├─ PR body MUST include:
@@ -191,6 +195,7 @@ The full path from idea to merged PR. Follow this even for a small change.
    └─ Standing order: do not stop until ALL checks pass
 
 8. Request review
+   ├─ `scripts/create_pr.py` requests edward-rosado automatically.
    ├─ The base branch requires CODEOWNERS review (@buzzijose-hub).
    ├─ Post a merge-ready comment summarizing: CI state, test count,
    │  coverage %, parity status, gates satisfied.
@@ -668,7 +673,13 @@ gh pr diff <PR#>                                  # diff
 gh pr comments <PR#>                              # discussion
 
 # OPENING A PR
+python scripts/create_pr.py \
+   --title "<title>" \
+   --body-file path/to/body.md
+
+# Raw fallback if the helper is unavailable:
 gh pr create --base modularize-v1.34 \
+   --reviewer edward-rosado \
    --title "<title>" \
    --body-file path/to/body.md
 

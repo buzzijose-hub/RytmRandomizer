@@ -14,7 +14,7 @@
 | "Refactor", "change architecture", "move a module", "rename layer"            | (consult `architecture.md`)        | Read `docs/ARCHITECTURE.md` and `.claude/rules/architecture.md` FIRST. Run `pytest tests/architecture/` after any change.                |
 | "Analyze track / library / 'rolling techno' / style description"              | `MusicLibraryGuardrails`           | Audio + style path. Produces a DRAFT `GuardrailProfile` against `rytm_randomizer/guardrails/schema.py`. Auto-invokes via its description frontmatter. Reads `reference.md` on demand. |
 | "Analyze SysEx / MIDI capture / mutation log / factory sound study"           | `DataAnalysisGuardrails`           | Parameter / capture-data path. Sibling of `MusicLibraryGuardrails`; same DRAFT `GuardrailProfile` output, different input class. Reads `reference.md` on demand.                        |
-| "Open a PR", "create pull request", "push for review"                         | `open-pr` (global)                 | After all architecture tests pass locally.                                                                                             |
+| "Open a PR", "create pull request", "push for review"                         | `open-pr` (global)                 | After all architecture tests pass locally. Use `scripts/create_pr.py` or include `--reviewer edward-rosado` in raw `gh pr create`.       |
 
 ## Architecture-affecting changes (gate)
 

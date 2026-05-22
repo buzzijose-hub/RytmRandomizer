@@ -17,7 +17,7 @@ When this file is updated, every open plan PR is expected to rebase and re-valid
 
 ## The hard gates (apply per workstream, no exceptions)
 
-A workstream does not reach `pr_open` (i.e. cannot call `gh pr create`) until **every gate below** passes locally. CI failures in any gate auto-revert the last commit and re-enter the implementation phase.
+A workstream does not reach `pr_open` (i.e. cannot call `scripts/create_pr.py` / `gh pr create`) until **every gate below** passes locally. CI failures in any gate auto-revert the last commit and re-enter the implementation phase.
 
 ### Gate 1 — Branch coverage on touched files: **100%**
 
