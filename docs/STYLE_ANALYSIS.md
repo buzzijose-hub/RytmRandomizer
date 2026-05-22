@@ -172,6 +172,10 @@ python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report \
 
 python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-reference-match-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -179,11 +183,17 @@ for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.
 The live cue sheet consumes that bundle and turns it into operator cues:
 preflight checks, per-segment risk labels, hands-on moves, go/no-go
-cues, and recovery actions. Together they are the current handoff shape
-for the future GUI/audio-analyzer planner: the analyzer can choose or
-bias a reference arc later, and these reports already show which
-segment-level machine rows and operator actions would be available
-without opening ports or sending MIDI.
+cues, and recovery actions. The reference-match report is the passive
+bridge from text/audio/library influence evidence into arc selection:
+it rejects blank/no-evidence references, ranks curated arcs, preserves
+audio/library source paths for traceability, explains the matched terms
+and style-axis scores, and can embed the selected cue sheet when saved-kit
+paths are present.
+Together they are the current handoff shape for the future
+GUI/audio-analyzer planner: the analyzer can choose or bias a reference
+arc later, and these reports already show which segment-level machine
+rows and operator actions would be available without opening ports or
+sending MIDI.
 
 ## See also
 

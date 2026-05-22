@@ -950,6 +950,398 @@ def test_style_performance_arc_live_cue_sheet_covers_focus_and_risk_edges(
     )
 
 
+def test_style_performance_arc_reference_match_ranks_description_and_embeds_cue_sheet(
+    tmp_path: Path,
+):
+    from rytm_randomizer.guardrails.schema import Confidence
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_reference_match_report,
+        format_style_performance_arc_reference_match_report,
+        to_style_performance_arc_reference_match_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    report = build_style_performance_arc_reference_match_report(
+        description=(
+            "Jeff Mills and Oscar Mulero dark hypnotic tunnel techno with "
+            "futurist bells, Detroit pressure, and restrained warehouse motion"
+        ),
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        include_live_cue_sheet=True,
+    )
+
+    assert report.feature_report.confidence is Confidence.LOW
+    assert report.source_kind == "description"
+    assert report.source_reference is None
+    assert report.selected_match.arc.key == "mills_mulero_tunnel"
+    assert report.live_cue_sheet is not None
+    assert report.live_cue_sheet.selected_entry.arc.key == "mills_mulero_tunnel"
+    assert report.matches[0].score >= report.matches[1].score
+    assert "jeff mills" in report.selected_match.matched_terms
+    assert "oscar mulero" in report.selected_match.matched_terms
+
+    lines = format_style_performance_arc_reference_match_report(
+        report,
+        include_events=True,
+        event_limit=1,
+    )
+    text = "\n".join(lines)
+    assert "RytmRandomizer passive style performance arc reference match" in text
+    assert "Reference match summary:" in text
+    assert "- Source kind: description" in text
+    assert "- Selected arc: mills_mulero_tunnel / Mills Mulero Tunnel" in text
+    assert "Ranked arc matches:" in text
+    assert "Embedded live cue sheet:" in text
+    assert "Cue sheet summary:" in text
+    assert "Mock render row preview:" in text
+    assert "- no MIDI sending" in lines
+    assert "- no port opening" in lines
+
+    payload = to_style_performance_arc_reference_match_json(report)
+    assert payload["reference_match"]["source_kind"] == "description"
+    assert payload["reference_match"]["source_reference"] is None
+    assert payload["reference_match"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
+    assert payload["reference_match"]["embedded_live_cue_sheet"] is True
+    assert payload["live_cue_sheet"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
+    assert payload["safety"][0] == "passive/read-only"
+
+
+def test_style_performance_arc_reference_match_scores_feature_report_without_text():
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.reports.style_performance_arcs import (
+        build_style_performance_arc_reference_match_report,
+        to_style_performance_arc_reference_match_json,
+    )
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
+
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=138.0,
+        tempo_stability=0.92,
+        kick_density=0.85,
+        percussion_density=0.82,
+        low_end_weight=0.88,
+        spectral_brightness=0.18,
+        texture_noise=0.9,
+        energy_arc=(0.35, 0.45, 0.55, 0.7, 0.85, 0.95, 0.92, 0.88),
+        content_hash="",
+        derived_at="2026-05-21T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+
+    report = build_style_performance_arc_reference_match_report(
+        feature_report=feature_report,
+    )
+
+    assert report.source_kind == "feature-report"
+    assert report.source_reference is None
+    assert report.selected_match.arc.key == "stigmata_birmingham_assault"
+    assert report.live_cue_sheet is None
+    assert report.matches[0].vector_score >= 70
+    assert report.matches[0].vector_score >= report.matches[1].vector_score
+
+    payload = to_style_performance_arc_reference_match_json(report)
+    assert payload["reference_match"]["feature_report"]["confidence"] == "HIGH"
+    assert payload["reference_match"]["selected"]["arc"]["key"] == ("stigmata_birmingham_assault")
+    assert payload["live_cue_sheet"] is None
+
+
+def test_style_performance_arc_reference_match_covers_edge_sources(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+):
+    import rytm_randomizer.style_analysis as style_analysis
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.reports.style_performance_arcs import (
+        _axis_scores_from_feature_report,
+        _bounded_int,
+        _handle_style_performance_arc_reference_match_report,
+        _parse_arc_reference_match_cli_args,
+        build_style_performance_arc_reference_match_report,
+        format_style_performance_arc_reference_match_report,
+    )
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
+
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=110.0,
+        tempo_stability=0.42,
+        kick_density=0.0,
+        percussion_density=0.0,
+        low_end_weight=0.0,
+        spectral_brightness=0.0,
+        texture_noise=0.0,
+        energy_arc=(),
+        content_hash="",
+        derived_at="2026-05-21T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+    empty_feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.LOW,
+        bpm=0.0,
+        tempo_stability=0.0,
+        kick_density=0.0,
+        percussion_density=0.0,
+        low_end_weight=0.0,
+        spectral_brightness=0.0,
+        texture_noise=0.0,
+        energy_arc=(0.0, 0.0, 0.0, 0.0),
+        content_hash="",
+        derived_at="2026-05-21T12:00:00Z",
+    )
+    empty_feature_report = replace(
+        empty_feature_report,
+        content_hash=compute_feature_report_hash(empty_feature_report),
+    )
+
+    assert _bounded_int(-1) == 0
+    assert _bounded_int(101) == 100
+
+    for empty_kwargs in (
+        {"description": ""},
+        {"description": "   "},
+        {"description": "florb zibble quarn"},
+        {"feature_report": empty_feature_report},
+    ):
+        with pytest.raises(ValueError, match="reference evidence"):
+            build_style_performance_arc_reference_match_report(**empty_kwargs)
+
+    stable_arc_scores = _axis_scores_from_feature_report(
+        replace(
+            feature_report,
+            bpm=0.0,
+            tempo_stability=0.0,
+            energy_arc=(0.4, 0.4, 0.4),
+        )
+    )
+    assert stable_arc_scores["minimal_restraint"] == 72
+    assert "motion_amount" not in stable_arc_scores
+    peakless_arc_scores = _axis_scores_from_feature_report(
+        replace(
+            feature_report,
+            bpm=0.0,
+            tempo_stability=0.0,
+            energy_arc=(-0.2, 0.0),
+        )
+    )
+    assert peakless_arc_scores["motion_amount"] == 20
+
+    report = build_style_performance_arc_reference_match_report(
+        feature_report=feature_report,
+    )
+    assert report.match_count == len(report.matches)
+    assert "Embedded live cue sheet: none" in "\n".join(
+        format_style_performance_arc_reference_match_report(report)
+    )
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_reference_match_report(report, event_limit=-1)
+
+    hardgroove_report = build_style_performance_arc_reference_match_report(
+        description="hardgroove percussive rolling machine funk"
+    )
+    assert hardgroove_report.selected_match.arc.key == "hardgroove_detroit_machine_funk"
+
+    with pytest.raises(ValueError, match="exactly one reference source"):
+        build_style_performance_arc_reference_match_report(
+            description="Jeff Mills",
+            feature_report=feature_report,
+        )
+
+    def fake_audio_report(path: Path) -> FeatureReport:
+        assert path == Path("track.wav")
+        return feature_report
+
+    def fake_library_report(path: Path) -> FeatureReport:
+        assert path == Path("library")
+        return feature_report
+
+    monkeypatch.setattr(style_analysis, "extract_from_audio", fake_audio_report)
+    monkeypatch.setattr(style_analysis, "analyze_library", fake_library_report)
+
+    audio_report = build_style_performance_arc_reference_match_report(audio_path=Path("track.wav"))
+    assert audio_report.source_kind == "audio"
+    assert audio_report.source_reference == "track.wav"
+    assert "- Source reference: track.wav" in "\n".join(
+        format_style_performance_arc_reference_match_report(audio_report)
+    )
+    library_report = build_style_performance_arc_reference_match_report(
+        library_path=Path("library")
+    )
+    assert library_report.source_kind == "library"
+    assert library_report.source_reference == "library"
+    assert _parse_arc_reference_match_cli_args(["--library", "library"])["library_path"] == Path(
+        "library"
+    )
+
+    def broken_audio_report(path: Path) -> FeatureReport:
+        raise RuntimeError(f"audio unavailable: {path}")
+
+    monkeypatch.setattr(style_analysis, "extract_from_audio", broken_audio_report)
+    rc = _handle_style_performance_arc_reference_match_report(
+        description=None,
+        audio_path=Path("missing.wav"),
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "audio unavailable: missing.wav" in captured.err
+
+    rc = _handle_style_performance_arc_reference_match_report(
+        description="florb zibble quarn",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "reference evidence" in captured.err
+
+
+def test_style_performance_arc_reference_match_parser_and_handlers(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.style_performance_arcs import (
+        _handle_style_performance_arc_reference_match_report,
+        _parse_arc_reference_match_cli_args,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    assert _parse_arc_reference_match_cli_args(
+        [
+            "--description",
+            "Jeff Mills Oscar Mulero tunnel",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "dual",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "120",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "80",
+            "--events",
+            "--limit",
+            "2",
+            "--json",
+        ]
+    ) == {
+        "description": "Jeff Mills Oscar Mulero tunnel",
+        "audio_path": None,
+        "library_path": None,
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "dual",
+        "selection_rank": 2,
+        "total_minutes": 120,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 80,
+        "include_events": True,
+        "event_limit": 2,
+        "json_output": True,
+    }
+
+    rc = _handle_style_performance_arc_reference_match_report(
+        description="Stigmata Birmingham Regis Surgeon Glenn Wilson pressure",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc reference match" in captured.out
+    assert "stigmata_birmingham_assault" in captured.out
+    assert "Embedded live cue sheet:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_reference_match_report(
+        description="Jeff Mills Oscar Mulero",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["reference_match"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
+    assert payload["reference_match"]["embedded_live_cue_sheet"] is False
+    assert captured.err == ""
+
+    for argv, message in (
+        ([], "exactly one reference source"),
+        (["--description", "x", "--audio", "track.wav"], "exactly one reference source"),
+        (["--description"], "usage"),
+        (["--description", "   "], "description must include reference evidence"),
+        (["--description", "x", "--limit", "-1"], ">= 0"),
+        (["--description", "x", "--rank", "0"], ">= 1"),
+        (["--description", "x", "--bogus"], "usage"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            _parse_arc_reference_match_cli_args(argv)
+
+
 def test_style_performance_arc_audition_packet_rejects_empty_readiness(
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -1162,12 +1554,14 @@ def test_style_performance_arc_readiness_parser_and_handlers(
         _handle_style_performance_arc_live_render_bundle_report,
         _handle_style_performance_arc_live_session_packet_report,
         _handle_style_performance_arc_readiness_report,
+        _handle_style_performance_arc_reference_match_report,
         _handle_style_performance_arc_rehearsal_manifest_report,
         _parse_arc_audition_packet_cli_args,
         _parse_arc_live_cue_sheet_cli_args,
         _parse_arc_live_render_bundle_cli_args,
         _parse_arc_live_session_packet_cli_args,
         _parse_arc_readiness_cli_args,
+        _parse_arc_reference_match_cli_args,
         _parse_arc_rehearsal_manifest_cli_args,
     )
 
@@ -1355,6 +1749,48 @@ def test_style_performance_arc_readiness_parser_and_handlers(
         ]
     ) == {
         "arc_keys": ("jose_warehouse_five_hour",),
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "dual",
+        "selection_rank": 2,
+        "total_minutes": 240,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 90,
+        "include_events": True,
+        "event_limit": 1,
+        "json_output": True,
+    }
+
+    assert _parse_arc_reference_match_cli_args(
+        [
+            "--description",
+            "Jeff Mills Oscar Mulero tunnel",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "dual",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "240",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "90",
+            "--events",
+            "--limit",
+            "1",
+            "--json",
+        ]
+    ) == {
+        "description": "Jeff Mills Oscar Mulero tunnel",
+        "audio_path": None,
+        "library_path": None,
         "rytm_sysex_path": Path("rytm.syx"),
         "analog_four_sysex_path": Path("a4.syx"),
         "scope": "dual",
@@ -1755,6 +2191,51 @@ def test_style_performance_arc_readiness_parser_and_handlers(
     assert captured.out == ""
     assert "requires --rytm" in captured.err
 
+    rc = _handle_style_performance_arc_reference_match_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc reference match" in captured.out
+    assert "Embedded live cue sheet:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_style_performance_arc_reference_match_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["reference_match"]["selected"]["arc"]["key"] == "mills_mulero_tunnel"
+    assert payload["live_cue_sheet"] is None
+    assert captured.err == ""
+
     rc = _handle_style_performance_arc_live_render_bundle_report(
         arc_keys=None,
         rytm_sysex_path=None,
@@ -1784,6 +2265,7 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
         _parse_arc_live_render_bundle_cli_args,
         _parse_arc_live_session_packet_cli_args,
         _parse_arc_readiness_cli_args,
+        _parse_arc_reference_match_cli_args,
         _parse_arc_rehearsal_manifest_cli_args,
         _parse_arc_set_plan_cli_args,
         _parse_no_args,
@@ -1876,6 +2358,19 @@ def test_style_performance_arc_set_plan_parser_rejects_bad_args():
     for argv, message in live_cue_bad_cases:
         with pytest.raises(ValueError, match=message):
             _parse_arc_live_cue_sheet_cli_args(argv)
+
+    reference_match_bad_cases = [
+        ([], "exactly one reference source"),
+        (["--description", "x", "--audio", "track.wav"], "exactly one reference source"),
+        (["--description"], "reference-match-report usage"),
+        (["--description", "   "], "description must include reference evidence"),
+        (["--description", "x", "--bogus"], "usage"),
+        (["--description", "x", "--limit", "-1"], ">= 0"),
+        (["--description", "x", "--rank", "0"], ">= 1"),
+    ]
+    for argv, message in reference_match_bad_cases:
+        with pytest.raises(ValueError, match=message):
+            _parse_arc_reference_match_cli_args(argv)
 
 
 def test_style_performance_arc_cli_dispatch_and_help(
@@ -2043,6 +2538,23 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "RytmRandomizer passive style performance arc live cue sheet" in captured.out
     assert "Performance cues:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-reference-match-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc reference match" in captured.out
+    assert "mills_mulero_tunnel" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -2053,6 +2565,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-live-session-packet-report" in help_text
     assert "style-performance-arc-live-render-bundle-report" in help_text
     assert "style-performance-arc-live-cue-sheet-report" in help_text
+    assert "style-performance-arc-reference-match-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -2089,3 +2602,10 @@ def test_style_performance_arc_cli_dispatch_and_help(
         live_cue_help
     )
     assert "Builds a passive live performance cue sheet from saved kit banks." in (live_cue_help)
+    reference_match_help = resolve_help_text("style-performance-arc-reference-match-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-reference-match-report" in (
+        reference_match_help
+    )
+    assert "Matches a reference description or FeatureReport to performance arcs." in (
+        reference_match_help
+    )

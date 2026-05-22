@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -12,6 +13,9 @@ from typing import Final
 
 from ..cli_registry import CliCommand, register
 from ..data.style_performance_arcs import STYLE_PERFORMANCE_ARCS, StylePerformanceArc
+from ..data.style_profiles import STYLE_PROFILES
+from ..data.style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
+from ..style_analysis.feature_report import FeatureReport
 from .dual_machine_style_kit_selection import normalize_selection_scope
 from .dual_machine_style_performance_set_plan import (
     DualMachineStylePerformanceSetPlan,
@@ -43,6 +47,7 @@ LIVE_RENDER_BUNDLE_TITLE: Final[str] = (
     "RytmRandomizer passive style performance arc live render bundle"
 )
 LIVE_CUE_SHEET_TITLE: Final[str] = "RytmRandomizer passive style performance arc live cue sheet"
+REFERENCE_MATCH_TITLE: Final[str] = "RytmRandomizer passive style performance arc reference match"
 SOURCE_MODULE: Final[str] = "reports.style_performance_arcs"
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -112,6 +117,20 @@ LIVE_CUE_SHEET_SAFETY_LINES: Final[tuple[str, ...]] = (
     "no hardware mutation",
     "no hardware required",
 )
+REFERENCE_MATCH_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "passive/read-only",
+    "reference match only",
+    "influence-not-replica scoring",
+    "metadata and plan expansion only",
+    "description-only path has no audio dependency",
+    "optional live cue sheet uses saved-kit snapshots only",
+    "no real MIDI rendering",
+    "no MIDI sending",
+    "no port opening",
+    "no command execution",
+    "no hardware mutation",
+    "no hardware required",
+)
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
     source_module=SOURCE_MODULE,
@@ -154,6 +173,10 @@ _LIVE_RENDER_BUNDLE_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
 )
 _LIVE_CUE_SHEET_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=LIVE_CUE_SHEET_TITLE,
+    source_module=SOURCE_MODULE,
+)
+_REFERENCE_MATCH_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
+    title=REFERENCE_MATCH_TITLE,
     source_module=SOURCE_MODULE,
 )
 _SET_PLAN_USAGE: Final[str] = (
@@ -205,6 +228,14 @@ _LIVE_CUE_SHEET_USAGE: Final[str] = (
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"
 )
+_REFERENCE_MATCH_USAGE: Final[str] = (
+    "style-performance-arc-reference-match-report usage: "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"
+)
 _SET_PLAN_OPTIONS: Final[tuple[str, ...]] = (
     "--rytm",
     "--analog-four",
@@ -247,6 +278,22 @@ _REHEARSAL_MANIFEST_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _LIVE_SESSION_PACKET_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _LIVE_RENDER_BUNDLE_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _LIVE_CUE_SHEET_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
+_REFERENCE_MATCH_OPTIONS: Final[tuple[str, ...]] = (
+    "--description",
+    "--audio",
+    "--library",
+    "--rytm",
+    "--analog-four",
+    "--scope",
+    "--rank",
+    "--total-minutes",
+    "--segment-minutes",
+    "--discovery-start",
+    "--discovery-end",
+    "--events",
+    "--limit",
+    "--json",
+)
 _DEFAULT_EVENT_LIMIT: Final[int] = 24
 _READINESS_SORT_ORDER: Final[Mapping[str, int]] = MappingProxyType(
     {
@@ -299,6 +346,47 @@ class StylePerformanceArcReadinessReport:
     total_mock_message_count: int
     total_deferred_row_count: int
     entries: tuple[StylePerformanceArcReadinessEntry, ...]
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcReferenceMatchEntry:
+    """One ranked reference-to-performance-arc match row."""
+
+    position: int
+    arc: StylePerformanceArc
+    score: int
+    vector_score: int
+    direct_score: int
+    max_style_score: int
+    matched_terms: tuple[str, ...]
+    matched_style_keys: tuple[str, ...]
+    operator_action: str
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcReferenceMatchReport:
+    """Passive reference description/feature match against curated arcs."""
+
+    source_kind: str
+    source_reference: str | None
+    description: str | None
+    feature_report: FeatureReport
+    axis_scores: Mapping[str, int]
+    matched_terms: tuple[str, ...]
+    matches: tuple[StylePerformanceArcReferenceMatchEntry, ...]
+    live_cue_sheet: StylePerformanceArcLiveCueSheetReport | None
+
+    @property
+    def selected_match(self) -> StylePerformanceArcReferenceMatchEntry:
+        """Return the top-ranked reference arc match."""
+
+        return self.matches[0]
+
+    @property
+    def match_count(self) -> int:
+        """Return ranked match count."""
+
+        return len(self.matches)
 
 
 @dataclass(frozen=True)
@@ -2484,6 +2572,614 @@ def to_style_performance_arc_live_cue_sheet_json(
     }
 
 
+_REFERENCE_TERM_STYLE_BOOSTS: Final[Mapping[str, Mapping[str, int]]] = MappingProxyType(
+    {
+        "jeff mills": MappingProxyType({"mills_hypnotic": 34, "jose_core_techno": 14}),
+        "mills": MappingProxyType({"mills_hypnotic": 28, "jose_core_techno": 12}),
+        "bell": MappingProxyType({"mills_hypnotic": 24}),
+        "bells": MappingProxyType({"mills_hypnotic": 26}),
+        "futurist": MappingProxyType({"mills_hypnotic": 24}),
+        "futuristic": MappingProxyType({"mills_hypnotic": 24}),
+        "oscar mulero": MappingProxyType({"deep_dark_hypnosis": 30, "jose_core_techno": 16}),
+        "mulero": MappingProxyType({"deep_dark_hypnosis": 26, "jose_core_techno": 14}),
+        "dark": MappingProxyType({"deep_dark_hypnosis": 20, "industrial_dark": 16}),
+        "deep": MappingProxyType({"deep_dark_hypnosis": 18}),
+        "tunnel": MappingProxyType({"deep_dark_hypnosis": 26}),
+        "hypnotic": MappingProxyType(
+            {
+                "deep_dark_hypnosis": 20,
+                "mills_hypnotic": 18,
+                "detroit_minimal": 10,
+            }
+        ),
+        "stigmata": MappingProxyType(
+            {"birmingham_pressure": 34, "industrial_dark": 24, "jose_core_techno": 18}
+        ),
+        "birmingham": MappingProxyType(
+            {"birmingham_pressure": 36, "industrial_dark": 22, "jose_core_techno": 16}
+        ),
+        "regis": MappingProxyType({"industrial_dark": 30, "birmingham_pressure": 22}),
+        "surgeon": MappingProxyType({"industrial_dark": 30, "birmingham_pressure": 22}),
+        "glenn wilson": MappingProxyType({"birmingham_pressure": 28, "industrial_dark": 20}),
+        "nightshift": MappingProxyType({"birmingham_pressure": 24}),
+        "thomas krome": MappingProxyType({"birmingham_pressure": 24}),
+        "krome": MappingProxyType({"birmingham_pressure": 20}),
+        "kay d smith": MappingProxyType({"birmingham_pressure": 22}),
+        "industrial": MappingProxyType({"industrial_dark": 34, "birmingham_pressure": 22}),
+        "raw": MappingProxyType({"birmingham_pressure": 18, "industrial_dark": 14}),
+        "hard": MappingProxyType({"birmingham_pressure": 16, "warehouse_peak": 12}),
+        "warehouse": MappingProxyType({"warehouse_peak": 24, "jose_core_techno": 12}),
+        "peak": MappingProxyType({"warehouse_peak": 26}),
+        "pressure": MappingProxyType(
+            {
+                "birmingham_pressure": 18,
+                "warehouse_peak": 16,
+                "jose_core_techno": 14,
+            }
+        ),
+        "hardgroove": MappingProxyType({"hardgroove_percussive": 36}),
+        "rolling": MappingProxyType({"hardgroove_percussive": 22, "deep_dark_hypnosis": 14}),
+        "funky": MappingProxyType({"hardgroove_percussive": 22, "ur_machine_funk": 18}),
+        "machine funk": MappingProxyType({"ur_machine_funk": 32}),
+        "underground resistance": MappingProxyType({"ur_machine_funk": 26}),
+        "ur": MappingProxyType({"ur_machine_funk": 18}),
+        "hood": MappingProxyType({"hood_stripped": 26, "detroit_minimal": 14}),
+        "robert hood": MappingProxyType({"hood_stripped": 32, "detroit_minimal": 18}),
+        "detroit": MappingProxyType(
+            {
+                "detroit_minimal": 20,
+                "mills_hypnotic": 16,
+                "ur_machine_funk": 16,
+            }
+        ),
+        "minimal": MappingProxyType({"hood_stripped": 20, "detroit_minimal": 18}),
+        "stripped": MappingProxyType({"hood_stripped": 24, "detroit_minimal": 18}),
+        "jose": MappingProxyType({"jose_core_techno": 36}),
+    }
+)
+
+_REFERENCE_TERM_AXIS_BOOSTS: Final[Mapping[str, Mapping[str, int]]] = MappingProxyType(
+    {
+        "bell": MappingProxyType({"metallicity": 82, "motion_amount": 76}),
+        "bells": MappingProxyType({"metallicity": 86, "motion_amount": 78}),
+        "futurist": MappingProxyType({"motion_amount": 82, "metallicity": 76}),
+        "futuristic": MappingProxyType({"motion_amount": 82, "metallicity": 76}),
+        "dark": MappingProxyType({"darkness": 86}),
+        "deep": MappingProxyType({"darkness": 78, "space_depth": 78}),
+        "tunnel": MappingProxyType({"darkness": 82, "repetition_hypnosis": 86}),
+        "hypnotic": MappingProxyType({"repetition_hypnosis": 90}),
+        "stigmata": MappingProxyType({"industrial_edge": 92, "noise_grit": 88}),
+        "birmingham": MappingProxyType(
+            {"industrial_edge": 92, "drive_pressure": 88, "noise_grit": 84}
+        ),
+        "regis": MappingProxyType({"industrial_edge": 90, "darkness": 88}),
+        "surgeon": MappingProxyType({"industrial_edge": 90, "darkness": 86}),
+        "glenn wilson": MappingProxyType({"drive_pressure": 88, "noise_grit": 82}),
+        "industrial": MappingProxyType({"industrial_edge": 94, "noise_grit": 92, "darkness": 88}),
+        "raw": MappingProxyType({"noise_grit": 84, "drive_pressure": 78}),
+        "hard": MappingProxyType({"drive_pressure": 82, "warehouse_intensity": 76}),
+        "warehouse": MappingProxyType({"warehouse_intensity": 88}),
+        "peak": MappingProxyType({"warehouse_intensity": 92, "drive_pressure": 84}),
+        "pressure": MappingProxyType({"drive_pressure": 84}),
+        "hardgroove": MappingProxyType(
+            {"percussive_density": 92, "transient_density": 84, "groove": 80}
+        ),
+        "rolling": MappingProxyType({"percussive_density": 76, "motion_amount": 70}),
+        "percussive": MappingProxyType({"percussive_density": 88, "transient_density": 82}),
+        "machine funk": MappingProxyType({"motion_amount": 76, "percussive_density": 78}),
+        "detroit": MappingProxyType({"repetition_hypnosis": 78, "minimal_restraint": 62}),
+        "minimal": MappingProxyType({"minimal_restraint": 90, "repetition_hypnosis": 84}),
+        "stripped": MappingProxyType({"minimal_restraint": 92}),
+    }
+)
+
+_REFERENCE_PHRASES: Final[tuple[str, ...]] = tuple(
+    sorted(
+        (
+            {
+                term
+                for term in (
+                    tuple(_REFERENCE_TERM_STYLE_BOOSTS)
+                    + tuple(_REFERENCE_TERM_AXIS_BOOSTS)
+                    + tuple(
+                        reference.lower()
+                        for arc in STYLE_PERFORMANCE_ARCS.values()
+                        for reference in arc.references
+                    )
+                )
+                if " " in term
+            }
+        ),
+        key=lambda term: (-len(term), term),
+    )
+)
+_REFERENCE_SINGLE_TERMS: Final[frozenset[str]] = frozenset(
+    term
+    for term in (
+        tuple(_REFERENCE_TERM_STYLE_BOOSTS)
+        + tuple(_REFERENCE_TERM_AXIS_BOOSTS)
+        + tuple(
+            token
+            for arc in STYLE_PERFORMANCE_ARCS.values()
+            for source in (
+                arc.tags + arc.style_keys + tuple(reference.lower() for reference in arc.references)
+            )
+            for token in re.sub(r"[^a-z0-9]+", " ", source.lower()).strip().split()
+        )
+    )
+    if " " not in term and len(term) > 2
+)
+
+
+def _reference_match_safety_lines() -> list[str]:
+    return [SAFETY_SECTION_HEADER, *[f"- {line}" for line in REFERENCE_MATCH_SAFETY_LINES]]
+
+
+def _canonical_reference_text(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.lower()).strip()
+
+
+def _reference_terms_from_text(description: str | None) -> tuple[str, ...]:
+    if not description:
+        return ()
+    normalized = f" {_canonical_reference_text(description)} "
+    terms: set[str] = set()
+    for phrase in _REFERENCE_PHRASES:
+        if f" {_canonical_reference_text(phrase)} " in normalized:
+            terms.add(phrase)
+    terms.update(token for token in normalized.split() if token in _REFERENCE_SINGLE_TERMS)
+    return tuple(sorted(terms))
+
+
+def _bounded_int(value: float) -> int:
+    if value < 0:
+        return 0
+    if value > 100:
+        return 100
+    return int(round(value))
+
+
+def _axis_scores_from_feature_report(report: FeatureReport) -> dict[str, int]:
+    scores: dict[str, int] = {}
+    if report.low_end_weight:
+        scores["low_end_weight"] = _bounded_int(report.low_end_weight * 100)
+    density = max(report.kick_density, report.percussion_density)
+    if density:
+        scores["transient_density"] = _bounded_int(density * 100)
+        scores["percussive_density"] = _bounded_int(report.percussion_density * 100)
+    if report.kick_density:
+        scores["drive_pressure"] = _bounded_int(report.kick_density * 100)
+    if report.spectral_brightness:
+        scores["attack_sharpness"] = _bounded_int(report.spectral_brightness * 100)
+        scores["darkness"] = _bounded_int((1.0 - report.spectral_brightness) * 100)
+    if report.texture_noise:
+        scores["noise_grit"] = _bounded_int(report.texture_noise * 100)
+        scores["industrial_edge"] = _bounded_int((report.texture_noise * 80) + 15)
+    if report.tempo_stability:
+        scores["repetition_hypnosis"] = _bounded_int(report.tempo_stability * 100)
+    if report.bpm:
+        bpm_pressure = min(max((report.bpm - 118.0) / 22.0, 0.0), 1.0)
+        if bpm_pressure:
+            scores["drive_pressure"] = max(
+                scores.get("drive_pressure", 0),
+                _bounded_int(bpm_pressure * 100),
+            )
+            scores["warehouse_intensity"] = max(
+                scores.get("warehouse_intensity", 0),
+                _bounded_int(bpm_pressure * 92),
+            )
+    if report.energy_arc and any(sample != 0 for sample in report.energy_arc):
+        arc = tuple(report.energy_arc)
+        arc_peak = max(arc)
+        arc_rise = arc[-1] - arc[0]
+        if arc_peak:
+            scores["warehouse_intensity"] = max(
+                scores.get("warehouse_intensity", 0),
+                _bounded_int(arc_peak * 100),
+            )
+        if arc_rise > 0:
+            scores["motion_amount"] = max(
+                scores.get("motion_amount", 0),
+                _bounded_int(min(arc_rise, 1.0) * 100),
+            )
+        if len(arc) > 1 and max(arc) - min(arc) <= 0.2:
+            scores["minimal_restraint"] = max(scores.get("minimal_restraint", 0), 72)
+    return {key: value for key, value in scores.items() if key in STYLE_TARGET_VECTOR_AXES}
+
+
+def _axis_scores_from_terms(terms: Sequence[str]) -> dict[str, int]:
+    scores: dict[str, int] = {}
+    for term in terms:
+        for axis, score in _REFERENCE_TERM_AXIS_BOOSTS.get(term, {}).items():
+            if axis not in STYLE_TARGET_VECTOR_AXES:
+                continue
+            scores[axis] = max(scores.get(axis, 0), score)
+    return scores
+
+
+def _merged_axis_scores(report: FeatureReport, terms: Sequence[str]) -> Mapping[str, int]:
+    scores = _axis_scores_from_feature_report(report)
+    for axis, score in _axis_scores_from_terms(terms).items():
+        scores[axis] = max(scores.get(axis, 0), score)
+    return MappingProxyType(dict(sorted(scores.items())))
+
+
+def _style_score_from_axes(style_key: str, axis_scores: Mapping[str, int]) -> int:
+    if not axis_scores:
+        return 0
+    target = STYLE_TARGET_VECTORS[style_key].as_mapping()
+    total = 0
+    for axis, score in axis_scores.items():
+        total += max(0, 100 - abs(score - target[axis]))
+    return _bounded_int(total / len(axis_scores))
+
+
+def _style_term_bonus(style_key: str, terms: Sequence[str]) -> int:
+    bonus = 0
+    profile = STYLE_PROFILES[style_key]
+    profile_text = _canonical_reference_text(
+        " ".join(
+            (
+                profile.key,
+                profile.name,
+                profile.summary,
+                " ".join(profile.tags),
+                " ".join(profile.analyzer_targets),
+            )
+        )
+    )
+    for term in terms:
+        bonus += _REFERENCE_TERM_STYLE_BOOSTS.get(term, {}).get(style_key, 0)
+        if f" {_canonical_reference_text(term)} " in f" {profile_text} ":
+            bonus += 4
+    return min(bonus, 45)
+
+
+def _style_scores(
+    axis_scores: Mapping[str, int],
+    terms: Sequence[str],
+) -> Mapping[str, int]:
+    scores = {
+        style_key: min(
+            100,
+            _style_score_from_axes(style_key, axis_scores) + _style_term_bonus(style_key, terms),
+        )
+        for style_key in STYLE_PROFILES
+    }
+    return MappingProxyType(scores)
+
+
+def _arc_text(arc: StylePerformanceArc) -> str:
+    return _canonical_reference_text(
+        " ".join(
+            (
+                arc.key,
+                arc.name,
+                arc.summary,
+                " ".join(arc.references),
+                " ".join(arc.tags),
+                " ".join(arc.style_keys),
+                " ".join(arc.operator_notes),
+            )
+        )
+    )
+
+
+def _arc_direct_score(
+    arc: StylePerformanceArc, terms: Sequence[str]
+) -> tuple[int, tuple[str, ...]]:
+    arc_text = f" {_arc_text(arc)} "
+    matched: list[str] = []
+    score = 0
+    for term in terms:
+        canonical = _canonical_reference_text(term)
+        if not canonical or f" {canonical} " not in arc_text:
+            continue
+        matched.append(term)
+        score += 14 if " " in term else 6
+    return min(score, 85), tuple(sorted(set(matched)))
+
+
+def _reference_match_entry(
+    *,
+    position: int,
+    arc: StylePerformanceArc,
+    style_scores: Mapping[str, int],
+    terms: Sequence[str],
+) -> StylePerformanceArcReferenceMatchEntry:
+    style_key_scores = tuple(style_scores[style_key] for style_key in arc.style_keys)
+    mean_style = sum(style_key_scores) / len(style_key_scores)
+    max_style = max(style_key_scores)
+    vector_score = _bounded_int((mean_style * 0.6) + (max_style * 0.4))
+    direct_score, matched_terms = _arc_direct_score(arc, terms)
+    matched_style_keys = tuple(
+        style_key for style_key in arc.style_keys if style_scores[style_key] >= 70
+    )
+    score = _bounded_int((vector_score * 0.65) + (direct_score * 0.35))
+    if score >= 80:
+        operator_action = "audition this arc first; evidence is strong enough for rehearsal prep"
+    elif score >= 55:
+        operator_action = "audition carefully; evidence is partial but useful"
+    else:
+        operator_action = "use only as a weak planning hint; refine the reference"
+    return StylePerformanceArcReferenceMatchEntry(
+        position=position,
+        arc=arc,
+        score=score,
+        vector_score=vector_score,
+        direct_score=direct_score,
+        max_style_score=max_style,
+        matched_terms=matched_terms,
+        matched_style_keys=matched_style_keys,
+        operator_action=operator_action,
+    )
+
+
+def _rank_reference_matches(
+    *,
+    axis_scores: Mapping[str, int],
+    terms: Sequence[str],
+) -> tuple[StylePerformanceArcReferenceMatchEntry, ...]:
+    style_scores = _style_scores(axis_scores, terms)
+    unsorted_entries = tuple(
+        _reference_match_entry(
+            position=0,
+            arc=arc,
+            style_scores=style_scores,
+            terms=terms,
+        )
+        for arc in STYLE_PERFORMANCE_ARCS.values()
+    )
+    sorted_entries = sorted(
+        unsorted_entries,
+        key=lambda entry: (
+            -entry.score,
+            -entry.direct_score,
+            -entry.vector_score,
+            -entry.max_style_score,
+            -len(entry.matched_style_keys),
+            entry.arc.default_selection_rank,
+            entry.arc.default_total_minutes,
+            entry.arc.key,
+        ),
+    )
+    return tuple(
+        StylePerformanceArcReferenceMatchEntry(
+            position=index,
+            arc=entry.arc,
+            score=entry.score,
+            vector_score=entry.vector_score,
+            direct_score=entry.direct_score,
+            max_style_score=entry.max_style_score,
+            matched_terms=entry.matched_terms,
+            matched_style_keys=entry.matched_style_keys,
+            operator_action=entry.operator_action,
+        )
+        for index, entry in enumerate(sorted_entries, start=1)
+    )
+
+
+def _source_count(
+    *,
+    description: str | None,
+    feature_report: FeatureReport | None,
+    audio_path: Path | None,
+    library_path: Path | None,
+) -> int:
+    return sum(
+        source is not None for source in (description, feature_report, audio_path, library_path)
+    )
+
+
+def _feature_report_for_reference_match(
+    *,
+    description: str | None,
+    feature_report: FeatureReport | None,
+    audio_path: Path | None,
+    library_path: Path | None,
+) -> tuple[str, str | None, FeatureReport]:
+    source_count = _source_count(
+        description=description,
+        feature_report=feature_report,
+        audio_path=audio_path,
+        library_path=library_path,
+    )
+    if source_count != 1:
+        raise ValueError("reference match requires exactly one reference source")
+    if description is not None:
+        if not description.strip():
+            raise ValueError("description must include reference evidence")
+        from ..style_analysis import extract_from_description
+
+        return "description", None, extract_from_description(description)
+    if feature_report is not None:
+        return "feature-report", None, feature_report
+    if audio_path is not None:
+        from ..style_analysis import extract_from_audio
+
+        return "audio", str(audio_path), extract_from_audio(audio_path)
+    if library_path is not None:
+        from ..style_analysis import analyze_library
+
+        return "library", str(library_path), analyze_library(library_path)
+    raise ValueError(  # pragma: no cover - defensive after source-count validation.
+        "reference match requires exactly one reference source"
+    )
+
+
+def build_style_performance_arc_reference_match_report(
+    *,
+    description: str | None = None,
+    feature_report: FeatureReport | None = None,
+    audio_path: Path | None = None,
+    library_path: Path | None = None,
+    rytm_sysex_path: Path | None = None,
+    analog_four_sysex_path: Path | None = None,
+    scope: str | None = None,
+    selection_rank: int | None = None,
+    total_minutes: int | None = None,
+    segment_minutes: int | None = None,
+    discovery_start: int | None = None,
+    discovery_end: int | None = None,
+    include_live_cue_sheet: bool = False,
+) -> StylePerformanceArcReferenceMatchReport:
+    """Return passive reference-to-arc matches and optional live cue sheet."""
+
+    source_kind, source_reference, measured_report = _feature_report_for_reference_match(
+        description=description,
+        feature_report=feature_report,
+        audio_path=audio_path,
+        library_path=library_path,
+    )
+    terms = _reference_terms_from_text(description)
+    axis_scores = _merged_axis_scores(measured_report, terms)
+    if not axis_scores and not terms:
+        raise ValueError("reference match requires reference evidence")
+    matches = _rank_reference_matches(axis_scores=axis_scores, terms=terms)
+    live_cue_sheet = None
+    if include_live_cue_sheet and (
+        rytm_sysex_path is not None or analog_four_sysex_path is not None
+    ):
+        live_cue_sheet = build_style_performance_arc_live_cue_sheet_report(
+            (matches[0].arc.key,),
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+        )
+    return StylePerformanceArcReferenceMatchReport(
+        source_kind=source_kind,
+        source_reference=source_reference,
+        description=description,
+        feature_report=measured_report,
+        axis_scores=axis_scores,
+        matched_terms=terms,
+        matches=matches,
+        live_cue_sheet=live_cue_sheet,
+    )
+
+
+def _feature_report_json(report: FeatureReport) -> dict[str, object]:
+    return {
+        "source_type": report.source_type.value,
+        "confidence": report.confidence.value,
+        "bpm": report.bpm,
+        "tempo_stability": report.tempo_stability,
+        "kick_density": report.kick_density,
+        "percussion_density": report.percussion_density,
+        "low_end_weight": report.low_end_weight,
+        "spectral_brightness": report.spectral_brightness,
+        "texture_noise": report.texture_noise,
+        "energy_arc": list(report.energy_arc),
+        "content_hash": report.content_hash,
+        "derived_at": report.derived_at,
+    }
+
+
+def _reference_match_entry_json(
+    entry: StylePerformanceArcReferenceMatchEntry,
+) -> dict[str, object]:
+    return {
+        "position": entry.position,
+        "arc": to_style_performance_arc_json(entry.arc),
+        "score": entry.score,
+        "vector_score": entry.vector_score,
+        "direct_score": entry.direct_score,
+        "max_style_score": entry.max_style_score,
+        "matched_terms": list(entry.matched_terms),
+        "matched_style_keys": list(entry.matched_style_keys),
+        "operator_action": entry.operator_action,
+    }
+
+
+def to_style_performance_arc_reference_match_json(
+    report: StylePerformanceArcReferenceMatchReport,
+) -> dict[str, object]:
+    """Return deterministic JSON data for a reference-match report."""
+
+    return {
+        "reference_match": {
+            "source_kind": report.source_kind,
+            "source_reference": report.source_reference,
+            "description": report.description,
+            "feature_report": _feature_report_json(report.feature_report),
+            "axis_scores": dict(report.axis_scores),
+            "matched_terms": list(report.matched_terms),
+            "selected": _reference_match_entry_json(report.selected_match),
+            "matches": [_reference_match_entry_json(entry) for entry in report.matches],
+            "embedded_live_cue_sheet": report.live_cue_sheet is not None,
+        },
+        "live_cue_sheet": (
+            None
+            if report.live_cue_sheet is None
+            else to_style_performance_arc_live_cue_sheet_json(report.live_cue_sheet)
+        ),
+        "safety": list(REFERENCE_MATCH_SAFETY_LINES),
+    }
+
+
+def _reference_match_lines(report: StylePerformanceArcReferenceMatchReport) -> list[str]:
+    selected = report.selected_match
+    confidence = report.feature_report.confidence.value
+    lines = [
+        "Reference match summary:",
+        f"- Source kind: {report.source_kind}",
+        f"- Feature confidence: {confidence}",
+        f"- Feature report hash: {report.feature_report.content_hash}",
+        f"- Axis evidence count: {len(report.axis_scores)}",
+        f"- Matched term count: {len(report.matched_terms)}",
+        f"- Selected arc: {selected.arc.key} / {selected.arc.name}",
+        f"- Selected score: {selected.score}",
+        f"- Selected action: {selected.operator_action}",
+        "Axis evidence:",
+        *[f"- {axis}: {score}" for axis, score in report.axis_scores.items()],
+        "Matched terms:",
+        *[f"- {term}" for term in report.matched_terms],
+        "Ranked arc matches:",
+        *[
+            (
+                f"- {entry.position}. {entry.arc.key} | {entry.arc.name} | "
+                f"score {entry.score} | vector {entry.vector_score} | direct {entry.direct_score}"
+            )
+            for entry in report.matches
+        ],
+    ]
+    if report.source_reference is not None:
+        lines.insert(2, f"- Source reference: {report.source_reference}")
+    return lines
+
+
+def format_style_performance_arc_reference_match_report(
+    report: StylePerformanceArcReferenceMatchReport,
+    *,
+    include_events: bool = False,
+    event_limit: int = _DEFAULT_EVENT_LIMIT,
+) -> list[str]:
+    """Return deterministic reference-match lines."""
+
+    if event_limit < 0:
+        raise ValueError("event_limit must be >= 0")
+
+    lines = _reference_match_lines(report)
+    if report.live_cue_sheet is None:
+        lines.append("Embedded live cue sheet: none")
+    else:
+        lines.append("Embedded live cue sheet:")
+        lines.extend(
+            format_style_performance_arc_live_cue_sheet_report(
+                report.live_cue_sheet,
+                include_events=include_events,
+                event_limit=event_limit,
+            )
+        )
+    lines.extend(_reference_match_safety_lines())
+    return passive_report_lines(_REFERENCE_MATCH_HEADER, lines)
+
+
 def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
     if argv:
         raise ValueError("command takes no arguments")
@@ -2961,6 +3657,87 @@ def _parse_arc_live_cue_sheet_cli_args(argv: Sequence[str]) -> dict[str, object]
     }
 
 
+def _parse_arc_reference_match_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    remaining = list(argv)
+    description: str | None = None
+    audio_path: Path | None = None
+    library_path: Path | None = None
+    rytm_sysex_path: Path | None = None
+    analog_four_sysex_path: Path | None = None
+    scope: str | None = None
+    selection_rank: int | None = None
+    total_minutes: int | None = None
+    segment_minutes: int | None = None
+    discovery_start: int | None = None
+    discovery_end: int | None = None
+    include_events = False
+    event_limit = _DEFAULT_EVENT_LIMIT
+    json_output = False
+    while remaining:
+        option = remaining.pop(0)
+        if option == "--events":
+            include_events = True
+            continue
+        if option == "--json":
+            json_output = True
+            continue
+        if option not in _REFERENCE_MATCH_OPTIONS:
+            raise ValueError(_REFERENCE_MATCH_USAGE)
+        value = _pop_option_value(remaining, usage=_REFERENCE_MATCH_USAGE)
+        if option == "--description":
+            description = value
+        elif option == "--audio":
+            audio_path = Path(value)
+        elif option == "--library":
+            library_path = Path(value)
+        elif option == "--rytm":
+            rytm_sysex_path = Path(value)
+        elif option == "--analog-four":
+            analog_four_sysex_path = Path(value)
+        elif option == "--scope":
+            scope = normalize_selection_scope(value)
+        elif option == "--rank":
+            selection_rank = _parse_positive_int(value, option=option)
+        elif option == "--total-minutes":
+            total_minutes = _parse_positive_int(value, option=option)
+        elif option == "--segment-minutes":
+            segment_minutes = _parse_positive_int(value, option=option)
+        elif option == "--discovery-start":
+            discovery_start = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery-end":
+            discovery_end = _parse_nonnegative_int(value, option=option)
+        else:
+            event_limit = _parse_nonnegative_int(value, option=option)
+    if description is not None and not description.strip():
+        raise ValueError("description must include reference evidence")
+    if (
+        _source_count(
+            description=description,
+            feature_report=None,
+            audio_path=audio_path,
+            library_path=library_path,
+        )
+        != 1
+    ):
+        raise ValueError("reference match requires exactly one reference source")
+    return {
+        "description": description,
+        "audio_path": audio_path,
+        "library_path": library_path,
+        "rytm_sysex_path": rytm_sysex_path,
+        "analog_four_sysex_path": analog_four_sysex_path,
+        "scope": scope,
+        "selection_rank": selection_rank,
+        "total_minutes": total_minutes,
+        "segment_minutes": segment_minutes,
+        "discovery_start": discovery_start,
+        "discovery_end": discovery_end,
+        "include_events": include_events,
+        "event_limit": event_limit,
+        "json_output": json_output,
+    }
+
+
 def _write_lines(lines: Sequence[str]) -> int:
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
@@ -3323,6 +4100,68 @@ def _handle_style_performance_arc_live_cue_sheet_report(
     return _write_lines(lines)
 
 
+def _handle_style_performance_arc_reference_match_report(
+    *,
+    description: str | None,
+    audio_path: Path | None,
+    library_path: Path | None,
+    rytm_sysex_path: Path | None,
+    analog_four_sysex_path: Path | None,
+    scope: str | None,
+    selection_rank: int | None,
+    total_minutes: int | None,
+    segment_minutes: int | None,
+    discovery_start: int | None,
+    discovery_end: int | None,
+    include_events: bool,
+    event_limit: int,
+    json_output: bool,
+) -> int:
+    try:
+        report = build_style_performance_arc_reference_match_report(
+            description=description,
+            audio_path=audio_path,
+            library_path=library_path,
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+            include_live_cue_sheet=(
+                rytm_sysex_path is not None or analog_four_sysex_path is not None
+            ),
+        )
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_style_performance_arc_reference_match_json(report),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_style_performance_arc_reference_match_report(
+            report,
+            include_events=include_events,
+            event_limit=event_limit,
+        )
+    except (
+        OSError,
+        ValueError,
+        RuntimeError,
+        NotImplementedError,
+        TypeError,
+        KeyError,
+    ) as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 2
+    return _write_lines(lines)
+
+
 def _format_cli_error(exc: Exception) -> str:
     return f"Error: {exc}"
 
@@ -3400,6 +4239,13 @@ STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND: Final[CliCommand] = CliCommand
     handler=_handle_style_performance_arc_live_cue_sheet_report,
     error_formatter=_format_cli_error,
 )
+STYLE_PERFORMANCE_ARC_REFERENCE_MATCH_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="style-performance-arc-reference-match-report",
+    summary="Match references to passive performance arcs and optional cue sheets.",
+    args_parser=_parse_arc_reference_match_cli_args,
+    handler=_handle_style_performance_arc_reference_match_report,
+    error_formatter=_format_cli_error,
+)
 
 register(STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND)
 register(LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
@@ -3412,6 +4258,7 @@ register(STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND)
+register(STYLE_PERFORMANCE_ARC_REFERENCE_MATCH_CLI_COMMAND)
 
 __all__ = [
     "AUDITION_PACKET_SAFETY_LINES",
@@ -3435,6 +4282,7 @@ __all__ = [
     "STYLE_PERFORMANCE_ARC_LIVE_CUE_SHEET_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND",
+    "STYLE_PERFORMANCE_ARC_REFERENCE_MATCH_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND",
@@ -3447,6 +4295,8 @@ __all__ = [
     "StylePerformanceArcLiveRenderSegment",
     "StylePerformanceArcLiveSessionPacketReport",
     "StylePerformanceArcLiveSessionSegment",
+    "StylePerformanceArcReferenceMatchEntry",
+    "StylePerformanceArcReferenceMatchReport",
     "StylePerformanceArcRehearsalManifestReport",
     "StylePerformanceArcRehearsalSegment",
     "StylePerformanceArcReadinessEntry",
@@ -3457,6 +4307,7 @@ __all__ = [
     "build_style_performance_arc_live_cue_sheet_report",
     "build_style_performance_arc_live_session_packet_report",
     "build_style_performance_arc_live_render_bundle_report",
+    "build_style_performance_arc_reference_match_report",
     "build_style_performance_arc_rehearsal_manifest_report",
     "build_style_performance_arc_readiness_report",
     "build_style_performance_arc_set_plan_report",
@@ -3464,6 +4315,7 @@ __all__ = [
     "format_style_performance_arc_live_cue_sheet_report",
     "format_style_performance_arc_live_session_packet_report",
     "format_style_performance_arc_live_render_bundle_report",
+    "format_style_performance_arc_reference_match_report",
     "format_style_performance_arc_rehearsal_manifest_report",
     "format_style_performance_arc_readiness_report",
     "format_style_performance_arc_inspection",
@@ -3476,6 +4328,7 @@ __all__ = [
     "to_style_performance_arc_live_cue_sheet_json",
     "to_style_performance_arc_live_session_packet_json",
     "to_style_performance_arc_live_render_bundle_json",
+    "to_style_performance_arc_reference_match_json",
     "to_style_performance_arc_rehearsal_manifest_json",
     "to_style_performance_arc_readiness_json",
     "to_style_performance_arc_set_plan_json",

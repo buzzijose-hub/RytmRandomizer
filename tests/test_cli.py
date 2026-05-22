@@ -107,6 +107,12 @@ USAGE = (
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
+    "style-performance-arc-reference-match-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1726,6 +1732,13 @@ def test_readme_mentions_style_performance_arc_live_cue_sheet_report_command():
 
     assert "style-performance-arc-live-cue-sheet-report" in text
     assert "live cue sheet" in text
+
+
+def test_readme_mentions_style_performance_arc_reference_match_report_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-reference-match-report" in text
+    assert "reference-match" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
