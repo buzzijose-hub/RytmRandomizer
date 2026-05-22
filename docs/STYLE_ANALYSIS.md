@@ -201,6 +201,11 @@ python -m rytm_randomizer.cli style-performance-arc-live-command-deck-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
   --cue 1 --lookahead 2 --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-live-state-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -216,9 +221,12 @@ and style-axis scores, and can embed the selected cue sheet when saved-kit
 paths are present. When saved-kit snapshots are supplied, the same report
 can feed a passive live command deck: the transition timeline is reduced
 to a current cue, lookahead cues, command cards, launch/hold/recovery
-actions, machine handoff checks, and replayable passive commands for a
-future GUI or live-show screen.
-also exposes a reference-selected snapshot preview with readiness,
+actions, machine handoff checks, and replayable passive commands. The
+live state packet then normalizes that command deck into a GUI-ready
+current screen state with now/next cues, Rytm/A4 machine panels, action
+bar rows, warning stack rows, recovery stack rows, and replay commands
+for a future live-show screen.
+It also exposes a reference-selected snapshot preview with readiness,
 mock/deferred totals, kit names, planned Rytm pads, planned Analog Four
 tracks, and passive operator action. The same saved-kit path also emits a
 stage packet: compact cue cards with the selected arc, scope, readiness,
@@ -238,6 +246,10 @@ into operator-facing prep windows, transition cards, launch/hold/recovery
 prompts, machine handoff summaries, passive replay commands, and optional
 capped event previews. It is the rehearsal timeline shape for the future GUI;
 it writes no files, opens no ports, and sends no MIDI.
+The live command deck and live state packet are the current UI handoff
+surfaces: the deck answers "what should I do right now?", and the state
+packet answers "what should a screen render right now?" without opening
+ports or sending MIDI.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,

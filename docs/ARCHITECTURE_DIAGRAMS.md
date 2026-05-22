@@ -16,7 +16,7 @@ Current baseline used while creating / refreshing this document:
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
 - Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 142 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four style kit-readiness, Analog Four kit-fingerprint, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, and live-command-deck slices so the strategy/report-module list and counts stay current.
+- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four style kit-readiness, Analog Four kit-fingerprint, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, and live-state-packet slices so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
 
@@ -171,6 +171,7 @@ flowchart TB
         RStyleProfiles["style_profiles.py<br/>passive techno style profile catalog<br/>+ registered CliCommand"]
         RStyleTargets["style_targets.py<br/>passive numeric target-vector catalog<br/>+ registered CliCommand"]
         RLiveCommandDeck["live_command_deck.py<br/>passive current-cue command deck<br/>+ registered CliCommand"]
+        RLivePerformanceState["live_performance_state.py<br/>passive GUI-ready live state packet<br/>+ registered CliCommand"]
     end
 
     subgraph ObservabilityPkg["observability/"]
@@ -973,7 +974,7 @@ flowchart LR
         DualStyleSnapshotRoutingReport["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntentReport["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreviewReport["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state"]
         QuickStatus["quick-status"]
     end
 
@@ -1621,7 +1622,7 @@ flowchart LR
         DualStyleSnapshotRouting["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntent["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreview["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state"]
         Status["project-status / quick-status"]
     end
 
@@ -1661,7 +1662,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-mock-preview-report"| CLI
-    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck"| CLI
+    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
@@ -1672,7 +1673,7 @@ flowchart LR
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The passive CLI never opens a port — see §16 Safety Boundary Diagram.
-- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/readiness, dual-machine style routing/intent/mock-preview, style-profile, style-target, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the live render bundle reuses existing segment mock previews and deferred A4 rows, the live cue sheet converts that bundle into operator risk/move/recovery cues plus compact stage cards, the live runbook turns direct arcs or reference matches into launch/timeline/recovery context, the stage-routing report turns that runbook into saved-kit slot/fingerprint route cards, the stage-rehearsal-state report turns those route cards into go/rehearse/do-not-arm cue and machine states, the live set cockpit and live show export reports climb from rehearsal state into show handoff JSON, the live transition timeline turns that export into cue-to-cue prep/launch/hold/recovery cards, the live command deck turns the timeline into current-cue command cards and lookahead, and the reference-match report turns a description/audio/library/FeatureReport reference into a ranked arc plus optional embedded cue sheet, snapshot preview, and stage packet projection. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
+- `cli_registry.py` (WS-S7) is the future-extension seam. The passive Rytm 12-pad machine matrix, snapshot pad-compatibility, snapshot intelligence, snapshot mutation preview, Rytm style snapshot routing, Rytm style mutation intent/render-plan/mock-preview, Analog Four style routing/intent/mock-preview/kit-catalog/readiness, dual-machine style routing/intent/mock-preview, style-profile, style-target, and style-performance-arc commands are registered there instead of growing `cli.py` with more inline report arms. The A4 kit catalog/readiness reports carry stable payload fingerprints for future GUI/audio-analyzer kit-state comparison; the live render bundle reuses existing segment mock previews and deferred A4 rows, the live cue sheet converts that bundle into operator risk/move/recovery cues plus compact stage cards, the live runbook turns direct arcs or reference matches into launch/timeline/recovery context, the stage-routing report turns that runbook into saved-kit slot/fingerprint route cards, the stage-rehearsal-state report turns those route cards into go/rehearse/do-not-arm cue and machine states, the live set cockpit and live show export reports climb from rehearsal state into show handoff JSON, the live transition timeline turns that export into cue-to-cue prep/launch/hold/recovery cards, the live command deck turns the timeline into current-cue command cards and lookahead, the live state packet turns that deck into GUI-ready now/next cues plus machine panels/action/warning/recovery stacks, and the reference-match report turns a description/audio/library/FeatureReport reference into a ranked arc plus optional embedded cue sheet, snapshot preview, and stage packet projection. Most legacy CLI dispatch remains in-line until the broader WS-S7 refactor lands. The architecture rule `test_no_parallel_device_registry` allows `cli_registry.py` (the CLI registry) as a non-device registry.
 
 ---
 

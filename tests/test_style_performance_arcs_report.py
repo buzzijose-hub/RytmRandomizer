@@ -3514,6 +3514,412 @@ def test_style_performance_arc_live_command_deck_parser_cli_and_edges(
     assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
 
 
+def test_style_performance_arc_live_state_packet_builds_gui_ready_state(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_command_deck import (
+        build_style_performance_arc_live_command_deck_report,
+    )
+    from rytm_randomizer.reports.live_performance_state import (
+        STATE_PACKET_VERSION,
+        build_style_performance_arc_live_state_from_command_deck,
+        build_style_performance_arc_live_state_report,
+        format_style_performance_arc_live_state_report,
+        to_style_performance_arc_live_state_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    command_deck = build_style_performance_arc_live_command_deck_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=60,
+        segment_minutes=15,
+        cue_number=2,
+        lookahead_count=2,
+    )
+    state = build_style_performance_arc_live_state_from_command_deck(command_deck)
+    rebuilt = build_style_performance_arc_live_state_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=60,
+        segment_minutes=15,
+        cue_number=2,
+        lookahead_count=2,
+    )
+
+    assert state.state_version == STATE_PACKET_VERSION
+    assert state.state_id == rebuilt.state_id
+    assert state.state_id.startswith(command_deck.deck_id)
+    assert state.command_deck is command_deck
+    assert state.screen_title == "Cue 2 live state"
+    assert state.screen_mode == command_deck.operator_mode
+    assert state.live_state in {"ready", "rehearsal", "blocked", "review"}
+    assert state.current_cue.cue_number == 2
+    assert state.current_cue.screen_state == state.screen_mode
+    assert state.current_cue.primary_action.startswith("Launch:")
+    assert state.current_cue.secondary_action.startswith("Hold:")
+    assert state.current_cue.warning_text
+    assert len(state.next_cues) == 2
+    assert state.next_cues[0].cue_number == 3
+    assert state.next_cues[1].cue_number == 4
+    assert {machine.machine for machine in state.machine_states} == {"rytm", "analog-four"}
+    assert all(machine.ui_badge for machine in state.machine_states)
+    assert any("Rytm" in machine.handoff_label for machine in state.machine_states)
+    assert any("Analog Four" in machine.handoff_label for machine in state.machine_states)
+    assert state.action_bar[0].startswith("Now:")
+    assert any("Machine:" in action for action in state.action_bar)
+    assert any("Recovery:" in recovery for recovery in state.recovery_stack)
+    assert any(
+        "style-performance-arc-live-state-report" in command for command in state.replay_commands
+    )
+    assert "style-performance-arc-live-state-report" in state.suggested_commands[0]
+
+    text = "\n".join(
+        format_style_performance_arc_live_state_report(
+            state,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "RytmRandomizer passive style performance arc live state packet" in text
+    assert "Live state summary:" in text
+    assert "Current GUI state:" in text
+    assert "Next cue strip:" in text
+    assert "Machine state panels:" in text
+    assert "Action bar:" in text
+    assert "Warning stack:" in text
+    assert "Recovery stack:" in text
+    assert "Replayable passive commands:" in text
+    assert "Cue event preview:" in text
+    assert "- live state packet only" in text
+    assert "- no MIDI sending" in text
+    assert "- no port opening" in text
+
+    payload = to_style_performance_arc_live_state_json(state)
+    state_payload = payload["live_state_packet"]
+    assert state_payload["state_version"] == STATE_PACKET_VERSION
+    assert state_payload["state_id"] == state.state_id
+    assert state_payload["screen_title"] == "Cue 2 live state"
+    assert state_payload["current_cue"]["cue_number"] == 2
+    assert state_payload["next_cues"][0]["cue_number"] == 3
+    assert state_payload["machine_states"][0]["machine"] in {"rytm", "analog-four"}
+    assert payload["live_command_deck"]["deck_id"] == command_deck.deck_id
+    assert payload["live_transition_timeline"]["timeline_id"] == command_deck.timeline.timeline_id
+    assert payload["safety"][-1] == "no hardware required"
+
+
+def test_style_performance_arc_live_state_packet_parser_cli_and_edges(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.reports.live_performance_state import (
+        _format_cli_error,
+        _handle_cli_report,
+        _parse_cli_args,
+        build_style_performance_arc_live_state_from_command_deck,
+        build_style_performance_arc_live_state_report,
+        format_style_performance_arc_live_state_report,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    parsed = _parse_cli_args(
+        [
+            "--arc",
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "a4-only",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "120",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "80",
+            "--cue",
+            "2",
+            "--lookahead",
+            "3",
+            "--events",
+            "--limit",
+            "0",
+            "--json",
+        ]
+    )
+    assert parsed == {
+        "arc_key": "jose_warehouse_five_hour",
+        "description": None,
+        "audio_path": None,
+        "library_path": None,
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "analog-four-only",
+        "selection_rank": 2,
+        "total_minutes": 120,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 80,
+        "cue_number": 2,
+        "lookahead_count": 3,
+        "include_events": True,
+        "event_limit": 0,
+        "json_output": True,
+    }
+    assert _parse_cli_args(["--audio", "track.wav"])["audio_path"] == Path("track.wav")
+    assert _parse_cli_args(["--library", "library-root"])["library_path"] == Path("library-root")
+    for argv, message in (
+        ([], "usage"),
+        (["--arc"], "usage"),
+        (["--arc", "x", "--bogus"], "usage"),
+        (["--arc", "x", "--limit", "oops"], "must be an integer"),
+        (["--arc", "x", "--limit", "-1"], ">= 0"),
+        (["--arc", "x", "--rank", "0"], ">= 1"),
+        (["--arc", "x", "--cue", "0"], ">= 1"),
+        (["--arc", "x", "--lookahead", "-1"], ">= 0"),
+        (["--arc", "x", "--description", "Jeff Mills"], "usage"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            _parse_cli_args(argv)
+
+    state = build_style_performance_arc_live_state_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=30,
+        segment_minutes=15,
+        cue_number=1,
+        lookahead_count=0,
+    )
+    assert state.next_cues == ()
+    assert "No next cues requested." in "\n".join(
+        format_style_performance_arc_live_state_report(state)
+    )
+    assert "Showing all events" in "\n".join(
+        format_style_performance_arc_live_state_report(
+            state,
+            include_events=True,
+            event_limit=0,
+        )
+    )
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_live_state_report(state, event_limit=-1)
+    with pytest.raises(ValueError, match="cue must be between 1 and"):
+        build_style_performance_arc_live_state_report(
+            description="Jeff Mills Oscar Mulero tunnel",
+            rytm_sysex_path=rytm_path,
+            analog_four_sysex_path=a4_path,
+            total_minutes=30,
+            segment_minutes=15,
+            cue_number=99,
+        )
+    with pytest.raises(ValueError, match="live state packet requires"):
+        build_style_performance_arc_live_state_report()
+    rebuilt_from_zero_lookahead = build_style_performance_arc_live_state_from_command_deck(
+        state.command_deck
+    )
+    assert rebuilt_from_zero_lookahead.next_cues == ()
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        cue_number=1,
+        lookahead_count=1,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc live state packet" in captured.out
+    assert "Live state summary:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        cue_number=1,
+        lookahead_count=1,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["live_state_packet"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description=None,
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        cue_number=1,
+        lookahead_count=1,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "live state packet requires exactly one selection source" in captured.err
+    assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
+
+
+def test_style_performance_arc_live_state_packet_formatting_edges(
+    tmp_path: Path,
+):
+    from rytm_randomizer.reports.live_command_deck import (
+        build_style_performance_arc_live_command_deck_report,
+    )
+    from rytm_randomizer.reports.live_performance_state import (
+        _first_prefixed,
+        _live_state,
+        _source_option,
+        _warning_stack,
+        _warning_text,
+        build_style_performance_arc_live_state_from_command_deck,
+        build_style_performance_arc_live_state_report,
+        format_style_performance_arc_live_state_report,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+    command_deck = build_style_performance_arc_live_command_deck_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=60,
+        segment_minutes=15,
+        cue_number=1,
+        lookahead_count=1,
+    )
+    command_deck = replace(
+        command_deck,
+        current_cue=replace(
+            command_deck.current_cue,
+            launch_sequence=("Check transition",),
+            command_state="hold",
+            blocker_summary="Operator review needed",
+            event_preview_rows=(),
+        ),
+        lookahead_cues=(
+            replace(
+                command_deck.lookahead_cues[0],
+                command_state="perform",
+                launch_sequence=("Check next cue",),
+            ),
+        ),
+    )
+    state = build_style_performance_arc_live_state_from_command_deck(command_deck)
+
+    assert state.live_state == "blocked"
+    assert state.current_cue.primary_action.startswith("Launch:")
+    assert state.current_cue.secondary_action.startswith("Hold:")
+    assert state.current_cue.warning_text.startswith("Red cue")
+    assert any("Blockers: Operator review needed" in warning for warning in state.warning_stack)
+    assert any(
+        "Machine check" in warning
+        for warning in _warning_stack(
+            state.current_cue,
+            (
+                replace(
+                    state.machine_states[0],
+                    label="Machine check",
+                    arm_state="rehearse",
+                ),
+            ),
+        )
+    )
+
+    text = "\n".join(
+        format_style_performance_arc_live_state_report(
+            state,
+            include_events=True,
+            event_limit=2,
+        )
+    )
+    assert "No mock rows available because the selected preview is not ready." in text
+
+    empty_machine_state = replace(
+        state,
+        machine_states=(),
+    )
+    assert "No machine states available." in "\n".join(
+        format_style_performance_arc_live_state_report(empty_machine_state)
+    )
+
+    no_units_state = replace(
+        state,
+        machine_states=(replace(state.machine_states[0], planned_units=()),),
+    )
+    assert "Planned units: none" in "\n".join(
+        format_style_performance_arc_live_state_report(no_units_state)
+    )
+
+    assert _live_state("perform") == "ready"
+    assert _live_state("soundcheck") == "rehearsal"
+    assert _live_state("hold") == "blocked"
+    assert _live_state("review-needed") == "review"
+    assert _warning_text(SimpleNamespace(command_state="perform")).startswith("Green cue")
+    assert _warning_text(SimpleNamespace(command_state="hold")).startswith("Red cue")
+    assert _warning_text(SimpleNamespace(command_state="unknown")).startswith("Review cue")
+    assert _first_prefixed(("Prep:",), "Launch:", "Launch: fallback") == "Launch: fallback"
+    assert (
+        _source_option(SimpleNamespace(selection_source="feature", selected_arc_key="arc-key"))
+        == "--arc arc-key"
+    )
+    assert _warning_stack(
+        replace(state.current_cue, blocker_summary="None"),
+        (),
+    ) == (state.current_cue.warning_text,)
+
+    arc_state = build_style_performance_arc_live_state_report(
+        arc_key="jose_warehouse_five_hour",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=60,
+        segment_minutes=15,
+    )
+    assert "--arc jose_warehouse_five_hour" in arc_state.replay_commands[0]
+
+
 def test_style_performance_arc_reference_match_summarizes_snapshot_preview(
     tmp_path: Path,
 ):
@@ -5431,6 +5837,33 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Command deck summary:" in captured.out
     assert "Now cue:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-state-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--cue",
+                "2",
+                "--lookahead",
+                "1",
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live state packet" in captured.out
+    assert "mills_mulero_tunnel" in captured.out
+    assert "Live state summary:" in captured.out
+    assert "Current GUI state:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -5449,6 +5882,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-live-show-export-report" in help_text
     assert "style-performance-arc-live-transition-timeline-report" in help_text
     assert "style-performance-arc-live-command-deck-report" in help_text
+    assert "style-performance-arc-live-state-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -5565,6 +5999,14 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "RytmRandomizer passive CLI: style-performance-arc-live-command-deck-report" in (
         live_command_deck_help
     )
+    live_state_help = resolve_help_text("style-performance-arc-live-state-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-state-report" in (
+        live_state_help
+    )
+    assert "Builds a passive live performance state packet" in live_state_help
+    assert "GUI-ready" in live_state_help
+    assert "--cue N --lookahead N" in live_state_help
+    assert "no MIDI sending" in live_state_help
     assert "Builds a passive live command deck from an arc or reference." in (
         live_command_deck_help
     )
