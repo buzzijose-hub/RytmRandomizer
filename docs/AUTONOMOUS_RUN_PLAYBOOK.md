@@ -30,7 +30,7 @@ git checkout -b chore/<plan>-bootstrap origin/modularize-v1.34
 git add docs/<PLAN>_STATE.json docs/<PLAN>_RUN_LOG.md
 git commit -m "chore(<plan>): bootstrap state files"
 git push -u origin chore/<plan>-bootstrap
-gh pr create --base modularize-v1.34 --title "Bootstrap <plan> orchestrator"
+python scripts/create_pr.py --title "Bootstrap <plan> orchestrator" --body-file docs/<PLAN>_PR_BODY.md
 ```
 
 ## 3. Decide: per-PR cascade or bundled branch?
@@ -102,8 +102,8 @@ Dispatch `security-reviewer` on the full WS diff (or on the bundle as a whole, b
 ## 7. Open the PR and wait for human approval
 
 ```powershell
-gh pr create --base modularize-v1.34 --title "<plan>: Wave N bundle" `
-  --body "Implements WSes <list>. Per docs/<PLAN>.md and docs/PLAN_REQUIREMENTS.md..."
+python scripts/create_pr.py --title "<plan>: Wave N bundle" `
+  --body-file docs/<PLAN>_PR_BODY.md
 ```
 
 The orchestrator now waits. Wake-up cadence: **1200s** while waiting on CI; **60-90s** while reconciling cascade conflicts. If `mergeable=BLOCKED` for >2h with no human activity, log and continue with other waves — do not poll uselessly.

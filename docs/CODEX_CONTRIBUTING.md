@@ -66,7 +66,9 @@ git merge --no-ff refactor/ws-1
 git merge --no-ff refactor/ws-2
 
 # Open ONE PR
-gh pr create --base modularize-v1.34 --head refactor/bundled --title "..." --body-file ...
+python scripts/create_pr.py --head refactor/bundled --title "..." --body-file ...
+# Raw fallback:
+gh pr create --base modularize-v1.34 --head refactor/bundled --reviewer edward-rosado --title "..." --body-file ...
 ```
 
 ## Anti-pattern 2 — Parallel sibling subpackages at the package root

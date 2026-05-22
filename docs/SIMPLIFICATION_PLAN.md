@@ -157,7 +157,7 @@ A single message starts the entire pipeline. Two equivalent triggers:
 | Situation | Auto-action | Escalation threshold |
 |---|---|---|
 | Worktree branch needs creating | `git worktree add` off latest `origin/modularize-v1.34` | n/a |
-| Local tests pass + lint clean | `git push -u origin <branch>` then `gh pr create` | n/a |
+| Local tests pass + lint clean | `git push -u origin <branch>` then `python scripts/create_pr.py` | n/a |
 | CI green + req=SUCCESS | `gh pr merge --squash` (no --auto, immediate) | n/a |
 | CI lint fails on black target-version | Re-run `python -m black --target-version=py311` and force-push | After 2 attempts, escalate to `build-error-resolver` |
 | CI test fails (regression in parity fixtures) | `git revert` the local commit, dispatch `tdd-guide` to rewrite the change behind the failing test | After 2 attempts, escalate to `architect` to redesign the WS |
@@ -188,7 +188,7 @@ After compaction, the orchestrator resumes by: reading `SIMPLIFICATION_STATE.jso
 
 ### Permission profile
 
-The kickoff message MUST be launched with permission mode `acceptEdits` (or higher) so the orchestrator can: create worktrees, edit files, run `gh pr create` / `gh pr merge`, force-push branches it owns, delete merged branches, and write to `docs/SIMPLIFICATION_RUN_LOG.md`. It **does not** need to be `bypassPermissions` — every tool it uses is in the allowlist for `acceptEdits` once branches it owns are scoped to `refactor/*` and `docs/simplification-*`.
+The kickoff message MUST be launched with permission mode `acceptEdits` (or higher) so the orchestrator can: create worktrees, edit files, run `scripts/create_pr.py` / `gh pr merge`, force-push branches it owns, delete merged branches, and write to `docs/SIMPLIFICATION_RUN_LOG.md`. It **does not** need to be `bypassPermissions` — every tool it uses is in the allowlist for `acceptEdits` once branches it owns are scoped to `refactor/*` and `docs/simplification-*`.
 
 The orchestrator **must refuse** to: force-push to `modularize-v1.34`, delete branches it doesn't own, run `gh pr close` on PR #21 (codex's), or rewrite history on already-merged PRs. These are hard-coded blocklist items, not approval-gated.
 
@@ -267,7 +267,7 @@ Every workstream uses the same crew shape — the only difference is which plugi
 | 7. Security review | `security-reviewer` | `everything-claude-code` | Required only for WS-S1/S5/S7 (boundary/IO/registry changes). |
 | 8. Build/CI guard | `build-error-resolver` | `everything-claude-code` | Stands by; engaged only if CI fails. |
 | 9. **Documentation update** | `doc-updater` | `everything-claude-code` | Updates `docs/STATUS.md` "Recent Cleanup" entry. Updates `docs/ARCHITECTURE.md` if the WS touches a documented boundary (S1/S2/S5/S6/S7 all do). Updates `docs/CODEMAPS/*` if the WS adds new top-level modules. **Required — not optional.** Runs before PR open. |
-| 10. PR open | (orchestrator) | — | `gh pr create` with WS-specific body referencing this plan + STATUS.md entry. |
+| 10. PR open | (orchestrator) | — | `python scripts/create_pr.py` with WS-specific body referencing this plan + STATUS.md entry. |
 
 Phases 1, 2, 5, 6, 7 run in parallel where their inputs are independent. Phase 4 (coverage gate) and Phase 9 (docs) are blocking — no PR opens until both pass. Phase 8 is on standby and only engages on CI failure.
 

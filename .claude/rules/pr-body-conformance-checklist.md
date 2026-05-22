@@ -14,7 +14,7 @@ These two blocks are not decoration. They are the binding interface between the 
 
 ## What you MUST do
 
-1. **Open the PR using the GitHub template.** `gh pr create` without `--body` will populate from `.github/PULL_REQUEST_TEMPLATE.md`; if you pass `--body` or `--body-file`, the body you pass **must** still contain both blocks. Do not bypass the template by passing a custom body that omits them.
+1. **Open the PR using the GitHub template.** Prefer `python scripts/create_pr.py --title "..." --body-file path/to/body.md` so `edward-rosado` is requested automatically. Raw `gh pr create` fallback commands must include `--reviewer edward-rosado`. `gh pr create` without `--body` will populate from `.github/PULL_REQUEST_TEMPLATE.md`; if you pass `--body` or `--body-file`, the body you pass **must** still contain both blocks. Do not bypass the template by passing a custom body that omits them.
 2. **Check every one of the 18 gates.** Each Gate 1–18 line gets exactly one of:
    - `[x] **Gate N** — <gate title>.` (satisfied; nothing more required, though a brief note is welcome)
    - `[ ] Gate N — N/A: <one-line reason>` (explicitly not applicable; the reason is mandatory and reviewer-readable)

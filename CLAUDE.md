@@ -38,7 +38,7 @@
 - **Running tests:** `python -m pytest` (default `-n auto` xdist parallelization). Never `-o addopts=''` outside `PARITY_CAPTURE_MODE=1` — 3× slowdown.
 - **Lint:** `python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .` (must all pass before push).
 - **Task runner:** prefer `just <task>` if [`Justfile`](Justfile) is present (`just test`, `just fast`, `just lint`, `just check`, `just pr`).
-- **PRs:** `gh pr create --base modularize-v1.34 --title "..." --body-file path/to/body.md`. Body must include conformance checklist.
+- **PRs:** `python scripts/create_pr.py --title "..." --body-file path/to/body.md` so `edward-rosado` is requested automatically. Raw fallback: `gh pr create --base modularize-v1.34 --reviewer edward-rosado --title "..." --body-file path/to/body.md`. Body must include conformance checklist.
 
 ### Default to small reversible changes
 

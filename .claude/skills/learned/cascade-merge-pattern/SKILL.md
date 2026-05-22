@@ -38,8 +38,8 @@ foreach ($ws in @('refactor/ws-s1','refactor/ws-s4','refactor/ws-m1','refactor/w
 
 # 3. Push and open a single PR.
 git push -u origin refactor/wave1-bundled
-gh pr create --base modularize-v1.34 --title "Wave 1 bundle: WS-S1..S5 + WS-M1..M4" `
-  --body "Bundled per cascade-merge-pattern (see .claude/skills/learned/cascade-merge-pattern/)"
+python scripts/create_pr.py --title "Wave 1 bundle: WS-S1..S5 + WS-M1..M4" `
+  --body-file docs/superpowers/plans/wave1-bundle-pr-body.md
 ```
 
 ### The keep-both conflict rule

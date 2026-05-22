@@ -246,9 +246,9 @@ just review           # lint + architecture + V1.34 parity (the mechanical gates
                       # the PR. See docs/CODE_REVIEW_HOOK_SETUP.md.
 
 # 5. Push + open PR with conformance checklist
-just pr               # pushes the current branch, opens a draft PR against modularize-v1.34,
-                      # and pre-populates the body from `.github/PULL_REQUEST_TEMPLATE.md`
-                      # (the 18-gate checklist + strict-rules block)
+just pr               # prints the canonical helper command; run
+                      # `python scripts/create_pr.py --title "..." --body-file path/to/body.md`
+                      # so edward-rosado is requested automatically.
 ```
 
 If you need to fall back to raw commands (e.g., the dev container is unavailable), the underlying invocations are still:
@@ -258,7 +258,9 @@ python -m pytest
 python -m pytest tests/architecture/ -q
 python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .
 git push -u origin <your-branch>
-gh pr create --base modularize-v1.34 --title "..." --body-file path/to/body.md
+python scripts/create_pr.py --title "..." --body-file path/to/body.md
+# Raw fallback:
+gh pr create --base modularize-v1.34 --reviewer edward-rosado --title "..." --body-file path/to/body.md
 ```
 
 PR body must include (enforced by `.claude/rules/pr-body-conformance-checklist.md`):

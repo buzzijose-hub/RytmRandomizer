@@ -163,7 +163,7 @@
           "items": {"type": "string"},
           "description": "File paths (or path patterns) this WS owns. Used by the orchestrator's disjoint-file-ownership check per Gate 16."
         },
-        "pr_number": {"type": ["integer", "null"], "description": "GitHub PR number after `gh pr create`. null before."},
+        "pr_number": {"type": ["integer", "null"], "description": "GitHub PR number after `scripts/create_pr.py` / `gh pr create`. null before."},
         "head_sha": {"type": ["string", "null"], "description": "Current HEAD of the WS's branch. Updated after every push."},
         "retry_count": {
           "type": "integer",
