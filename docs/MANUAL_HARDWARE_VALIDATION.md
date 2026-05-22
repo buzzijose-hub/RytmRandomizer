@@ -142,11 +142,15 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-live-transition-timeline-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
    ```
-6. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, and `Transition cards:`.
-7. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+6. Run the passive live command deck for the cue you want to rehearse:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-command-deck-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --events --limit 8
+   ```
+7. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, and `Now cue:`.
+8. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-8. Confirm rehearsal/cockpit/export/timeline state marks each cue as `go`, `rehearse`, or `do-not-arm`.
-9. Treat the current validated Rytm live flow as:
+9. Confirm rehearsal/cockpit/export/timeline/deck state marks each cue as `go`, `rehearse`, or `do-not-arm`.
+10. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```

@@ -196,6 +196,11 @@ python -m rytm_randomizer.cli style-performance-arc-live-show-export-report \
 python -m rytm_randomizer.cli style-performance-arc-live-transition-timeline-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-live-command-deck-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -209,6 +214,10 @@ it rejects blank/no-evidence references, ranks curated arcs, preserves
 audio/library source paths for traceability, explains the matched terms
 and style-axis scores, and can embed the selected cue sheet when saved-kit
 paths are present. When saved-kit snapshots are supplied, the same report
+can feed a passive live command deck: the transition timeline is reduced
+to a current cue, lookahead cues, command cards, launch/hold/recovery
+actions, machine handoff checks, and replayable passive commands for a
+future GUI or live-show screen.
 also exposes a reference-selected snapshot preview with readiness,
 mock/deferred totals, kit names, planned Rytm pads, planned Analog Four
 tracks, and passive operator action. The same saved-kit path also emits a
