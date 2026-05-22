@@ -20,6 +20,10 @@ from .dual_machine_style_performance_set_plan import (
     format_dual_machine_style_performance_set_plan_report,
     to_dual_machine_style_performance_set_plan_json,
 )
+from .dual_machine_style_selection_mock_preview import (
+    format_dual_machine_style_selection_mock_preview_event_rows,
+    to_dual_machine_style_selection_mock_preview_json,
+)
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive style performance arc report"
@@ -34,6 +38,9 @@ REHEARSAL_MANIFEST_TITLE: Final[str] = (
 )
 LIVE_SESSION_PACKET_TITLE: Final[str] = (
     "RytmRandomizer passive style performance arc live session packet"
+)
+LIVE_RENDER_BUNDLE_TITLE: Final[str] = (
+    "RytmRandomizer passive style performance arc live render bundle"
 )
 SOURCE_MODULE: Final[str] = "reports.style_performance_arcs"
 SAFETY_LINES: Final[tuple[str, ...]] = (
@@ -77,6 +84,19 @@ LIVE_SESSION_PACKET_SAFETY_LINES: Final[tuple[str, ...]] = (
     "no hardware mutation",
     "no hardware required",
 )
+LIVE_RENDER_BUNDLE_SAFETY_LINES: Final[tuple[str, ...]] = (
+    "passive/read-only",
+    "live render bundle",
+    "mock render preview only",
+    "existing saved-kit snapshots only",
+    "metadata and plan expansion only",
+    "no real MIDI rendering",
+    "no MIDI sending",
+    "no port opening",
+    "no command execution",
+    "no hardware mutation",
+    "no hardware required",
+)
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=REPORT_TITLE,
     source_module=SOURCE_MODULE,
@@ -113,6 +133,10 @@ _LIVE_SESSION_PACKET_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
     title=LIVE_SESSION_PACKET_TITLE,
     source_module=SOURCE_MODULE,
 )
+_LIVE_RENDER_BUNDLE_HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
+    title=LIVE_RENDER_BUNDLE_TITLE,
+    source_module=SOURCE_MODULE,
+)
 _SET_PLAN_USAGE: Final[str] = (
     "style-performance-arc-set-plan-report usage: "
     "<arc-key> --rytm <syx-path> [--analog-four <syx-path>] "
@@ -143,6 +167,13 @@ _REHEARSAL_MANIFEST_USAGE: Final[str] = (
 )
 _LIVE_SESSION_PACKET_USAGE: Final[str] = (
     "style-performance-arc-live-session-packet-report usage: "
+    "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] [--events] [--limit N] [--json]"
+)
+_LIVE_RENDER_BUNDLE_USAGE: Final[str] = (
+    "style-performance-arc-live-render-bundle-report usage: "
     "[<arc-key> ...] --rytm <syx-path> [--analog-four <syx-path>] "
     "[--scope dual|rytm-only|analog-four-only|a4-only] "
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
@@ -188,6 +219,7 @@ _AUDITION_PACKET_OPTIONS: Final[tuple[str, ...]] = (
 )
 _REHEARSAL_MANIFEST_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _LIVE_SESSION_PACKET_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
+_LIVE_RENDER_BUNDLE_OPTIONS: Final[tuple[str, ...]] = _AUDITION_PACKET_OPTIONS
 _DEFAULT_EVENT_LIMIT: Final[int] = 24
 _READINESS_SORT_ORDER: Final[Mapping[str, int]] = MappingProxyType(
     {
@@ -388,6 +420,175 @@ class StylePerformanceArcLiveSessionPacketReport:
         return self.rehearsal_manifest.blocked_segment_count
 
 
+@dataclass(frozen=True)
+class StylePerformanceArcLiveRenderSegment:
+    """One segment-level passive mock-render bundle for live rehearsal."""
+
+    live_segment: StylePerformanceArcLiveSessionSegment
+    set_plan_segment: DualMachineStylePerformanceSetSegment
+    event_preview_rows: tuple[str, ...]
+    deferred_rows: tuple[str, ...]
+
+    @property
+    def position(self) -> int:
+        """Return the segment position in the selected performance arc."""
+
+        return self.live_segment.position
+
+    @property
+    def style_key(self) -> str:
+        """Return the segment style key."""
+
+        return self.live_segment.style_key
+
+    @property
+    def time_window(self) -> str:
+        """Return the segment time window."""
+
+        return self.live_segment.time_window
+
+    @property
+    def discovery_amount(self) -> int:
+        """Return the segment discovery amount."""
+
+        return self.live_segment.discovery_amount
+
+    @property
+    def discovery_band(self) -> str:
+        """Return the segment discovery band."""
+
+        return self.live_segment.discovery_band
+
+    @property
+    def mutation_depth(self) -> str:
+        """Return the segment mutation depth."""
+
+        return self.live_segment.mutation_depth
+
+    @property
+    def readiness(self) -> str:
+        """Return the segment readiness."""
+
+        return self.live_segment.readiness
+
+    @property
+    def listen_for(self) -> str:
+        """Return the segment listening cue."""
+
+        return self.live_segment.listen_for
+
+    @property
+    def go_no_go_cue(self) -> str:
+        """Return the segment go/no-go cue."""
+
+        return self.live_segment.go_no_go_cue
+
+    @property
+    def reset_cue(self) -> str:
+        """Return the segment reset cue."""
+
+        return self.live_segment.reset_cue
+
+    @property
+    def rytm_preview_summary(self) -> str:
+        """Return the Rytm preview summary."""
+
+        return self.live_segment.rytm_preview_summary
+
+    @property
+    def analog_four_preview_summary(self) -> str:
+        """Return the Analog Four preview summary."""
+
+        return self.live_segment.analog_four_preview_summary
+
+    @property
+    def event_row_count(self) -> int:
+        """Return the segment event row count."""
+
+        return self.live_segment.event_row_count
+
+    @property
+    def mock_message_count(self) -> int:
+        """Return the segment mock message count."""
+
+        return self.live_segment.mock_message_count
+
+    @property
+    def deferred_row_count(self) -> int:
+        """Return the segment deferred row count."""
+
+        return self.live_segment.deferred_row_count
+
+    @property
+    def preview_json(self) -> dict[str, object]:
+        """Return the full existing dual-machine mock preview JSON."""
+
+        return to_dual_machine_style_selection_mock_preview_json(self.set_plan_segment.preview_plan)
+
+
+@dataclass(frozen=True)
+class StylePerformanceArcLiveRenderBundleReport:
+    """Passive live render bundle derived from a live-session packet."""
+
+    live_session_packet: StylePerformanceArcLiveSessionPacketReport
+    suggested_commands: tuple[str, ...]
+    segments: tuple[StylePerformanceArcLiveRenderSegment, ...]
+
+    @property
+    def selected_entry(self) -> StylePerformanceArcReadinessEntry:
+        """Return the selected reference arc readiness entry."""
+
+        return self.live_session_packet.selected_entry
+
+    @property
+    def selected_set_plan(self) -> DualMachineStylePerformanceSetPlan:
+        """Return the selected timed set plan."""
+
+        return self.live_session_packet.selected_set_plan
+
+    @property
+    def segment_count(self) -> int:
+        """Return the selected set-plan segment count."""
+
+        return self.live_session_packet.segment_count
+
+    @property
+    def ready_segment_count(self) -> int:
+        """Return ready segment count for the selected plan."""
+
+        return self.live_session_packet.ready_segment_count
+
+    @property
+    def partial_segment_count(self) -> int:
+        """Return partial segment count for the selected plan."""
+
+        return self.live_session_packet.partial_segment_count
+
+    @property
+    def blocked_segment_count(self) -> int:
+        """Return blocked segment count for the selected plan."""
+
+        return self.live_session_packet.blocked_segment_count
+
+    @property
+    def total_event_row_count(self) -> int:
+        """Return total segment event rows."""
+
+        return self.selected_set_plan.total_event_row_count
+
+    @property
+    def total_mock_message_count(self) -> int:
+        """Return total segment mock messages."""
+
+        return self.selected_set_plan.total_mock_message_count
+
+    @property
+    def total_deferred_row_count(self) -> int:
+        """Return total deferred rows."""
+
+        return self.selected_set_plan.total_deferred_row_count
+
+
 def _join(values: Sequence[str]) -> str:
     return ", ".join(values)
 
@@ -418,6 +619,13 @@ def _live_session_packet_safety_lines() -> list[str]:
     return [
         SAFETY_SECTION_HEADER,
         *[f"- {line}" for line in LIVE_SESSION_PACKET_SAFETY_LINES],
+    ]
+
+
+def _live_render_bundle_safety_lines() -> list[str]:
+    return [
+        SAFETY_SECTION_HEADER,
+        *[f"- {line}" for line in LIVE_RENDER_BUNDLE_SAFETY_LINES],
     ]
 
 
@@ -1558,6 +1766,270 @@ def to_style_performance_arc_live_session_packet_json(
     }
 
 
+def _live_render_bundle_suggested_commands(
+    packet: StylePerformanceArcLiveSessionPacketReport,
+) -> tuple[str, ...]:
+    arc_key = packet.selected_entry.arc.key
+    plan = packet.selected_set_plan
+    base_args = (
+        f"{arc_key} {_live_session_machine_path_flags(plan.scope)} "
+        f"{_live_session_plan_flags(plan)}"
+    )
+    return (
+        (
+            "python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report "
+            f"{base_args} --events --limit 8"
+        ),
+        *packet.suggested_commands,
+    )
+
+
+def _live_render_bundle_event_rows(
+    segment: DualMachineStylePerformanceSetSegment,
+) -> tuple[str, ...]:
+    return format_dual_machine_style_selection_mock_preview_event_rows(segment.preview_plan)
+
+
+def _live_render_bundle_deferred_rows(
+    segment: DualMachineStylePerformanceSetSegment,
+) -> tuple[str, ...]:
+    analog_four_preview = segment.preview_plan.analog_four_preview
+    if analog_four_preview is None or not analog_four_preview.deferred_rows:
+        return ("- none",)
+    return tuple(
+        (
+            f"- Analog Four Track {row.track} | {row.role_key} | {row.zone} | "
+            f"{row.reason} | bias {row.target_bias} | depth {row.mutation_depth} | "
+            f"direction {row.target_direction}"
+        )
+        for row in analog_four_preview.deferred_rows
+    )
+
+
+def _live_render_segment(
+    *,
+    live_segment: StylePerformanceArcLiveSessionSegment,
+    set_plan_segment: DualMachineStylePerformanceSetSegment,
+) -> StylePerformanceArcLiveRenderSegment:
+    return StylePerformanceArcLiveRenderSegment(
+        live_segment=live_segment,
+        set_plan_segment=set_plan_segment,
+        event_preview_rows=_live_render_bundle_event_rows(set_plan_segment),
+        deferred_rows=_live_render_bundle_deferred_rows(set_plan_segment),
+    )
+
+
+def build_style_performance_arc_live_render_bundle_report(
+    arc_keys: Sequence[str] | None = None,
+    *,
+    rytm_sysex_path: Path | None = None,
+    analog_four_sysex_path: Path | None = None,
+    scope: str | None = None,
+    selection_rank: int | None = None,
+    total_minutes: int | None = None,
+    segment_minutes: int | None = None,
+    discovery_start: int | None = None,
+    discovery_end: int | None = None,
+) -> StylePerformanceArcLiveRenderBundleReport:
+    """Return a passive segment-level mock-render bundle for live rehearsal."""
+
+    packet = build_style_performance_arc_live_session_packet_report(
+        arc_keys,
+        rytm_sysex_path=rytm_sysex_path,
+        analog_four_sysex_path=analog_four_sysex_path,
+        scope=scope,
+        selection_rank=selection_rank,
+        total_minutes=total_minutes,
+        segment_minutes=segment_minutes,
+        discovery_start=discovery_start,
+        discovery_end=discovery_end,
+    )
+    live_segments = packet.segments
+    set_plan_segments = packet.selected_set_plan.segments
+    if len(live_segments) != len(set_plan_segments):
+        raise ValueError(
+            "live render bundle requires matching live-session and set-plan segment counts"
+        )
+    segments = tuple(
+        _live_render_segment(
+            live_segment=live_segment,
+            set_plan_segment=set_plan_segment,
+        )
+        for live_segment, set_plan_segment in zip(
+            live_segments,
+            set_plan_segments,
+            strict=True,
+        )
+    )
+    return StylePerformanceArcLiveRenderBundleReport(
+        live_session_packet=packet,
+        suggested_commands=_live_render_bundle_suggested_commands(packet),
+        segments=segments,
+    )
+
+
+def _limited_event_rows(
+    rows: Sequence[str],
+    *,
+    event_limit: int,
+) -> tuple[str, ...]:
+    if event_limit == 0 or event_limit >= len(rows):
+        return tuple(rows)
+    return tuple(rows[:event_limit])
+
+
+def _live_render_segment_lines(
+    segment: StylePerformanceArcLiveRenderSegment,
+    *,
+    include_events: bool,
+    event_limit: int,
+) -> list[str]:
+    lines = [
+        (
+            f"- {segment.position}. {segment.time_window} | {segment.style_key} "
+            f"| discovery {segment.discovery_amount} | {segment.discovery_band} "
+            f"| depth {segment.mutation_depth} | readiness {segment.readiness}"
+        ),
+        f"  Listen for: {segment.listen_for}",
+        f"  Go/no-go cue: {segment.go_no_go_cue}",
+        f"  Reset cue: {segment.reset_cue}",
+        f"  Rytm preview: {segment.rytm_preview_summary}",
+        f"  Analog Four preview: {segment.analog_four_preview_summary}",
+        (
+            f"  Counts: events {segment.event_row_count}, "
+            f"mock messages {segment.mock_message_count}, "
+            f"deferred {segment.deferred_row_count}"
+        ),
+        "  Deferred rows:",
+        *[f"  {row}" for row in segment.deferred_rows],
+    ]
+    if include_events:
+        lines.append(f"  Mock render preview: Event preview for segment {segment.position}")
+        if not segment.event_preview_rows:
+            lines.append("  - No mock rows available because the selected preview is not ready.")
+        else:
+            selected_rows = _limited_event_rows(
+                segment.event_preview_rows,
+                event_limit=event_limit,
+            )
+            if len(selected_rows) == len(segment.event_preview_rows):
+                lines.append("  - Showing all events")
+            else:
+                lines.append(
+                    f"  - Showing first {event_limit} of {len(segment.event_preview_rows)} events"
+                )
+            lines.extend(f"  {row}" for row in selected_rows)
+    return lines
+
+
+def format_style_performance_arc_live_render_bundle_report(
+    report: StylePerformanceArcLiveRenderBundleReport,
+    *,
+    include_events: bool = False,
+    event_limit: int = _DEFAULT_EVENT_LIMIT,
+) -> list[str]:
+    """Return deterministic live render bundle lines."""
+
+    if event_limit < 0:
+        raise ValueError("event_limit must be >= 0")
+
+    selected = report.selected_entry
+    plan = report.selected_set_plan
+    lines = [
+        "Render bundle summary:",
+        f"- Scope: {plan.scope}",
+        f"- Total duration minutes: {plan.total_minutes}",
+        f"- Selection rank: {plan.selection_rank}",
+        f"- Segment count: {report.segment_count}",
+        (
+            "- Segment readiness: "
+            f"{report.ready_segment_count} ready, "
+            f"{report.partial_segment_count} partial, "
+            f"{report.blocked_segment_count} blocked"
+        ),
+        f"- Total event rows: {report.total_event_row_count}",
+        f"- Total mock messages: {report.total_mock_message_count}",
+        f"- Total deferred rows: {report.total_deferred_row_count}",
+        "Selected arc:",
+        f"- Position: {selected.position}",
+        f"- Key: {selected.arc.key}",
+        f"- Name: {selected.arc.name}",
+        f"- Readiness: {selected.readiness}",
+        f"- Operator action: {selected.operator_action}",
+        "Replayable passive commands:",
+        *[f"- {command}" for command in report.suggested_commands],
+        "Segment render bundles:",
+    ]
+    for segment in report.segments:
+        lines.extend(
+            _live_render_segment_lines(
+                segment,
+                include_events=include_events,
+                event_limit=event_limit,
+            )
+        )
+    lines.extend(_live_render_bundle_safety_lines())
+    return passive_report_lines(_LIVE_RENDER_BUNDLE_HEADER, lines)
+
+
+def _live_render_segment_json(
+    segment: StylePerformanceArcLiveRenderSegment,
+) -> dict[str, object]:
+    return {
+        "position": segment.position,
+        "style_key": segment.style_key,
+        "time_window": segment.time_window,
+        "discovery_amount": segment.discovery_amount,
+        "discovery_band": segment.discovery_band,
+        "mutation_depth": segment.mutation_depth,
+        "readiness": segment.readiness,
+        "listen_for": segment.listen_for,
+        "go_no_go_cue": segment.go_no_go_cue,
+        "reset_cue": segment.reset_cue,
+        "rytm_preview": segment.rytm_preview_summary,
+        "analog_four_preview": segment.analog_four_preview_summary,
+        "event_row_count": segment.event_row_count,
+        "mock_message_count": segment.mock_message_count,
+        "deferred_row_count": segment.deferred_row_count,
+        "event_preview_rows": list(segment.event_preview_rows),
+        "deferred_rows": list(segment.deferred_rows),
+        "preview": segment.preview_json,
+    }
+
+
+def to_style_performance_arc_live_render_bundle_json(
+    report: StylePerformanceArcLiveRenderBundleReport,
+) -> dict[str, object]:
+    """Return deterministic JSON data for a live render bundle."""
+
+    plan = report.selected_set_plan
+    return {
+        "selected": _readiness_entry_json(report.selected_entry),
+        "live_session_packet": to_style_performance_arc_live_session_packet_json(
+            report.live_session_packet
+        ),
+        "render_bundle": {
+            "scope": plan.scope,
+            "total_minutes": plan.total_minutes,
+            "selection_rank": plan.selection_rank,
+            "discovery_start": plan.discovery_start,
+            "discovery_end": plan.discovery_end,
+            "suggested_commands": list(report.suggested_commands),
+            "totals": {
+                "segments": report.segment_count,
+                "ready": report.ready_segment_count,
+                "partial": report.partial_segment_count,
+                "blocked": report.blocked_segment_count,
+                "event_rows": report.total_event_row_count,
+                "mock_messages": report.total_mock_message_count,
+                "deferred_rows": report.total_deferred_row_count,
+            },
+            "segments": [_live_render_segment_json(segment) for segment in report.segments],
+        },
+        "safety": list(LIVE_RENDER_BUNDLE_SAFETY_LINES),
+    }
+
+
 def _parse_no_args(argv: Sequence[str]) -> dict[str, object]:
     if argv:
         raise ValueError("command takes no arguments")
@@ -1909,6 +2381,69 @@ def _parse_arc_live_session_packet_cli_args(argv: Sequence[str]) -> dict[str, ob
     }
 
 
+def _parse_arc_live_render_bundle_cli_args(argv: Sequence[str]) -> dict[str, object]:
+    remaining = list(argv)
+    arc_keys: list[str] = []
+    while remaining and not remaining[0].startswith("--"):
+        arc_keys.append(remaining.pop(0))
+    if remaining and remaining[0] == "--json" and not arc_keys:
+        raise ValueError(_LIVE_RENDER_BUNDLE_USAGE)
+    rytm_sysex_path: Path | None = None
+    analog_four_sysex_path: Path | None = None
+    scope: str | None = None
+    selection_rank: int | None = None
+    total_minutes: int | None = None
+    segment_minutes: int | None = None
+    discovery_start: int | None = None
+    discovery_end: int | None = None
+    include_events = False
+    event_limit = _DEFAULT_EVENT_LIMIT
+    json_output = False
+    while remaining:
+        option = remaining.pop(0)
+        if option == "--events":
+            include_events = True
+            continue
+        if option == "--json":
+            json_output = True
+            continue
+        if option not in _LIVE_RENDER_BUNDLE_OPTIONS:
+            raise ValueError(_LIVE_RENDER_BUNDLE_USAGE)
+        value = _pop_option_value(remaining, usage=_LIVE_RENDER_BUNDLE_USAGE)
+        if option == "--rytm":
+            rytm_sysex_path = Path(value)
+        elif option == "--analog-four":
+            analog_four_sysex_path = Path(value)
+        elif option == "--scope":
+            scope = normalize_selection_scope(value)
+        elif option == "--rank":
+            selection_rank = _parse_positive_int(value, option=option)
+        elif option == "--total-minutes":
+            total_minutes = _parse_positive_int(value, option=option)
+        elif option == "--segment-minutes":
+            segment_minutes = _parse_positive_int(value, option=option)
+        elif option == "--discovery-start":
+            discovery_start = _parse_nonnegative_int(value, option=option)
+        elif option == "--discovery-end":
+            discovery_end = _parse_nonnegative_int(value, option=option)
+        else:
+            event_limit = _parse_nonnegative_int(value, option=option)
+    return {
+        "arc_keys": None if not arc_keys else tuple(arc_keys),
+        "rytm_sysex_path": rytm_sysex_path,
+        "analog_four_sysex_path": analog_four_sysex_path,
+        "scope": scope,
+        "selection_rank": selection_rank,
+        "total_minutes": total_minutes,
+        "segment_minutes": segment_minutes,
+        "discovery_start": discovery_start,
+        "discovery_end": discovery_end,
+        "include_events": include_events,
+        "event_limit": event_limit,
+        "json_output": json_output,
+    }
+
+
 def _write_lines(lines: Sequence[str]) -> int:
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
@@ -2175,6 +2710,54 @@ def _handle_style_performance_arc_live_session_packet_report(
     return _write_lines(lines)
 
 
+def _handle_style_performance_arc_live_render_bundle_report(
+    *,
+    arc_keys: Sequence[str] | None,
+    rytm_sysex_path: Path | None,
+    analog_four_sysex_path: Path | None,
+    scope: str | None,
+    selection_rank: int | None,
+    total_minutes: int | None,
+    segment_minutes: int | None,
+    discovery_start: int | None,
+    discovery_end: int | None,
+    include_events: bool,
+    event_limit: int,
+    json_output: bool,
+) -> int:
+    try:
+        report = build_style_performance_arc_live_render_bundle_report(
+            arc_keys,
+            rytm_sysex_path=rytm_sysex_path,
+            analog_four_sysex_path=analog_four_sysex_path,
+            scope=scope,
+            selection_rank=selection_rank,
+            total_minutes=total_minutes,
+            segment_minutes=segment_minutes,
+            discovery_start=discovery_start,
+            discovery_end=discovery_end,
+        )
+        if json_output:
+            sys.stdout.write(
+                json.dumps(
+                    to_style_performance_arc_live_render_bundle_json(report),
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            sys.stdout.write("\n")
+            return 0
+        lines = format_style_performance_arc_live_render_bundle_report(
+            report,
+            include_events=include_events,
+            event_limit=event_limit,
+        )
+    except (OSError, ValueError, NotImplementedError, TypeError, KeyError) as exc:
+        sys.stderr.write(f"Error: {exc}\n")
+        return 2
+    return _write_lines(lines)
+
+
 def _format_cli_error(exc: Exception) -> str:
     return f"Error: {exc}"
 
@@ -2238,6 +2821,13 @@ STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND: Final[CliCommand] = CliCo
     handler=_handle_style_performance_arc_live_session_packet_report,
     error_formatter=_format_cli_error,
 )
+STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name="style-performance-arc-live-render-bundle-report",
+    summary="Build passive live render bundles from saved kit banks.",
+    args_parser=_parse_arc_live_render_bundle_cli_args,
+    handler=_handle_style_performance_arc_live_render_bundle_report,
+    error_formatter=_format_cli_error,
+)
 
 register(STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND)
 register(LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND)
@@ -2248,6 +2838,7 @@ register(STYLE_PERFORMANCE_ARC_READINESS_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND)
 register(STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND)
+register(STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND)
 
 __all__ = [
     "AUDITION_PACKET_SAFETY_LINES",
@@ -2256,6 +2847,8 @@ __all__ = [
     "LIST_STYLE_PERFORMANCE_ARCS_CLI_COMMAND",
     "LIVE_SESSION_PACKET_SAFETY_LINES",
     "LIVE_SESSION_PACKET_TITLE",
+    "LIVE_RENDER_BUNDLE_SAFETY_LINES",
+    "LIVE_RENDER_BUNDLE_TITLE",
     "REPORT_TITLE",
     "REHEARSAL_MANIFEST_SAFETY_LINES",
     "REHEARSAL_MANIFEST_TITLE",
@@ -2264,6 +2857,7 @@ __all__ = [
     "SET_PLAN_TITLE",
     "SOURCE_MODULE",
     "STYLE_PERFORMANCE_ARC_AUDITION_PACKET_CLI_COMMAND",
+    "STYLE_PERFORMANCE_ARC_LIVE_RENDER_BUNDLE_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_LIVE_SESSION_PACKET_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_REHEARSAL_MANIFEST_CLI_COMMAND",
     "STYLE_PERFORMANCE_ARC_REPORT_CLI_COMMAND",
@@ -2271,6 +2865,8 @@ __all__ = [
     "STYLE_PERFORMANCE_ARC_SET_PLAN_CLI_COMMAND",
     "StylePerformanceArcAuditionPacketReport",
     "StylePerformanceArcCatalogReport",
+    "StylePerformanceArcLiveRenderBundleReport",
+    "StylePerformanceArcLiveRenderSegment",
     "StylePerformanceArcLiveSessionPacketReport",
     "StylePerformanceArcLiveSessionSegment",
     "StylePerformanceArcRehearsalManifestReport",
@@ -2281,11 +2877,13 @@ __all__ = [
     "build_style_performance_arc_audition_packet_report",
     "build_style_performance_arc_catalog_report",
     "build_style_performance_arc_live_session_packet_report",
+    "build_style_performance_arc_live_render_bundle_report",
     "build_style_performance_arc_rehearsal_manifest_report",
     "build_style_performance_arc_readiness_report",
     "build_style_performance_arc_set_plan_report",
     "format_style_performance_arc_audition_packet_report",
     "format_style_performance_arc_live_session_packet_report",
+    "format_style_performance_arc_live_render_bundle_report",
     "format_style_performance_arc_rehearsal_manifest_report",
     "format_style_performance_arc_readiness_report",
     "format_style_performance_arc_inspection",
@@ -2296,6 +2894,7 @@ __all__ = [
     "to_style_performance_arc_audition_packet_json",
     "to_style_performance_arc_json",
     "to_style_performance_arc_live_session_packet_json",
+    "to_style_performance_arc_live_render_bundle_json",
     "to_style_performance_arc_rehearsal_manifest_json",
     "to_style_performance_arc_readiness_json",
     "to_style_performance_arc_set_plan_json",
