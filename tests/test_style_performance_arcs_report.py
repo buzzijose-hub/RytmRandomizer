@@ -2175,6 +2175,311 @@ def test_style_performance_arc_stage_rehearsal_state_sources_edges_and_parser(
     assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
 
 
+def test_style_performance_arc_live_set_cockpit_builds_stage_dashboard(tmp_path: Path):
+    from rytm_randomizer.reports.live_set_cockpit import (
+        build_style_performance_arc_live_set_cockpit_report,
+        format_style_performance_arc_live_set_cockpit_report,
+        to_style_performance_arc_live_set_cockpit_json,
+    )
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    report = build_style_performance_arc_live_set_cockpit_report(
+        description="Jeff Mills Oscar Mulero tunnel",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        total_minutes=45,
+        segment_minutes=15,
+    )
+
+    assert report.selected_arc_key == "mills_mulero_tunnel"
+    assert report.stage_rehearsal_state.selected_arc_key == report.selected_arc_key
+    assert report.cue_count == report.stage_rehearsal_state.cue_count
+    assert report.cockpit_status == "rehearsal-required"
+    assert report.operator_mode == "soundcheck"
+    assert report.overall_go_no_go == "rehearse"
+    assert report.next_best_action.startswith("Rehearse")
+    assert report.cue_cards[0].status_light == "AMBER"
+    assert report.cue_cards[0].deck_label == "Cue 1"
+    assert "Rytm loaded" in report.cue_cards[0].machine_arm_summary
+    assert "Analog Four candidate-deferred" in report.cue_cards[0].machine_arm_summary
+    assert report.machine_panels[0].label == "Rytm"
+    assert report.machine_panels[1].label == "Analog Four"
+    assert report.recovery_controls[-1] == "Exit the script with Q if anything feels wrong."
+
+    text = "\n".join(
+        format_style_performance_arc_live_set_cockpit_report(
+            report,
+            include_events=True,
+            event_limit=1,
+        )
+    )
+    assert "RytmRandomizer passive style performance arc live set cockpit" in text
+    assert "Cockpit summary:" in text
+    assert "- Cockpit status: rehearsal-required" in text
+    assert "- Operator mode: soundcheck" in text
+    assert "Launch controls:" in text
+    assert "Machine panels:" in text
+    assert "Cue cockpit cards:" in text
+    assert "Recovery controls:" in text
+    assert "S5 -> Z -> Q" in text
+    assert "Cue event preview:" in text
+    assert "Showing first 1 of" in text
+    assert "- live set cockpit packet only" in text
+    assert "- no MIDI sending" in text
+    assert "- no port opening" in text
+
+    payload = to_style_performance_arc_live_set_cockpit_json(report)
+    cockpit_payload = payload["live_set_cockpit"]
+    assert cockpit_payload["selected_arc_key"] == "mills_mulero_tunnel"
+    assert cockpit_payload["cockpit_status"] == "rehearsal-required"
+    assert cockpit_payload["operator_mode"] == "soundcheck"
+    assert cockpit_payload["cue_cards"][0]["status_light"] == "AMBER"
+    assert cockpit_payload["cue_cards"][0]["machine_arm_summary"].startswith("Rytm loaded")
+    assert payload["stage_rehearsal_state"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert payload["safety"][-1] == "no hardware required"
+
+
+def test_style_performance_arc_live_set_cockpit_sources_edges_and_parser(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+):
+    from rytm_randomizer.guardrails.schema import Confidence, SourceType
+    from rytm_randomizer.reports.live_set_cockpit import (
+        _format_cli_error,
+        _handle_cli_report,
+        _machine_panel,
+        _machine_status_light,
+        _next_best_action,
+        _operator_mode,
+        _parse_cli_args,
+        _status_light,
+        _string_sequence,
+        build_style_performance_arc_live_set_cockpit_from_rehearsal_state,
+        build_style_performance_arc_live_set_cockpit_report,
+        format_style_performance_arc_live_set_cockpit_report,
+    )
+    from rytm_randomizer.style_analysis import FeatureReport, compute_feature_report_hash
+
+    rytm_path, a4_path = _arc_bank_files(tmp_path)
+
+    report = build_style_performance_arc_live_set_cockpit_report(
+        arc_key="jose_warehouse_five_hour",
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope="rytm-only",
+        total_minutes=30,
+        segment_minutes=15,
+    )
+    from_rehearsal = build_style_performance_arc_live_set_cockpit_from_rehearsal_state(
+        report.stage_rehearsal_state
+    )
+    assert from_rehearsal.selected_arc_key == report.selected_arc_key
+    assert from_rehearsal.operator_mode == report.operator_mode
+    assert "Analog Four unchanged-by-scope" in from_rehearsal.cue_cards[0].machine_arm_summary
+
+    assert _string_sequence(()) == "none"
+    assert _status_light("go") == "GREEN"
+    assert _status_light("do-not-arm") == "RED"
+    assert _status_light("custom") == "WHITE"
+    assert _machine_status_light("blocked") == "RED"
+    assert _machine_status_light("custom") == "WHITE"
+    assert _operator_mode("ready") == "performance-ready"
+    assert _operator_mode("blocked") == "blocked"
+    assert _operator_mode("custom") == "review"
+    assert _next_best_action("ready", "go").startswith("Run one passive")
+    assert _next_best_action("blocked", "do-not-arm").startswith("Resolve red")
+    assert _next_best_action("custom", "custom").startswith("Review cockpit state")
+    blocked_panel = _machine_panel(
+        replace(report.stage_rehearsal_state.machine_states[0], status="blocked")
+    )
+    assert blocked_panel.arm_state == "do-not-arm"
+
+    no_event_text = "\n".join(format_style_performance_arc_live_set_cockpit_report(report))
+    assert "Cue event preview:" not in no_event_text
+
+    a4_only = build_style_performance_arc_live_set_cockpit_report(
+        arc_key="jose_warehouse_five_hour",
+        analog_four_sysex_path=a4_path,
+        scope="a4-only",
+        total_minutes=30,
+        segment_minutes=15,
+    )
+    assert "Rytm unchanged-by-scope" in a4_only.cue_cards[0].machine_arm_summary
+    assert "Showing all events" in "\n".join(
+        format_style_performance_arc_live_set_cockpit_report(
+            report,
+            include_events=True,
+            event_limit=0,
+        )
+    )
+    assert "No mock rows available because the selected preview is not ready." in "\n".join(
+        format_style_performance_arc_live_set_cockpit_report(
+            a4_only,
+            include_events=True,
+            event_limit=0,
+        )
+    )
+    with pytest.raises(ValueError, match="event_limit"):
+        format_style_performance_arc_live_set_cockpit_report(report, event_limit=-1)
+
+    parsed = _parse_cli_args(
+        [
+            "--arc",
+            "jose_warehouse_five_hour",
+            "--rytm",
+            "rytm.syx",
+            "--analog-four",
+            "a4.syx",
+            "--scope",
+            "a4-only",
+            "--rank",
+            "2",
+            "--total-minutes",
+            "120",
+            "--segment-minutes",
+            "30",
+            "--discovery-start",
+            "25",
+            "--discovery-end",
+            "80",
+            "--events",
+            "--limit",
+            "0",
+            "--json",
+        ]
+    )
+    assert parsed == {
+        "arc_key": "jose_warehouse_five_hour",
+        "description": None,
+        "audio_path": None,
+        "library_path": None,
+        "rytm_sysex_path": Path("rytm.syx"),
+        "analog_four_sysex_path": Path("a4.syx"),
+        "scope": "analog-four-only",
+        "selection_rank": 2,
+        "total_minutes": 120,
+        "segment_minutes": 30,
+        "discovery_start": 25,
+        "discovery_end": 80,
+        "include_events": True,
+        "event_limit": 0,
+        "json_output": True,
+    }
+    audio_parsed = _parse_cli_args(["--audio", "track.wav"])
+    library_parsed = _parse_cli_args(["--library", "library-root"])
+    assert audio_parsed["audio_path"] == Path("track.wav")
+    assert library_parsed["library_path"] == Path("library-root")
+    for argv, message in (
+        ([], "usage"),
+        (["--arc"], "usage"),
+        (["--arc", "x", "--bogus"], "usage"),
+        (["--arc", "x", "--limit", "oops"], "must be an integer"),
+        (["--arc", "x", "--limit", "-1"], ">= 0"),
+        (["--arc", "x", "--rank", "0"], ">= 1"),
+        (["--arc", "x", "--description", "Jeff Mills"], "usage"),
+    ):
+        with pytest.raises(ValueError, match=message):
+            _parse_cli_args(argv)
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=True,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 0
+    assert "RytmRandomizer passive style performance arc live set cockpit" in captured.out
+    assert "Cockpit summary:" in captured.out
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description="Jeff Mills Oscar Mulero tunnel",
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=0,
+        json_output=True,
+    )
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert rc == 0
+    assert payload["live_set_cockpit"]["selected_arc_key"] == "mills_mulero_tunnel"
+    assert captured.err == ""
+
+    rc = _handle_cli_report(
+        arc_key=None,
+        description=None,
+        audio_path=None,
+        library_path=None,
+        rytm_sysex_path=None,
+        analog_four_sysex_path=None,
+        scope=None,
+        selection_rank=None,
+        total_minutes=None,
+        segment_minutes=None,
+        discovery_start=None,
+        discovery_end=None,
+        include_events=False,
+        event_limit=1,
+        json_output=False,
+    )
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert "live set cockpit requires exactly one selection source" in captured.err
+    assert _format_cli_error(ValueError("bad input")) == "Error: bad input"
+
+    feature_report = FeatureReport(
+        source_type=SourceType.SINGLE_TRACK,
+        confidence=Confidence.HIGH,
+        bpm=138.0,
+        tempo_stability=0.92,
+        kick_density=0.85,
+        percussion_density=0.82,
+        low_end_weight=0.88,
+        spectral_brightness=0.18,
+        texture_noise=0.9,
+        energy_arc=(0.35, 0.45, 0.55, 0.7, 0.85, 0.95, 0.92, 0.88),
+        content_hash="",
+        derived_at="2026-05-22T12:00:00Z",
+    )
+    feature_report = replace(
+        feature_report,
+        content_hash=compute_feature_report_hash(feature_report),
+    )
+    feature_state = build_style_performance_arc_live_set_cockpit_report(
+        feature_report=feature_report,
+        rytm_sysex_path=rytm_path,
+        analog_four_sysex_path=a4_path,
+    )
+    assert feature_state.selection_source == "feature-report"
+    assert feature_state.source_reference == feature_report.content_hash
+    assert "--arc " in feature_state.suggested_commands[0]
+    assert "--feature-report" not in feature_state.suggested_commands[0]
+
+
 def test_style_performance_arc_reference_match_summarizes_snapshot_preview(
     tmp_path: Path,
 ):
@@ -3996,6 +4301,29 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "Machine states:" in captured.out
     assert "Cue states:" in captured.out
 
+    assert (
+        main(
+            [
+                "style-performance-arc-live-set-cockpit-report",
+                "--description",
+                "Jeff Mills Oscar Mulero tunnel",
+                "--rytm",
+                str(rytm_path),
+                "--analog-four",
+                str(a4_path),
+                "--events",
+                "--limit",
+                "1",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert "RytmRandomizer passive style performance arc live set cockpit" in captured.out
+    assert "mills_mulero_tunnel" in captured.out
+    assert "Cockpit summary:" in captured.out
+    assert "Cue cockpit cards:" in captured.out
+
     help_text = resolve_help_text("--help")
     assert "style-performance-arc-report" in help_text
     assert "list-style-performance-arcs" in help_text
@@ -4010,6 +4338,7 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "style-performance-arc-live-runbook-report" in help_text
     assert "style-performance-arc-stage-routing-report" in help_text
     assert "style-performance-arc-stage-rehearsal-state-report" in help_text
+    assert "style-performance-arc-live-set-cockpit-report" in help_text
     report_help = resolve_help_text("style-performance-arc-report")
     assert "RytmRandomizer passive CLI: style-performance-arc-report" in report_help
     assert "Prints passive reference/performance arc presets" in report_help
@@ -4087,4 +4416,13 @@ def test_style_performance_arc_cli_dispatch_and_help(
     assert "go/rehearse/do-not-arm cue states" in stage_rehearsal_help
     assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
         stage_rehearsal_help
+    )
+    live_set_cockpit_help = resolve_help_text("style-performance-arc-live-set-cockpit-report")
+    assert "RytmRandomizer passive CLI: style-performance-arc-live-set-cockpit-report" in (
+        live_set_cockpit_help
+    )
+    assert "Builds a passive live set cockpit from an arc or reference." in (live_set_cockpit_help)
+    assert "Cue cockpit cards" in live_set_cockpit_help
+    assert "--arc <arc-key>|--description <text>|--audio <path>|--library <dir>" in (
+        live_set_cockpit_help
     )

@@ -184,6 +184,10 @@ python -m rytm_randomizer.cli style-performance-arc-stage-routing-report \
 python -m rytm_randomizer.cli style-performance-arc-stage-rehearsal-state-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-live-set-cockpit-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> --events --limit 8
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -201,8 +205,12 @@ also exposes a reference-selected snapshot preview with readiness,
 mock/deferred totals, kit names, planned Rytm pads, planned Analog Four
 tracks, and passive operator action. The same saved-kit path also emits a
 stage packet: compact cue cards with the selected arc, scope, readiness,
-planned pads/tracks, risk labels, hands-on move, listening target, and
-recovery action for each segment.
+mock/deferred totals, planned pads/tracks, operator moves, listening targets,
+recovery actions, and risk labels for each segment. The live set cockpit
+consumes that rehearsal state and turns it into a single show dashboard with
+launch controls, machine panels, cue cockpit cards, recovery controls,
+next-best-action text, optional capped event previews, and deterministic JSON
+for future GUI/live-performance routing.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,
