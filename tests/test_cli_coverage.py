@@ -116,8 +116,10 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     live_command_deck_help = resolve_help_text("style-performance-arc-live-command-deck-report")
     live_state_help = resolve_help_text("style-performance-arc-live-state-report")
+    live_readiness_help = resolve_help_text("style-performance-arc-live-readiness-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
+    assert "style-performance-arc-live-readiness-report" in top_level_help
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -181,6 +183,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert dual_style_performance_set_plan_help.startswith(
         "RytmRandomizer passive CLI: dual-machine-style-performance-set-plan-report"
     )
+    assert live_readiness_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-readiness-report"
+    )
+    assert "GUI/audio-analyzer readiness" in live_readiness_help
+    assert "no MIDI sending" in live_readiness_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"
