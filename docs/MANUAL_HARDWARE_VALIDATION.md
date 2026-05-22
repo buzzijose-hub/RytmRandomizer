@@ -138,16 +138,20 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-live-show-export-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
    ```
-5. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, and `Cue launch script:`.
-6. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+5. Run the passive live transition timeline for the same saved kit banks:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-transition-timeline-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --events --limit 8
+   ```
+6. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, and `Transition cards:`.
+7. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-7. Confirm rehearsal/cockpit/export state marks each cue as `go`, `rehearse`, or `do-not-arm`.
-8. Treat the current validated Rytm live flow as:
+8. Confirm rehearsal/cockpit/export/timeline state marks each cue as `go`, `rehearse`, or `do-not-arm`.
+9. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-9. Keep volume moderate before `S3B` and `S4B`.
-10. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+10. Keep volume moderate before `S3B` and `S4B`.
+11. If the set gets too hot, use `S5`, then `Z`, then `Q`.
 11. Remember that the passive reports are route/rehearsal/cockpit/export cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.

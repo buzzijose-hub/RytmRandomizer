@@ -192,6 +192,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_show_export",
             "STYLE_PERFORMANCE_ARC_LIVE_SHOW_EXPORT_CLI_COMMAND",
         ),
+        "style-performance-arc-live-transition-timeline-report": (
+            "rytm_randomizer.reports.live_transition_timeline",
+            "STYLE_PERFORMANCE_ARC_LIVE_TRANSITION_TIMELINE_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
