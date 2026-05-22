@@ -12,7 +12,12 @@ from typing import Final
 from ..cli_registry import CliCommand, register
 from ..style_analysis.feature_report import FeatureReport
 from .dual_machine_style_kit_selection import normalize_selection_scope
-from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
+from .formatter import (
+    SAFETY_SECTION_HEADER,
+    PassiveReportHeader,
+    passive_report_lines,
+    powershell_literal_arg,
+)
 from .live_stage_rehearsal_state import (
     StylePerformanceArcStageRehearsalCueState,
     StylePerformanceArcStageRehearsalMachineState,
@@ -289,7 +294,10 @@ def _suggested_source_option(
         source_reference = (
             stage_rehearsal_state.source_reference or stage_rehearsal_state.selected_arc_key
         )
-        return f"--{stage_rehearsal_state.selection_source} {source_reference}"
+        return (
+            f"--{stage_rehearsal_state.selection_source} "
+            f"{powershell_literal_arg(source_reference)}"
+        )
     return f"--arc {stage_rehearsal_state.selected_arc_key}"
 
 

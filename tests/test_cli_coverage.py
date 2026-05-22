@@ -110,6 +110,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     stage_routing_help = resolve_help_text("style-performance-arc-stage-routing-report")
     stage_rehearsal_help = resolve_help_text("style-performance-arc-stage-rehearsal-state-report")
     live_set_cockpit_help = resolve_help_text("style-performance-arc-live-set-cockpit-report")
+    live_show_export_help = resolve_help_text("style-performance-arc-live-show-export-report")
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert snapshot_help.startswith(
@@ -187,6 +188,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert live_set_cockpit_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-set-cockpit-report"
+    )
+    assert live_show_export_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-show-export-report"
     )
     assert snapshot_help.split("Safety:\n", 1)[1].splitlines() == [
         f"  {line}" for line in SAFETY_LINES
