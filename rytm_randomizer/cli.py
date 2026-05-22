@@ -216,6 +216,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_analyzer_handoff",
             "STYLE_PERFORMANCE_ARC_LIVE_ANALYZER_HANDOFF_CLI_COMMAND",
         ),
+        "style-performance-arc-live-analyzer-targets-report": (
+            "rytm_randomizer.reports.live_analyzer_targets",
+            "STYLE_PERFORMANCE_ARC_LIVE_ANALYZER_TARGETS_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
