@@ -206,6 +206,16 @@ python -m rytm_randomizer.cli style-performance-arc-live-state-report \
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
   --cue 1 --lookahead 2 --events --limit 8
+
+python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-readiness-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -255,6 +265,10 @@ handoff surfaces: the handoff answers "what reference evidence and GUI state
 should the analyzer see?", and the target packet answers "what bands,
 checkpoints, calibration steps, and warning thresholds should a rehearsal
 capture compare against?" without opening ports or sending MIDI.
+The live GUI/audio-analyzer readiness bundle consumes that target packet and
+adds the panel manifest, stream wiring, operator workflow, blocked active
+actions, replay commands, and deterministic JSON that a future desktop screen
+or analyzer handoff can render without opening ports or sending MIDI.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,
