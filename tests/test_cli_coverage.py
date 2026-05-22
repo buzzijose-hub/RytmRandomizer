@@ -120,10 +120,14 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_control_surface_help = resolve_help_text(
         "style-performance-arc-live-control-surface-report"
     )
+    live_analyzer_handoff_help = resolve_help_text(
+        "style-performance-arc-live-analyzer-handoff-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
     assert "style-performance-arc-live-control-surface-report" in top_level_help
+    assert "style-performance-arc-live-analyzer-handoff-report" in top_level_help
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -197,6 +201,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "GUI/audio-analyzer control surface" in live_control_surface_help
     assert "no MIDI sending" in live_control_surface_help
+    assert live_analyzer_handoff_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-analyzer-handoff-report"
+    )
+    assert "audio analyzer handoff" in live_analyzer_handoff_help
+    assert "no MIDI sending" in live_analyzer_handoff_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"
