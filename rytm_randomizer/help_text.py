@@ -219,6 +219,16 @@ USAGE = (
     "[--cue N] [--lookahead N] [--matches N] "
     "[--takes N] [--slot capture-001] [--label <text>] "
     "[--capture-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-sidecar-session-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1425,6 +1435,33 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_performance_arc_live_gui_sidecar_session_report_help():
+    from .reports.live_gui_sidecar_session import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-sidecar-session-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --slot capture-001 --sidecar-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive single sidecar-ready GUI state from the capture review. The
+  report emits panel rows, analyzer comparison rows, capture decision rows,
+  disabled active controls, blocked active actions, and replayable passive
+  commands for future desktop GUI and audio-analyzer flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -1507,6 +1544,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--capture-prefix <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-review-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -1651,6 +1689,8 @@ Commands:
                      Build passive GUI/audio-analyzer capture queues.
   style-performance-arc-live-gui-capture-review-report
                      Review passive GUI/audio-analyzer captures with go/repeat/hold decisions.
+  style-performance-arc-live-gui-sidecar-session-report
+                     Compose passive capture review into one sidecar-ready GUI state.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1936,6 +1976,9 @@ Safety:
     ),
     "style-performance-arc-live-gui-capture-review-report": (
         _style_performance_arc_live_gui_capture_review_report_help
+    ),
+    "style-performance-arc-live-gui-sidecar-session-report": (
+        _style_performance_arc_live_gui_sidecar_session_report_help
     ),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

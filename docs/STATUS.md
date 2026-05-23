@@ -1,9 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-22. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-23. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-23: Live GUI sidecar session packet prepared locally. The passive CLI can now compose the live GUI capture review into one sidecar-ready GUI state with overview/current-cue/machine/analyzer/capture/safety panels, analyzer rows, capture decision rows, disabled active controls, blocked actions, deterministic JSON, and replayable passive commands without touching MIDI ports or hardware.
 - 2026-05-22: Live GUI/audio analyzer capture review prepared locally. The passive CLI can now compose the capture queue with captured FeatureReport evidence into deterministic go/repeat/hold decisions, metric drift notes, hold reasons, blocked active actions, replayable passive commands, deterministic JSON, and explicit no-send/no-port/no-recording safety lines so a future desktop/audio-analyzer surface can decide whether a listen-only rehearsal take is close enough without touching hardware.
 - 2026-05-22: Live GUI/audio analyzer capture queue prepared locally. The passive CLI can now compose the GUI rehearsal session packet into deterministic capture slots, suggested capture filenames, analyzer job cards, operator capture checklists, blocked active actions, replayable passive commands, deterministic JSON, and explicit no-send/no-port/no-recording safety lines so a future desktop/audio-analyzer surface can queue repeated listen-only rehearsal takes without touching hardware.
 - 2026-05-22: Live GUI rehearsal session packet prepared locally. The passive CLI can now compose the GUI/audio-analyzer readiness bundle into session task cards, listen-only rehearsal take cards, operator checklists, blocked active actions, replayable passive commands, deterministic JSON, and explicit no-send/no-port safety lines so a future desktop/audio-analyzer surface can guide repeated cue captures without touching hardware.
