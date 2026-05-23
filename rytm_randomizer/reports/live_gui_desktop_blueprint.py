@@ -11,13 +11,19 @@ from pathlib import Path
 from typing import Final
 
 from ..cli_registry import CliCommand, register
+from ..data.live_gui_contracts import (
+    LIVE_GUI_DESKTOP_MOUNT_REGION_SPECS,
+    LIVE_GUI_DESKTOP_REGION_SPECS,
+    LIVE_GUI_DESKTOP_VIEWPORT_SPECS,
+)
 from ..style_analysis.feature_report import FeatureReport
 from .formatter import (
     SAFETY_SECTION_HEADER,
     PassiveReportHeader,
     passive_report_lines,
-    powershell_literal_arg,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value, replace_replay_command, status_severity
 from .live_gui_implementation_bridge import (
     StylePerformanceArcLiveGuiImplementationBridgeReport,
     build_style_performance_arc_live_gui_implementation_bridge_report,
@@ -293,14 +299,6 @@ def _normalize_desktop_shell(value: str) -> str:
     return normalized
 
 
-def _status_severity(status: str) -> str:
-    if status == "blocked":
-        return "critical"
-    if status == "review-needed":
-        return "warning"
-    return "info"
-
-
 def _coverage_status(count: int) -> str:
     if count <= 0:
         return "blocked"
@@ -334,31 +332,16 @@ def _viewports(
     density: str,
     layout_key: str,
 ) -> tuple[StylePerformanceArcLiveGuiDesktopBlueprintViewport, ...]:
-    return (
+    return tuple(
         StylePerformanceArcLiveGuiDesktopBlueprintViewport(
-            viewport_key="desktop",
-            width_px=1440,
-            height_px=900,
-            density=density,
+            viewport_key=spec.viewport_key,
+            width_px=spec.width_px,
+            height_px=spec.height_px,
+            density=density if spec.density_mode == "requested" else spec.density_mode,
             layout_key=layout_key,
             passive=True,
-        ),
-        StylePerformanceArcLiveGuiDesktopBlueprintViewport(
-            viewport_key="tablet",
-            width_px=1024,
-            height_px=768,
-            density=density,
-            layout_key=layout_key,
-            passive=True,
-        ),
-        StylePerformanceArcLiveGuiDesktopBlueprintViewport(
-            viewport_key="compact",
-            width_px=768,
-            height_px=1024,
-            density="compact",
-            layout_key=layout_key,
-            passive=True,
-        ),
+        )
+        for spec in LIVE_GUI_DESKTOP_VIEWPORT_SPECS
     )
 
 
@@ -388,67 +371,18 @@ def _region(
 
 
 def _regions() -> tuple[StylePerformanceArcLiveGuiDesktopBlueprintRegion, ...]:
-    return (
+    return tuple(
         _region(
-            region_key="region-current-cue",
-            order=1,
-            label="Current cue",
-            role="main",
-            source_component_key="current-cue-panel",
-            grid_area="cue",
-            min_width_px=420,
-            min_height_px=240,
-        ),
-        _region(
-            region_key="region-machine-grid",
-            order=2,
-            label="Machines",
-            role="status-grid",
-            source_component_key="machine-panels",
-            grid_area="machines",
-            min_width_px=520,
-            min_height_px=240,
-        ),
-        _region(
-            region_key="region-analyzer",
-            order=3,
-            label="Analyzer",
-            role="meter-stack",
-            source_component_key="analyzer-overlay",
-            grid_area="analyzer",
-            min_width_px=420,
-            min_height_px=220,
-        ),
-        _region(
-            region_key="region-capture-review",
-            order=4,
-            label="Capture review",
-            role="review-table",
-            source_component_key="capture-review-panel",
-            grid_area="capture",
-            min_width_px=520,
-            min_height_px=220,
-        ),
-        _region(
-            region_key="region-controls",
-            order=5,
-            label="Controls",
-            role="action-bar",
-            source_component_key="controller-actions",
-            grid_area="controls",
-            min_width_px=420,
-            min_height_px=120,
-        ),
-        _region(
-            region_key="region-harness",
-            order=6,
-            label="Harness",
-            role="validation",
-            source_component_key="test-harness-panel",
-            grid_area="harness",
-            min_width_px=520,
-            min_height_px=160,
-        ),
+            region_key=spec.region_key,
+            order=spec.order,
+            label=spec.label,
+            role=spec.role,
+            source_component_key=spec.source_component_key,
+            grid_area=spec.grid_area,
+            min_width_px=spec.min_width_px,
+            min_height_px=spec.min_height_px,
+        )
+        for spec in LIVE_GUI_DESKTOP_REGION_SPECS
     )
 
 
@@ -483,12 +417,7 @@ def _widgets(
 ) -> tuple[StylePerformanceArcLiveGuiDesktopBlueprintWidget, ...]:
     mounts = bridge.component_mounts
     region_by_mount = {
-        "current-cue-panel": "region-current-cue",
-        "machine-panels": "region-machine-grid",
-        "analyzer-overlay": "region-analyzer",
-        "capture-review-panel": "region-capture-review",
-        "controller-actions": "region-controls",
-        "test-harness-panel": "region-harness",
+        spec.component_key: spec.region_key for spec in LIVE_GUI_DESKTOP_MOUNT_REGION_SPECS
     }
     return tuple(
         _widget(
@@ -680,7 +609,7 @@ def _check(
         check_key=check_key,
         label=label,
         status=status,
-        severity=_status_severity(status),
+        severity=status_severity(status),
         source_id=source_id,
         message=message,
         operator_action=operator_action,
@@ -832,14 +761,14 @@ def _replace_replay_command(
     blueprint_label: str,
     desktop_shell: str,
 ) -> str | None:
-    source = "style-performance-arc-live-gui-implementation-bridge-report"
-    target = "style-performance-arc-live-gui-desktop-blueprint-report"
-    if source not in command:
-        return None
-    return (
-        command.replace(source, target, 1)
-        + f" --desktop-shell {powershell_literal_arg(desktop_shell)}"
-        + f" --blueprint-label {powershell_literal_arg(blueprint_label)}"
+    return replace_replay_command(
+        command,
+        source_command="style-performance-arc-live-gui-implementation-bridge-report",
+        target_command="style-performance-arc-live-gui-desktop-blueprint-report",
+        extra_options=(
+            ("--desktop-shell", desktop_shell),
+            ("--blueprint-label", blueprint_label),
+        ),
     )
 
 
@@ -1337,9 +1266,7 @@ def format_style_performance_arc_live_gui_desktop_blueprint_report(
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def parse_style_performance_arc_live_gui_desktop_blueprint_cli_args(
@@ -1472,10 +1399,6 @@ def _handle_cli_report(
     for line in lines:
         sys.stdout.write(f"{line}\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_BLUEPRINT_CLI_COMMAND: Final[CliCommand] = CliCommand(

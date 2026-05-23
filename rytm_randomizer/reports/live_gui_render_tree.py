@@ -18,6 +18,8 @@ from .formatter import (
     passive_report_lines,
     powershell_literal_arg,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value
 from .live_gui_screen_contract import (
     StylePerformanceArcLiveGuiScreenAlert,
     StylePerformanceArcLiveGuiScreenComponent,
@@ -807,9 +809,7 @@ def format_style_performance_arc_live_gui_render_tree_report(
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
@@ -919,10 +919,6 @@ def _handle_cli_report(
     for line in lines:
         sys.stdout.write(f"{line}\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND: Final[CliCommand] = CliCommand(

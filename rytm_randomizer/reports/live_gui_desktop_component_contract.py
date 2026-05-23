@@ -16,8 +16,9 @@ from .formatter import (
     SAFETY_SECTION_HEADER,
     PassiveReportHeader,
     passive_report_lines,
-    powershell_literal_arg,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value, replace_replay_command, status_severity
 from .live_gui_desktop_app_plan import (
     StylePerformanceArcLiveGuiDesktopAppPlanComponentFile,
     StylePerformanceArcLiveGuiDesktopAppPlanReport,
@@ -271,14 +272,6 @@ def _slug(value: str) -> str:
     return slug or "selector"
 
 
-def _status_severity(status: str) -> str:
-    if status == "blocked":
-        return "critical"
-    if status == "review-needed":
-        return "warning"
-    return "info"
-
-
 def _coverage_status(count: int) -> str:
     if count <= 0:
         return "blocked"
@@ -436,7 +429,7 @@ def _check(
         check_key=check_key,
         label=label,
         status=status,
-        severity=_status_severity(status),
+        severity=status_severity(status),
         source_id=source_id,
         message=message,
         operator_action=operator_action,
@@ -583,15 +576,14 @@ def _replace_replay_command(
     component_contract_label: str,
     selector_prefix: str,
 ) -> str | None:
-    source = "style-performance-arc-live-gui-desktop-app-plan-report"
-    target = "style-performance-arc-live-gui-desktop-component-contract-report"
-    if source not in command:
-        return None
-    return (
-        command.replace(source, target, 1)
-        + " --component-contract-label "
-        + powershell_literal_arg(component_contract_label)
-        + f" --selector-prefix {powershell_literal_arg(selector_prefix)}"
+    return replace_replay_command(
+        command,
+        source_command="style-performance-arc-live-gui-desktop-app-plan-report",
+        target_command="style-performance-arc-live-gui-desktop-component-contract-report",
+        extra_options=(
+            ("--component-contract-label", component_contract_label),
+            ("--selector-prefix", selector_prefix),
+        ),
     )
 
 
@@ -1026,9 +1018,7 @@ def format_style_performance_arc_live_gui_desktop_component_contract_report(
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def parse_style_performance_arc_live_gui_desktop_component_contract_cli_args(
@@ -1172,10 +1162,6 @@ def _handle_cli_report(
     for line in lines:
         sys.stdout.write(f"{line}\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND: Final[CliCommand] = (

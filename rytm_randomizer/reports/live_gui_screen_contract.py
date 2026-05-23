@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Final
 
 from ..cli_registry import CliCommand, register
+from ..data.live_gui_contracts import LIVE_GUI_SCREEN_COMPONENT_SPECS
 from ..style_analysis.feature_report import FeatureReport
 from .dual_machine_style_kit_selection import normalize_selection_scope
 from .formatter import (
@@ -19,6 +20,8 @@ from .formatter import (
     passive_report_lines,
     powershell_literal_arg,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value
 from .live_gui_sidecar_session import (
     StylePerformanceArcLiveGuiSidecarSessionReport,
     build_style_performance_arc_live_gui_sidecar_session_report,
@@ -343,50 +346,30 @@ def _base_components(
     next_cues: tuple[str, ...],
     primary_action: StylePerformanceArcLiveGuiScreenAction,
 ) -> tuple[StylePerformanceArcLiveGuiScreenComponent, ...]:
+    status_values = {
+        "sidecar_status": sidecar.sidecar_status,
+        "queued": "queued",
+    }
+    value_values = {
+        "selected_arc": f"{sidecar.selected_arc_key} / {sidecar.selected_arc_name}",
+        "sidecar_status": sidecar.sidecar_status,
+        "current_cue_label": sidecar.current_cue_label,
+        "next_cue_labels": ", ".join(next_cues),
+    }
     components = [
-        StylePerformanceArcLiveGuiScreenComponent(
-            key="selected-arc",
-            region_key="header",
-            component_type="badge",
-            label="Selected arc",
-            status=sidecar.sidecar_status,
-            value=f"{sidecar.selected_arc_key} / {sidecar.selected_arc_name}",
-            enabled=False,
-            source="live_gui_sidecar_session.selected_arc",
-            operator_action="Display the selected performance arc and scope.",
-        ),
-        StylePerformanceArcLiveGuiScreenComponent(
-            key="sidecar-status",
-            region_key="header",
-            component_type="status",
-            label="Sidecar status",
-            status=sidecar.sidecar_status,
-            value=sidecar.sidecar_status,
-            enabled=False,
-            source="live_gui_sidecar_session.sidecar_status",
-            operator_action="Display the passive sidecar state badge.",
-        ),
-        StylePerformanceArcLiveGuiScreenComponent(
-            key="current-cue",
-            region_key="cue-strip",
-            component_type="cue",
-            label="Current cue",
-            status=sidecar.sidecar_status,
-            value=sidecar.current_cue_label,
-            enabled=False,
-            source="live_gui_sidecar_session.current_cue_label",
-            operator_action="Display the cue currently being rehearsed.",
-        ),
-        StylePerformanceArcLiveGuiScreenComponent(
-            key="next-cues",
-            region_key="cue-strip",
-            component_type="lookahead",
-            label="Next cues",
-            status="queued",
-            value=", ".join(next_cues),
-            enabled=False,
-            source="live_gui_sidecar_session.next_cue_labels",
-            operator_action="Display passive lookahead cue labels.",
+        *(
+            StylePerformanceArcLiveGuiScreenComponent(
+                key=spec.key,
+                region_key=spec.region_key,
+                component_type=spec.component_type,
+                label=spec.label,
+                status=status_values[spec.status_source],
+                value=value_values[spec.value_source],
+                enabled=False,
+                source=spec.source,
+                operator_action=spec.operator_action,
+            )
+            for spec in LIVE_GUI_SCREEN_COMPONENT_SPECS
         ),
         StylePerformanceArcLiveGuiScreenComponent(
             key=primary_action.key,
@@ -1019,9 +1002,7 @@ def _parse_positive_int(value: str, *, option: str) -> int:
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
@@ -1250,10 +1231,6 @@ def _handle_cli_report(
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND: Final[CliCommand] = CliCommand(

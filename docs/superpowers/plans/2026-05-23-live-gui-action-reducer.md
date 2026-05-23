@@ -18,7 +18,7 @@
 - [x] Wire the command into `rytm_randomizer/cli.py` and `rytm_randomizer/help_text.py`.
 - [x] Update passive CLI safety tests, CLI coverage tests, CLI help fixture, README, architecture docs/diagrams, manual validation, style-analysis docs, and status notes.
 - [x] Run focused tests, architecture tests, fast/full tests, coverage, lint, and review gates.
-- [ ] Keep the work local while PR #94 is open; after the base PRs land, recreate from `origin/modularize-v1.34`, rerun all gates, exact-stage only intended files, push, open a non-stacked PR, request review, and link this plan in the PR body.
+- [x] PR #94 has landed; this work was recreated from `origin/modularize-v1.34`, bundled into PR #95, rerun through the local gates, pushed as a non-stacked PR, review requested, and this plan is linked from the PR body.
 
 ## Behavior Contract
 
@@ -61,6 +61,13 @@
 - Gate 13 - Env vars: no new environment variables.
 - Gate 14 - Maintainability review: code review checks abstraction reuse, docs freshness, side effects, replay-command safety, and house style.
 - Gate 15 - Learning phase: N/A for this local feature slice; no repo-level learned skill is expected.
-- Gate 16 - Execution shape: this stays local while PR #94 is open, then becomes a non-stacked PR from `origin/modularize-v1.34`.
+- Gate 16 - Execution shape: PR #95 is non-stacked from `origin/modularize-v1.34`; PR #94 has landed and there is no sibling PR dependency.
 - Gate 17 - Abstraction reuse and genericization: reuses interaction script, analyzer frame, overlay, render tree, screen contract, capture review, passive formatter, style analysis, saved-kit fixtures, and `CliCommand`.
 - Gate 18 - Architecture-doc and diagram freshness: `ARCHITECTURE.md` and `ARCHITECTURE_DIAGRAMS.md` include the new report/command surface and refreshed module counts.
+
+## Bundle Closeout Addendum
+
+- Plan requirements: PR #95 links this plan and carries the full 18-gate checklist; this slice remains passive/mock-safe, uses existing `reports/`, `data/`, `CliCommand`, and formatter boundaries, and does not touch V1.34 parity.
+- Rollback plan: revert the PR #95 bundle commit(s) for this report chain; because the commands are passive and lazily registered, rollback removes only report metadata/CLI/docs/tests.
+- Done criteria: focused report tests pass, handler-level passive MIDI import safety passes, architecture/fast/full/coverage/review gates pass, docs counts stay current, and the PR stays non-stacked against `modularize-v1.34`.
+- Bundle status: PR #94 merged; this work was recreated from `origin/modularize-v1.34`, bundled into PR #95, pushed with exact-path staging, and review was requested.

@@ -11,13 +11,15 @@ from pathlib import Path
 from typing import Final
 
 from ..cli_registry import CliCommand, register
+from ..data.live_gui_contracts import LIVE_GUI_DESKTOP_APP_STYLE_TOKEN_SPECS
 from ..style_analysis.feature_report import FeatureReport
 from .formatter import (
     SAFETY_SECTION_HEADER,
     PassiveReportHeader,
     passive_report_lines,
-    powershell_literal_arg,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value, replace_replay_command, status_severity
 from .live_gui_desktop_blueprint import (
     StylePerformanceArcLiveGuiDesktopBlueprintRegion,
     StylePerformanceArcLiveGuiDesktopBlueprintReport,
@@ -259,14 +261,6 @@ def _normalize_framework_target(value: str) -> str:
     return normalized
 
 
-def _status_severity(status: str) -> str:
-    if status == "blocked":
-        return "critical"
-    if status == "review-needed":
-        return "warning"
-    return "info"
-
-
 def _coverage_status(count: int) -> str:
     if count <= 0:
         return "blocked"
@@ -384,23 +378,17 @@ def _style_tokens(
     *,
     framework_target: str,
 ) -> tuple[StylePerformanceArcLiveGuiDesktopAppPlanStyleToken, ...]:
-    rows = (
-        ("token-surface", "Surface", "color", "operator dark neutral surface"),
-        ("token-panel", "Panel", "color", "low-glare machine panel"),
-        ("token-warning", "Warning", "color", "high-contrast hold/repeat warning"),
-        ("token-disabled", "Disabled", "state", "disabled active-control affordance"),
-    )
     return tuple(
         StylePerformanceArcLiveGuiDesktopAppPlanStyleToken(
-            token_key=token_key,
-            label=label,
-            token_type=token_type,
-            value_hint=value_hint,
+            token_key=spec.token_key,
+            label=spec.label,
+            token_type=spec.token_type,
+            value_hint=spec.value_hint,
             framework_target=framework_target,
             status="ready",
             passive=True,
         )
-        for token_key, label, token_type, value_hint in rows
+        for spec in LIVE_GUI_DESKTOP_APP_STYLE_TOKEN_SPECS
     )
 
 
@@ -417,7 +405,7 @@ def _check(
         check_key=check_key,
         label=label,
         status=status,
-        severity=_status_severity(status),
+        severity=status_severity(status),
         source_id=source_id,
         message=message,
         operator_action=operator_action,
@@ -572,14 +560,14 @@ def _replace_replay_command(
     app_plan_label: str,
     framework_target: str,
 ) -> str | None:
-    source = "style-performance-arc-live-gui-desktop-blueprint-report"
-    target = "style-performance-arc-live-gui-desktop-app-plan-report"
-    if source not in command:
-        return None
-    return (
-        command.replace(source, target, 1)
-        + f" --framework-target {powershell_literal_arg(framework_target)}"
-        + f" --app-plan-label {powershell_literal_arg(app_plan_label)}"
+    return replace_replay_command(
+        command,
+        source_command="style-performance-arc-live-gui-desktop-blueprint-report",
+        target_command="style-performance-arc-live-gui-desktop-app-plan-report",
+        extra_options=(
+            ("--framework-target", framework_target),
+            ("--app-plan-label", app_plan_label),
+        ),
     )
 
 
@@ -991,9 +979,7 @@ def format_style_performance_arc_live_gui_desktop_app_plan_report(
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def parse_style_performance_arc_live_gui_desktop_app_plan_cli_args(
@@ -1130,10 +1116,6 @@ def _handle_cli_report(
     for line in lines:
         sys.stdout.write(f"{line}\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND: Final[CliCommand] = CliCommand(

@@ -86,7 +86,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-The full suite is roughly 2,400 tests and usually runs in about 30 seconds on a multi-core machine. `pyproject.toml` sets `-n auto`, so `pytest-xdist` parallelizes across CPU cores. Do not pass `-o addopts=''` for normal runs; it disables xdist and makes the suite much slower. Every commit must keep the suite green. The pytest config in `pyproject.toml` enables:
+The full suite is 3,400+ tests and usually runs in about 30 seconds on a multi-core machine. `pyproject.toml` sets `-n auto`, so `pytest-xdist` parallelizes across CPU cores. Do not pass `-o addopts=''` for normal runs; it disables xdist and makes the suite much slower. Every commit must keep the suite green. The pytest config in `pyproject.toml` enables:
 
 - `pytest-xdist` (`-n auto`) for parallel execution.
 - `pytest-timeout` (default 180s per test) so no test can silently hang the suite.
@@ -107,7 +107,7 @@ Common loops if `just` is installed: `just test` for the full suite, `just fast`
 | `rytm_randomizer/data/`, `state/` | Canonical fact tables and runtime state. |
 | `rytm_randomizer/guardrails/`, `observability/`, `snapshot/`, `reports/`, `behavior/`, `style_analysis/` | Safety/policy, logging/metrics, SysEx envelope helpers, passive reports, behavior evaluators, and style-analysis support. |
 | `tests/fixtures/v134_parity/` | Frozen V1.34 reference behavior as JSON goldens, one per parity request. The retired `rytm_hybrid_randomizer_v134.py` monolith used to be the live byte-parity baseline; the goldens are now the authoritative source. |
-| `tests/` | Roughly 2,400 tests across 108 test files, including `tests/architecture/` mechanical guardrails and parity tests against the V1.34 JSON goldens. |
+| `tests/` | 3,400+ tests across 160+ test modules, including `tests/architecture/` mechanical guardrails and parity tests against the V1.34 JSON goldens. |
 | `docs/` | Project documentation, status, process notes, `ARCHITECTURE.md`, `ARCHITECTURE_DIAGRAMS.md`, and `PLAN_REQUIREMENTS.md`. |
 | `scripts/` | Cross-platform Python tooling such as closeout and coverage checks. `Scripts/` is the legacy PowerShell equivalent. |
 | `tooling/` | Developer utilities (hardware-capture scripts). Not part of the core product. |

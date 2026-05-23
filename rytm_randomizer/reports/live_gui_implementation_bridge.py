@@ -16,8 +16,9 @@ from .formatter import (
     SAFETY_SECTION_HEADER,
     PassiveReportHeader,
     passive_report_lines,
-    powershell_literal_arg,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value, replace_replay_command, status_severity
 from .live_gui_test_harness_readiness import (
     StylePerformanceArcLiveGuiTestHarnessReadinessReport,
     build_style_performance_arc_live_gui_test_harness_readiness_report,
@@ -209,14 +210,6 @@ def _normalize_nonblank(value: str, *, field: str) -> str:
     if not normalized:
         raise ValueError(f"{field} must not be blank")
     return normalized
-
-
-def _status_severity(status: str) -> str:
-    if status == "blocked":
-        return "critical"
-    if status == "review-needed":
-        return "warning"
-    return "info"
 
 
 def _bridge_id(
@@ -485,7 +478,7 @@ def _gate(
         key=key,
         label=label,
         status=status,
-        severity=_status_severity(status),
+        severity=status_severity(status),
         source_id=source_id,
         message=message,
         operator_action=operator_action,
@@ -618,13 +611,11 @@ def _replace_replay_command(
     *,
     bridge_label: str,
 ) -> str | None:
-    source = "style-performance-arc-live-gui-test-harness-readiness-report"
-    target = "style-performance-arc-live-gui-implementation-bridge-report"
-    if source not in command:
-        return None
-    return (
-        command.replace(source, target, 1)
-        + f" --bridge-label {powershell_literal_arg(bridge_label)}"
+    return replace_replay_command(
+        command,
+        source_command="style-performance-arc-live-gui-test-harness-readiness-report",
+        target_command="style-performance-arc-live-gui-implementation-bridge-report",
+        extra_options=(("--bridge-label", bridge_label),),
     )
 
 
@@ -957,9 +948,7 @@ def format_style_performance_arc_live_gui_implementation_bridge_report(
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def parse_style_performance_arc_live_gui_implementation_bridge_cli_args(
@@ -1084,10 +1073,6 @@ def _handle_cli_report(
     for line in lines:
         sys.stdout.write(f"{line}\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_IMPLEMENTATION_BRIDGE_CLI_COMMAND: Final[CliCommand] = CliCommand(

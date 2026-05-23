@@ -25,6 +25,8 @@ from .live_gui_action_reducer import (
     parse_style_performance_arc_live_gui_action_reducer_cli_args,
     to_style_performance_arc_live_gui_action_reducer_json,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive style performance arc live GUI controller state"
 SOURCE_MODULE: Final[str] = "reports.live_gui_controller_state"
@@ -583,9 +585,7 @@ def format_style_performance_arc_live_gui_controller_state_report(
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
@@ -704,10 +704,6 @@ def _handle_cli_report(
     for line in lines:
         sys.stdout.write(f"{line}\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_CONTROLLER_STATE_CLI_COMMAND: Final[CliCommand] = CliCommand(

@@ -24,6 +24,8 @@ from .live_analyzer_targets import (
     build_style_performance_arc_live_analyzer_targets_report,
     to_style_performance_arc_live_analyzer_targets_json,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value
 
 REPORT_TITLE: Final[str] = (
     "RytmRandomizer passive style performance arc live GUI analyzer readiness"
@@ -671,9 +673,7 @@ def _parse_positive_int(value: str, *, option: str) -> int:
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
@@ -814,10 +814,6 @@ def _handle_cli_report(
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_READINESS_CLI_COMMAND: Final[CliCommand] = CliCommand(

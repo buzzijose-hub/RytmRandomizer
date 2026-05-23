@@ -51,4 +51,11 @@
 - [x] Run focused coverage for `rytm_randomizer.reports.live_gui_desktop_blueprint`.
 - [x] Run lint, architecture, fast/full, package coverage, and mechanical review gates.
 - [x] Exact-stage only intended blueprint files, excluding parity fixtures and unrelated CRLF noise.
-- [x] Commit locally without pushing while PR #94 waits for review.
+- [x] Bundled into PR #95 after PR #94 landed; the branch is non-stacked against `origin/modularize-v1.34`, pushed for review, and no sibling PR dependency remains.
+
+## Bundle Closeout Addendum
+
+- Plan requirements: PR #95 links this plan and carries the full 18-gate checklist; this slice remains passive/mock-safe, uses existing `reports/`, `data/`, `CliCommand`, and formatter boundaries, and does not touch V1.34 parity.
+- Rollback plan: revert the PR #95 bundle commit(s) for this report chain; because the commands are passive and lazily registered, rollback removes only report metadata/CLI/docs/tests.
+- Done criteria: focused report tests pass, handler-level passive MIDI import safety passes, architecture/fast/full/coverage/review gates pass, docs counts stay current, and the PR stays non-stacked against `modularize-v1.34`.
+- Bundle status: PR #94 merged; this work was recreated from `origin/modularize-v1.34`, bundled into PR #95, pushed with exact-path staging, and review was requested.
