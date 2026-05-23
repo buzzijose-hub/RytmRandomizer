@@ -356,6 +356,12 @@ cases, blocked active actions, JSON, and replayable passive commands without
 launching a GUI, running a test harness, executing commands, recording audio,
 opening ports, or sending MIDI.
 
+The test-harness contract report consumes the playback-validation matrix and
+emits deterministic GUI/audio-analyzer harness metadata. It preserves Harness
+suites, fixture contracts, selector bindings, blocked active actions, JSON, and
+replayable passive commands without launching a GUI, running a harness, writing
+files, reading audio streams, opening ports, or sending MIDI.
+
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.

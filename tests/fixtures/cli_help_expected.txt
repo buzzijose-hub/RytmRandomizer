@@ -248,6 +248,8 @@ Commands:
                      Compose passive controller state into GUI playback transcript metadata.
   style-performance-arc-live-gui-playback-validation-report
                      Compose passive playback transcript into GUI validation matrix metadata.
+  style-performance-arc-live-gui-test-harness-contract-report
+                     Compose passive validation matrix into GUI test-harness contract metadata.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
