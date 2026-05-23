@@ -182,17 +182,21 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard
    ```
-16. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, `Live GUI capture queue summary:`, `Live GUI capture review summary:`, `Live GUI sidecar session summary:`, `Live GUI screen contract summary:`, and `Live GUI render tree summary:`.
-17. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+16. Run the passive live GUI analyzer overlay when you want audio-analyzer meter metadata for a future GUI overlay:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay"
+   ```
+17. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, `Live GUI capture queue summary:`, `Live GUI capture review summary:`, `Live GUI sidecar session summary:`, `Live GUI screen contract summary:`, `Live GUI render tree summary:`, and `Live GUI analyzer overlay summary:`.
+18. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-18. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue/capture-review/sidecar packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable; capture review and sidecar packets may also mark a take as `repeat`.
-19. Treat the current validated Rytm live flow as:
+19. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue/capture-review/sidecar packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable; capture review, sidecar, and analyzer-overlay packets may also mark a take as `repeat`.
+20. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-20. Keep volume moderate before `S3B` and `S4B`.
-21. If the set gets too hot, use `S5`, then `Z`, then `Q`.
-20. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue/capture-review/sidecar cards only. Armed runtime
+21. Keep volume moderate before `S3B` and `S4B`.
+22. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+23. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue/capture-review/sidecar/screen-contract/render-tree/analyzer-overlay cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.
 

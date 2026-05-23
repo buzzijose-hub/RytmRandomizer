@@ -260,6 +260,20 @@ USAGE = (
     "[--viewport desktop|tablet|compact] "
     "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
     "[--density standard|compact] [--json] | "
+    "style-performance-arc-live-gui-analyzer-overlay-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -2021,6 +2035,14 @@ def test_readme_mentions_style_performance_arc_live_gui_render_tree_command():
     assert "style-performance-arc-live-gui-render-tree-report" in text
     assert "GUI render tree" in text
     assert "deterministic root/region/component tree" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_analyzer_overlay_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-analyzer-overlay-report" in text
+    assert "GUI analyzer overlay" in text
+    assert "meter widgets" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
