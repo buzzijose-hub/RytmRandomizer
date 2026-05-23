@@ -232,6 +232,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_capture_queue",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_CAPTURE_QUEUE_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-capture-review-report": (
+            "rytm_randomizer.reports.live_gui_capture_review",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_CAPTURE_REVIEW_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

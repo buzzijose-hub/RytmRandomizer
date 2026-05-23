@@ -166,17 +166,21 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --capture-prefix warehouse
    ```
-12. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, and `Live GUI capture queue summary:`.
-13. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+12. Run the passive live GUI/audio analyzer capture review after a listen-only take is represented as FeatureReport evidence:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-review-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse
+   ```
+13. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, `Live GUI capture queue summary:`, and `Live GUI capture review summary:`.
+14. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-14. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable.
-15. Treat the current validated Rytm live flow as:
+15. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue/capture-review packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable; capture review packets may also mark a take as `repeat`.
+16. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-16. Keep volume moderate before `S3B` and `S4B`.
-17. If the set gets too hot, use `S5`, then `Z`, then `Q`.
-18. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue cards only. Armed runtime
+17. Keep volume moderate before `S3B` and `S4B`.
+18. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+19. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue/capture-review cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.
 
