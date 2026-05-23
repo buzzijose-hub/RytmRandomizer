@@ -342,6 +342,13 @@ replayable passive commands for future desktop GUI state-machine tests without
 launching a GUI, dispatching GUI events, mutating a GUI state store, opening
 ports, or sending MIDI.
 
+The playback-transcript report consumes the controller state and emits
+deterministic playback timeline events, GUI playback assertions, analyzer
+checkpoints, blocked active actions, JSON, and replayable passive commands for
+future desktop GUI and GUI test-harness flows without launching a GUI,
+dispatching GUI events, mutating a GUI state store, recording audio, opening
+ports, or sending MIDI.
+
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.

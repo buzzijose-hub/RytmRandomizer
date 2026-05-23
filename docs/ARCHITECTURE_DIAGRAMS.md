@@ -14,9 +14,9 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: Analog Four snapshot/style readiness bundle, built on the passive style profile/target/routing/render-plan/mock-preview and dual-machine mock-preview foundation.
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 160 total Python modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` - 26 top-level Python files + 12 subpackages = 161 total Python modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
-- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four style kit-readiness, Analog Four kit-fingerprint, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, and live GUI controller state slices so the strategy/report-module list and counts stay current.
+- This file was audited and refreshed as part of PR #43, then updated through the style-profile, style-target-vector, Rytm style snapshot routing, Analog Four style snapshot routing, dual-machine style routing, reference/discovery slider, Rytm/Analog Four style mutation-intent, dual-machine style mutation-intent, Rytm style mutation render-plan, Rytm style mutation mock-preview, Analog Four style mutation mock-preview, dual-machine style mutation mock-preview, Analog Four saved-kit SysEx readiness-intake, Analog Four kit-catalog, Analog Four style kit-readiness, Analog Four kit-fingerprint, live runbook, stage-routing, stage-rehearsal-state, live-set-cockpit, live-show-export, live-transition-timeline, live-command-deck, live-state-packet, live-readiness, live-control-surface, live-analyzer-handoff, live-analyzer-targets, live GUI analyzer readiness, live GUI rehearsal session, live GUI capture queue, live GUI capture review, live GUI sidecar session, live GUI screen contract, live GUI render tree, live GUI analyzer overlay, live GUI analyzer frame, live GUI interaction script, live GUI action reducer, live GUI controller state, and live GUI playback transcript slices so the strategy/report-module list and counts stay current.
 
 ## Source Files Used
 
@@ -974,7 +974,7 @@ flowchart LR
         DualStyleSnapshotRoutingReport["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntentReport["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreviewReport["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state/live-gui-playback-transcript"]
         QuickStatus["quick-status"]
     end
 
@@ -1276,6 +1276,7 @@ flowchart TB
         LiveGuiInteractionScriptModule["live_gui_interaction_script.py<br/>GUI interaction script packet<br/>+ registered CliCommand"]
         LiveGuiActionReducerModule["live_gui_action_reducer.py<br/>GUI action reducer packet<br/>+ registered CliCommand"]
         LiveGuiControllerStateModule["live_gui_controller_state.py<br/>GUI controller state packet<br/>+ registered CliCommand"]
+        LiveGuiPlaybackTranscriptModule["live_gui_playback_transcript.py<br/>GUI playback transcript packet<br/>+ registered CliCommand"]
     end
 
     subgraph Reports["Report builders (in __init__.py)"]
@@ -1335,6 +1336,7 @@ flowchart TB
         C39["style-performance-arc-live-gui-interaction-script-report"]
         C40["style-performance-arc-live-gui-action-reducer-report"]
         C41["style-performance-arc-live-gui-controller-state-report"]
+        C42["style-performance-arc-live-gui-playback-transcript-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1373,6 +1375,7 @@ flowchart TB
     Reports --> LiveGuiInteractionScriptModule
     Reports --> LiveGuiActionReducerModule
     Reports --> LiveGuiControllerStateModule
+    Reports --> LiveGuiPlaybackTranscriptModule
     Formatter --> Init
     Reports --> Init
 
@@ -1664,7 +1667,7 @@ flowchart LR
         DualStyleSnapshotRouting["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntent["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreview["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state/live-gui-playback-transcript"]
         Status["project-status / quick-status"]
     end
 
@@ -1704,7 +1707,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-mock-preview-report"| CLI
-    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state"| CLI
+    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state/live-gui-playback-transcript"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
