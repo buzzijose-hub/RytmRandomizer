@@ -255,6 +255,15 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-re
   --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
   --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
   --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame"
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -280,6 +289,11 @@ threshold markers, selected capture badges, render-node annotations, blocked
 actions, JSON, and replayable passive commands for future desktop GUI and
 audio-analyzer overlays without launching a GUI, recording audio, opening ports,
 or sending MIDI.
+
+The analyzer-frame report consumes the overlay and emits ordered frame events,
+visual assertions, blocked actions, JSON, and replayable passive commands for
+future desktop GUI test harnesses without rendering frames, recording audio,
+opening ports, or sending MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
