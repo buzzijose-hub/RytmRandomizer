@@ -192,6 +192,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_desktop_render_contract_help = resolve_help_text(
         "style-performance-arc-live-gui-desktop-render-contract-report"
     )
+    live_gui_desktop_render_harness_help = resolve_help_text(
+        "style-performance-arc-live-gui-desktop-render-harness-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -220,6 +223,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-gui-desktop-component-contract-report" in top_level_help
     assert "style-performance-arc-live-gui-desktop-view-model-report" in top_level_help
     assert "style-performance-arc-live-gui-desktop-render-contract-report" in top_level_help
+    assert "style-performance-arc-live-gui-desktop-render-harness-report" in top_level_help
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -416,6 +420,12 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "desktop render contract" in live_gui_desktop_render_contract_help
     assert "no MIDI sending" in live_gui_desktop_render_contract_help
+    assert live_gui_desktop_render_harness_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-desktop-render-harness-report"
+    )
+    assert "GUI desktop render harness" in live_gui_desktop_render_harness_help
+    assert "no MIDI sending" in live_gui_desktop_render_harness_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"
