@@ -1,16 +1,12 @@
 /**
- * Top-level App placeholder for the scaffold (WS-I).
- *
- * The real cockpit UI lives in `src/cockpit/**` (WS-J) — it will replace this component.
- * Until the first `session_status` event arrives, we render "Connecting…".
- *
- * This file uses only the scaffold's own surface (state + ws). Once WS-J lands, this file
- * becomes a thin wrapper that mounts `<Cockpit />` instead of the placeholder shell.
+ * Top-level App. Mounts <Cockpit /> once the engine has pushed a session_status; otherwise
+ * shows a small connecting placeholder.
  */
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { bindClientToStore, useCockpitStore, type SessionStatus } from './state';
+import { Cockpit } from './cockpit';
+import { bindClientToStore, useCockpitStore } from './state';
 import { CockpitClient, type ConnectionStatus } from './ws/client';
 
 interface AppProps {
@@ -44,26 +40,5 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
     );
   }
 
-  return (
-    <main className="cockpit-placeholder">
-      <h1>RytmRandomizer · Cockpit</h1>
-      <ConnectedBanner status={sessionStatus} />
-      <p>
-        Scaffold ready. The v10 cockpit UI mounts here once <code>src/cockpit/**</code>{' '}
-        ships (WS-J).
-      </p>
-    </main>
-  );
-}
-
-function ConnectedBanner({ status }: { status: SessionStatus }): JSX.Element {
-  const armed = status.armed ? 'armed' : 'safe';
-  return (
-    <p className="cockpit-status">
-      <span>mode: {status.mode}</span>
-      <span> · port: {status.midi_port ?? 'none'}</span>
-      <span> · {armed}</span>
-      <span> · unsaved sends: {status.unsaved_sends}</span>
-    </p>
-  );
+  return <Cockpit client={client} />;
 }

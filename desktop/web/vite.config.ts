@@ -33,10 +33,11 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'json-summary'],
       reportsDirectory: './coverage',
-      include: ['src/ws/**', 'src/state/**'],
-      exclude: ['src/**/index.ts'],
+      include: ['src/ws/**', 'src/state/**', 'src/cockpit/**'],
+      exclude: ['src/**/index.ts', 'src/cockpit/**/*.css'],
       thresholds: {
         // WS-I scope: 100% branch coverage on ws/** and state/**.
+        // WS-J scope: 100% branch coverage on cockpit/**.
         lines: 100,
         functions: 100,
         statements: 100,
