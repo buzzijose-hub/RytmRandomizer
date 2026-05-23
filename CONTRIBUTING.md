@@ -457,6 +457,13 @@ Sub-rules under `.claude/rules/` extend the 18 gates:
 Architecture-enforcement tests under `tests/architecture/` mechanically
 verify a subset of these gates on every CI run; do not skip them locally.
 
+`RYTM_RAND_WS_PORT` is reserved for a future cockpit Python sidecar/WebSocket
+port. It is not currently read by runtime code and must not start a server,
+open a port, launch a GUI, or send MIDI. If a future cockpit implementation
+starts reading it, document the default, valid overrides, local setup, CI
+behavior, installer behavior, and passive-CLI isolation here and in
+`docs/LOCAL_DEV_TOOLING_NOTES.md` before enabling the sidecar.
+
 ## Test suite structure
 
 The suite has 2370+ tests across these layers. **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md` §13 Test Suite Layers](docs/ARCHITECTURE_DIAGRAMS.md#13-test-suite-layers-2370-tests) and [§24 Closeout + Test Coverage Map](docs/ARCHITECTURE_DIAGRAMS.md#24-closeout--test-coverage-map).

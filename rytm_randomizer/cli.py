@@ -308,6 +308,14 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_desktop_render_contract",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_CONTRACT_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-desktop-render-harness-report": (
+            "rytm_randomizer.reports.live_gui_desktop_render_harness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_RENDER_HARNESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-cockpit-boundary-readiness-report": (
+            "rytm_randomizer.reports.live_gui_cockpit_boundary_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_COCKPIT_BOUNDARY_READINESS_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
