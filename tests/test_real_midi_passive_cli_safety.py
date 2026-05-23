@@ -78,6 +78,7 @@ PASSIVE_CLI_COMMANDS = (
     ("style-performance-arc-live-gui-desktop-app-plan-report", "--help"),
     ("style-performance-arc-live-gui-desktop-component-contract-report", "--help"),
     ("style-performance-arc-live-gui-desktop-view-model-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-render-contract-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -157,6 +158,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("style-performance-arc-live-gui-desktop-app-plan-report", "--help"),
     ("style-performance-arc-live-gui-desktop-component-contract-report", "--help"),
     ("style-performance-arc-live-gui-desktop-view-model-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-render-contract-report", "--help"),
 )
 LIVE_GUI_FULL_HANDLER_PASSIVE_COMMANDS = (
     ("style-performance-arc-live-gui-screen-contract-report",),
@@ -175,6 +177,7 @@ LIVE_GUI_FULL_HANDLER_PASSIVE_COMMANDS = (
     ("style-performance-arc-live-gui-desktop-app-plan-report",),
     ("style-performance-arc-live-gui-desktop-component-contract-report",),
     ("style-performance-arc-live-gui-desktop-view-model-report",),
+    ("style-performance-arc-live-gui-desktop-render-contract-report",),
 )
 LIVE_GUI_FULL_HANDLER_BASE_ARGS = (
     "--description",
