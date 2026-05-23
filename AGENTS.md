@@ -248,7 +248,9 @@ just review           # lint + architecture + V1.34 parity (the mechanical gates
 # 5. Push + open PR with conformance checklist
 just pr               # prints the canonical helper command; run
                       # `python scripts/create_pr.py --title "..." --body-file path/to/body.md`
-                      # so edward-rosado is requested automatically.
+                      # so edward-rosado is requested automatically. After
+                      # updating an existing PR, run
+                      # `python scripts/create_pr.py --request-review-for <PR#>`.
 ```
 
 If you need to fall back to raw commands (e.g., the dev container is unavailable), the underlying invocations are still:
@@ -259,6 +261,8 @@ python -m pytest tests/architecture/ -q
 python -m ruff check . && python -m black --check --target-version=py311 . && python -m isort --profile black --check-only .
 git push -u origin <your-branch>
 python scripts/create_pr.py --title "..." --body-file path/to/body.md
+# Re-request review after updating an existing PR:
+python scripts/create_pr.py --request-review-for <PR#>
 # Raw fallback:
 gh pr create --base modularize-v1.34 --reviewer edward-rosado --title "..." --body-file path/to/body.md
 ```

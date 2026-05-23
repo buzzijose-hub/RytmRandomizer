@@ -198,6 +198,8 @@ pr:
     @echo "  gh pr create --base modularize-v1.34 --reviewer edward-rosado --title '<title>' --body-file <path>"
     @echo ""
     @echo "Both paths request review from edward-rosado automatically."
+    @echo "After updating an existing PR, re-request review with:"
+    @echo "  python scripts/create_pr.py --request-review-for <pr-number-or-url>"
     @echo "Body must include: conformance checklist (18 gates), strict-rules confirmation, test plan."
     @echo "See .github/PULL_REQUEST_TEMPLATE.md for the canonical template."
 
