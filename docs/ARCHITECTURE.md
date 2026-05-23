@@ -318,6 +318,170 @@ backward compatibility — they delegate to the strategies.
 
 ---
 
+## 6.2 Cockpit & Profile-Model layer (Phase 1)
+
+The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
+and the home of the portable mutation engine. It is the **active runtime
+counterpart** to the 40+ passive `live_gui_*` reports under `reports/`:
+those reports define the declarative contracts the cockpit conforms to,
+and the cockpit hosts the actual WebSocket Protocol the desktop shell
+drives.
+
+**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md)
+has two new mermaid diagrams that illustrate this section —
+[§28 Cockpit C4 Component Diagram](ARCHITECTURE_DIAGRAMS.md#28-cockpit--profile-model-c4-component-diagram-phase-1)
+and [§29 Cockpit SEND Sequence](ARCHITECTURE_DIAGRAMS.md#29-cockpit-send-command-sequence-phase-1).
+The source spec lives at [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md);
+the implementation plan is at [`docs/superpowers/plans/2026-05-23-cockpit-and-profile-model.md`](superpowers/plans/2026-05-23-cockpit-and-profile-model.md).
+
+### Package layout
+
+```
+rytm_randomizer/cockpit/
+    __init__.py            # PROTOCOL_VERSION, re-exports
+    __main__.py            # `python -m rytm_randomizer.cockpit` -> WS server
+    data/                  # Frozen dataclasses for the wire format
+        snapshot.py        # PadState, Snapshot
+        profile_model.py   # StyleTrait, TraitPadWeight, ProfileModel
+        mutation_candidate.py  # PadDelta, MutationCandidate
+        history.py         # HistoryEntry, History
+        types.py           # Literal aliases (kind, status, via, ...)
+    engine/                # The deterministic mutation function
+        mutate.py          # mutate(snapshot, profile, depth, seed)
+        prng.py            # xorshift32 — documented cross-language PRNG
+        spec.md            # Normative C-portable algorithm spec
+    profiles/              # Disk-backed profile registry
+        registry.py        # load / save / list / get_by_id
+        builtin.py         # Seven default `kind="scene"` profiles
+    history/               # In-memory snapshot chain
+        store.py           # append, undo, load, promote-to-saved
+    device/                # Device adapter abstraction
+        adapter.py         # DeviceAdapter Protocol
+        mock.py            # MockDeviceAdapter (default, no MIDI)
+        real.py            # RealMidiDeviceAdapter (wraps mido_provider)
+    ws/                    # WebSocket Protocol surface
+        server.py          # FastAPI app, single /ws endpoint
+        protocol.py        # Wire-format event + command types
+        handlers.py        # One handler per command
+    export/                # Portable model export pipeline
+        model_format.py    # Header: magic "RYMP" + format_version + crc32
+        serialize.py       # MessagePack pack / unpack
+```
+
+The desktop shell (`desktop/shell/` — Rust + Tauri 2) and the web frontend
+(`desktop/web/` — Vite + React + TypeScript) live **outside** the Python
+package: they are bundled by `cargo build --release` into a single binary
+that spawns the Python sidecar via `python -m rytm_randomizer.cockpit`.
+
+### The Protocol — events out, commands in
+
+The cockpit's wire format is transport-agnostic (WebSocket today; could
+become subprocess JSON, in-process import, or hardware UART tomorrow).
+Anything the engine knows is published as a **whole-state** event; the
+UI drives the engine with **typed commands** that ack synchronously.
+
+| Event (engine → UI) | Payload | When |
+|---|---|---|
+| `snapshot_changed` | `{ snapshot: Snapshot }` | After SEND, LOAD, or UNDO |
+| `mutation_previewed` | `{ candidate: MutationCandidate \| null }` | After depth change, REGEN, or PREVIEW toggle |
+| `history_updated` | `{ history: History }` | After SEND, SAVE, LOAD, or UNDO |
+| `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
+| `session_status` | `{ armed, midi_port, mode, unsaved_sends }` | On connect, on arm-toggle |
+
+| Command (UI → engine) | Returns | Notes |
+|---|---|---|
+| `select_profile` | `{ ok }` | Sets active profile |
+| `set_depth` | `{ ok, candidate? }` | Recomputes candidate at new depth |
+| `set_pad_lock` | `{ ok }` | Locked pads are skipped on SEND |
+| `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
+| `regen` | `{ ok, candidate }` | New seed, same depth |
+| `send` | `{ ok, new_snapshot_id }` | Applies candidate via device adapter |
+| `save` | `{ ok, snapshot_id }` | Promotes current snapshot to device kit |
+| `load_snapshot` | `{ ok }` | Restores a historical snapshot |
+| `undo` | `{ ok, snapshot_id }` | Walks history back one step |
+| `export_profile_model` | `{ ok, model_bytes }` | MessagePack + header + CRC |
+
+Events are full-state — the UI re-renders from the latest event per kind,
+no delta-ordering subtleties. Commands are idempotent given the same
+engine state.
+
+### Mutation engine — two reference implementations, identical output
+
+The function `mutate(snapshot, profile, depth, seed) -> MutationCandidate`
+lives in `cockpit/engine/mutate.py`. It is **pure, deterministic, and
+constrained from day one to be C-portable** because the long-term goal
+(Phase 4) is to run the same algorithm on dedicated hardware (Elektron
+Rytm SysEx accessory; out of scope for this spec):
+
+1. **Python reference** — `cockpit/engine/mutate.py`. The authoritative
+   implementation; used by the cockpit, profile wizard, and all tests.
+2. **C-portable algorithm spec** — `cockpit/engine/spec.md`. A normative
+   document describing the algorithm in pseudocode, value ranges,
+   clamping rules, and the documented `xorshift32` PRNG. Initially a
+   document only; a reference C implementation lands in a later spec.
+
+**Conformance:** for every `(snapshot, profile, depth, seed)` tuple, both
+implementations must produce byte-identical `MutationCandidate.pad_deltas`.
+A CI job runs this over fixtures in `tests/cockpit/fixtures/engine_conformance/`.
+
+Constraints baked into the engine:
+
+- No dict-iteration-order dependence (use sorted keys).
+- No `numpy`, no language-level RNG without a documented spec.
+- The PRNG is `xorshift32` with a fixed encoding — implementable in
+  C99, Rust, or any language with 32-bit unsigned arithmetic.
+- The model format is the exact dataclass tree the engine consumes —
+  no Python-specific object serialization.
+
+### Relationship to existing layers
+
+The cockpit layer is **additive**: it does not displace the V1.34 engine,
+the existing `MutationPlanner` Strategy on `Device`, or any passive
+report. It sits **alongside** them:
+
+- **V1.34 parity is untouched.** The 685 byte-frozen JSON goldens under
+  `tests/fixtures/v134_parity/` remain the canonical V1.34 reference.
+  The new `mutate(...)` function is a separate path used only by the
+  cockpit; the existing `engines/pad{1..4}.py` + `group_runner.py` +
+  `scene_runner.py` chain continues to drive armed CLI behavior.
+- **Passive reports remain authoritative contracts.** The cockpit's
+  web frontend derives its component props, state slices, action
+  reducers, and test selectors directly from the corresponding
+  `live_gui_*` report module. The reports stay passive and the cockpit
+  is the active implementation of the same shape.
+- **The Device Protocol seam is reused.** The cockpit's `RealMidiDeviceAdapter`
+  routes hardware sends through the existing `mido_provider` + `real_midi_adapter`
+  boundary — the same one the armed CLI path uses. The `--arm` discipline
+  applies identically: passive default opens no MIDI port, only an
+  explicit arm step does.
+- **Architecture invariants apply unchanged.** `data/` stays a leaf
+  (cockpit code may read `data/profiles.py` for CC-number lookups but
+  never re-defines a fact table). The `cockpit/` subpackage satisfies
+  Gate 9 (no new top-level `*.py`, one new subpackage justified by a
+  distinct concern). `mido` imports stay lazy.
+- **Device families plug in through `devices/`.** Phase 1 targets the
+  Analog Rytm MK2 via the `AnalogRytmDevice` strategy chain. The Analog
+  Four MK2 follows the same pattern when its mutation planner promotes
+  out of candidate state — the cockpit consumes the existing `Device`
+  Protocol; no parallel device registry is introduced.
+
+### Environment + configuration
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `RYTM_RAND_WS_PORT` | `4317` | WebSocket port the sidecar binds; documented in `CONTRIBUTING.md` and `docs/COCKPIT_QUICKSTART.md`. |
+| Profile directory | `$XDG_CONFIG_HOME/rytm-randomizer/profiles/` on Linux, platform-equivalents on macOS / Windows | Where user `kind="user"` profiles live as JSON files. Built-in `kind="scene"` profiles are bundled in `profiles/builtin.py`. |
+
+### Phase boundaries
+
+This subpackage covers **Phase 1** (cockpit + Python engine). The Phase 2
+Profile Wizard, Phase 3 model-export CLI, and Phase 4 hardware runtime are
+out of scope and will get their own design specs. The constraints above
+(C-portable engine, language-agnostic model format) are the reason Phase 1
+makes the choices it does — Phase 4's existence shapes Phase 1's seams.
+
+---
+
 ## 7. Enforcement summary
 
 The rules above are mechanically enforced by:

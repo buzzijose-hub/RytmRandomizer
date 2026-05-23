@@ -5,6 +5,7 @@
 - [Strict rules — non-negotiables](#strict-rules--non-negotiables)
 - [Branching model](#branching-model)
 - [Local development setup](#local-development-setup)
+- [Cockpit / desktop development](#cockpit--desktop-development)
 - [Cross-platform operation](#cross-platform-operation)
 - [End-to-end contributor flow](#end-to-end-contributor-flow)
 - [Verification gate](#verification-gate)
@@ -101,6 +102,53 @@ sudo apt-get install libasound2-dev
 ```
 
 **Hardware pinning:** `mido==1.3.3` and `python-rtmidi==1.5.8` are pinned because they encode the exact byte-level MIDI wire format the Elektron Analog Rytm MK2 accepts. **Do not bump these versions**, even for CVE advisories, without coordinating with @buzzijose-hub. See `.claude/skills/learned/pip-audit-editable-install/SKILL.md` for the `pip-audit` policy on these pins.
+
+## Cockpit / desktop development
+
+The Phase 1 cockpit (see [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md), [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md), and [`docs/ARCHITECTURE.md` §6.2](docs/ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1)) is a Tauri 2 + web frontend bundled with a Python sidecar. Working on the cockpit code requires three toolchains in addition to the Python dev setup above.
+
+**Required toolchains:**
+
+| Toolchain | Minimum version | Why |
+|---|---|---|
+| Python | 3.11 | Same as the rest of the project; the `cockpit` subpackage is plain Python. |
+| Rust | 1.75 (stable) | Builds the Tauri 2 shell under `desktop/shell/`. Install via [`rustup`](https://rustup.rs/). |
+| Node.js | 20 LTS | Builds the Vite + React + TypeScript frontend under `desktop/web/`. Use `nvm`, `fnm`, or your platform's installer. |
+
+Tauri has additional per-OS system dependencies (WebView2 on Windows, `webkit2gtk` on Linux, the Xcode Command Line Tools on macOS). See [the Tauri prerequisites page](https://tauri.app/start/prerequisites/) and the per-OS install steps in [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md).
+
+**Build commands:**
+
+```bash
+# Python sidecar (already installed via pip install -e ".[dev]")
+python -m rytm_randomizer.cockpit         # runs the WebSocket server on 127.0.0.1:4317
+
+# Web frontend (Vite dev server with HMR)
+cd desktop/web
+npm install
+npm run dev                                # serves at http://localhost:5173 with hot reload
+npm test                                   # vitest unit tests
+npm run build                              # production bundle into desktop/web/dist/
+
+# Tauri shell (Rust)
+cd desktop/shell
+cargo build                                # debug build, fast iteration
+cargo run                                  # spawns the sidecar + loads the frontend
+cargo build --release                      # release binary (slower, ships standalone)
+cargo test
+cargo clippy --all-targets -- -D warnings  # required for CI
+```
+
+**Dev-loop tips:**
+
+- **Use the two-terminal split during active development.** Run `python -m rytm_randomizer.cockpit` in one terminal and `cd desktop/shell && cargo run` in another. The shell talks to the standalone sidecar over WebSocket. The release-build path spawns the sidecar internally; that's slower to iterate on.
+- **Hot-reload the frontend separately.** `cd desktop/web && npm run dev` gives you a Vite dev server with HMR; open the dev URL in any browser (or point Tauri at it via `tauri dev`) to iterate on UI without a full rebuild.
+- **The sidecar port is configurable.** `RYTM_RAND_WS_PORT=4318 python -m rytm_randomizer.cockpit` overrides the default `4317`. The web frontend reads the port from the same env var (mirrored by the Tauri shell when it spawns the sidecar). Default is safe on every OS this project supports.
+- **Mock-first; armed on purpose.** The cockpit defaults to `MockDeviceAdapter` (no MIDI port opened). The real-MIDI path constructs `RealMidiDeviceAdapter`, which wraps the existing `mido_provider` and only opens a port behind an explicit arm step. This matches the rest of the project's passive-default discipline (Strict rule 8) — running the cockpit never touches your Rytm until you ask it to.
+- **Run the conformance fixtures when touching the engine.** Changes to `cockpit/engine/mutate.py` or `cockpit/engine/prng.py` must keep `tests/cockpit/fixtures/engine_conformance/*.json` byte-identical. Those fixtures lock the algorithm so the future C-portable implementation produces matching output.
+- **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
+- **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
+- **CI runs the cockpit gates separately.** Python coverage on `rytm_randomizer/cockpit/**`, web Vitest, Rust `cargo test` + `cargo clippy` each run as their own CI step alongside the existing pytest matrix.
 
 ## Cross-platform operation
 
