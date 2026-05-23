@@ -198,17 +198,21 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer"
    ```
-20. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, `Live GUI capture queue summary:`, `Live GUI capture review summary:`, `Live GUI sidecar session summary:`, `Live GUI screen contract summary:`, `Live GUI render tree summary:`, `Live GUI analyzer overlay summary:`, `Live GUI analyzer frame summary:`, `Live GUI interaction script summary:`, and `Live GUI action reducer summary:`.
-21. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+20. Run the passive live GUI controller state when you want deterministic future GUI view-model state:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --capture-description "captured warehouse take with tight low end and building pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" --reducer-label "Warehouse reducer" --controller-label "Warehouse controller"
+   ```
+21. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, `Live GUI rehearsal session summary:`, `Live GUI capture queue summary:`, `Live GUI capture review summary:`, `Live GUI sidecar session summary:`, `Live GUI screen contract summary:`, `Live GUI render tree summary:`, `Live GUI analyzer overlay summary:`, `Live GUI analyzer frame summary:`, `Live GUI interaction script summary:`, `Live GUI action reducer summary:`, and `Live GUI controller state summary:`.
+22. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-22. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue/capture-review/sidecar packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable; capture review, sidecar, analyzer-overlay, analyzer-frame, interaction-script, and action-reducer packets may also mark a take as `repeat`.
-23. Treat the current validated Rytm live flow as:
+23. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session/capture-queue/capture-review/sidecar packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable; capture review, sidecar, analyzer-overlay, analyzer-frame, interaction-script, action-reducer, and controller-state packets may also mark a take as `repeat`.
+24. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-24. Keep volume moderate before `S3B` and `S4B`.
-25. If the set gets too hot, use `S5`, then `Z`, then `Q`.
-26. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue/capture-review/sidecar/screen-contract/render-tree/analyzer-overlay/analyzer-frame/interaction-script/action-reducer cards only. Armed runtime
+25. Keep volume moderate before `S3B` and `S4B`.
+26. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+27. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session/capture-queue/capture-review/sidecar/screen-contract/render-tree/analyzer-overlay/analyzer-frame/interaction-script/action-reducer/controller-state cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.
 

@@ -264,6 +264,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_action_reducer",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_ACTION_REDUCER_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-controller-state-report": (
+            "rytm_randomizer.reports.live_gui_controller_state",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_CONTROLLER_STATE_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
