@@ -32,6 +32,10 @@ dev = [
     "pytest-timeout>=2,<3",
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
+    # WS-G cockpit export tests exercise pack/unpack of the portable
+    # ProfileModel binary; mirrored from the [cockpit] extra below so the
+    # dev install picks it up without having to chain extras.
+    "msgpack>=1.0.0,<2",
 ]
 # WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
 # guardrails system). Only pulled in by users running real audio analyses;
@@ -39,6 +43,17 @@ dev = [
 # librosa never touches MIDI, so its version is not Elektron-critical.
 style = [
     "librosa>=0.11,<2",
+]
+# WS-G cockpit export pipeline (Phase 3 of the cockpit/profile-model
+# design): MessagePack-encoded ProfileModel blobs for the embedded
+# hardware runtime. msgpack is a small, pure-Python-compatible
+# serializer with implementations in C, Rust, and JavaScript — picked
+# precisely so the Phase 4 firmware can read the same wire format the
+# Python pipeline emits. It never touches MIDI, so its version is not
+# Elektron-critical. Pinned with a >= floor; the wire format is stable
+# across minor versions.
+cockpit = [
+    "msgpack>=1.0.0,<2",
 ]
 # Native end-user installer toolchain. Kept separate from `dev` so the test
 # suite stays lean and contributors are not forced to install briefcase just
