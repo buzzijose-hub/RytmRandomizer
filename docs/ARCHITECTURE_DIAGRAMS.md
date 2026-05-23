@@ -1821,6 +1821,7 @@ flowchart LR
 - **Understanding safety:** MIDI Boundary Map (§15), Safety Boundary Diagram (§16).
 - **Test ecosystem:** Test Suite Layers (§13), Closeout + Test Coverage Map (§24).
 - **CLI surface:** Passive CLI Command Flow (§14), Command / Capability Surface (§25).
+- **Cockpit (Phase 1, in flight):** C4 Component Diagram (§28), SEND Command Sequence (§29).
 
 ### Explicit non-claims
 
@@ -1830,11 +1831,180 @@ The diagrams DO NOT claim that the project currently has:
 - Automatic hardware port discovery
 - A working `AnalogFourDevice` (forward-looking in §18; PR #36 redo target)
 - Pads 5-12 in the live mutation path (work-in-progress on PR #36)
-- A GUI / capture interface
+- A shipped Tauri + web cockpit (forward-looking in §28 and §29; in active implementation against `feat/cockpit-and-profile-model-bundle`)
 - Generic `senders/guarded.py` + `senders/hardware.py` (forward-looking in §18)
 - A nested `dual_machine/` subpackage (forward-looking in §18)
 - `analog_four/` / `rytm/` / `essence/` subpackages (anti-pattern, rejected by arch tests in §10)
 
 These remain absent unless a later committed code change and CI evidence prove
-otherwise. The forward-looking diagrams (§18, §19) are labeled as such and
-describe the intended shape, not the current shape.
+otherwise. The forward-looking diagrams (§18, §19, §28, §29) are labeled as
+such and describe the intended shape, not the current shape.
+
+---
+
+## 28. Cockpit & Profile-Model C4 Component Diagram (Phase 1)
+
+> **Forward-looking diagram.** The Phase 1 cockpit is in active
+> implementation (12 parallel workstreams against
+> `feat/cockpit-and-profile-model-bundle`); not all of these components
+> exist on `modularize-v1.34` yet. This diagram describes the intended
+> Phase 1 shape; the source spec is the authoritative reference.
+
+The Phase 1 cockpit — Tauri shell + web frontend + Python sidecar over
+WebSocket — is the active-runtime counterpart to the 40+ passive
+`live_gui_*` reports. The component shape is defined by
+[`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md);
+the implementation plan is at
+[`docs/superpowers/plans/2026-05-23-cockpit-and-profile-model.md`](superpowers/plans/2026-05-23-cockpit-and-profile-model.md);
+the architecture-doc explanation is at
+[`docs/ARCHITECTURE.md` §6.2](ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1).
+
+```mermaid
+flowchart TB
+    Operator["Operator<br/>(at the Elektron rig)"]
+
+    subgraph Desktop["Desktop binary (one process)"]
+        TauriShell["Tauri shell (Rust)<br/>desktop/shell/<br/>~80 LOC<br/>· opens one window<br/>· spawns + supervises sidecar<br/>· system tray + Quit"]
+        WebFrontend["Web frontend (TypeScript + React)<br/>desktop/web/<br/>· v10 cockpit UI<br/>· pure renderer over engine state<br/>· emits typed commands"]
+        WSClient["WebSocket client<br/>desktop/web/src/ws/client.ts<br/>· subscribes to events<br/>· emits commands"]
+    end
+
+    subgraph Sidecar["Python sidecar process (spawned by Tauri)"]
+        WSServer["WebSocket server<br/>cockpit/ws/server.py<br/>FastAPI + websockets<br/>· /ws endpoint<br/>· 127.0.0.1:4317"]
+        Handlers["Command handlers<br/>cockpit/ws/handlers.py"]
+        Engine["Mutation engine<br/>cockpit/engine/mutate.py<br/>· pure deterministic function<br/>· xorshift32 PRNG<br/>· C-portable spec"]
+        Profiles["Profile registry<br/>cockpit/profiles/registry.py<br/>· built-in scenes<br/>· user profiles<br/>· $XDG_CONFIG_HOME/rytm-randomizer/profiles/"]
+        History["History store<br/>cockpit/history/store.py<br/>· in-memory chain<br/>· UNDO + LOAD + SAVE"]
+        Export["Model export<br/>cockpit/export/<br/>· MessagePack<br/>· header + CRC32"]
+        DeviceAdapter["Device adapter<br/>cockpit/device/adapter.py<br/>· DeviceAdapter Protocol<br/>· MockDeviceAdapter (default)<br/>· RealMidiDeviceAdapter (--arm)"]
+    end
+
+    subgraph ExistingBoundary["Existing boundary (re-used)"]
+        MidoProvider["mido_provider.py<br/>· lazy mido import<br/>· real MIDI port lifecycle"]
+        RealAdapter["real_midi_adapter.py<br/>· RealMidiSender<br/>· RealMidiPortProvider Protocol"]
+    end
+
+    Rytm["Elektron Analog Rytm MK2<br/>(USB MIDI)"]
+    Disk[("Profile registry<br/>flat JSON files<br/>(operator-authored<br/>+ built-in scenes)")]
+
+    Operator -->|"runs Tauri binary"| TauriShell
+    TauriShell -->|"spawns + supervises<br/>python -m rytm_randomizer.cockpit"| WSServer
+    TauriShell -->|"loads HTML/JS from<br/>desktop/web/dist"| WebFrontend
+    WebFrontend --> WSClient
+
+    WSClient <-->|"WebSocket<br/>events + commands<br/>(typed JSON)"| WSServer
+    WSServer --> Handlers
+    Handlers --> Engine
+    Handlers --> Profiles
+    Handlers --> History
+    Handlers --> DeviceAdapter
+    Handlers --> Export
+
+    Profiles <-->|"read / write"| Disk
+
+    DeviceAdapter -->|"only when --arm"| RealAdapter
+    RealAdapter --> MidoProvider
+    MidoProvider -->|"USB MIDI<br/>(CC + SysEx)"| Rytm
+
+    Operator -. "sees current state<br/>+ mutation preview<br/>+ history strip" .-> WebFrontend
+
+    style TauriShell fill:#fef,stroke:#747
+    style WebFrontend fill:#efe,stroke:#474
+    style WSServer fill:#eef,stroke:#447
+    style Engine fill:#eef,stroke:#447
+    style DeviceAdapter fill:#ffe,stroke:#774
+    style Rytm fill:#fee,stroke:#a44
+    style Disk fill:#fee,stroke:#a44
+```
+
+**Notes:**
+
+- **One desktop binary, two processes.** The Tauri shell process owns the
+  window and supervises the sidecar; the Python sidecar process owns all
+  business state. The boundary is the WebSocket. This matches the spec's
+  "render-agnosticism" principle — the engine emits events, any UI renders.
+- **Mock-first, arm-on-purpose.** `MockDeviceAdapter` is the default; no
+  real MIDI port is opened until the operator (or a later flag) constructs
+  the `RealMidiDeviceAdapter`. The hardware-safety boundary from the
+  existing CLI (`--arm` discipline, lazy `mido` import) is preserved
+  identically.
+- **Profile registry is disk-backed.** Built-in `kind="scene"` profiles
+  ship in `cockpit/profiles/builtin.py`; user `kind="user"` profiles are
+  flat JSON files under the platform-appropriate config directory
+  (`XDG_CONFIG_HOME` honored on Linux).
+- **No new device family.** Phase 1 targets the Analog Rytm MK2 only;
+  Analog Four MK2 plugs in once its `MutationPlanner` promotes out of
+  candidate state — no parallel registry, no new top-level subpackage.
+
+---
+
+## 29. Cockpit SEND Command Sequence (Phase 1)
+
+The SEND command lifecycle. This is the canonical interaction the spec's
+§"Interaction flow examples" describes: operator hits SEND, the active
+`MutationCandidate` lands on the device, history grows by one, the preview
+clears. Every other command (REGEN, UNDO, LOAD, SAVE, depth-slide) follows
+a structurally identical event-emission pattern.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Operator
+    participant UI as Web frontend<br/>(React + WS client)
+    participant WS as WebSocket server<br/>(cockpit/ws/server.py)
+    participant Handler as send handler<br/>(cockpit/ws/handlers.py)
+    participant Engine as Mutation engine<br/>(cockpit/engine/mutate.py)
+    participant Device as DeviceAdapter<br/>(mock or real)
+    participant History as HistoryStore<br/>(cockpit/history/store.py)
+
+    Operator->>UI: clicks SEND
+    UI->>WS: send { } (typed command)
+    WS->>Handler: dispatch("send", payload)
+
+    Note over Handler: the active candidate was<br/>computed earlier by set_depth /<br/>regen and cached in engine state
+    Handler->>Engine: read active MutationCandidate
+    Engine-->>Handler: candidate (pad_deltas, safety_status)
+
+    Handler->>Device: apply(candidate, pad_locks)
+    Note over Device: locked pads keep their<br/>pre-mutation params — the<br/>device receives only the<br/>unlocked pad deltas
+    Device-->>Handler: new Snapshot (post-send device state)
+
+    Handler->>History: append(new_snapshot, kind="auto", via="send")
+    History-->>Handler: updated History
+
+    Handler-->>WS: { ok: true, new_snapshot_id }
+    WS-->>UI: command ack (synchronous)
+
+    par engine emits whole-state events
+        WS-->>UI: event snapshot_changed { snapshot }
+    and
+        WS-->>UI: event history_updated { history }
+    and
+        WS-->>UI: event mutation_previewed { candidate: null }
+    end
+
+    UI->>UI: re-render pads from new snapshot<br/>+ add grey dot to history strip<br/>+ clear ghost overlay
+    UI-->>Operator: visible new kit state
+```
+
+**Guarantees:**
+
+- **Synchronous ack, then events.** Every command returns `{ ok: bool, ... }`
+  immediately; the corresponding `*_changed` event arrives right after if
+  state changed. UIs that prefer optimistic updates can act on the ack; UIs
+  that prefer authoritative state wait for the event.
+- **Whole-state events, not deltas.** `snapshot_changed.snapshot` is the
+  complete new snapshot; `history_updated.history` is the complete updated
+  chain. No ordering subtleties, no missed-delta failure modes.
+- **Preview clears on SEND.** The `mutation_previewed { candidate: null }`
+  event in the par-block tells every UI to drop the ghost overlay. The
+  next `set_depth` or `regen` produces a new candidate and re-emits the
+  event with a non-null candidate.
+- **Locked pads are honored at apply time.** `DeviceAdapter.apply` is
+  responsible for skipping locked pads (the engine has already produced
+  full `pad_deltas`; the adapter filters). This keeps the engine pure
+  and concentrates the policy in one place.
+- **History entry kind = "auto".** Post-SEND entries are `kind="auto"`
+  with `via="send"`. Only explicit SAVE promotes a snapshot to
+  `kind="saved"` with an optional label; only SAVE writes the snapshot
+  to the device's persistent kit memory (Rytm SysEx kit dump).
