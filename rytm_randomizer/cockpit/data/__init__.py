@@ -8,6 +8,7 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from .snapshot import PadState, Snapshot
 from .types import (
     HISTORY_KIND_VALUES,
     KIND_VALUES,
@@ -27,7 +28,9 @@ __all__ = [
     "HistoryKind",
     "KIND_VALUES",
     "Kind",
+    "PadState",
     "STATUS_VALUES",
+    "Snapshot",
     "Status",
     "TRANSITION_CURVE_VALUES",
     "TransitionCurve",
