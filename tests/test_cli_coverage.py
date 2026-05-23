@@ -153,6 +153,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_analyzer_frame_help = resolve_help_text(
         "style-performance-arc-live-gui-analyzer-frame-report"
     )
+    live_gui_interaction_script_help = resolve_help_text(
+        "style-performance-arc-live-gui-interaction-script-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -168,6 +171,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-gui-render-tree-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-overlay-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-frame-report" in top_level_help
+    assert "style-performance-arc-live-gui-interaction-script-report" in top_level_help
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -296,6 +300,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "analyzer frame" in live_gui_analyzer_frame_help
     assert "no MIDI sending" in live_gui_analyzer_frame_help
+    assert live_gui_interaction_script_help.startswith(
+        "RytmRandomizer passive CLI: " "style-performance-arc-live-gui-interaction-script-report"
+    )
+    assert "GUI interaction script" in live_gui_interaction_script_help
+    assert "no MIDI sending" in live_gui_interaction_script_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"

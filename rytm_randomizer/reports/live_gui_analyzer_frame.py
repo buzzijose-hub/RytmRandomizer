@@ -622,6 +622,14 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     return parsed
 
 
+def parse_style_performance_arc_live_gui_analyzer_frame_cli_args(
+    argv: Sequence[str],
+) -> dict[str, object]:
+    """Return parsed CLI args for analyzer-frame-compatible report commands."""
+
+    return _parse_cli_args(argv)
+
+
 def _handle_cli_report(
     *,
     description: str | None,
@@ -732,5 +740,6 @@ __all__ = [
     "build_style_performance_arc_live_gui_analyzer_frame_from_overlay",
     "build_style_performance_arc_live_gui_analyzer_frame_report",
     "format_style_performance_arc_live_gui_analyzer_frame_report",
+    "parse_style_performance_arc_live_gui_analyzer_frame_cli_args",
     "to_style_performance_arc_live_gui_analyzer_frame_json",
 ]
