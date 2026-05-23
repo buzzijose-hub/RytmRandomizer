@@ -71,6 +71,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-analyzer-handoff-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-readiness-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -209,6 +210,8 @@ Commands:
                      Build passive rehearsal targets for future live analyzer comparison.
   style-performance-arc-live-gui-analyzer-readiness-report
                      Build passive GUI/audio-analyzer readiness bundles.
+  style-performance-arc-live-gui-rehearsal-session-report
+                     Build passive GUI rehearsal session packets.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile

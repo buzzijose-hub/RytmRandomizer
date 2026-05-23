@@ -198,6 +198,14 @@ USAGE = (
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] "
     "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-gui-rehearsal-session-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1911,6 +1919,14 @@ def test_readme_mentions_style_performance_arc_live_gui_analyzer_readiness_comma
     assert "style-performance-arc-live-gui-analyzer-readiness-report" in text
     assert "GUI/audio-analyzer readiness bundle" in text
     assert "blocked active actions" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_rehearsal_session_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-rehearsal-session-report" in text
+    assert "GUI rehearsal session packet" in text
+    assert "listen-only rehearsal take" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

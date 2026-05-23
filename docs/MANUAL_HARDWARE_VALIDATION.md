@@ -158,17 +158,21 @@ no MIDI is sent, no port is opened, and no hardware is mutated.
    ```
    python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-readiness-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3
    ```
-10. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, and `GUI/audio-analyzer readiness bundle summary:`.
-11. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
+10. Run the passive live GUI rehearsal session packet before repeated listen-only cue captures:
+   ```
+   python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --description "Jeff Mills Oscar Mulero Birmingham pressure" --rytm "G:\ANALOG RYTM\KITS\ANALOGRYTMKITS2.syx" --analog-four "G:\ANALOG FOUR\KITS\ANALOGFOURKITS1.syx" --cue 1 --lookahead 2 --matches 3 --takes 2
+   ```
+11. Confirm the reports print `Live set card:`, `Route cards:`, `Stage rehearsal summary:`, `Machine states:`, `Cue states:`, `Cockpit summary:`, `Machine panels:`, `Cue cockpit cards:`, `Show export summary:`, `Machine handoff manifest:`, `Cue launch script:`, `Transition timeline summary:`, `Transition cards:`, `Command deck summary:`, `Now cue:`, `Live state summary:`, `Current GUI state:`, `Machine state panels:`, `Live analyzer handoff summary:`, `Live analyzer target packet summary:`, `GUI/audio-analyzer readiness bundle summary:`, and `Live GUI rehearsal session summary:`.
+12. Confirm each cue lists saved-kit slots/fingerprints, planned pads/tracks,
    Rytm mock rows, A4 deferred/candidate rows, blockers, and recovery actions.
-12. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable.
-13. Treat the current validated Rytm live flow as:
+13. Confirm rehearsal/cockpit/export/timeline/deck/state/analyzer target/readiness/session packets mark each cue as `go`, `rehearse`, or `do-not-arm` where applicable.
+14. Treat the current validated Rytm live flow as:
    ```
    SCN -> GM -> S1A -> S3A -> S3B -> S4B -> S5 -> Z -> Q
    ```
-13. Keep volume moderate before `S3B` and `S4B`.
-14. If the set gets too hot, use `S5`, then `Z`, then `Q`.
-15. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer cards only. Armed runtime
+15. Keep volume moderate before `S3B` and `S4B`.
+16. If the set gets too hot, use `S5`, then `Z`, then `Q`.
+17. Remember that the passive reports are route/rehearsal/cockpit/export/state/analyzer/session cards only. Armed runtime
    mutation remains the validated four-pad Rytm surface until a later runtime
    slice promotes more live sends.
 
