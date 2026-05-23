@@ -11,8 +11,9 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Mapping, Self
+from typing import Final, Self
 
 from .types import (
     KIND_VALUES,
@@ -31,9 +32,7 @@ def _check_unit_interval(name: str, value: float) -> None:
     """Validate that ``value`` lies inside the closed unit interval [0.0, 1.0]."""
 
     if value < _UNIT_MIN or value > _UNIT_MAX:
-        raise ValueError(
-            f"{name} must lie in [{_UNIT_MIN}, {_UNIT_MAX}]; got {value}"
-        )
+        raise ValueError(f"{name} must lie in [{_UNIT_MIN}, {_UNIT_MAX}]; got {value}")
 
 
 @dataclass(frozen=True)
@@ -80,9 +79,7 @@ class TraitPadWeight:
         if not self.trait:
             raise ValueError("trait must be a non-empty string")
         if not (_PAD_ID_MIN <= self.pad_id <= _PAD_ID_MAX):
-            raise ValueError(
-                f"pad_id must be in [{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {self.pad_id}"
-            )
+            raise ValueError(f"pad_id must be in [{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {self.pad_id}")
         _check_unit_interval("weight", self.weight)
 
     def to_dict(self) -> dict[str, object]:
@@ -125,9 +122,7 @@ class ProfileModel:
         if not self.model_version:
             raise ValueError("model_version must be a non-empty string")
         if self.kind not in KIND_VALUES:
-            raise ValueError(
-                f"kind must be one of {KIND_VALUES}; got {self.kind!r}"
-            )
+            raise ValueError(f"kind must be one of {KIND_VALUES}; got {self.kind!r}")
         if self.transition_curve not in TRANSITION_CURVE_VALUES:
             raise ValueError(
                 "transition_curve must be one of "
@@ -136,9 +131,7 @@ class ProfileModel:
         known_trait_names = {t.name for t in self.traits}
         for mapping in self.pad_mappings:
             if mapping.trait not in known_trait_names:
-                raise ValueError(
-                    f"pad_mapping references unknown trait {mapping.trait!r}"
-                )
+                raise ValueError(f"pad_mapping references unknown trait {mapping.trait!r}")
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -156,8 +149,10 @@ class ProfileModel:
     def from_dict(cls, data: Mapping[str, object]) -> Self:
         traits_obj = data["traits"]
         mappings_obj = data["pad_mappings"]
-        assert isinstance(traits_obj, (list, tuple))
-        assert isinstance(mappings_obj, (list, tuple))
+        if not isinstance(traits_obj, (list, tuple)):
+            raise TypeError(f"traits must be a list/tuple; got {type(traits_obj).__name__}")
+        if not isinstance(mappings_obj, (list, tuple)):
+            raise TypeError(f"pad_mappings must be a list/tuple; got {type(mappings_obj).__name__}")
         return cls(
             profile_id=str(data["profile_id"]),
             name=str(data["name"]),

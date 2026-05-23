@@ -201,6 +201,24 @@ def test_history_to_dict_round_trip_chain() -> None:
     assert restored == h
 
 
+def test_history_entry_from_dict_rejects_non_mapping_snapshot() -> None:
+    bad = {
+        "snapshot": ["not", "a", "mapping"],
+        "kind": "auto",
+        "parent_id": None,
+        "via": None,
+        "label": None,
+    }
+    with pytest.raises(TypeError, match="snapshot"):
+        HistoryEntry.from_dict(bad)
+
+
+def test_history_from_dict_rejects_non_iterable_entries() -> None:
+    bad = {"entries": {"not": "a list"}, "current_id": ""}
+    with pytest.raises(TypeError, match="entries"):
+        History.from_dict(bad)
+
+
 def test_history_to_dict_key_set_is_stable() -> None:
     h = History(entries=(_make_entry(),), current_id="01HXY5Q9PJM0123456789ABCD0")
     assert set(h.to_dict().keys()) == {"entries", "current_id"}

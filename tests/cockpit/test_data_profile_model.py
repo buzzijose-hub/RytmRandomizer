@@ -226,6 +226,36 @@ def test_profile_model_to_dict_round_trip_full() -> None:
     assert restored == profile
 
 
+def test_profile_model_from_dict_rejects_non_iterable_traits() -> None:
+    bad = {
+        "profile_id": "01H",
+        "name": "x",
+        "kind": "user",
+        "model_version": "1.0.0",
+        "traits": {"not": "a list"},
+        "pad_mappings": [],
+        "transition_curve": "linear",
+        "source_summary": "",
+    }
+    with pytest.raises(TypeError, match="traits"):
+        ProfileModel.from_dict(bad)
+
+
+def test_profile_model_from_dict_rejects_non_iterable_pad_mappings() -> None:
+    bad = {
+        "profile_id": "01H",
+        "name": "x",
+        "kind": "user",
+        "model_version": "1.0.0",
+        "traits": [],
+        "pad_mappings": {"not": "a list"},
+        "transition_curve": "linear",
+        "source_summary": "",
+    }
+    with pytest.raises(TypeError, match="pad_mappings"):
+        ProfileModel.from_dict(bad)
+
+
 def test_profile_model_to_dict_key_set_is_stable() -> None:
     profile = _make_profile()
     data = profile.to_dict()

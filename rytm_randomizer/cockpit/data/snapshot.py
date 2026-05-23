@@ -13,10 +13,11 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from types import MappingProxyType
-from typing import Final, Mapping, Self
+from typing import Final, Self
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -50,9 +51,7 @@ class PadState:
 
     def __post_init__(self) -> None:
         if not (_PAD_ID_MIN <= self.pad_id <= _PAD_ID_MAX):
-            raise ValueError(
-                f"pad_id must be in [{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {self.pad_id}"
-            )
+            raise ValueError(f"pad_id must be in [{_PAD_ID_MIN}, {_PAD_ID_MAX}]; got {self.pad_id}")
         if not self.machine:
             raise ValueError("machine must be a non-empty string")
         # Re-wrap params so an external mutable dict can't leak through.
@@ -73,7 +72,8 @@ class PadState:
         """Restore from a dict produced by :meth:`to_dict` (or a JSON load)."""
 
         params_obj = data["params"]
-        assert isinstance(params_obj, Mapping), "params must be a Mapping"
+        if not isinstance(params_obj, Mapping):
+            raise TypeError(f"params must be a Mapping; got {type(params_obj).__name__}")
         return cls(
             pad_id=int(data["pad_id"]),  # type: ignore[arg-type]
             machine=str(data["machine"]),
@@ -129,8 +129,9 @@ class Snapshot:
         """Restore from a dict produced by :meth:`to_dict`."""
 
         pads_obj = data["pads"]
-        assert isinstance(pads_obj, (list, tuple)), "pads must be a list/tuple"
-        pads = tuple(PadState.from_dict(p) for p in pads_obj)  # type: ignore[arg-type]
+        if not isinstance(pads_obj, (list, tuple)):
+            raise TypeError(f"pads must be a list/tuple; got {type(pads_obj).__name__}")
+        pads = tuple(PadState.from_dict(p) for p in pads_obj)
         scene_slot_obj = data["scene_slot"]
         bpm_obj = data["bpm"]
         return cls(

@@ -210,6 +210,29 @@ def test_snapshot_to_dict_round_trip_empty_pads() -> None:
     assert restored.pads == ()
 
 
+def test_pad_state_from_dict_rejects_non_mapping_params() -> None:
+    """``from_dict`` raises ``TypeError`` if ``params`` isn't a mapping."""
+
+    bad = {"pad_id": 1, "machine": "BD Hard", "params": ["not", "a", "dict"]}
+    with pytest.raises(TypeError, match="params"):
+        PadState.from_dict(bad)
+
+
+def test_snapshot_from_dict_rejects_non_iterable_pads() -> None:
+    """``from_dict`` raises ``TypeError`` if ``pads`` isn't a list/tuple."""
+
+    bad = {
+        "snapshot_id": "01HXY5Q9PJM0123456789ABCD0",
+        "device": "analog_rytm_mk2",
+        "captured_at": _FIXED_TS.isoformat(),
+        "pads": {"not": "a list"},  # dict, not list/tuple
+        "scene_slot": None,
+        "bpm": None,
+    }
+    with pytest.raises(TypeError, match="pads"):
+        Snapshot.from_dict(bad)
+
+
 def test_snapshot_to_dict_keys_are_stable() -> None:
     """``to_dict`` returns a deterministic key set so serializers depend on it."""
 

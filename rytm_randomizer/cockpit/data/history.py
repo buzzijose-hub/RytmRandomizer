@@ -16,8 +16,9 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping, Self
+from typing import Self
 
 from .snapshot import Snapshot
 from .types import HISTORY_KIND_VALUES, VIA_VALUES, HistoryKind, Via
@@ -41,13 +42,9 @@ class HistoryEntry:
 
     def __post_init__(self) -> None:
         if self.kind not in HISTORY_KIND_VALUES:
-            raise ValueError(
-                f"kind must be one of {HISTORY_KIND_VALUES}; got {self.kind!r}"
-            )
+            raise ValueError(f"kind must be one of {HISTORY_KIND_VALUES}; got {self.kind!r}")
         if self.via is not None and self.via not in VIA_VALUES:
-            raise ValueError(
-                f"via must be None or one of {VIA_VALUES}; got {self.via!r}"
-            )
+            raise ValueError(f"via must be None or one of {VIA_VALUES}; got {self.via!r}")
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -61,7 +58,8 @@ class HistoryEntry:
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> Self:
         snap_obj = data["snapshot"]
-        assert isinstance(snap_obj, Mapping)
+        if not isinstance(snap_obj, Mapping):
+            raise TypeError(f"snapshot must be a Mapping; got {type(snap_obj).__name__}")
         parent_obj = data["parent_id"]
         via_obj = data["via"]
         label_obj = data["label"]
@@ -97,13 +95,10 @@ class History:
         if not self.entries:
             if self.current_id != "":
                 raise ValueError(
-                    "current_id must be empty when entries is empty; "
-                    f"got {self.current_id!r}"
+                    "current_id must be empty when entries is empty; " f"got {self.current_id!r}"
                 )
         elif self.current_id not in seen:
-            raise ValueError(
-                f"current_id {self.current_id!r} must name an entry's snapshot_id"
-            )
+            raise ValueError(f"current_id {self.current_id!r} must name an entry's snapshot_id")
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -114,7 +109,8 @@ class History:
     @classmethod
     def from_dict(cls, data: Mapping[str, object]) -> Self:
         entries_obj = data["entries"]
-        assert isinstance(entries_obj, (list, tuple))
+        if not isinstance(entries_obj, (list, tuple)):
+            raise TypeError(f"entries must be a list/tuple; got {type(entries_obj).__name__}")
         return cls(
             entries=tuple(HistoryEntry.from_dict(e) for e in entries_obj),
             current_id=str(data["current_id"]),

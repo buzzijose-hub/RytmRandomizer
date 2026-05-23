@@ -224,6 +224,41 @@ def test_mutation_candidate_to_dict_round_trip_full() -> None:
     assert restored == cand
 
 
+def test_pad_delta_from_dict_rejects_non_mapping_proposed_params() -> None:
+    bad = {
+        "pad_id": 1,
+        "proposed_params": ["not", "a", "dict"],
+        "changed_keys": [],
+    }
+    with pytest.raises(TypeError, match="proposed_params"):
+        PadDelta.from_dict(bad)
+
+
+def test_pad_delta_from_dict_rejects_non_iterable_changed_keys() -> None:
+    bad = {
+        "pad_id": 1,
+        "proposed_params": {"tun": 1},
+        "changed_keys": 12,  # int, not iterable
+    }
+    with pytest.raises(TypeError, match="changed_keys"):
+        PadDelta.from_dict(bad)
+
+
+def test_mutation_candidate_from_dict_rejects_non_iterable_pad_deltas() -> None:
+    bad = {
+        "candidate_id": "01H",
+        "source_snapshot_id": "01I",
+        "profile_id": "01J",
+        "depth": 0.5,
+        "seed": 0,
+        "pad_deltas": {"not": "a list"},
+        "safety_status": "safe",
+        "estimated_midi_msgs": 0,
+    }
+    with pytest.raises(TypeError, match="pad_deltas"):
+        MutationCandidate.from_dict(bad)
+
+
 def test_mutation_candidate_to_dict_key_set_is_stable() -> None:
     cand = _make_candidate()
     data = cand.to_dict()
