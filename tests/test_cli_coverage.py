@@ -171,6 +171,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_test_harness_contract_help = resolve_help_text(
         "style-performance-arc-live-gui-test-harness-contract-report"
     )
+    live_gui_test_harness_readiness_help = resolve_help_text(
+        "style-performance-arc-live-gui-test-harness-readiness-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -192,6 +195,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-gui-playback-transcript-report" in top_level_help
     assert "style-performance-arc-live-gui-playback-validation-report" in top_level_help
     assert "style-performance-arc-live-gui-test-harness-contract-report" in top_level_help
+    assert "style-performance-arc-live-gui-test-harness-readiness-report" in top_level_help
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -350,6 +354,12 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "GUI test-harness contract" in live_gui_test_harness_contract_help
     assert "no MIDI sending" in live_gui_test_harness_contract_help
+    assert live_gui_test_harness_readiness_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-test-harness-readiness-report"
+    )
+    assert "GUI test-harness readiness" in live_gui_test_harness_readiness_help
+    assert "no MIDI sending" in live_gui_test_harness_readiness_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"

@@ -721,6 +721,14 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     return parsed
 
 
+def parse_style_performance_arc_live_gui_test_harness_contract_cli_args(
+    argv: Sequence[str],
+) -> dict[str, object]:
+    """Parse passive test-harness contract CLI args for downstream reports."""
+
+    return _parse_cli_args(argv)
+
+
 def _handle_cli_report(
     *,
     description: str | None,
@@ -844,5 +852,6 @@ __all__ = [
     "build_style_performance_arc_live_gui_test_harness_contract_from_validation",
     "build_style_performance_arc_live_gui_test_harness_contract_report",
     "format_style_performance_arc_live_gui_test_harness_contract_report",
+    "parse_style_performance_arc_live_gui_test_harness_contract_cli_args",
     "to_style_performance_arc_live_gui_test_harness_contract_json",
 ]

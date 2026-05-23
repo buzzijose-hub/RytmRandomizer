@@ -280,6 +280,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_test_harness_contract",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_CONTRACT_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-test-harness-readiness-report": (
+            "rytm_randomizer.reports.live_gui_test_harness_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_READINESS_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

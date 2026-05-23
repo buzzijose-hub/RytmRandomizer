@@ -362,6 +362,12 @@ suites, fixture contracts, selector bindings, blocked active actions, JSON, and
 replayable passive commands without launching a GUI, running a harness, writing
 files, reading audio streams, opening ports, or sending MIDI.
 
+The test-harness readiness report consumes that contract and emits deterministic
+GUI/audio-analyzer rehearsal readiness metadata. It preserves readiness gates,
+readiness checks, rehearsal steps, blocked active actions, JSON, and replayable
+passive commands without launching a GUI, running a harness, writing files,
+reading or comparing audio streams, opening ports, or sending MIDI.
+
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.
