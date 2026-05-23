@@ -20,6 +20,7 @@ from .types import (
     TransitionCurve,
     Via,
 )
+from .ulid import new_ulid
 
 __all__ = [
     "HISTORY_KIND_VALUES",
@@ -32,4 +33,5 @@ __all__ = [
     "TransitionCurve",
     "VIA_VALUES",
     "Via",
+    "new_ulid",
 ]
