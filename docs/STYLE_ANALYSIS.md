@@ -404,6 +404,23 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-c
   --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard \
   --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python \
   --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-view-model-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge" \
+  --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard \
+  --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python \
+  --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live \
+  --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -506,6 +523,13 @@ JSON, and replayable passive commands without launching a GUI, mounting
 components, dispatching GUI events, writing files, opening ports, or sending
 MIDI.
 
+The desktop view-model report consumes that component contract and emits the
+future GUI view-model shape that a desktop shell can bind to later. It preserves
+component view models, state bindings, disabled action view models, style
+tokens, acceptance checks, blocked active actions, JSON, and replayable passive
+commands without launching a GUI, mounting components, dispatching GUI events,
+starting a dev server, writing files, opening ports, or sending MIDI.
+
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.
@@ -568,7 +592,9 @@ future desktop screen can queue listen-only rehearsal takes without recording
 audio, opening ports, or sending MIDI. The GUI implementation bridge then
 turns the test-harness readiness packet into view-model packets, disabled
 component mounts, fixture bundles, and implementation gates for the future
-desktop GUI while staying metadata-only.
+desktop GUI while staying metadata-only. The desktop view-model report now
+continues that passive GUI chain from component contracts into bindable
+component/state/action/style-token metadata for the future GUI shell.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,
