@@ -8,6 +8,7 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from .history import History, HistoryEntry
 from .mutation_candidate import MutationCandidate, PadDelta
 from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
 from .snapshot import PadState, Snapshot
@@ -27,6 +28,8 @@ from .ulid import new_ulid
 
 __all__ = [
     "HISTORY_KIND_VALUES",
+    "History",
+    "HistoryEntry",
     "HistoryKind",
     "KIND_VALUES",
     "Kind",

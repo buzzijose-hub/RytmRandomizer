@@ -1,0 +1,124 @@
+"""``HistoryEntry`` and ``History`` frozen dataclasses.
+
+The cockpit's history strip is a linear, chronological chain of snapshots
+with metadata about how each came into being. UNDO walks left one step;
+LOAD jumps to any past entry; SAVE promotes an ``auto`` entry to ``saved``
+with a label.
+
+This module is pure data — the write-side state machine (append-after-send,
+undo, promote, load) lives in WS-D's ``HistoryStore``. Keeping the
+state-machine logic out of the dataclass lets the same shape serve the
+in-memory store, the WebSocket payload, and any future on-disk persistence.
+
+See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
+§"History" for the authoritative shape.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Mapping, Self
+
+from .snapshot import Snapshot
+from .types import HISTORY_KIND_VALUES, VIA_VALUES, HistoryKind, Via
+
+
+@dataclass(frozen=True)
+class HistoryEntry:
+    """One entry in the cockpit history strip.
+
+    ``kind`` is the entry's promotion status (``"auto"`` for a post-SEND
+    snapshot, ``"saved"`` for one promoted to the device's persistent
+    kit memory). ``parent_id`` and ``via`` are ``None`` only for the
+    root entry of a fresh session.
+    """
+
+    snapshot: Snapshot
+    kind: HistoryKind
+    parent_id: str | None
+    via: Via | None
+    label: str | None
+
+    def __post_init__(self) -> None:
+        if self.kind not in HISTORY_KIND_VALUES:
+            raise ValueError(
+                f"kind must be one of {HISTORY_KIND_VALUES}; got {self.kind!r}"
+            )
+        if self.via is not None and self.via not in VIA_VALUES:
+            raise ValueError(
+                f"via must be None or one of {VIA_VALUES}; got {self.via!r}"
+            )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "snapshot": self.snapshot.to_dict(),
+            "kind": self.kind,
+            "parent_id": self.parent_id,
+            "via": self.via,
+            "label": self.label,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> Self:
+        snap_obj = data["snapshot"]
+        assert isinstance(snap_obj, Mapping)
+        parent_obj = data["parent_id"]
+        via_obj = data["via"]
+        label_obj = data["label"]
+        return cls(
+            snapshot=Snapshot.from_dict(snap_obj),
+            kind=str(data["kind"]),  # type: ignore[arg-type]
+            parent_id=None if parent_obj is None else str(parent_obj),
+            via=None if via_obj is None else str(via_obj),  # type: ignore[arg-type]
+            label=None if label_obj is None else str(label_obj),
+        )
+
+
+@dataclass(frozen=True)
+class History:
+    """The linear, chronological chain of ``HistoryEntry`` plus a current pointer.
+
+    ``current_id`` names the snapshot id of the "now" entry. UNDO walks
+    one step backwards along the chain; LOAD sets ``current_id`` to any
+    chosen entry's snapshot id. An empty session has zero entries and an
+    empty ``current_id``.
+    """
+
+    entries: tuple[HistoryEntry, ...]
+    current_id: str
+
+    def __post_init__(self) -> None:
+        seen: set[str] = set()
+        for entry in self.entries:
+            sid = entry.snapshot.snapshot_id
+            if sid in seen:
+                raise ValueError(f"duplicate snapshot_id {sid!r} in entries")
+            seen.add(sid)
+        if not self.entries:
+            if self.current_id != "":
+                raise ValueError(
+                    "current_id must be empty when entries is empty; "
+                    f"got {self.current_id!r}"
+                )
+        elif self.current_id not in seen:
+            raise ValueError(
+                f"current_id {self.current_id!r} must name an entry's snapshot_id"
+            )
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "entries": [e.to_dict() for e in self.entries],
+            "current_id": self.current_id,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Mapping[str, object]) -> Self:
+        entries_obj = data["entries"]
+        assert isinstance(entries_obj, (list, tuple))
+        return cls(
+            entries=tuple(HistoryEntry.from_dict(e) for e in entries_obj),
+            current_id=str(data["current_id"]),
+        )
+
+
+__all__ = ["History", "HistoryEntry"]
