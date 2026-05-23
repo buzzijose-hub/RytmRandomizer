@@ -293,6 +293,19 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-re
   --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
   --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
   --reducer-label "Warehouse reducer" --controller-label "Warehouse controller"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge"
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -368,6 +381,13 @@ readiness checks, rehearsal steps, blocked active actions, JSON, and replayable
 passive commands without launching a GUI, running a harness, writing files,
 reading or comparing audio streams, opening ports, or sending MIDI.
 
+The implementation bridge report consumes that readiness packet and emits
+deterministic future-GUI wiring metadata. It preserves view-model packets,
+disabled component mounts, fixture bundles, implementation gates, blocked
+active actions, JSON, and replayable passive commands without launching a GUI,
+starting a renderer, running a harness, writing files, reading or comparing
+audio streams, opening ports, or sending MIDI.
+
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.
@@ -427,7 +447,10 @@ The live GUI/audio analyzer capture queue consumes that session and adds
 deterministic capture slots, suggested filenames, analyzer job cards, operator
 capture checklists, blocked active actions, replay commands, and JSON so a
 future desktop screen can queue listen-only rehearsal takes without recording
-audio, opening ports, or sending MIDI.
+audio, opening ports, or sending MIDI. The GUI implementation bridge then
+turns the test-harness readiness packet into view-model packets, disabled
+component mounts, fixture bundles, and implementation gates for the future
+desktop GUI while staying metadata-only.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,

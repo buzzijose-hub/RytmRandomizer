@@ -856,6 +856,14 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     return parsed
 
 
+def parse_style_performance_arc_live_gui_test_harness_readiness_cli_args(
+    argv: Sequence[str],
+) -> dict[str, object]:
+    """Parse readiness CLI args for passive downstream report composition."""
+
+    return _parse_cli_args(argv)
+
+
 def _handle_cli_report(
     *,
     description: str | None,
@@ -981,5 +989,6 @@ __all__ = [
     "build_style_performance_arc_live_gui_test_harness_readiness_from_contract",
     "build_style_performance_arc_live_gui_test_harness_readiness_report",
     "format_style_performance_arc_live_gui_test_harness_readiness_report",
+    "parse_style_performance_arc_live_gui_test_harness_readiness_cli_args",
     "to_style_performance_arc_live_gui_test_harness_readiness_json",
 ]
