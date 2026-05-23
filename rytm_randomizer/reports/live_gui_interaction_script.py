@@ -700,6 +700,14 @@ def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
     return parsed
 
 
+def parse_style_performance_arc_live_gui_interaction_script_cli_args(
+    argv: Sequence[str],
+) -> dict[str, object]:
+    """Return parsed CLI args for interaction-script-compatible report commands."""
+
+    return _parse_cli_args(argv)
+
+
 def _handle_cli_report(
     *,
     description: str | None,
@@ -812,5 +820,6 @@ __all__ = [
     "build_style_performance_arc_live_gui_interaction_script_from_frame",
     "build_style_performance_arc_live_gui_interaction_script_report",
     "format_style_performance_arc_live_gui_interaction_script_report",
+    "parse_style_performance_arc_live_gui_interaction_script_cli_args",
     "to_style_performance_arc_live_gui_interaction_script_json",
 ]

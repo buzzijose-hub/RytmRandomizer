@@ -273,6 +273,16 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-
   --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
   --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
   --frame-label "Warehouse frame" --interaction-label "Warehouse interactions"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer"
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -309,6 +319,12 @@ interaction steps, GUI control bindings, disabled hardware locks, blocked
 actions, JSON, and replayable passive commands for future desktop GUI operator
 flows without launching a GUI, dispatching GUI events, opening ports, or
 sending MIDI.
+
+The action-reducer report consumes the interaction script and emits deterministic
+control transition decisions, blocked active actions, controller state metadata,
+JSON, and replayable passive commands for future desktop GUI reducer tests
+without launching a GUI, dispatching GUI events, dispatching reducer events,
+opening ports, or sending MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
