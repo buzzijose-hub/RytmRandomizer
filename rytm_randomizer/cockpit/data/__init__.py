@@ -8,6 +8,7 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
 from .snapshot import PadState, Snapshot
 from .types import (
     HISTORY_KIND_VALUES,
@@ -29,10 +30,13 @@ __all__ = [
     "KIND_VALUES",
     "Kind",
     "PadState",
+    "ProfileModel",
     "STATUS_VALUES",
     "Snapshot",
     "Status",
+    "StyleTrait",
     "TRANSITION_CURVE_VALUES",
+    "TraitPadWeight",
     "TransitionCurve",
     "VIA_VALUES",
     "Via",
