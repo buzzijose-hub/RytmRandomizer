@@ -292,6 +292,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_desktop_blueprint",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_BLUEPRINT_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-desktop-app-plan-report": (
+            "rytm_randomizer.reports.live_gui_desktop_app_plan",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
