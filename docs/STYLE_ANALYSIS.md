@@ -306,6 +306,20 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-brid
   --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
   --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
   --bridge-label "Warehouse implementation bridge"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge" \
+  --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -387,6 +401,13 @@ disabled component mounts, fixture bundles, implementation gates, blocked
 active actions, JSON, and replayable passive commands without launching a GUI,
 starting a renderer, running a harness, writing files, reading or comparing
 audio streams, opening ports, or sending MIDI.
+
+The desktop blueprint report consumes that implementation bridge and emits
+future desktop-GUI layout metadata. It preserves desktop shell selection,
+viewports, regions, widgets, view-model bindings, fixture file hints,
+acceptance checks, blocked active actions, JSON, and replayable passive
+commands without launching a GUI, starting a renderer, writing files, opening
+ports, or sending MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes

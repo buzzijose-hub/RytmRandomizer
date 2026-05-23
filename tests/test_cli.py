@@ -425,6 +425,26 @@ USAGE = (
     "[--playback-label <text>] [--validation-label <text>] "
     "[--harness-label <text>] [--readiness-label <text>] "
     "[--bridge-label <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-blueprint-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -2266,6 +2286,14 @@ def test_readme_mentions_style_performance_arc_live_gui_implementation_bridge_co
     assert "style-performance-arc-live-gui-implementation-bridge-report" in text
     assert "GUI implementation bridge" in text
     assert "view-model packets" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_blueprint_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-desktop-blueprint-report" in text
+    assert "GUI desktop blueprint" in text
+    assert "desktop shell" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:
