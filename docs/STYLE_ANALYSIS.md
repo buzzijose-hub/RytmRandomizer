@@ -349,6 +349,13 @@ future desktop GUI and GUI test-harness flows without launching a GUI,
 dispatching GUI events, mutating a GUI state store, recording audio, opening
 ports, or sending MIDI.
 
+The playback-validation report consumes the playback transcript and emits a
+deterministic validation matrix for future desktop GUI and audio-analyzer test
+harnesses. It preserves harness steps, timeline/assertion/analyzer/safety
+cases, blocked active actions, JSON, and replayable passive commands without
+launching a GUI, running a test harness, executing commands, recording audio,
+opening ports, or sending MIDI.
+
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
 each segment's mock render preview rows and Analog Four deferred rows.
