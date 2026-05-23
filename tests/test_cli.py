@@ -234,6 +234,18 @@ USAGE = (
     "[--cue N] [--lookahead N] [--matches N] "
     "[--takes N] [--slot capture-001] [--label <text>] "
     "[--capture-prefix <text>] [--sidecar-label <text>] [--json] | "
+    "style-performance-arc-live-gui-screen-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1979,6 +1991,14 @@ def test_readme_mentions_style_performance_arc_live_gui_sidecar_session_command(
     assert "style-performance-arc-live-gui-sidecar-session-report" in text
     assert "sidecar-ready GUI state" in text
     assert "disabled active controls" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_screen_contract_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-screen-contract-report" in text
+    assert "GUI screen contract" in text
+    assert "disabled interaction controls" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

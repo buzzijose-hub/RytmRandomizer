@@ -240,6 +240,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_sidecar_session",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-screen-contract-report": (
+            "rytm_randomizer.reports.live_gui_screen_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
