@@ -62,6 +62,21 @@ PASSIVE_CLI_COMMANDS = (
     ("style-performance-arc-live-gui-capture-queue-report", "--help"),
     ("style-performance-arc-live-gui-capture-review-report", "--help"),
     ("style-performance-arc-live-gui-sidecar-session-report", "--help"),
+    ("style-performance-arc-live-gui-screen-contract-report", "--help"),
+    ("style-performance-arc-live-gui-render-tree-report", "--help"),
+    ("style-performance-arc-live-gui-analyzer-overlay-report", "--help"),
+    ("style-performance-arc-live-gui-analyzer-frame-report", "--help"),
+    ("style-performance-arc-live-gui-interaction-script-report", "--help"),
+    ("style-performance-arc-live-gui-action-reducer-report", "--help"),
+    ("style-performance-arc-live-gui-controller-state-report", "--help"),
+    ("style-performance-arc-live-gui-playback-transcript-report", "--help"),
+    ("style-performance-arc-live-gui-playback-validation-report", "--help"),
+    ("style-performance-arc-live-gui-test-harness-contract-report", "--help"),
+    ("style-performance-arc-live-gui-test-harness-readiness-report", "--help"),
+    ("style-performance-arc-live-gui-implementation-bridge-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-blueprint-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-app-plan-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-component-contract-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -125,6 +140,45 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("style-performance-arc-live-gui-capture-queue-report", "--help"),
     ("style-performance-arc-live-gui-capture-review-report", "--help"),
     ("style-performance-arc-live-gui-sidecar-session-report", "--help"),
+    ("style-performance-arc-live-gui-screen-contract-report", "--help"),
+    ("style-performance-arc-live-gui-render-tree-report", "--help"),
+    ("style-performance-arc-live-gui-analyzer-overlay-report", "--help"),
+    ("style-performance-arc-live-gui-analyzer-frame-report", "--help"),
+    ("style-performance-arc-live-gui-interaction-script-report", "--help"),
+    ("style-performance-arc-live-gui-action-reducer-report", "--help"),
+    ("style-performance-arc-live-gui-controller-state-report", "--help"),
+    ("style-performance-arc-live-gui-playback-transcript-report", "--help"),
+    ("style-performance-arc-live-gui-playback-validation-report", "--help"),
+    ("style-performance-arc-live-gui-test-harness-contract-report", "--help"),
+    ("style-performance-arc-live-gui-test-harness-readiness-report", "--help"),
+    ("style-performance-arc-live-gui-implementation-bridge-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-blueprint-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-app-plan-report", "--help"),
+    ("style-performance-arc-live-gui-desktop-component-contract-report", "--help"),
+)
+LIVE_GUI_FULL_HANDLER_PASSIVE_COMMANDS = (
+    ("style-performance-arc-live-gui-screen-contract-report",),
+    ("style-performance-arc-live-gui-render-tree-report",),
+    ("style-performance-arc-live-gui-analyzer-overlay-report",),
+    ("style-performance-arc-live-gui-analyzer-frame-report",),
+    ("style-performance-arc-live-gui-interaction-script-report",),
+    ("style-performance-arc-live-gui-action-reducer-report",),
+    ("style-performance-arc-live-gui-controller-state-report",),
+    ("style-performance-arc-live-gui-playback-transcript-report",),
+    ("style-performance-arc-live-gui-playback-validation-report",),
+    ("style-performance-arc-live-gui-test-harness-contract-report",),
+    ("style-performance-arc-live-gui-test-harness-readiness-report",),
+    ("style-performance-arc-live-gui-implementation-bridge-report",),
+    ("style-performance-arc-live-gui-desktop-blueprint-report",),
+    ("style-performance-arc-live-gui-desktop-app-plan-report",),
+    ("style-performance-arc-live-gui-desktop-component-contract-report",),
+)
+LIVE_GUI_FULL_HANDLER_BASE_ARGS = (
+    "--description",
+    "hypnotic warehouse pressure",
+    "--capture-description",
+    "current live capture pressure",
+    "--json",
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",
@@ -220,6 +274,27 @@ def test_representative_passive_cli_commands_do_not_import_real_midi_libraries()
 def test_passive_cli_sweep_does_not_import_real_midi_or_adapter_modules():
     for command in PASSIVE_CLI_SWEEP_COMMANDS:
         result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(*command)
+
+        assert result.returncode == 0, (command, result.stderr)
+        assert result.stderr == ""
+
+
+def test_live_gui_full_handlers_do_not_import_real_midi_or_adapter_modules(tmp_path):
+    from conftest import dual_machine_reference_bank_files
+
+    rytm_path, analog_four_path = dual_machine_reference_bank_files(tmp_path)
+    full_handler_args = (
+        *LIVE_GUI_FULL_HANDLER_BASE_ARGS,
+        "--rytm",
+        str(rytm_path),
+        "--analog-four",
+        str(analog_four_path),
+    )
+    for command in LIVE_GUI_FULL_HANDLER_PASSIVE_COMMANDS:
+        result = run_cli_in_process_and_check_no_real_midi_or_adapter_modules(
+            *command,
+            *full_handler_args,
+        )
 
         assert result.returncode == 0, (command, result.stderr)
         assert result.stderr == ""

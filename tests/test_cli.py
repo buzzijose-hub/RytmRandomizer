@@ -234,6 +234,262 @@ USAGE = (
     "[--cue N] [--lookahead N] [--matches N] "
     "[--takes N] [--slot capture-001] [--label <text>] "
     "[--capture-prefix <text>] [--sidecar-label <text>] [--json] | "
+    "style-performance-arc-live-gui-screen-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] [--json] | "
+    "style-performance-arc-live-gui-render-tree-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--json] | "
+    "style-performance-arc-live-gui-analyzer-overlay-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] [--json] | "
+    "style-performance-arc-live-gui-analyzer-frame-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--json] | "
+    "style-performance-arc-live-gui-interaction-script-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] [--json] | "
+    "style-performance-arc-live-gui-action-reducer-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--json] | "
+    "style-performance-arc-live-gui-controller-state-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] [--json] | "
+    "style-performance-arc-live-gui-playback-transcript-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--json] | "
+    "style-performance-arc-live-gui-playback-validation-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] [--json] | "
+    "style-performance-arc-live-gui-test-harness-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--json] | "
+    "style-performance-arc-live-gui-test-harness-readiness-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] [--json] | "
+    "style-performance-arc-live-gui-implementation-bridge-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-blueprint-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json] | "
+    "style-performance-arc-live-gui-desktop-app-plan-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
+    "style-performance-arc-live-gui-desktop-component-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] "
+    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1979,6 +2235,126 @@ def test_readme_mentions_style_performance_arc_live_gui_sidecar_session_command(
     assert "style-performance-arc-live-gui-sidecar-session-report" in text
     assert "sidecar-ready GUI state" in text
     assert "disabled active controls" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_screen_contract_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-screen-contract-report" in text
+    assert "GUI screen contract" in text
+    assert "disabled interaction controls" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_render_tree_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-render-tree-report" in text
+    assert "GUI render tree" in text
+    assert "deterministic root/region/component tree" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_analyzer_overlay_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-analyzer-overlay-report" in text
+    assert "GUI analyzer overlay" in text
+    assert "meter widgets" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_analyzer_frame_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-analyzer-frame-report" in text
+    assert "GUI analyzer frame" in text
+    assert "frame events" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_interaction_script_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-interaction-script-report" in text
+    assert "GUI interaction script" in text
+    assert "control bindings" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_action_reducer_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-action-reducer-report" in text
+    assert "GUI action reducer" in text
+    assert "control transition" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_controller_state_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-controller-state-report" in text
+    assert "GUI controller state" in text
+    assert "control-state" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_playback_transcript_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-playback-transcript-report" in text
+    assert "GUI playback transcript" in text
+    assert "playback transcript" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_playback_validation_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-playback-validation-report" in text
+    assert "GUI playback validation" in text
+    assert "validation matrix" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_test_harness_contract_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-test-harness-contract-report" in text
+    assert "GUI test-harness contract" in text
+    assert "Harness suites" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_test_harness_readiness_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-test-harness-readiness-report" in text
+    assert "GUI test-harness readiness" in text
+    assert "readiness gates" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_implementation_bridge_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-implementation-bridge-report" in text
+    assert "GUI implementation bridge" in text
+    assert "view-model packets" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_blueprint_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-desktop-blueprint-report" in text
+    assert "GUI desktop blueprint" in text
+    assert "desktop shell" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_app_plan_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-desktop-app-plan-report" in text
+    assert "GUI desktop app plan" in text
+    assert "app shell" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_desktop_component_contract_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-desktop-component-contract-report" in text
+    assert "GUI desktop component contract" in text
+    assert "component props" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

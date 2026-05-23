@@ -229,6 +229,262 @@ USAGE = (
     "[--cue N] [--lookahead N] [--matches N] "
     "[--takes N] [--slot capture-001] [--label <text>] "
     "[--capture-prefix <text>] [--sidecar-label <text>] [--json] | "
+    "style-performance-arc-live-gui-screen-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] [--json] | "
+    "style-performance-arc-live-gui-render-tree-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--json] | "
+    "style-performance-arc-live-gui-analyzer-overlay-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] [--json] | "
+    "style-performance-arc-live-gui-analyzer-frame-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--json] | "
+    "style-performance-arc-live-gui-interaction-script-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] [--json] | "
+    "style-performance-arc-live-gui-action-reducer-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--json] | "
+    "style-performance-arc-live-gui-controller-state-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] [--json] | "
+    "style-performance-arc-live-gui-playback-transcript-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--json] | "
+    "style-performance-arc-live-gui-playback-validation-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] [--json] | "
+    "style-performance-arc-live-gui-test-harness-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--json] | "
+    "style-performance-arc-live-gui-test-harness-readiness-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] [--json] | "
+    "style-performance-arc-live-gui-implementation-bridge-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--json] | "
+    "style-performance-arc-live-gui-desktop-blueprint-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json] | "
+    "style-performance-arc-live-gui-desktop-app-plan-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] [--json] | "
+    "style-performance-arc-live-gui-desktop-component-contract-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--sidecar-label <text>] "
+    "[--screen-label <text>] [--layout <key>] "
+    "[--viewport desktop|tablet|compact] "
+    "[--render-target desktop-sidecar|test-harness|operator-dashboard] "
+    "[--density standard|compact] [--overlay-label <text>] "
+    "[--frame-label <text>] [--interaction-label <text>] "
+    "[--reducer-label <text>] [--controller-label <text>] "
+    "[--playback-label <text>] [--validation-label <text>] "
+    "[--harness-label <text>] [--readiness-label <text>] "
+    "[--bridge-label <text>] [--blueprint-label <text>] "
+    "[--desktop-shell operator-dashboard|desktop-sidecar|test-harness] "
+    "[--app-plan-label <text>] "
+    "[--framework-target desktop-python|web-desktop|test-harness] "
+    "[--component-contract-label <text>] [--selector-prefix <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1462,6 +1718,413 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_performance_arc_live_gui_screen_contract_report_help():
+    from .reports.live_gui_screen_contract import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-screen-contract-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --slot capture-001 --screen-label <text> --layout <key> --viewport desktop --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive GUI screen contract from the sidecar session. The report
+  emits ordered screen regions, component state, analyzer/capture table rows,
+  disabled interaction controls, blocked active actions, deterministic JSON,
+  and replayable passive commands for future desktop GUI and audio-analyzer
+  flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_render_tree_report_help():
+    from .reports.live_gui_render_tree import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-render-tree-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --render-target desktop-sidecar --density standard --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive GUI render tree from the screen contract. The report emits
+  a deterministic root/region/component/table-row tree, source bindings,
+  disabled active controls, blocked active actions, JSON-ready node metadata,
+  and replayable passive commands for future desktop GUI and audio-analyzer
+  flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_analyzer_overlay_report_help():
+    from .reports.live_gui_analyzer_overlay import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-overlay-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --overlay-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive analyzer overlay from the render tree. The report emits
+  meter widgets, threshold markers, selected capture badges, render-node
+  annotations, blocked active actions, deterministic JSON, and replayable
+  passive commands for future desktop GUI and audio-analyzer flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_analyzer_frame_report_help():
+    from .reports.live_gui_analyzer_frame import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-analyzer-frame-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --overlay-label <text> --frame-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive analyzer frame from the analyzer overlay. The report emits
+  ordered frame events, visual assertions, blocked active actions,
+  deterministic JSON, and replayable passive commands for future desktop GUI
+  and GUI test-harness flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_interaction_script_report_help():
+    from .reports.live_gui_interaction_script import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-interaction-script-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --frame-label <text> --interaction-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive GUI interaction script from the analyzer frame. The report
+  emits ordered interaction steps, GUI control bindings, disabled hardware
+  locks, deterministic JSON, and replayable passive commands for future desktop
+  GUI and GUI test-harness flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_action_reducer_report_help():
+    from .reports.live_gui_action_reducer import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-action-reducer-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --interaction-label <text> --reducer-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive GUI action reducer from the interaction script. The report
+  emits deterministic control transition metadata, blocked hardware/action
+  decisions, JSON, and replayable passive commands for future desktop GUI and
+  GUI test-harness flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_controller_state_report_help():
+    from .reports.live_gui_controller_state import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-controller-state-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --reducer-label <text> --controller-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds passive GUI controller state from the action reducer. The report emits
+  deterministic control-state rows, queued allowed GUI actions, blocked-control
+  decisions, JSON, and replayable passive commands for future desktop GUI and
+  GUI test-harness flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_playback_transcript_report_help():
+    from .reports.live_gui_playback_transcript import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-playback-transcript-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --controller-label <text> --playback-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive GUI playback transcript from controller state. The report
+  emits deterministic playback events, GUI assertions, analyzer checkpoints,
+  blocked active actions, JSON, and replayable passive commands for future
+  desktop GUI and GUI test-harness flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_playback_validation_report_help():
+    from .reports.live_gui_playback_validation import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-playback-validation-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --playback-label <text> --validation-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds passive GUI playback validation from a playback transcript. The report
+  emits deterministic validation harness steps, validation cases, blocked active
+  actions, JSON, and replayable passive commands for future GUI and
+  audio-analyzer test harnesses.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_test_harness_contract_report_help():
+    from .reports.live_gui_test_harness_contract import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-test-harness-contract-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --validation-label <text> --harness-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive GUI test-harness contract from a playback-validation matrix.
+  The report emits deterministic suites, fixtures, bindings, blocked active
+  actions, JSON, and replayable passive commands for future GUI and
+  audio-analyzer harnesses.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_test_harness_readiness_report_help():
+    from .reports.live_gui_test_harness_readiness import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-test-harness-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --harness-label <text> --readiness-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds passive GUI test-harness readiness from a test-harness contract.
+  The report emits deterministic readiness gates, checks, rehearsal steps,
+  blocked active actions, JSON, and replayable passive commands for future GUI
+  and audio-analyzer harness rehearsal.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_implementation_bridge_report_help():
+    from .reports.live_gui_implementation_bridge import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-implementation-bridge-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --readiness-label <text> --bridge-label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds passive GUI implementation bridge metadata from test-harness readiness.
+  The report emits deterministic view-model packets, disabled component mounts,
+  fixture bundles, implementation gates, blocked active actions, JSON, and
+  replayable passive commands for future desktop GUI implementation work.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_desktop_blueprint_report_help():
+    from .reports.live_gui_desktop_blueprint import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-blueprint-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --bridge-label <text> --blueprint-label <text> --desktop-shell operator-dashboard --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive desktop GUI blueprint from implementation bridge metadata.
+  The report emits deterministic desktop shell, viewport, region, widget,
+  binding, implementation task, fixture hint, acceptance check, blocked action,
+  JSON, and replayable passive command metadata for future GUI work.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_desktop_app_plan_report_help():
+    from .reports.live_gui_desktop_app_plan import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-app-plan-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --blueprint-label <text> --desktop-shell operator-dashboard --app-plan-label <text> --framework-target desktop-python --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive desktop app plan from GUI desktop blueprint metadata.
+  The report emits deterministic app shell, routes, component file hints,
+  state slices, style tokens, acceptance checks, blocked actions, JSON, and
+  replayable passive command metadata for future GUI desktop app work.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_performance_arc_live_gui_desktop_component_contract_report_help():
+    from .reports.live_gui_desktop_component_contract import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-desktop-component-contract-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --audio <path> --capture-audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --library <dir> --capture-library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --description <text> --capture-description <text> --rytm <syx-path> --analog-four <syx-path> --app-plan-label <text> --component-contract-label <text> --selector-prefix <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+  --capture-description <text>|--capture-audio <path>|--capture-library <dir>
+
+Behavior:
+  Builds a passive desktop component contract from GUI desktop app plan metadata.
+  The report emits deterministic component contracts, prop contracts, disabled
+  action contracts, test selectors, acceptance checks, blocked actions, JSON,
+  and replayable passive command metadata for future GUI desktop implementation work.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -1545,6 +2208,21 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--capture-prefix <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-review-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -1691,6 +2369,36 @@ Commands:
                      Review passive GUI/audio-analyzer captures with go/repeat/hold decisions.
   style-performance-arc-live-gui-sidecar-session-report
                      Compose passive capture review into one sidecar-ready GUI state.
+  style-performance-arc-live-gui-screen-contract-report
+                     Compose passive sidecar state into a deterministic GUI screen contract.
+  style-performance-arc-live-gui-render-tree-report
+                     Compose passive screen contract into a deterministic GUI render tree.
+  style-performance-arc-live-gui-analyzer-overlay-report
+                     Compose passive render tree into GUI analyzer overlay metadata.
+  style-performance-arc-live-gui-analyzer-frame-report
+                     Compose passive analyzer overlay into GUI frame metadata.
+  style-performance-arc-live-gui-interaction-script-report
+                     Compose passive analyzer frame into GUI interaction metadata.
+  style-performance-arc-live-gui-action-reducer-report
+                     Compose passive interaction script into GUI action reducer metadata.
+  style-performance-arc-live-gui-controller-state-report
+                     Compose passive action reducer into GUI controller state metadata.
+  style-performance-arc-live-gui-playback-transcript-report
+                     Compose passive controller state into GUI playback transcript metadata.
+  style-performance-arc-live-gui-playback-validation-report
+                     Compose passive playback transcript into GUI validation matrix metadata.
+  style-performance-arc-live-gui-test-harness-contract-report
+                     Compose passive validation matrix into GUI test-harness contract metadata.
+  style-performance-arc-live-gui-test-harness-readiness-report
+                     Compose passive GUI test-harness contract into readiness metadata.
+  style-performance-arc-live-gui-implementation-bridge-report
+                     Compose passive GUI readiness into future implementation wiring metadata.
+  style-performance-arc-live-gui-desktop-blueprint-report
+                     Compose passive GUI implementation metadata into a future desktop blueprint.
+  style-performance-arc-live-gui-desktop-app-plan-report
+                     Compose passive GUI desktop blueprint metadata into a future desktop app plan.
+  style-performance-arc-live-gui-desktop-component-contract-report
+                     Compose passive GUI desktop app plan metadata into future component contracts.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1979,6 +2687,51 @@ Safety:
     ),
     "style-performance-arc-live-gui-sidecar-session-report": (
         _style_performance_arc_live_gui_sidecar_session_report_help
+    ),
+    "style-performance-arc-live-gui-screen-contract-report": (
+        _style_performance_arc_live_gui_screen_contract_report_help
+    ),
+    "style-performance-arc-live-gui-render-tree-report": (
+        _style_performance_arc_live_gui_render_tree_report_help
+    ),
+    "style-performance-arc-live-gui-analyzer-overlay-report": (
+        _style_performance_arc_live_gui_analyzer_overlay_report_help
+    ),
+    "style-performance-arc-live-gui-analyzer-frame-report": (
+        _style_performance_arc_live_gui_analyzer_frame_report_help
+    ),
+    "style-performance-arc-live-gui-interaction-script-report": (
+        _style_performance_arc_live_gui_interaction_script_report_help
+    ),
+    "style-performance-arc-live-gui-action-reducer-report": (
+        _style_performance_arc_live_gui_action_reducer_report_help
+    ),
+    "style-performance-arc-live-gui-controller-state-report": (
+        _style_performance_arc_live_gui_controller_state_report_help
+    ),
+    "style-performance-arc-live-gui-playback-transcript-report": (
+        _style_performance_arc_live_gui_playback_transcript_report_help
+    ),
+    "style-performance-arc-live-gui-playback-validation-report": (
+        _style_performance_arc_live_gui_playback_validation_report_help
+    ),
+    "style-performance-arc-live-gui-test-harness-contract-report": (
+        _style_performance_arc_live_gui_test_harness_contract_report_help
+    ),
+    "style-performance-arc-live-gui-test-harness-readiness-report": (
+        _style_performance_arc_live_gui_test_harness_readiness_report_help
+    ),
+    "style-performance-arc-live-gui-implementation-bridge-report": (
+        _style_performance_arc_live_gui_implementation_bridge_report_help
+    ),
+    "style-performance-arc-live-gui-desktop-blueprint-report": (
+        _style_performance_arc_live_gui_desktop_blueprint_report_help
+    ),
+    "style-performance-arc-live-gui-desktop-app-plan-report": (
+        _style_performance_arc_live_gui_desktop_app_plan_report_help
+    ),
+    "style-performance-arc-live-gui-desktop-component-contract-report": (
+        _style_performance_arc_live_gui_desktop_component_contract_report_help
     ),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

@@ -239,6 +239,171 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-rep
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
   --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
   --sidecar-label "Warehouse sidecar"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-screen-contract-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-overlay-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-frame-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-interaction-script-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-action-reducer-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-controller-state-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-transcript-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-playback-validation-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-contract-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-test-harness-readiness-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-implementation-bridge-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-blueprint-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge" \
+  --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-app-plan-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge" \
+  --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard \
+  --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-component-contract-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge" \
+  --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard \
+  --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python \
+  --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -252,6 +417,94 @@ sidecar-ready GUI state: overview/current-cue/machine/analyzer/capture/safety
 panels, analyzer rows, capture decision rows, disabled active controls, blocked
 actions, deterministic JSON, and replayable passive commands without opening
 ports or sending MIDI.
+
+The render-tree report consumes the screen contract and emits deterministic
+root/region/component/table-row GUI nodes plus source bindings, blocked actions,
+JSON, and replayable passive commands for future desktop GUI and audio-analyzer
+test harnesses without launching a GUI, writing files, opening ports, or
+sending MIDI.
+
+The analyzer-overlay report consumes the render tree and emits meter widgets,
+threshold markers, selected capture badges, render-node annotations, blocked
+actions, JSON, and replayable passive commands for future desktop GUI and
+audio-analyzer overlays without launching a GUI, recording audio, opening ports,
+or sending MIDI.
+
+The analyzer-frame report consumes the overlay and emits ordered frame events,
+visual assertions, blocked actions, JSON, and replayable passive commands for
+future desktop GUI test harnesses without rendering frames, recording audio,
+opening ports, or sending MIDI.
+
+The interaction-script report consumes the analyzer frame and emits ordered
+interaction steps, GUI control bindings, disabled hardware locks, blocked
+actions, JSON, and replayable passive commands for future desktop GUI operator
+flows without launching a GUI, dispatching GUI events, opening ports, or
+sending MIDI.
+
+The action-reducer report consumes the interaction script and emits deterministic
+control transition decisions, blocked active actions, controller state metadata,
+JSON, and replayable passive commands for future desktop GUI reducer tests
+without launching a GUI, dispatching GUI events, dispatching reducer events,
+opening ports, or sending MIDI.
+
+The controller-state report consumes the action reducer and emits deterministic
+control-state rows, queued allowed GUI actions, blocked controls, JSON, and
+replayable passive commands for future desktop GUI state-machine tests without
+launching a GUI, dispatching GUI events, mutating a GUI state store, opening
+ports, or sending MIDI.
+
+The playback-transcript report consumes the controller state and emits
+deterministic playback timeline events, GUI playback assertions, analyzer
+checkpoints, blocked active actions, JSON, and replayable passive commands for
+future desktop GUI and GUI test-harness flows without launching a GUI,
+dispatching GUI events, mutating a GUI state store, recording audio, opening
+ports, or sending MIDI.
+
+The playback-validation report consumes the playback transcript and emits a
+deterministic validation matrix for future desktop GUI and audio-analyzer test
+harnesses. It preserves harness steps, timeline/assertion/analyzer/safety
+cases, blocked active actions, JSON, and replayable passive commands without
+launching a GUI, running a test harness, executing commands, recording audio,
+opening ports, or sending MIDI.
+
+The test-harness contract report consumes the playback-validation matrix and
+emits deterministic GUI/audio-analyzer harness metadata. It preserves Harness
+suites, fixture contracts, selector bindings, blocked active actions, JSON, and
+replayable passive commands without launching a GUI, running a harness, writing
+files, reading audio streams, opening ports, or sending MIDI.
+
+The test-harness readiness report consumes that contract and emits deterministic
+GUI/audio-analyzer rehearsal readiness metadata. It preserves readiness gates,
+readiness checks, rehearsal steps, blocked active actions, JSON, and replayable
+passive commands without launching a GUI, running a harness, writing files,
+reading or comparing audio streams, opening ports, or sending MIDI.
+
+The implementation bridge report consumes that readiness packet and emits
+deterministic future-GUI wiring metadata. It preserves view-model packets,
+disabled component mounts, fixture bundles, implementation gates, blocked
+active actions, JSON, and replayable passive commands without launching a GUI,
+starting a renderer, running a harness, writing files, reading or comparing
+audio streams, opening ports, or sending MIDI.
+
+The desktop blueprint report consumes that implementation bridge and emits
+future desktop-GUI layout metadata. It preserves desktop shell selection,
+viewports, regions, widgets, view-model bindings, fixture file hints,
+acceptance checks, blocked active actions, JSON, and replayable passive
+commands without launching a GUI, starting a renderer, writing files, opening
+ports, or sending MIDI.
+
+The desktop app-plan report consumes that blueprint and emits future GUI desktop
+app implementation metadata. It preserves app shell selection, routes, component
+file hints, state slices, style tokens, acceptance checks, blocked active
+actions, JSON, and replayable passive commands without launching a GUI, starting
+a dev server or bundler, writing files, opening ports, or sending MIDI.
+
+The desktop component-contract report consumes that app plan and emits future GUI
+desktop component implementation metadata. It preserves component props,
+disabled actions, test selectors, acceptance checks, blocked active actions,
+JSON, and replayable passive commands without launching a GUI, mounting
+components, dispatching GUI events, writing files, opening ports, or sending
+MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
@@ -312,7 +565,10 @@ The live GUI/audio analyzer capture queue consumes that session and adds
 deterministic capture slots, suggested filenames, analyzer job cards, operator
 capture checklists, blocked active actions, replay commands, and JSON so a
 future desktop screen can queue listen-only rehearsal takes without recording
-audio, opening ports, or sending MIDI.
+audio, opening ports, or sending MIDI. The GUI implementation bridge then
+turns the test-harness readiness packet into view-model packets, disabled
+component mounts, fixture bundles, and implementation gates for the future
+desktop GUI while staying metadata-only.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,

@@ -25,6 +25,8 @@ from .live_gui_capture_review import (
     build_style_performance_arc_live_gui_capture_review_report,
     to_style_performance_arc_live_gui_capture_review_json,
 )
+from .live_gui_common import format_cli_error as _format_cli_error
+from .live_gui_common import pop_option_value
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive style performance arc live GUI sidecar session"
 SOURCE_MODULE: Final[str] = "reports.live_gui_sidecar_session"
@@ -837,9 +839,7 @@ def _parse_positive_int(value: str, *, option: str) -> int:
 
 
 def _pop_option_value(remaining: list[str]) -> str:
-    if not remaining:
-        raise ValueError(_USAGE)
-    return remaining.pop(0)
+    return pop_option_value(remaining, usage=_USAGE)
 
 
 def _parse_cli_args(argv: Sequence[str]) -> dict[str, object]:
@@ -1050,10 +1050,6 @@ def _handle_cli_report(
     sys.stdout.write("\n".join(lines))
     sys.stdout.write("\n")
     return 0
-
-
-def _format_cli_error(exc: Exception) -> str:
-    return f"Error: {exc}"
 
 
 STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND: Final[CliCommand] = CliCommand(

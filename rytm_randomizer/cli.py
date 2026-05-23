@@ -240,6 +240,66 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_sidecar_session",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND",
         ),
+        "style-performance-arc-live-gui-screen-contract-report": (
+            "rytm_randomizer.reports.live_gui_screen_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_SCREEN_CONTRACT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-render-tree-report": (
+            "rytm_randomizer.reports.live_gui_render_tree",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_RENDER_TREE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-analyzer-overlay-report": (
+            "rytm_randomizer.reports.live_gui_analyzer_overlay",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_OVERLAY_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-analyzer-frame-report": (
+            "rytm_randomizer.reports.live_gui_analyzer_frame",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_FRAME_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-interaction-script-report": (
+            "rytm_randomizer.reports.live_gui_interaction_script",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_INTERACTION_SCRIPT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-action-reducer-report": (
+            "rytm_randomizer.reports.live_gui_action_reducer",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_ACTION_REDUCER_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-controller-state-report": (
+            "rytm_randomizer.reports.live_gui_controller_state",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_CONTROLLER_STATE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-playback-transcript-report": (
+            "rytm_randomizer.reports.live_gui_playback_transcript",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_TRANSCRIPT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-playback-validation-report": (
+            "rytm_randomizer.reports.live_gui_playback_validation",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_VALIDATION_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-test-harness-contract-report": (
+            "rytm_randomizer.reports.live_gui_test_harness_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_CONTRACT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-test-harness-readiness-report": (
+            "rytm_randomizer.reports.live_gui_test_harness_readiness",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_READINESS_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-implementation-bridge-report": (
+            "rytm_randomizer.reports.live_gui_implementation_bridge",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_IMPLEMENTATION_BRIDGE_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-blueprint-report": (
+            "rytm_randomizer.reports.live_gui_desktop_blueprint",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_BLUEPRINT_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-app-plan-report": (
+            "rytm_randomizer.reports.live_gui_desktop_app_plan",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND",
+        ),
+        "style-performance-arc-live-gui-desktop-component-contract-report": (
+            "rytm_randomizer.reports.live_gui_desktop_component_contract",
+            "STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_COMPONENT_CONTRACT_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
