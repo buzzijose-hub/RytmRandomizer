@@ -91,7 +91,22 @@ Local tooling must not introduce:
 - package metadata changes
 - V1.34 reference changes
 
-## 7. Next Project Task
+## 7. Reserved Future Cockpit Env Var
+
+`RYTM_RAND_WS_PORT` is reserved for a future cockpit Python sidecar/WebSocket
+port. The current runtime does not read this variable, start a server, open a
+port, launch a GUI, or send MIDI because of it.
+
+Before any future implementation reads `RYTM_RAND_WS_PORT`, the PR must document:
+
+- the default port
+- valid override values
+- local developer setup
+- CI behavior
+- installer behavior
+- how the existing Python CLI remains passive and dependency-light
+
+## 8. Next Project Task
 
 The next project task remains:
 

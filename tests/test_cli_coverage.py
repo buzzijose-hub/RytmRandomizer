@@ -195,6 +195,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_desktop_render_harness_help = resolve_help_text(
         "style-performance-arc-live-gui-desktop-render-harness-report"
     )
+    live_gui_cockpit_boundary_readiness_help = resolve_help_text(
+        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -224,6 +227,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-gui-desktop-view-model-report" in top_level_help
     assert "style-performance-arc-live-gui-desktop-render-contract-report" in top_level_help
     assert "style-performance-arc-live-gui-desktop-render-harness-report" in top_level_help
+    assert "style-performance-arc-live-gui-cockpit-boundary-readiness-report" in (top_level_help)
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -426,6 +430,12 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "GUI desktop render harness" in live_gui_desktop_render_harness_help
     assert "no MIDI sending" in live_gui_desktop_render_harness_help
+    assert live_gui_cockpit_boundary_readiness_help.startswith(
+        "RytmRandomizer passive CLI: "
+        "style-performance-arc-live-gui-cockpit-boundary-readiness-report"
+    )
+    assert "cockpit boundary readiness" in live_gui_cockpit_boundary_readiness_help
+    assert "no MIDI sending" in live_gui_cockpit_boundary_readiness_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"

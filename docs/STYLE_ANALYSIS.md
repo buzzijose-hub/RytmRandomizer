@@ -458,6 +458,26 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harn
   --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state \
   --render-contract-label "Warehouse render contract" \
   --render-harness-label "Warehouse render harness" --runner-label "Warehouse passive runner"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard --overlay-label "Warehouse overlay" \
+  --frame-label "Warehouse frame" --interaction-label "Warehouse interactions" \
+  --reducer-label "Warehouse reducer" --controller-label "Warehouse controller" \
+  --playback-label "Warehouse playback" --validation-label "Warehouse validation" \
+  --harness-label "Warehouse harness" --readiness-label "Warehouse readiness" \
+  --bridge-label "Warehouse implementation bridge" \
+  --blueprint-label "Warehouse desktop blueprint" --desktop-shell operator-dashboard \
+  --app-plan-label "Warehouse desktop app plan" --framework-target desktop-python \
+  --component-contract-label "Warehouse component contract" --selector-prefix warehouse-live \
+  --view-model-label "Warehouse desktop view model" --state-prefix warehouse-state \
+  --render-contract-label "Warehouse render contract" \
+  --render-harness-label "Warehouse render harness" --runner-label "Warehouse passive runner" \
+  --boundary-label "Warehouse cockpit boundary"
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -578,6 +598,14 @@ future passive GUI test surface. It preserves surface harnesses, binding
 harnesses, style-token checks, harness assertions, blocked active actions, JSON,
 and replayable passive commands without launching a GUI, running browser
 automation, taking screenshots, writing files, opening ports, or sending MIDI.
+
+The cockpit boundary-readiness report consumes that render harness and emits the
+future desktop-cockpit implementation boundary. It preserves the rule that
+active hardware stays behind `python -m rytm_randomizer.app --arm`, passive
+metadata stays under `python -m rytm_randomizer.cli`, Rytm pads 1-12 and Analog
+Four tracks 1-4 stay explicit, future `RYTM_RAND_WS_PORT` docs stay visible,
+and Tauri/web lockfile and optional dependency guardrails stay reviewable
+without launching a GUI, opening ports, or sending MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
