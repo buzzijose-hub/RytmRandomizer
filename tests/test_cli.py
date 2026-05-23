@@ -214,6 +214,16 @@ USAGE = (
     "[--discovery-start N] [--discovery-end N] "
     "[--cue N] [--lookahead N] [--matches N] "
     "[--takes N] [--label <text>] [--capture-prefix <text>] [--json] | "
+    "style-performance-arc-live-gui-capture-review-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "(--capture-description <text>|--capture-audio <path>|--capture-library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--slot capture-001] [--label <text>] "
+    "[--capture-prefix <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1943,6 +1953,14 @@ def test_readme_mentions_style_performance_arc_live_gui_capture_queue_command():
     assert "style-performance-arc-live-gui-capture-queue-report" in text
     assert "GUI/audio analyzer capture queue" in text
     assert "analyzer job" in text
+
+
+def test_readme_mentions_style_performance_arc_live_gui_capture_review_command():
+    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+
+    assert "style-performance-arc-live-gui-capture-review-report" in text
+    assert "GUI/audio analyzer capture review" in text
+    assert "go/repeat/hold" in text
 
 
 def test_dual_machine_target_report_prints_both_devices(capsys) -> None:

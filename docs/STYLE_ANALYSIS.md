@@ -226,7 +226,19 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-repor
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
   --cue 1 --lookahead 2 --matches 3 --takes 2 --capture-prefix warehouse
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-review-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse
 ```
+
+The capture review report is the passive decision layer after the queue: it
+compares captured FeatureReport evidence against the queued target metrics and
+prints go/repeat/hold guidance, metric drift notes, hold reasons, deterministic
+JSON, and replayable passive commands without recording audio, opening ports, or
+sending MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes

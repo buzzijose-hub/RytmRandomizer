@@ -60,6 +60,7 @@ PASSIVE_CLI_COMMANDS = (
     ("style-performance-arc-live-gui-analyzer-readiness-report", "--help"),
     ("style-performance-arc-live-gui-rehearsal-session-report", "--help"),
     ("style-performance-arc-live-gui-capture-queue-report", "--help"),
+    ("style-performance-arc-live-gui-capture-review-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -121,6 +122,7 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("style-performance-arc-live-gui-analyzer-readiness-report", "--help"),
     ("style-performance-arc-live-gui-rehearsal-session-report", "--help"),
     ("style-performance-arc-live-gui-capture-queue-report", "--help"),
+    ("style-performance-arc-live-gui-capture-review-report", "--help"),
 )
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",
