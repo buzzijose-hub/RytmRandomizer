@@ -221,6 +221,11 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-r
   --description "Jeff Mills Oscar Mulero Birmingham pressure" \
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
   --cue 1 --lookahead 2 --matches 3 --takes 2
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-capture-queue-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --capture-prefix warehouse
 ```
 
 The live render bundle selects the best ready or partial reference arc
@@ -278,6 +283,11 @@ The live GUI rehearsal session packet consumes that readiness bundle and adds
 session task cards, listen-only rehearsal take cards, operator checklists,
 blocked active actions, replay commands, and deterministic JSON so a future
 desktop screen can guide repeated cue captures without touching hardware.
+The live GUI/audio analyzer capture queue consumes that session and adds
+deterministic capture slots, suggested filenames, analyzer job cards, operator
+capture checklists, blocked active actions, replay commands, and JSON so a
+future desktop screen can queue listen-only rehearsal takes without recording
+audio, opening ports, or sending MIDI.
 The stage-routing report turns the runbook into the show-day handoff:
 cue-by-cue route cards with saved-kit slots, payload fingerprints,
 planned Rytm pads, planned Analog Four tracks, Rytm mock row counts,

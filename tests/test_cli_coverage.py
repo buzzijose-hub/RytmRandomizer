@@ -132,6 +132,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     live_gui_rehearsal_session_help = resolve_help_text(
         "style-performance-arc-live-gui-rehearsal-session-report"
     )
+    live_gui_capture_queue_help = resolve_help_text(
+        "style-performance-arc-live-gui-capture-queue-report"
+    )
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
@@ -140,6 +143,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     assert "style-performance-arc-live-analyzer-targets-report" in top_level_help
     assert "style-performance-arc-live-gui-analyzer-readiness-report" in top_level_help
     assert "style-performance-arc-live-gui-rehearsal-session-report" in top_level_help
+    assert "style-performance-arc-live-gui-capture-queue-report" in top_level_help
     assert snapshot_help.startswith(
         "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
     )
@@ -233,6 +237,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert "GUI rehearsal session packet" in live_gui_rehearsal_session_help
     assert "no MIDI sending" in live_gui_rehearsal_session_help
+    assert live_gui_capture_queue_help.startswith(
+        "RytmRandomizer passive CLI: style-performance-arc-live-gui-capture-queue-report"
+    )
+    assert "GUI/audio analyzer capture queue" in live_gui_capture_queue_help
+    assert "no MIDI sending" in live_gui_capture_queue_help
     assert style_target_help.startswith("RytmRandomizer passive CLI: style-target-report")
     assert live_runbook_help.startswith(
         "RytmRandomizer passive CLI: style-performance-arc-live-runbook-report"
