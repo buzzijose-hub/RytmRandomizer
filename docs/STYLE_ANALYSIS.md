@@ -239,6 +239,14 @@ python -m rytm_randomizer.cli style-performance-arc-live-gui-sidecar-session-rep
   --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
   --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
   --sidecar-label "Warehouse sidecar"
+
+python -m rytm_randomizer.cli style-performance-arc-live-gui-render-tree-report \
+  --description "Jeff Mills Oscar Mulero Birmingham pressure" \
+  --capture-description "captured warehouse take with tight low end and building pressure" \
+  --rytm <rytm-syx-path> --analog-four <a4-syx-path> \
+  --cue 1 --lookahead 2 --matches 3 --takes 2 --slot capture-001 --capture-prefix warehouse \
+  --sidecar-label "Warehouse sidecar" --screen-label "Warehouse screen" \
+  --render-target desktop-sidecar --density standard
 ```
 
 The capture review report is the passive decision layer after the queue: it
@@ -252,6 +260,12 @@ sidecar-ready GUI state: overview/current-cue/machine/analyzer/capture/safety
 panels, analyzer rows, capture decision rows, disabled active controls, blocked
 actions, deterministic JSON, and replayable passive commands without opening
 ports or sending MIDI.
+
+The render-tree report consumes the screen contract and emits deterministic
+root/region/component/table-row GUI nodes plus source bindings, blocked actions,
+JSON, and replayable passive commands for future desktop GUI and audio-analyzer
+test harnesses without launching a GUI, writing files, opening ports, or
+sending MIDI.
 
 The live render bundle selects the best ready or partial reference arc
 for the saved kit banks, embeds the live-session packet, then exposes
