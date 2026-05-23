@@ -19,6 +19,7 @@ import pytest
 
 from rytm_randomizer.cockpit.data import History, HistoryEntry, PadState, Snapshot
 from rytm_randomizer.cockpit.history import HistoryStore
+from rytm_randomizer.observability.errors import StateError
 
 pytestmark = pytest.mark.fast
 
@@ -80,7 +81,7 @@ def test_undo_on_empty_store_raises() -> None:
 
 def test_append_post_send_without_initial_raises() -> None:
     store = HistoryStore()
-    with pytest.raises(RuntimeError, match="initial"):
+    with pytest.raises(StateError, match="initial"):
         store.append_post_send(_make_snap(SNAP_A), via="send")
 
 
@@ -92,7 +93,7 @@ def test_load_on_empty_store_raises_key_error() -> None:
 
 def test_promote_on_empty_store_raises() -> None:
     store = HistoryStore()
-    with pytest.raises(RuntimeError, match="current entry"):
+    with pytest.raises(StateError, match="current entry"):
         store.promote_current_to_saved("anything")
 
 
@@ -127,7 +128,7 @@ def test_initial_returns_same_history_as_current_property() -> None:
 def test_initial_called_twice_raises() -> None:
     store = HistoryStore()
     store.initial(_make_snap(SNAP_A))
-    with pytest.raises(RuntimeError, match="only be called once"):
+    with pytest.raises(StateError, match="only be called once"):
         store.initial(_make_snap(SNAP_B))
 
 

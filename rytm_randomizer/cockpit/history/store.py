@@ -27,6 +27,8 @@ state machine implements.
 
 from __future__ import annotations
 
+from rytm_randomizer.observability.errors import StateError
+
 from ..data import History, HistoryEntry, Snapshot, Via
 
 
@@ -91,7 +93,7 @@ class HistoryStore:
         """
 
         if self._entries:
-            raise RuntimeError("initial() may only be called once on an empty HistoryStore")
+            raise StateError("initial() may only be called once on an empty HistoryStore")
         entry = HistoryEntry(
             snapshot=snapshot,
             kind="auto",
@@ -115,7 +117,7 @@ class HistoryStore:
         """
 
         if not self._entries:
-            raise RuntimeError("append_post_send() requires initial() to have been called first")
+            raise StateError("append_post_send() requires initial() to have been called first")
         if snapshot.snapshot_id in self._by_id:
             raise ValueError(f"snapshot_id {snapshot.snapshot_id!r} already present in history")
         entry = HistoryEntry(
@@ -163,7 +165,7 @@ class HistoryStore:
         """
 
         if not self._current_id:
-            raise RuntimeError("promote_current_to_saved() requires a current entry")
+            raise StateError("promote_current_to_saved() requires a current entry")
         current = self._by_id[self._current_id]
         promoted = HistoryEntry(
             snapshot=current.snapshot,

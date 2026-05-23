@@ -28,6 +28,20 @@ from rytm_randomizer.cockpit.profiles.registry import ProfileRegistry
 pytestmark = pytest.mark.fast
 
 
+@pytest.fixture
+def registry_warning_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> pytest.LogCaptureFixture:
+    """Capture registry warnings even after package logging disables propagation."""
+
+    logger = logging.getLogger("rytm_randomizer.cockpit.profiles.registry")
+    logger.addHandler(caplog.handler)
+    try:
+        yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -230,50 +244,52 @@ def test_list_profiles_returns_new_list_each_call(tmp_path: Path) -> None:
 
 
 def test_malformed_json_file_is_skipped_with_warning(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, registry_warning_caplog: pytest.LogCaptureFixture
 ) -> None:
     user_dir = tmp_path / "user"
     user_dir.mkdir()
     bad = user_dir / "broken.json"
     bad.write_text("{not valid json", encoding="utf-8")
     registry = ProfileRegistry(profiles_dir=tmp_path)
-    with caplog.at_level(logging.WARNING):
+    with registry_warning_caplog.at_level(logging.WARNING):
         profiles = registry.list_profiles()
     # Built-ins survive; the bad file is silently absent.
     assert len(profiles) == len(BUILTIN_SCENES)
-    assert any("malformed profile file" in r.message.lower() for r in caplog.records)
+    assert any(
+        "malformed profile file" in r.message.lower() for r in registry_warning_caplog.records
+    )
 
 
 def test_non_object_top_level_json_is_skipped_with_warning(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, registry_warning_caplog: pytest.LogCaptureFixture
 ) -> None:
     user_dir = tmp_path / "user"
     user_dir.mkdir()
     bad = user_dir / "list.json"
     bad.write_text("[1, 2, 3]", encoding="utf-8")
     registry = ProfileRegistry(profiles_dir=tmp_path)
-    with caplog.at_level(logging.WARNING):
+    with registry_warning_caplog.at_level(logging.WARNING):
         profiles = registry.list_profiles()
     assert len(profiles) == len(BUILTIN_SCENES)
-    assert any("top-level JSON" in r.message for r in caplog.records)
+    assert any("top-level JSON" in r.message for r in registry_warning_caplog.records)
 
 
 def test_profile_missing_required_field_is_skipped_with_warning(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, registry_warning_caplog: pytest.LogCaptureFixture
 ) -> None:
     user_dir = tmp_path / "user"
     user_dir.mkdir()
     bad = user_dir / "missing-name.json"
     bad.write_text(json.dumps({"profile_id": "01H"}), encoding="utf-8")
     registry = ProfileRegistry(profiles_dir=tmp_path)
-    with caplog.at_level(logging.WARNING):
+    with registry_warning_caplog.at_level(logging.WARNING):
         profiles = registry.list_profiles()
     assert len(profiles) == len(BUILTIN_SCENES)
-    assert any("invalid profile file" in r.message.lower() for r in caplog.records)
+    assert any("invalid profile file" in r.message.lower() for r in registry_warning_caplog.records)
 
 
 def test_profile_with_invalid_kind_is_skipped_with_warning(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, registry_warning_caplog: pytest.LogCaptureFixture
 ) -> None:
     user_dir = tmp_path / "user"
     user_dir.mkdir()
@@ -291,16 +307,16 @@ def test_profile_with_invalid_kind_is_skipped_with_warning(
     bad = user_dir / "bad-kind.json"
     bad.write_text(json.dumps(payload), encoding="utf-8")
     registry = ProfileRegistry(profiles_dir=tmp_path)
-    with caplog.at_level(logging.WARNING):
+    with registry_warning_caplog.at_level(logging.WARNING):
         profiles = registry.list_profiles()
     assert len(profiles) == len(BUILTIN_SCENES)
-    assert any("invalid profile file" in r.message.lower() for r in caplog.records)
+    assert any("invalid profile file" in r.message.lower() for r in registry_warning_caplog.records)
 
 
 def test_unreadable_file_is_skipped_with_warning(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
+    registry_warning_caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A file that raises ``OSError`` on read is logged + skipped."""
 
@@ -318,13 +334,18 @@ def test_unreadable_file_is_skipped_with_warning(
 
     monkeypatch.setattr(Path, "read_text", boom)
     registry = ProfileRegistry(profiles_dir=tmp_path)
-    with caplog.at_level(logging.WARNING):
+    with registry_warning_caplog.at_level(logging.WARNING):
         profiles = registry.list_profiles()
     assert len(profiles) == len(BUILTIN_SCENES)
-    assert any("malformed profile file" in r.message.lower() for r in caplog.records)
+    assert any(
+        "malformed profile file" in r.message.lower() for r in registry_warning_caplog.records
+    )
 
 
-def test_good_and_bad_files_coexist(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_good_and_bad_files_coexist(
+    tmp_path: Path,
+    registry_warning_caplog: pytest.LogCaptureFixture,
+) -> None:
     """Good profiles still load when sibling files are malformed."""
 
     user_dir = tmp_path / "user"
@@ -333,7 +354,7 @@ def test_good_and_bad_files_coexist(tmp_path: Path, caplog: pytest.LogCaptureFix
     good = _make_user_profile(profile_id="01HXY5Q9PJM0000000000000GOOD")
     (user_dir / f"{good.profile_id}.json").write_text(json.dumps(good.to_dict()), encoding="utf-8")
     registry = ProfileRegistry(profiles_dir=tmp_path)
-    with caplog.at_level(logging.WARNING):
+    with registry_warning_caplog.at_level(logging.WARNING):
         profiles = registry.list_profiles()
     user_profiles = [p for p in profiles if p.kind == "user"]
     assert user_profiles == [good]
