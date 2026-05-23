@@ -1,4 +1,4 @@
-"""Create repository PRs with the required default reviewer request."""
+"""Create repository PRs and re-request review with the required default reviewer."""
 
 from __future__ import annotations
 
@@ -26,6 +26,14 @@ class PullRequestOptions:
     reviewers: tuple[str, ...] = (DEFAULT_REVIEWER,)
     head: str | None = None
     draft: bool = False
+
+
+@dataclass(frozen=True)
+class ReviewRequestOptions:
+    """Inputs needed to build an existing PR reviewer request command."""
+
+    pull_request: str
+    reviewers: tuple[str, ...] = (DEFAULT_REVIEWER,)
 
 
 def normalize_reviewers(reviewers: Sequence[str] = ()) -> tuple[str, ...]:
@@ -58,6 +66,15 @@ def build_create_command(options: PullRequestOptions) -> list[str]:
     return command
 
 
+def build_review_request_command(options: ReviewRequestOptions) -> list[str]:
+    """Build the `gh pr edit --add-reviewer` command without running it."""
+
+    command = ["gh", "pr", "edit", options.pull_request]
+    for reviewer in normalize_reviewers(options.reviewers):
+        command.extend(["--add-reviewer", reviewer])
+    return command
+
+
 def run_command(command: Sequence[str]) -> int:
     """Run a prepared subprocess command and return its exit code."""
 
@@ -70,16 +87,22 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         description=(
-            "Create a GitHub PR against the integration branch while requesting "
-            "the repository's default reviewer."
+            "Create a GitHub PR or re-request review on an existing PR while "
+            "requesting the repository's default reviewer."
         )
     )
-    parser.add_argument("--title", required=True, help="Pull request title.")
+    parser.add_argument("--title", help="Pull request title.")
     parser.add_argument(
         "--body-file",
-        required=True,
         type=Path,
         help="Path to the pull request body markdown file.",
+    )
+    parser.add_argument(
+        "--request-review-for",
+        help=(
+            "Existing pull request number, URL, or branch to re-request reviewers "
+            "for after updating the PR."
+        ),
     )
     parser.add_argument(
         "--base",
@@ -108,12 +131,30 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None, *, runner: Runner = run_command) -> int:
     """CLI entry point."""
 
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    reviewers = normalize_reviewers(args.reviewer)
+
+    if args.request_review_for:
+        command = build_review_request_command(
+            ReviewRequestOptions(
+                pull_request=args.request_review_for,
+                reviewers=reviewers,
+            )
+        )
+        if args.dry_run:
+            print(shlex.join(command))
+            return 0
+        return runner(command)
+
+    if args.title is None or args.body_file is None:
+        parser.error("--title and --body-file are required when creating a pull request.")
+
     options = PullRequestOptions(
         title=args.title,
         body_file=args.body_file,
         base=args.base,
-        reviewers=normalize_reviewers(args.reviewer),
+        reviewers=reviewers,
         head=args.head,
         draft=args.draft,
     )

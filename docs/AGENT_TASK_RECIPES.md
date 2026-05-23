@@ -386,7 +386,11 @@ All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` 
    just watch           # or: gh pr checks <#> --watch
    ```
 6. **On any failure: iterate immediately.** Fix the cause, push the fix, watch again. Do NOT pause for human input on routine CI failures (lint, coverage gap, flaky test, missing arch-test allowlist entry).
-7. **On CI green: post a merge-ready comment** summarizing the state. Stop there. The merge itself requires CODEOWNERS approval (`@buzzijose-hub`) and is the human's gate.
+7. **Re-request review after each PR update** so dismissed or stale review requests do not require a GitHub UI click:
+   ```bash
+   python scripts/create_pr.py --request-review-for <PR#>
+   ```
+8. **On CI green: post a merge-ready comment** summarizing the state. Stop there. The merge itself requires CODEOWNERS approval (`@buzzijose-hub`) and is the human's gate.
 
 ### Common pitfalls
 - **Do not open a stacked PR** (one whose base is another open PR's head). Bundle multi-workstream work into one PR via `git merge --no-ff`. See cascade-merge-pattern rule.

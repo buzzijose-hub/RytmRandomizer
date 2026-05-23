@@ -133,3 +133,38 @@ def test_main_delegates_constructed_command_to_runner(tmp_path):
             "--draft",
         )
     ]
+
+
+def test_review_request_command_readds_eddie_to_existing_pr():
+    """Existing PR updates must be able to re-request Eddie without a UI click."""
+
+    create_pr = _load_create_pr()
+    options = create_pr.ReviewRequestOptions(
+        pull_request="92",
+        reviewers=("buzzijose-hub",),
+    )
+
+    command = create_pr.build_review_request_command(options)
+
+    assert command == [
+        "gh",
+        "pr",
+        "edit",
+        "92",
+        "--add-reviewer",
+        "edward-rosado",
+        "--add-reviewer",
+        "buzzijose-hub",
+    ]
+
+
+def test_main_can_request_review_for_existing_pr(capsys):
+    """Dry-run mode should show the existing-PR reviewer request command."""
+
+    create_pr = _load_create_pr()
+
+    result = create_pr.main(["--request-review-for", "92", "--dry-run"])
+
+    assert result == 0
+    out = capsys.readouterr().out
+    assert out.strip() == "gh pr edit 92 --add-reviewer edward-rosado"

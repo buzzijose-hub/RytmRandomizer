@@ -192,10 +192,13 @@ The full path from idea to merged PR. Follow this even for a small change.
    ├─ Watch: gh pr checks <PR#> --watch
    ├─ Address every failing check
    ├─ Re-run pre-push verification locally before each push
+   ├─ Re-request review after updating the PR:
+   │  python scripts/create_pr.py --request-review-for <PR#>
    └─ Standing order: do not stop until ALL checks pass
 
 8. Request review
-   ├─ `scripts/create_pr.py` requests edward-rosado automatically.
+   ├─ `scripts/create_pr.py` requests edward-rosado automatically
+   │  when opening a PR and when re-requesting review after updates.
    ├─ The base branch requires CODEOWNERS review (@buzzijose-hub).
    ├─ Post a merge-ready comment summarizing: CI state, test count,
    │  coverage %, parity status, gates satisfied.
@@ -686,6 +689,7 @@ gh pr create --base modularize-v1.34 \
 # UPDATING A PR
 gh pr edit <PR#> --body-file path/to/new-body.md
 gh pr comment <PR#> --body "<comment>"
+python scripts/create_pr.py --request-review-for <PR#>
 
 # REVIEWING
 gh pr review <PR#> --comment --body "<comment>"
