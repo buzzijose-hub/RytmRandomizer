@@ -193,6 +193,14 @@ USAGE = (
     "[--rank N] [--total-minutes N] [--segment-minutes N] "
     "[--discovery-start N] [--discovery-end N] "
     "[--cue N] [--lookahead N] [--matches N] [--json] | "
+    "style-performance-arc-live-gui-rehearsal-session-report "
+    "(--description <text>|--audio <path>|--library <dir>) "
+    "[--rytm <syx-path>] [--analog-four <syx-path>] "
+    "[--scope dual|rytm-only|analog-four-only|a4-only] "
+    "[--rank N] [--total-minutes N] [--segment-minutes N] "
+    "[--discovery-start N] [--discovery-end N] "
+    "[--cue N] [--lookahead N] [--matches N] "
+    "[--takes N] [--label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1318,6 +1326,32 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _style_performance_arc_live_gui_rehearsal_session_report_help():
+    from .reports.live_gui_rehearsal_session import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-performance-arc-live-gui-rehearsal-session-report
+
+Usage:
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --description <text> --rytm <syx-path> --analog-four <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --audio <path> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --library <dir> --rytm <syx-path>
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --description <text> --rytm <syx-path> --analog-four <syx-path> --cue N --lookahead N --matches N --takes N
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --description <text> --rytm <syx-path> --analog-four <syx-path> --label <text> --json
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report --help
+
+Arguments:
+  --description <text>|--audio <path>|--library <dir>
+
+Behavior:
+  Builds a passive GUI rehearsal session packet from the GUI/audio-analyzer
+  readiness bundle. The report exposes session task cards, listen-only
+  rehearsal take cards, operator checklists, blocked active actions, and
+  replayable passive commands for future desktop GUI and audio-analyzer flows.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -1397,6 +1431,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-analyzer-handoff-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-analyzer-readiness-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--json]
+  python -m rytm_randomizer.cli style-performance-arc-live-gui-rehearsal-session-report (--description <text>|--audio <path>|--library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -1535,6 +1570,8 @@ Commands:
                      Build passive rehearsal targets for future live analyzer comparison.
   style-performance-arc-live-gui-analyzer-readiness-report
                      Build passive GUI/audio-analyzer readiness bundles.
+  style-performance-arc-live-gui-rehearsal-session-report
+                     Build passive GUI rehearsal session packets.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -1811,6 +1848,9 @@ Safety:
     ),
     "style-performance-arc-live-gui-analyzer-readiness-report": (
         _style_performance_arc_live_gui_analyzer_readiness_report_help
+    ),
+    "style-performance-arc-live-gui-rehearsal-session-report": (
+        _style_performance_arc_live_gui_rehearsal_session_report_help
     ),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 

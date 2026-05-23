@@ -974,7 +974,7 @@ flowchart LR
         DualStyleSnapshotRoutingReport["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntentReport["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreviewReport["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session"]
         QuickStatus["quick-status"]
     end
 
@@ -1622,7 +1622,7 @@ flowchart LR
         DualStyleSnapshotRouting["dual-machine-style-snapshot-routing-report"]
         DualStyleMutationIntent["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreview["dual-machine-style-mutation-mock-preview-report"]
-        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness"]
+        StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session"]
         Status["project-status / quick-status"]
     end
 
@@ -1662,7 +1662,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-snapshot-routing-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-mock-preview-report"| CLI
-    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness"| CLI
+    CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
