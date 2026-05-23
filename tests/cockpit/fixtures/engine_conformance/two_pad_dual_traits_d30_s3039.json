@@ -1,0 +1,98 @@
+{
+  "depth": 0.3,
+  "expected": {
+    "depth": 0.3,
+    "estimated_midi_msgs": 6,
+    "pad_deltas": [
+      {
+        "changed_keys": [
+          "dec",
+          "lev",
+          "tun"
+        ],
+        "pad_id": 1,
+        "proposed_params": {
+          "dec": 45,
+          "lev": 101,
+          "tun": 28
+        }
+      },
+      {
+        "changed_keys": [
+          "dec",
+          "lev",
+          "tun"
+        ],
+        "pad_id": 2,
+        "proposed_params": {
+          "dec": 57,
+          "lev": 78,
+          "tun": 22
+        }
+      }
+    ],
+    "profile_id": "PROF_DUAL_TRAITS",
+    "safety_status": "armed",
+    "seed": 12345,
+    "source_snapshot_id": "SNAP_2PAD_BASIC"
+  },
+  "name": "two_pad_dual_traits_d30_s3039",
+  "profile": {
+    "kind": "user",
+    "model_version": "1.0",
+    "name": "profile_PROF_DUAL_TRAITS",
+    "pad_mappings": [
+      {
+        "pad_id": 1,
+        "trait": "low_end",
+        "weight": 0.9
+      },
+      {
+        "pad_id": 2,
+        "trait": "texture",
+        "weight": 0.5
+      }
+    ],
+    "profile_id": "PROF_DUAL_TRAITS",
+    "source_summary": "conformance fixture",
+    "traits": [
+      {
+        "name": "low_end",
+        "value": 0.8
+      },
+      {
+        "name": "texture",
+        "value": 0.3
+      }
+    ],
+    "transition_curve": "linear"
+  },
+  "seed": 12345,
+  "snapshot": {
+    "bpm": 128.0,
+    "captured_at": "2026-05-23T12:00:00+00:00",
+    "device": "rytm_mk2",
+    "pads": [
+      {
+        "machine": "bd_classic",
+        "pad_id": 1,
+        "params": {
+          "dec": 40,
+          "lev": 100,
+          "tun": 60
+        }
+      },
+      {
+        "machine": "sd_classic",
+        "pad_id": 2,
+        "params": {
+          "dec": 80,
+          "lev": 90,
+          "tun": 50
+        }
+      }
+    ],
+    "scene_slot": null,
+    "snapshot_id": "SNAP_2PAD_BASIC"
+  }
+}

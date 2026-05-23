@@ -1,0 +1,61 @@
+{
+  "depth": 0.5,
+  "expected": {
+    "depth": 0.5,
+    "estimated_midi_msgs": 1,
+    "pad_deltas": [
+      {
+        "changed_keys": [
+          "k"
+        ],
+        "pad_id": 1,
+        "proposed_params": {
+          "k": 69
+        }
+      }
+    ],
+    "profile_id": "PROF_ONE_TRAIT_PAD1",
+    "safety_status": "armed",
+    "seed": 3735928559,
+    "source_snapshot_id": "SNAP_ONE_KEY"
+  },
+  "name": "one_key_pad_d050_sdeadbeef",
+  "profile": {
+    "kind": "user",
+    "model_version": "1.0",
+    "name": "profile_PROF_ONE_TRAIT_PAD1",
+    "pad_mappings": [
+      {
+        "pad_id": 1,
+        "trait": "low_end",
+        "weight": 0.9
+      }
+    ],
+    "profile_id": "PROF_ONE_TRAIT_PAD1",
+    "source_summary": "conformance fixture",
+    "traits": [
+      {
+        "name": "low_end",
+        "value": 0.8
+      }
+    ],
+    "transition_curve": "linear"
+  },
+  "seed": 3735928559,
+  "snapshot": {
+    "bpm": 128.0,
+    "captured_at": "2026-05-23T12:00:00+00:00",
+    "device": "rytm_mk2",
+    "pads": [
+      {
+        "machine": "bd",
+        "pad_id": 1,
+        "params": {
+          "k": 64
+        }
+      }
+    ],
+    "scene_slot": null,
+    "snapshot_id": "SNAP_ONE_KEY"
+  }
+}
