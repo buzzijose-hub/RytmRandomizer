@@ -45,6 +45,12 @@ on:
 #       with random.seed() set for full determinism. Triggers on the same
 #       paths as `test` plus tests/e2e/.
 #
+#   desktop-web — validates the React/TypeScript cockpit surface under
+#       desktop/web with npm ci, eslint, typecheck, Vitest, and build.
+#
+#   desktop-shell — validates the Tauri shell under desktop/shell with
+#       rustfmt, cargo test, and clippy on Windows.
+#
 #   docs-gate — pull-request-only gate that fails when production code or
 #       pyproject.toml changes without an accompanying docs/, README.md,
 #       or CONTRIBUTING.md edit. Prevents silent rot of onboarding
@@ -75,6 +81,7 @@ jobs:
       deps: ${{ steps.filter.outputs.deps }}
       ci: ${{ steps.filter.outputs.ci }}
       e2e: ${{ steps.filter.outputs.e2e }}
+      desktop: ${{ steps.filter.outputs.desktop }}
       architecture: ${{ steps.filter.outputs.architecture }}
       lint-targets: ${{ steps.filter.outputs.lint-targets }}
 
@@ -120,6 +127,13 @@ jobs:
               - 'rytm_randomizer/**'
               - 'tests/e2e/**'
               - 'pyproject.toml'
+
+            # `desktop` -- validates the cockpit web frontend and Tauri
+            # shell when desktop source, tests, package manifests, or CI
+            # workflow wiring changes.
+            desktop:
+              - 'desktop/**'
+              - '.github/workflows/**'
 
             # `deps` -- dependency surface. Triggers the security (pip-audit)
             # job. Bumping a dep can introduce a CVE.
@@ -492,6 +506,84 @@ jobs:
         # --dry-run against MockMidiSender, no hardware, no port opened.
         run: pytest tests/e2e/ -v
 
+  desktop-web:
+    # Validates the browser half of the Phase 1 cockpit without launching
+    # a browser against real hardware. Vitest runs in jsdom and the build
+    # emits static assets for the Tauri shell to load later.
+    name: desktop-web
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.desktop == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop/web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: desktop/web/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: TypeScript check
+        run: npm run typecheck
+
+      - name: Vitest
+        run: npm run test:run
+
+      - name: Build web frontend
+        run: npm run build
+
+  desktop-shell:
+    # Validates the Rust/Tauri shell on Windows, matching the primary
+    # operator platform and avoiding Linux WebKit package churn. The job
+    # does not launch the GUI or touch MIDI; it compiles/tests shell code.
+    name: desktop-shell
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      needs.detect-changes.outputs.desktop == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop/shell
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Rust 1.77
+        shell: pwsh
+        run: |
+          rustup toolchain install 1.77.0 --profile minimal
+          rustup component add rustfmt clippy --toolchain 1.77.0
+          rustup default 1.77.0
+
+      - name: rustfmt
+        run: cargo fmt --check
+
+      - name: cargo test
+        run: cargo test
+
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+
   docs-gate:
     # Pull-request-only gate enforcing the data-not-code rule's onboarding
     # corollary: when production code (rytm_randomizer/) or the dependency
@@ -582,7 +674,7 @@ jobs:
     # `failure` or `cancelled`. `skipped` counts as success because the
     # path filter said this category did not need to be re-validated.
     name: required-checks
-    needs: [detect-changes, lint, security, architecture, test, e2e, docs-gate]
+    needs: [detect-changes, lint, security, architecture, test, e2e, desktop-web, desktop-shell, docs-gate]
     if: always()
     runs-on: ubuntu-latest
 
@@ -597,6 +689,8 @@ jobs:
           echo "architecture   : ${{ needs.architecture.result }}"
           echo "test           : ${{ needs.test.result }}"
           echo "e2e            : ${{ needs.e2e.result }}"
+          echo "desktop-web    : ${{ needs.desktop-web.result }}"
+          echo "desktop-shell  : ${{ needs.desktop-shell.result }}"
           echo "docs-gate      : ${{ needs.docs-gate.result }}"
 
       - name: Fail if any upstream job failed or was cancelled
@@ -612,6 +706,8 @@ jobs:
             "${{ needs.architecture.result }}" \
             "${{ needs.test.result }}" \
             "${{ needs.e2e.result }}" \
+            "${{ needs.desktop-web.result }}" \
+            "${{ needs.desktop-shell.result }}" \
             "${{ needs.docs-gate.result }}"; do
             case "$result" in
               success|skipped) ;;
