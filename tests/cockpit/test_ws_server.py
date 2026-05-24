@@ -42,6 +42,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PROFILE_CHANGED,
+    EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
 )
@@ -125,6 +126,16 @@ def _send_command(ws, request_id: str, cmd_type: str, **body) -> dict:
 
 def _drain(ws, n: int) -> list[dict]:
     return [ws.receive_json() for _ in range(n)]
+
+
+def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
+    ack = _send_command(ws, request_id, "prepare_send_plan")
+    if ack.get("ok") is not True:
+        raise AssertionError(f"prepare_send_plan failed: {ack}")
+    if ack["send_plan"]["ready"] is not True:
+        raise AssertionError(f"prepare_send_plan blocked: {ack['send_plan']}")
+    _drain(ws, 1)
+    return ack
 
 
 # ---------------------------------------------------------------------------
@@ -259,7 +270,7 @@ def test_regen_returns_new_candidate(session_factory) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_send_after_set_depth_emits_four_events(session_factory) -> None:
+def test_send_after_set_depth_emits_five_events(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
@@ -268,8 +279,9 @@ def test_send_after_set_depth_emits_four_events(session_factory) -> None:
     with client.websocket_connect("/ws") as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_depth", depth=0.55)  # primes candidate
+        _prepare_send_plan(ws)
         ack = _send_command(ws, "req-2", "send")
-        events_after = _drain(ws, 4)
+        events_after = _drain(ws, 5)
 
     assert ack["ok"] is True
     assert ack["new_snapshot_id"]
@@ -278,6 +290,7 @@ def test_send_after_set_depth_emits_four_events(session_factory) -> None:
         EVENT_SNAPSHOT_CHANGED,
         EVENT_HISTORY_UPDATED,
         EVENT_MUTATION_PREVIEWED,
+        EVENT_SEND_PLAN_CHANGED,
         EVENT_SESSION_STATUS,
     ]
     null_event = next(e for e in events_after if e["type"] == EVENT_MUTATION_PREVIEWED)
@@ -297,8 +310,9 @@ def test_send_respects_pad_lock(session_factory) -> None:
         _send_command(ws, "req-1", "set_pad_lock", pad_id=1, locked=True)
         _send_command(ws, "req-2", "set_depth", depth=0.55)
         pre_pad1 = dict(session.device.capture_snapshot().pads[0].params)
+        _prepare_send_plan(ws)
         _send_command(ws, "req-3", "send")
-        _drain(ws, 4)
+        _drain(ws, 5)
 
     post_pad1 = dict(session.device.capture_snapshot().pads[0].params)
     assert pre_pad1 == post_pad1  # locked pad untouched
@@ -318,8 +332,9 @@ def test_undo_after_send_emits_snapshot_and_history(session_factory) -> None:
     with client.websocket_connect("/ws") as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_depth", depth=0.55)
+        _prepare_send_plan(ws)
         _send_command(ws, "req-2", "send")
-        _drain(ws, 4)
+        _drain(ws, 5)
         ack = _send_command(ws, "req-3", "undo")
         events_after = _drain(ws, 2)
 
@@ -366,8 +381,9 @@ def test_load_snapshot_jumps_to_past_entry(session_factory) -> None:
     with client.websocket_connect("/ws") as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_depth", depth=0.55)
+        _prepare_send_plan(ws)
         send_ack = _send_command(ws, "req-2", "send")
-        _drain(ws, 4)
+        _drain(ws, 5)
         load_ack = _send_command(
             ws, "req-3", "load_snapshot", snapshot_id="01HXY5Q9PJM0000000000000A"
         )

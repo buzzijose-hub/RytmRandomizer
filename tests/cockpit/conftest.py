@@ -2,7 +2,7 @@
 
 These fixtures spin up a real :func:`rytm_randomizer.cockpit.ws.server.create_app`
 FastAPI instance in-process and drive it through ``fastapi.testclient.TestClient``
-so every command in the spec (10 total) and every event (5 total) can be
+so every command in the spec (11 total) and every event (6 total) can be
 exercised end-to-end across the JSON-over-WebSocket protocol.
 
 The two top-level fixtures:
@@ -16,10 +16,11 @@ The two top-level fixtures:
   :func:`cockpit_client`, **drains the four bootstrap events** so tests
   start at the "live command loop" cursor, and yields the live socket.
 
-Three helpers that integration tests call directly:
+Four helpers that integration tests call directly:
 
 * :func:`send_cmd` — write a command envelope, read the matching ack frame.
 * :func:`drain_events` — read all queued events until the socket buffer is empty.
+* :func:`prepare_send_plan` — run the inert PREPARE step before SEND.
 * :func:`collect_initial_events` — read the bootstrap events on a *fresh*
   socket (the :func:`cockpit_ws` fixture already drains them; tests that
   need to inspect them open their own connection via :func:`cockpit_client`).
@@ -155,7 +156,7 @@ def drain_events(ws: object, count: int) -> list[dict]:
     """Read exactly ``count`` event frames in order.
 
     Tests know the expected event count per command from the spec
-    (e.g. ``send`` emits exactly 4 events after its ack). Passing the
+    (e.g. ``send`` emits exactly 5 events after its ack). Passing the
     expected count keeps the helper synchronous and deterministic — there
     is no idle ``select`` / timeout dance.
     """
@@ -163,10 +164,23 @@ def drain_events(ws: object, count: int) -> list[dict]:
     return [ws.receive_json() for _ in range(count)]  # type: ignore[attr-defined]
 
 
+def prepare_send_plan(ws: object, request_id: str = "req-prepare-send-plan") -> dict:
+    """Prepare and drain the inert SEND-plan event before a SEND command."""
+
+    ack = send_cmd(ws, "prepare_send_plan", request_id=request_id)
+    if ack.get("ok") is not True:
+        raise AssertionError(f"prepare_send_plan failed: {ack}")
+    if ack["send_plan"]["ready"] is not True:
+        raise AssertionError(f"prepare_send_plan blocked: {ack['send_plan']}")
+    drain_events(ws, 1)
+    return ack
+
+
 __all__ = [
     "cockpit_client",
     "cockpit_ws",
     "collect_initial_events",
     "drain_events",
+    "prepare_send_plan",
     "send_cmd",
 ]

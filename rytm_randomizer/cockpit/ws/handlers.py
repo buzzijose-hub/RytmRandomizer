@@ -51,12 +51,13 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
-from ..data import History, MutationCandidate, Snapshot
-from ..engine import mutate
+from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
+from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
 from .protocol import (
     COMMAND_EXPORT_PROFILE_MODEL,
     COMMAND_LOAD_SNAPSHOT,
+    COMMAND_PREPARE_SEND_PLAN,
     COMMAND_REGEN,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
@@ -68,6 +69,7 @@ from .protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PROFILE_CHANGED,
+    EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
 )
@@ -148,6 +150,15 @@ def _build_mutation_previewed(candidate: MutationCandidate | None) -> dict:
     }
 
 
+def _build_send_plan_changed(send_plan: CockpitSendPlan | None) -> dict:
+    """Construct the ``send_plan_changed`` event payload (``None`` clears)."""
+
+    return {
+        "type": EVENT_SEND_PLAN_CHANGED,
+        "send_plan": None if send_plan is None else send_plan.to_dict(),
+    }
+
+
 def _build_history_updated(history: History) -> dict:
     """Construct the ``history_updated`` event payload."""
 
@@ -207,6 +218,15 @@ def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
     return candidate
 
 
+def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict]:
+    """Clear a stale plan and emit one null event when a plan existed."""
+
+    if session.current_send_plan is None:
+        return []
+    session.current_send_plan = None
+    return [_build_send_plan_changed(None)]
+
+
 # ---------------------------------------------------------------------------
 # Per-command handlers.
 #
@@ -221,9 +241,10 @@ async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerR
     profile = session.profile_registry.get(profile_id)
     if profile is None:
         return HandlerResult(ack={"ok": False, "error": f"unknown profile_id: {profile_id!r}"})
+    events = _clear_send_plan_if_needed(session)
     session.active_profile = profile
     candidate = _recompute_candidate(session)
-    events: list[dict] = [_build_profile_changed(profile)]
+    events.append(_build_profile_changed(profile))
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
     return HandlerResult(ack={"ok": True}, events=events)
@@ -231,9 +252,9 @@ async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerR
 
 async def _handle_set_depth(cmd: dict, session: CockpitSession) -> HandlerResult:
     depth = float(cmd["depth"])
+    events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
-    events: list[dict] = []
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
     return HandlerResult(
@@ -249,20 +270,21 @@ async def _handle_set_pad_lock(cmd: dict, session: CockpitSession) -> HandlerRes
         session.pad_locks.add(pad_id)
     else:
         session.pad_locks.discard(pad_id)
-    return HandlerResult(ack={"ok": True})
+    return HandlerResult(ack={"ok": True}, events=_clear_send_plan_if_needed(session))
 
 
 async def _handle_toggle_preview(cmd: dict, session: CockpitSession) -> HandlerResult:
     on = bool(cmd["on"])
+    events = _clear_send_plan_if_needed(session)
     session.preview_on = on
     # Toggling preview on recomputes a fresh candidate (so stale state isn't
     # shown); toggling off keeps the prior candidate in memory but emits a
     # null event so the ghost overlay drops.
     candidate = _recompute_candidate(session) if on else session.current_candidate
     if on:
-        events = [_build_mutation_previewed(candidate)]
+        events.append(_build_mutation_previewed(candidate))
     else:
-        events = [_build_mutation_previewed(None)]
+        events.append(_build_mutation_previewed(None))
     return HandlerResult(
         ack={
             "ok": True,
@@ -284,14 +306,37 @@ async def _handle_regen(cmd: dict, session: CockpitSession) -> HandlerResult:
     # the seed to vary the output").
     from .session import _fresh_seed  # local import to keep module surface clean
 
+    events = _clear_send_plan_if_needed(session)
     session.seed = _fresh_seed()
     candidate = _recompute_candidate(session)
-    events: list[dict] = []
     if session.preview_on:
         events.append(_build_mutation_previewed(candidate))
     return HandlerResult(
         ack={"ok": True, "candidate": None if candidate is None else candidate.to_dict()},
         events=events,
+    )
+
+
+async def _handle_prepare_send_plan(cmd: dict, session: CockpitSession) -> HandlerResult:
+    del cmd
+    if session.current_candidate is None:
+        return HandlerResult(
+            ack={"ok": False, "error": "no current candidate; set a profile and depth first"}
+        )
+    plan = prepare_send_plan(
+        session.device.capture_snapshot(),
+        session.active_profile,
+        session.current_candidate,
+        frozenset(session.pad_locks),
+    )
+    if plan is None:
+        return HandlerResult(
+            ack={"ok": False, "error": "no active profile; select one before preparing send plan"}
+        )
+    session.current_send_plan = plan
+    return HandlerResult(
+        ack={"ok": True, "send_plan": plan.to_dict()},
+        events=[_build_send_plan_changed(plan)],
     )
 
 
@@ -301,17 +346,28 @@ async def _handle_send(cmd: dict, session: CockpitSession) -> HandlerResult:
         return HandlerResult(
             ack={"ok": False, "error": "no current candidate; set a profile and depth first"}
         )
-    new_snapshot = session.device.apply(session.current_candidate, frozenset(session.pad_locks))
+    if session.current_send_plan is None or not session.current_send_plan.ready:
+        return HandlerResult(
+            ack={"ok": False, "error": "no ready send plan; run prepare_send_plan first"}
+        )
+    sent_plan = session.current_send_plan
+    new_snapshot = session.device.apply_send_plan(sent_plan)
     session.history_store.append_post_send(new_snapshot, via="send")
     session.unsaved_sends += 1
     # Preview clears after a SEND per spec § "Operator hits SEND" step 4.
     session.current_candidate = None
+    session.current_send_plan = None
     return HandlerResult(
-        ack={"ok": True, "new_snapshot_id": new_snapshot.snapshot_id},
+        ack={
+            "ok": True,
+            "new_snapshot_id": new_snapshot.snapshot_id,
+            "send_plan_id": sent_plan.plan_id,
+        },
         events=[
             _build_snapshot_changed(new_snapshot),
             _build_history_updated(session.history_store.current),
             _build_mutation_previewed(None),
+            _build_send_plan_changed(None),
             _build_session_status(session),
         ],
     )
@@ -408,6 +464,7 @@ _HANDLERS: dict[
     COMMAND_SET_PAD_LOCK: _handle_set_pad_lock,
     COMMAND_TOGGLE_PREVIEW: _handle_toggle_preview,
     COMMAND_REGEN: _handle_regen,
+    COMMAND_PREPARE_SEND_PLAN: _handle_prepare_send_plan,
     COMMAND_SEND: _handle_send,
     COMMAND_SAVE: _handle_save,
     COMMAND_LOAD_SNAPSHOT: _handle_load_snapshot,

@@ -14,7 +14,12 @@
  * inside the active profile card (handled by ProfileChips).
  */
 
-import { selectCanUndo, useCockpitStore } from '../state';
+import {
+  selectCanSend,
+  selectCanUndo,
+  selectPreparedPadCount,
+  useCockpitStore,
+} from '../state';
 
 import { useCockpitClient } from './context';
 
@@ -26,11 +31,14 @@ export interface ActionBarProps {
 export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.Element {
   const client = useCockpitClient();
   const candidate = useCockpitStore((s) => s.previewCandidate);
+  const canSend = useCockpitStore(selectCanSend);
   const canUndo = useCockpitStore(selectCanUndo);
+  const preparedPadCount = useCockpitStore(selectPreparedPadCount);
 
-  const sendDisabled = candidate === null || candidate.safety_status === 'high_risk';
+  const prepareDisabled = candidate === null;
+  const sendDisabled = !canSend;
   const previewLabel = previewOn ? '◐ PREVIEW (on)' : '◐ PREVIEW (off)';
-  const padsAffected = candidate === null ? 0 : candidate.pad_deltas.length;
+  const padsAffected = preparedPadCount;
 
   const handleTogglePreview = (): void => {
     const next = !previewOn;
@@ -58,6 +66,17 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         }}
       >
         ⟳ REGEN
+      </button>
+      <button
+        type="button"
+        className="action-button"
+        data-testid="action-prepare-send-plan"
+        disabled={prepareDisabled}
+        onClick={() => {
+          void client.send({ type: 'prepare_send_plan' });
+        }}
+      >
+        PREPARE
       </button>
       <button
         type="button"

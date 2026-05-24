@@ -44,6 +44,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PROFILE_CHANGED,
+    EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
 )
@@ -482,35 +483,124 @@ def test_regen_without_active_profile_returns_error(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# prepare_send_plan — explicit preflight between preview and SEND.
+# ---------------------------------------------------------------------------
+
+
+def test_prepare_send_plan_without_candidate_returns_error(tmp_path: Path) -> None:
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    ack = _dispatch(_envelope("prepare_send_plan"), session, recorder)
+
+    assert ack["ok"] is False
+    assert "no current candidate" in ack["error"]
+    assert session.current_send_plan is None
+    assert recorder.events == []
+
+
+def test_prepare_send_plan_with_candidate_stores_and_emits_plan(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    recorder = _Recorder()
+
+    ack = _dispatch(_envelope("prepare_send_plan"), session, recorder)
+
+    assert ack["ok"] is True
+    assert ack["send_plan"]["ready"] is True
+    assert session.current_send_plan is not None
+    assert ack["send_plan"]["plan_id"] == session.current_send_plan.plan_id
+    assert recorder.events == [
+        {
+            "type": EVENT_SEND_PLAN_CHANGED,
+            "send_plan": session.current_send_plan.to_dict(),
+        }
+    ]
+
+
+def test_prepare_send_plan_without_active_profile_returns_error(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    assert session.current_candidate is not None
+    session.active_profile = None
+    recorder = _Recorder()
+
+    ack = _dispatch(_envelope("prepare_send_plan"), session, recorder)
+
+    assert ack["ok"] is False
+    assert "no active profile" in ack["error"]
+    assert session.current_send_plan is None
+    assert recorder.events == []
+
+
+def test_set_pad_lock_clears_stale_send_plan(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
+    assert session.current_send_plan is not None
+
+    recorder = _Recorder()
+    ack = _dispatch(_envelope("set_pad_lock", pad_id=1, locked=True), session, recorder)
+
+    assert ack["ok"] is True
+    assert session.current_send_plan is None
+    assert recorder.events == [{"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None}]
+
+
+def test_send_with_candidate_but_no_ready_plan_returns_error(tmp_path: Path) -> None:
+    profile = _profile()
+    session = _make_session(tmp_path, profile)
+    session.active_profile = profile
+    _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    recorder = _Recorder()
+
+    ack = _dispatch(_envelope("send"), session, recorder)
+
+    assert ack["ok"] is False
+    assert "no ready send plan" in ack["error"]
+    assert recorder.events == []
+
+
+# ---------------------------------------------------------------------------
 # send — happy + no-candidate error.
 # ---------------------------------------------------------------------------
 
 
-def test_send_with_current_candidate_applies_and_emits_four_events(tmp_path: Path) -> None:
+def test_send_with_ready_plan_applies_and_emits_five_events(tmp_path: Path) -> None:
     profile = _profile()
     session = _make_session(tmp_path, profile)
     session.active_profile = profile
     # Prime current_candidate via a set_depth call.
     recorder_setup = _Recorder()
     _dispatch(_envelope("set_depth", depth=0.5), session, recorder_setup)
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
 
     recorder = _Recorder()
     ack = _dispatch(_envelope("send"), session, recorder)
 
     assert ack["ok"] is True
     assert ack["new_snapshot_id"]
-    # Four events in order: snapshot_changed, history_updated, mutation_previewed(null), session_status
+    assert ack["send_plan_id"]
+    # Five events in order: snapshot, history, preview(null), send_plan(null), status.
     types_emitted = [e["type"] for e in recorder.events]
     assert types_emitted == [
         EVENT_SNAPSHOT_CHANGED,
         EVENT_HISTORY_UPDATED,
         EVENT_MUTATION_PREVIEWED,
+        EVENT_SEND_PLAN_CHANGED,
         EVENT_SESSION_STATUS,
     ]
     # mutation_previewed must carry null (preview clears post-send)
     null_event = next(e for e in recorder.events if e["type"] == EVENT_MUTATION_PREVIEWED)
     assert null_event["candidate"] is None
     assert session.current_candidate is None
+    assert session.current_send_plan is None
     assert session.unsaved_sends == 1
 
 
@@ -523,6 +613,7 @@ def test_send_respects_pad_locks(tmp_path: Path) -> None:
     session.pad_locks.add(1)
     # Prime a candidate
     _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
     pre_pad1_params = dict(session.device.capture_snapshot().pads[0].params)
 
     _dispatch(_envelope("send"), session, _Recorder())
@@ -622,6 +713,7 @@ def test_load_snapshot_existing_id_emits_snapshot_and_history(tmp_path: Path) ->
     session.active_profile = profile
     # Push two more snapshots so we have something to load back to.
     _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
     _dispatch(_envelope("send"), session, _Recorder())
     original_id = "01HXY5Q9PJM0000000000000A"
 
@@ -656,6 +748,7 @@ def test_undo_walks_pointer_when_parent_exists(tmp_path: Path) -> None:
     session.active_profile = profile
     # set_depth + send to advance the chain
     _dispatch(_envelope("set_depth", depth=0.5), session, _Recorder())
+    _dispatch(_envelope("prepare_send_plan"), session, _Recorder())
     _dispatch(_envelope("send"), session, _Recorder())
     pre_undo_id = session.history_store.current.current_id
 

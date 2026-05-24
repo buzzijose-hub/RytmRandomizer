@@ -344,11 +344,13 @@ rytm_randomizer/cockpit/
         snapshot.py        # PadState, Snapshot
         profile_model.py   # StyleTrait, TraitPadWeight, ProfileModel
         mutation_candidate.py  # PadDelta, MutationCandidate
+        send_plan.py       # CockpitSendPlan, SendPlanPacket
         history.py         # HistoryEntry, History
         types.py           # Literal aliases (kind, status, via, ...)
     engine/                # The deterministic mutation function
         mutate.py          # mutate(snapshot, profile, depth, seed)
         prng.py            # xorshift32 — documented cross-language PRNG
+        send_plan.py       # prepare_send_plan(...) inert SEND preflight
         spec.md            # Normative C-portable algorithm spec
     profiles/              # Disk-backed profile registry
         registry.py        # load / save / list / get_by_id
@@ -384,6 +386,7 @@ UI drives the engine with **typed commands** that ack synchronously.
 |---|---|---|
 | `snapshot_changed` | `{ snapshot: Snapshot }` | After SEND, LOAD, or UNDO |
 | `mutation_previewed` | `{ candidate: MutationCandidate \| null }` | After depth change, REGEN, or PREVIEW toggle |
+| `send_plan_changed` | `{ send_plan: CockpitSendPlan \| null }` | After PREPARE, stale candidate/lock changes, or SEND |
 | `history_updated` | `{ history: History }` | After SEND, SAVE, LOAD, or UNDO |
 | `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
 | `session_status` | `{ armed, midi_port, mode, unsaved_sends }` | On connect, on arm-toggle |
@@ -395,7 +398,8 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `set_pad_lock` | `{ ok }` | Locked pads are skipped on SEND |
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |
-| `send` | `{ ok, new_snapshot_id }` | Applies candidate via device adapter |
+| `prepare_send_plan` | `{ ok, send_plan }` | Builds an inert packet plan and readiness blockers |
+| `send` | `{ ok, new_snapshot_id, send_plan_id }` | Applies the ready plan via device adapter |
 | `save` | `{ ok, snapshot_id }` | Promotes current snapshot to device kit |
 | `load_snapshot` | `{ ok }` | Restores a historical snapshot |
 | `undo` | `{ ok, snapshot_id }` | Walks history back one step |

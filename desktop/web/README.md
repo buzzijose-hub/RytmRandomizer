@@ -24,7 +24,7 @@ desktop/web/
 │   │   ├── client.ts        # Typed WebSocket client (Command / Event)
 │   │   └── protocol.ts      # TS types one-to-one with Python dataclasses
 │   ├── state/
-│   │   ├── store.ts         # Zustand store: snapshot / preview / history / profile / session
+│   │   ├── store.ts         # Zustand store: snapshot / preview / send plan / history / profile / session
 │   │   └── index.ts         # bindClientToStore + re-exports
 │   └── types/
 │       └── index.ts         # Public type re-exports
@@ -84,7 +84,8 @@ Full type catalog: `src/ws/protocol.ts`.
 | `set_pad_lock` | `{pad_id, locked}` | Per-pad lock |
 | `toggle_preview` | `{on}` | Enables/disables ghost overlay |
 | `regen` | `{}` | New seed, same depth |
-| `send` | `{}` | Applies candidate to device |
+| `prepare_send_plan` | `{}` | Preflights candidate into an inert SEND plan |
+| `send` | `{}` | Applies the ready SEND plan to the device |
 | `save` | `{label?}` | Promote current snapshot to device kit |
 | `load_snapshot` | `{snapshot_id}` | Jump to a past snapshot |
 | `undo` | `{}` | Walk history back one |
@@ -96,16 +97,17 @@ Full type catalog: `src/ws/protocol.ts`.
 |---|---|---|
 | `snapshot_changed` | `{snapshot}` | Pad cards |
 | `mutation_previewed` | `{candidate \| null}` | Ghost overlay |
+| `send_plan_changed` | `{send_plan \| null}` | SEND readiness / preflight gate |
 | `history_updated` | `{history}` | History strip |
 | `profile_changed` | `{profile \| null}` | Profile card |
 | `session_status` | `{armed, midi_port, mode, unsaved_sends}` | Header status |
 
 ## State store
 
-`src/state/store.ts` exposes a Zustand store with five slices, one per event type, plus
+`src/state/store.ts` exposes a Zustand store with six slices, one per event type, plus
 typed setters and a `reset()`. Selectors live alongside (`selectIsConnected`,
 `selectIsArmed`, `selectUnsavedSends`, `selectPadCount`, `selectHasHistory`,
-`selectCanUndo`).
+`selectCanUndo`, `selectSendPlanReady`, `selectCanSend`, `selectPreparedPadCount`).
 
 `bindClientToStore(client, store?)` wires a `CockpitClient` instance's event stream to
 the store. Returns an unsubscribe function.

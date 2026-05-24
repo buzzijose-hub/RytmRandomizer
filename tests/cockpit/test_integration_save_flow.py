@@ -16,7 +16,7 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import drain_events, send_cmd
+from cockpit.conftest import drain_events, prepare_send_plan, send_cmd
 
 from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
@@ -50,8 +50,9 @@ def test_save_resets_unsaved_sends_to_zero(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, "select_profile", profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.45)
+    prepare_send_plan(cockpit_ws)
     send_cmd(cockpit_ws, "send", request_id="req-send")
-    drain_events(cockpit_ws, 4)
+    drain_events(cockpit_ws, 5)
 
     ack = send_cmd(cockpit_ws, "save", request_id="req-save")
     events = drain_events(cockpit_ws, 2)
@@ -107,8 +108,9 @@ def test_save_then_new_send_re_increments_unsaved_sends(cockpit_ws: object) -> N
     send_cmd(cockpit_ws, "select_profile", profile_id="scene-rolling")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.5)
+    prepare_send_plan(cockpit_ws)
     send_cmd(cockpit_ws, "send", request_id="req-send-1")
-    events = drain_events(cockpit_ws, 4)
+    events = drain_events(cockpit_ws, 5)
 
     status = next(e for e in events if e["type"] == EVENT_SESSION_STATUS)
     assert status["unsaved_sends"] == 1

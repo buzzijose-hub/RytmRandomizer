@@ -34,13 +34,14 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
     individual = {
         protocol.EVENT_SNAPSHOT_CHANGED,
         protocol.EVENT_MUTATION_PREVIEWED,
+        protocol.EVENT_SEND_PLAN_CHANGED,
         protocol.EVENT_HISTORY_UPDATED,
         protocol.EVENT_PROFILE_CHANGED,
         protocol.EVENT_SESSION_STATUS,
     }
     assert individual == protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    assert len(protocol.EVENT_TYPES) == 5
+    assert len(protocol.EVENT_TYPES) == 6
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -51,6 +52,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SET_DEPTH,
         protocol.COMMAND_SET_PAD_LOCK,
         protocol.COMMAND_TOGGLE_PREVIEW,
+        protocol.COMMAND_PREPARE_SEND_PLAN,
         protocol.COMMAND_REGEN,
         protocol.COMMAND_SEND,
         protocol.COMMAND_SAVE,
@@ -60,7 +62,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     }
     assert individual == protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    assert len(protocol.COMMAND_TYPES) == 10
+    assert len(protocol.COMMAND_TYPES) == 11
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -68,6 +70,7 @@ def test_event_and_command_constants_match_spec_strings() -> None:
 
     assert protocol.EVENT_SNAPSHOT_CHANGED == "snapshot_changed"
     assert protocol.EVENT_MUTATION_PREVIEWED == "mutation_previewed"
+    assert protocol.EVENT_SEND_PLAN_CHANGED == "send_plan_changed"
     assert protocol.EVENT_HISTORY_UPDATED == "history_updated"
     assert protocol.EVENT_PROFILE_CHANGED == "profile_changed"
     assert protocol.EVENT_SESSION_STATUS == "session_status"
@@ -76,6 +79,7 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.COMMAND_SET_DEPTH == "set_depth"
     assert protocol.COMMAND_SET_PAD_LOCK == "set_pad_lock"
     assert protocol.COMMAND_TOGGLE_PREVIEW == "toggle_preview"
+    assert protocol.COMMAND_PREPARE_SEND_PLAN == "prepare_send_plan"
     assert protocol.COMMAND_REGEN == "regen"
     assert protocol.COMMAND_SEND == "send"
     assert protocol.COMMAND_SAVE == "save"
@@ -127,6 +131,26 @@ def test_mutation_previewed_event_accepts_candidate_dict() -> None:
         "candidate": {"candidate_id": "c1", "depth": 0.5},
     }
     assert event["candidate"]["candidate_id"] == "c1"
+
+
+def test_send_plan_changed_event_accepts_plan_and_none() -> None:
+    event: protocol.SendPlanChangedEvent = {
+        "type": "send_plan_changed",
+        "send_plan": {
+            "plan_id": "sendplan-1",
+            "candidate_id": "candidate-1",
+            "ready": True,
+            "estimated_midi_msgs": 2,
+        },
+    }
+    assert event["type"] == protocol.EVENT_SEND_PLAN_CHANGED
+    assert event["send_plan"]["plan_id"] == "sendplan-1"
+
+    cleared: protocol.SendPlanChangedEvent = {
+        "type": "send_plan_changed",
+        "send_plan": None,
+    }
+    assert cleared["send_plan"] is None
 
 
 def test_history_updated_event_dict_carries_history() -> None:
@@ -203,6 +227,15 @@ def test_command_ack_with_candidate_for_set_depth() -> None:
     assert ack["candidate"]["candidate_id"] == "c1"
 
 
+def test_command_ack_with_send_plan_for_prepare_send_plan() -> None:
+    ack: protocol.CommandAck = {
+        "request_id": "req-plan",
+        "ok": True,
+        "send_plan": {"plan_id": "sendplan-1", "ready": True},
+    }
+    assert ack["send_plan"]["plan_id"] == "sendplan-1"
+
+
 def test_command_ack_with_new_snapshot_id_for_send() -> None:
     ack: protocol.CommandAck = {
         "request_id": "req-3",
@@ -260,6 +293,11 @@ def test_set_pad_lock_command_shape() -> None:
 def test_toggle_preview_command_shape() -> None:
     cmd: protocol.TogglePreviewCommand = {"type": "toggle_preview", "on": True}
     assert cmd["on"] is True
+
+
+def test_prepare_send_plan_command_shape_is_typeonly() -> None:
+    cmd: protocol.PrepareSendPlanCommand = {"type": "prepare_send_plan"}
+    assert cmd["type"] == "prepare_send_plan"
 
 
 def test_regen_command_shape_is_typeonly() -> None:

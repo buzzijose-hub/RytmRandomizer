@@ -18,6 +18,9 @@ export {
   selectIsArmed,
   selectUnsavedSends,
   selectPadCount,
+  selectPreparedPadCount,
+  selectSendPlanReady,
+  selectCanSend,
   selectHasHistory,
   selectCanUndo,
 } from './store';
@@ -37,6 +40,7 @@ export function bindClientToStore(
     client.on('mutation_previewed', (ev) =>
       store.getState().setPreviewCandidate(ev.candidate),
     ),
+    client.on('send_plan_changed', (ev) => store.getState().setSendPlan(ev.send_plan)),
     client.on('history_updated', (ev) => store.getState().setHistory(ev.history)),
     client.on('profile_changed', (ev) => store.getState().setProfile(ev.profile)),
     client.on('session_status', (ev) =>

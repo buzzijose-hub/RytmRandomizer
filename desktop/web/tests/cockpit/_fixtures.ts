@@ -16,6 +16,7 @@ import type {
   Event as ProtocolEvent,
   EventType,
   History,
+  CockpitSendPlan,
   MutationCandidate,
   ProfileModel,
   Snapshot,
@@ -65,6 +66,36 @@ export const highRiskCandidate: MutationCandidate = {
   ...candidate,
   candidate_id: 'cand-risk',
   safety_status: 'high_risk',
+};
+
+export const sendPlan: CockpitSendPlan = {
+  plan_id: 'sendplan-1',
+  candidate_id: 'cand-1',
+  source_snapshot_id: 'snap-1',
+  profile_id: 'user-buzzi',
+  ready: true,
+  readiness_reason: 'ready',
+  safety_status: 'safe',
+  estimated_midi_msgs: 2,
+  pad_count: 2,
+  locked_pad_ids: [2],
+  blocked_reasons: [],
+  packets: [
+    { pad_id: 1, parameter: 'tun', channel: 0, control: 52, value: 35 },
+    { pad_id: 3, parameter: 'tun', channel: 0, control: 52, value: 55 },
+  ],
+};
+
+export const blockedSendPlan: CockpitSendPlan = {
+  ...sendPlan,
+  plan_id: 'sendplan-blocked',
+  ready: false,
+  readiness_reason: 'candidate_high_risk',
+  safety_status: 'high_risk',
+  estimated_midi_msgs: 0,
+  pad_count: 0,
+  packets: [],
+  blocked_reasons: ['candidate_high_risk'],
 };
 
 export const profile: ProfileModel = {
