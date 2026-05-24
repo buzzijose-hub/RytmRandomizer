@@ -19,6 +19,7 @@ import type {
   WizardSourceKind,
   WizardSourceMode,
 } from '../types/wizard_protocol';
+import { KIND_DISPLAY_ORDER, KIND_STRATEGY } from './kinds';
 
 export interface AddStepProps {
   sources: ReadonlyArray<InspirationSource>;
@@ -42,23 +43,6 @@ interface PickerDraft {
   kind: WizardSourceKind;
   mode: WizardSourceMode;
 }
-
-/** Recommended source mode for each kind. References are textual; everything else is files. */
-const DEFAULT_MODE_FOR_KIND: Readonly<Record<WizardSourceKind, WizardSourceMode>> = {
-  kit: 'file',
-  sound: 'file',
-  song: 'file',
-  album: 'folder',
-  artist: 'reference',
-};
-
-const KIND_LABELS: ReadonlyArray<{ kind: WizardSourceKind; label: string }> = [
-  { kind: 'kit', label: '+ kit' },
-  { kind: 'sound', label: '+ sound' },
-  { kind: 'song', label: '+ song' },
-  { kind: 'album', label: '+ album' },
-  { kind: 'artist', label: '+ artist' },
-];
 
 /**
  * Default dialog opener — dynamic-imports the Tauri plugin. When the plugin isn't
@@ -129,7 +113,7 @@ export function AddStep({
   const opener = openDialog ?? defaultOpenDialog;
 
   const openDraft = (kind: WizardSourceKind): void => {
-    const mode = DEFAULT_MODE_FOR_KIND[kind];
+    const mode = KIND_STRATEGY[kind].defaultMode;
     setDraft({ kind, mode });
     setLocation('');
     setDisplayName('');
@@ -175,15 +159,15 @@ export function AddStep({
     <section className="wizard-panel" data-testid="wizard-add-step">
       <h2>Add inspiration sources</h2>
       <div className="wizard-add-buttons" data-testid="wizard-add-buttons">
-        {KIND_LABELS.map((entry) => (
+        {KIND_DISPLAY_ORDER.map((kind) => (
           <button
-            key={entry.kind}
+            key={kind}
             type="button"
             className="wizard-button ghost"
-            data-testid={`wizard-add-${entry.kind}`}
-            onClick={() => openDraft(entry.kind)}
+            data-testid={`wizard-add-${kind}`}
+            onClick={() => openDraft(kind)}
           >
-            {entry.label}
+            {KIND_STRATEGY[kind].label}
           </button>
         ))}
       </div>

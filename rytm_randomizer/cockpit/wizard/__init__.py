@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from .analyze import analyze_source, feature_report_to_traits
 from .errors import WizardSourcePathError
-from .reference_analyzer import WIZARD_TRAIT_NAMES, lookup_traits
+from .reference_analyzer import lookup_traits
 from .state import (
     KIND_VALUES,
     MODE_VALUES,
@@ -36,6 +36,7 @@ from .state import (
     WizardState,
 )
 from .sysex_analyzer import extract_kit_traits
+from .traits import WIZARD_TRAIT_NAMES
 
 __all__ = [
     "AnalysisJob",

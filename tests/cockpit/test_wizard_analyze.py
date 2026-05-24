@@ -22,8 +22,8 @@ from rytm_randomizer.cockpit.wizard.analyze import (
     analyze_source,
     feature_report_to_traits,
 )
-from rytm_randomizer.cockpit.wizard.reference_analyzer import WIZARD_TRAIT_NAMES
 from rytm_randomizer.cockpit.wizard.state import InspirationSource
+from rytm_randomizer.cockpit.wizard.traits import WIZARD_TRAIT_NAMES
 
 pytestmark = pytest.mark.fast
 

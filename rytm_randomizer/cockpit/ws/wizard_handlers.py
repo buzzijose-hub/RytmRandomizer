@@ -39,14 +39,12 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Final
 
 from ..data.ulid import new_ulid
 from ..wizard.analyze import analyze_source
 from ..wizard.builder import build_profile
 from ..wizard.state import (
-    KIND_VALUES,
-    MODE_VALUES,
     AnalysisJob,
     InspirationSource,
     WizardState,
@@ -68,6 +66,25 @@ from .wizard_protocol import (
     EVENT_WIZARD_STATE_CHANGED,
 )
 from .wizard_session import WizardSession
+
+# ---------------------------------------------------------------------------
+# Analyzer failure surface
+# ---------------------------------------------------------------------------
+
+#: Union of analyzer failure modes the analyze loop catches and downgrades to a
+#: ``failed`` job. ``WizardSourcePathError`` inherits ``FileNotFoundError``,
+#: ``extract_from_audio`` may raise ``OSError`` on unreadable files, the
+#: dispatcher raises ``ValueError`` for unsupported ``(kind, mode)`` pairs, and
+#: the underlying audio extractor surfaces ``RuntimeError`` for unsupported
+#: codecs. Anything outside this set is a programmer bug and is allowed to
+#: bubble up.
+_ANALYZER_FAILURE_EXCEPTIONS: Final[tuple[type[BaseException], ...]] = (
+    FileNotFoundError,
+    OSError,
+    ValueError,
+    RuntimeError,
+)
+
 
 # ---------------------------------------------------------------------------
 # Event payload builders
@@ -140,7 +157,14 @@ async def _handle_wizard_set_metadata(cmd: dict, session: CockpitSession) -> Han
 
 
 async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> HandlerResult:
-    """Append an :class:`InspirationSource` to the wizard state."""
+    """Append an :class:`InspirationSource` to the wizard state.
+
+    Field-level validation (kind/mode/location/display_name) is delegated
+    to :meth:`InspirationSource.__post_init__`, which raises ``ValueError``
+    with the same diagnostic the manual check would have produced — caught
+    here and surfaced as an ack-level ``ok=False`` so the wire shape is
+    unchanged.
+    """
 
     wizard = session.active_wizard
     if wizard is None:
@@ -149,23 +173,18 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
     mode = str(cmd.get("mode", ""))
     location = str(cmd.get("location", ""))
     display_name = str(cmd.get("display_name", ""))
-    if kind not in KIND_VALUES:
-        return HandlerResult(
-            ack={"ok": False, "error": f"kind must be one of {KIND_VALUES}; got {kind!r}"}
-        )
-    if mode not in MODE_VALUES:
-        return HandlerResult(
-            ack={"ok": False, "error": f"mode must be one of {MODE_VALUES}; got {mode!r}"}
-        )
     source_id = new_ulid()
-    source = InspirationSource(
-        source_id=source_id,
-        kind=kind,  # type: ignore[arg-type]
-        mode=mode,  # type: ignore[arg-type]
-        location=location,
-        display_name=display_name,
-        added_at=datetime.now(timezone.utc),
-    )
+    try:
+        source = InspirationSource(
+            source_id=source_id,
+            kind=kind,  # type: ignore[arg-type]
+            mode=mode,  # type: ignore[arg-type]
+            location=location,
+            display_name=display_name,
+            added_at=datetime.now(timezone.utc),
+        )
+    except ValueError as exc:
+        return HandlerResult(ack={"ok": False, "error": str(exc)})
     new_state = wizard.state.with_source(source)
     wizard.state = new_state
     return HandlerResult(
@@ -227,12 +246,7 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
         events.append(_build_analysis_progress(analyzing_job))
         try:
             traits = await asyncio.to_thread(analyze_source, source)
-        except (
-            FileNotFoundError,
-            OSError,
-            ValueError,
-            RuntimeError,
-        ) as exc:
+        except _ANALYZER_FAILURE_EXCEPTIONS as exc:
             terminal_job = AnalysisJob(
                 source_id=source.source_id,
                 status="failed",

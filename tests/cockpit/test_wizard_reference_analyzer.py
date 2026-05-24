@@ -12,10 +12,8 @@ from __future__ import annotations
 import pytest
 
 from rytm_randomizer.cockpit.data.profile_model import StyleTrait
-from rytm_randomizer.cockpit.wizard.reference_analyzer import (
-    WIZARD_TRAIT_NAMES,
-    lookup_traits,
-)
+from rytm_randomizer.cockpit.wizard.reference_analyzer import lookup_traits
+from rytm_randomizer.cockpit.wizard.traits import WIZARD_TRAIT_NAMES
 
 pytestmark = pytest.mark.fast
 

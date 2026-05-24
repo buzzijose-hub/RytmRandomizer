@@ -29,6 +29,10 @@ If ``path`` is a folder, every ``*.syx`` file in the folder is analyzed
 and the resulting per-file 4-trait tuples are weighted-averaged
 (equal weight per file). Files with other extensions are skipped. An
 empty folder (no ``.syx`` matches) returns the neutral 4-trait profile.
+
+The averaging + clamping + neutral-fallback helpers all live in
+:mod:`.trait_math` so the audio analyzer and this analyzer share a single
+implementation.
 """
 
 from __future__ import annotations
@@ -38,7 +42,7 @@ from typing import Final
 
 from ..data.profile_model import StyleTrait
 from .errors import WizardSourcePathError
-from .reference_analyzer import WIZARD_TRAIT_NAMES
+from .trait_math import average_trait_tuples, build_canonical_traits, neutral_traits
 
 #: File extension that flags a kit SysEx dump.
 _KIT_EXTENSION: Final[str] = ".syx"
@@ -91,9 +95,9 @@ def _analyze_folder(folder: Path) -> tuple[StyleTrait, ...]:
         p for p in folder.iterdir() if p.is_file() and p.suffix.lower() == _KIT_EXTENSION
     )
     if not matches:
-        return _neutral_traits()
+        return neutral_traits()
     per_file = tuple(_analyze_single_file(p) for p in matches)
-    return _average_trait_tuples(per_file)
+    return average_trait_tuples(per_file)
 
 
 def _traits_from_bytes(data: bytes) -> tuple[StyleTrait, ...]:
@@ -104,7 +108,7 @@ def _traits_from_bytes(data: bytes) -> tuple[StyleTrait, ...]:
     """
 
     if not data:
-        return _neutral_traits()
+        return neutral_traits()
 
     n = len(data)
     total = sum(data)
@@ -127,39 +131,7 @@ def _traits_from_bytes(data: bytes) -> tuple[StyleTrait, ...]:
     hats = min(n, _DENSITY_DENOMINATOR) / _DENSITY_DENOMINATOR
     motion = distinct / 256.0
 
-    return (
-        StyleTrait("rolling_low_end", rolling),
-        StyleTrait("metallic_tension", metallic),
-        StyleTrait("hat_density", hats),
-        StyleTrait("filter_motion", motion),
-    )
-
-
-def _average_trait_tuples(
-    per_file: tuple[tuple[StyleTrait, ...], ...],
-) -> tuple[StyleTrait, ...]:
-    """Element-wise mean across a non-empty tuple of canonical 4-trait tuples.
-
-    All inputs are expected to be 4-tuples carrying the canonical
-    wizard traits (in :data:`reference_analyzer.WIZARD_TRAIT_NAMES`
-    order). The caller filters the empty case before invoking this
-    helper, so no defensive empty-input guard lives here. Per-file
-    inputs are already ``[0.0, 1.0]`` clamped by :func:`_traits_from_bytes`,
-    so the average never escapes the unit interval -- no re-clamp needed.
-    """
-
-    count = len(per_file)
-    sums: dict[str, float] = dict.fromkeys(WIZARD_TRAIT_NAMES, 0.0)
-    for traits in per_file:
-        for trait in traits:
-            sums[trait.name] = sums.get(trait.name, 0.0) + trait.value
-    return tuple(StyleTrait(name, sums[name] / count) for name in WIZARD_TRAIT_NAMES)
-
-
-def _neutral_traits() -> tuple[StyleTrait, ...]:
-    """Return the canonical 4-trait tuple at ``0.5`` apiece (neutral)."""
-
-    return tuple(StyleTrait(name, 0.5) for name in WIZARD_TRAIT_NAMES)
+    return build_canonical_traits(rolling, metallic, hats, motion)
 
 
 __all__ = ["extract_kit_traits"]

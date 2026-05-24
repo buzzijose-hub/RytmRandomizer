@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 
 from rytm_randomizer.cockpit.data.profile_model import StyleTrait
-from rytm_randomizer.cockpit.wizard.reference_analyzer import WIZARD_TRAIT_NAMES
 from rytm_randomizer.cockpit.wizard.sysex_analyzer import extract_kit_traits
+from rytm_randomizer.cockpit.wizard.traits import WIZARD_TRAIT_NAMES
 
 pytestmark = pytest.mark.fast
 
