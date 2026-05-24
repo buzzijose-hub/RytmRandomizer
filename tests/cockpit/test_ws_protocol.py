@@ -29,7 +29,13 @@ pytestmark = pytest.mark.fast
 
 
 def test_event_types_frozenset_lists_every_event_constant() -> None:
-    """``EVENT_TYPES`` must be bijective with the per-event constants."""
+    """Every cockpit per-event constant must appear in ``EVENT_TYPES``.
+
+    ``EVENT_TYPES`` is the union of the cockpit + wizard event surfaces
+    (the wizard set is folded in from :mod:`wizard_protocol`), so this
+    test asserts the cockpit constants are a subset, not strict equality.
+    The wizard test file asserts the wizard subset separately.
+    """
 
     individual = {
         protocol.EVENT_SNAPSHOT_CHANGED,
@@ -39,13 +45,20 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_PROFILE_CHANGED,
         protocol.EVENT_SESSION_STATUS,
     }
-    assert individual == protocol.EVENT_TYPES
+    assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    assert len(protocol.EVENT_TYPES) == 6
+    # 6 cockpit events + 3 wizard events (folded in from wizard_protocol)
+    assert len(protocol.EVENT_TYPES) == 9
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
-    """``COMMAND_TYPES`` must be bijective with the 10 per-command constants."""
+    """Every cockpit per-command constant must appear in ``COMMAND_TYPES``.
+
+    ``COMMAND_TYPES`` is the union of the cockpit + wizard command
+    surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
+    and asserted in the wizard test file. This test verifies the
+    10 cockpit-native commands remain present.
+    """
 
     individual = {
         protocol.COMMAND_SELECT_PROFILE,
@@ -60,9 +73,10 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_UNDO,
         protocol.COMMAND_EXPORT_PROFILE_MODEL,
     }
-    assert individual == protocol.COMMAND_TYPES
+    assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    assert len(protocol.COMMAND_TYPES) == 11
+    # 11 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 19
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:

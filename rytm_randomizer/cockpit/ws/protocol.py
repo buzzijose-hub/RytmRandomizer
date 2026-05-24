@@ -36,6 +36,8 @@ from __future__ import annotations
 
 from typing import Final, Literal, TypedDict
 
+from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
+
 # ---------------------------------------------------------------------------
 # Event-type discriminators (server → client)
 #
@@ -63,17 +65,25 @@ EVENT_PROFILE_CHANGED: Final[Literal["profile_changed"]] = "profile_changed"
 EVENT_SESSION_STATUS: Final[Literal["session_status"]] = "session_status"
 """Emitted at connect + after SEND to refresh ``unsaved_sends`` / mode pill."""
 
-EVENT_TYPES: Final[frozenset[str]] = frozenset(
-    {
-        EVENT_SNAPSHOT_CHANGED,
-        EVENT_MUTATION_PREVIEWED,
-        EVENT_SEND_PLAN_CHANGED,
-        EVENT_HISTORY_UPDATED,
-        EVENT_PROFILE_CHANGED,
-        EVENT_SESSION_STATUS,
-    }
+EVENT_TYPES: Final[frozenset[str]] = (
+    frozenset(
+        {
+            EVENT_SNAPSHOT_CHANGED,
+            EVENT_MUTATION_PREVIEWED,
+            EVENT_SEND_PLAN_CHANGED,
+            EVENT_HISTORY_UPDATED,
+            EVENT_PROFILE_CHANGED,
+            EVENT_SESSION_STATUS,
+        }
+    )
+    | WIZARD_EVENT_TYPES
 )
-"""Frozen set of every event-type discriminator. Test invariant: bijective with the EVENT_* constants."""
+"""Frozen set of every event-type discriminator (cockpit + wizard surfaces).
+
+The wizard event types are folded in from :data:`wizard_protocol.WIZARD_EVENT_TYPES`
+so the cockpit's single ``EVENT_TYPES`` constant remains the wire-format
+authority for any consumer (server, tests, future TypeScript client).
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -94,22 +104,30 @@ COMMAND_LOAD_SNAPSHOT: Final[Literal["load_snapshot"]] = "load_snapshot"
 COMMAND_UNDO: Final[Literal["undo"]] = "undo"
 COMMAND_EXPORT_PROFILE_MODEL: Final[Literal["export_profile_model"]] = "export_profile_model"
 
-COMMAND_TYPES: Final[frozenset[str]] = frozenset(
-    {
-        COMMAND_SELECT_PROFILE,
-        COMMAND_SET_DEPTH,
-        COMMAND_SET_PAD_LOCK,
-        COMMAND_TOGGLE_PREVIEW,
-        COMMAND_REGEN,
-        COMMAND_PREPARE_SEND_PLAN,
-        COMMAND_SEND,
-        COMMAND_SAVE,
-        COMMAND_LOAD_SNAPSHOT,
-        COMMAND_UNDO,
-        COMMAND_EXPORT_PROFILE_MODEL,
-    }
+COMMAND_TYPES: Final[frozenset[str]] = (
+    frozenset(
+        {
+            COMMAND_SELECT_PROFILE,
+            COMMAND_SET_DEPTH,
+            COMMAND_SET_PAD_LOCK,
+            COMMAND_TOGGLE_PREVIEW,
+            COMMAND_REGEN,
+            COMMAND_PREPARE_SEND_PLAN,
+            COMMAND_SEND,
+            COMMAND_SAVE,
+            COMMAND_LOAD_SNAPSHOT,
+            COMMAND_UNDO,
+            COMMAND_EXPORT_PROFILE_MODEL,
+        }
+    )
+    | WIZARD_COMMAND_TYPES
 )
-"""Frozen set of every supported command-type discriminator (10 total per spec)."""
+"""Frozen set of every supported command-type discriminator (cockpit + wizard).
+
+10 cockpit commands + 8 wizard commands = 18 total. The wizard commands are
+folded in from :data:`wizard_protocol.WIZARD_COMMAND_TYPES` so the cockpit's
+single ``COMMAND_TYPES`` constant remains the wire-format authority.
+"""
 
 
 # ---------------------------------------------------------------------------
