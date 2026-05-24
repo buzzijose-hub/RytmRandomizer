@@ -1,0 +1,323 @@
+{
+  "depth": 0.1,
+  "expected": {
+    "depth": 0.1,
+    "estimated_midi_msgs": 31,
+    "pad_deltas": [
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 1,
+        "proposed_params": {
+          "k0": 36,
+          "k1": 24,
+          "k2": 37,
+          "k3": 41
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 2,
+        "proposed_params": {
+          "k0": 46,
+          "k1": 34,
+          "k2": 41,
+          "k3": 36
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 3,
+        "proposed_params": {
+          "k0": 40,
+          "k1": 37,
+          "k2": 61,
+          "k3": 57
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 4,
+        "proposed_params": {
+          "k0": 67,
+          "k1": 63,
+          "k2": 64,
+          "k3": 65
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2"
+        ],
+        "pad_id": 5,
+        "proposed_params": {
+          "k0": 69,
+          "k1": 60,
+          "k2": 79,
+          "k3": 73
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 6,
+        "proposed_params": {
+          "k0": 82,
+          "k1": 75,
+          "k2": 72,
+          "k3": 79
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 7,
+        "proposed_params": {
+          "k0": 102,
+          "k1": 87,
+          "k2": 96,
+          "k3": 97
+        }
+      },
+      {
+        "changed_keys": [
+          "k0",
+          "k1",
+          "k2",
+          "k3"
+        ],
+        "pad_id": 8,
+        "proposed_params": {
+          "k0": 102,
+          "k1": 93,
+          "k2": 110,
+          "k3": 99
+        }
+      }
+    ],
+    "profile_id": "PROF_ALL_PADS",
+    "safety_status": "safe",
+    "seed": 42,
+    "source_snapshot_id": "SNAP_8PAD"
+  },
+  "name": "eight_pad_all_mapped_d10_s42",
+  "profile": {
+    "kind": "user",
+    "model_version": "1.0",
+    "name": "profile_PROF_ALL_PADS",
+    "pad_mappings": [
+      {
+        "pad_id": 1,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 2,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 3,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 4,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 5,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 6,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 7,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 8,
+        "trait": "energy",
+        "weight": 0.5
+      },
+      {
+        "pad_id": 1,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 2,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 3,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 4,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 5,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 6,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 7,
+        "trait": "grit",
+        "weight": 0.3
+      },
+      {
+        "pad_id": 8,
+        "trait": "grit",
+        "weight": 0.3
+      }
+    ],
+    "profile_id": "PROF_ALL_PADS",
+    "source_summary": "conformance fixture",
+    "traits": [
+      {
+        "name": "energy",
+        "value": 0.7
+      },
+      {
+        "name": "grit",
+        "value": 0.4
+      }
+    ],
+    "transition_curve": "linear"
+  },
+  "seed": 42,
+  "snapshot": {
+    "bpm": 128.0,
+    "captured_at": "2026-05-23T12:00:00+00:00",
+    "device": "rytm_mk2",
+    "pads": [
+      {
+        "machine": "machine_1",
+        "pad_id": 1,
+        "params": {
+          "k0": 30,
+          "k1": 31,
+          "k2": 32,
+          "k3": 33
+        }
+      },
+      {
+        "machine": "machine_2",
+        "pad_id": 2,
+        "params": {
+          "k0": 40,
+          "k1": 41,
+          "k2": 42,
+          "k3": 43
+        }
+      },
+      {
+        "machine": "machine_3",
+        "pad_id": 3,
+        "params": {
+          "k0": 50,
+          "k1": 51,
+          "k2": 52,
+          "k3": 53
+        }
+      },
+      {
+        "machine": "machine_4",
+        "pad_id": 4,
+        "params": {
+          "k0": 60,
+          "k1": 61,
+          "k2": 62,
+          "k3": 63
+        }
+      },
+      {
+        "machine": "machine_5",
+        "pad_id": 5,
+        "params": {
+          "k0": 70,
+          "k1": 71,
+          "k2": 72,
+          "k3": 73
+        }
+      },
+      {
+        "machine": "machine_6",
+        "pad_id": 6,
+        "params": {
+          "k0": 80,
+          "k1": 81,
+          "k2": 82,
+          "k3": 83
+        }
+      },
+      {
+        "machine": "machine_7",
+        "pad_id": 7,
+        "params": {
+          "k0": 90,
+          "k1": 91,
+          "k2": 92,
+          "k3": 93
+        }
+      },
+      {
+        "machine": "machine_8",
+        "pad_id": 8,
+        "params": {
+          "k0": 100,
+          "k1": 101,
+          "k2": 102,
+          "k3": 103
+        }
+      }
+    ],
+    "scene_slot": null,
+    "snapshot_id": "SNAP_8PAD"
+  }
+}

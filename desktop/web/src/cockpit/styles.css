@@ -1,0 +1,487 @@
+/**
+ * v10 cockpit stylesheet — dark theme.
+ *
+ * Color palette:
+ *   --bg          #0d1117 (top-level background)
+ *   --panel       #161b22 (cards, panels)
+ *   --panel-2     #1f242c (raised: pad-card)
+ *   --text        #c9d1d9 (primary text)
+ *   --text-dim    #8b949e (secondary text)
+ *   --accent      #58a6ff (primary highlight / current snapshot)
+ *   --green       #2ea043 (SEND, saved history)
+ *   --amber       #d29922 (armed indicator)
+ *   --danger      #f85149 (rejected actions, locked highlight)
+ */
+
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel-2: #1f242c;
+  --border: #30363d;
+  --text: #c9d1d9;
+  --text-dim: #8b949e;
+  --accent: #58a6ff;
+  --cyan: #56d4dd;
+  --green: #2ea043;
+  --amber: #d29922;
+  --danger: #f85149;
+}
+
+body,
+html,
+#root {
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  margin: 0;
+  height: 100%;
+}
+
+/* ---------- Top-level layout ---------- */
+
+.cockpit-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 16px;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.cockpit-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+}
+
+/* ---------- HeaderBar ---------- */
+
+.cockpit-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.cockpit-header .title {
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.cockpit-header .badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+.cockpit-header .badge.armed {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+.cockpit-header .badge.safe {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.cockpit-header .badge.unsaved {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ---------- Panels ---------- */
+
+.cockpit-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cockpit-panel h2 {
+  margin: 0;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-dim);
+}
+
+.cockpit-panel .panel-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+/* ---------- Pad grid ---------- */
+
+.pad-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.pad-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+.pad-card.locked {
+  border-color: var(--amber);
+  box-shadow: inset 0 0 0 1px rgba(210, 153, 34, 0.25);
+}
+
+.pad-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pad-card-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.pad-card-machine {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.pad-card-knobs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+/* ---------- Knob ---------- */
+
+.knob {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.knob-dial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #2b3340 0%, #11151c 100%);
+  border: 1px solid var(--border);
+  position: relative;
+}
+
+.knob-indicator {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 2px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 1px;
+  transform-origin: 50% 100%;
+}
+
+.knob-ghost-indicator {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  width: 2px;
+  height: 18px;
+  background: var(--cyan);
+  border-radius: 1px;
+  transform-origin: 50% 100%;
+  opacity: 0.45;
+}
+
+.knob-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.knob-value {
+  font-size: 10px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Lock button ---------- */
+
+.lock-button {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.lock-button.locked {
+  color: var(--amber);
+  border-color: var(--amber);
+  background: rgba(210, 153, 34, 0.08);
+}
+
+.lock-button:hover {
+  background: var(--panel-2);
+}
+
+/* ---------- History strip ---------- */
+
+.history-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-strip-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.history-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  padding: 0;
+}
+
+.history-dot.saved {
+  background: var(--green);
+}
+
+.history-dot.current {
+  background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+}
+
+.history-empty {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* ---------- Profile toggle ---------- */
+
+.profile-toggle {
+  display: inline-flex;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+}
+
+.profile-toggle button {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-toggle button.active {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+/* ---------- Profile chips ---------- */
+
+.profile-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-chip-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-chip {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.profile-chip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.profile-chip:hover {
+  background: var(--panel);
+}
+
+.profile-active-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-active-card .name {
+  font-weight: 600;
+}
+
+.profile-active-card .meta {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.profile-traits {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-trait {
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.profile-export-button {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* ---------- Depth slider ---------- */
+
+.depth-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.depth-slider-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.depth-slider-value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.depth-slider-track-wrap {
+  position: relative;
+}
+
+.depth-slider-range {
+  width: 100%;
+  height: 26px;
+  background: transparent;
+}
+
+.depth-slider-range.active {
+  filter: drop-shadow(0 0 6px var(--accent));
+}
+
+.depth-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ---------- Action bar ---------- */
+
+.action-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.action-bar-row {
+  display: flex;
+  gap: 10px;
+}
+
+.action-button {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.action-button:hover:not(:disabled) {
+  background: var(--panel-2);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-button.primary {
+  background: var(--green);
+  color: white;
+  border-color: var(--green);
+  font-weight: 600;
+  grid-column: span 2;
+  padding: 14px 18px;
+  font-size: 14px;
+}
+
+.action-button.primary:hover:not(:disabled) {
+  background: #3fb950;
+}
+
+.action-button.toggle.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}

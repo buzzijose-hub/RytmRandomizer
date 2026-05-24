@@ -32,6 +32,15 @@ dev = [
     "pytest-timeout>=2,<3",
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
+    # WS-G/WS-E cockpit tests exercise ProfileModel export plus the
+    # FastAPI/Uvicorn WebSocket sidecar; mirrored from the [cockpit] extra
+    # below so CI's ``pip install -e .[dev]`` picks them up without having
+    # to chain extras.
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "httpx>=0.27.0,<1",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
 ]
 # WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
 # guardrails system). Only pulled in by users running real audio analyses;
@@ -39,6 +48,30 @@ dev = [
 # librosa never touches MIDI, so its version is not Elektron-critical.
 style = [
     "librosa>=0.11,<2",
+]
+# WS-G cockpit export pipeline (Phase 3 of the cockpit/profile-model
+# design): MessagePack-encoded ProfileModel blobs for the embedded
+# hardware runtime. msgpack is a small, pure-Python-compatible
+# serializer with implementations in C, Rust, and JavaScript — picked
+# precisely so the Phase 4 firmware can read the same wire format the
+# Python pipeline emits. It never touches MIDI, so its version is not
+# Elektron-critical. Pinned with a >= floor; the wire format is stable
+# across minor versions.
+#
+# WS-E cockpit WebSocket server (Phase 1 sidecar): FastAPI exposes one
+# WebSocket endpoint at /ws; uvicorn[standard] hosts it under
+# ``python -m rytm_randomizer.cockpit``; ``websockets`` is the underlying
+# ASGI WS transport FastAPI/Starlette consume. None of these reach the
+# MIDI boundary, so the versions are not Elektron-critical. Pinned with
+# a floor that matches the Phase 1 reference implementation (the
+# WebSocket / FastAPI / Starlette stack stabilized around these floors
+# and the protocol is intentionally JSON, so a future minor bump should
+# stay drop-in).
+cockpit = [
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
 ]
 # Native end-user installer toolchain. Kept separate from `dev` so the test
 # suite stays lean and contributors are not forced to install briefcase just

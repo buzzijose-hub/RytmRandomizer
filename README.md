@@ -6,6 +6,27 @@ Each machine is exposed as a registered `Device`; see `docs/ARCHITECTURE.md` sec
 
 ---
 
+## Cockpit (alpha)
+
+The **Cockpit** is the new GUI surface for live performance — a Tauri desktop window backed by a Python sidecar that hosts the mutation engine, the snapshot history, the profile registry, and the device adapter. The operator drives mutations with a depth slider, previews a ghost overlay over the current pad state, locks pads to protect them, and walks history back with UNDO. The first design lands as Phase 1 of a longer roadmap whose endpoint is laptop-free, hardware-first mutation. See [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md) for the full design.
+
+**Status:** alpha. The implementation is in active development on [`feat/cockpit-and-profile-model-bundle`](https://github.com/buzzijose-hub/RytmRandomizer/pulls); the V1.34 armed CLI path remains the stable runtime. The cockpit defaults to a mock device adapter (no MIDI port opened), matching the rest of the project's passive-default discipline.
+
+**Launching the cockpit (dev loop):**
+
+```bash
+# Terminal 1 — Python sidecar (WebSocket server on 127.0.0.1:4317)
+python -m rytm_randomizer.cockpit
+
+# Terminal 2 — Tauri shell + web frontend
+cd desktop/shell
+cargo run
+```
+
+The shell spawns the sidecar automatically in a release build (`cargo build --release`); the two-terminal split above is for development. See [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for prerequisites, install steps, and troubleshooting.
+
+---
+
 ## End-user setup
 
 This path is for someone who just wants to run RytmRandomizer against their Analog Rytm MK2, or inspect the safe dual-machine target surface that now includes Analog Four MK2.
