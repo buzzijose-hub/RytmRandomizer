@@ -50,6 +50,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
+from ...observability.errors import RytmRandomizerError
 from ..data import History, MutationCandidate, Snapshot
 from ..engine import mutate
 from ..export import pack_profile_model
@@ -432,7 +433,8 @@ async def handle_command(envelope: dict, session: CockpitSession, emitter: Event
       raised message. (The client should never send a malformed envelope;
       this is a last-line safety net.)
     * Unknown ``command.type`` → ``ok=False, error="unknown command: ..."``.
-    * Handler raises any exception → ``ok=False, error=str(exc)``.
+    * Handler raises a realistic command/runtime failure → ``ok=False,
+      error=str(exc)``.
 
     Args:
         envelope: The parsed JSON object the client sent over the WebSocket.
@@ -460,7 +462,7 @@ async def handle_command(envelope: dict, session: CockpitSession, emitter: Event
         }
     try:
         result = await handler(cmd, session)
-    except Exception as exc:  # noqa: BLE001  intentional last-line catch
+    except (KeyError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
         return {"request_id": request_id, "ok": False, "error": str(exc)}
     # Push events AFTER the ack — the ack itself is sent by the caller when
     # this coroutine returns the dict below. To honour "ack first then

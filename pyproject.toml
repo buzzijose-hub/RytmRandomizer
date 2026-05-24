@@ -32,10 +32,15 @@ dev = [
     "pytest-timeout>=2,<3",
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
-    # WS-G cockpit export tests exercise pack/unpack of the portable
-    # ProfileModel binary; mirrored from the [cockpit] extra below so the
-    # dev install picks it up without having to chain extras.
+    # WS-G/WS-E cockpit tests exercise ProfileModel export plus the
+    # FastAPI/Uvicorn WebSocket sidecar; mirrored from the [cockpit] extra
+    # below so CI's ``pip install -e .[dev]`` picks them up without having
+    # to chain extras.
     "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "httpx>=0.27.0,<1",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
 ]
 # WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
 # guardrails system). Only pulled in by users running real audio analyses;
