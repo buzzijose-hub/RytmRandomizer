@@ -29,7 +29,7 @@ Tauri's per-OS system dependencies.
 | Toolchain | Version | Install link |
 |---|---|---|
 | Python | 3.11 | [python.org/downloads](https://www.python.org/downloads/) |
-| Rust | 1.75 stable | [rustup.rs](https://rustup.rs/) |
+| Rust | 1.88 stable | [rustup.rs](https://rustup.rs/) |
 | Node.js | 20 LTS | [nodejs.org](https://nodejs.org/), or use `nvm` / `fnm` |
 
 ### Tauri system prerequisites by OS

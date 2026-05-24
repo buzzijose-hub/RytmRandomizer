@@ -29,7 +29,8 @@ desktop/shell/
 ├── Cargo.toml            # Rust dependencies (tauri 2, tauri-plugin-shell, env_logger, nix on unix)
 ├── build.rs              # Tauri build-time entry; calls tauri_build::build()
 ├── tauri.conf.json       # Window 1440x900, tray icon, frontendDist = ../web/dist
-├── icons/icon.png        # 256x256 placeholder (solid navy + accent square) — replace before release
+├── icons/icon.png        # 256x256 placeholder for tray/dev surfaces — replace before release
+├── icons/icon.ico        # Windows bundle/resource icon required by tauri-build
 ├── src/lib.rs            # Library root exposing the sidecar module for unit tests
 ├── src/sidecar.rs        # Sidecar spawn + shutdown + backoff math (with tests)
 └── src/main.rs           # Tauri entry: window + tray + supervisor thread
@@ -83,44 +84,41 @@ cargo build
 cargo build --release
 ```
 
-### Known build status in this worktree
+### CI verification
 
-> **Cargo not installed on the workstation that authored this WS.** The Rust
-> toolchain (`cargo`) is not on `PATH` in the autonomous orchestrator's
-> environment, so the four verification commands above could not be executed
-> from this WS. The source files are committed as the WS-H deliverable; the
-> integration phase or a follow-up environment with `rustup` installed must
-> run them. The expectations remain:
->
-> - `cargo fmt --check` — clean (the code follows rustfmt defaults).
-> - `cargo clippy --all-targets -- -D warnings` — clean (no `unwrap`/`expect`
->   on user-reachable paths, all `Result`s consumed).
-> - `cargo test` — passes; covers the `backoff_delay` table and the
->   `SHUTDOWN_GRACE_SECS` / `BACKOFF_RESET_SECS` constants in
->   `src/sidecar.rs`.
-> - `cargo build` — succeeds.
+GitHub Actions runs the shell in the `desktop-shell` job on Windows with
+Rust 1.88:
 
-Install Rust on Windows (matching the orchestrator's host) via:
+- `cargo fmt --check`
+- `cargo test`
+- `cargo clippy --all-targets -- -D warnings`
+
+Run the same commands locally before changing the shell. Install Rust on
+Windows via:
 
 ```powershell
 winget install --id Rustlang.Rustup
-rustup default stable
+rustup toolchain install 1.88.0
+rustup default 1.88.0
 ```
 
-…then re-run the four verification commands from `desktop/shell/`.
+Then re-run the verification commands from `desktop/shell/`.
 
 ## Tray
 
-The tray icon uses `icons/icon.png` (256x256 PNG). The only menu item is
-`Quit`, which calls the same shutdown path as the window-close handler:
+The tray icon uses `icons/icon.png` (256x256 PNG). Windows bundle/resource
+generation also requires `icons/icon.ico`; both assets are declared in
+`tauri.conf.json` and guarded by the architecture tests. The only menu item
+is `Quit`, which calls the same shutdown path as the window-close handler:
 flips the supervisor's shutdown flag, sends `SIGTERM` to the sidecar, waits
 5 s, then `SIGKILL`s and exits Tauri with code 0.
 
 ## Replacing the placeholder icon
 
-Generate or drop in a real 256x256 PNG at `icons/icon.png` before any
-release build. The current placeholder is a solid navy background with a
-cyan accent square — adequate for local dev, not adequate for distribution.
+Generate or drop in a real 256x256 PNG at `icons/icon.png` and a matching
+Windows ICO at `icons/icon.ico` before any release build. The current
+placeholder is a solid navy background with a cyan accent square — adequate
+for local dev, not adequate for distribution.
 
 ## Cross-references
 

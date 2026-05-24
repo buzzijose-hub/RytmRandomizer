@@ -33,7 +33,7 @@ Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the P
 
 1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
-3. **Architecture tests** — all 16 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
+3. **Architecture tests** — all 17 test files under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
 5. **No hardware in tests** — no test opens a real MIDI port; no test mutates a connected device.
 6. **Lazy MIDI imports** — `mido` and `python-rtmidi` are imported lazily inside `real_midi_adapter.py`. Never at module top-level. Enforced by `tests/architecture/test_no_side_effects.py`.
@@ -112,7 +112,7 @@ The Phase 1 cockpit (see [`docs/superpowers/specs/2026-05-23-cockpit-and-profile
 | Toolchain | Minimum version | Why |
 |---|---|---|
 | Python | 3.11 | Same as the rest of the project; the `cockpit` subpackage is plain Python. |
-| Rust | 1.75 (stable) | Builds the Tauri 2 shell under `desktop/shell/`. Install via [`rustup`](https://rustup.rs/). |
+| Rust | 1.88 (stable) | Builds the Tauri 2 shell under `desktop/shell/`. Install via [`rustup`](https://rustup.rs/). |
 | Node.js | 20 LTS | Builds the Vite + React + TypeScript frontend under `desktop/web/`. Use `nvm`, `fnm`, or your platform's installer. |
 
 Tauri has additional per-OS system dependencies (WebView2 on Windows, `webkit2gtk` on Linux, the Xcode Command Line Tools on macOS). See [the Tauri prerequisites page](https://tauri.app/start/prerequisites/) and the per-OS install steps in [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md).
@@ -148,7 +148,7 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **Run the conformance fixtures when touching the engine.** Changes to `cockpit/engine/mutate.py` or `cockpit/engine/prng.py` must keep `tests/cockpit/fixtures/engine_conformance/*.json` byte-identical. Those fixtures lock the algorithm so the future C-portable implementation produces matching output.
 - **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
 - **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
-- **CI runs the cockpit gates separately.** Python coverage on `rytm_randomizer/cockpit/**`, web Vitest, Rust `cargo test` + `cargo clippy` each run as their own CI step alongside the existing pytest matrix.
+- **CI runs the cockpit gates separately.** Python coverage on `rytm_randomizer/cockpit/**`, web lint/typecheck/Vitest/build, and Rust `cargo fmt --check` + `cargo test` + `cargo clippy` each run as first-class CI jobs alongside the existing pytest matrix.
 
 ## Cross-platform operation
 

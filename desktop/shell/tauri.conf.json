@@ -36,7 +36,8 @@
     "active": true,
     "targets": "all",
     "icon": [
-      "icons/icon.png"
+      "icons/icon.png",
+      "icons/icon.ico"
     ],
     "category": "Music",
     "shortDescription": "Tauri shell for the RytmRandomizer cockpit"

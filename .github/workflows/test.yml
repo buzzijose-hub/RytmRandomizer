@@ -49,7 +49,7 @@ on:
 #       desktop/web with npm ci, eslint, typecheck, Vitest, and build.
 #
 #   desktop-shell — validates the Tauri shell under desktop/shell with
-#       rustfmt, cargo test, and clippy on Windows.
+#       a local web build, rustfmt, cargo test, and clippy on Windows.
 #
 #   docs-gate — pull-request-only gate that fails when production code or
 #       pyproject.toml changes without an accompanying docs/, README.md,
@@ -551,7 +551,8 @@ jobs:
   desktop-shell:
     # Validates the Rust/Tauri shell on Windows, matching the primary
     # operator platform and avoiding Linux WebKit package churn. The job
-    # does not launch the GUI or touch MIDI; it compiles/tests shell code.
+    # does not launch the GUI or touch MIDI; it builds the static web
+    # bundle that tauri.conf.json points at, then compiles/tests shell code.
     name: desktop-shell
     needs: detect-changes
     if: |
@@ -574,6 +575,21 @@ jobs:
           rustup toolchain install 1.88.0 --profile minimal
           rustup component add rustfmt clippy --toolchain 1.88.0
           rustup default 1.88.0
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: desktop/web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: desktop/web
+        run: npm ci
+
+      - name: Build web frontend for Tauri config
+        working-directory: desktop/web
+        run: npm run build
 
       - name: rustfmt
         run: cargo fmt --check
