@@ -14,7 +14,10 @@ import { useCockpitStore } from '../../src/state';
 
 import { FakeCockpitClient, availableProfiles } from './_fixtures';
 
-function renderWith(previewOn = false): {
+function renderWith(
+  previewOn = false,
+  onLaunchWizard?: () => void,
+): {
   fake: FakeCockpitClient;
   togglePreview: ReturnType<typeof vi.fn>;
 } {
@@ -26,6 +29,7 @@ function renderWith(previewOn = false): {
         availableProfiles={availableProfiles}
         previewOn={previewOn}
         onTogglePreview={togglePreview}
+        {...(onLaunchWizard === undefined ? {} : { onLaunchWizard })}
       />
     </CockpitClientProvider>,
   );
@@ -72,5 +76,20 @@ describe('MutationPanel', () => {
     const { togglePreview } = renderWith(false);
     fireEvent.click(screen.getByTestId('action-preview'));
     expect(togglePreview).toHaveBeenCalledWith(true);
+  });
+
+  it('renders the wizard launcher and invokes the injected onLaunchWizard handler', () => {
+    const onLaunchWizard = vi.fn();
+    renderWith(false, onLaunchWizard);
+    fireEvent.click(screen.getByTestId('mutation-panel-launch-wizard'));
+    expect(onLaunchWizard).toHaveBeenCalledTimes(1);
+  });
+
+  it('wizard launcher falls back to setting window.location.hash when no handler is provided', () => {
+    renderWith();
+    const originalHash = window.location.hash;
+    fireEvent.click(screen.getByTestId('mutation-panel-launch-wizard'));
+    expect(window.location.hash).toBe('#/wizard');
+    window.location.hash = originalHash;
   });
 });
