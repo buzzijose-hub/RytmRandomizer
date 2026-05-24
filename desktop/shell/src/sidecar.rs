@@ -51,8 +51,7 @@ pub fn shutdown_child(child: &mut Child) {
         let pid = Pid::from_raw(child.id() as i32);
         let _ = kill(pid, Signal::SIGTERM);
     }
-    let deadline =
-        std::time::Instant::now() + Duration::from_secs(SHUTDOWN_GRACE_SECS);
+    let deadline = std::time::Instant::now() + Duration::from_secs(SHUTDOWN_GRACE_SECS);
     while std::time::Instant::now() < deadline {
         if let Ok(Some(_)) = child.try_wait() {
             return;
