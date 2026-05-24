@@ -27,12 +27,36 @@ from .model_format import (
     Header,
 )
 from .serialize import pack_profile_model, unpack_profile_model
+from .signing import (
+    SIGNATURE_ALGO_HMAC_SHA256,
+    SIGNATURE_FORMAT_VERSION,
+    SIGNATURE_HEADER_MAGIC,
+    SignedBlob,
+    pack_signed,
+    sign_profile_blob,
+    unpack_signed,
+)
+from .verifier import (
+    VerificationResult,
+    verify_signed_blob,
+    verify_unsigned_payload,
+)
 
 __all__ = [
     "FORMAT_VERSION",
     "Header",
     "MAGIC",
+    "SIGNATURE_ALGO_HMAC_SHA256",
+    "SIGNATURE_FORMAT_VERSION",
+    "SIGNATURE_HEADER_MAGIC",
     "SUPPORTED_FORMAT_VERSIONS",
+    "SignedBlob",
+    "VerificationResult",
     "pack_profile_model",
+    "pack_signed",
+    "sign_profile_blob",
     "unpack_profile_model",
+    "unpack_signed",
+    "verify_signed_blob",
+    "verify_unsigned_payload",
 ]
