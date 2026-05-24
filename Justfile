@@ -214,6 +214,17 @@ rerun-failed:
         gh run rerun $$RUN --failed
 
 # ─────────────────────────────────────────────────────────────────────────
+# DESKTOP COCKPIT
+# ─────────────────────────────────────────────────────────────────────────
+
+# Build the Tauri desktop bundle for the current OS. Mirrors the
+# desktop-bundle matrix job in .github/workflows/installers.yml so a
+# release engineer can reproduce the per-OS bundle locally before tagging.
+desktop-bundle:
+    cd desktop/web && npm ci && npm run build
+    cd desktop/shell && cargo tauri build
+
+# ─────────────────────────────────────────────────────────────────────────
 # DOCS
 # ─────────────────────────────────────────────────────────────────────────
 
