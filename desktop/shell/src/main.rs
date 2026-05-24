@@ -59,7 +59,7 @@ fn supervise(shutdown: Arc<AtomicBool>, child_slot: Arc<Mutex<Option<std::proces
             return;
         }
         let delay = backoff_delay(failures);
-        log::warn!("sidecar exited; restarting in {:?}", delay);
+        log::warn!("sidecar exited; restarting in {delay:?}");
         thread::sleep(delay);
         failures = failures.saturating_add(1);
     }
