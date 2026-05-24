@@ -3,13 +3,19 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { ActionBar } from '../../src/cockpit/ActionBar';
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { useCockpitStore } from '../../src/state';
 
-import { FakeCockpitClient, candidate, highRiskCandidate, history } from './_fixtures';
+import {
+  FakeCockpitClient,
+  blockedSendPlan,
+  candidate,
+  history,
+  sendPlan,
+} from './_fixtures';
 
 interface Harness {
   fake: FakeCockpitClient;
@@ -28,11 +34,15 @@ function renderWith(previewOn: boolean): Harness {
 }
 
 describe('ActionBar', () => {
+  const updateStore = (update: () => void): void => {
+    act(update);
+  };
+
   beforeEach(() => {
-    useCockpitStore.getState().reset();
+    updateStore(() => useCockpitStore.getState().reset());
   });
   afterEach(() => {
-    useCockpitStore.getState().reset();
+    updateStore(() => useCockpitStore.getState().reset());
   });
 
   it('preview button shows "(off)" label and aria-pressed=false when previewOn=false', () => {
@@ -71,7 +81,24 @@ describe('ActionBar', () => {
     expect(fake.sent).toEqual([{ type: 'regen' }]);
   });
 
-  it('SEND is disabled when there is no candidate', () => {
+  it('PREPARE is disabled when there is no candidate', () => {
+    const { fake } = renderWith(false);
+    const prepare = screen.getByTestId('action-prepare-send-plan');
+    expect(prepare).toBeDisabled();
+    fireEvent.click(prepare);
+    expect(fake.sent).toEqual([]);
+  });
+
+  it('PREPARE emits prepare_send_plan when a candidate is staged', () => {
+    updateStore(() => useCockpitStore.getState().setPreviewCandidate(candidate));
+    const { fake } = renderWith(true);
+    const prepare = screen.getByTestId('action-prepare-send-plan');
+    expect(prepare).not.toBeDisabled();
+    fireEvent.click(prepare);
+    expect(fake.sent).toEqual([{ type: 'prepare_send_plan' }]);
+  });
+
+  it('SEND is disabled when there is no ready send plan', () => {
     const { fake } = renderWith(false);
     const send = screen.getByTestId('action-send');
     expect(send).toBeDisabled();
@@ -79,8 +106,11 @@ describe('ActionBar', () => {
     expect(fake.sent).toEqual([]);
   });
 
-  it('SEND is disabled and unclickable when candidate is high_risk', () => {
-    useCockpitStore.getState().setPreviewCandidate(highRiskCandidate);
+  it('SEND is disabled and unclickable when send plan is blocked', () => {
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan(blockedSendPlan);
+    });
     const { fake } = renderWith(true);
     const send = screen.getByTestId('action-send');
     expect(send).toBeDisabled();
@@ -89,7 +119,10 @@ describe('ActionBar', () => {
   });
 
   it('SEND enabled with safe candidate, shows pad count, and emits send', () => {
-    useCockpitStore.getState().setPreviewCandidate(candidate);
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan(sendPlan);
+    });
     const { fake } = renderWith(true);
     const send = screen.getByTestId('action-send');
     expect(send).not.toBeDisabled();
@@ -99,15 +132,19 @@ describe('ActionBar', () => {
   });
 
   it('SEND shows singular "1 pad" when exactly one delta is present', () => {
-    useCockpitStore
-      .getState()
-      .setPreviewCandidate({ ...candidate, pad_deltas: [candidate.pad_deltas[0]!] });
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 1 });
+    });
     renderWith(true);
     expect(screen.getByTestId('action-send')).toHaveTextContent('SEND ▶ (1 pad)');
   });
 
   it('SEND omits the pad-count chip when candidate has zero deltas', () => {
-    useCockpitStore.getState().setPreviewCandidate({ ...candidate, pad_deltas: [] });
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 0, packets: [] });
+    });
     renderWith(true);
     expect(screen.getByTestId('action-send')).toHaveTextContent('SEND ▶');
     expect(screen.getByTestId('action-send').textContent).not.toMatch(/\(\d/);
@@ -120,7 +157,7 @@ describe('ActionBar', () => {
   });
 
   it('UNDO is enabled and emits undo when canUndo=true', () => {
-    useCockpitStore.getState().setHistory(history);
+    updateStore(() => useCockpitStore.getState().setHistory(history));
     const { fake } = renderWith(false);
     const undo = screen.getByTestId('action-undo');
     expect(undo).not.toBeDisabled();

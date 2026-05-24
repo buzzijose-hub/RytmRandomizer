@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import logging
 
-from ..data import MutationCandidate, PadState, Snapshot, new_ulid
+from ..data import CockpitSendPlan, MutationCandidate, PadState, Snapshot, new_ulid
 
 _logger = logging.getLogger(__name__)
 
@@ -86,6 +86,47 @@ class MockDeviceAdapter:
             else:
                 # Either the candidate doesn't touch this pad, or it's locked.
                 new_pads.append(current_pad)
+
+        new_snapshot = Snapshot(
+            snapshot_id=new_ulid(),
+            device=self._state.device,
+            captured_at=self._state.captured_at,
+            pads=tuple(new_pads),
+            scene_slot=self._state.scene_slot,
+            bpm=self._state.bpm,
+        )
+        self._state = new_snapshot
+        return new_snapshot
+
+    def apply_send_plan(self, send_plan: CockpitSendPlan) -> Snapshot:
+        """Apply a prepared SEND plan to the in-memory state.
+
+        Only packets present in ``send_plan`` are applied, so locked pads
+        excluded by preflight remain unchanged.
+        """
+
+        if not send_plan.ready:
+            raise ValueError("send_plan_not_ready")
+
+        updates_by_pad: dict[int, dict[str, int]] = {}
+        for packet in send_plan.packets:
+            updates_by_pad.setdefault(packet.pad_id, {})[packet.parameter] = packet.value
+
+        new_pads: list[PadState] = []
+        for current_pad in self._state.pads:
+            updates = updates_by_pad.get(current_pad.pad_id)
+            if updates is None:
+                new_pads.append(current_pad)
+                continue
+            params = dict(current_pad.params)
+            params.update(updates)
+            new_pads.append(
+                PadState(
+                    pad_id=current_pad.pad_id,
+                    machine=current_pad.machine,
+                    params=params,
+                )
+            )
 
         new_snapshot = Snapshot(
             snapshot_id=new_ulid(),

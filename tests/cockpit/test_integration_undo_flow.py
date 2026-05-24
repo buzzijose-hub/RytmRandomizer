@@ -12,7 +12,7 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import drain_events, send_cmd
+from cockpit.conftest import drain_events, prepare_send_plan, send_cmd
 
 from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
@@ -28,8 +28,9 @@ def _send_once(ws: object) -> str:
     send_cmd(ws, "select_profile", profile_id="scene-industrial")
     drain_events(ws, 1)
     send_cmd(ws, "set_depth", depth=0.55)
+    prepare_send_plan(ws)
     ack = send_cmd(ws, "send")
-    drain_events(ws, 4)
+    drain_events(ws, 5)
     return ack["new_snapshot_id"]
 
 
@@ -82,12 +83,14 @@ def test_undo_twice_after_two_sends_walks_back_two_steps(cockpit_ws: object) -> 
     send_cmd(cockpit_ws, "select_profile", profile_id="scene-garage")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.5)
+    prepare_send_plan(cockpit_ws, request_id="req-prepare-1")
     send_cmd(cockpit_ws, "send", request_id="req-send-1")
-    drain_events(cockpit_ws, 4)
+    drain_events(cockpit_ws, 5)
     # SEND #2
-    send_cmd(cockpit_ws, "set_depth", request_id="req-depth-2", depth=0.7)
+    send_cmd(cockpit_ws, "set_depth", request_id="req-depth-2", depth=0.6)
+    prepare_send_plan(cockpit_ws, request_id="req-prepare-2")
     send_cmd(cockpit_ws, "send", request_id="req-send-2")
-    drain_events(cockpit_ws, 4)
+    drain_events(cockpit_ws, 5)
 
     # UNDO #1: should land on the SEND #1 snapshot (not root yet).
     ack1 = send_cmd(cockpit_ws, "undo", request_id="req-undo-1")

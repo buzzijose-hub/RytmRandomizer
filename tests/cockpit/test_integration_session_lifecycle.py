@@ -23,7 +23,12 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import collect_initial_events, drain_events, send_cmd
+from cockpit.conftest import (
+    collect_initial_events,
+    drain_events,
+    prepare_send_plan,
+    send_cmd,
+)
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
@@ -55,9 +60,10 @@ def test_pad_locks_persist_across_reconnect(cockpit_client: TestClient) -> None:
         collect_initial_events(ws, count=4)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
-        send_cmd(ws, "set_depth", depth=0.65)
+        send_cmd(ws, "set_depth", depth=0.64)
+        prepare_send_plan(ws)
         send_cmd(ws, "send")
-        events = drain_events(ws, 4)
+        events = drain_events(ws, 5)
 
     snapshot = next(e for e in events if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
     pad3 = next(p for p in snapshot["pads"] if p["pad_id"] == 3)
@@ -74,8 +80,9 @@ def test_unsaved_sends_persists_across_reconnect(cockpit_client: TestClient) -> 
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", depth=0.55)
+        prepare_send_plan(ws)
         send_cmd(ws, "send")
-        drain_events(ws, 4)
+        drain_events(ws, 5)
 
     # Connection #2: the bootstrap ``session_status`` carries the preserved count.
     with cockpit_client.websocket_connect("/ws") as ws:
@@ -94,11 +101,13 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", request_id="req-d-1", depth=0.45)
+        prepare_send_plan(ws, request_id="req-prepare-1")
         send_cmd(ws, "send", request_id="req-s-1")
-        drain_events(ws, 4)
+        drain_events(ws, 5)
         send_cmd(ws, "set_depth", request_id="req-d-2", depth=0.6)
+        prepare_send_plan(ws, request_id="req-prepare-2")
         send_cmd(ws, "send", request_id="req-s-2")
-        drain_events(ws, 4)
+        drain_events(ws, 5)
 
     # Connection #2: the bootstrap history event reflects all 3 entries.
     with cockpit_client.websocket_connect("/ws") as ws:

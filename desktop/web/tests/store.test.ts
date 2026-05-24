@@ -11,10 +11,12 @@ import {
   createCockpitStore,
   INITIAL_STATE,
   selectCanUndo,
+  selectCanSend,
   selectHasHistory,
   selectIsArmed,
   selectIsConnected,
   selectPadCount,
+  selectSendPlanReady,
   selectUnsavedSends,
   useCockpitStore,
   type CockpitStore,
@@ -30,11 +32,13 @@ import type {
   EventType,
   History,
   HistoryUpdatedEvent,
+  CockpitSendPlan,
   MutationCandidate,
   MutationPreviewedEvent,
   ProfileChangedEvent,
   ProfileModel,
   SessionStatusEvent,
+  SendPlanChangedEvent,
   Snapshot,
   SnapshotChangedEvent,
 } from '../src/ws/protocol';
@@ -64,6 +68,24 @@ const candidate: MutationCandidate = {
   pad_deltas: [],
   safety_status: 'safe',
   estimated_midi_msgs: 12,
+};
+
+const sendPlan: CockpitSendPlan = {
+  plan_id: 'sendplan-1',
+  candidate_id: 'cand-1',
+  source_snapshot_id: 'snap-1',
+  profile_id: 'prof-1',
+  ready: true,
+  readiness_reason: 'ready',
+  safety_status: 'safe',
+  estimated_midi_msgs: 2,
+  pad_count: 2,
+  locked_pad_ids: [],
+  blocked_reasons: [],
+  packets: [
+    { pad_id: 1, parameter: 'tun', channel: 0, control: 52, value: 45 },
+    { pad_id: 2, parameter: 'dec', channel: 0, control: 44, value: 72 },
+  ],
 };
 
 const history: History = {
@@ -102,12 +124,14 @@ describe('cockpit store — actions write each slice', () => {
     expect(state.previewCandidate).toBeNull();
     expect(state.history).toBeNull();
     expect(state.profile).toBeNull();
+    expect(state.sendPlan).toBeNull();
     expect(state.sessionStatus).toBeNull();
     expect(INITIAL_STATE).toEqual({
       snapshot: null,
       previewCandidate: null,
       history: null,
       profile: null,
+      sendPlan: null,
       sessionStatus: null,
     });
   });
@@ -140,6 +164,14 @@ describe('cockpit store — actions write each slice', () => {
     expect(store.getState().profile).toBeNull();
   });
 
+  it('setSendPlan accepts a plan and null (stale plan cleared)', () => {
+    const store = createCockpitStore();
+    store.getState().setSendPlan(sendPlan);
+    expect(store.getState().sendPlan).toBe(sendPlan);
+    store.getState().setSendPlan(null);
+    expect(store.getState().sendPlan).toBeNull();
+  });
+
   it('setSessionStatus writes the session status slice', () => {
     const store = createCockpitStore();
     store.getState().setSessionStatus(session);
@@ -152,6 +184,7 @@ describe('cockpit store — actions write each slice', () => {
     store.getState().setPreviewCandidate(candidate);
     store.getState().setHistory(history);
     store.getState().setProfile(profile);
+    store.getState().setSendPlan(sendPlan);
     store.getState().setSessionStatus(session);
     store.getState().reset();
     const s = store.getState();
@@ -159,6 +192,7 @@ describe('cockpit store — actions write each slice', () => {
     expect(s.previewCandidate).toBeNull();
     expect(s.history).toBeNull();
     expect(s.profile).toBeNull();
+    expect(s.sendPlan).toBeNull();
     expect(s.sessionStatus).toBeNull();
   });
 
@@ -193,6 +227,19 @@ describe('cockpit store — selectors', () => {
   it('selectPadCount handles null snapshot and counts pads', () => {
     expect(selectPadCount({ ...INITIAL_STATE })).toBe(0);
     expect(selectPadCount({ ...INITIAL_STATE, snapshot })).toBe(2);
+  });
+
+  it('selectSendPlanReady and selectCanSend require a ready send plan', () => {
+    expect(selectSendPlanReady({ ...INITIAL_STATE })).toBe(false);
+    expect(selectCanSend({ ...INITIAL_STATE })).toBe(false);
+    expect(selectSendPlanReady({ ...INITIAL_STATE, sendPlan })).toBe(true);
+    expect(selectCanSend({ ...INITIAL_STATE, sendPlan })).toBe(true);
+    expect(
+      selectCanSend({
+        ...INITIAL_STATE,
+        sendPlan: { ...sendPlan, ready: false, readiness_reason: 'candidate_high_risk' },
+      }),
+    ).toBe(false);
   });
 
   it('selectHasHistory handles null history and empty entries', () => {
@@ -260,7 +307,7 @@ class FakeClient {
 }
 
 describe('bindClientToStore', () => {
-  it('routes all five engine events into the corresponding store slices', () => {
+  it('routes all six engine events into the corresponding store slices', () => {
     const store = createCockpitStore();
     const client = new FakeClient();
     const unbind = bindClientToStore(client as unknown as CockpitClient, store);
@@ -285,6 +332,14 @@ describe('bindClientToStore', () => {
     const previewOff: MutationPreviewedEvent = { type: 'mutation_previewed', candidate: null };
     fire('mutation_previewed', previewOff);
     expect(store.getState().previewCandidate).toBeNull();
+
+    const planEvent: SendPlanChangedEvent = { type: 'send_plan_changed', send_plan: sendPlan };
+    fire('send_plan_changed', planEvent);
+    expect(store.getState().sendPlan).toBe(sendPlan);
+
+    const planOff: SendPlanChangedEvent = { type: 'send_plan_changed', send_plan: null };
+    fire('send_plan_changed', planOff);
+    expect(store.getState().sendPlan).toBeNull();
 
     const historyEvent: HistoryUpdatedEvent = { type: 'history_updated', history };
     fire('history_updated', historyEvent);
@@ -315,7 +370,7 @@ describe('bindClientToStore', () => {
 
     // Unsubscribe should call client's individual unsubs (5 events → 5 calls).
     unbind();
-    expect(client.unsubCalls).toBe(5);
+    expect(client.unsubCalls).toBe(6);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

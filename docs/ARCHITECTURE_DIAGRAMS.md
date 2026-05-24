@@ -1943,11 +1943,10 @@ flowchart TB
 
 ## 29. Cockpit SEND Command Sequence (Phase 1)
 
-The SEND command lifecycle. This is the canonical interaction the spec's
-§"Interaction flow examples" describes: operator hits SEND, the active
-`MutationCandidate` lands on the device, history grows by one, the preview
-clears. Every other command (REGEN, UNDO, LOAD, SAVE, depth-slide) follows
-a structurally identical event-emission pattern.
+The PREPARE -> SEND command lifecycle. The operator first preflights the
+active `MutationCandidate` into an inert `CockpitSendPlan`; only a ready
+plan can be sent. SEND then consumes that plan, history grows by one, the
+preview and plan clear, and the UI re-renders from whole-state events.
 
 ```mermaid
 sequenceDiagram
@@ -1955,27 +1954,34 @@ sequenceDiagram
     participant Operator
     participant UI as Web frontend<br/>(React + WS client)
     participant WS as WebSocket server<br/>(cockpit/ws/server.py)
-    participant Handler as send handler<br/>(cockpit/ws/handlers.py)
-    participant Engine as Mutation engine<br/>(cockpit/engine/mutate.py)
+    participant Handler as command handlers<br/>(cockpit/ws/handlers.py)
+    participant Engine as Mutation + send-plan engine<br/>(cockpit/engine/)
     participant Device as DeviceAdapter<br/>(mock or real)
     participant History as HistoryStore<br/>(cockpit/history/store.py)
+
+    Operator->>UI: clicks PREPARE
+    UI->>WS: prepare_send_plan { } (typed command)
+    WS->>Handler: dispatch("prepare_send_plan", payload)
+
+    Note over Handler: the active candidate was<br/>computed earlier by set_depth /<br/>regen and cached in engine state
+    Handler->>Engine: prepare_send_plan(snapshot, profile, candidate, pad_locks)
+    Engine-->>Handler: CockpitSendPlan (ready, packets, blockers)
+    Handler-->>WS: { ok: true, send_plan }
+    WS-->>UI: command ack (synchronous)
+    WS-->>UI: event send_plan_changed { send_plan }
+    UI->>UI: SEND enabled only if send_plan.ready
 
     Operator->>UI: clicks SEND
     UI->>WS: send { } (typed command)
     WS->>Handler: dispatch("send", payload)
-
-    Note over Handler: the active candidate was<br/>computed earlier by set_depth /<br/>regen and cached in engine state
-    Handler->>Engine: read active MutationCandidate
-    Engine-->>Handler: candidate (pad_deltas, safety_status)
-
-    Handler->>Device: apply(candidate, pad_locks)
-    Note over Device: locked pads keep their<br/>pre-mutation params — the<br/>device receives only the<br/>unlocked pad deltas
+    Handler->>Device: apply_send_plan(send_plan)
+    Note over Device: the adapter consumes<br/>prepared packet rows; locked pads<br/>were already excluded by preflight
     Device-->>Handler: new Snapshot (post-send device state)
 
     Handler->>History: append(new_snapshot, kind="auto", via="send")
     History-->>Handler: updated History
 
-    Handler-->>WS: { ok: true, new_snapshot_id }
+    Handler-->>WS: { ok: true, new_snapshot_id, send_plan_id }
     WS-->>UI: command ack (synchronous)
 
     par engine emits whole-state events
@@ -1984,6 +1990,8 @@ sequenceDiagram
         WS-->>UI: event history_updated { history }
     and
         WS-->>UI: event mutation_previewed { candidate: null }
+    and
+        WS-->>UI: event send_plan_changed { send_plan: null }
     end
 
     UI->>UI: re-render pads from new snapshot<br/>+ add grey dot to history strip<br/>+ clear ghost overlay
@@ -1999,14 +2007,15 @@ sequenceDiagram
 - **Whole-state events, not deltas.** `snapshot_changed.snapshot` is the
   complete new snapshot; `history_updated.history` is the complete updated
   chain. No ordering subtleties, no missed-delta failure modes.
-- **Preview clears on SEND.** The `mutation_previewed { candidate: null }`
-  event in the par-block tells every UI to drop the ghost overlay. The
-  next `set_depth` or `regen` produces a new candidate and re-emits the
-  event with a non-null candidate.
-- **Locked pads are honored at apply time.** `DeviceAdapter.apply` is
-  responsible for skipping locked pads (the engine has already produced
-  full `pad_deltas`; the adapter filters). This keeps the engine pure
-  and concentrates the policy in one place.
+- **SEND is gated by a ready plan.** The sidecar refuses `send` unless
+  `current_send_plan.ready` is true. Candidate, depth, profile, preview,
+  regen, and lock changes clear stale plans with `send_plan_changed`.
+- **Preview and plan clear on SEND.** The `mutation_previewed { candidate: null }`
+  and `send_plan_changed { send_plan: null }` events tell every UI to drop
+  the ghost overlay and disable SEND until PREPARE runs again.
+- **Locked pads are honored at preflight time.** `prepare_send_plan` excludes
+  locked pads before the adapter sees packet rows. The adapter consumes the
+  plan without recomputing CC/channel/value data at the hardware boundary.
 - **History entry kind = "auto".** Post-SEND entries are `kind="auto"`
   with `via="send"`. Only explicit SAVE promotes a snapshot to
   `kind="saved"` with an optional label; only SAVE writes the snapshot
