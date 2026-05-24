@@ -10,9 +10,17 @@
  *   3 sources · 1,243 analyzed signals
  *
  *               [← Back]                       [Save profile]
+ *
+ * Perf: pad_mappings are grouped by trait into a `useMemo`-d `Map` so the per-trait
+ * render is an O(1) lookup instead of a fresh `.filter(...)` per trait. Saves an
+ * O(T·M) pass on every re-render — the candidate profile is mostly stable but any
+ * parent state change still triggers this component, and the Map keeps it cheap.
  */
 
+import { useMemo } from 'react';
+
 import type { CandidateProfileModel } from '../types/wizard_protocol';
+import type { TraitPadWeight } from '../ws/protocol';
 
 export interface ReviewStepProps {
   candidate: CandidateProfileModel | null;
@@ -21,6 +29,22 @@ export interface ReviewStepProps {
 }
 
 export function ReviewStep({ candidate, onBack, onSave }: ReviewStepProps): JSX.Element {
+  // Group pad_mappings by trait name once per candidate reference. The candidate is
+  // an immutable wire value, so the Map only rebuilds when a new candidate arrives.
+  const mappingsByTrait = useMemo<Map<string, TraitPadWeight[]>>(() => {
+    const map = new Map<string, TraitPadWeight[]>();
+    if (candidate === null) return map;
+    for (const mapping of candidate.pad_mappings) {
+      let bucket = map.get(mapping.trait);
+      if (bucket === undefined) {
+        bucket = [];
+        map.set(mapping.trait, bucket);
+      }
+      bucket.push(mapping);
+    }
+    return map;
+  }, [candidate]);
+
   if (candidate === null) {
     return (
       <section className="wizard-panel" data-testid="wizard-review-step">
@@ -53,7 +77,7 @@ export function ReviewStep({ candidate, onBack, onSave }: ReviewStepProps): JSX.
 
       <ul className="wizard-trait-list" data-testid="wizard-trait-list">
         {candidate.traits.map((trait) => {
-          const mappings = candidate.pad_mappings.filter((m) => m.trait === trait.name);
+          const mappings = mappingsByTrait.get(trait.name) ?? [];
           return (
             <li
               key={trait.name}

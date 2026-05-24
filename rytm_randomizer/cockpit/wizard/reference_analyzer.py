@@ -28,7 +28,8 @@ The four canonical wizard traits are ``metallic_tension``,
 ``rolling_low_end``, ``hat_density``, ``filter_motion`` -- the same set
 the :mod:`sysex_analyzer` produces and that the
 :class:`~rytm_randomizer.cockpit.wizard.builder.ProfileBuilder` (WS-C)
-expects.
+expects. The canonical name tuple lives in :mod:`.traits` so analyzers
+import it from a neutral location instead of reaching through each other.
 """
 
 from __future__ import annotations
@@ -38,35 +39,7 @@ from types import MappingProxyType
 from typing import Final
 
 from ..data.profile_model import StyleTrait
-
-# ---------------------------------------------------------------------------
-# Canonical wizard trait names
-# ---------------------------------------------------------------------------
-
-#: Names of the four canonical wizard traits, in deterministic display order.
-WIZARD_TRAIT_NAMES: Final[tuple[str, ...]] = (
-    "rolling_low_end",
-    "metallic_tension",
-    "hat_density",
-    "filter_motion",
-)
-
-
-def _profile(
-    rolling_low_end: float,
-    metallic_tension: float,
-    hat_density: float,
-    filter_motion: float,
-) -> tuple[StyleTrait, ...]:
-    """Build the canonical 4-trait tuple in deterministic order."""
-
-    return (
-        StyleTrait("rolling_low_end", rolling_low_end),
-        StyleTrait("metallic_tension", metallic_tension),
-        StyleTrait("hat_density", hat_density),
-        StyleTrait("filter_motion", filter_motion),
-    )
-
+from .trait_math import build_canonical_traits, neutral_traits
 
 # ---------------------------------------------------------------------------
 # Built-in lookup table (Phase 2 curated set)
@@ -81,31 +54,31 @@ def _profile(
 _REFERENCE_LOOKUP: Final[Mapping[str, tuple[StyleTrait, ...]]] = MappingProxyType(
     {
         # Industrial / Birmingham techno
-        "surgeon": _profile(0.85, 0.78, 0.55, 0.65),
-        "regis": _profile(0.80, 0.82, 0.50, 0.60),
-        "birmingham": _profile(0.75, 0.85, 0.45, 0.55),
-        "british murder boys": _profile(0.82, 0.86, 0.50, 0.60),
-        "industrial": _profile(0.70, 0.90, 0.55, 0.50),
-        "schranz": _profile(0.78, 0.88, 0.70, 0.45),
+        "surgeon": build_canonical_traits(0.85, 0.78, 0.55, 0.65),
+        "regis": build_canonical_traits(0.80, 0.82, 0.50, 0.60),
+        "birmingham": build_canonical_traits(0.75, 0.85, 0.45, 0.55),
+        "british murder boys": build_canonical_traits(0.82, 0.86, 0.50, 0.60),
+        "industrial": build_canonical_traits(0.70, 0.90, 0.55, 0.50),
+        "schranz": build_canonical_traits(0.78, 0.88, 0.70, 0.45),
         # Hypnotic / dub techno
-        "daniel avery": _profile(0.65, 0.45, 0.55, 0.75),
-        "drone logic": _profile(0.60, 0.50, 0.50, 0.80),
-        "hypnotic": _profile(0.70, 0.40, 0.45, 0.85),
-        "basic channel": _profile(0.72, 0.30, 0.35, 0.90),
+        "daniel avery": build_canonical_traits(0.65, 0.45, 0.55, 0.75),
+        "drone logic": build_canonical_traits(0.60, 0.50, 0.50, 0.80),
+        "hypnotic": build_canonical_traits(0.70, 0.40, 0.45, 0.85),
+        "basic channel": build_canonical_traits(0.72, 0.30, 0.35, 0.90),
         # Garage / breakbeat textures
-        "garage": _profile(0.55, 0.45, 0.75, 0.50),
-        "burial": _profile(0.60, 0.40, 0.70, 0.65),
-        "two-step": _profile(0.50, 0.40, 0.80, 0.55),
+        "garage": build_canonical_traits(0.55, 0.45, 0.75, 0.50),
+        "burial": build_canonical_traits(0.60, 0.40, 0.70, 0.65),
+        "two-step": build_canonical_traits(0.50, 0.40, 0.80, 0.55),
         # Peak-time / club
-        "peak-time": _profile(0.80, 0.60, 0.65, 0.55),
-        "berghain": _profile(0.85, 0.65, 0.60, 0.55),
-        "rolling": _profile(0.90, 0.50, 0.55, 0.60),
+        "peak-time": build_canonical_traits(0.80, 0.60, 0.65, 0.55),
+        "berghain": build_canonical_traits(0.85, 0.65, 0.60, 0.55),
+        "rolling": build_canonical_traits(0.90, 0.50, 0.55, 0.60),
         # Acid / 303-driven
-        "acid": _profile(0.65, 0.55, 0.60, 0.85),
-        "hardfloor": _profile(0.75, 0.65, 0.60, 0.80),
+        "acid": build_canonical_traits(0.65, 0.55, 0.60, 0.85),
+        "hardfloor": build_canonical_traits(0.75, 0.65, 0.60, 0.80),
         # Detroit / minimal
-        "detroit": _profile(0.60, 0.55, 0.65, 0.65),
-        "minimal": _profile(0.50, 0.45, 0.55, 0.70),
+        "detroit": build_canonical_traits(0.60, 0.55, 0.65, 0.65),
+        "minimal": build_canonical_traits(0.50, 0.45, 0.55, 0.70),
     }
 )
 
@@ -134,7 +107,7 @@ def lookup_traits(text: str) -> tuple[StyleTrait, ...]:
         raise TypeError("text must be a string")
     needle = text.strip().lower()
     if not needle:
-        return _neutral_profile()
+        return neutral_traits()
 
     # Iterate keys longest-first so the first hit IS the longest match;
     # this collapses the "longest wins" rule into a single linear scan with
@@ -142,16 +115,9 @@ def lookup_traits(text: str) -> tuple[StyleTrait, ...]:
     for key in _KEYS_BY_LENGTH_DESC:
         if needle.startswith(key):
             return _REFERENCE_LOOKUP[key]
-    return _neutral_profile()
-
-
-def _neutral_profile() -> tuple[StyleTrait, ...]:
-    """Return the neutral fallback: every canonical trait at ``0.5``."""
-
-    return _profile(0.5, 0.5, 0.5, 0.5)
+    return neutral_traits()
 
 
 __all__ = [
-    "WIZARD_TRAIT_NAMES",
     "lookup_traits",
 ]

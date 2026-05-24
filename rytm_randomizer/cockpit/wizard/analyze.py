@@ -26,10 +26,17 @@ The dispatcher is synchronous + deterministic + side-effect free except
 for the file reads the analyzers perform. The WS handler runs it on a
 worker thread (:func:`asyncio.to_thread`) so the WebSocket event loop
 stays responsive.
+
+Routing is table-driven (a ``(kind, mode)`` -> callable map built once
+at module load) so adding a new analyzer is a single dict insertion: no
+``if/elif`` ladder to extend, no risk of forgetting to forward an error
+case. The dispatcher itself becomes a ``Mapping`` lookup with a single
+``KeyError → ValueError`` translation for unsupported combinations.
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final
 
@@ -38,25 +45,73 @@ from ...style_analysis.feature_report import FeatureReport
 from ..data.profile_model import StyleTrait
 from . import reference_analyzer, sysex_analyzer
 from .errors import WizardSourcePathError
-from .reference_analyzer import WIZARD_TRAIT_NAMES
-from .state import InspirationSource
+from .state import InspirationSource, Kind, Mode
+from .trait_math import average_trait_tuples, build_canonical_traits, neutral_traits
 
 #: Audio extensions accepted by the audio path.
 _AUDIO_EXTENSIONS: Final[tuple[str, ...]] = (".wav", ".mp3", ".flac", ".aif", ".aiff")
 
-#: SysEx extension accepted by the kit path (mirrors :mod:`sysex_analyzer`).
-_KIT_EXTENSIONS: Final[tuple[str, ...]] = (".syx",)
 
-#: Audio-leaning :data:`~rytm_randomizer.cockpit.wizard.state.Kind` values.
-_AUDIO_KINDS: Final[frozenset[str]] = frozenset({"sound", "song", "album"})
+_AnalyzerFn = Callable[[InspirationSource], tuple[StyleTrait, ...]]
+
+
+def _dispatch_reference(source: InspirationSource) -> tuple[StyleTrait, ...]:
+    """Route ``mode="reference"`` to the curated lookup table."""
+
+    return reference_analyzer.lookup_traits(source.location)
+
+
+def _dispatch_kit(source: InspirationSource) -> tuple[StyleTrait, ...]:
+    """Route ``kind="kit", mode in {"file", "folder"}`` to the SysEx analyzer."""
+
+    return sysex_analyzer.extract_kit_traits(Path(source.location))
+
+
+def _dispatch_audio(source: InspirationSource) -> tuple[StyleTrait, ...]:
+    """Route audio kinds to :func:`_analyze_audio_path`."""
+
+    return _analyze_audio_path(Path(source.location))
+
+
+def _build_dispatch_table() -> Mapping[tuple[Kind, Mode], _AnalyzerFn]:
+    """Build the ``(kind, mode)`` -> analyzer-function lookup once.
+
+    Reference mode wins over kind because the lookup table is text-only;
+    file / folder modes routed by kind because the analyzer depends on
+    the underlying byte / audio interpretation. New analyzers become a
+    single insertion here.
+    """
+
+    table: dict[tuple[Kind, Mode], _AnalyzerFn] = {}
+
+    # Every kind routed through reference when the mode is "reference".
+    reference_kinds: tuple[Kind, ...] = ("kit", "sound", "song", "album", "artist")
+    for kind in reference_kinds:
+        table[(kind, "reference")] = _dispatch_reference
+
+    # Kit + file/folder routes through the SysEx analyzer.
+    for mode in ("file", "folder"):
+        table[("kit", mode)] = _dispatch_kit
+
+    # Audio kinds + file/folder routes through the audio analyzer.
+    audio_kinds: tuple[Kind, ...] = ("sound", "song", "album")
+    for kind in audio_kinds:
+        for mode in ("file", "folder"):
+            table[(kind, mode)] = _dispatch_audio
+
+    return table
+
+
+#: ``(kind, mode)`` -> analyzer function. Built once at import time.
+_DISPATCH: Final[Mapping[tuple[Kind, Mode], _AnalyzerFn]] = _build_dispatch_table()
 
 
 def analyze_source(source: InspirationSource) -> tuple[StyleTrait, ...]:
     """Dispatch ``source`` to the correct analyzer + return its traits.
 
-    Routes purely on ``source.kind`` + ``source.mode`` -- the analyzers
-    themselves do not inspect the dispatch decision. See module docstring
-    for the routing table.
+    Routes purely on ``source.kind`` + ``source.mode`` via :data:`_DISPATCH`
+    -- the analyzers themselves do not inspect the dispatch decision. See
+    module docstring for the routing table.
 
     Raises ``ValueError`` for an unsupported ``(kind, mode)`` combination
     (e.g. ``kind="artist"`` with ``mode="file"``) -- the wizard's state
@@ -64,17 +119,14 @@ def analyze_source(source: InspirationSource) -> tuple[StyleTrait, ...]:
     against a malformed source slipping through.
     """
 
-    if source.mode == "reference":
-        return reference_analyzer.lookup_traits(source.location)
-
-    path = Path(source.location)
-    if source.kind == "kit":
-        return sysex_analyzer.extract_kit_traits(path)
-
-    if source.kind in _AUDIO_KINDS:
-        return _analyze_audio_path(path)
-
-    raise ValueError(f"unsupported (kind, mode) combination: ({source.kind!r}, {source.mode!r})")
+    key = (source.kind, source.mode)
+    try:
+        analyzer = _DISPATCH[key]
+    except KeyError:
+        raise ValueError(
+            f"unsupported (kind, mode) combination: ({source.kind!r}, {source.mode!r})"
+        ) from None
+    return analyzer(source)
 
 
 # ---------------------------------------------------------------------------
@@ -106,9 +158,9 @@ def _analyze_audio_path(path: Path) -> tuple[StyleTrait, ...]:
             p for p in path.iterdir() if p.is_file() and p.suffix.lower() in _AUDIO_EXTENSIONS
         )
         if not matches:
-            return _neutral_traits()
+            return neutral_traits()
         per_file = tuple(feature_report_to_traits(extract_from_audio(p)) for p in matches)
-        return _average_trait_tuples(per_file)
+        return average_trait_tuples(per_file)
 
     raise ValueError(f"audio path is neither a file nor a directory: {path}")
 
@@ -132,56 +184,11 @@ def feature_report_to_traits(report: FeatureReport) -> tuple[StyleTrait, ...]:
     Every output value is clamped to ``[0.0, 1.0]``.
     """
 
-    rolling = _clamp_unit((report.low_end_weight + report.tempo_stability) / 2.0)
-    metallic = _clamp_unit((report.spectral_brightness + report.texture_noise) / 2.0)
-    hats = _clamp_unit(report.percussion_density)
-    motion = _clamp_unit(1.0 - report.tempo_stability)
-    return (
-        StyleTrait("rolling_low_end", rolling),
-        StyleTrait("metallic_tension", metallic),
-        StyleTrait("hat_density", hats),
-        StyleTrait("filter_motion", motion),
-    )
-
-
-# ---------------------------------------------------------------------------
-# Internal helpers (mirrored from :mod:`sysex_analyzer`; intentionally local
-# so the two analyzers can evolve their averaging independently if needed).
-# ---------------------------------------------------------------------------
-
-
-def _average_trait_tuples(
-    per_file: tuple[tuple[StyleTrait, ...], ...],
-) -> tuple[StyleTrait, ...]:
-    """Element-wise mean across a non-empty tuple of canonical 4-trait tuples.
-
-    The audio path filters out the empty case BEFORE invoking this
-    helper, so the contract is "at least one tuple in"; this keeps the
-    branch surface minimal.
-    """
-
-    count = len(per_file)
-    sums: dict[str, float] = dict.fromkeys(WIZARD_TRAIT_NAMES, 0.0)
-    for traits in per_file:
-        for trait in traits:
-            sums[trait.name] = sums.get(trait.name, 0.0) + trait.value
-    return tuple(StyleTrait(name, _clamp_unit(sums[name] / count)) for name in WIZARD_TRAIT_NAMES)
-
-
-def _neutral_traits() -> tuple[StyleTrait, ...]:
-    """Return the canonical 4-trait tuple at ``0.5`` apiece (neutral)."""
-
-    return tuple(StyleTrait(name, 0.5) for name in WIZARD_TRAIT_NAMES)
-
-
-def _clamp_unit(value: float) -> float:
-    """Clamp ``value`` into ``[0.0, 1.0]``."""
-
-    if value < 0.0:
-        return 0.0
-    if value > 1.0:
-        return 1.0
-    return float(value)
+    rolling = (report.low_end_weight + report.tempo_stability) / 2.0
+    metallic = (report.spectral_brightness + report.texture_noise) / 2.0
+    hats = report.percussion_density
+    motion = 1.0 - report.tempo_stability
+    return build_canonical_traits(rolling, metallic, hats, motion)
 
 
 __all__ = [

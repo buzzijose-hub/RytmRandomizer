@@ -14,6 +14,10 @@ import { useEffect, useState } from 'react';
 import type { CockpitClient } from '../ws/client';
 import {
   bindWizardClient,
+  selectCandidateProfile,
+  selectJobs,
+  selectSources,
+  selectStep,
   sendWizardCommand,
   useWizardStore,
   type WizardStore,
@@ -55,15 +59,26 @@ export function Wizard({
   navigate,
   openDialog,
 }: WizardProps): JSX.Element {
-  const wizardState = store((s) => s.state);
+  // Slice the store into the four things this container actually depends on. Each
+  // selector subscribes to a single field of the underlying WizardState, so changing
+  // (say) the jobs slice does not re-render the metadata fields or vice versa.
+  // Existing selectors live in wizard_store.ts — we just consume them here.
+  const sliceStep = store(selectStep);
+  const sources = store(selectSources);
+  const jobs = store(selectJobs);
+  const candidateProfile = store(selectCandidateProfile);
+  // Metadata fields (name / description) don't have dedicated selectors yet; they
+  // change at most once per wizard session, so a single tiny inline selector is fine.
+  const name = store((s) => s.state?.name ?? null);
+  const description = store((s) => s.state?.description ?? null);
   const lastCreated = store((s) => s.lastCreatedProfile);
   // The active step is held locally so the operator can move forward/back through the
   // wizard without waiting for the sidecar to ack each transition. The store's
   // `state.step` only overrides on the first state push (initial render) so backend
   // catch-ups don't fight the optimistic local cursor.
-  const [activeStep, setActiveStep] = useState<WizardStep>(wizardState?.step ?? 'name');
+  const [activeStep, setActiveStep] = useState<WizardStep>(sliceStep ?? 'name');
   const [hasSyncedInitialStep, setHasSyncedInitialStep] = useState<boolean>(
-    wizardState !== null,
+    sliceStep !== null,
   );
 
   // Bind WS events into the store + start a wizard session on mount.
@@ -78,11 +93,11 @@ export function Wizard({
   // First state push from the sidecar seeds the optimistic step. Subsequent pushes
   // do NOT clobber it (the operator's button clicks drive the cursor).
   useEffect(() => {
-    if (wizardState !== null && !hasSyncedInitialStep) {
-      setActiveStep(wizardState.step);
+    if (sliceStep !== null && !hasSyncedInitialStep) {
+      setActiveStep(sliceStep);
       setHasSyncedInitialStep(true);
     }
-  }, [wizardState, hasSyncedInitialStep]);
+  }, [sliceStep, hasSyncedInitialStep]);
 
   // After save, return to the cockpit when we see the profile_created event.
   useEffect(() => {
@@ -94,9 +109,6 @@ export function Wizard({
     // Clear the last-created marker so re-entering the wizard doesn't re-navigate.
     (store as unknown as { getState: () => WizardStore }).getState().reset();
   }, [lastCreated, navigate, store]);
-
-  const sources = wizardState?.sources ?? [];
-  const jobs = wizardState?.jobs ?? [];
 
   const handleCancel = (): void => {
     void sendWizardCommand(client, { type: 'wizard_cancel' });
@@ -167,8 +179,8 @@ export function Wizard({
       <main className="wizard-main">
         {activeStep === 'name' ? (
           <NameStep
-            initialName={wizardState?.name ?? null}
-            initialDescription={wizardState?.description ?? null}
+            initialName={name}
+            initialDescription={description}
             onSubmit={handleNameSubmit}
             onCancel={handleCancel}
           />
@@ -195,7 +207,7 @@ export function Wizard({
         ) : null}
         {activeStep === 'review' ? (
           <ReviewStep
-            candidate={wizardState?.candidate_profile ?? null}
+            candidate={candidateProfile}
             onBack={goToAnalyze}
             onSave={handleSave}
           />
