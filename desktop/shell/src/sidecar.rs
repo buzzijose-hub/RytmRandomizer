@@ -24,8 +24,8 @@ pub const SHUTDOWN_GRACE_SECS: u64 = 5;
 /// doubles the delay until the cap is reached. The function is pure so the
 /// table is unit-testable without spawning real processes.
 pub fn backoff_delay(failures: u32) -> Duration {
-    let shift = failures.min(u32::BITS - 1);
-    let raw = INITIAL_BACKOFF_SECS.saturating_shl(shift);
+    let multiplier = 1_u64.checked_shl(failures).unwrap_or(u64::MAX);
+    let raw = INITIAL_BACKOFF_SECS.saturating_mul(multiplier);
     Duration::from_secs(raw.min(MAX_BACKOFF_SECS))
 }
 
