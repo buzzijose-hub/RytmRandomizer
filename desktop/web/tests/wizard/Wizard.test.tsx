@@ -259,6 +259,20 @@ describe('Wizard container — step handlers', () => {
     expect(navigate).toHaveBeenCalledWith('/');
   });
 
+  it('NameStep cancel clears local wizard draft state before returning to cockpit', () => {
+    const navigate = vi.fn();
+    const store = createWizardStore();
+    store.getState().handleEvent({
+      type: 'wizard_state_changed',
+      state: { ...stateName, name: 'to-be-cancelled' },
+    });
+    renderWizard({ store, navigate });
+    expect(screen.getByTestId('wizard-name-input')).toHaveValue('to-be-cancelled');
+    fireEvent.click(screen.getByTestId('wizard-cancel'));
+    expect(store.getState().state).toBeNull();
+    expect(navigate).toHaveBeenCalledWith('/');
+  });
+
   it('NameStep cancel falls back to window.location.hash when navigate prop omitted', () => {
     const client = new FakeClient();
     render(<Wizard client={client.asClient()} />);

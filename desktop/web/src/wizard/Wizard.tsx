@@ -112,6 +112,7 @@ export function Wizard({
 
   const handleCancel = (): void => {
     void sendWizardCommand(client, { type: 'wizard_cancel' });
+    (store as unknown as { getState: () => WizardStore }).getState().reset();
     const go = navigate ?? ((hash: string) => {
       window.location.hash = hash;
     });
