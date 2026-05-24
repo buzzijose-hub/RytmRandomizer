@@ -316,6 +316,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.live_gui_cockpit_boundary_readiness",
             "STYLE_PERFORMANCE_ARC_LIVE_GUI_COCKPIT_BOUNDARY_READINESS_CLI_COMMAND",
         ),
+        "cockpit-send-plan-readiness-report": (
+            "rytm_randomizer.reports.cockpit_send_plan_operator_readiness",
+            "COCKPIT_SEND_PLAN_OPERATOR_READINESS_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

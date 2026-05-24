@@ -565,6 +565,8 @@ USAGE = (
     "[--view-model-label <text>] [--state-prefix <text>] "
     "[--render-contract-label <text>] "
     "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
+    "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
+    "[--label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
