@@ -19,6 +19,9 @@ See ``docs/superpowers/specs/2026-05-24-profile-wizard-design.md``
 
 from __future__ import annotations
 
+from .analyze import analyze_source, feature_report_to_traits
+from .errors import WizardSourcePathError
+from .reference_analyzer import WIZARD_TRAIT_NAMES, lookup_traits
 from .state import (
     KIND_VALUES,
     MODE_VALUES,
@@ -32,6 +35,7 @@ from .state import (
     Step,
     WizardState,
 )
+from .sysex_analyzer import extract_kit_traits
 
 __all__ = [
     "AnalysisJob",
@@ -44,5 +48,11 @@ __all__ = [
     "STEP_VALUES",
     "Status",
     "Step",
+    "WIZARD_TRAIT_NAMES",
+    "WizardSourcePathError",
     "WizardState",
+    "analyze_source",
+    "extract_kit_traits",
+    "feature_report_to_traits",
+    "lookup_traits",
 ]

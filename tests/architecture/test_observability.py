@@ -306,6 +306,10 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "ProfileRejectedError",
         "IllegalStateTransitionError",
         "GuardrailResolutionError",
+        # Cockpit Profile Wizard analysis adapter: re-homed under DataError
+        # + FileNotFoundError so ``except FileNotFoundError`` callers still
+        # work AND the conformance check sees a taxonomy member.
+        "WizardSourcePathError",
     }
 )
 
