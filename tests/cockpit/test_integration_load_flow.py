@@ -13,7 +13,7 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import drain_events, send_cmd
+from cockpit.conftest import drain_events, prepare_send_plan, send_cmd
 
 from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
@@ -31,8 +31,9 @@ def _send_chain(ws: object, *depths: float) -> list[str]:
     new_ids: list[str] = []
     for i, depth in enumerate(depths):
         send_cmd(ws, "set_depth", request_id=f"req-depth-{i}", depth=depth)
+        prepare_send_plan(ws, request_id=f"req-prepare-{i}")
         ack = send_cmd(ws, "send", request_id=f"req-send-{i}")
-        drain_events(ws, 4)
+        drain_events(ws, 5)
         new_ids.append(ack["new_snapshot_id"])
     return new_ids
 
@@ -59,7 +60,7 @@ def test_load_snapshot_jumps_to_root(cockpit_ws: object) -> None:
 def test_load_snapshot_jumps_to_arbitrary_mid_entry(cockpit_ws: object) -> None:
     """LOAD with the id of a non-current entry lands the pointer on that entry."""
 
-    new_ids = _send_chain(cockpit_ws, 0.45, 0.6, 0.75)
+    new_ids = _send_chain(cockpit_ws, 0.45, 0.55, 0.64)
     target_id = new_ids[1]  # middle of the chain
 
     ack = send_cmd(cockpit_ws, "load_snapshot", snapshot_id=target_id)

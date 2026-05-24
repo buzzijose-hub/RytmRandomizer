@@ -1,6 +1,6 @@
 """Integration: every command type round-trips correctly over the WebSocket.
 
-For each of the 10 spec commands, sends an envelope and verifies:
+For each of the 11 spec commands, sends an envelope and verifies:
 
 * the ack frame's ``request_id`` echoes the request,
 * ``ok`` is ``True`` for valid commands,
@@ -32,6 +32,7 @@ from fastapi.testclient import TestClient
 from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_EXPORT_PROFILE_MODEL,
     COMMAND_LOAD_SNAPSHOT,
+    COMMAND_PREPARE_SEND_PLAN,
     COMMAND_REGEN,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
@@ -125,14 +126,31 @@ def test_regen_roundtrips_after_profile_selected(cockpit_ws: object) -> None:
     assert ack["candidate"] is not None
 
 
+def test_prepare_send_plan_roundtrips_with_send_plan_field(cockpit_ws: object) -> None:
+    """``prepare_send_plan`` round-trip: ack carries the inert send-plan packet."""
+
+    send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
+    drain_events(cockpit_ws, 1)
+    send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
+    ack = send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN, request_id="rt-prepare")
+    drain_events(cockpit_ws, 1)
+
+    assert ack["request_id"] == "rt-prepare"
+    assert ack["ok"] is True
+    assert "send_plan" in ack
+    assert ack["send_plan"]["ready"] is True
+
+
 def test_send_roundtrips_with_new_snapshot_id_field(cockpit_ws: object) -> None:
     """``send`` round-trip: ack carries ``new_snapshot_id``."""
 
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
+    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
+    drain_events(cockpit_ws, 1)
     ack = send_cmd(cockpit_ws, COMMAND_SEND, request_id="rt-send")
-    drain_events(cockpit_ws, 4)
+    drain_events(cockpit_ws, 5)
 
     assert ack["request_id"] == "rt-send"
     assert ack["ok"] is True
@@ -157,8 +175,10 @@ def test_load_snapshot_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> 
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
+    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
+    drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SEND)
-    drain_events(cockpit_ws, 4)
+    drain_events(cockpit_ws, 5)
 
     ack = send_cmd(
         cockpit_ws,
@@ -179,8 +199,10 @@ def test_undo_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.55)
+    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
+    drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SEND)
-    drain_events(cockpit_ws, 4)
+    drain_events(cockpit_ws, 5)
 
     ack = send_cmd(cockpit_ws, COMMAND_UNDO, request_id="rt-undo")
     drain_events(cockpit_ws, 2)
@@ -209,21 +231,22 @@ def test_export_profile_model_roundtrips_with_model_bytes_b64_field(
     assert isinstance(ack["model_bytes_b64"], str)
 
 
-def test_all_ten_command_types_are_exercised(cockpit_ws: object) -> None:
+def test_all_eleven_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every COMMAND_TYPES entry has a matching round-trip test above.
 
-    The spec lists 10 commands. If a new command lands and this assertion
+    The spec lists 11 commands. If a new command lands and this assertion
     is not extended, the file falls out of sync silently — this test makes
     that drift visible at the integration boundary.
     """
 
-    assert len(COMMAND_TYPES) == 10
+    assert len(COMMAND_TYPES) == 11
     expected = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
         COMMAND_SET_PAD_LOCK,
         COMMAND_TOGGLE_PREVIEW,
         COMMAND_REGEN,
+        COMMAND_PREPARE_SEND_PLAN,
         COMMAND_SEND,
         COMMAND_SAVE,
         COMMAND_LOAD_SNAPSHOT,

@@ -26,5 +26,6 @@ from __future__ import annotations
 
 from .mutate import mutate
 from .prng import xorshift32
+from .send_plan import prepare_send_plan
 
-__all__ = ["mutate", "xorshift32"]
+__all__ = ["mutate", "prepare_send_plan", "xorshift32"]

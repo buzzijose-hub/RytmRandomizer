@@ -37,7 +37,7 @@ import secrets
 from dataclasses import dataclass, field
 from typing import Final
 
-from ..data import MutationCandidate, ProfileModel
+from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
 from ..history import HistoryStore
 from ..profiles import ProfileRegistry
@@ -76,6 +76,7 @@ class CockpitSession:
     pad_locks: set[int] = field(default_factory=set)
     preview_on: bool = False
     current_candidate: MutationCandidate | None = None
+    current_send_plan: CockpitSendPlan | None = None
     unsaved_sends: int = 0
 
 

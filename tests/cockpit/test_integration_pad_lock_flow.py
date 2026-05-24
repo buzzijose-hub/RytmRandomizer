@@ -12,7 +12,7 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import drain_events, send_cmd
+from cockpit.conftest import drain_events, prepare_send_plan, send_cmd
 
 pytestmark = pytest.mark.fast
 
@@ -42,8 +42,9 @@ def test_locked_pad_keeps_params_after_send(cockpit_ws: object) -> None:
     # Capture pre-send state.
     send_cmd(cockpit_ws, "set_pad_lock", pad_id=2, locked=True)
     _arm_candidate(cockpit_ws)
+    prepare_send_plan(cockpit_ws)
     send_cmd(cockpit_ws, "send")
-    events_after = drain_events(cockpit_ws, 4)
+    events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pad2_after = next(p for p in snapshot_after["pads"] if p["pad_id"] == 2)
@@ -56,8 +57,9 @@ def test_unlocked_pad_changes_after_send(cockpit_ws: object) -> None:
 
     send_cmd(cockpit_ws, "set_pad_lock", pad_id=2, locked=True)
     _arm_candidate(cockpit_ws)
+    prepare_send_plan(cockpit_ws)
     send_cmd(cockpit_ws, "send")
-    events_after = drain_events(cockpit_ws, 4)
+    events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pad1_after = next(p for p in snapshot_after["pads"] if p["pad_id"] == 1)
@@ -73,8 +75,9 @@ def test_unlocking_pad_restores_normal_mutation_path(cockpit_ws: object) -> None
     send_cmd(cockpit_ws, "set_pad_lock", request_id="req-lock", pad_id=2, locked=True)
     send_cmd(cockpit_ws, "set_pad_lock", request_id="req-unlock", pad_id=2, locked=False)
     _arm_candidate(cockpit_ws)
+    prepare_send_plan(cockpit_ws)
     send_cmd(cockpit_ws, "send")
-    events_after = drain_events(cockpit_ws, 4)
+    events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pad2_after = next(p for p in snapshot_after["pads"] if p["pad_id"] == 2)
@@ -88,8 +91,9 @@ def test_multiple_locked_pads_all_skipped(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, "set_pad_lock", request_id="req-1", pad_id=1, locked=True)
     send_cmd(cockpit_ws, "set_pad_lock", request_id="req-3", pad_id=3, locked=True)
     _arm_candidate(cockpit_ws)
+    prepare_send_plan(cockpit_ws)
     send_cmd(cockpit_ws, "send")
-    events_after = drain_events(cockpit_ws, 4)
+    events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pads_after = {p["pad_id"]: p["params"] for p in snapshot_after["pads"]}

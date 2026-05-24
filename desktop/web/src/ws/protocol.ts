@@ -19,6 +19,13 @@ export type TransitionCurve = 'linear' | 'progressive' | 'progressive_w_release'
 
 export type SafetyStatus = 'safe' | 'armed' | 'high_risk';
 
+export type SendPlanReadinessReason =
+  | 'ready'
+  | 'candidate_high_risk'
+  | 'profile_mismatch'
+  | 'source_snapshot_mismatch'
+  | 'no_sendable_changes';
+
 export type HistoryEntryKind = 'auto' | 'saved';
 
 export type HistoryVia = 'send' | 'regen' | 'load' | 'import';
@@ -83,6 +90,29 @@ export interface MutationCandidate {
   estimated_midi_msgs: number;
 }
 
+export interface SendPlanPacket {
+  pad_id: number;
+  parameter: string;
+  channel: number;
+  control: number;
+  value: number;
+}
+
+export interface CockpitSendPlan {
+  plan_id: string;
+  candidate_id: string;
+  source_snapshot_id: string;
+  profile_id: string;
+  ready: boolean;
+  readiness_reason: SendPlanReadinessReason;
+  safety_status: SafetyStatus;
+  estimated_midi_msgs: number;
+  pad_count: number;
+  locked_pad_ids: number[];
+  blocked_reasons: SendPlanReadinessReason[];
+  packets: SendPlanPacket[];
+}
+
 export interface HistoryEntry {
   snapshot: Snapshot;
   kind: HistoryEntryKind;
@@ -108,6 +138,11 @@ export interface MutationPreviewedEvent {
   candidate: MutationCandidate | null; // null = preview off
 }
 
+export interface SendPlanChangedEvent {
+  type: 'send_plan_changed';
+  send_plan: CockpitSendPlan | null; // null = stale/cleared plan
+}
+
 export interface HistoryUpdatedEvent {
   type: 'history_updated';
   history: History;
@@ -129,6 +164,7 @@ export interface SessionStatusEvent {
 export type Event =
   | SnapshotChangedEvent
   | MutationPreviewedEvent
+  | SendPlanChangedEvent
   | HistoryUpdatedEvent
   | ProfileChangedEvent
   | SessionStatusEvent;
@@ -162,6 +198,10 @@ export interface RegenCommand {
   type: 'regen';
 }
 
+export interface PrepareSendPlanCommand {
+  type: 'prepare_send_plan';
+}
+
 export interface SendCommand {
   type: 'send';
 }
@@ -192,6 +232,7 @@ export type Command =
   | SetPadLockCommand
   | TogglePreviewCommand
   | RegenCommand
+  | PrepareSendPlanCommand
   | SendCommand
   | SaveCommand
   | LoadSnapshotCommand
@@ -217,9 +258,12 @@ export interface CommandAck {
   ok: boolean;
   // Optional contextual payload returned with the ack (e.g. new candidate after set_depth).
   candidate?: MutationCandidate;
+  send_plan?: CockpitSendPlan | null;
+  send_plan_id?: string;
   snapshot_id?: string;
   new_snapshot_id?: string;
   model_bytes?: string; // base64 for binary, raw json otherwise
+  model_bytes_b64?: string; // Python sidecar's explicit base64 field name
   error?: string;
 }
 
@@ -235,6 +279,7 @@ export function isEvent(msg: unknown): msg is Event {
   const eventTypes: ReadonlyArray<EventType> = [
     'snapshot_changed',
     'mutation_previewed',
+    'send_plan_changed',
     'history_updated',
     'profile_changed',
     'session_status',

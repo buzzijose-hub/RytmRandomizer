@@ -18,9 +18,11 @@ from datetime import datetime, timezone
 import pytest
 
 from rytm_randomizer.cockpit.data import (
+    CockpitSendPlan,
     MutationCandidate,
     PadDelta,
     PadState,
+    SendPlanPacket,
     Snapshot,
 )
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
@@ -101,6 +103,21 @@ def _candidate(*deltas: PadDelta) -> MutationCandidate:
         pad_deltas=deltas or (_delta(1), _delta(2)),
         safety_status="safe",
         estimated_midi_msgs=6,
+    )
+
+
+def _send_plan(*packets: SendPlanPacket, ready: bool = True) -> CockpitSendPlan:
+    return CockpitSendPlan(
+        plan_id="sendplan-mock",
+        candidate_id="candidate-mock",
+        source_snapshot_id="01HXY5Q9PJM0123456789ABCD0",
+        profile_id="profile-buzzi",
+        ready=ready,
+        readiness_reason="ready" if ready else "candidate_high_risk",
+        safety_status="safe" if ready else "high_risk",
+        packets=packets or (SendPlanPacket(1, "tun", 0, 52, 99),),
+        locked_pad_ids=frozenset({2}),
+        blocked_reasons=() if ready else ("candidate_high_risk",),
     )
 
 
@@ -284,6 +301,36 @@ def test_apply_persists_state_between_calls() -> None:
     by_id_second = {pad.pad_id: dict(pad.params) for pad in second.pads}
     assert by_id_first[1] == {"tun": 99, "dec": 88, "lev": 77}
     assert by_id_second[1] == {"tun": 99, "dec": 88, "lev": 77}
+
+
+# ---------------------------------------------------------------------------
+# apply_send_plan: prepared plan path used by cockpit SEND.
+# ---------------------------------------------------------------------------
+
+
+def test_apply_send_plan_updates_only_planned_packet_params() -> None:
+    initial = _snapshot(
+        _pad(1, machine="BD Hard", tun=10, dec=20, lev=30),
+        _pad(2, machine="SD Acoustic", tun=40, dec=50, lev=60),
+    )
+    adapter = MockDeviceAdapter(initial=initial)
+    plan = _send_plan(
+        SendPlanPacket(1, "tun", 0, 52, 99),
+        SendPlanPacket(1, "dec", 0, 44, 88),
+    )
+
+    result = adapter.apply_send_plan(plan)
+
+    by_id = {pad.pad_id: dict(pad.params) for pad in result.pads}
+    assert by_id[1] == {"tun": 99, "dec": 88, "lev": 30}
+    assert by_id[2] == {"tun": 40, "dec": 50, "lev": 60}
+
+
+def test_apply_send_plan_rejects_blocked_plan() -> None:
+    adapter = MockDeviceAdapter(initial=_snapshot())
+
+    with pytest.raises(ValueError, match="send_plan_not_ready"):
+        adapter.apply_send_plan(_send_plan(ready=False))
 
 
 # ---------------------------------------------------------------------------

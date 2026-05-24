@@ -51,6 +51,9 @@ EVENT_SNAPSHOT_CHANGED: Final[Literal["snapshot_changed"]] = "snapshot_changed"
 EVENT_MUTATION_PREVIEWED: Final[Literal["mutation_previewed"]] = "mutation_previewed"
 """Emitted when the current :class:`MutationCandidate` (or its absence) changes."""
 
+EVENT_SEND_PLAN_CHANGED: Final[Literal["send_plan_changed"]] = "send_plan_changed"
+"""Emitted when the current inert :class:`CockpitSendPlan` changes."""
+
 EVENT_HISTORY_UPDATED: Final[Literal["history_updated"]] = "history_updated"
 """Emitted whenever the snapshot history mutates (append, undo, load, save)."""
 
@@ -64,6 +67,7 @@ EVENT_TYPES: Final[frozenset[str]] = frozenset(
     {
         EVENT_SNAPSHOT_CHANGED,
         EVENT_MUTATION_PREVIEWED,
+        EVENT_SEND_PLAN_CHANGED,
         EVENT_HISTORY_UPDATED,
         EVENT_PROFILE_CHANGED,
         EVENT_SESSION_STATUS,
@@ -83,6 +87,7 @@ COMMAND_SET_DEPTH: Final[Literal["set_depth"]] = "set_depth"
 COMMAND_SET_PAD_LOCK: Final[Literal["set_pad_lock"]] = "set_pad_lock"
 COMMAND_TOGGLE_PREVIEW: Final[Literal["toggle_preview"]] = "toggle_preview"
 COMMAND_REGEN: Final[Literal["regen"]] = "regen"
+COMMAND_PREPARE_SEND_PLAN: Final[Literal["prepare_send_plan"]] = "prepare_send_plan"
 COMMAND_SEND: Final[Literal["send"]] = "send"
 COMMAND_SAVE: Final[Literal["save"]] = "save"
 COMMAND_LOAD_SNAPSHOT: Final[Literal["load_snapshot"]] = "load_snapshot"
@@ -96,6 +101,7 @@ COMMAND_TYPES: Final[frozenset[str]] = frozenset(
         COMMAND_SET_PAD_LOCK,
         COMMAND_TOGGLE_PREVIEW,
         COMMAND_REGEN,
+        COMMAND_PREPARE_SEND_PLAN,
         COMMAND_SEND,
         COMMAND_SAVE,
         COMMAND_LOAD_SNAPSHOT,
@@ -136,6 +142,18 @@ class MutationPreviewedEvent(TypedDict):
 
     type: Literal["mutation_previewed"]
     candidate: dict | None
+
+
+class SendPlanChangedEvent(TypedDict):
+    """``send_plan_changed`` - current inert SEND plan or ``None``.
+
+    ``send_plan`` is the output of :meth:`CockpitSendPlan.to_dict` when a
+    preflight plan exists, or ``None`` when a later operator action made
+    the old plan stale.
+    """
+
+    type: Literal["send_plan_changed"]
+    send_plan: dict | None
 
 
 class HistoryUpdatedEvent(TypedDict):
@@ -220,6 +238,8 @@ class CommandAck(TypedDict, total=False):
     ok: bool
     error: str | None
     candidate: dict | None
+    send_plan: dict | None
+    send_plan_id: str | None
     new_snapshot_id: str | None
     snapshot_id: str | None
     model_bytes_b64: str | None
@@ -269,6 +289,12 @@ class RegenCommand(TypedDict):
     type: Literal["regen"]
 
 
+class PrepareSendPlanCommand(TypedDict):
+    """``prepare_send_plan {}`` - preflight the current candidate for SEND."""
+
+    type: Literal["prepare_send_plan"]
+
+
 class SendCommand(TypedDict):
     """``send {}`` — apply the current candidate to the device."""
 
@@ -310,6 +336,7 @@ class ExportProfileModelCommand(TypedDict):
 __all__ = [
     "COMMAND_EXPORT_PROFILE_MODEL",
     "COMMAND_LOAD_SNAPSHOT",
+    "COMMAND_PREPARE_SEND_PLAN",
     "COMMAND_REGEN",
     "COMMAND_SAVE",
     "COMMAND_SELECT_PROFILE",
@@ -324,6 +351,7 @@ __all__ = [
     "EVENT_HISTORY_UPDATED",
     "EVENT_MUTATION_PREVIEWED",
     "EVENT_PROFILE_CHANGED",
+    "EVENT_SEND_PLAN_CHANGED",
     "EVENT_SESSION_STATUS",
     "EVENT_SNAPSHOT_CHANGED",
     "EVENT_TYPES",
@@ -331,11 +359,13 @@ __all__ = [
     "HistoryUpdatedEvent",
     "LoadSnapshotCommand",
     "MutationPreviewedEvent",
+    "PrepareSendPlanCommand",
     "ProfileChangedEvent",
     "RegenCommand",
     "SaveCommand",
     "SelectProfileCommand",
     "SendCommand",
+    "SendPlanChangedEvent",
     "SessionStatusEvent",
     "SetDepthCommand",
     "SetPadLockCommand",

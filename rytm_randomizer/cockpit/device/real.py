@@ -25,7 +25,6 @@ package code keeps holding.
 
 from __future__ import annotations
 
-import hashlib
 import logging
 import warnings
 from datetime import datetime, timezone
@@ -33,7 +32,14 @@ from typing import TYPE_CHECKING
 
 from ...mock_midi import MidiMessage, build_cc_message
 from ...real_midi_adapter import RealMidiPortError
-from ..data import MutationCandidate, PadState, Snapshot, new_ulid
+from ..data import (
+    CockpitSendPlan,
+    MutationCandidate,
+    PadState,
+    Snapshot,
+    new_ulid,
+    synthetic_parameter_cc,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from ...mido_provider import MidoMidiPortProvider
@@ -179,6 +185,41 @@ class RealMidiDeviceAdapter:
             bpm=None,
         )
 
+    def apply_send_plan(self, send_plan: CockpitSendPlan) -> Snapshot:
+        """Send every packet in a prepared SEND plan over MIDI as CCs."""
+
+        if not send_plan.ready:
+            raise ValueError("send_plan_not_ready")
+
+        port = self._ensure_port_open()
+        params_by_pad: dict[int, dict[str, int]] = {}
+        for packet in send_plan.packets:
+            message = build_cc_message(
+                channel=packet.channel,
+                control=packet.control,
+                value=packet.value,
+                metadata={
+                    "pad": packet.pad_id,
+                    "parameter": packet.parameter,
+                    "cockpit_send_plan": True,
+                    "send_plan_id": send_plan.plan_id,
+                },
+            )
+            self._send(port, message)
+            params_by_pad.setdefault(packet.pad_id, {})[packet.parameter] = packet.value
+
+        return Snapshot(
+            snapshot_id=new_ulid(),
+            device="analog_rytm_mk2",
+            captured_at=datetime.now(tz=timezone.utc),
+            pads=tuple(
+                PadState(pad_id=pad_id, machine="unknown", params=params)
+                for pad_id, params in sorted(params_by_pad.items())
+            ),
+            scene_slot=None,
+            bpm=None,
+        )
+
     def commit_kit(self, snapshot: Snapshot, label: str | None) -> None:
         """Phase 1: not implemented; kit-dump SysEx writing lands in Phase 1.x.
 
@@ -252,8 +293,7 @@ class RealMidiDeviceAdapter:
         # 7-bit CC numbers live in [0, 127]; 0 and 32 are reserved for
         # bank-select pairs in MIDI, so we map into [33, 127] (a 95-wide
         # window). SHA-1 of the name is used for stability across runs.
-        digest = hashlib.sha1(parameter.encode("utf-8"), usedforsecurity=False).digest()
-        return 33 + (digest[0] % 95)
+        return synthetic_parameter_cc(parameter)
 
 
 __all__ = ["RealMidiDeviceAdapter"]

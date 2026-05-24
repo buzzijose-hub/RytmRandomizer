@@ -16,8 +16,10 @@ from collections.abc import Iterator
 import pytest
 
 from rytm_randomizer.cockpit.data import (
+    CockpitSendPlan,
     MutationCandidate,
     PadDelta,
+    SendPlanPacket,
     Snapshot,
 )
 from rytm_randomizer.cockpit.device import RealMidiDeviceAdapter
@@ -119,6 +121,21 @@ def _candidate(*deltas: PadDelta) -> MutationCandidate:
         pad_deltas=deltas or (_delta(1), _delta(2)),
         safety_status="safe",
         estimated_midi_msgs=4,
+    )
+
+
+def _send_plan(*packets: SendPlanPacket, ready: bool = True) -> CockpitSendPlan:
+    return CockpitSendPlan(
+        plan_id="sendplan-real",
+        candidate_id="candidate-real",
+        source_snapshot_id="snapshot-real",
+        profile_id="profile-buzzi",
+        ready=ready,
+        readiness_reason="ready" if ready else "candidate_high_risk",
+        safety_status="safe" if ready else "high_risk",
+        packets=packets or (SendPlanPacket(1, "tun", 0, 52, 99),),
+        locked_pad_ids=frozenset(),
+        blocked_reasons=() if ready else ("candidate_high_risk",),
     )
 
 
@@ -250,6 +267,37 @@ def test_apply_metadata_carries_pad_and_parameter_labels() -> None:
     assert message.metadata["pad"] == 1
     assert message.metadata["parameter"] == "tun"
     assert message.metadata["cockpit_apply"] is True
+
+
+def test_apply_send_plan_sends_prepared_packets_without_recomputing() -> None:
+    port = _FakePort()
+    adapter = RealMidiDeviceAdapter(midi_provider=_FakeProvider(port=port))
+    plan = _send_plan(
+        SendPlanPacket(2, "dec", 3, 44, 91),
+        SendPlanPacket(1, "tun", 4, 52, 70),
+    )
+
+    snap = adapter.apply_send_plan(plan)
+
+    assert len(port.sent) == 2
+    first = port.sent[0]
+    assert first.channel == 3
+    assert first.control == 44
+    assert first.value == 91
+    assert first.metadata["cockpit_send_plan"] is True
+    assert first.metadata["send_plan_id"] == "sendplan-real"
+    by_id = {pad.pad_id: dict(pad.params) for pad in snap.pads}
+    assert by_id == {1: {"tun": 70}, 2: {"dec": 91}}
+
+
+def test_apply_send_plan_rejects_blocked_plan_before_opening_port() -> None:
+    provider = _FakeProvider()
+    adapter = RealMidiDeviceAdapter(midi_provider=provider)
+
+    with pytest.raises(ValueError, match="send_plan_not_ready"):
+        adapter.apply_send_plan(_send_plan(ready=False))
+
+    assert provider.open_output_calls == []
 
 
 def test_apply_uses_default_first_port_when_no_port_name_given() -> None:

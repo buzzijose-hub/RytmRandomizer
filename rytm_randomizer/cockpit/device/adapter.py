@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
-from ..data import MutationCandidate, Snapshot
+from ..data import CockpitSendPlan, MutationCandidate, Snapshot
 
 
 @runtime_checkable
@@ -67,6 +67,14 @@ class DeviceAdapter(Protocol):
         Returns the new device state as a fresh
         :class:`~rytm_randomizer.cockpit.data.Snapshot` (read back after
         apply).
+        """
+
+    def apply_send_plan(self, send_plan: CockpitSendPlan) -> Snapshot:
+        """Apply a prepared, ready ``CockpitSendPlan`` to the device.
+
+        SEND uses this method once the UI/server preflight has produced
+        a ready inert plan. Adapters must reject blocked plans and must
+        not recompute packet contents at the hardware boundary.
         """
 
     def commit_kit(self, snapshot: Snapshot, label: str | None) -> None:

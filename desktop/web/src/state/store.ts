@@ -19,6 +19,7 @@
 import { create } from 'zustand';
 
 import type {
+  CockpitSendPlan,
   History,
   MutationCandidate,
   ProfileModel,
@@ -40,6 +41,7 @@ export interface CockpitState {
   previewCandidate: MutationCandidate | null;
   history: History | null;
   profile: ProfileModel | null;
+  sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
 }
 
@@ -48,6 +50,7 @@ export interface CockpitActions {
   setPreviewCandidate: (candidate: MutationCandidate | null) => void;
   setHistory: (history: History) => void;
   setProfile: (profile: ProfileModel | null) => void;
+  setSendPlan: (sendPlan: CockpitSendPlan | null) => void;
   setSessionStatus: (status: SessionStatus) => void;
   /** Reset all slices back to null (used on disconnect / shutdown). */
   reset: () => void;
@@ -62,6 +65,7 @@ export const INITIAL_STATE: CockpitState = {
   previewCandidate: null,
   history: null,
   profile: null,
+  sendPlan: null,
   sessionStatus: null,
 };
 
@@ -78,6 +82,7 @@ export function createCockpitStore() {
     setPreviewCandidate: (candidate) => set({ previewCandidate: candidate }),
     setHistory: (history) => set({ history }),
     setProfile: (profile) => set({ profile }),
+    setSendPlan: (sendPlan) => set({ sendPlan }),
     setSessionStatus: (status) => set({ sessionStatus: status }),
     reset: () => set({ ...INITIAL_STATE }),
   }));
@@ -96,6 +101,12 @@ export const selectUnsavedSends = (s: CockpitState): number =>
   s.sessionStatus?.unsaved_sends ?? 0;
 
 export const selectPadCount = (s: CockpitState): number => s.snapshot?.pads.length ?? 0;
+
+export const selectSendPlanReady = (s: CockpitState): boolean => s.sendPlan?.ready ?? false;
+
+export const selectCanSend = (s: CockpitState): boolean => selectSendPlanReady(s);
+
+export const selectPreparedPadCount = (s: CockpitState): number => s.sendPlan?.pad_count ?? 0;
 
 export const selectHasHistory = (s: CockpitState): boolean =>
   (s.history?.entries.length ?? 0) > 0;
