@@ -58,6 +58,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...observability.errors import DataError
 from ..data.profile_model import ProfileModel, StyleTrait, TraitPadWeight
 from ..data.ulid import new_ulid
 from .pad_mapping import TRAIT_TO_PAD
@@ -85,12 +86,22 @@ _OK_STATUS: Final[str] = "ok"
 # ---------------------------------------------------------------------------
 
 
-class EmptyAnalysisError(ValueError):
+class EmptyAnalysisError(DataError, ValueError):
     """Raised when :func:`build_profile` receives no contributing OK jobs.
 
-    Subclasses :class:`ValueError` so callers that already catch
-    ``ValueError`` for general input validation don't need to widen
-    their except clause.
+    Multi-inheritance via :class:`DataError` (the RytmRandomizerError
+    taxonomy branch for missing / malformed data) AND :class:`ValueError`
+    (stdlib) means:
+
+    * ``except ValueError:`` callers continue to work without import changes
+      (idiomatic Python validation-error handling);
+    * The observability conformance test
+      (``tests/architecture/test_observability.py``) recognises the raise as
+      a taxonomy member, satisfying the per-PR check that every package
+      ``raise`` either uses the taxonomy or an allowlisted stdlib class.
+
+    Mirrors :class:`rytm_randomizer.cockpit.wizard.errors.
+    WizardSourcePathError`, which uses the same dual-inheritance pattern.
     """
 
 
