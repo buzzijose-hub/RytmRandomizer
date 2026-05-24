@@ -231,16 +231,19 @@ def test_export_profile_model_roundtrips_with_model_bytes_b64_field(
     assert isinstance(ack["model_bytes_b64"], str)
 
 
-def test_all_eleven_command_types_are_exercised(cockpit_ws: object) -> None:
-    """Pin invariant: every COMMAND_TYPES entry has a matching round-trip test above.
+def test_all_eleven_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
+    """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
-    The spec lists 11 commands. If a new command lands and this assertion
-    is not extended, the file falls out of sync silently — this test makes
-    that drift visible at the integration boundary.
+    ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
+    (11 cockpit + 8 wizard = 19 total). This test pins the 11 cockpit-native
+    commands; the wizard subset is exercised end-to-end in
+    ``test_integration_wizard_flow.py``. If a new cockpit command lands and
+    this assertion is not extended, the file falls out of sync silently —
+    this test makes that drift visible at the integration boundary.
     """
 
-    assert len(COMMAND_TYPES) == 11
-    expected = {
+    assert len(COMMAND_TYPES) == 19
+    cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
         COMMAND_SET_PAD_LOCK,
@@ -253,7 +256,8 @@ def test_all_eleven_command_types_are_exercised(cockpit_ws: object) -> None:
         COMMAND_UNDO,
         COMMAND_EXPORT_PROFILE_MODEL,
     }
-    assert expected == COMMAND_TYPES
+    assert cockpit_native <= COMMAND_TYPES
+    assert len(cockpit_native) == 11
 
 
 # ---------------------------------------------------------------------------

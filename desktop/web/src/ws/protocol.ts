@@ -9,6 +9,8 @@
  * `cockpit/data/` (WS-A).
  */
 
+import type { WizardEvent } from '../types/wizard_protocol';
+
 // ---------- Domain enums (literal unions) ----------
 
 export type DeviceKind = 'analog_rytm_mk2' | 'analog_four';
@@ -167,7 +169,8 @@ export type Event =
   | SendPlanChangedEvent
   | HistoryUpdatedEvent
   | ProfileChangedEvent
-  | SessionStatusEvent;
+  | SessionStatusEvent
+  | WizardEvent;
 
 export type EventType = Event['type'];
 
@@ -283,6 +286,9 @@ export function isEvent(msg: unknown): msg is Event {
     'history_updated',
     'profile_changed',
     'session_status',
+    'wizard_state_changed',
+    'analysis_progress',
+    'profile_created',
   ];
   return (eventTypes as ReadonlyArray<string>).includes(obj.type);
 }
