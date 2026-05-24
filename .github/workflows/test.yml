@@ -46,7 +46,13 @@ on:
 #       paths as `test` plus tests/e2e/.
 #
 #   desktop-web — validates the React/TypeScript cockpit surface under
-#       desktop/web with npm ci, eslint, typecheck, Vitest, and build.
+#       desktop/web with npm ci, eslint, typecheck, Vitest under the 100%
+#       coverage gate configured in vite.config.ts, and build.
+#
+#   desktop-web-e2e — runs the Playwright end-to-end suite for the
+#       cockpit web surface against a real Python sidecar so the wizard
+#       WebSocket protocol is exercised end-to-end. Triggers on any
+#       desktop/, tests/, ci, or wizard_*.py change.
 #
 #   desktop-shell — validates the Tauri shell under desktop/shell with
 #       a local web build, rustfmt, cargo test, and clippy on Windows.
@@ -130,9 +136,14 @@ jobs:
 
             # `desktop` -- validates the cockpit web frontend and Tauri
             # shell when desktop source, tests, package manifests, or CI
-            # workflow wiring changes.
+            # workflow wiring changes. The wizard_*.py sidecar files under
+            # rytm_randomizer/cockpit/ws/ define the WebSocket protocol the
+            # desktop/web Playwright suite drives end-to-end, so any change
+            # to that protocol must re-run the desktop-web + desktop-web-e2e
+            # checks even when no file under desktop/ changes.
             desktop:
               - 'desktop/**'
+              - 'rytm_randomizer/cockpit/ws/wizard_*.py'
               - '.github/workflows/**'
 
             # `deps` -- dependency surface. Triggers the security (pip-audit)
@@ -542,11 +553,93 @@ jobs:
       - name: TypeScript check
         run: npm run typecheck
 
-      - name: Vitest
-        run: npm run test:run
+      # Run Vitest under the 100% branch/line/function/statement coverage
+      # gate configured in desktop/web/vite.config.ts. The previous
+      # `npm run test:run` invocation skipped --coverage entirely, so the
+      # threshold was never enforced and uncovered branches in the wizard
+      # surface could merge silently. `npm run test:coverage` runs the
+      # same suite under @vitest/coverage-v8 and fails the job on any
+      # threshold miss.
+      - name: Vitest with coverage gate
+        run: npm run test:coverage
 
       - name: Build web frontend
         run: npm run build
+
+  desktop-web-e2e:
+    # End-to-end gate for the cockpit web surface. Runs Playwright
+    # (headless chromium) against a Vite preview of the built bundle
+    # talking to a real Python sidecar over WebSocket, so the wizard
+    # protocol contract between rytm_randomizer/cockpit/ws/wizard_*.py
+    # and desktop/web/src/wizard/** is exercised end-to-end on every
+    # PR that touches either side. Gated by the same path filter as
+    # desktop-web so unrelated PRs do not pay the Playwright + Python
+    # install cost.
+    name: desktop-web-e2e
+    needs: detect-changes
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      needs.detect-changes.outputs.desktop == 'true' ||
+      needs.detect-changes.outputs.tests == 'true' ||
+      needs.detect-changes.outputs.ci == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop/web
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: pyproject.toml
+
+      - name: Install ALSA dev headers
+        # python-rtmidi's C-extension wheel build links against ALSA;
+        # the sidecar import path pulls it in even when no real port is
+        # opened, so the headers must be present before pip install.
+        working-directory: ${{ github.workspace }}
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+
+      - name: Install Python sidecar with dev extras
+        working-directory: ${{ github.workspace }}
+        run: pip install -e ".[dev]"
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: desktop/web/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build web frontend
+        run: npm run build
+
+      - name: Run Playwright end-to-end suite
+        env:
+          CI: "true"
+        run: npm run e2e:ci
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            desktop/web/playwright-report
+            desktop/web/test-results
+          if-no-files-found: ignore
+          retention-days: 14
 
   desktop-shell:
     # Validates the Rust/Tauri shell on Windows, matching the primary
@@ -690,7 +783,7 @@ jobs:
     # `failure` or `cancelled`. `skipped` counts as success because the
     # path filter said this category did not need to be re-validated.
     name: required-checks
-    needs: [detect-changes, lint, security, architecture, test, e2e, desktop-web, desktop-shell, docs-gate]
+    needs: [detect-changes, lint, security, architecture, test, e2e, desktop-web, desktop-web-e2e, desktop-shell, docs-gate]
     if: always()
     runs-on: ubuntu-latest
 
@@ -699,15 +792,16 @@ jobs:
         # Echo each upstream result for the run log so a failure is
         # easy to triage from the GitHub UI without expanding every job.
         run: |
-          echo "detect-changes : ${{ needs.detect-changes.result }}"
-          echo "lint           : ${{ needs.lint.result }}"
-          echo "security       : ${{ needs.security.result }}"
-          echo "architecture   : ${{ needs.architecture.result }}"
-          echo "test           : ${{ needs.test.result }}"
-          echo "e2e            : ${{ needs.e2e.result }}"
-          echo "desktop-web    : ${{ needs.desktop-web.result }}"
-          echo "desktop-shell  : ${{ needs.desktop-shell.result }}"
-          echo "docs-gate      : ${{ needs.docs-gate.result }}"
+          echo "detect-changes  : ${{ needs.detect-changes.result }}"
+          echo "lint            : ${{ needs.lint.result }}"
+          echo "security        : ${{ needs.security.result }}"
+          echo "architecture    : ${{ needs.architecture.result }}"
+          echo "test            : ${{ needs.test.result }}"
+          echo "e2e             : ${{ needs.e2e.result }}"
+          echo "desktop-web     : ${{ needs.desktop-web.result }}"
+          echo "desktop-web-e2e : ${{ needs.desktop-web-e2e.result }}"
+          echo "desktop-shell   : ${{ needs.desktop-shell.result }}"
+          echo "docs-gate       : ${{ needs.docs-gate.result }}"
 
       - name: Fail if any upstream job failed or was cancelled
         # GitHub workflow `needs.*.result` is one of: success, failure,
@@ -723,6 +817,7 @@ jobs:
             "${{ needs.test.result }}" \
             "${{ needs.e2e.result }}" \
             "${{ needs.desktop-web.result }}" \
+            "${{ needs.desktop-web-e2e.result }}" \
             "${{ needs.desktop-shell.result }}" \
             "${{ needs.docs-gate.result }}"; do
             case "$result" in
