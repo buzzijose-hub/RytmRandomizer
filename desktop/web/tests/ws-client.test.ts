@@ -175,6 +175,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
@@ -200,6 +201,39 @@ describe('CockpitClient — defaults & constants', () => {
     });
     expect(() => c.connect()).not.toThrow();
     c.close();
+  });
+
+  it('calls default browser timers with the global receiver', async () => {
+    const receivers: unknown[] = [];
+    const fakeSetTimeout = function (this: unknown): ReturnType<typeof setTimeout> {
+      receivers.push(this);
+      return 1 as ReturnType<typeof setTimeout>;
+    } as typeof setTimeout;
+    const fakeClearTimeout = function (this: unknown): void {
+      receivers.push(this);
+    } as typeof clearTimeout;
+    vi.stubGlobal('setTimeout', fakeSetTimeout);
+    vi.stubGlobal('clearTimeout', fakeClearTimeout);
+
+    let socket: FakeWebSocket | null = null;
+    const client = new CockpitClient({
+      url: 'ws://test/ws',
+      disableReconnect: true,
+      requestIdGenerator: () => 'r1',
+      webSocketFactory: (url) => {
+        socket = new FakeWebSocket(url);
+        return socket;
+      },
+    });
+    client.connect();
+    if (socket === null) throw new Error('socket not created');
+    socket.emitOpen();
+
+    const promise = client.send({ type: 'regen' });
+    socket.emitMessage(ack('r1'));
+
+    await expect(promise).resolves.toMatchObject({ ok: true });
+    expect(receivers).toEqual([globalThis, globalThis]);
   });
 
   it('the default request-id generator produces unique-ish strings', () => {

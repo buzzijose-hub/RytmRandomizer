@@ -138,8 +138,8 @@ export class CockpitClient {
     this.url = opts.url ?? DEFAULT_WS_URL;
     this.webSocketFactory = opts.webSocketFactory ?? defaultWebSocketFactory;
     this.requestIdGenerator = opts.requestIdGenerator ?? defaultRequestIdGenerator;
-    this.setTimeoutImpl = opts.setTimeoutImpl ?? setTimeout;
-    this.clearTimeoutImpl = opts.clearTimeoutImpl ?? clearTimeout;
+    this.setTimeoutImpl = opts.setTimeoutImpl ?? globalThis.setTimeout.bind(globalThis);
+    this.clearTimeoutImpl = opts.clearTimeoutImpl ?? globalThis.clearTimeout.bind(globalThis);
     this.initialReconnectDelayMs =
       opts.initialReconnectDelayMs ?? DEFAULT_INITIAL_RECONNECT_DELAY_MS;
     this.maxReconnectDelayMs = opts.maxReconnectDelayMs ?? DEFAULT_MAX_RECONNECT_DELAY_MS;
