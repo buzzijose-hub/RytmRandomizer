@@ -562,6 +562,9 @@ USAGE = (
     "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
     "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
     "[--label <text>] [--json] | "
+    "cockpit-send-plan-rehearsal-surface-report "
+    "(--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) "
+    "[--label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -2335,6 +2338,33 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _cockpit_send_plan_rehearsal_surface_report_help():
+    from .reports.cockpit_send_plan_rehearsal_surface import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: cockpit-send-plan-rehearsal-surface-report
+
+Usage:
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report --plan-json <json>
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report --plan-file <path>
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report --readiness-json <json>
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report --readiness-file <path>
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report --plan-json <json> --label <text> --json
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report --help
+
+Arguments:
+  --plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>
+
+Behavior:
+  Builds passive send-plan rehearsal surface state from CockpitSendPlan or readiness metadata.
+  The report emits GUI-ready panels, state bindings, disabled action controls,
+  acceptance checks, blocked active actions, deterministic JSON, and replayable
+  passive command metadata without preparing or applying SEND, launching a GUI,
+  opening a sidecar, or touching hardware.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -2438,6 +2468,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--boundary-label <text>] [--hardware-entrypoint <command>] [--passive-entrypoint <command>] [--ws-port-env <name>] [--json]
   python -m rytm_randomizer.cli cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) [--label <text>] [--json]
+  python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report (--plan-json <json>|--plan-file <path>|--readiness-json <json>|--readiness-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -2624,6 +2655,8 @@ Commands:
                     Compose passive GUI desktop render harnesses into cockpit boundary readiness.
   cockpit-send-plan-readiness-report
                     Explain prepared cockpit SEND plan readiness for operator review.
+  cockpit-send-plan-rehearsal-surface-report
+                    Build GUI-ready passive SEND plan rehearsal surface state.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -2971,6 +3004,9 @@ Safety:
         _style_performance_arc_live_gui_cockpit_boundary_readiness_report_help
     ),
     "cockpit-send-plan-readiness-report": _cockpit_send_plan_readiness_report_help,
+    "cockpit-send-plan-rehearsal-surface-report": (
+        _cockpit_send_plan_rehearsal_surface_report_help
+    ),
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:

@@ -320,6 +320,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.cockpit_send_plan_operator_readiness",
             "COCKPIT_SEND_PLAN_OPERATOR_READINESS_CLI_COMMAND",
         ),
+        "cockpit-send-plan-rehearsal-surface-report": (
+            "rytm_randomizer.reports.cockpit_send_plan_rehearsal_surface",
+            "COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])
