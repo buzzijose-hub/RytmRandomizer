@@ -142,9 +142,13 @@ describe('wizard store — handleEvent reducer', () => {
     const store = createWizardStore();
     const event: AnalysisProgressEvent = {
       type: 'analysis_progress',
-      source_id: 'src_01',
-      progress: 0.5,
-      status: 'analyzing',
+      job: {
+        source_id: 'src_01',
+        status: 'analyzing',
+        progress: 0.5,
+        error: null,
+        extracted_traits: [],
+      },
     };
     store.getState().handleEvent(event);
     expect(store.getState().state).toBeNull();
@@ -157,9 +161,13 @@ describe('wizard store — handleEvent reducer', () => {
       .handleEvent({ type: 'wizard_state_changed', state: wizardState });
     store.getState().handleEvent({
       type: 'analysis_progress',
-      source_id: 'src_01',
-      progress: 0.65,
-      status: 'analyzing',
+      job: {
+        source_id: 'src_01',
+        status: 'analyzing',
+        progress: 0.65,
+        error: null,
+        extracted_traits: [],
+      },
     });
     const updated = store.getState().state;
     expect(updated).not.toBeNull();
@@ -171,6 +179,30 @@ describe('wizard store — handleEvent reducer', () => {
     expect(otherJob).toEqual(job2);
   });
 
+  it('analysis_progress propagates extracted_traits + error from the nested job', () => {
+    const store = createWizardStore();
+    store
+      .getState()
+      .handleEvent({ type: 'wizard_state_changed', state: wizardState });
+    store.getState().handleEvent({
+      type: 'analysis_progress',
+      job: {
+        source_id: 'src_01',
+        status: 'ok',
+        progress: 1.0,
+        error: null,
+        extracted_traits: [{ name: 'rolling_low_end', value: 0.8 }],
+      },
+    });
+    const updated = store.getState().state;
+    if (updated === null) throw new Error('expected state');
+    const updatedJob = updated.jobs.find((j) => j.source_id === 'src_01');
+    expect(updatedJob?.status).toBe('ok');
+    expect(updatedJob?.extracted_traits).toEqual([
+      { name: 'rolling_low_end', value: 0.8 },
+    ]);
+  });
+
   it('analysis_progress for an unknown source_id leaves jobs untouched (mapping branch — no match)', () => {
     const store = createWizardStore();
     store
@@ -178,9 +210,13 @@ describe('wizard store — handleEvent reducer', () => {
       .handleEvent({ type: 'wizard_state_changed', state: wizardState });
     store.getState().handleEvent({
       type: 'analysis_progress',
-      source_id: 'src_99',
-      progress: 1.0,
-      status: 'ok',
+      job: {
+        source_id: 'src_99',
+        status: 'ok',
+        progress: 1.0,
+        error: null,
+        extracted_traits: [],
+      },
     });
     const updated = store.getState().state;
     expect(updated?.jobs).toEqual([job, job2]);
@@ -298,9 +334,13 @@ describe('isWizardEvent type guard', () => {
     expect(
       isWizardEvent({
         type: 'analysis_progress',
-        source_id: 'src_01',
-        progress: 0.5,
-        status: 'analyzing',
+        job: {
+          source_id: 'src_01',
+          status: 'analyzing',
+          progress: 0.5,
+          error: null,
+          extracted_traits: [],
+        },
       }),
     ).toBe(true);
     expect(isWizardEvent({ type: 'profile_created', profile: candidate })).toBe(true);
@@ -354,9 +394,13 @@ describe('bindWizardClient', () => {
 
     client.fire('analysis_progress', {
       type: 'analysis_progress',
-      source_id: 'src_01',
-      progress: 0.5,
-      status: 'analyzing',
+      job: {
+        source_id: 'src_01',
+        status: 'analyzing',
+        progress: 0.5,
+        error: null,
+        extracted_traits: [],
+      },
     } satisfies AnalysisProgressEvent);
     const after = store.getState().state;
     if (after === null) throw new Error('expected state');

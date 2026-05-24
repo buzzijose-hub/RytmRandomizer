@@ -47,6 +47,20 @@ export interface AnalysisJob {
 }
 
 /**
+ * Wire-format mirror of Python `AnalysisJob.to_dict()`. Structurally identical to
+ * `AnalysisJob` today, but kept as a distinct named type so the `analysis_progress`
+ * payload contract is grep-able and any future divergence (e.g. server-only fields)
+ * surfaces as a type error at the parity boundary instead of silently.
+ */
+export interface AnalysisJobDict {
+  source_id: string;
+  status: AnalysisStatus;
+  progress: number;
+  error: string | null;
+  extracted_traits: StyleTrait[];
+}
+
+/**
  * The wizard's candidate ProfileModel — same shape as `ProfileModel` but always carries
  * `kind: 'user'` and is materialised by the WS-C ProfileBuilder. We define a wizard-local
  * alias so the type surface stays self-contained.
@@ -133,11 +147,16 @@ export interface WizardStateChangedEvent {
   state: WizardState;
 }
 
+/**
+ * Per-job progress event. The payload mirrors the Python sidecar exactly
+ * (`{"type": "analysis_progress", "job": <AnalysisJob.to_dict()>}`) — the full job
+ * is nested so `status`, `progress`, `error`, and `extracted_traits` all propagate
+ * through one event channel. See `tests/cockpit/test_protocol_parity.py` for the
+ * cross-language guard that pins this shape.
+ */
 export interface AnalysisProgressEvent {
   type: 'analysis_progress';
-  source_id: string;
-  progress: number;
-  status: AnalysisStatus;
+  job: AnalysisJobDict;
 }
 
 export interface ProfileCreatedEvent {

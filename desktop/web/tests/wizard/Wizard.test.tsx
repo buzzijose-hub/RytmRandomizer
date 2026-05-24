@@ -385,9 +385,13 @@ describe('Wizard container — step handlers', () => {
     act(() => {
       client.fire('analysis_progress', {
         type: 'analysis_progress',
-        source_id: 'src_A',
-        progress: 0.4,
-        status: 'analyzing',
+        job: {
+          source_id: 'src_A',
+          status: 'analyzing',
+          progress: 0.4,
+          error: null,
+          extracted_traits: [],
+        },
       } satisfies AnalysisProgressEvent);
     });
     expect(screen.getByTestId('wizard-progress-src_A')).toHaveAttribute('aria-valuenow', '40');
