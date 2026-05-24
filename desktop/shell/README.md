@@ -61,7 +61,9 @@ unit-tested in `src/sidecar.rs`.
 ### Prerequisites
 
 - **Rust toolchain** — install via [rustup](https://rustup.rs/). MSRV is
-  Rust 1.77 (see `Cargo.toml` `rust-version`).
+  Rust 1.85 (see `Cargo.toml` `rust-version`), which is the first stable
+  toolchain with Cargo support for transitive crates that publish
+  Rust 2024-edition manifests.
 - **Tauri 2 system deps** — see
   [tauri.app prerequisites](https://v2.tauri.app/start/prerequisites/) for
   per-OS native dependencies (WebView2 on Windows, webkit2gtk on Linux).
