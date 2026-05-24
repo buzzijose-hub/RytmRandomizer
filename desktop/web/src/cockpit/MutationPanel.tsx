@@ -24,12 +24,19 @@ export interface MutationPanelProps {
   }>;
   previewOn: boolean;
   onTogglePreview: (next: boolean) => void;
+  /**
+   * Optional override for the wizard launcher's navigation. Defaults to setting
+   * `window.location.hash = '/wizard'` so the Tauri shell's hash router can route to it.
+   * Tests inject a spy.
+   */
+  onLaunchWizard?: () => void;
 }
 
 export function MutationPanel({
   availableProfiles,
   previewOn,
   onTogglePreview,
+  onLaunchWizard,
 }: MutationPanelProps): JSX.Element {
   const [kind, setKind] = useState<ProfileKind>('scene');
   const filtered = useMemo(
@@ -37,11 +44,27 @@ export function MutationPanel({
     [availableProfiles, kind],
   );
 
+  const handleLaunchWizard = (): void => {
+    if (onLaunchWizard !== undefined) {
+      onLaunchWizard();
+      return;
+    }
+    window.location.hash = '/wizard';
+  };
+
   return (
     <section className="cockpit-panel" data-testid="mutation-panel">
       <h2>Mutation Panel</h2>
       <ProfileToggle value={kind} onChange={setKind} />
       <ProfileChips available={filtered} />
+      <button
+        type="button"
+        className="wizard-launcher"
+        data-testid="mutation-panel-launch-wizard"
+        onClick={handleLaunchWizard}
+      >
+        + Create profile…
+      </button>
       <DepthSlider />
       <ActionBar previewOn={previewOn} onTogglePreview={onTogglePreview} />
     </section>
