@@ -41,6 +41,7 @@ from ..data import MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
 from ..history import HistoryStore
 from ..profiles import ProfileRegistry
+from .wizard_session import WizardSession
 
 DEFAULT_DEPTH: Final[float] = 0.45
 """Default depth value matching the v10 UX mockup (slider mid-position, 45%)."""
@@ -77,6 +78,15 @@ class CockpitSession:
     preview_on: bool = False
     current_candidate: MutationCandidate | None = None
     unsaved_sends: int = 0
+    active_wizard: WizardSession | None = None
+    """The in-flight :class:`WizardSession`, or ``None`` between wizard runs.
+
+    Set by :func:`wizard_handlers._handle_wizard_start` and cleared by
+    :func:`wizard_handlers._handle_wizard_save` /
+    :func:`wizard_handlers._handle_wizard_cancel`. Every wizard command
+    other than ``wizard_start`` / ``wizard_cancel`` requires this field
+    to be non-``None`` and returns ``ok=False`` otherwise.
+    """
 
 
 __all__ = ["DEFAULT_DEPTH", "CockpitSession"]

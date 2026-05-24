@@ -453,7 +453,15 @@ async def handle_command(envelope: dict, session: CockpitSession, emitter: Event
         cmd_type = cmd["type"]
     except KeyError as exc:
         return {"request_id": request_id, "ok": False, "error": f"missing key: {exc.args[0]!r}"}
-    handler = _HANDLERS.get(cmd_type)
+    if isinstance(cmd_type, str) and cmd_type.startswith("wizard_"):
+        # Delegate the wizard-namespaced commands to the wizard surface.
+        # Lazy-import keeps the wizard dispatcher table out of the import
+        # graph of cockpit boot paths that never touch the wizard.
+        from .wizard_handlers import WIZARD_HANDLERS
+
+        handler = WIZARD_HANDLERS.get(cmd_type)
+    else:
+        handler = _HANDLERS.get(cmd_type)
     if handler is None:
         return {
             "request_id": request_id,
