@@ -3,7 +3,9 @@ name: installers
 # Native end-user installer builds for RytmRandomizer.
 #
 # Produces a .msi (Windows), .pkg (macOS, console-app spec), AppImage + .deb
-# (Linux) using BeeWare briefcase. The full release-engineer story is
+# (Linux) using BeeWare briefcase for the Python sidecar, AND a Tauri
+# desktop bundle for the React cockpit shell on each of the same three
+# OSes via `cargo tauri build`. The full release-engineer story is
 # documented in docs/BUILDING_INSTALLERS.md.
 #
 # WHY NOT REQUIRED-CHECK: installer builds take ~20 minutes per OS and
@@ -117,5 +119,90 @@ jobs:
         with:
           name: rytm-randomizer-installer-${{ runner.os }}
           path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+          retention-days: 30
+
+  desktop-bundle:
+    # Tauri-shell cockpit bundle, one artifact per OS. Briefcase (the
+    # `installer` job above) only packages the Python sidecar; without
+    # this job the desktop cockpit (Rust shell wrapping the Vite-built
+    # React frontend) would never reach end-users via a release. The
+    # bundle is uploaded to the workflow run for the release engineer
+    # to attach to the GitHub Release alongside the briefcase installer.
+    #
+    # The shell must be built on each target OS — Tauri uses the host's
+    # webview (WebView2 on Windows, WKWebView on macOS, WebKitGTK on
+    # Linux) and the per-OS bundle format (MSI/EXE, DMG/APP, deb/AppImage)
+    # is produced by `cargo tauri build` against that host's toolchain.
+    name: desktop-bundle (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    # 30 min cap: the first build per cache key compiles the entire
+    # Tauri + wry + webview2-com tree; cached runs are ~5 minutes.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: desktop/web/package-lock.json
+
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + shell target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            desktop/shell/target
+          key: ${{ runner.os }}-cargo-tauri-${{ hashFiles('desktop/shell/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-tauri-
+
+      - name: Install Linux Tauri system deps
+        # libwebkit2gtk-4.1-dev: WebKitGTK 4.1 (Tauri v2 baseline on
+        #   Linux). libssl-dev: TLS for the Rust shell. libayatana-
+        #   appindicator3-dev: tray icon support. librsvg2-dev: SVG
+        #   loader the bundler invokes when generating .desktop icons.
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install web dependencies
+        working-directory: desktop/web
+        run: npm ci
+
+      - name: Build web frontend (Tauri loads desktop/web/dist)
+        working-directory: desktop/web
+        run: npm run build
+
+      - name: Install tauri-cli
+        # Pinning to ^2 follows the workspace Cargo.toml's Tauri major.
+        run: cargo install tauri-cli --version "^2"
+
+      - name: Build Tauri bundle
+        working-directory: desktop/shell
+        run: cargo tauri build
+
+      - name: Upload Tauri bundle artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: cockpit-bundle-${{ matrix.os }}
+          path: desktop/shell/target/release/bundle/**/*
           if-no-files-found: error
           retention-days: 30

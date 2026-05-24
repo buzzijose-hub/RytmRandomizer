@@ -12,6 +12,8 @@ The **Cockpit** is the new GUI surface for live performance — a Tauri desktop 
 
 **Status:** alpha. The implementation is in active development on [`feat/cockpit-and-profile-model-bundle`](https://github.com/buzzijose-hub/RytmRandomizer/pulls); the V1.34 armed CLI path remains the stable runtime. The cockpit defaults to a mock device adapter (no MIDI port opened), matching the rest of the project's passive-default discipline.
 
+**Create your first profile via the wizard.** Phase 2 adds an in-cockpit **Profile Wizard** — click the "Create profile…" button in the Mutation Panel to launch it. The wizard walks you through four steps: naming the profile, adding inspiration sources (folders of SysEx kits, audio files, or artist / album / song references), analyzing each source through the existing `style_analysis/` pipeline plus a SysEx kit analyzer and a built-in artist-reference lookup, and reviewing the derived `StyleTrait` bars and pad mapping before saving. Saving writes the new `kind="user"` profile to `~/.rytm-randomizer/profiles/` and the cockpit's `ProfileChips` picks it up automatically. The wizard is passive by construction — it never opens a MIDI port and never sends MIDI. See [`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](docs/superpowers/specs/2026-05-24-profile-wizard-design.md) for the full design and [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for the operator walkthrough.
+
 **Launching the cockpit (dev loop):**
 
 ```bash
@@ -40,6 +42,8 @@ This path is for someone who just wants to run RytmRandomizer against their Anal
 ### 2. Install — option A: native installer (recommended)
 
 > **Coming soon.** The native installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) but the **first signed release has not shipped yet**. The build matrix lives in `.github/workflows/installers.yml`; release artifacts will be attached to the GitHub Release page once code-signing is provisioned. Until then, use option B.
+
+> **Heads up: two installers, two artifacts.** The Briefcase installer packages the Python CLI sidecar (the passive reports plus the armed `rytm-randomizer` runtime). The Cockpit GUI + Profile Wizard ship in a separate Tauri desktop bundle (see [`docs/BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md#cockpit--wizard-desktop-bundle)). Install both if you want the wizard authoring surface and the CLI.
 
 When available, the install flow is:
 

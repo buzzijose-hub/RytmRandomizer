@@ -105,7 +105,7 @@ sudo apt-get install libasound2-dev
 
 ## Cockpit / desktop development
 
-The Phase 1 cockpit (see [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md), [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md), and [`docs/ARCHITECTURE.md` §6.2](docs/ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1)) is a Tauri 2 + web frontend bundled with a Python sidecar. Working on the cockpit code requires three toolchains in addition to the Python dev setup above.
+The Phase 1 cockpit (see [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md), [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md), and [`docs/ARCHITECTURE.md` §6.2](docs/ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1)) is a Tauri 2 + web frontend bundled with a Python sidecar. Phase 2 layers the Profile Wizard on top (see [`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](docs/superpowers/specs/2026-05-24-profile-wizard-design.md) and [`docs/ARCHITECTURE.md` §6.3](docs/ARCHITECTURE.md#63-profile-wizard-layer-phase-2)). Working on the cockpit code — including the wizard — requires three toolchains in addition to the Python dev setup above.
 
 **Required toolchains:**
 
@@ -149,6 +149,14 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
 - **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
 - **CI runs the cockpit gates separately.** Python coverage on `rytm_randomizer/cockpit/**`, web lint/typecheck/Vitest/build, and Rust `cargo fmt --check` + `cargo test` + `cargo clippy` each run as first-class CI jobs alongside the existing pytest matrix.
+- **Profile Wizard uses `@tauri-apps/plugin-dialog` for file / folder pickers.** The Phase 2 wizard's Add step opens a native file picker (audio file or single SysEx dump) or folder picker (a directory of `.syx` kits) via Tauri 2's `dialog` plugin. The Tauri-side dialog plugin requires three things to work in a production bundle:
+
+  1. `tauri-plugin-dialog = "2"` declared in `desktop/shell/Cargo.toml` under `[dependencies]`.
+  2. `.plugin(tauri_plugin_dialog::init())` registered in `desktop/shell/src/main.rs` on the Tauri builder.
+  3. `dialog:allow-open` permission listed in `desktop/shell/capabilities/default.json` (Tauri 2 denies plugin access without an explicit per-window allow-list).
+
+  On the web side, `@tauri-apps/plugin-dialog` is declared in `desktop/web/package.json` and loaded by `AddStep.tsx` via a runtime dynamic import. Tests stub the import via an indirection in `AddStep.tsx`; the Tauri shell injects the real implementation at production runtime. The plugin is not used outside `desktop/web/src/wizard/**`; the rest of the cockpit frontend continues to talk only to the Python sidecar over WebSocket.
+- **Wizard analyzers are passive and stay off the MIDI boundary.** The Phase 2 `cockpit/wizard/analyze.py`, `cockpit/wizard/sysex_analyzer.py`, and `cockpit/wizard/reference_analyzer.py` modules read files, decode SysEx in memory, and look up reference text in a built-in `Final` table. None of them imports `mido` (or anything that lazily imports `mido`), and none of them opens a MIDI port. The `tests/architecture/test_no_side_effects.py` gate enforces this for the whole `cockpit/wizard/` subpackage just as it does for the rest of the package — the wizard fits cleanly inside the existing passive-default discipline.
 
 ## Cross-platform operation
 

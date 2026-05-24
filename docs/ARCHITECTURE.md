@@ -486,6 +486,218 @@ makes the choices it does — Phase 4's existence shapes Phase 1's seams.
 
 ---
 
+## 6.3 Profile Wizard layer (Phase 2)
+
+The `rytm_randomizer.cockpit.wizard` subpackage is the authoring surface
+for user-defined `ProfileModel`s. Phase 1 shipped the cockpit GUI plus a
+read-only `ProfileRegistry` populated with seven built-in `kind="scene"`
+profiles; Phase 2 closes the authoring gap so the operator can create
+`kind="user"` profiles by pointing the system at musical inspiration
+(folders of SysEx, audio files, artist or song references) and letting the
+analysis pipeline derive `StyleTrait`s and `TraitPadWeight` mappings.
+
+**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md)
+has two new mermaid diagrams that illustrate this section —
+[§30 Profile Wizard sequence](ARCHITECTURE_DIAGRAMS.md#30-profile-wizard-sequence-name--add--analyze--review--save-phase-2)
+and
+[§31 Profile Wizard components](ARCHITECTURE_DIAGRAMS.md#31-profile-wizard-component-diagram-phase-2).
+The source spec lives at
+[`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](superpowers/specs/2026-05-24-profile-wizard-design.md);
+the implementation plan is at
+[`docs/superpowers/plans/2026-05-24-profile-wizard.md`](superpowers/plans/2026-05-24-profile-wizard.md).
+
+### Package layout
+
+```
+rytm_randomizer/cockpit/wizard/
+    __init__.py              # Re-exports the public surface
+    state.py                 # WizardState, InspirationSource, AnalysisJob dataclasses
+    analyze.py               # analyze_source dispatcher + FeatureReport -> StyleTrait mapping
+    sysex_analyzer.py        # extract_kit_traits(path) for kit / sound SysEx dumps
+    reference_analyzer.py    # lookup_traits(text) for artist / album / song references
+    builder.py               # build_profile(name, description, jobs) -> ProfileModel
+    pad_mapping.py           # TRAIT_TO_PAD: Final[Mapping[str, int]] (built-in trait -> pad table)
+```
+
+The new code lives entirely under the existing `cockpit/` subpackage and
+adds no new top-level module (Gate 9). The web wizard surface
+(`desktop/web/src/wizard/`) is bundled by Tauri exactly the same way as
+the rest of the cockpit frontend.
+
+### The three new typed entities
+
+All three are frozen dataclasses defined in `cockpit/wizard/state.py`.
+Each carries a `Literal` discriminator and supports JSON round-trip via
+`to_dict` / `from_dict`. The wire format mirrors the Python shape so the
+WebSocket Protocol can pass values through unchanged.
+
+| Entity                | Purpose                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `InspirationSource`   | One operator-added source: ULID, `kind` (`kit`/`sound`/`song`/`album`/`artist`), `mode` (`file`/`folder`/`reference`), `location` (path for file/folder; name for reference), `display_name`, `added_at`. |
+| `AnalysisJob`         | One per-source analysis run: `source_id` back-reference, `status` (`pending`/`analyzing`/`ok`/`failed`), `progress` 0.0–1.0, `error`, `extracted_traits: tuple[StyleTrait, ...]`. |
+| `WizardState`         | Full wizard-session state: ULID, `step` (`name`/`add`/`analyze`/`review`), `name`, `description`, `sources` tuple, `jobs` tuple, `candidate_profile: ProfileModel \| None` (set on review). |
+
+`WizardState` exposes pure transition methods — `next_step()`,
+`with_source(...)`, `with_job_update(...)`, `with_candidate(...)` — that
+return a new instance instead of mutating in place. The cockpit's
+existing immutability discipline is preserved.
+
+### The Protocol surface — 8 commands, 3 events
+
+The wizard extends the Phase 1 WebSocket Protocol additively. Phase 1's
+existing commands and events continue working unchanged; the wizard
+commands are dispatched by a new branch in `cockpit/ws/handlers.py` that
+delegates to `cockpit/ws/wizard_handlers.py`. The new types are also
+registered in `cockpit/ws/protocol.py`'s `COMMAND_TYPES` and `EVENT_TYPES`
+constants so the typed wire format stays exhaustive.
+
+| Command (UI → engine)   | Returns                              | Notes |
+|---|---|---|
+| `wizard_start`          | `{ ok, wizard_id }`                  | Creates a new `WizardSession`. |
+| `wizard_set_metadata`   | `{ ok, state }`                      | Updates `name` and/or `description`. |
+| `wizard_add_source`     | `{ ok, state, source_id }`           | Appends one `InspirationSource`. |
+| `wizard_remove_source`  | `{ ok, state }`                      | Removes a source by id. |
+| `wizard_analyze`        | `{ ok }`                             | Runs each source through the analyzer; emits `analysis_progress` between sources. |
+| `wizard_review`         | `{ ok, candidate_profile }`          | Assembles the candidate `ProfileModel` via `ProfileBuilder`. |
+| `wizard_save`           | `{ ok, profile_id }`                 | Writes to `~/.rytm-randomizer/profiles/<id>.json` and emits `profile_created` plus `profile_changed`. |
+| `wizard_cancel`         | `{ ok }`                             | Drops the in-flight `WizardSession`. |
+
+| Event (engine → UI)       | Payload                              | When |
+|---|---|---|
+| `wizard_state_changed`    | `{ state: WizardState }`             | After any command that mutates state. |
+| `analysis_progress`       | `{ job: AnalysisJob }`               | Once per source as `wizard_analyze` advances. |
+| `profile_created`         | `{ profile: ProfileModel }`          | After `wizard_save` writes the profile to disk. |
+
+The existing Phase 1 `profile_changed` event also fires after
+`wizard_save` so the active-profile UI updates without a separate code
+path. Events remain whole-state payloads; the UI re-renders from the
+latest event per kind, matching the Phase 1 discipline.
+
+### Analysis adapter
+
+`cockpit/wizard/analyze.py` is the dispatcher that maps an
+`InspirationSource` to a tuple of `StyleTrait` values. It reuses the
+existing `rytm_randomizer.style_analysis/` infrastructure for the audio
+path and adds two new analyzers for the SysEx and reference paths.
+
+| Source kind / mode                                  | Analyzer path                                                                                        |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| audio file (`kind="song"`/`"album"`/`"sound"`, `mode="file"`)    | `style_analysis.extractor.extract_features(path) -> FeatureReport` -> `feature_report_to_traits(...)` |
+| audio folder (`mode="folder"`)                      | iterate `*.wav|*.mp3|*.flac|*.aif|*.aiff` per kind; weighted average of the per-file trait tuples.    |
+| SysEx file or folder (`kind="kit"`)                 | `sysex_analyzer.extract_kit_traits(path)` — parses the kit dump using existing `snapshot/` helpers; folder mode iterates `*.syx`. |
+| reference (`mode="reference"`)                      | `reference_analyzer.lookup_traits(text)` — a built-in `Final` lookup of 20 known artist / album names mapped to trait profiles; unknown names return a neutral profile with low confidence. |
+
+All three analyzers are deterministic and side-effect free except for
+reading files. They run synchronously on a worker thread (via
+`asyncio.to_thread` in the WS handler) so the event loop stays
+responsive while the WS server emits `analysis_progress` between
+sources. Audio fingerprint lookup against external services is
+explicitly out of scope for Phase 2 and is deferred to Phase 3+.
+
+### ProfileBuilder
+
+`cockpit/wizard/builder.py` aggregates the OK `AnalysisJob`s into one
+`ProfileModel`:
+
+```python
+def build_profile(
+    name: str,
+    description: str | None,
+    jobs: tuple[AnalysisJob, ...],
+) -> ProfileModel:
+    """Aggregate per-source traits into a single ProfileModel.
+
+    - Traits: weighted average of `extracted_traits` across all OK jobs,
+      normalized to 0..1.
+    - pad_mappings: derived from trait names via the `TRAIT_TO_PAD`
+      table in cockpit/wizard/pad_mapping.py.
+    - kind: "user"
+    - model_version: "1.0.0" initially; re-analysis bumps the patch level.
+    - source_summary: e.g. "5 sources, 1,243 analyzed signals" for the UI.
+    """
+```
+
+`pad_mapping.TRAIT_TO_PAD: Final[Mapping[str, int]]` is the built-in
+trait → pad assignment table. The standard mapping is
+`rolling_low_end → Pad 1 (BD)`, `metallic_tension → Pad 2 (SD)`,
+`hat_density → Pad 3 (CH/OH)`, `filter_motion → Pad 4 (FX/FLT)`.
+Operator-overridable pad mapping is deferred to a later iteration; for
+Phase 2 the table is immutable.
+
+Edge cases:
+
+- No OK jobs → `build_profile` raises `EmptyAnalysisError`; the UI
+  surfaces a "fix" affordance in the Review step.
+- A job that finished with no extracted traits contributes nothing to
+  the average (it is not an error — just a low-signal source).
+- A job that failed entirely is excluded; the UI offers retry / remove /
+  replace from the Analyze step before `wizard_review` runs.
+
+### Relationship to existing layers
+
+The wizard layer is **additive**: like the rest of the cockpit, it
+displaces nothing.
+
+- **`style_analysis/` is reused.** The audio path calls the existing
+  `extract_features` function directly. The Phase 2 wizard adds the
+  `feature_report_to_traits` mapping helper plus the two new analyzers,
+  but the underlying feature extraction is the same code path the live
+  analyzer reports already use.
+- **`cockpit/data/profile_model.py` is reused.** `build_profile` returns
+  the same `ProfileModel` dataclass the Phase 1 registry consumes.
+  Saving a wizard-built profile is just `ProfileRegistry.save(profile)`.
+- **`cockpit/ws/` is extended, not replaced.** The wizard's commands are
+  added through a new dispatch branch in the existing
+  `handlers.handle_command` function. The Phase 1 commands continue
+  working unchanged; the `wizard_*` commands are isolated to their own
+  handlers + session module.
+- **V1.34 parity is untouched.** The wizard never touches engine code or
+  the V1.34 reference path. The 685 JSON goldens under
+  `tests/fixtures/v134_parity/` remain byte-identical after Phase 2.
+- **Passive / armed boundary is preserved.** The wizard is passive by
+  construction — it reads files, decodes SysEx in memory, and writes
+  JSON profiles. It never opens a MIDI port and never sends MIDI. Only
+  the cockpit's armed runtime can drive hardware.
+- **`mido` lazy-import discipline is preserved.** None of the wizard
+  analyzers import `mido`; SysEx parsing uses the existing
+  `snapshot/envelope.py` helpers, which are pure bytes-in / dataclass-out.
+- **Architecture invariants apply unchanged.** Gate 9 (subpackage by
+  default) is satisfied because the new code lives under
+  `cockpit/wizard/` rather than a new top-level module. Gate 10
+  (`Literal` types) is satisfied by the discriminators on
+  `InspirationSource`, `AnalysisJob`, and `WizardState`. Gate 12
+  (`Final` constants) is satisfied by `TRAIT_TO_PAD` and the
+  reference-analyzer lookup table.
+
+### Frontend surface
+
+The web wizard lives under `desktop/web/src/wizard/`:
+
+- `<Wizard />` — top-level container; mounts when route is `/wizard`.
+- `<WizardSteps />` — step indicator (Name · Add · Analyze · Review).
+- `<NameStep />`, `<AddStep />`, `<AnalyzeStep />`, `<ReviewStep />` —
+  one component per wizard step.
+- `<WizardLauncher />` — a small "Create profile…" button added to the
+  cockpit's `MutationPanel` that opens the wizard route.
+
+State flows through a new `wizard` slice in
+`desktop/web/src/state/wizard_store.ts`; the slice subscribes to
+`wizard_state_changed`, `analysis_progress`, and `profile_created`. File
+and folder selection in the `<AddStep />` uses
+`@tauri-apps/plugin-dialog`'s `open({ directory: true })` and
+`open({ multiple: false })`; reference selection is a plain text input.
+
+### Phase boundaries
+
+Phase 2 closes the authoring loop. Phase 3 (model export to portable
+binary) and Phase 4 (hardware runtime) remain out of scope and will get
+their own design specs. The wizard's output is the same `ProfileModel`
+shape Phase 3 will export and Phase 4 will execute on dedicated
+hardware, so Phase 2's choices stay forward-compatible with that
+roadmap.
+
+---
+
 ## 7. Enforcement summary
 
 The rules above are mechanically enforced by:

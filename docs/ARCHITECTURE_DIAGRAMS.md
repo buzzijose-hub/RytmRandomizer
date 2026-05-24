@@ -2023,3 +2023,293 @@ sequenceDiagram
   with `via="send"`. Only explicit SAVE promotes a snapshot to
   `kind="saved"` with an optional label; only SAVE writes the snapshot
   to the device's persistent kit memory (Rytm SysEx kit dump).
+
+---
+
+## 30. Profile Wizard Sequence (Name → Add → Analyze → Review → Save, Phase 2)
+
+> **Forward-looking diagram.** The Phase 2 Profile Wizard is in active
+> implementation (7 parallel workstreams against
+> `feat/profile-wizard-bundle`); not all of these components exist on
+> `modularize-v1.34` yet. This diagram describes the intended Phase 2
+> shape; the source spec is the authoritative reference.
+
+The wizard's four-step lifecycle, from operator clicking "Create
+profile…" through `profile_created`. The pattern mirrors §29's SEND
+sequence: typed command in, synchronous ack, whole-state event(s) push
+back. The new wrinkle in Phase 2 is the streaming `analysis_progress`
+event — one per source as the analyzer worker thread walks them — so
+the UI can render per-source progress bars during the Analyze step.
+The source spec is at
+[`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](superpowers/specs/2026-05-24-profile-wizard-design.md);
+the architecture-doc explanation is at
+[`docs/ARCHITECTURE.md` §6.3](ARCHITECTURE.md#63-profile-wizard-layer-phase-2).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Operator
+    participant UI as Web wizard<br/>(desktop/web/src/wizard/)
+    participant WS as WebSocket server<br/>(cockpit/ws/server.py)
+    participant Handlers as Wizard handlers<br/>(cockpit/ws/wizard_handlers.py)
+    participant Session as WizardSession<br/>(cockpit/ws/wizard_session.py)
+    participant Analyze as Analysis adapter<br/>(cockpit/wizard/analyze.py)
+    participant Builder as ProfileBuilder<br/>(cockpit/wizard/builder.py)
+    participant Registry as ProfileRegistry<br/>(cockpit/profiles/registry.py)
+    participant Disk as Profile directory<br/>(~/.rytm-randomizer/profiles/)
+
+    Operator->>UI: clicks "Create profile..." in MutationPanel
+    UI->>WS: wizard_start { }
+    WS->>Handlers: dispatch("wizard_start", payload)
+    Handlers->>Session: create new WizardSession (step="name")
+    Session-->>Handlers: WizardState (empty)
+    Handlers-->>WS: { ok: true, wizard_id }
+    WS-->>UI: ack + event wizard_state_changed { state }
+    UI-->>Operator: NameStep visible
+
+    Note over Operator,UI: Step 1 - Name
+    Operator->>UI: types "buzzi" + optional description
+    UI->>WS: wizard_set_metadata { name: "buzzi", description }
+    WS->>Handlers: dispatch("wizard_set_metadata", payload)
+    Handlers->>Session: state.with_metadata(name, description)
+    Handlers-->>WS: { ok: true, state }
+    WS-->>UI: event wizard_state_changed { state }
+
+    Note over Operator,UI: Step 2 - Add (two sources)
+    Operator->>UI: + kit -> Tauri folder picker -> /Music/Kits/Industrial
+    UI->>WS: wizard_add_source { kind: "kit", mode: "folder", location, display_name }
+    WS->>Handlers: dispatch("wizard_add_source", payload)
+    Handlers->>Session: state.with_source(InspirationSource)
+    Handlers-->>WS: { ok: true, state, source_id }
+    WS-->>UI: event wizard_state_changed { state }
+
+    Operator->>UI: + artist -> text input "Surgeon"
+    UI->>WS: wizard_add_source { kind: "artist", mode: "reference", location: "Surgeon", display_name: "Surgeon" }
+    WS->>Handlers: dispatch("wizard_add_source", payload)
+    Handlers->>Session: state.with_source(InspirationSource)
+    Handlers-->>WS: { ok: true, state, source_id }
+    WS-->>UI: event wizard_state_changed { state }
+
+    Note over Operator,UI: Step 3 - Analyze (per-source progress)
+    Operator->>UI: clicks Analyze
+    UI->>WS: wizard_analyze { }
+    WS->>Handlers: dispatch("wizard_analyze", payload)
+    Handlers-->>WS: { ok: true } (ack returns immediately)
+    WS-->>UI: ack
+
+    loop for each InspirationSource in state.sources
+        Handlers->>Analyze: analyze_source(source) on worker thread
+        Note over Analyze: SysEx folder -> sysex_analyzer.extract_kit_traits<br/>Reference text -> reference_analyzer.lookup_traits
+        Analyze-->>Handlers: tuple[StyleTrait, ...]
+        Handlers->>Session: state.with_job_update(AnalysisJob status=ok)
+        Handlers-->>WS: event analysis_progress { job }
+        WS-->>UI: per-source progress bar advances
+    end
+
+    Handlers-->>WS: event wizard_state_changed { state (step="analyze", all jobs ok) }
+    WS-->>UI: Analyze step shows all green; Review enabled
+
+    Note over Operator,UI: Step 4 - Review
+    Operator->>UI: clicks Review
+    UI->>WS: wizard_review { }
+    WS->>Handlers: dispatch("wizard_review", payload)
+    Handlers->>Builder: build_profile(name, description, jobs)
+    Builder-->>Handlers: ProfileModel (candidate)
+    Handlers->>Session: state.with_candidate(profile)
+    Handlers-->>WS: { ok: true, candidate_profile }
+    WS-->>UI: event wizard_state_changed { state (step="review") }
+    UI-->>Operator: trait bars + pad mapping table + Save button
+
+    Note over Operator,UI: Step 4 (continued) - Save
+    Operator->>UI: clicks Save
+    UI->>WS: wizard_save { }
+    WS->>Handlers: dispatch("wizard_save", payload)
+    Handlers->>Registry: save(candidate_profile)
+    Registry->>Disk: write ~/.rytm-randomizer/profiles/<id>.json
+    Disk-->>Registry: file written
+    Registry-->>Handlers: profile_id
+
+    par engine emits two whole-state events
+        Handlers-->>WS: event profile_created { profile }
+    and
+        Handlers-->>WS: event profile_changed { profile }
+    end
+
+    WS-->>UI: cockpit ProfileChips picks up the new "buzzi" profile
+    Handlers-->>WS: { ok: true, profile_id }
+    WS-->>UI: ack
+    UI-->>Operator: wizard closes; cockpit shows the new active profile
+```
+
+**Guarantees:**
+
+- **Synchronous ack, then events.** Every wizard command returns
+  `{ ok: bool, ... }` immediately; whole-state events arrive right
+  after. `wizard_analyze` is the one exception: the ack returns as soon
+  as the analysis task is queued, and the result is delivered through a
+  stream of `analysis_progress` events plus a final
+  `wizard_state_changed`.
+- **Whole-state events match Phase 1.** `wizard_state_changed.state` is
+  the complete `WizardState`; the UI re-renders from it without
+  delta-merging.
+- **Two events on save.** `wizard_save` emits both `profile_created`
+  (the wizard's confirmation) and `profile_changed` (the cockpit's
+  existing active-profile event). This lets the wizard close cleanly
+  while the cockpit's `ProfileChips` picks up the new profile without
+  a separate code path.
+- **Passive throughout.** The wizard reads files, decodes SysEx
+  in memory, and writes one JSON file at save time. It never opens a
+  MIDI port and never sends MIDI; the armed runtime is the only thing
+  in the cockpit that touches hardware.
+
+---
+
+## 31. Profile Wizard Component Diagram (Phase 2)
+
+> **Forward-looking diagram.** The Phase 2 Profile Wizard is in active
+> implementation (7 parallel workstreams against
+> `feat/profile-wizard-bundle`); not all of these components exist on
+> `modularize-v1.34` yet. This diagram describes the intended Phase 2
+> shape; the source spec is the authoritative reference.
+
+The Phase 2 Profile Wizard sits inside the existing cockpit subpackage
+and extends the cockpit's WebSocket Protocol. This diagram shows the
+new modules (`cockpit/wizard/` and `cockpit/ws/wizard_*`), the web
+wizard surface that consumes the extended protocol, and the existing
+abstractions the wizard reuses (`style_analysis/`, `cockpit/data/`,
+`cockpit/profiles/`, `cockpit/ws/`).
+
+```mermaid
+flowchart TB
+    Operator["Operator<br/>(at the Elektron rig)"]
+
+    subgraph Desktop["Desktop binary (one process)"]
+        subgraph TauriHost["Tauri shell (Rust)"]
+            TauriShell["desktop/shell/<br/>· opens one window<br/>· spawns + supervises sidecar<br/>· @tauri-apps/plugin-dialog<br/>(file/folder picker)"]
+        end
+
+        subgraph WebFrontend["Web frontend (TypeScript + React)"]
+            CockpitView["Cockpit view<br/>desktop/web/src/cockpit/<br/>(Phase 1 surface)"]
+            MutationPanel["MutationPanel.tsx<br/>+ Create profile... button"]
+            WizardRoot["&lt;Wizard /&gt;<br/>desktop/web/src/wizard/Wizard.tsx<br/>(route: /wizard)"]
+            WizardSteps["&lt;WizardSteps /&gt;<br/>· NameStep<br/>· AddStep<br/>· AnalyzeStep<br/>· ReviewStep"]
+            WizardStore["wizard_store.ts<br/>desktop/web/src/state/<br/>· subscribes to wizard events<br/>· holds current WizardState"]
+            WSClient["WebSocket client<br/>(shared with cockpit)"]
+        end
+    end
+
+    subgraph Sidecar["Python sidecar process"]
+        subgraph WizardLayer["cockpit/wizard/ (Phase 2 - NEW)"]
+            WState["state.py<br/>· WizardState<br/>· InspirationSource<br/>· AnalysisJob"]
+            WAnalyze["analyze.py<br/>· analyze_source dispatcher<br/>· feature_report_to_traits"]
+            WSysex["sysex_analyzer.py<br/>· extract_kit_traits(path)"]
+            WReference["reference_analyzer.py<br/>· lookup_traits(text)<br/>· built-in Final dict"]
+            WBuilder["builder.py<br/>· build_profile(name, description, jobs)<br/>· EmptyAnalysisError"]
+            WPadMap["pad_mapping.py<br/>· TRAIT_TO_PAD: Final[Mapping[str, int]]"]
+        end
+
+        subgraph WizardWS["cockpit/ws/wizard_* (Phase 2 - NEW)"]
+            WSWizProto["wizard_protocol.py<br/>· 8 command types<br/>· 3 event types"]
+            WSWizSession["wizard_session.py<br/>· WizardSession dataclass<br/>(per WS client)"]
+            WSWizHandlers["wizard_handlers.py<br/>· wizard_start/set_metadata<br/>· wizard_add/remove_source<br/>· wizard_analyze/review/save/cancel"]
+        end
+
+        subgraph CockpitCore["cockpit/ (Phase 1 - reused)"]
+            WSServer["ws/server.py<br/>FastAPI + websockets<br/>/ws @ 127.0.0.1:4317"]
+            WSHandlers["ws/handlers.py<br/>+ wizard_* dispatch branch"]
+            WSProto["ws/protocol.py<br/>+ wizard_* entries in<br/>COMMAND_TYPES / EVENT_TYPES"]
+            Registry["profiles/registry.py<br/>save() / load() / list()"]
+            ProfileModel["data/profile_model.py<br/>ProfileModel, StyleTrait,<br/>TraitPadWeight"]
+        end
+
+        subgraph StyleAnalysis["style_analysis/ (reused)"]
+            Extractor["extractor.py<br/>extract_features(path)<br/>-> FeatureReport"]
+            FeatureReport["feature_report.py<br/>FeatureReport dataclass"]
+            Library["library.py<br/>folder iteration helpers"]
+        end
+
+        subgraph SnapshotEnv["snapshot/envelope.py (reused)"]
+            Envelope["unpack_elektron_7bit<br/>find_kit_record<br/>read_ascii_name"]
+        end
+    end
+
+    Disk[("Profile directory<br/>~/.rytm-randomizer/profiles/<br/>flat JSON files")]
+
+    Operator -->|"clicks Create profile..."| MutationPanel
+    MutationPanel -->|"opens /wizard route"| WizardRoot
+    WizardRoot --> WizardSteps
+    WizardSteps -->|"reads"| WizardStore
+    WizardSteps -->|"sends typed commands"| WSClient
+    WizardStore <-->|"subscribes to events"| WSClient
+    TauriShell -->|"@tauri-apps/plugin-dialog<br/>(folder / file picker)"| WizardSteps
+
+    WSClient <-->|"WebSocket<br/>wizard_* commands + events<br/>(typed JSON)"| WSServer
+    WSServer --> WSHandlers
+    WSHandlers -->|"cmd.startswith('wizard_')"| WSWizHandlers
+    WSHandlers --> WSProto
+    WSWizHandlers --> WSWizProto
+    WSWizHandlers --> WSWizSession
+    WSWizSession --> WState
+
+    WSWizHandlers --> WAnalyze
+    WSWizHandlers --> WBuilder
+    WSWizHandlers -->|"on wizard_save"| Registry
+    Registry <-->|"read / write"| Disk
+
+    WAnalyze --> WSysex
+    WAnalyze --> WReference
+    WAnalyze -->|"audio file/folder"| Extractor
+    Extractor --> FeatureReport
+    WAnalyze -->|"folder iteration"| Library
+
+    WSysex --> Envelope
+    WBuilder --> WPadMap
+    WBuilder --> ProfileModel
+
+    Operator -. "sees per-source progress<br/>+ trait bars<br/>+ pad mapping table" .-> WizardSteps
+
+    style WState fill:#efe,stroke:#474
+    style WAnalyze fill:#efe,stroke:#474
+    style WSysex fill:#efe,stroke:#474
+    style WReference fill:#efe,stroke:#474
+    style WBuilder fill:#efe,stroke:#474
+    style WPadMap fill:#efe,stroke:#474
+    style WSWizProto fill:#efe,stroke:#474
+    style WSWizSession fill:#efe,stroke:#474
+    style WSWizHandlers fill:#efe,stroke:#474
+    style WizardRoot fill:#efe,stroke:#474
+    style WizardSteps fill:#efe,stroke:#474
+    style WizardStore fill:#efe,stroke:#474
+    style WSServer fill:#eef,stroke:#447
+    style WSHandlers fill:#eef,stroke:#447
+    style WSProto fill:#eef,stroke:#447
+    style Registry fill:#eef,stroke:#447
+    style ProfileModel fill:#eef,stroke:#447
+    style TauriShell fill:#fef,stroke:#747
+    style Disk fill:#fee,stroke:#a44
+```
+
+**Notes:**
+
+- **Green nodes are new in Phase 2.** Blue nodes are the Phase 1 surface
+  the wizard extends. The diagram makes the additive shape explicit:
+  the wizard composes the existing `style_analysis/`, `cockpit/data/`,
+  `cockpit/profiles/`, and `cockpit/ws/` layers rather than rebuilding
+  any of them.
+- **One new dispatch branch.** `cockpit/ws/handlers.py` grows one
+  `elif cmd_type.startswith("wizard_")` branch that delegates to
+  `wizard_handlers.handle_wizard_command(...)`. The Phase 1 commands
+  continue working unchanged.
+- **One small UI change in the cockpit.** `MutationPanel.tsx` gains a
+  "Create profile…" button (the `<WizardLauncher />` from §6.3).
+  Everything else under `desktop/web/src/wizard/**` is new and isolated.
+- **Tauri's plugin-dialog is the only new toolchain dependency.**
+  `@tauri-apps/plugin-dialog` ships as part of the Tauri 2 standard kit;
+  no new Python package and no new Rust crate are introduced.
+- **Architecture invariants apply unchanged.** Gate 9 (subpackage by
+  default) is satisfied because the new code lives under
+  `cockpit/wizard/` rather than as new top-level modules. Gate 10
+  (`Literal` types) is satisfied by the discriminators on
+  `InspirationSource`, `AnalysisJob`, and `WizardState`. Gate 12
+  (`Final` constants) is satisfied by `TRAIT_TO_PAD` and the
+  reference-analyzer lookup table.

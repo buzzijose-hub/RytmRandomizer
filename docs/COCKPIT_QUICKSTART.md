@@ -182,14 +182,113 @@ left (your current pad state) and a Mutation Panel on the right
    persistent kit slot; the dot turns green.
 7. **Hit UNDO** — walks the history back one step.
 
-Authoring your own `kind="user"` profiles needs the Phase 2 Profile
-Wizard, which is out of scope for this Phase 1 cockpit (it gets its own
-spec). Until then, the seven built-in scenes are the starting set.
-
 Profiles live as flat JSON files under `~/.rytm-randomizer/profiles/` on
 Linux (`$XDG_CONFIG_HOME/rytm-randomizer/profiles/` is honored if set),
 and platform-appropriate paths on macOS and Windows. You can hand-edit
-the JSON to author profiles before the wizard ships.
+the JSON to author profiles, but the supported authoring path is the
+Phase 2 Profile Wizard described below.
+
+---
+
+## 5b. Creating your first profile
+
+The Phase 2 **Profile Wizard** is the in-cockpit authoring surface for
+`kind="user"` profiles. It turns a pile of musical inspiration — a
+folder of Rytm SysEx kits, a song file, an artist name — into a
+deployable `ProfileModel` you can select from the cockpit's
+`ProfileChips` and drive with the depth slider. The wizard is passive
+by construction: it reads files, decodes SysEx in memory, and writes
+one JSON file at save time. It never opens a MIDI port and never sends
+MIDI; the armed runtime is the only thing in the cockpit that touches
+hardware.
+
+The walkthrough below assumes the cockpit is already launched per
+sections 1–4 and you are looking at the v10 window.
+
+1. **Open the wizard.** Click the **+ Create profile…** button in the
+   Mutation Panel (right side of the window, under the depth slider).
+   The cockpit navigates to `#/wizard` (the wizard surface lives behind
+   the hash router mounted in `App.tsx`) and shows the four-step
+   indicator at the top: **Name · Add · Analyze · Review**.
+
+2. **Step 1 — Name.** Type a profile name (e.g. `buzzi`), an optional
+   description (e.g. `industrial-leaning hypnotic techno`), and an
+   optional color tag. Click **Next** to advance. The cockpit's
+   sidecar emits a `wizard_state_changed` event so the step indicator
+   updates immediately.
+
+3. **Step 2 — Add inspiration sources.** Click the per-kind add
+   buttons (`+ kit`, `+ sound`, `+ song`, `+ album`, `+ artist`) to
+   build a source list. For the worked example below, add three
+   sources:
+
+   - `+ kit` → opens a Tauri folder picker → pick a folder of `.syx`
+     kit dumps (the wizard reads every supported Rytm kit it finds).
+   - `+ song` → opens a Tauri file picker → pick one audio file
+     (`.wav`, `.mp3`, `.flac`, `.aif`, `.aiff`).
+   - `+ artist` → opens a plain text input → type a reference name
+     (`Surgeon`, `Daniel Avery`, etc.). The built-in lookup table maps
+     20 known names to trait profiles; unknown names contribute a
+     neutral, low-confidence trait set.
+
+   Each added source appears in the list with a remove (×) affordance.
+   Add as many sources as you like, in any order. Click **Next** when
+   the list looks right.
+
+4. **Step 3 — Analyze.** Click **Analyze**. The wizard runs each
+   source through the analysis pipeline on a worker thread and emits
+   one `analysis_progress` event per source as it advances:
+
+   - Audio file / folder → existing `style_analysis.extractor` produces
+     a `FeatureReport`, then the wizard's `feature_report_to_traits`
+     mapper converts the report into a tuple of `StyleTrait`s.
+   - SysEx file / folder → `sysex_analyzer.extract_kit_traits` parses
+     the kit dump with the shared `snapshot/envelope.py` helpers and
+     derives per-pad parameter statistics that map to traits.
+   - Reference text → `reference_analyzer.lookup_traits` consults the
+     built-in lookup table.
+
+   The Analyze step shows one progress bar per source; jobs go from
+   `pending` to `analyzing` to `ok` (or `failed` with a fix
+   affordance: retry, remove, or replace). When every job reaches a
+   terminal state, the **Review** button enables. Failures here are
+   recoverable — fix the source and re-analyze without restarting the
+   wizard.
+
+5. **Step 4 — Review.** Click **Review**. The wizard's
+   `ProfileBuilder` aggregates the OK jobs' traits by weighted
+   average, normalizes to 0..1, and assembles a candidate
+   `ProfileModel`. The Review step renders:
+
+   - The derived `StyleTrait` bars (the same shape the cockpit's
+     reference panel uses).
+   - The `TraitPadWeight` mapping table, derived from the built-in
+     `TRAIT_TO_PAD` table (standard mapping is
+     `rolling_low_end → Pad 1`, `metallic_tension → Pad 2`,
+     `hat_density → Pad 3`, `filter_motion → Pad 4`).
+   - A source summary line (e.g. `5 sources, 1,243 analyzed signals`).
+   - A rename / description-edit affordance plus a **Back to Analyze**
+     button if you want to add more sources or re-analyze.
+
+6. **Step 4 (continued) — Save.** Click **Save**. The wizard writes
+   the new profile to `~/.rytm-randomizer/profiles/<id>.json` via the
+   existing `ProfileRegistry.save(profile)` call, then emits both
+   `profile_created` (the wizard's confirmation) and `profile_changed`
+   (the cockpit's existing active-profile event). The hash route flips
+   back from `#/wizard` to the cockpit root and the new profile chip
+   appears in the `ProfileChips` strip, already selected as the active
+   profile and ready to drive with the depth slider.
+
+7. **Verify the round-trip.** Slide the depth knob, watch the ghost
+   overlay update against the trait weights you just authored, and
+   hit **REGEN** for a new candidate at the same depth. Hit **SEND**
+   to apply the candidate (the mock device adapter records the
+   message internally; the armed path is gated behind an explicit
+   arm step per §6 below).
+
+If you want to abandon a wizard in flight, the **Cancel** button on
+any step emits `wizard_cancel`, drops the in-flight `WizardSession`,
+and returns you to the cockpit with no profile written.
 
 ---
 
@@ -269,8 +368,12 @@ dev server, Rust hot-reload, and the sidecar all spin up together.
 
 ## Reference
 
-- [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md) — full design spec (events, commands, profile model, mutation engine, phasing).
-- [`docs/superpowers/plans/2026-05-23-cockpit-and-profile-model.md`](superpowers/plans/2026-05-23-cockpit-and-profile-model.md) — 12-workstream parallel implementation plan.
-- [`docs/ARCHITECTURE.md` §6.2](ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1) — where the cockpit fits in the package architecture.
-- [`docs/ARCHITECTURE_DIAGRAMS.md` §28 + §29](ARCHITECTURE_DIAGRAMS.md#28-cockpit--profile-model-c4-component-diagram-phase-1) — C4 component diagram and SEND command sequence diagram.
+- [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md) — full Phase 1 cockpit design spec (events, commands, profile model, mutation engine, phasing).
+- [`docs/superpowers/plans/2026-05-23-cockpit-and-profile-model.md`](superpowers/plans/2026-05-23-cockpit-and-profile-model.md) — 12-workstream Phase 1 parallel implementation plan.
+- [`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](superpowers/specs/2026-05-24-profile-wizard-design.md) — Phase 2 Profile Wizard design spec (wizard flow, data abstractions, analyzers, ProfileBuilder).
+- [`docs/superpowers/plans/2026-05-24-profile-wizard.md`](superpowers/plans/2026-05-24-profile-wizard.md) — 7-workstream Phase 2 parallel implementation plan.
+- [`docs/ARCHITECTURE.md` §6.2](ARCHITECTURE.md#62-cockpit--profile-model-layer-phase-1) — where the Phase 1 cockpit fits in the package architecture.
+- [`docs/ARCHITECTURE.md` §6.3](ARCHITECTURE.md#63-profile-wizard-layer-phase-2) — where the Phase 2 Profile Wizard fits in the package architecture.
+- [`docs/ARCHITECTURE_DIAGRAMS.md` §28 + §29](ARCHITECTURE_DIAGRAMS.md#28-cockpit--profile-model-c4-component-diagram-phase-1) — Phase 1 C4 component diagram and SEND command sequence diagram.
+- [`docs/ARCHITECTURE_DIAGRAMS.md` §30 + §31](ARCHITECTURE_DIAGRAMS.md#30-profile-wizard-sequence-name--add--analyze--review--save-phase-2) — Phase 2 wizard sequence diagram and component diagram.
 - [`CONTRIBUTING.md` § Cockpit / desktop development](../CONTRIBUTING.md#cockpit--desktop-development) — developer setup, build commands, dev-loop tips.
