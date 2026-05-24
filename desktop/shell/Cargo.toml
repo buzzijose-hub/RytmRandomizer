@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Tauri shell for the RytmRandomizer cockpit"
 authors = ["RytmRandomizer contributors"]
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.88"
 
 [lib]
 name = "rytm_randomizer_shell_lib"
