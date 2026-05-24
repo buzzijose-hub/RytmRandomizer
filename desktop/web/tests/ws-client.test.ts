@@ -207,26 +207,28 @@ describe('CockpitClient — defaults & constants', () => {
     const receivers: unknown[] = [];
     const fakeSetTimeout = function (this: unknown): ReturnType<typeof setTimeout> {
       receivers.push(this);
-      return 1 as ReturnType<typeof setTimeout>;
-    } as typeof setTimeout;
+      return {} as ReturnType<typeof setTimeout>;
+    } as unknown as typeof setTimeout;
     const fakeClearTimeout = function (this: unknown): void {
       receivers.push(this);
-    } as typeof clearTimeout;
+    } as unknown as typeof clearTimeout;
     vi.stubGlobal('setTimeout', fakeSetTimeout);
     vi.stubGlobal('clearTimeout', fakeClearTimeout);
 
-    let socket: FakeWebSocket | null = null;
+    const sockets: FakeWebSocket[] = [];
     const client = new CockpitClient({
       url: 'ws://test/ws',
       disableReconnect: true,
       requestIdGenerator: () => 'r1',
       webSocketFactory: (url) => {
-        socket = new FakeWebSocket(url);
+        const socket = new FakeWebSocket(url);
+        sockets.push(socket);
         return socket;
       },
     });
     client.connect();
-    if (socket === null) throw new Error('socket not created');
+    const socket = sockets[0];
+    if (socket === undefined) throw new Error('socket not created');
     socket.emitOpen();
 
     const promise = client.send({ type: 'regen' });
