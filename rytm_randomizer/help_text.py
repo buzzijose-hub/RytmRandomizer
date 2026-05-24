@@ -560,6 +560,8 @@ USAGE = (
     "[--view-model-label <text>] [--state-prefix <text>] "
     "[--render-contract-label <text>] "
     "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
+    "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
+    "[--label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -2309,6 +2311,30 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _cockpit_send_plan_readiness_report_help():
+    from .reports.cockpit_send_plan_operator_readiness import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: cockpit-send-plan-readiness-report
+
+Usage:
+  python -m rytm_randomizer.cli cockpit-send-plan-readiness-report --plan-json <json>
+  python -m rytm_randomizer.cli cockpit-send-plan-readiness-report --plan-file <path>
+  python -m rytm_randomizer.cli cockpit-send-plan-readiness-report --plan-json <json> --label <text> --json
+  python -m rytm_randomizer.cli cockpit-send-plan-readiness-report --help
+
+Arguments:
+  --plan-json <json>|--plan-file <path>
+
+Behavior:
+  Builds passive send-plan operator readiness from CockpitSendPlan metadata.
+  The report explains ready versus blocked SEND state, pad packet rows,
+  locked pads, blocked reasons, operator next action, deterministic JSON,
+  and replayable passive command metadata without preparing or applying a SEND plan.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -2411,6 +2437,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-contract-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--boundary-label <text>] [--hardware-entrypoint <command>] [--passive-entrypoint <command>] [--ws-port-env <name>] [--json]
+  python -m rytm_randomizer.cli cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) [--label <text>] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -2595,6 +2622,8 @@ Commands:
                     Compose passive GUI desktop render contracts into future render harnesses.
   style-performance-arc-live-gui-cockpit-boundary-readiness-report
                     Compose passive GUI desktop render harnesses into cockpit boundary readiness.
+  cockpit-send-plan-readiness-report
+                    Explain prepared cockpit SEND plan readiness for operator review.
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -2941,6 +2970,7 @@ Safety:
     "style-performance-arc-live-gui-cockpit-boundary-readiness-report": (
         _style_performance_arc_live_gui_cockpit_boundary_readiness_report_help
     ),
+    "cockpit-send-plan-readiness-report": _cockpit_send_plan_readiness_report_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:

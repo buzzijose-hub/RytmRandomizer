@@ -975,6 +975,7 @@ flowchart LR
         DualStyleMutationIntentReport["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreviewReport["dual-machine-style-mutation-mock-preview-report"]
         StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state/live-gui-playback-transcript/live-gui-playback-validation/live-gui-test-harness-contract/live-gui-test-harness-readiness/live-gui-implementation-bridge/live-gui-desktop-blueprint/live-gui-desktop-app-plan/live-gui-desktop-component-contract/live-gui-desktop-view-model/live-gui-desktop-render-contract/live-gui-desktop-render-harness"]
+        CockpitSendPlanReadinessReport["cockpit-send-plan-readiness-report<br/>operator SEND readiness from CockpitSendPlan"]
         QuickStatus["quick-status"]
     end
 
@@ -1698,6 +1699,7 @@ flowchart LR
         DualStyleMutationIntent["dual-machine-style-mutation-intent-report"]
         DualStyleMutationMockPreview["dual-machine-style-mutation-mock-preview-report"]
         StylePerformanceArcReports["style-performance-arc-* reports<br/>set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state/live-gui-playback-transcript/live-gui-playback-validation/live-gui-test-harness-contract/live-gui-test-harness-readiness/live-gui-implementation-bridge/live-gui-desktop-blueprint/live-gui-desktop-app-plan/live-gui-desktop-component-contract/live-gui-desktop-view-model/live-gui-desktop-render-contract/live-gui-desktop-render-harness"]
+        CockpitSendPlanReadiness["cockpit-send-plan-readiness-report"]
         Status["project-status / quick-status"]
     end
 
@@ -1738,6 +1740,7 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-intent-report"| CLI
     CliRegistry -->|"registered passive command:<br/>dual-machine-style-mutation-mock-preview-report"| CLI
     CliRegistry -->|"registered passive commands:<br/>style-performance-arc set-plan/readiness/audition/rehearsal/live-session/live-render/live-cue-sheet/live-runbook/reference-match(+stage-packet)/stage-routing/stage-rehearsal-state/live-set-cockpit/live-show-export/live-transition-timeline/live-command-deck/live-state/live-readiness/live-control-surface/live-analyzer-handoff/live-analyzer-targets/live-gui-analyzer-readiness/live-gui-rehearsal-session/live-gui-capture-queue/live-gui-capture-review/live-gui-sidecar-session/live-gui-screen-contract/live-gui-render-tree/live-gui-analyzer-overlay/live-gui-analyzer-frame/live-gui-interaction-script/live-gui-action-reducer/live-gui-controller-state/live-gui-playback-transcript/live-gui-playback-validation/live-gui-test-harness-contract/live-gui-test-harness-readiness/live-gui-implementation-bridge/live-gui-desktop-blueprint/live-gui-desktop-app-plan/live-gui-desktop-component-contract/live-gui-desktop-view-model/live-gui-desktop-render-contract/live-gui-desktop-render-harness"| CLI
+    CliRegistry -->|"registered passive command:<br/>cockpit-send-plan-readiness-report"| CLI
     CliRegistry -.->|"future-extension seam:<br/>future commands register CliCommand entries here<br/>instead of growing cli.py inline"| CLI
 
     CLI -.->|"not implemented in passive CLI"| NotPresent
