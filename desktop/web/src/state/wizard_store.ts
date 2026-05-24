@@ -85,14 +85,12 @@ function applyAnalysisProgress(
   current: WizardState,
   event: AnalysisProgressEvent,
 ): WizardState {
-  const updatedJobs: AnalysisJob[] = current.jobs.map((job) => {
-    if (job.source_id !== event.source_id) return job;
-    return {
-      ...job,
-      progress: event.progress,
-      status: event.status,
-    };
-  });
+  // The Python sidecar emits the full job dict (`{type, job}`), so we replace the
+  // matching job wholesale — this propagates `extracted_traits` + `error` in
+  // addition to `status`/`progress`, which a field-level merge would drop.
+  const updatedJobs: AnalysisJob[] = current.jobs.map((job) =>
+    job.source_id === event.job.source_id ? event.job : job,
+  );
   return { ...current, jobs: updatedJobs };
 }
 
