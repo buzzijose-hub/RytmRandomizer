@@ -43,6 +43,8 @@ This path is for someone who just wants to run RytmRandomizer against their Anal
 
 > **Coming soon.** The native installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) but the **first signed release has not shipped yet**. The build matrix lives in `.github/workflows/installers.yml`; release artifacts will be attached to the GitHub Release page once code-signing is provisioned. Until then, use option B.
 
+> **Heads up: two installers, two artifacts.** The Briefcase installer packages the Python CLI sidecar (the passive reports plus the armed `rytm-randomizer` runtime). The Cockpit GUI + Profile Wizard ship in a separate Tauri desktop bundle (see [`docs/BUILDING_INSTALLERS.md`](docs/BUILDING_INSTALLERS.md#cockpit--wizard-desktop-bundle)). Install both if you want the wizard authoring surface and the CLI.
+
 When available, the install flow is:
 
 1. Visit the [GitHub Releases](https://github.com/buzzijose-hub/RytmRandomizer/releases) page.

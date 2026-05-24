@@ -205,10 +205,11 @@ hardware.
 The walkthrough below assumes the cockpit is already launched per
 sections 1–4 and you are looking at the v10 window.
 
-1. **Open the wizard.** Click the **Create profile…** button in the
+1. **Open the wizard.** Click the **+ Create profile…** button in the
    Mutation Panel (right side of the window, under the depth slider).
-   The cockpit routes to `/wizard` and shows the four-step indicator
-   at the top: **Name · Add · Analyze · Review**.
+   The cockpit navigates to `#/wizard` (the wizard surface lives behind
+   the hash router mounted in `App.tsx`) and shows the four-step
+   indicator at the top: **Name · Add · Analyze · Review**.
 
 2. **Step 1 — Name.** Type a profile name (e.g. `buzzi`), an optional
    description (e.g. `industrial-leaning hypnotic techno`), and an
@@ -273,10 +274,10 @@ sections 1–4 and you are looking at the v10 window.
    the new profile to `~/.rytm-randomizer/profiles/<id>.json` via the
    existing `ProfileRegistry.save(profile)` call, then emits both
    `profile_created` (the wizard's confirmation) and `profile_changed`
-   (the cockpit's existing active-profile event). The wizard window
-   closes and you land back in the cockpit, with your new profile
-   selected in the `ProfileChips` strip and ready to drive with the
-   depth slider.
+   (the cockpit's existing active-profile event). The hash route flips
+   back from `#/wizard` to the cockpit root and the new profile chip
+   appears in the `ProfileChips` strip, already selected as the active
+   profile and ready to drive with the depth slider.
 
 7. **Verify the round-trip.** Slide the depth knob, watch the ghost
    overlay update against the trait weights you just authored, and
