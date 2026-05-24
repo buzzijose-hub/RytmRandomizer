@@ -459,3 +459,89 @@ def test_wizard_trait_math_helpers_are_shared_not_duplicated() -> None:
         assert "def _clamp_unit" not in text, (
             f"{analyzer} must not redefine _clamp_unit — import from " f"wizard.trait_math instead."
         )
+
+
+# ---------------------------------------------------------------------------
+# Category 7 — Browser-runtime invariants
+#
+# Bugs that only surface in a real browser (jsdom + unit tests don't catch
+# them). Each one was found by Playwright E2E running against the production
+# bundle + real Python sidecar.
+# ---------------------------------------------------------------------------
+
+
+def test_cockpit_client_does_not_assign_bare_settimeout_to_class_field() -> None:
+    """``CockpitClient`` must not store the bare ``setTimeout`` global as a field.
+
+    Regression guard: ``this.setTimeoutImpl = setTimeout`` silently strips
+    the function's ``window`` binding. Calling ``this.setTimeoutImpl(...)``
+    in a real browser then throws ``TypeError: Illegal invocation`` — which
+    caused every wizard WS command to silently reject in production (the
+    Playwright happy-path test failed even though every unit test and the
+    direct-WS smoke against the same sidecar passed).
+
+    The fix is to bind the global to its host (e.g.
+    ``globalThis.setTimeout.bind(globalThis)``) so the binding survives
+    invocation through the class field. A vitest regression test in
+    ``desktop/web/tests/ws-client.test.ts`` exercises the runtime; this
+    arch-level guard pins the source pattern so the bug cannot regress via
+    a refactor that "simplifies away" the binding wrapper.
+    """
+
+    client_ts = (WEB_ROOT / "src" / "ws" / "client.ts").read_text(encoding="utf-8")
+    bad_patterns = (
+        "opts.setTimeoutImpl ?? setTimeout;",
+        "opts.clearTimeoutImpl ?? clearTimeout;",
+    )
+    for pattern in bad_patterns:
+        assert pattern not in client_ts, (
+            "desktop/web/src/ws/client.ts is assigning the bare global "
+            f"({pattern!r}) to a class field. Bind to its host (e.g. "
+            "`globalThis.setTimeout.bind(globalThis)`) so the `window` "
+            "binding survives when the field is invoked as `this.X(...)`. "
+            "Otherwise browsers throw `TypeError: Illegal invocation` and "
+            "every WS command silently rejects."
+        )
+
+
+def test_wizard_cancel_resets_store_so_relaunch_starts_fresh() -> None:
+    """``<Wizard />``'s cancel handler must clear the singleton store.
+
+    Regression guard: without this, a re-launched wizard (after cancel)
+    sees the previous session's slice state. Child components like
+    ``NameStep`` seed their local ``useState`` from ``state.name`` on
+    first mount; without a reset they keep showing the previous
+    operator's input until a new ``wizard_state_changed`` lands AND the
+    child happens to rerun its initializer (which ``useState`` does NOT
+    do — it only seeds once).
+
+    The Playwright spec ``wizard_cancel.spec.ts`` exercises the runtime;
+    this arch-level guard pins the source pattern so the cleanup call
+    cannot regress via a refactor that "simplifies away" the reset.
+    """
+
+    wizard_tsx = (WEB_ROOT / "src" / "wizard" / "Wizard.tsx").read_text(encoding="utf-8")
+    # The handleCancel function must call `.reset()` on the store. A loose
+    # match (`.reset()` anywhere) is intentional — multiple paths
+    # (handleCancel, the post-save effect) legitimately call reset(); we
+    # require AT LEAST one call site in the file.
+    assert ".reset()" in wizard_tsx, (
+        "Wizard.tsx must call store.reset() (in handleCancel and/or the "
+        "post-save effect) so a re-launched wizard starts with a clean "
+        "slice. Otherwise NameStep / metadata fields render stale values "
+        "from the prior session."
+    )
+    # Specifically, handleCancel must reset — pin that path because the
+    # post-save reset doesn't help the cancel→relaunch flow.
+    cancel_block_match = re.search(
+        r"const\s+handleCancel\s*=\s*\(\s*\)\s*:\s*void\s*=>\s*\{(.*?)\};",
+        wizard_tsx,
+        re.DOTALL,
+    )
+    assert cancel_block_match is not None, "handleCancel function body not found in Wizard.tsx"
+    cancel_body = cancel_block_match.group(1)
+    assert ".reset()" in cancel_body, (
+        "handleCancel in Wizard.tsx must call store.getState().reset() "
+        "before navigating away. Without it, cancel → re-launch shows the "
+        "previous session's name/description in the form inputs."
+    )
