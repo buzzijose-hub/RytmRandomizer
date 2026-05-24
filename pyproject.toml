@@ -52,8 +52,21 @@ style = [
 # Python pipeline emits. It never touches MIDI, so its version is not
 # Elektron-critical. Pinned with a >= floor; the wire format is stable
 # across minor versions.
+#
+# WS-E cockpit WebSocket server (Phase 1 sidecar): FastAPI exposes one
+# WebSocket endpoint at /ws; uvicorn[standard] hosts it under
+# ``python -m rytm_randomizer.cockpit``; ``websockets`` is the underlying
+# ASGI WS transport FastAPI/Starlette consume. None of these reach the
+# MIDI boundary, so the versions are not Elektron-critical. Pinned with
+# a floor that matches the Phase 1 reference implementation (the
+# WebSocket / FastAPI / Starlette stack stabilized around these floors
+# and the protocol is intentionally JSON, so a future minor bump should
+# stay drop-in).
 cockpit = [
     "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
 ]
 # Native end-user installer toolchain. Kept separate from `dev` so the test
 # suite stays lean and contributors are not forced to install briefcase just
