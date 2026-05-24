@@ -32,6 +32,80 @@ You run these on **the same OS as the target installer**. See the
 
 ---
 
+## Cockpit / wizard desktop bundle
+
+Briefcase ships the **Python CLI sidecar only**. It does not include the
+React cockpit, the Profile Wizard, or any of the `desktop/` tree —
+those are a separate artifact lineage with their own build tool and
+their own per-OS output.
+
+The Cockpit GUI (and therefore the Phase 2 Profile Wizard layered on
+top of it) ships as a **Tauri 2 bundle**, built from `desktop/shell/`.
+That bundle is the only way an end user gets the wizard surface; the
+Briefcase `.msi` / `.pkg` / `.deb` / AppImage carry the passive CLI
+and the armed runtime, nothing GUI.
+
+### Local build
+
+```bash
+npm --prefix desktop/web ci
+npm --prefix desktop/web run build
+cd desktop/shell
+cargo install tauri-cli --version "^2"
+cargo tauri build
+```
+
+A `just desktop-bundle` recipe wraps the same steps once the CI
+workstream adds it to the `Justfile`; until then, copy the block
+above. The recipe and the manual block produce identical output.
+
+The first `cargo tauri build` on a cold Rust cache is multi-minute;
+subsequent builds finish in seconds because `desktop/shell/target/`
+is cached.
+
+### Per-OS artifacts
+
+Tauri writes per-OS installers under
+`desktop/shell/target/release/bundle/`:
+
+| OS | Artifact path under `bundle/` |
+|---|---|
+| Windows | `msi/RytmRandomizerCockpit_<version>_x64_en-US.msi` (plus a `nsis/` `.exe` if NSIS is configured) |
+| macOS | `dmg/RytmRandomizerCockpit_<version>_x64.dmg` and `macos/RytmRandomizerCockpit.app` |
+| Linux | `deb/`, `rpm/`, and `appimage/` subdirectories |
+
+These are GUI installers (the operator double-clicks the file), unlike
+the CLI-oriented Briefcase artifacts. They embed the web frontend from
+`desktop/web/dist/` and they expect the Python sidecar's
+`python -m rytm_randomizer.cockpit` entry point to be reachable on PATH
+at launch time — typically because the operator has also installed the
+Briefcase artifact, or has the editable `pip install -e .` checkout
+active.
+
+### Runtime supervision
+
+The Tauri bundle is a process supervisor. When the operator launches
+the cockpit binary, the Rust shell in `desktop/shell/src/main.rs`:
+
+1. Starts the embedded web frontend in the Tauri window.
+2. Spawns the Python sidecar (`python -m rytm_randomizer.cockpit`) as
+   a child process, picking up `RYTM_RAND_WS_PORT` if set.
+3. Bridges the two over WebSocket on `127.0.0.1:<port>` (default 4317).
+
+When the window closes, the shell terminates the sidecar. The operator
+never has to manage the sidecar lifecycle directly — the bundle owns
+both halves.
+
+### CI
+
+`.github/workflows/installers.yml` has a `desktop-bundle` matrix job
+that runs the four-step build on every release (per OS) and uploads
+the per-OS artifacts. The artifacts are attached to each GitHub
+Release alongside the Briefcase outputs, so an operator picks the file
+for their OS regardless of which lineage they want.
+
+---
+
 ## Per-OS prerequisites
 
 ### Windows (`.msi`)
