@@ -51,6 +51,8 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 
 **Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
 
+For the dev-loop launch (two-terminal split) see [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md). The release Tauri bundle spawns the sidecar automatically.
+
 ---
 
 <a id="profile-wizard"></a>
@@ -81,7 +83,7 @@ Each source is analyzed, the derived `StyleTrait`s are averaged, and the wizard 
 <img src="docs/assets/export-pipeline.svg" alt="Export pipeline — ProfileModel through pack, sign, atomic write, verify, to a portable .rymp file" width="100%" />
 </div>
 
-A profile in the cockpit is one thing. A **deployable artifact** is another. Phase 3 turns the in-memory `ProfileModel` into a tiny, self-describing, signed file:
+A profile in the cockpit is one thing. A **deployable artifact** is another. Phase 3 turns the in-memory `ProfileModel` into a tiny, self-describing, signed file (`cockpit-export-profile-model` for the write, `cockpit-export-rehearsal-report` for the passive pre-flight; see [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) §5c for the operator walkthrough):
 
 ```bash
 rytm-randomizer cockpit-export-profile-model \

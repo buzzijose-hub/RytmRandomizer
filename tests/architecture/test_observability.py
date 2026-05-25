@@ -272,6 +272,12 @@ _STDLIB_VALIDATION_OK: frozenset[str] = frozenset(
         "SystemExit",
         "StopIteration",
         "NotImplementedError",
+        # Cockpit Phase 3 export writer raises FileExistsError when an
+        # output path already exists and the operator did not pass
+        # --overwrite. This is the canonical stdlib signal for "file
+        # exists" so callers that ``except FileExistsError`` keep working
+        # without import changes.
+        "FileExistsError",
     }
 )
 
@@ -314,6 +320,12 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # ValueError so ``except ValueError`` callers still work AND the
         # conformance check sees a taxonomy member.
         "EmptyAnalysisError",
+        # Cockpit Phase 3 export writer: re-homed under DataError +
+        # OSError so ``except OSError`` callers still work AND the
+        # conformance check sees a taxonomy member. Mirrors the
+        # WizardSourcePathError / EmptyAnalysisError dual-inheritance
+        # pattern.
+        "WriteError",
     }
 )
 

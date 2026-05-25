@@ -696,6 +696,62 @@ shape Phase 3 will export and Phase 4 will execute on dedicated
 hardware, so Phase 2's choices stay forward-compatible with that
 roadmap.
 
+## 6.4 Export Pipeline (Phase 3)
+
+The `rytm_randomizer.cockpit.export` subpackage was seeded in Phase 1
+with a binary `pack_profile_model` / `unpack_profile_model` serializer
+(MAGIC `RYMP` + format version + CRC32 + MessagePack payload). Phase 3
+wraps that serializer in a production-grade pipeline so a `ProfileModel`
+can be packed, HMAC-SHA256 signed, atomically written to disk, and
+post-flight verified end-to-end. The output is the byte-stable `.rymp`
+file the Phase 4 hardware loader will consume — `Phase 3's bytes are
+Phase 4's input bytes`. The companion passive report
+`reports/cockpit_export_rehearsal.py` mirrors PR #104's
+rehearsal-surface shape so the GUI's pre-EXPORT question ("what bytes
+would actually get written if I clicked export right now?") is answered
+by deterministic, replayable JSON without touching disk.
+
+**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md)
+has one new mermaid diagram —
+[§32 Cockpit · Export Pipeline (Phase 3)](ARCHITECTURE_DIAGRAMS.md#32-cockpit--export-pipeline-phase-3).
+The source spec lives at
+[`docs/superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md`](superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md);
+the implementation plan is at
+[`docs/superpowers/plans/2026-05-24-phase-3-export-pipeline.md`](superpowers/plans/2026-05-24-phase-3-export-pipeline.md).
+
+### Package layout
+
+```
+rytm_randomizer/cockpit/export/
+    __init__.py            # Re-exports the public surface (Phase 1 + Phase 3)
+    model_format.py        # Phase 1, existing — MAGIC=b"RYMP", format_version, build/parse header, CRC32 trailer
+    serialize.py           # Phase 1, existing — pack_profile_model / unpack_profile_model
+    signing.py             # Phase 3, NEW — HMAC-SHA256 signing + signed envelope (MAGIC=b"RYMS")
+    verifier.py            # Phase 3, NEW — never-raises VerificationResult over signed envelopes and bare blobs
+    writer.py              # Phase 3, NEW — atomic_write(path, blob): temp + fsync + os.replace, never partial
+    cli.py                 # Phase 3, NEW — cockpit-export-profile-model CLI (pack -> sign -> write -> verify)
+rytm_randomizer/reports/
+    cockpit_export_rehearsal.py  # Phase 3, NEW — passive pre-flight report mirroring PR #104's panel/binding/check shape
+```
+
+The new code lives entirely under the existing `cockpit/export/` and
+`reports/` subpackages — no new top-level module (Gate 9). The pipeline
+is pure stdlib (`hmac`, `hashlib`, `zlib`, `secrets`, `os.replace`,
+`tempfile.NamedTemporaryFile`) plus the already-shipped MessagePack
+dependency; no new third-party package and no new toolchain. Phase 3
+introduces no `mido` imports, no socket / network calls, no subprocess /
+threading / asyncio — the entire pipeline runs in-process on the
+operator's machine and is pinned that way by
+`tests/architecture/test_export_pipeline_invariants.py`. The same
+phase ships the missing
+`tests/architecture/test_cockpit_send_plan_rehearsal_surface_invariants.py`
+flagged by PR #104's review (so the rehearsal-surface contract the
+export-rehearsal report mirrors is also pinned) and refactors
+`tests/architecture/test_real_midi_passive_cli_safety.py` to
+auto-discover passive CLI commands from `cli_registry` (so every future
+passive CLI auto-enrolls in the safety sweep instead of relying on
+contributor discipline).
+
 ---
 
 ## 7. Enforcement summary

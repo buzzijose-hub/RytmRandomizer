@@ -1,0 +1,445 @@
+"""End-to-end export CLI for cockpit ``ProfileModel`` artifacts.
+
+Drives the full pack → (optional sign) → atomic write → verify pipeline
+behind a single passive subcommand::
+
+    python -m rytm_randomizer.cli cockpit-export-profile-model \\
+        --profile-id <id> --profiles-dir <path> \\
+        --output <file.rymp> \\
+        [--key-hex <hexkey> --key-id <label>] \\
+        [--unsigned] [--overwrite] [--json]
+
+The flow on success:
+
+1. Load the ``ProfileModel`` from ``ProfileRegistry(profiles_dir).get(profile_id)``.
+2. Pack it via :func:`pack_profile_model`.
+3. If signing is requested, :func:`sign_profile_blob` + :func:`pack_signed`
+   the payload; otherwise emit the raw ``RYMP`` blob.
+4. :func:`atomic_write` the envelope to ``output``.
+5. Read the bytes back and :func:`verify_signed_blob` them — this is the
+   post-write integrity check operators rely on.
+6. Emit a structured ack (JSON if ``--json``, otherwise text).
+
+Validation rules (every failure produces ``ok=False`` and a non-zero exit
+code — no exceptions ever escape the handler):
+
+* ``--key-hex`` AND ``--unsigned``: mutually exclusive.
+* ``--key-hex`` without ``--key-id``: ``key-id`` required when key is given.
+* ``--key-id`` without ``--key-hex``: ``key-hex`` required when id is given.
+* Neither ``--key-hex`` nor ``--unsigned``: explicit choice required.
+* ``--key-hex`` not valid hex: rejected before file work.
+* ``--profile-id`` not in registry: reported with the offending id.
+* Missing required value for any option: usage hint.
+
+The signing surface comes from sibling modules (``signing``, ``verifier``).
+The atomic-write surface comes from sibling :mod:`.writer` once WS-B
+lands; until then a tiny module-private fallback (see ``# WS-B fallback``
+below) provides the same shape so this module is independently testable.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+import tempfile
+from collections.abc import Sequence
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Final
+
+from ...cli_registry import CliCommand
+from ...cli_registry import register as _registry_register
+from .serialize import pack_profile_model
+from .signing import pack_signed, sign_profile_blob
+from .verifier import verify_signed_blob, verify_unsigned_payload
+
+# WS-B fallback: remove at integration time once WS-B merges its writer.
+try:
+    from .writer import (  # type: ignore[attr-defined]  # noqa: F401
+        WriteResult,
+        atomic_write,
+        default_export_dir,
+    )
+except ImportError:  # pragma: no cover - exercised once WS-B merges
+
+    @dataclass(frozen=True)
+    class WriteResult:  # type: ignore[no-redef]
+        """In-memory record of the bytes written to disk.
+
+        Mirrors the WS-B public surface so callers can swap implementations
+        at integration time without touching this module.
+        """
+
+        path: Path
+        bytes_written: int
+        overwrote_existing: bool
+
+    def default_export_dir() -> Path:  # type: ignore[no-redef]
+        """Operator-facing default directory for cockpit exports.
+
+        Used when ``--output`` is a bare filename. Lives under the user's
+        home so concurrent runs from different worktrees don't collide.
+        """
+
+        return Path.home() / ".rytm-randomizer" / "exports"
+
+    def atomic_write(  # type: ignore[no-redef]
+        path: Path, data: bytes, *, overwrite: bool = False
+    ) -> WriteResult:
+        """Write ``data`` to ``path`` atomically.
+
+        Writes to a sibling temp file first, ``fsync``s, then ``os.replace``s
+        into place so partial writes never appear at ``path``. Refuses to
+        overwrite an existing file unless ``overwrite=True``.
+        """
+
+        existed = path.exists()
+        if existed and not overwrite:
+            # WS-B will use ``FileExistsError`` here; the fallback uses
+            # ``ValueError`` so it stays inside the architecture-allowed
+            # exception taxonomy (TypeError / ValueError / NotImplementedError).
+            raise ValueError(f"refusing to overwrite existing file {path} (pass --overwrite)")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(suffix=".tmp", dir=str(path.parent))
+        try:
+            with os.fdopen(fd, "wb") as handle:
+                handle.write(data)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp, path)
+        except OSError:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+        return WriteResult(
+            path=path.resolve(),
+            bytes_written=len(data),
+            overwrote_existing=existed,
+        )
+
+
+_COMMAND_NAME: Final[str] = "cockpit-export-profile-model"
+"""Subcommand token registered with the cli dispatcher."""
+
+_USAGE: Final[str] = (
+    f"{_COMMAND_NAME} usage: "
+    "--profile-id <id> --profiles-dir <path> --output <file.rymp> "
+    "[--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]"
+)
+"""Single-line usage string echoed on parse errors."""
+
+
+@dataclass(frozen=True)
+class _CliOptions:
+    """Parsed command-line options (validated structurally, not semantically).
+
+    The validator (``_validate``) performs the cross-field semantic checks
+    — mutually-exclusive flags, signing-mode completeness — separately so
+    parse errors and validation errors are reported with distinct wording.
+    """
+
+    profile_id: str
+    profiles_dir: Path
+    output: Path
+    key_hex: str | None
+    key_id: str | None
+    unsigned: bool
+    overwrite: bool
+    json_output: bool
+
+
+def _pop_value(remaining: list[str], option: str) -> str:
+    """Pop the next CLI option value or raise ``ValueError`` with usage."""
+
+    if not remaining:
+        raise ValueError(f"{option} requires a value. {_USAGE}")
+    return remaining.pop(0)
+
+
+def _parse_args(args: Sequence[str]) -> _CliOptions:
+    """Walk ``args`` left-to-right collecting recognized options.
+
+    Required positional inputs (``--profile-id``, ``--profiles-dir``,
+    ``--output``) raise :class:`ValueError` if absent — those errors get
+    converted into ``ok=False`` acks one layer up.
+    """
+
+    profile_id: str | None = None
+    profiles_dir: Path | None = None
+    output: Path | None = None
+    key_hex: str | None = None
+    key_id: str | None = None
+    unsigned = False
+    overwrite = False
+    json_output = False
+
+    remaining = list(args)
+    while remaining:
+        option = remaining.pop(0)
+        if option == "--profile-id":
+            profile_id = _pop_value(remaining, option)
+        elif option == "--profiles-dir":
+            profiles_dir = Path(_pop_value(remaining, option))
+        elif option == "--output":
+            output = Path(_pop_value(remaining, option))
+        elif option == "--key-hex":
+            key_hex = _pop_value(remaining, option)
+        elif option == "--key-id":
+            key_id = _pop_value(remaining, option)
+        elif option == "--unsigned":
+            unsigned = True
+        elif option == "--overwrite":
+            overwrite = True
+        elif option == "--json":
+            json_output = True
+        else:
+            raise ValueError(f"unknown option {option!r}. {_USAGE}")
+
+    if profile_id is None:
+        raise ValueError(f"--profile-id is required. {_USAGE}")
+    if profiles_dir is None:
+        raise ValueError(f"--profiles-dir is required. {_USAGE}")
+    if output is None:
+        raise ValueError(f"--output is required. {_USAGE}")
+
+    return _CliOptions(
+        profile_id=profile_id,
+        profiles_dir=profiles_dir,
+        output=output,
+        key_hex=key_hex,
+        key_id=key_id,
+        unsigned=unsigned,
+        overwrite=overwrite,
+        json_output=json_output,
+    )
+
+
+def _validate(options: _CliOptions) -> None:
+    """Cross-field semantic validation. Raises :class:`ValueError` on failure."""
+
+    has_key = options.key_hex is not None
+    has_key_id = options.key_id is not None
+
+    if has_key and options.unsigned:
+        raise ValueError("--key-hex and --unsigned are mutually exclusive")
+    if has_key and not has_key_id:
+        raise ValueError("--key-id is required when --key-hex is provided")
+    if has_key_id and not has_key:
+        raise ValueError("--key-hex is required when --key-id is provided")
+    if not has_key and not options.unsigned:
+        raise ValueError(
+            "must explicitly choose --key-hex/--key-id (signed) "
+            "or --unsigned — no silent default"
+        )
+
+
+def _decode_key(key_hex: str) -> bytes:
+    """Decode a hex-encoded signing key or raise ``ValueError`` on bad input."""
+
+    try:
+        return bytes.fromhex(key_hex)
+    except ValueError as exc:
+        raise ValueError(f"--key-hex is invalid hex: {exc}") from exc
+
+
+def _verification_to_dict(*, blob: bytes, signed: bool, key: bytes | None) -> dict[str, object]:
+    """Build the verification sub-dict for the ack payload.
+
+    Re-runs the verifier against the bytes that were just written so the
+    ack reflects what an operator would see on a fresh load. ``signed``
+    determines which entry point we use.
+    """
+
+    if signed:
+        result = verify_signed_blob(blob, key=key)
+    else:
+        result = verify_unsigned_payload(blob)
+    return {
+        "ok": result.ok,
+        "reason": result.reason,
+        "expected_key_id": result.expected_key_id,
+        "expected_algorithm": result.expected_algorithm,
+        "payload_size": result.payload_size,
+    }
+
+
+def _build_result(
+    *,
+    options: _CliOptions,
+    profile_id: str,
+    profile_name: str,
+    model_version: str,
+    write_result: WriteResult,
+    written_bytes: bytes,
+    signed: bool,
+    key: bytes | None,
+) -> dict[str, object]:
+    """Assemble the operator-facing ack dict for a successful export."""
+
+    verification = _verification_to_dict(blob=written_bytes, signed=signed, key=key)
+    payload: dict[str, object] = {
+        "ok": verification["ok"] is True,
+        "profile_id": profile_id,
+        "profile_name": profile_name,
+        "model_version": model_version,
+        "output_path": str(write_result.path),
+        "bytes_written": write_result.bytes_written,
+        "overwrote_existing": write_result.overwrote_existing,
+        "signed": signed,
+        "verification": verification,
+    }
+    if signed:
+        payload["key_id"] = options.key_id
+    return payload
+
+
+def _format_text(payload: dict[str, object]) -> str:
+    """Format an ack dict as a human-readable, key: value block."""
+
+    lines: list[str] = []
+    for key in (
+        "ok",
+        "profile_id",
+        "profile_name",
+        "model_version",
+        "output_path",
+        "bytes_written",
+        "overwrote_existing",
+        "signed",
+    ):
+        if key in payload:
+            lines.append(f"{key}: {_json_scalar(payload[key])}")
+    if "key_id" in payload:
+        lines.append(f"key_id: {_json_scalar(payload['key_id'])}")
+    if "error" in payload:
+        lines.append(f"error: {payload['error']}")
+    verification = payload.get("verification")
+    if isinstance(verification, dict):
+        for key in ("ok", "reason", "expected_key_id", "expected_algorithm", "payload_size"):
+            lines.append(f"verification.{key}: {_json_scalar(verification[key])}")
+    return "\n".join(lines) + "\n"
+
+
+def _json_scalar(value: object) -> str:
+    """Render a scalar the same way JSON would (``true``/``false``/``null``)."""
+
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if value is None:
+        return "null"
+    return str(value)
+
+
+def _emit(payload: dict[str, object], *, json_output: bool) -> None:
+    """Write the ack payload to stdout in the requested format."""
+
+    if json_output:
+        sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True))
+        sys.stdout.write("\n")
+        return
+    sys.stdout.write(_format_text(payload))
+
+
+def _error_payload(message: str) -> dict[str, object]:
+    """Build a deterministic ``ok=False`` ack from an error message."""
+
+    return {"ok": False, "error": message}
+
+
+def handle_export_profile_model(args: Sequence[str]) -> int:
+    """Parse, validate, execute the export pipeline. Return the exit code.
+
+    Every exception path converts to ``ok=False`` and a non-zero exit
+    code; no exception ever escapes the handler. The CLI dispatcher
+    relies on this contract — the registered ``CliCommand`` does not set
+    an ``error_formatter`` because there are no parser errors to format.
+    """
+
+    args_list = list(args)
+    # ``json_output`` is parsed once early so error acks before validation
+    # complete still respect the operator's chosen format.
+    json_output = "--json" in args_list
+    try:
+        options = _parse_args(args_list)
+        json_output = options.json_output
+        _validate(options)
+
+        key_bytes: bytes | None = None
+        if options.key_hex is not None and options.key_id is not None:
+            key_bytes = _decode_key(options.key_hex)
+
+        # Local import keeps the cockpit-data import out of the hot path
+        # for ``--help`` and parse-failure invocations.
+        from rytm_randomizer.cockpit.profiles import ProfileRegistry
+
+        registry = ProfileRegistry(options.profiles_dir)
+        profile = registry.get(options.profile_id)
+        if profile is None:
+            raise ValueError(f"unknown profile_id: {options.profile_id}")
+
+        payload = pack_profile_model(profile)
+        signed = key_bytes is not None
+        if signed and options.key_id is not None and key_bytes is not None:
+            envelope = pack_signed(sign_profile_blob(payload, key=key_bytes, key_id=options.key_id))
+        else:
+            envelope = payload
+
+        write_result = atomic_write(options.output, envelope, overwrite=options.overwrite)
+        written_bytes = write_result.path.read_bytes()
+
+        ack = _build_result(
+            options=options,
+            profile_id=profile.profile_id,
+            profile_name=profile.name,
+            model_version=profile.model_version,
+            write_result=write_result,
+            written_bytes=written_bytes,
+            signed=signed,
+            key=key_bytes,
+        )
+    except (ValueError, TypeError, OSError) as exc:
+        ack = _error_payload(str(exc))
+        _emit(ack, json_output=json_output)
+        return 2
+
+    _emit(ack, json_output=json_output)
+    return 0 if ack.get("ok") is True else 2
+
+
+def _parse_for_registry(argv: Sequence[str]) -> dict[str, object]:
+    """Adapter for the CLI registry's ``args_parser`` contract.
+
+    The registry expects ``argv -> dict[str, Any]``; the handler accepts
+    a single ``args`` list. Wrapping keeps the handler simple to test in
+    isolation while still allowing dispatch through the registry.
+    """
+
+    return {"args": list(argv)}
+
+
+def _handle_for_registry(*, args: Sequence[str]) -> int:
+    """Adapter for the CLI registry's ``handler`` contract."""
+
+    return handle_export_profile_model(args)
+
+
+COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND: Final[CliCommand] = CliCommand(
+    name=_COMMAND_NAME,
+    summary=("Export a cockpit ProfileModel artifact " "(pack + sign + atomic write + verify)."),
+    args_parser=_parse_for_registry,
+    handler=_handle_for_registry,
+)
+"""Registered ``CliCommand`` for the lazy dispatcher to look up."""
+
+_registry_register(COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND)
+
+
+__all__ = [
+    "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
+    "handle_export_profile_model",
+]

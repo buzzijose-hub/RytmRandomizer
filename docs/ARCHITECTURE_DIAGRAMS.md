@@ -2313,3 +2313,111 @@ flowchart TB
   `InspirationSource`, `AnalysisJob`, and `WizardState`. Gate 12
   (`Final` constants) is satisfied by `TRAIT_TO_PAD` and the
   reference-analyzer lookup table.
+
+## 32. Cockpit · Export Pipeline (Phase 3)
+
+> **Forward-looking diagram.** The Phase 3 Model Export Pipeline is in
+> active implementation (7 parallel workstreams against
+> `feat/phase-3-export-pipeline`); not all of these components exist on
+> `modularize-v1.34` yet. This diagram describes the intended Phase 3
+> shape; the source spec at
+> [`docs/superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md`](superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md)
+> is the authoritative reference.
+
+The Phase 3 export pipeline lives inside the existing
+`cockpit/export/` subpackage and drives the operator's end-to-end
+"profile to portable signed binary on disk" flow. This sequence diagram
+shows the full pack -> sign -> atomic-write -> verify chain that the new
+`cockpit-export-profile-model` CLI orchestrates. The same code path is
+mirrored (without the disk write) by the new
+`cockpit-export-rehearsal-report` passive report so an operator can
+preview exactly what would be written without committing it.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Operator as Operator<br/>(at the Elektron rig)
+    participant GUI as cockpit_gui<br/>(Phase 1 / 3.5)
+    participant CLI as cli.py<br/>cockpit-export-profile-model
+    participant Registry as profiles/registry.py<br/>ProfileRegistry
+    participant Pack as serialize.py<br/>pack_profile_model
+    participant Sign as signing.py<br/>sign_profile_blob / pack_signed
+    participant Writer as writer.py<br/>atomic_write
+    participant Verifier as verifier.py<br/>verify_file
+    participant Disk as ~/profiles/&lt;id&gt;.rymp<br/>(filesystem)
+    participant Keystore as ~/.rytm-randomizer/keys/<br/>(Phase 3.5)
+
+    Operator->>GUI: clicks "Export profile"<br/>(or invokes CLI directly)
+    GUI->>CLI: cockpit-export-profile-model<br/>--profile-id X --output Y --key-id K
+    activate CLI
+    CLI->>Registry: load(profile_id)
+    Registry-->>CLI: ProfileModel
+    CLI->>Keystore: read &lt;key_id&gt;.key
+    Keystore-->>CLI: key bytes (32B for hmac-sha256)
+    CLI->>Pack: pack_profile_model(profile)
+    Pack-->>CLI: payload bytes<br/>(RYMP || ver || model_ver || len || msgpack || crc32)
+    CLI->>Sign: sign_profile_blob(payload,<br/>algo="hmac-sha256", key_id, key)
+    Note over Sign: hmac-sha256 over<br/>algo || 0x1f || key_id || 0x1f || payload
+    Sign-->>CLI: signature (32 bytes)
+    CLI->>Sign: pack_signed(payload, algo, key_id, sig)
+    Sign-->>CLI: signed envelope bytes<br/>(RYMS || ver || algo || key_id || sig || payload_len || payload)
+    CLI->>Writer: atomic_write(output_path, envelope)
+    activate Writer
+    Note over Writer: 1. NamedTemporaryFile in path.parent<br/>2. write + flush + fsync<br/>3. os.replace(tmp, output)<br/>4. unlink tmp on any failure
+    Writer->>Disk: write tmp file (same dir as output)
+    Writer->>Disk: fsync tmp fd
+    Writer->>Disk: os.replace(tmp, output)
+    Writer-->>CLI: None (or OSError; tmp cleaned up)
+    deactivate Writer
+    CLI->>Verifier: verify_file(output_path,<br/>key_resolver=lambda kid: key)
+    activate Verifier
+    Verifier->>Disk: read output_path
+    Disk-->>Verifier: envelope bytes
+    Note over Verifier: 1. dispatch on magic (RYMS/RYMP/other)<br/>2. parse envelope (never raises)<br/>3. hmac.compare_digest(expected, actual)<br/>4. parse inner RYMP + check CRC32
+    Verifier-->>CLI: VerificationResult(ok=True, reason="ok",<br/>signed=True, header=...)
+    deactivate Verifier
+    CLI-->>Operator: file written: &lt;output&gt;<br/>bytes: N · signed: yes · verified: ok
+    deactivate CLI
+
+    Note over Operator,Disk: Phase 4 hardware loader reads the same RYMS envelope from SD/flash,<br/>looks up the same key_id in its on-device keystore, runs the same<br/>hmac.compare_digest, and unwraps the same RYMP payload — the bytes<br/>written here are the bytes Phase 4 will execute against.
+```
+
+**Notes:**
+
+- **Two distinct magics.** `b"RYMP"` (Phase 1) marks a bare packed
+  payload; `b"RYMS"` (Phase 3) marks a signed envelope wrapping a
+  Phase 1 payload bit-identically. The verifier dispatches on the
+  leading 4 bytes and reports `bad_magic` for anything else. The
+  hardware loader does the same.
+- **Stdlib only.** `hmac` + `hashlib` (HMAC-SHA256), `zlib` (CRC32),
+  `tempfile.NamedTemporaryFile` + `os.fsync` + `os.replace` (atomic
+  write). No new third-party package, no new toolchain.
+- **Never-raises verifier.** Every kind of badness (bad magic, truncated
+  envelope, wrong signature, bad CRC, unknown algo, unknown key, IO
+  error) becomes a `VerificationResult(ok=False, reason=..., detail=...)`
+  rather than an exception. The cockpit GUI will eventually invoke the
+  verifier over arbitrary third-party `.rymp` files; raising would crash
+  the GUI.
+- **Atomic write is load-bearing.** The temp file is opened in the
+  SAME directory as the target so the final `os.replace` is a
+  same-filesystem rename (atomic on POSIX and Windows). `os.fsync`
+  before `os.replace` guarantees no observable "renamed but truncated"
+  state after a power loss.
+- **Phase 3.5 keystore is the only deferred piece.** The CLI accepts a
+  `--key-id` flag; the actual key bytes resolve from
+  `~/.rytm-randomizer/keys/<key_id>.key` (raw 32-byte file in Phase 3).
+  A wizard / UI for generating, rotating, and importing keys is
+  deferred. The `--unsigned` flag exists so an operator can export
+  today without a keystore.
+- **The CLI is mirrored by a passive rehearsal report.** The new
+  `reports/cockpit_export_rehearsal.py` runs the same pack -> sign ->
+  verify chain in memory (no disk write) and emits panels + bindings +
+  primary action + replay command — exactly the shape PR #104
+  established for `cockpit_send_plan_rehearsal_surface.py`. The
+  matching architecture invariant for that PR-#104 report (the file
+  flagged as missing by its review) lands in the same Phase 3 PR.
+- **Phase 4 reads the same bytes.** The `.rymp` file on disk is the
+  cross-language contract between the Python authoring host and the
+  embedded C-portable loader. The architecture invariant test pins
+  every magic, every format-version constant, the supported algorithm
+  set, and the signature lengths — drift fails CI loudly.
