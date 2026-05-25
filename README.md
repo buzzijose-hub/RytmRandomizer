@@ -51,6 +51,14 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 
 **Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
 
+**Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
+
+- **Per-launch HMAC handshake token.** The sidecar mints a fresh URL-safe token on every start (`secrets.token_urlsafe(32)`), writes it to `RYTM_RAND_WS_TOKEN_FILE` (or `~/.rytm-randomizer/cockpit-ws-token` in dev), and refuses every command until the first WS frame echoes the token under `hmac.compare_digest`. A foreign browser tab that can't read the token file cannot drive the cockpit.
+- **Pinned subprotocol** (`rytm-rand-cockpit-v1`). Casual `new WebSocket(url)` connections from a browser tab omit the subprotocol and fail the upgrade.
+- **Per-message size cap** (1 MiB by default; override via `RYTM_RAND_WS_MAX_MESSAGE_BYTES`). Oversize frames are rejected before parsing so a hostile client can't OOM the sidecar.
+- **Wizard-source path allow-list.** Filesystem locations sent to the analyzer must resolve inside one of the roots in `WIZARD_SOURCE_ROOTS` (defaults to `~/.rytm-randomizer/wizard-sources/`). Symlinks and out-of-root paths are rejected with a categorical reason that never echoes the path back over the wire.
+- **Architecture-enforced.** Nine prevention tests under `tests/architecture/` (e.g. `test_no_unauthenticated_ws_endpoints`, `test_no_unconstrained_path_inputs`, `test_no_raw_exception_messages_on_wire`, `test_no_silent_overwrite_writes`) hard-fail CI if any of these invariants regresses.
+
 For the dev-loop launch (two-terminal split) see [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md). The release Tauri bundle spawns the sidecar automatically.
 
 ---

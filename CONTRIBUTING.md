@@ -159,6 +159,93 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **Wizard analyzers are passive and stay off the MIDI boundary.** The Phase 2 `cockpit/wizard/analyze.py`, `cockpit/wizard/sysex_analyzer.py`, and `cockpit/wizard/reference_analyzer.py` modules read files, decode SysEx in memory, and look up reference text in a built-in `Final` table. None of them imports `mido` (or anything that lazily imports `mido`), and none of them opens a MIDI port. The `tests/architecture/test_no_side_effects.py` gate enforces this for the whole `cockpit/wizard/` subpackage just as it does for the rest of the package — the wizard fits cleanly inside the existing passive-default discipline.
 - **Wrapped-readiness-JSON pattern for passive reports.** Passive reports that consume cockpit data may accept EITHER the inner data JSON (a bare `CockpitSendPlan` / `ProfileModel` mapping) OR the wrapped report JSON (a top-level document with the inner data nested under a known key), peeling out the inner key automatically. PR #104's `cockpit_send_plan_rehearsal_surface.py::_readiness_from_mapping` introduced the pattern; Phase 3's `reports/cockpit_export_rehearsal.py::_profile_from_mapping` follows the same shape for `--profile-id` resolution. New rehearsal-surface-style reports should reuse this peeling helper rather than reinventing it — operators end up passing whichever JSON they already had on hand (the inner data or the previous report's output) and both paths work without a separate flag.
 
+## Patterns introduced by the CODE_REVIEW.md sweep (2026-05-25)
+
+The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
+
+### `narrow_*` Literal-narrowing helpers (wire-boundary)
+
+When a `from_dict` constructor needs to turn a runtime `str` (read off the wire) into a `Literal["a", "b", "c"]` value on a frozen dataclass, **do not** write:
+
+```python
+# ANTI-PATTERN — banned by tests/architecture/test_no_str_in_literal_position.py
+return MutationCandidate(
+    safety_status=str(data["safety_status"]),  # type: ignore[arg-type]
+    ...
+)
+```
+
+The `# type: ignore[arg-type]` lies to the type checker without buying any runtime validation. Use a `narrow_*` helper instead — one helper per Literal alias, declared next to the alias:
+
+```python
+# rytm_randomizer/cockpit/data/types.py
+Status = Literal["safe", "edge", "hot"]
+_STATUS_VALUES: Final[frozenset[str]] = frozenset(("safe", "edge", "hot"))
+
+def narrow_status(s: str) -> Status:
+    if s not in _STATUS_VALUES:
+        raise ValueError(f"not a Status: {s!r}")
+    return cast(Status, s)
+```
+
+The full helper family (`narrow_kind`, `narrow_history_kind`, `narrow_via`, `narrow_status`, `narrow_transition_curve`, `narrow_readiness_reason`, `narrow_mode`, `narrow_step`) lives in `cockpit/data/types.py`, `cockpit/data/send_plan.py`, and `cockpit/wizard/state.py`. New Literal aliases on wire-bound dataclasses MUST ship a matching `narrow_*` helper. See `tests/architecture/test_no_str_in_literal_position.py` for the enforcement.
+
+### `WizardPathPolicy` (and the policy-object pattern in general)
+
+When a wire handler accepts a string that gets fed to a filesystem op, do not validate inline in the handler. Pin the policy as a frozen dataclass with a single `validate(input) -> SafeShape` method that returns the safe object on success and raises a categorical exception on failure. `rytm_randomizer/cockpit/wizard/path_policy.py:WizardPathPolicy` is the reference implementation:
+
+```python
+@dataclass(frozen=True)
+class WizardPathPolicy:
+    roots: tuple[Path, ...]
+
+    @classmethod
+    def from_env(cls, env_var: str = WIZARD_SOURCE_ROOTS_ENV) -> WizardPathPolicy: ...
+
+    def validate(self, location: str) -> Path:
+        # 1. non-empty   2. no symlink in chain   3. exists   4. inside a root
+        # Raises WizardSourcePathRejected with a CATEGORICAL message that
+        # NEVER echoes the rejected path back to the caller.
+        ...
+```
+
+Why a policy object, not free functions:
+
+- **Testable in isolation.** Tests construct a `WizardPathPolicy(roots=(tmp_path,))` and exercise every branch without env mutation or filesystem fakery.
+- **Frozen + side-effect-free.** Safe to share across coroutines, safe to stash on the `CockpitSession`.
+- **Single source of truth.** `from_env(...)` is the only place the env var is parsed; nothing else duplicates the parsing logic.
+- **Categorical errors.** The rejection message is one of a fixed enumeration (`"path is empty"`, `"path traverses a symlink"`, `"path does not exist"`, `"path is outside the allowed roots"`). The wire handler logs the offending path server-side but never returns it to the caller — this is the H4 fix and is enforced by `tests/architecture/test_no_raw_exception_messages_on_wire.py`.
+
+Apply this pattern to any new wire-boundary policy (allow-listed origins, allow-listed kit slot ranges, allow-listed CC ranges, etc.). The matching arch test is `tests/architecture/test_no_unconstrained_path_inputs.py`.
+
+### Grandfathered-ratchet arch tests
+
+Several new arch tests cannot start at zero (existing codebase already has violations) but the count must never grow. Pattern:
+
+```python
+# tests/architecture/test_final_constants.py
+GRANDFATHER_FLOOR: Final[int] = 282
+"""Number of top-level constants without Final[T] when this test landed.
+
+The ratchet may only thaw DOWNWARD as offenders migrate. If you add a
+new top-level constant in a cockpit/wizard/data/state module, give it
+Final[T]. If the count goes UP, fix the new offender or document why
+it can't carry the annotation (rare).
+"""
+
+def test_final_floor_not_exceeded() -> None:
+    actual = _count_offenders(...)
+    assert actual <= GRANDFATHER_FLOOR, (
+        f"{actual} > {GRANDFATHER_FLOOR}; new top-level constants without Final[T]."
+    )
+```
+
+When you legitimately reduce the count (migrated offenders), lower `GRANDFATHER_FLOOR` in the same PR — the ratchet only goes one way. This pattern is used by `test_final_constants.py` (282-entry floor), `test_cli_no_inline_arms.py`, `test_no_raw_exception_messages_on_wire.py`, and `test_no_str_in_literal_position.py`.
+
+### Single canonical surface (no fallback re-implementations)
+
+When a primitive exists somewhere in the package (`cockpit/export/writer.py:atomic_write`, `cockpit/export/signing.py:pack_signed`, `cockpit/wizard/path_policy.py:WizardPathPolicy.validate`), **import it directly**. Do not write a try/except-ImportError fallback "in case the canonical module isn't there." `cli.py` previously carried a 60-LOC fallback `atomic_write` re-implementation that diverged on three observable points (PR 3, C3); the fix was to delete the fallback and hard-import. A broken canonical surface must fail loudly at module load, not silently switch to divergent behaviour. `tests/architecture/test_abstraction_reuse.py` flags any second canonical surface for these primitives.
+
 ## Cross-platform operation
 
 The codebase runs on **Windows, macOS, and Linux**. CI exercises all three on `python 3.11`. Contributor pitfalls to avoid:
