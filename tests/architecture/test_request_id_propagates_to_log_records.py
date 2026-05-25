@@ -56,7 +56,7 @@ from typing import Final
 import pytest
 
 from rytm_randomizer.observability.logging import PACKAGE_LOGGER_NAME, get_logger
-from rytm_randomizer.observability.tracing import operation
+from rytm_randomizer.observability.tracing import _OpIdFilter, operation
 
 pytestmark = pytest.mark.fast
 
@@ -102,6 +102,15 @@ def capture_package_records() -> Iterator[_RecordCaptureHandler]:
     """
 
     handler = _RecordCaptureHandler()
+    # Install the OBS O1 filter on the probe handler ourselves. In a
+    # fresh CI process (no prior import-side-effect from another test)
+    # `_ensure_filter_installed()` runs at the FIRST `operation()` call
+    # and iterates `package_logger.handlers` THEN — but the probe handler
+    # is added by this fixture, so we must either re-trigger installation
+    # AFTER adding it, or attach the filter to the probe handler
+    # directly. Attaching directly is the local, explicit option that
+    # makes the test independent of process-global install state.
+    handler.addFilter(_OpIdFilter())
     package_logger = logging.getLogger(PACKAGE_LOGGER_NAME)
     prior_level = package_logger.level
     # Force DEBUG so the operation_start / operation_end records (at

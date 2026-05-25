@@ -64,11 +64,14 @@ test.describe('handshake token (PR #113 / C1)', () => {
 
     await page.goto('/');
 
-    // The placeholder ("Connecting…") should still be visible after a
-    // short wait — `cockpit-root` must NOT mount because no
+    // The placeholder root container (`<main class="cockpit-placeholder">`)
+    // should stay visible — `cockpit-root` must NOT mount because no
     // `session_status` event ever arrives (the WS gets closed at 1008
-    // before the bootstrap fires).
-    const placeholder = page.locator('text=Connecting');
+    // before the bootstrap fires). We target the placeholder by its
+    // class to avoid the strict-mode collision with the
+    // `status: reconnecting` chip that also contains the word
+    // "Connecting" once the client transitions to the reconnect loop.
+    const placeholder = page.locator('main.cockpit-placeholder');
     await expect(placeholder).toBeVisible({ timeout: 3_000 });
 
     // And `cockpit-root` should NOT be visible.
