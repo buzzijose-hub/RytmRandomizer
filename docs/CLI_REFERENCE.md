@@ -56,21 +56,18 @@ python -m rytm_randomizer.cli dual-machine-target-report both   # both registere
 
 ## Analog Rytm — kit + snapshot intelligence
 
+| Command | Description |
+|---|---|
+| `rytm-12-pad-machine-matrix-report` | Passive Rytm **12-pad machine matrix** with machine compatibility per pad |
+| `rytm-snapshot-pad-compatibility-report` | Passive **snapshot-pad compatibility** report per Rytm pad |
+| `rytm-snapshot-intelligence-report KITS.syx --slot N [--list]` | Passive **snapshot intelligence** for one supported Rytm kit snapshot, or `--list` every supported snapshot in a SysEx dump |
+| `rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth N [--events --limit N]` | Passive **snapshot mutation preview** for one slot at a given depth; with `--events` include mock CC event rows |
+
 ```bash
-# Passive Rytm 12-pad machine compatibility matrix
 python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
-
-# Passive snapshot readiness per Rytm pad
 python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
-
-# List supported Rytm kit snapshots in a SysEx dump
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report KITS.syx --list
-
-# Passive intelligence for one Rytm kit snapshot
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report KITS.syx --slot 7
-
-# Passive mutation preview — mock-only, no MIDI send
-python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --slot 7 --depth 2
 python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --slot 7 --depth 2 --events --limit 24
 ```
 
@@ -79,40 +76,31 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --s
 ## Analog Rytm — style routing + mutation planning
 
 ```bash
-# Reference-close style routing
+python -m rytm_randomizer.cli style-profile-report   # list curated style profiles
 python -m rytm_randomizer.cli rytm-style-snapshot-routing-report KITS.syx birmingham_pressure --slot 7 --discovery 10
-python -m rytm_randomizer.cli rytm-style-snapshot-routing-report KITS.syx birmingham_pressure --discovery 95 --json
-
-# Style mutation intent (zone / parameter targets)
 python -m rytm_randomizer.cli rytm-style-mutation-intent-report KITS.syx birmingham_pressure --slot 7 --discovery 45
-python -m rytm_randomizer.cli rytm-style-mutation-intent-report KITS.syx birmingham_pressure --discovery 95 --json
-
-# Render-plan target-value windows
 python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report KITS.syx birmingham_pressure --slot 7 --discovery 45
-python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report KITS.syx birmingham_pressure --discovery 95 --json
-
-# Mock CC preview rows (no MIDI send)
 python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 7 --discovery 45 --events --limit 24
-python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report KITS.syx jose_core_techno --json
-
-# Per-kit style readiness sweep
 python -m rytm_randomizer.cli rytm-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
-python -m rytm_randomizer.cli rytm-style-kit-readiness-report KITS.syx jose_core_techno --json
 ```
 
 ---
 
 ## Analog Four — style routing + mutation planning
 
+| Command | Description |
+|---|---|
+| `analog-four-style-snapshot-routing-report` | Passive **Analog Four style snapshot routing** balanced/wild-discovery routing |
+| `analog-four-style-mutation-intent-report` | Passive Analog Four track/zone mutation intent |
+| `analog-four-style-mutation-mock-preview-report` | Passive Analog Four mock CC rows (deferred while saved-kit offsets are promoted) |
+| `analog-four-kit-catalog-report` | Passive Analog Four decoded kit catalog |
+| `analog-four-style-kit-readiness-report` | Passive per-kit Analog Four style-readiness sweep |
+
 ```bash
 python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report KITS.syx industrial_dark --slot 0 --discovery 50
-python -m rytm_randomizer.cli analog-four-style-snapshot-routing-report KITS.syx industrial_dark --discovery 95 --json
 python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx birmingham_pressure --slot 0 --discovery 45
-python -m rytm_randomizer.cli analog-four-style-mutation-intent-report KITS.syx birmingham_pressure --discovery 95 --json
 python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 0 --discovery 45 --events --limit 24
-python -m rytm_randomizer.cli analog-four-style-mutation-mock-preview-report KITS.syx jose_core_techno --json
 python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --limit 16
-python -m rytm_randomizer.cli analog-four-kit-catalog-report KITS.syx --json
 python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
 ```
 
@@ -120,24 +108,23 @@ python -m rytm_randomizer.cli analog-four-style-kit-readiness-report KITS.syx jo
 
 ## Rig-level (Rytm + Analog Four together)
 
+| Command | Description |
+|---|---|
+| `dual-machine-style-kit-readiness-report` | Passive ranked Rytm + A4 kit-pair readiness sweep |
+| `dual-machine-style-kit-selection-report` | Passive best live kit selections across both machines |
+| `dual-machine-style-selection-mock-preview-report` | Passive best-**selection mock preview** without manually copying slots |
+| `dual-machine-style-live-audition-report` | Passive **live audition** set across multiple style targets |
+| `dual-machine-style-performance-set-plan-report` | Passive timed **performance set plan** for a long-form live arc |
+| `dual-machine-style-snapshot-routing-report` | Passive rig-level **dual-machine style snapshot routing** |
+| `dual-machine-style-mutation-intent-report` | Passive rig-level mutation intent (Rytm + Analog Four) |
+| `dual-machine-style-mutation-mock-preview-report` | Passive rig-level mock CC rows + Analog Four deferred rows |
+
 ```bash
-# Ranked kit-pair readiness across both machines
 python -m rytm_randomizer.cli dual-machine-style-kit-readiness-report RYTM.syx A4.syx jose_core_techno --limit 16
-
-# Best live kit selections across both machines
 python -m rytm_randomizer.cli dual-machine-style-kit-selection-report jose_core_techno --rytm RYTM.syx --analog-four A4.syx --limit 8
-python -m rytm_randomizer.cli dual-machine-style-kit-selection-report jose_core_techno --rytm RYTM.syx --scope rytm-only --json
-
-# Mock preview without manually copying slots
 python -m rytm_randomizer.cli dual-machine-style-selection-mock-preview-report jose_core_techno --rytm RYTM.syx --analog-four A4.syx --events --limit 24
-
-# Live audition set across multiple style targets
 python -m rytm_randomizer.cli dual-machine-style-live-audition-report jose_core_techno birmingham_pressure warehouse_peak --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Timed performance set plan for a long-form live arc
 python -m rytm_randomizer.cli dual-machine-style-performance-set-plan-report jose_core_techno birmingham_pressure warehouse_peak --rytm RYTM.syx --analog-four A4.syx --total-minutes 300 --discovery-start 35 --discovery-end 75 --events --limit 8
-
-# Rig-level routing + mutation intent + mock preview
 python -m rytm_randomizer.cli dual-machine-style-snapshot-routing-report RYTM.syx A4.syx warehouse_peak --rytm-slot 7 --a4-slot 0 --discovery 45
 python -m rytm_randomizer.cli dual-machine-style-mutation-intent-report RYTM.syx A4.syx birmingham_pressure --rytm-slot 7 --a4-slot 0 --discovery 45
 python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report RYTM.syx A4.syx jose_core_techno --rytm-slot 7 --a4-slot 0 --discovery 45 --events --limit 24
@@ -156,87 +143,59 @@ python -m rytm_randomizer.cli inspect-style-performance-arc jose_warehouse_five_
 
 # Expand a reference arc into a timed dual-machine performance set planner
 python -m rytm_randomizer.cli style-performance-arc-set-plan-report jose_warehouse_five_hour --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Rank all reference arcs against saved kit banks
-python -m rytm_randomizer.cli style-performance-arc-readiness-report --rytm RYTM.syx --analog-four A4.syx --limit 8
-
-# Pick the best-ready reference arc and embed its timed set-plan preview
-python -m rytm_randomizer.cli style-performance-arc-audition-packet-report --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Preflight checklist + segment runbook
-python -m rytm_randomizer.cli style-performance-arc-rehearsal-manifest-report --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Launch checklist + passive commands + live segment cards
-python -m rytm_randomizer.cli style-performance-arc-live-session-packet-report --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Segment-level mock render rows
-python -m rytm_randomizer.cli style-performance-arc-live-render-bundle-report --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Live cue sheet with risk labels, hands-on moves, recovery cues
-python -m rytm_randomizer.cli style-performance-arc-live-cue-sheet-report --rytm RYTM.syx --analog-four A4.syx --events --limit 8
 ```
 
 ---
 
-## Live GUI / sidecar / analyzer reports (40+ surfaces)
+## Live performance reports (operator-facing surfaces)
 
-The codebase has a deep set of GUI-facing passive reports that compose into a future cockpit and analyzer pipeline. Each one is one-screen state that the live cockpit can render without executing anything.
+Each command produces deterministic JSON describing one operator-facing surface — they compose into the future live cockpit and the analyzer pipeline.
 
-```bash
-# Reference-match nonblank text/audio/library influence evidence to an arc + cue sheet
-python -m rytm_randomizer.cli style-performance-arc-reference-match-report \
-    --description "Jeff Mills Oscar Mulero Birmingham pressure" \
-    --rytm RYTM.syx --analog-four A4.syx --events --limit 8
+| Command | Surface |
+|---|---|
+| `style-performance-arc-live-cue-sheet-report` | **live cue sheet** with risk labels, hands-on moves, recovery cues |
+| `style-performance-arc-reference-match-report` | **Reference-match** evidence packet for a description / track / library |
+| `style-performance-arc-live-runbook-report` | **live runbook** — launch brief, stage packet, timeline cards, recovery cues |
+| `style-performance-arc-stage-routing-report` | **stage routing** with cue-by-cue **route cards**, saved-kit slots, mock/deferred rows, recovery sequence |
+| `style-performance-arc-stage-rehearsal-state-report` | **stage rehearsal** state with **go/rehearse/do-not-arm** cue states per machine |
+| `style-performance-arc-live-show-export-report` | **live show export** packet with deterministic export id, machine **show handoff** manifest, cue launch script, recovery script |
+| `style-performance-arc-live-transition-timeline-report` | **live transition timeline** with prep windows, **transition cards**, launch/hold/recovery prompts |
+| `style-performance-arc-live-command-deck-report` | **live command deck** with current-cue **command cards**, prep/launch/hold/recovery actions, machine handoffs |
+| `style-performance-arc-live-state-report` | **GUI-ready** **live state packet** (now/next cues, machine panels, action bar, warning stack) |
+| `style-performance-arc-live-control-surface-report` | GUI / audio-analyzer **control surface** with header tiles, transport controls, cue cards, machine cards |
+| `style-performance-arc-live-analyzer-handoff-report` | **analyzer handoff** with **FeatureReport meters**, top influence matches, capture prompts |
+| `style-performance-arc-live-analyzer-targets-report` | **analyzer target** packet (rehearsal target bands, cue checkpoints, calibration steps, **future live analyzer comparison** JSON) |
 
-# Live runbook (launch brief, stage packet, timeline cards, recovery cues)
-python -m rytm_randomizer.cli style-performance-arc-live-runbook-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --events --limit 8
+---
 
-# Stage routing (cue-by-cue route cards, saved-kit slots, recovery sequence)
-python -m rytm_randomizer.cli style-performance-arc-stage-routing-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --events --limit 8
+## Live GUI / sidecar reports (one-screen state for the future cockpit)
 
-# Stage rehearsal state (go / rehearse / do-not-arm states per cue)
-python -m rytm_randomizer.cli style-performance-arc-stage-rehearsal-state-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --events --limit 8
+The `live-gui-*` family is the GUI consumer contract — each report is one screen of state the cockpit can render without executing anything. Every command is passive: every raise is `ValueError` or `TypeError`, every panel is frozen, every output is deterministic.
 
-# One-screen live set cockpit packet
-python -m rytm_randomizer.cli style-performance-arc-live-set-cockpit-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Live show export packet (deterministic export id, machine handoff manifest, cue scripts)
-python -m rytm_randomizer.cli style-performance-arc-live-show-export-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Live transition timeline (prep windows, transition cards, hold/recovery prompts)
-python -m rytm_randomizer.cli style-performance-arc-live-transition-timeline-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --events --limit 8
-
-# Live command deck for the current cue
-python -m rytm_randomizer.cli style-performance-arc-live-command-deck-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --cue 1 --lookahead 2 --events --limit 8
-
-# GUI-ready live state packet (now/next cues, machine panels, action bar)
-python -m rytm_randomizer.cli style-performance-arc-live-state-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --cue 1 --lookahead 2 --events --limit 8
-
-# GUI / audio-analyzer readiness gates + launch mode
-python -m rytm_randomizer.cli style-performance-arc-live-readiness-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --cue 1 --lookahead 2
-
-# Live control surface (header tiles, transport, cue cards, analyzer cards)
-python -m rytm_randomizer.cli style-performance-arc-live-control-surface-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --cue 1 --lookahead 2
-
-# Analyzer handoff packet (FeatureReport meters, influence matches, capture prompts)
-python -m rytm_randomizer.cli style-performance-arc-live-analyzer-handoff-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --cue 1 --lookahead 2 --matches 3
-
-# Analyzer target packet (rehearsal target bands, cue checkpoints, calibration steps)
-python -m rytm_randomizer.cli style-performance-arc-live-analyzer-targets-report \
-    --description "..." --rytm RYTM.syx --analog-four A4.syx --cue 1 --lookahead 2 --matches 3
-```
-
-The full set of `live-gui-*` reports continues — capture queue, capture review, sidecar session, screen contract, render tree, analyzer overlay, analyzer frame, interaction script, action reducer, controller state, playback transcript, playback validation, test harness contract / readiness, implementation bridge, desktop blueprint / app plan / component contract / view model / render contract / render harness, cockpit boundary readiness — each composing into the next layer of the future GUI / analyzer pipeline.
+| Command | Surface |
+|---|---|
+| `style-performance-arc-live-gui-analyzer-readiness-report` | **GUI/audio-analyzer readiness bundle** with panel manifest, stream wiring, operator workflow, **blocked active actions** |
+| `style-performance-arc-live-gui-rehearsal-session-report` | **GUI rehearsal session packet** with task cards, **listen-only rehearsal take** cards, operator checklist |
+| `style-performance-arc-live-gui-capture-queue-report` | **GUI/audio analyzer capture queue** with capture slots, suggested filenames, **analyzer job** cards |
+| `style-performance-arc-live-gui-capture-review-report` | **GUI/audio analyzer capture review** with **go/repeat/hold** decisions, metric drift notes, hold reasons |
+| `style-performance-arc-live-gui-sidecar-session-report` | **sidecar-ready GUI state** with panels, analyzer rows, capture decisions, **disabled active controls** |
+| `style-performance-arc-live-gui-screen-contract-report` | **GUI screen contract** with ordered regions, component state, table rows, **disabled interaction controls** |
+| `style-performance-arc-live-gui-render-tree-report` | **GUI render tree** — **deterministic root/region/component tree**, source bindings, disabled controls |
+| `style-performance-arc-live-gui-analyzer-overlay-report` | **GUI analyzer overlay** with **meter widgets**, threshold markers, selected capture badge, node annotations |
+| `style-performance-arc-live-gui-analyzer-frame-report` | **GUI analyzer frame** with ordered **frame events**, visual assertions, blocked actions |
+| `style-performance-arc-live-gui-interaction-script-report` | **GUI interaction script** with ordered interaction steps, **control bindings**, disabled hardware locks |
+| `style-performance-arc-live-gui-action-reducer-report` | **GUI action reducer** with deterministic **control transition** decisions, disabled hardware locks |
+| `style-performance-arc-live-gui-controller-state-report` | **GUI controller state** with deterministic **control-state** rows, queued allowed actions, blocked controls |
+| `style-performance-arc-live-gui-playback-transcript-report` | **GUI playback transcript** with deterministic **playback transcript** events, GUI assertions, analyzer checkpoints |
+| `style-performance-arc-live-gui-playback-validation-report` | **GUI playback validation** matrix with deterministic future test-harness cases, harness steps (**validation matrix**) |
+| `style-performance-arc-live-gui-test-harness-contract-report` | **GUI test-harness contract** with **Harness suites**, fixtures, bindings, blocked actions |
+| `style-performance-arc-live-gui-test-harness-readiness-report` | **GUI test-harness readiness** with **readiness gates**, checks, rehearsal steps |
+| `style-performance-arc-live-gui-implementation-bridge-report` | **GUI implementation bridge** with **view-model packets**, disabled component mounts, fixture bundles |
+| `style-performance-arc-live-gui-desktop-blueprint-report` | **GUI desktop blueprint** with **desktop shell**, viewports, regions, widgets, bindings |
+| `style-performance-arc-live-gui-desktop-app-plan-report` | **GUI desktop app plan** with **app shell**, routes, component file hints, state slices, style tokens |
+| `style-performance-arc-live-gui-desktop-component-contract-report` | **GUI desktop component contract** with **component props**, disabled actions, test selectors |
+| `style-performance-arc-live-gui-desktop-view-model-report` | **GUI desktop view model** with component view models, **state bindings**, disabled actions, style tokens |
+| `style-performance-arc-live-gui-desktop-render-contract-report` | **GUI desktop render contract** with **render surfaces**, render bindings, style-token bindings |
+| `style-performance-arc-live-gui-desktop-render-harness-report` | **GUI desktop render harness** with **surface harnesses**, binding harnesses, style-token checks |
 
 Run any one with `--help` for its full flag set, or check the lazy command registry in [`rytm_randomizer/cli.py`](../rytm_randomizer/cli.py) for the complete catalogue.
