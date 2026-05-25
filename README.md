@@ -9,11 +9,11 @@
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-3%2C700%2B-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-3%2C900%2B-9be8a0.svg)](#testing)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
-[![Phase 3 · Export](https://img.shields.io/badge/Phase%203%20%C2%B7%20Export-in%20flight-ffcf7c.svg)](#export-pipeline)
-[![Phase 4 · Hardware](https://img.shields.io/badge/Phase%204%20%C2%B7%20Hardware-future-5b6573.svg)](#roadmap)
+[![Phase 3 · Export](https://img.shields.io/badge/Phase%203%20%C2%B7%20Export-shipped-9be8a0.svg)](#export-pipeline)
+[![Phase 4 · Hardware](https://img.shields.io/badge/Phase%204%20%C2%B7%20Hardware-next-ffcf7c.svg)](#roadmap)
 
 </div>
 
@@ -144,7 +144,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the long form; [`docs/ARC
 
 ### 🚀 Recommended — native installer (coming soon)
 
-> The signed installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) for the Python CLI and a Tauri 2 bundle for the cockpit GUI. The first signed release ships with Phase 3.
+> The signed installers (Windows `.msi`, macOS `.pkg`, Linux AppImage / `.deb`) are wired up via [BeeWare briefcase](https://briefcase.beeware.org/) for the Python CLI and a Tauri 2 bundle for the cockpit GUI. Phase 3's export pipeline is the last on-disk artifact gate before the first signed release; OS signing / notarization is the only outstanding piece.
 
 Two install paths because there are two artifacts:
 
@@ -204,14 +204,18 @@ cd desktop/shell && cargo run
    shipped (PR #102)                      profiles from kits, audio, references.
                                           Plus Playwright E2E + 17 arch guards.
 
-🚧 Phase 3 · Export Pipeline              Production-grade pipeline around the
-   in flight                              Phase 1 serializer: HMAC-SHA256
-                                          signing, atomic file writes,
-                                          never-raises verifier, CLI driver,
+✅ Phase 3 · Export Pipeline              Production-grade pipeline around the
+   shipped (PR #106)                      Phase 1 serializer: HMAC-SHA256
+                                          signing (stdlib only, timing-safe),
+                                          atomic file writes (sibling temp +
+                                          fsync + os.replace), never-raises
+                                          integrity verifier, CLI driver, and
                                           passive pre-flight rehearsal report.
+                                          7 WSes, 1 bundled PR, Phase-4-ready
+                                          wire format pinned by arch tests.
 
 🔮 Phase 4 · Hardware Runtime             Dedicated device that loads .rymp
-   future                                 from flash, runs an embedded C
+   next                                   from flash, runs an embedded C
                                           port of the same mutation engine,
                                           emits CC back to the Rytm.
                                           One push-button = new kit, no laptop.
@@ -227,7 +231,7 @@ See [`docs/STATUS.md`](docs/STATUS.md) for the dated activity log and the per-ph
 git clone https://github.com/buzzijose-hub/RytmRandomizer.git
 cd RytmRandomizer
 pip install -e ".[dev]"
-pytest                    # full suite — 3,700+ tests, ~30s on a multi-core machine
+pytest                    # full suite — 3,900+ tests, ~30s on a multi-core machine
 just check                # pre-PR gate (ruff + black + isort + tests + arch)
 ```
 

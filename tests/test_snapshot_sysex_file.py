@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from conftest import rytm_real_layout_kit_payload
 
 pytestmark = pytest.mark.fast

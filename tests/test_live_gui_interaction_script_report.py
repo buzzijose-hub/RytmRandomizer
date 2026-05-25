@@ -55,7 +55,6 @@ def _feature_report(
 
 def _frame(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_analyzer_frame import (
         build_style_performance_arc_live_gui_analyzer_frame_report,
     )
@@ -242,7 +241,6 @@ def test_live_gui_interaction_script_parser_builder_and_cli_edges(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.reports.live_gui_interaction_script import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_INTERACTION_SCRIPT_CLI_COMMAND,

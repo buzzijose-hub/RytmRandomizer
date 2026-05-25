@@ -862,7 +862,6 @@ def test_main_rytm_snapshot_intelligence_report_lazy_imports_when_module_unloade
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     payload = rytm_real_layout_kit_payload(name=b"COVERAGE")
@@ -896,7 +895,6 @@ def test_main_rytm_snapshot_mutation_preview_report_lazy_imports_when_module_unl
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     payload = rytm_real_layout_kit_payload(name=b"PREVCOV")
@@ -930,7 +928,6 @@ def test_main_rytm_style_mutation_mock_preview_report_lazy_imports_when_module_u
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     payload = rytm_real_layout_kit_payload(name=b"STYLECOV")
@@ -970,7 +967,6 @@ def test_main_rytm_style_kit_readiness_report_lazy_imports_when_module_unloaded(
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     payload = rytm_real_layout_kit_payload(name=b"RYTMKITCOV")
@@ -1048,7 +1044,6 @@ def test_main_dual_machine_style_mutation_mock_preview_report_lazy_imports_when_
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     rytm_payload = rytm_real_layout_kit_payload(name=b"DUALRYTM")
@@ -1093,7 +1088,6 @@ def test_main_dual_machine_style_kit_readiness_report_lazy_imports_when_unloaded
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     rytm_payload = rytm_real_layout_kit_payload(name=b"PAIRRYTM")
@@ -1138,7 +1132,6 @@ def test_main_dual_machine_style_kit_selection_report_lazy_imports_when_unloaded
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     rytm_payload = rytm_real_layout_kit_payload(name=b"SELECTRY")
@@ -1182,7 +1175,6 @@ def test_main_dual_machine_style_selection_mock_preview_report_lazy_imports_when
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     rytm_payload = rytm_real_layout_kit_payload(name=b"SELPREV")
@@ -1226,7 +1218,6 @@ def test_main_dual_machine_style_live_audition_report_lazy_imports_when_unloaded
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     rytm_payload = rytm_real_layout_kit_payload(name=b"LIVEAUD")
@@ -1271,7 +1262,6 @@ def test_main_dual_machine_style_performance_set_plan_report_lazy_imports_when_u
     import sys
 
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer import cli_registry
 
     rytm_payload = rytm_real_layout_kit_payload(name=b"SETPLAN")

@@ -9,6 +9,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+
 from conftest import dual_machine_reference_bank_files as _arc_bank_files
 
 pytestmark = pytest.mark.fast

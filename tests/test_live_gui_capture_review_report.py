@@ -61,7 +61,6 @@ def _feature_report(
 
 def test_live_gui_capture_review_builds_go_decision_json_and_text(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
     )
@@ -148,7 +147,6 @@ def test_live_gui_capture_review_builds_go_decision_json_and_text(tmp_path: Path
 
 def test_live_gui_capture_review_repeats_when_metrics_are_near_misses(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
     )
@@ -189,7 +187,6 @@ def test_live_gui_capture_review_holds_when_capture_evidence_is_not_trustworthy(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
     )
@@ -222,7 +219,6 @@ def test_live_gui_capture_review_holds_when_capture_evidence_is_not_trustworthy(
 
 def test_live_gui_capture_review_holds_low_confidence_capture(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.guardrails.schema import Confidence
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
@@ -255,7 +251,6 @@ def test_live_gui_capture_review_holds_unqueued_slots_and_missing_jobs(tmp_path:
     from dataclasses import replace
 
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
     )
@@ -295,7 +290,6 @@ def test_live_gui_capture_review_holds_unqueued_slots_and_missing_jobs(tmp_path:
 
 def test_live_gui_capture_review_handles_hash_and_metric_edge_cases(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
     )
@@ -342,7 +336,6 @@ def test_live_gui_capture_review_handles_hash_and_metric_edge_cases(tmp_path: Pa
 
 def test_live_gui_capture_review_metric_helpers_cover_defensive_edges(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports import live_gui_capture_review as review
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
@@ -431,7 +424,6 @@ def test_live_gui_capture_review_builds_from_sources_and_validates_inputs(
     monkeypatch: pytest.MonkeyPatch,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_review import (
         build_style_performance_arc_live_gui_capture_review_report,
     )
@@ -566,7 +558,6 @@ def test_live_gui_capture_review_cli_dispatches_json_text_errors_and_help(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 

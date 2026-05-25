@@ -55,7 +55,6 @@ def _feature_report(
 
 def _desktop_blueprint(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_desktop_blueprint import (
         build_style_performance_arc_live_gui_desktop_blueprint_report,
     )
@@ -310,7 +309,6 @@ def test_live_gui_desktop_app_plan_wrapper_and_parser_support_custom_labels(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_desktop_app_plan import (
         build_style_performance_arc_live_gui_desktop_app_plan_report,
         parse_style_performance_arc_live_gui_desktop_app_plan_cli_args,
@@ -383,7 +381,6 @@ def test_live_gui_desktop_app_plan_handler_outputs_text_json_and_errors(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_desktop_app_plan import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_DESKTOP_APP_PLAN_CLI_COMMAND,
         _format_cli_error,

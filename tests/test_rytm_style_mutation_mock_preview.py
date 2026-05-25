@@ -329,7 +329,6 @@ def test_style_mutation_mock_preview_cli_handler_reports_json(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_style_mutation_mock_preview import _handle_cli_report
 
     payload = rytm_real_layout_kit_payload(name=b"MOCKJSON")
@@ -360,7 +359,6 @@ def test_style_mutation_mock_preview_cli_handler_reports_text(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_style_mutation_mock_preview import _handle_cli_report
 
     payload = rytm_real_layout_kit_payload(name=b"MOCKTEXT")

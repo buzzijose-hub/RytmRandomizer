@@ -55,7 +55,6 @@ def _feature_report(
 
 def _test_harness_contract(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_test_harness_contract import (
         build_style_performance_arc_live_gui_test_harness_contract_report,
     )
@@ -289,7 +288,6 @@ def test_live_gui_test_harness_readiness_parser_builder_and_cli_edges(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.reports.live_gui_test_harness_readiness import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_TEST_HARNESS_READINESS_CLI_COMMAND,

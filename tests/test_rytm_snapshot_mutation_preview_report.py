@@ -337,7 +337,6 @@ def test_preview_cli_handler_reads_requested_slot_and_reports_plan(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_snapshot_mutation_preview import _handle_cli_report
 
     first_payload = rytm_real_layout_kit_payload(name=b"FIRST")

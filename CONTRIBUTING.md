@@ -845,7 +845,14 @@ that true:
    gates (lint + architecture + V1.34 parity) on every `git push`, by any
    tool, and **blocks the push** if they fail. Activate it once with
    `git config core.hooksPath .githooks` — `just install` and the dev
-   container do this for you.
+   container do this for you. **The top-level `conftest.py` also
+   self-heals this on the first `pytest` run in any clone or worktree**
+   (each `git worktree add` gets its own per-worktree git config space and
+   does NOT inherit the parent's `core.hooksPath` — without the
+   self-heal, lint regressions would silently escape the local gate, see
+   PR #107). The architecture test
+   `tests/architecture/test_pre_push_hook_installed.py` asserts the gate
+   is active and fails loudly if the self-heal didn't fire.
 
 You can also run the full review on demand with `just review` (it
 env-detects the agent and dispatches it — no copy-paste).

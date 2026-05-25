@@ -46,7 +46,6 @@ def _feature_report(
 
 def _render_tree(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_render_tree import (
         build_style_performance_arc_live_gui_render_tree_report,
     )
@@ -270,7 +269,6 @@ def test_live_gui_analyzer_overlay_parser_builder_and_cli_edges(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.reports.live_gui_analyzer_overlay import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_ANALYZER_OVERLAY_CLI_COMMAND,

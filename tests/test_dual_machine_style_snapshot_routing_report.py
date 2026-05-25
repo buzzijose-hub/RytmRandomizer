@@ -356,7 +356,6 @@ def test_dual_machine_style_routing_cli_handler_reports_plan(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.dual_machine_style_snapshot_routing import (
         _handle_cli_report,
     )
@@ -392,7 +391,6 @@ def test_dual_machine_style_routing_cli_handler_reports_json(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.dual_machine_style_snapshot_routing import (
         _handle_cli_report,
     )

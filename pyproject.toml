@@ -216,6 +216,13 @@ ignore = [
     "S101", "S105", "S110", "S311", "S603", "S607",
     "E402", "B007", "B011", "B017", "B904",
 ]
+# Top-level conftest.py self-heals the local git pre-push hook on
+# the first pytest run in any worktree (see conftest.py docstring).
+# That involves two subprocess.run calls to the resolved git binary
+# with a static argv -- bandit's S603 ("subprocess call: check for
+# execution of untrusted input") is a false positive because there
+# is no untrusted input. Bandit cannot prove the argv is static.
+"conftest.py" = ["S603"]
 # rytm_randomizer/observability/errors.py: __all__ lists names that are
 # resolved via PEP 562 module-level __getattr__ (lazy re-export to avoid
 # import cycles). F822 does not understand PEP 562 lazy attributes.
