@@ -90,6 +90,23 @@ class MidiMetrics:
     cc_blocked_by_guardrail_by_pad: Counter[int] = field(default_factory=Counter)
     errors_by_kind: Counter[str] = field(default_factory=Counter)
 
+    # OBS O2 — RED metrics per WS command. The dispatcher in
+    # ``cockpit/ws/handlers.py`` increments these via
+    # ``record_ws_command_*`` on each handler invocation. Keys are the
+    # command-type strings from the wire (``"send"``, ``"wizard_save"``,
+    # etc.); values are accumulated counts. Together these give a
+    # per-command Rate (count), Errors (errors_by_code), and Duration
+    # (total ms / count = average; full histograms are deferred to a
+    # future OpenTelemetry shim per OBSERVABILITY_REVIEW.md PR O5).
+    ws_command_count: Counter[str] = field(default_factory=Counter)
+    ws_command_errors_by_code: Counter[str] = field(default_factory=Counter)
+    ws_command_duration_ms_total: Counter[str] = field(default_factory=Counter)
+
+    # OBS O2 — RED metrics per export pipeline run.
+    export_count: int = 0
+    export_errors_by_code: Counter[str] = field(default_factory=Counter)
+    export_duration_ms_total: float = 0.0
+
     def record_cc_sent(self, channel: int) -> None:
         """Increment the per-channel CC-sent counter for ``channel``.
 
@@ -123,6 +140,53 @@ class MidiMetrics:
 
         self.errors_by_kind[kind] += 1
 
+    def record_ws_command(
+        self,
+        cmd_type: str,
+        duration_ms: float,
+        *,
+        error_code: str | None = None,
+    ) -> None:
+        """Record one WS command invocation for RED metrics.
+
+        Called by the WS dispatcher in ``cockpit/ws/handlers.py`` after each
+        handler returns (or raises). ``cmd_type`` is the command-type string
+        from the wire (``"send"``, ``"wizard_save"``, etc.); ``duration_ms``
+        is wall-clock handler runtime in milliseconds; ``error_code`` is the
+        categorical ack code (``ERR_*``) when the handler produced an error
+        envelope, ``None`` on success.
+
+        Together these three counters give per-command Rate (count), Errors
+        (errors_by_code), and Duration (total / count = average). Full
+        histograms are deferred to a future OpenTelemetry shim per
+        OBSERVABILITY_REVIEW.md PR O5.
+        """
+
+        self.ws_command_count[cmd_type] += 1
+        self.ws_command_duration_ms_total[cmd_type] += int(duration_ms)
+        if error_code is not None:
+            self.ws_command_errors_by_code[error_code] += 1
+
+    def record_export(
+        self,
+        duration_ms: float,
+        *,
+        error_code: str | None = None,
+    ) -> None:
+        """Record one export pipeline run for RED metrics.
+
+        Called from ``cockpit/export/cli.py`` after the export pipeline
+        completes (success or failure). ``duration_ms`` is wall-clock
+        pipeline runtime; ``error_code`` is a categorical label such as
+        ``"profile_load"`` / ``"pack_failed"`` / ``"write_failed"`` on
+        failure, ``None`` on success.
+        """
+
+        self.export_count += 1
+        self.export_duration_ms_total += duration_ms
+        if error_code is not None:
+            self.export_errors_by_code[error_code] += 1
+
     def format_summary(self) -> str:
         """Return a multi-line human-readable summary of every counter.
 
@@ -138,7 +202,13 @@ class MidiMetrics:
             "MidiMetrics: "
             f"cc_sent={_format_counter(self.cc_sent_by_channel)}, "
             f"blocked={_format_counter(self.cc_blocked_by_guardrail_by_pad)}, "
-            f"errors={_format_counter(self.errors_by_kind)}"
+            f"errors={_format_counter(self.errors_by_kind)}, "
+            f"ws_cmd_count={_format_counter(self.ws_command_count)}, "
+            f"ws_cmd_errors={_format_counter(self.ws_command_errors_by_code)}, "
+            f"ws_cmd_duration_ms={_format_counter(self.ws_command_duration_ms_total)}, "
+            f"export_count={self.export_count}, "
+            f"export_errors={_format_counter(self.export_errors_by_code)}, "
+            f"export_duration_ms={self.export_duration_ms_total:.1f}"
         )
 
 
@@ -186,3 +256,9 @@ def reset_metrics() -> None:
     _METRICS.cc_sent_by_channel.clear()
     _METRICS.cc_blocked_by_guardrail_by_pad.clear()
     _METRICS.errors_by_kind.clear()
+    _METRICS.ws_command_count.clear()
+    _METRICS.ws_command_errors_by_code.clear()
+    _METRICS.ws_command_duration_ms_total.clear()
+    _METRICS.export_count = 0
+    _METRICS.export_errors_by_code.clear()
+    _METRICS.export_duration_ms_total = 0.0

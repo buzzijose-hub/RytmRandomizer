@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -51,6 +52,7 @@ import msgpack
 from ...cli_registry import CliCommand
 from ...cli_registry import register as _registry_register
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from .serialize import pack_profile_model
 from .signing import pack_signed, sign_profile_blob
 from .verifier import verify_signed_blob, verify_unsigned_payload
@@ -302,6 +304,29 @@ def _error_payload(message: str) -> dict[str, object]:
     return {"ok": False, "error": message}
 
 
+def _classify_export_error(exc: BaseException) -> str:
+    """Map an export-pipeline exception to a categorical RED-metrics label.
+
+    Kept deliberately small and stable — these strings show up in the
+    ``export_errors_by_code`` counter histogram operators scan at shell
+    exit. A free-form ``type(exc).__name__`` would explode the cardinality
+    and defeat the purpose of a categorized counter (cf. the same rule
+    enforced for ``record_error``).
+    """
+
+    if isinstance(exc, FileExistsError):
+        return "overwrite_refused"
+    if isinstance(exc, OSError):
+        return "write_failed"
+    if isinstance(exc, OverflowError):
+        return "pack_overflow"
+    if isinstance(exc, msgpack.exceptions.PackException):
+        return "pack_failed"
+    if isinstance(exc, (ValueError, TypeError)):
+        return "validation"
+    return "unknown"  # pragma: no cover - belt-and-braces; all known paths hit above
+
+
 def handle_export_profile_model(args: Sequence[str]) -> int:
     """Parse, validate, execute the export pipeline. Return the exit code.
 
@@ -315,6 +340,14 @@ def handle_export_profile_model(args: Sequence[str]) -> int:
     # ``json_output`` is parsed once early so error acks before validation
     # complete still respect the operator's chosen format.
     json_output = "--json" in args_list
+    # OBS O2 — RED metrics. Time the whole pipeline (parse + validate +
+    # pack + sign + write + verify). The metric is recorded exactly once
+    # at exit, on every code path, via the ``finally`` block below so
+    # rate/error/duration stays accurate even if a future contributor
+    # adds an early return.
+    _metrics = get_metrics()
+    _t0 = time.perf_counter()
+    _error_code: str | None = None
     try:
         options = _parse_args(args_list)
         json_output = options.json_output
@@ -375,12 +408,21 @@ def handle_export_profile_model(args: Sequence[str]) -> int:
         # explicitly so it does not escape the handler.
         msgpack.exceptions.PackException,
     ) as exc:
+        _error_code = _classify_export_error(exc)
         ack = _error_payload(str(exc))
         _emit(ack, json_output=json_output)
+        _metrics.record_export((time.perf_counter() - _t0) * 1000.0, error_code=_error_code)
         return 2
 
     _emit(ack, json_output=json_output)
-    return 0 if ack.get("ok") is True else 2
+    ok = ack.get("ok") is True
+    if not ok and _error_code is None:
+        # ack.ok is False but no exception was raised — the verifier
+        # rejected the bytes just written. Record under a distinct bucket
+        # so operators can spot post-write integrity regressions.
+        _error_code = "verify_failed"
+    _metrics.record_export((time.perf_counter() - _t0) * 1000.0, error_code=_error_code)
+    return 0 if ok else 2
 
 
 def _parse_for_registry(argv: Sequence[str]) -> dict[str, object]:

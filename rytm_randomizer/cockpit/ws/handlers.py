@@ -59,12 +59,14 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Final, Protocol, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
 from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
 from ..engine import mutate, prepare_send_plan
@@ -653,6 +655,13 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
     """
 
     request_id = envelope.get("request_id", "")
+    # OBS O2 — RED metrics. Start the wall-clock here so the duration
+    # captures envelope parsing AND handler runtime AND post-handler
+    # bookkeeping. The cmd_type label is unknown until after the envelope
+    # parse, so the missing-envelope-key path records under the special
+    # ``"<malformed>"`` bucket.
+    _metrics = get_metrics()
+    _t0 = time.perf_counter()
     try:
         cmd = envelope["command"]
         cmd_type = cmd["type"]
@@ -674,6 +683,11 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
                 "request_id": request_id,
             },
         )
+        _metrics.record_ws_command(
+            "<malformed>",
+            (time.perf_counter() - _t0) * 1000.0,
+            error_code=ERR_MISSING_ENVELOPE_KEY,
+        )
         return {
             "request_id": request_id,
             **_error_ack(
@@ -690,7 +704,17 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
         handler = WIZARD_HANDLERS.get(cmd_type)
     else:
         handler = _HANDLERS.get(cmd_type)
+    # OBS O2 — bucket label for the RED counters. Use the actual cmd_type
+    # if it's a string; non-string types collapse to the same "<unknown>"
+    # label the operation span uses, so the operator sees one consistent
+    # vocabulary across logs and metrics.
+    _label = cmd_type if isinstance(cmd_type, str) else "<unknown>"
     if handler is None:
+        _metrics.record_ws_command(
+            _label,
+            (time.perf_counter() - _t0) * 1000.0,
+            error_code=ERR_UNKNOWN_COMMAND,
+        )
         return {
             "request_id": request_id,
             **_error_ack(ERR_UNKNOWN_COMMAND, f"unknown command: {cmd_type!r}"),
@@ -702,7 +726,7 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
     # every breadcrumb the dispatcher + handler + downstream emitted
     # during that one client request — wizard analyzer, atomic_write,
     # signing, verifier, etc.
-    op_name = f"ws.{cmd_type}" if isinstance(cmd_type, str) else "ws.unknown"
+    op_name = f"ws.{_label}"
     with operation(op_name, logger=_logger, request_id=request_id):
         try:
             result = await handler(cmd, session)
@@ -728,6 +752,11 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
                     "request_id": request_id,
                 },
             )
+            _metrics.record_ws_command(
+                _label,
+                (time.perf_counter() - _t0) * 1000.0,
+                error_code=code,
+            )
             return {"request_id": request_id, **_error_ack(code, message)}
         # Queue events on the session for the caller to drain AFTER it sends
         # the ack on the wire. We cannot await the emitter from here without
@@ -736,6 +765,20 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
         # :func:`drain_pending_events` via the real ``pending_events`` field
         # on :class:`CockpitSession`.
         session.pending_events = list(result.events)
+        # OBS O2 — record success. If the handler returned an error envelope
+        # (ack.ok is False) we still treat it as an error bucket — handlers
+        # producing ``{ok: False, code: ...}`` directly (rather than raising)
+        # are the same kind of failure from a RED perspective.
+        ack_error = (
+            result.ack.get("code")
+            if isinstance(result.ack, dict) and not result.ack.get("ok", True)
+            else None
+        )
+        _metrics.record_ws_command(
+            _label,
+            (time.perf_counter() - _t0) * 1000.0,
+            error_code=ack_error,
+        )
         return {"request_id": request_id, **result.ack}
 
 
