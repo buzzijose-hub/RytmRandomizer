@@ -41,7 +41,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import ClassVar, Final
 
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
@@ -109,6 +109,8 @@ class WriteError(DataError, OSError):
     :class:`rytm_randomizer.cockpit.wizard.builder.EmptyAnalysisError`
     (``DataError`` + :class:`ValueError`).
     """
+
+    fingerprint: ClassVar[str] = "export.write.failed"
 
 
 # ---------------------------------------------------------------------------

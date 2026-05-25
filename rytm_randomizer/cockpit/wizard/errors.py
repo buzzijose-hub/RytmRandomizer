@@ -22,6 +22,8 @@ StyleAnalysisDependencyError`, which uses the same
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from ...observability.errors import DataError
 
 
@@ -32,6 +34,8 @@ class WizardSourcePathError(DataError, FileNotFoundError):
     error reads naturally from a caller's perspective and counts as a
     taxonomy member from the conformance-test perspective.
     """
+
+    fingerprint: ClassVar[str] = "wizard.source.path_not_found"
 
 
 __all__ = ["WizardSourcePathError"]

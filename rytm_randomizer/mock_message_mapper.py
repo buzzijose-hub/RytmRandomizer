@@ -12,6 +12,8 @@ callers both work.
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 from .mock_midi import MidiMessage
 from .observability.errors import DataError
 from .profile_lookup import describe_group_profile
@@ -26,6 +28,8 @@ class MockMessageMappingError(DataError, ValueError):
     taxonomy. ``ValueError`` is kept as an additional base for
     backward-compatibility with any ``except ValueError`` caller.
     """
+
+    fingerprint: ClassVar[str] = "mock.message.mapping_failed"
 
 
 def _target_concept(profile):

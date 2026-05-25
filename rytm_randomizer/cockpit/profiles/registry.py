@@ -50,7 +50,7 @@ import errno
 import json
 import logging
 from pathlib import Path
-from typing import Final
+from typing import ClassVar, Final
 
 from rytm_randomizer.cockpit.data import ProfileModel
 from rytm_randomizer.cockpit.export.writer import atomic_write
@@ -93,6 +93,8 @@ class ProfileAlreadyExistsError(DataError, FileExistsError):
     the same dual-inheritance pattern.
     """
 
+    fingerprint: ClassVar[str] = "profile.registry.already_exists"
+
 
 class ProfileRegistryAccessError(DataError, PermissionError):
     """Raised on infrastructure-level failures reading the profiles dir.
@@ -106,6 +108,8 @@ class ProfileRegistryAccessError(DataError, PermissionError):
     keeps stdlib ``except PermissionError:`` callers working AND lets the
     observability conformance test recognise it as a taxonomy member.
     """
+
+    fingerprint: ClassVar[str] = "profile.registry.access_denied"
 
 
 class ProfileRegistry:

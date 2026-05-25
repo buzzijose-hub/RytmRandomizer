@@ -56,7 +56,7 @@ See ``docs/superpowers/specs/2026-05-24-profile-wizard-design.md``
 
 from __future__ import annotations
 
-from typing import Final
+from typing import ClassVar, Final
 
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
@@ -123,6 +123,8 @@ class EmptyAnalysisError(DataError, ValueError):
     Mirrors :class:`rytm_randomizer.cockpit.wizard.errors.
     WizardSourcePathError`, which uses the same dual-inheritance pattern.
     """
+
+    fingerprint: ClassVar[str] = "wizard.builder.empty_analysis"
 
 
 # ---------------------------------------------------------------------------

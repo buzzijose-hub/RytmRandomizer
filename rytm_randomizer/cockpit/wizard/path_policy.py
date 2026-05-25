@@ -53,7 +53,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import ClassVar, Final
 
 from ...observability.errors import DataError
 
@@ -108,6 +108,8 @@ class WizardSourcePathRejected(DataError, ValueError):
     errors.WizardSourcePathError`, both of which use the same dual-
     inheritance pattern.
     """
+
+    fingerprint: ClassVar[str] = "wizard.source.path_rejected"
 
 
 @dataclass(frozen=True)

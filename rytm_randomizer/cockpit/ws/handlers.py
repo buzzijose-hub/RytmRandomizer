@@ -337,6 +337,26 @@ def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     return ERR_INTERNAL, _HANDLER_INTERNAL_MESSAGE
 
 
+def _exc_fingerprint(exc: BaseException) -> str | None:
+    """Return the taxonomy fingerprint for ``exc`` (or ``None`` for stdlib).
+
+    OBS O4 — every :class:`RytmRandomizerError` subclass declares a
+    stable, short ``fingerprint`` class attribute (a lowercase
+    ``<subsystem>.<verb>.<noun>`` dot-path) that an operator
+    ``grep``s for in logs and a future alerting tier groups on. This
+    helper is the single point of truth for "give me the fingerprint
+    of any caught exception, or ``None`` if it is not a taxonomy
+    member". Used by the structured ``_logger.warning(..., extra={
+    "exception_repr": ...})`` call sites in this module so every
+    WS-side error log entry carries the same aggregator field when
+    the cause is a taxonomy raise.
+    """
+
+    if isinstance(exc, RytmRandomizerError):
+        return exc.fingerprint
+    return None
+
+
 # ---------------------------------------------------------------------------
 # Per-command handlers.
 #
@@ -534,6 +554,12 @@ async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerRe
                 "snapshot_id": snapshot_id,
                 "exception_type": type(exc).__name__,
                 "exception_repr": repr(exc),
+                # OBS O4 — taxonomy fingerprint pass-through. ``KeyError``
+                # is a stdlib exception (no fingerprint); the helper
+                # returns ``None`` and the log entry carries an explicit
+                # ``fingerprint=None`` so the field exists for log
+                # shippers' presence-based filters either way.
+                "fingerprint": _exc_fingerprint(exc),
             },
         )
         return HandlerResult(
@@ -680,6 +706,7 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
                 "missing_key": missing_key,
                 "exception_type": type(exc).__name__,
                 "exception_repr": repr(exc),
+                "fingerprint": _exc_fingerprint(exc),
                 "request_id": request_id,
             },
         )
@@ -749,6 +776,13 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
                     "cmd_type": cmd_type,
                     "exception_type": type(exc).__name__,
                     "exception_repr": repr(exc),
+                    # OBS O4 — when ``exc`` is a :class:`RytmRandomizerError`
+                    # subclass (one of the arms of the except tuple above),
+                    # this is the stable ``<subsystem>.<verb>.<noun>``
+                    # aggregator string an operator greps in logs and a
+                    # future Sentry tier groups on. stdlib exceptions in
+                    # the same except tuple surface as ``None``.
+                    "fingerprint": _exc_fingerprint(exc),
                     "request_id": request_id,
                 },
             )

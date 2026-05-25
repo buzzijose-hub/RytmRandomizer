@@ -39,12 +39,24 @@ Class identity is preserved for the re-homed errors: the original module
 still owns the class object so ``isinstance(...)`` checks and ``import``
 paths in existing tests are unchanged. This module re-exports them solely
 as a convenience.
+
+OBS O4 -- fingerprint discipline. Every concrete subclass of
+:class:`RytmRandomizerError` declares a stable, short ``fingerprint``
+class attribute -- a lowercase dot-separated path of the form
+``<subsystem>.<verb>.<noun>`` (e.g. ``"midi.port.open_failed"``,
+``"export.write.failed"``). The fingerprint is what an operator
+``grep``s for in logs and what a future Sentry / alerting tier groups
+on; it is the same vocabulary across logs, metrics, and breadcrumbs.
+The root base and the five taxonomy bases carry placeholder
+``<family>.error.unspecified`` fingerprints so an inadvertent raw
+raise still has *some* aggregator; concrete subclasses override.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
+from typing import ClassVar
 
 __all__ = [
     "ActiveBoundaryError",
@@ -75,7 +87,13 @@ class RytmRandomizerError(Exception):
     Carries an optional ``context`` mapping that callers use to attach
     structured diagnostic data. The ``context`` is captured as an immutable
     view at construction time.
+
+    OBS O4: every concrete subclass declares a stable, short ``fingerprint``
+    class attribute (a lowercase dot-separated path). The root carries a
+    fallback so a raw ``raise RytmRandomizerError(...)`` still aggregates.
     """
+
+    fingerprint: ClassVar[str] = "rytm_randomizer.error.unspecified"
 
     def __init__(
         self,
@@ -109,21 +127,31 @@ class RytmRandomizerError(Exception):
 class MidiError(RytmRandomizerError):
     """Base for failures at the MIDI boundary (port open, send, translate)."""
 
+    fingerprint: ClassVar[str] = "midi.error.unspecified"
+
 
 class StateError(RytmRandomizerError):
     """Invalid runtime state transition or missing required state."""
+
+    fingerprint: ClassVar[str] = "state.error.unspecified"
 
 
 class DataError(RytmRandomizerError):
     """Missing or malformed data-layer entry."""
 
+    fingerprint: ClassVar[str] = "data.error.unspecified"
+
 
 class BoundaryError(RytmRandomizerError):
     """Generic boundary / contract violation that is not MIDI- or data-shaped."""
 
+    fingerprint: ClassVar[str] = "boundary.error.unspecified"
+
 
 class ConfigError(RytmRandomizerError):
     """Configuration or mode misuse (CLI flags, log level names, etc.)."""
+
+    fingerprint: ClassVar[str] = "config.error.unspecified"
 
 
 # ---------------------------------------------------------------------------
