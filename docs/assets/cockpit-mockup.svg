@@ -1,0 +1,204 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="Cockpit GUI — live performance surface">
+  <defs>
+    <linearGradient id="winbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#13171f"/>
+      <stop offset="100%" stop-color="#0c0f15"/>
+    </linearGradient>
+    <linearGradient id="ghost" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ff6a3d" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ff6a3d" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <!-- window chrome -->
+  <rect x="0" y="0" width="1280" height="720" rx="14" fill="url(#winbg)"/>
+  <rect x="0" y="0" width="1280" height="44" rx="14" fill="#181d27"/>
+  <g transform="translate(20,22)">
+    <circle cx="0"  cy="0" r="7" fill="#ff5f57"/>
+    <circle cx="22" cy="0" r="7" fill="#ffbd2e"/>
+    <circle cx="44" cy="0" r="7" fill="#28c840"/>
+  </g>
+  <text x="640" y="29" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="500" fill="#8c93a0" text-anchor="middle">
+    RytmRandomizer · Cockpit
+  </text>
+  <!-- top status bar -->
+  <g transform="translate(0,44)">
+    <rect x="0" y="0" width="1280" height="56" fill="#101620"/>
+    <text x="20" y="34" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#f5f5f5">
+      Live  •
+    </text>
+    <text x="78" y="34" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#9be8a0">
+      ARMED
+    </text>
+    <text x="155" y="34" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="400" fill="#bcbcbc">
+      · 2 unsaved sends
+    </text>
+    <!-- right side actions -->
+    <g transform="translate(900,12)" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle">
+      <rect x="0"   y="0" width="84" height="32" rx="6" fill="#1f2530" stroke="#2a3140"/>
+      <text x="42"  y="21" fill="#bcbcbc">UNDO</text>
+      <rect x="92"  y="0" width="84" height="32" rx="6" fill="#1f2530" stroke="#2a3140"/>
+      <text x="134" y="21" fill="#bcbcbc">REGEN</text>
+      <rect x="184" y="0" width="92" height="32" rx="6" fill="#2a3140" stroke="#3a4150"/>
+      <text x="230" y="21" fill="#bcbcbc">PREVIEW ●</text>
+      <rect x="284" y="0" width="96" height="32" rx="6" fill="#ff6a3d"/>
+      <text x="332" y="21" fill="#0c0f15">SEND →</text>
+    </g>
+  </g>
+  <!-- LEFT PANEL: Snapshot with pad grid + ghost preview -->
+  <g transform="translate(20,120)">
+    <rect x="0" y="0" width="720" height="560" rx="10" fill="#13181f" stroke="#1f2530"/>
+    <text x="20" y="30" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#8c93a0" letter-spacing="3">SNAPSHOT</text>
+    <text x="690" y="30" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#ff9d3d" text-anchor="end">● UNSAVED · ghost overlay on</text>
+    <!-- 4x3 pad grid with one locked, one previewed, one selected -->
+    <g transform="translate(40,60)">
+      <!-- pad cards 160x150 with 10px gap → 3 cols, 4 rows = nope, do 4 cols x 3 rows = 12 pads -->
+      <!-- spacing: 160 + 12 = 172 ; 150 + 12 = 162 -->
+      <!-- helper for one pad -->
+      <g font-family="Helvetica, Arial, sans-serif">
+        <!-- row 1 -->
+        <g transform="translate(0,0)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 1</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">BD Hard</text>
+          <!-- knobs -->
+          <g transform="translate(14,60)" stroke="#ff6a3d" fill="none">
+            <circle cx="12" cy="12" r="11"/>  <circle cx="42" cy="12" r="11"/>
+            <circle cx="72" cy="12" r="11"/>  <circle cx="102" cy="12" r="11"/>
+          </g>
+          <text x="14" y="118" font-size="10" font-weight="500" fill="#8c93a0">TUN 64 · DEC 80 · LEV 110 · FLT 64</text>
+          <!-- ghost overlay -->
+          <rect x="0" y="0" width="158" height="150" rx="10" fill="url(#ghost)" opacity="0.7"/>
+          <text x="14" y="142" font-size="10" font-weight="700" fill="#ffcf7c">→ TUN 71 · DEC 88</text>
+        </g>
+        <!-- row 1 col 2: LOCKED -->
+        <g transform="translate(170,0)">
+          <rect width="158" height="150" rx="10" fill="#181c25" stroke="#262d3a"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#5b6573">PAD 2  🔒</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#6b7280">SD Acoustic</text>
+          <g transform="translate(14,60)" stroke="#3a4150" fill="none">
+            <circle cx="12" cy="12" r="11"/>  <circle cx="42" cy="12" r="11"/>
+            <circle cx="72" cy="12" r="11"/>  <circle cx="102" cy="12" r="11"/>
+          </g>
+          <text x="14" y="118" font-size="10" font-weight="500" fill="#5b6573">LOCKED · no changes proposed</text>
+        </g>
+        <!-- row 1 col 3 -->
+        <g transform="translate(340,0)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 3</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">CH</text>
+          <g transform="translate(14,60)" stroke="#ff6a3d" fill="none">
+            <circle cx="12" cy="12" r="11"/>  <circle cx="42" cy="12" r="11"/>
+            <circle cx="72" cy="12" r="11"/>  <circle cx="102" cy="12" r="11"/>
+          </g>
+          <text x="14" y="118" font-size="10" font-weight="500" fill="#8c93a0">density: high</text>
+        </g>
+        <!-- row 1 col 4 -->
+        <g transform="translate(510,0)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 4</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">FX</text>
+          <g transform="translate(14,60)" stroke="#ff6a3d" fill="none">
+            <circle cx="12" cy="12" r="11"/>  <circle cx="42" cy="12" r="11"/>
+            <circle cx="72" cy="12" r="11"/>  <circle cx="102" cy="12" r="11"/>
+          </g>
+          <text x="14" y="118" font-size="10" font-weight="500" fill="#8c93a0">filter motion</text>
+        </g>
+        <!-- row 2 (collapsed for legibility) -->
+        <g transform="translate(0,160)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 5</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">RS</text>
+        </g>
+        <g transform="translate(170,160)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 6</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">CY</text>
+        </g>
+        <g transform="translate(340,160)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 7</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">CB</text>
+        </g>
+        <g transform="translate(510,160)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 8</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">CP</text>
+        </g>
+        <!-- row 3 -->
+        <g transform="translate(0,320)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 9</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">BT</text>
+        </g>
+        <g transform="translate(170,320)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 10</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">LT</text>
+        </g>
+        <g transform="translate(340,320)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 11</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">MT</text>
+        </g>
+        <g transform="translate(510,320)">
+          <rect width="158" height="150" rx="10" fill="#1c2230" stroke="#2a3140"/>
+          <text x="14" y="24" font-size="11" font-weight="700" fill="#7cc4ff">PAD 12</text>
+          <text x="14" y="44" font-size="16" font-weight="700" fill="#f5f5f5">HT</text>
+        </g>
+      </g>
+    </g>
+  </g>
+  <!-- RIGHT PANEL: Mutation -->
+  <g transform="translate(760,120)">
+    <rect x="0" y="0" width="500" height="560" rx="10" fill="#13181f" stroke="#1f2530"/>
+    <text x="20" y="30" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#8c93a0" letter-spacing="3">MUTATION PANEL</text>
+    <text x="20" y="62" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#8c93a0">Active profile</text>
+    <g transform="translate(20,72)" font-family="Helvetica, Arial, sans-serif">
+      <rect width="118" height="36" rx="18" fill="#ff6a3d"/>
+      <text x="59" y="23" font-size="14" font-weight="700" fill="#0c0f15" text-anchor="middle">★ buzzi</text>
+      <rect x="128" width="92" height="36" rx="18" fill="#1f2530" stroke="#2a3140"/>
+      <text x="174" y="23" font-size="14" font-weight="500" fill="#bcbcbc" text-anchor="middle">kanye</text>
+      <rect x="230" width="138" height="36" rx="18" fill="#1f2530" stroke="#2a3140"/>
+      <text x="299" y="23" font-size="14" font-weight="500" fill="#bcbcbc" text-anchor="middle">warehouse</text>
+    </g>
+    <!-- profile card -->
+    <g transform="translate(20,140)">
+      <rect width="460" height="120" rx="10" fill="#1c2230" stroke="#2a3140"/>
+      <text x="20" y="32" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#f5f5f5">★ buzzi</text>
+      <text x="20" y="54" font-family="Helvetica, Arial, sans-serif" font-size="12" font-weight="500" fill="#8c93a0">5 sources · ready · model v1.0.0 · kind=user</text>
+      <!-- traits -->
+      <g transform="translate(20,72)" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="600">
+        <text fill="#bcbcbc">rolling_low_end</text>
+        <rect x="120" y="-8" width="240" height="8" rx="4" fill="#1f2530"/>
+        <rect x="120" y="-8" width="204" height="8" rx="4" fill="#ff6a3d"/>
+        <text x="370" fill="#ff9d3d">0.85</text>
+        <text y="22" fill="#bcbcbc">metallic_tension</text>
+        <rect x="120" y="14" width="240" height="8" rx="4" fill="#1f2530"/>
+        <rect x="120" y="14" width="156" height="8" rx="4" fill="#ff6a3d"/>
+        <text x="370" y="22" fill="#ff9d3d">0.65</text>
+      </g>
+    </g>
+    <!-- DEPTH slider -->
+    <text x="20" y="296" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#bcbcbc" letter-spacing="2">DEPTH</text>
+    <g transform="translate(20,316)">
+      <rect width="460" height="8" rx="4" fill="#1f2530"/>
+      <rect width="207" height="8" rx="4" fill="#ff6a3d"/>
+      <circle cx="207" cy="4" r="11" fill="#ff9d3d" stroke="#0c0f15" stroke-width="2"/>
+      <text x="0"   y="36" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#8c93a0">0.10</text>
+      <text x="207" y="36" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#ff9d3d" text-anchor="middle">0.45 · safe</text>
+      <text x="460" y="36" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#8c93a0" text-anchor="end">0.90</text>
+    </g>
+    <!-- send-plan readiness card -->
+    <g transform="translate(20,376)">
+      <rect width="460" height="164" rx="10" fill="#11161f" stroke="#1f2530"/>
+      <text x="20" y="30" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#9be8a0" letter-spacing="2">SEND PLAN · READY</text>
+      <text x="20" y="56" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#bcbcbc">plan_id: 01HXY5R…2C8 · candidate-derived</text>
+      <text x="20" y="78" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#bcbcbc">3 pads · 7 CC msgs · 1 pad locked · est. 4ms</text>
+      <text x="20" y="100" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#bcbcbc">readiness: ready · safety: safe</text>
+      <rect x="20" y="118" width="120" height="30" rx="6" fill="#1f2530" stroke="#2a3140"/>
+      <text x="80" y="138" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#bcbcbc" text-anchor="middle">REHEARSE</text>
+      <rect x="320" y="118" width="120" height="30" rx="6" fill="#ff6a3d"/>
+      <text x="380" y="138" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#0c0f15" text-anchor="middle">SEND →</text>
+    </g>
+  </g>
+</svg>
