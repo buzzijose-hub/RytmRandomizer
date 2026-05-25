@@ -86,9 +86,8 @@ def _is_websocket_decorator(node: ast.expr) -> bool:
     func = node.func
     if isinstance(func, ast.Attribute) and func.attr == "websocket":
         return True
-    if isinstance(func, ast.Name) and func.id == "websocket":  # bare import form
-        return True
-    return False
+    # Bare import form: `from fastapi import websocket; @websocket(...)`
+    return isinstance(func, ast.Name) and func.id == "websocket"
 
 
 def _function_body_text(func: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
@@ -163,9 +162,7 @@ def test_at_least_one_websocket_handler_exists() -> None:
     audible failure.
     """
 
-    handler_count = sum(
-        len(_websocket_handlers_in(p)) for p in _all_cockpit_python_files()
-    )
+    handler_count = sum(len(_websocket_handlers_in(p)) for p in _all_cockpit_python_files())
     assert handler_count >= 1, (
         "No @app.websocket(...) handlers found anywhere under "
         f"{COCKPIT_DIR}. The cockpit sidecar exists specifically to serve "

@@ -50,9 +50,7 @@ SCOPE_DIRS: Final[tuple[Path, ...]] = (
 # The forbidden method names (called on a Path object) + the forbidden
 # open-mode strings. These are the only known ways to perform a
 # non-atomic write.
-_FORBIDDEN_PATH_METHODS: Final[frozenset[str]] = frozenset(
-    {"write_text", "write_bytes"}
-)
+_FORBIDDEN_PATH_METHODS: Final[frozenset[str]] = frozenset({"write_text", "write_bytes"})
 _WRITE_MODE_LETTERS: Final[frozenset[str]] = frozenset(
     {"w", "wb", "a", "ab", "w+", "wb+", "a+", "ab+"}
 )

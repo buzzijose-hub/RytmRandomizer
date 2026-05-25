@@ -136,8 +136,7 @@ def test_wizard_handlers_with_location_route_through_path_policy() -> None:
     """
 
     assert WIZARD_HANDLERS.is_file(), (
-        f"{WIZARD_HANDLERS} not found — has the file been moved? Update "
-        "the path in this test."
+        f"{WIZARD_HANDLERS} not found — has the file been moved? Update " "the path in this test."
     )
 
     violations: list[str] = []
@@ -176,9 +175,7 @@ def test_path_policy_module_exists() -> None:
     fail at runtime). This pins the file's existence.
     """
 
-    policy_path = (
-        PROJECT_ROOT / "rytm_randomizer" / "cockpit" / "wizard" / "path_policy.py"
-    )
+    policy_path = PROJECT_ROOT / "rytm_randomizer" / "cockpit" / "wizard" / "path_policy.py"
     assert policy_path.is_file(), (
         f"{policy_path} must exist — it is the canonical home for "
         "WizardPathPolicy. If you've moved it, update this test."

@@ -182,9 +182,10 @@ def test_every_hot_path_module_binds_a_logger() -> None:
                 "module top level. Add one (one line) so future structured "
                 "log calls have somewhere to land."
             )
-    assert not missing, (
-        "Hot-path modules without a `_logger` binding — OBS regression:"
-        "\n  " + "\n  ".join(missing)
+    assert (
+        not missing
+    ), "Hot-path modules without a `_logger` binding — OBS regression:" "\n  " + "\n  ".join(
+        missing
     )
 
 
@@ -225,12 +226,8 @@ def test_hot_path_module_set_only_contains_real_files() -> None:
     test makes a stale entry an audible failure.
     """
 
-    missing = [
-        rel
-        for rel in sorted(_HOT_PATH_MODULES)
-        if not (PROJECT_ROOT / rel).is_file()
-    ]
+    missing = [rel for rel in sorted(_HOT_PATH_MODULES) if not (PROJECT_ROOT / rel).is_file()]
     assert not missing, (
-        "_HOT_PATH_MODULES references files that do not exist — update "
+        "_HOT_PATH_MODULES references files that do not exist - update "  # noqa: S608
         "the set when renaming / moving:\n  " + "\n  ".join(missing)
     )

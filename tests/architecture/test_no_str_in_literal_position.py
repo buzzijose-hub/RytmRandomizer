@@ -53,9 +53,8 @@ NARROW_HELPERS_PATH: Final[Path] = COCKPIT_DIR / "data" / "types.py"
 # PR can lower this value.
 _MAX_ARG_TYPE_IGNORES: Final[int] = 50
 
-_ARG_TYPE_IGNORE_PATTERN: Final[re.Pattern[str]] = re.compile(
-    r"#\s*type:\s*ignore\[arg-type\]"
-)
+_ARG_TYPE_IGNORE_PATTERN: Final[re.Pattern[str]] = re.compile(r"#\s*type:\s*ignore\[arg-type\]")
+
 
 def _narrow_helpers_present() -> bool:
     """Detect whether PR 5's narrow_* helpers have actually been added.
