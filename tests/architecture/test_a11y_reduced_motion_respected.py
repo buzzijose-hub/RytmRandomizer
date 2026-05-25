@@ -22,10 +22,10 @@ CSS_FILES: Final[tuple[Path, ...]] = (
 )
 
 _GRANDFATHERED: Final[dict[str, int]] = {
-    # Audit miss vs. plan (2026-05-25): wizard/styles.css declares
-    # animations/transitions without a prefers-reduced-motion override.
-    # Cluster 8 task drops this to 0.
-    "desktop/web/src/wizard/styles.css": 1,
+    # Cluster 8 (Task 11) added the prefers-reduced-motion override to
+    # wizard/styles.css; floor dropped to 0. Entry kept as a tripwire so
+    # any future regression has to be explicit.
+    "desktop/web/src/wizard/styles.css": 0,
 }
 
 _ANIM_HINT: Final[re.Pattern[str]] = re.compile(

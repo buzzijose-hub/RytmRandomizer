@@ -485,3 +485,33 @@ html,
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* ---------- WCAG 2.3.3 / 2.2 reduced-motion + forced-colors ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  /* Use the system colors so Windows High Contrast renders cleanly. */
+  .cockpit-root,
+  .wizard-root {
+    border: 1px solid CanvasText;
+  }
+  button,
+  [role="tab"],
+  [role="slider"] {
+    border: 1px solid ButtonText;
+  }
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}
