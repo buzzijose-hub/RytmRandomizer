@@ -40,7 +40,9 @@ def test_undo_at_root_returns_error(cockpit_ws: object) -> None:
     ack = send_cmd(cockpit_ws, "undo")
 
     assert ack["ok"] is False
-    assert "nothing to undo" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "validation_error"
+    assert "nothing to undo" in ack["message"]
 
 
 def test_undo_after_one_send_returns_to_root(cockpit_ws: object) -> None:
@@ -114,4 +116,6 @@ def test_undo_then_undo_at_root_returns_error(cockpit_ws: object) -> None:
     ack = send_cmd(cockpit_ws, "undo", request_id="req-undo-2")
 
     assert ack["ok"] is False
-    assert "nothing to undo" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "validation_error"
+    assert "nothing to undo" in ack["message"]

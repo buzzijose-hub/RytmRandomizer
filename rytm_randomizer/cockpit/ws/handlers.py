@@ -32,11 +32,24 @@ Errors and the ack
 
 Every handler returns a :class:`HandlerResult` (no ``request_id``
 yet). On any exception inside a handler, the dispatcher catches the
-exception and replies with ``{ok: False, error: str(exc)}``. Handlers
+exception and replies with a *categorical* error envelope:
+``{ok: False, code: "<ERR_*>", message: "<safe-text>"}``. Handlers
 do **not** raise to express "the command is invalid" — they return
-``{ok: False, error: "..."}`` directly so the error message stays
-human-readable. The exception path is the *last-line* safety net for
-bugs that shouldn't happen in normal operation.
+the same categorical shape directly via :func:`_error_ack` so the
+wire-format contract is one and the same regardless of whether the
+failure was a handler-detected precondition or a raised exception.
+A structured :func:`logger.warning` call captures ``repr(exc)`` and
+the exception type server-side only, *never* on the wire
+(CODE_REVIEW.md PR 14, RR4f). ``repr(exc)`` is used (rather than
+``str(exc)``) so the AST guard in
+``tests/architecture/test_no_raw_exception_messages_on_wire.py`` can
+stay at floor 0 for this file.
+
+The four categorical codes (:data:`WS_ERROR_CODES`) are stable
+identifiers a TypeScript / log-shipper client can branch on
+deterministically. New code values must be added to the tuple AND
+mirrored in any client allowlist; renaming an existing one is a
+wire-format break.
 
 See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 §"The Three Protocols" for the command list and per-command semantics.
@@ -48,7 +61,7 @@ import base64
 import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Final, Protocol, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
@@ -67,22 +80,38 @@ from .protocol import (
     COMMAND_SET_PAD_LOCK,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_UNDO,
+    ERR_INTERNAL,
+    ERR_MISSING_ENVELOPE_KEY,
+    ERR_UNKNOWN_COMMAND,
+    ERR_VALIDATION,
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_PROFILE_CHANGED,
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
+    WS_ERROR_CODES,
 )
 from .session import CockpitSession
 
 _logger = get_logger(__name__)
 """Module logger for the cockpit WS command dispatcher.
 
-Bound here so future structured log calls (PR O1 — request_id correlation,
-PR O2 — RED metrics, PR O4 — fingerprinted error events) land in the
-package's structured stream without touching this file's imports. See
-``OBSERVABILITY_REVIEW.md`` Phase 5."""
+Used for the structured forensic record that backs every categorical
+error envelope returned by :func:`handle_command` (PR 14 / RR4f). The
+``extra=`` payload carries ``repr(exc)`` (which encodes type + args
+without using ``str(exc)`` — the AST guard in
+``tests/architecture/test_no_raw_exception_messages_on_wire.py`` flags
+``str(<exc-name>)`` regardless of whether the result reaches the wire,
+so we use :func:`repr` instead) plus the exception type name so
+operators can correlate a client-facing categorical ``code`` with the
+underlying detail without that detail ever appearing on the wire.
+
+Bound here so future structured log calls (PR O1 — request_id
+correlation, PR O2 — RED metrics, PR O4 — fingerprinted error events)
+land in the package's structured stream without touching this file's
+imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5.
+"""
 
 
 @runtime_checkable
@@ -237,6 +266,75 @@ def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Categorical error envelope helper (CODE_REVIEW.md PR 14 / RR4f).
+#
+# Every wire-level error ack flows through :func:`_error_ack` so the
+# four-field shape -- ``{ok: False, code, message}`` -- is built in one
+# place. The ``code`` is one of :data:`WS_ERROR_CODES`; the ``message``
+# is a short, *operator-safe* canonical string. The full exception
+# detail (``repr(exc)``, ``type(exc).__name__``) is the caller's
+# responsibility to log via :data:`_logger` BEFORE calling this helper
+# -- the helper itself takes only the safe text.
+# ---------------------------------------------------------------------------
+
+
+def _error_ack(code: str, message: str) -> dict:
+    """Build the categorical-error ack body (no ``request_id`` yet).
+
+    Args:
+        code: One of :data:`WS_ERROR_CODES`. Stable identifier the client
+            branches on (e.g. ``ERR_VALIDATION``).
+        message: Short, operator-safe canonical text. MUST NOT include
+            ``str(exc)`` or any user-controlled path / id substring
+            beyond what the spec already exposes on the wire (e.g. an
+            ``unknown profile_id: 'X'`` message echoes the wire-supplied
+            id back, which is fine because the client already knows it).
+
+    Returns:
+        A two-field ack body ready for :class:`HandlerResult.ack`. The
+        dispatcher merges ``request_id`` in before sending.
+    """
+
+    if code not in WS_ERROR_CODES:
+        # Defensive: a stray ``code`` value would silently break clients
+        # branching on :data:`WS_ERROR_CODES`. We raise rather than
+        # return a malformed envelope so the dispatcher's catch-all
+        # surfaces it as ``ERR_INTERNAL`` (the right bucket for "this
+        # is a server bug, not bad input").
+        raise ValueError(f"unknown error code: {code!r}")
+    return {"ok": False, "code": code, "message": message}
+
+
+#: Canonical message strings for the two dispatcher-classified codes.
+#: Kept as module-level constants so the new categorical-envelope tests
+#: can import and assert exact equality rather than re-stating the strings.
+_HANDLER_VALIDATION_MESSAGE: Final[str] = "command rejected by handler validation"
+_HANDLER_INTERNAL_MESSAGE: Final[str] = "internal error processing command"
+
+
+def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
+    """Map a handler-raised exception to a ``(code, canonical_message)`` pair.
+
+    * :class:`KeyError` / :class:`ValueError` → ``ERR_VALIDATION`` --
+      both arise from invalid wire-supplied data (a missing dict key
+      inside a handler that ``cmd[...]``-ed it, or an out-of-range value
+      caught by ``int()`` / ``float()``).
+    * Everything else in the catch tuple (``TypeError``,
+      ``RuntimeError``, :class:`RytmRandomizerError`) → ``ERR_INTERNAL``
+      because those represent bugs / state corruption rather than bad
+      input. The wire message stays generic; the structured log carries
+      the type + ``repr(exc)`` for correlation.
+
+    Importantly, the *canonical* message is constant per code -- the
+    caller MUST NOT pass ``str(exc)`` through to the wire (RR4f).
+    """
+
+    if isinstance(exc, (KeyError, ValueError)):
+        return ERR_VALIDATION, _HANDLER_VALIDATION_MESSAGE
+    return ERR_INTERNAL, _HANDLER_INTERNAL_MESSAGE
+
+
+# ---------------------------------------------------------------------------
 # Per-command handlers.
 #
 # Each takes (cmd_body, session), returns a :class:`HandlerResult` carrying
@@ -249,7 +347,7 @@ async def _handle_select_profile(cmd: dict, session: CockpitSession) -> HandlerR
     profile_id = str(cmd["profile_id"])
     profile = session.profile_registry.get(profile_id)
     if profile is None:
-        return HandlerResult(ack={"ok": False, "error": f"unknown profile_id: {profile_id!r}"})
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, f"unknown profile_id: {profile_id!r}"))
     events = _clear_send_plan_if_needed(session)
     session.active_profile = profile
     candidate = _recompute_candidate(session)
@@ -307,7 +405,7 @@ async def _handle_regen(cmd: dict, session: CockpitSession) -> HandlerResult:
     del cmd  # regen has no body fields
     if session.active_profile is None:
         return HandlerResult(
-            ack={"ok": False, "error": "no active profile; select one before regen"}
+            ack=_error_ack(ERR_VALIDATION, "no active profile; select one before regen")
         )
     # Bump the seed so the candidate genuinely changes (without moving depth).
     # Using a fresh 32-bit sample is simpler and indistinguishable from a
@@ -330,7 +428,7 @@ async def _handle_prepare_send_plan(cmd: dict, session: CockpitSession) -> Handl
     del cmd
     if session.current_candidate is None:
         return HandlerResult(
-            ack={"ok": False, "error": "no current candidate; set a profile and depth first"}
+            ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
         )
     plan = prepare_send_plan(
         session.device.capture_snapshot(),
@@ -340,7 +438,9 @@ async def _handle_prepare_send_plan(cmd: dict, session: CockpitSession) -> Handl
     )
     if plan is None:
         return HandlerResult(
-            ack={"ok": False, "error": "no active profile; select one before preparing send plan"}
+            ack=_error_ack(
+                ERR_VALIDATION, "no active profile; select one before preparing send plan"
+            )
         )
     session.current_send_plan = plan
     return HandlerResult(
@@ -353,11 +453,11 @@ async def _handle_send(cmd: dict, session: CockpitSession) -> HandlerResult:
     del cmd
     if session.current_candidate is None:
         return HandlerResult(
-            ack={"ok": False, "error": "no current candidate; set a profile and depth first"}
+            ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
         )
     if session.current_send_plan is None or not session.current_send_plan.ready:
         return HandlerResult(
-            ack={"ok": False, "error": "no ready send plan; run prepare_send_plan first"}
+            ack=_error_ack(ERR_VALIDATION, "no ready send plan; run prepare_send_plan first")
         )
     sent_plan = session.current_send_plan
     new_snapshot = session.device.apply_send_plan(sent_plan)
@@ -388,7 +488,7 @@ async def _handle_save(cmd: dict, session: CockpitSession) -> HandlerResult:
         label = str(label)
     current = session.history_store.current
     if not current.entries:
-        return HandlerResult(ack={"ok": False, "error": "no current snapshot to save"})
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "no current snapshot to save"))
     snapshot = next(
         entry.snapshot
         for entry in current.entries
@@ -411,7 +511,31 @@ async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerRe
     try:
         history = session.history_store.load(snapshot_id)
     except KeyError as exc:
-        return HandlerResult(ack={"ok": False, "error": str(exc)})
+        # PR 14 / RR4f: never echo the underlying exception text back
+        # over the wire -- ``HistoryStore.load`` raises
+        # ``KeyError(snapshot_id)`` whose representation embeds the
+        # requested id (which is fine, the client already knows it) but
+        # the categorical envelope is the contract regardless. Full
+        # forensic detail goes to the structured log via :func:`repr` so
+        # operators can correlate ``code=validation_error`` acks with
+        # the underlying ``KeyError`` without ``str(exc)`` appearing on
+        # the wire side at all. ``repr(exc)`` is intentional -- it
+        # carries the exception type + args without using ``str(exc)``
+        # (the AST guard in
+        # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
+        # specifically flags ``str(<exc-name>)`` and treats the new floor
+        # of 0 as an absolute ceiling).
+        _logger.warning(
+            "load_snapshot_unknown_id",
+            extra={
+                "snapshot_id": snapshot_id,
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+            },
+        )
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, f"unknown snapshot_id: {snapshot_id!r}")
+        )
     loaded_entry = next(
         entry for entry in history.entries if entry.snapshot.snapshot_id == snapshot_id
     )
@@ -427,7 +551,7 @@ async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerRe
 async def _handle_undo(cmd: dict, session: CockpitSession) -> HandlerResult:
     del cmd
     if not session.history_store.can_undo:
-        return HandlerResult(ack={"ok": False, "error": "nothing to undo"})
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "nothing to undo"))
     history = session.history_store.undo()
     entry = next(e for e in history.entries if e.snapshot.snapshot_id == history.current_id)
     return HandlerResult(
@@ -444,11 +568,11 @@ async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> Ha
     target = str(cmd["target"])
     if target not in ("binary", "json"):
         return HandlerResult(
-            ack={"ok": False, "error": f"target must be 'binary' or 'json'; got {target!r}"}
+            ack=_error_ack(ERR_VALIDATION, f"target must be 'binary' or 'json'; got {target!r}")
         )
     profile = session.profile_registry.get(profile_id)
     if profile is None:
-        return HandlerResult(ack={"ok": False, "error": f"unknown profile_id: {profile_id!r}"})
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, f"unknown profile_id: {profile_id!r}"))
     if target == "binary":
         raw = pack_profile_model(profile)
     else:
@@ -495,15 +619,25 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
     the spec's "ack first, then events" contract without forcing the
     dispatcher to also know how to emit.
 
-    Three error paths:
+    Three error paths -- each maps to one of :data:`WS_ERROR_CODES`:
 
     * Missing ``request_id`` or ``command`` keys → ``KeyError`` from the
-      raw dict access; we catch it and reply with ``ok=False`` and the
-      raised message. (The client should never send a malformed envelope;
-      this is a last-line safety net.)
-    * Unknown ``command.type`` → ``ok=False, error="unknown command: ..."``.
-    * Handler raises a realistic command/runtime failure → ``ok=False,
-      error=str(exc)``.
+      raw dict access; we catch it and reply with
+      ``code=ERR_MISSING_ENVELOPE_KEY``. The full ``repr(exc)`` is logged
+      server-side via :data:`_logger`. (The client should never send a
+      malformed envelope; this is a last-line safety net.)
+    * Unknown ``command.type`` → ``code=ERR_UNKNOWN_COMMAND``, message
+      echoes the offending type so the operator can fix a typo.
+    * Handler raises a realistic command/runtime failure -- ``ValueError``
+      maps to ``code=ERR_VALIDATION`` (operator-supplied wire value was
+      invalid); ``KeyError`` (handler-level, distinct from the envelope
+      ``KeyError`` above) also maps to ``ERR_VALIDATION`` (a referenced
+      id wasn't found); everything else (``TypeError`` / ``RuntimeError``
+      / :class:`RytmRandomizerError`) maps to ``code=ERR_INTERNAL`` and
+      is the last-line safety net for genuine bugs. In every case the
+      full ``repr(exc)`` and exception type are logged server-side; only
+      the categorical ``code`` and a short canonical ``message`` reach
+      the wire (PR 14 / RR4f).
 
     Args:
         envelope: The parsed JSON object the client sent over the WebSocket.
@@ -522,7 +656,30 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
         cmd = envelope["command"]
         cmd_type = cmd["type"]
     except KeyError as exc:
-        return {"request_id": request_id, "ok": False, "error": f"missing key: {exc.args[0]!r}"}
+        missing_key = exc.args[0] if exc.args else "<unknown>"
+        # PR 14 / RR4f: the underlying exception detail (which echoes
+        # the missing key) is captured server-side via :func:`repr`;
+        # the wire-level ``message`` is a short canonical string that
+        # names which envelope key is missing. We use ``repr(exc)``
+        # (not ``str(exc)``) so the AST guard in
+        # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
+        # stays at floor 0 for this file.
+        _logger.warning(
+            "envelope_missing_key",
+            extra={
+                "missing_key": missing_key,
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "request_id": request_id,
+            },
+        )
+        return {
+            "request_id": request_id,
+            **_error_ack(
+                ERR_MISSING_ENVELOPE_KEY,
+                f"envelope missing required key: {missing_key!r}",
+            ),
+        }
     if isinstance(cmd_type, str) and cmd_type.startswith("wizard_"):
         # Delegate the wizard-namespaced commands to the wizard surface.
         # Lazy-import keeps the wizard dispatcher table out of the import
@@ -535,13 +692,33 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
     if handler is None:
         return {
             "request_id": request_id,
-            "ok": False,
-            "error": f"unknown command: {cmd_type!r}",
+            **_error_ack(ERR_UNKNOWN_COMMAND, f"unknown command: {cmd_type!r}"),
         }
     try:
         result = await handler(cmd, session)
     except (KeyError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
-        return {"request_id": request_id, "ok": False, "error": str(exc)}
+        # PR 14 / RR4f: never echo the underlying exception text back
+        # over the wire -- exception messages routinely embed filesystem
+        # paths, profile ids the server has rejected, or stack-traceable
+        # details. Map to a categorical code and surface the full
+        # forensic record via :data:`_logger` so operators can still
+        # correlate. ``repr(exc)`` is used in the structured ``extra``
+        # payload (rather than ``str(exc)``) so the AST guard in
+        # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
+        # stays at floor 0 for this file -- ``repr`` still carries the
+        # exception type + args for forensic purposes.
+        code, message = _classify_handler_exception(exc)
+        _logger.warning(
+            "handler_exception",
+            extra={
+                "code": code,
+                "cmd_type": cmd_type,
+                "exception_type": type(exc).__name__,
+                "exception_repr": repr(exc),
+                "request_id": request_id,
+            },
+        )
+        return {"request_id": request_id, **_error_ack(code, message)}
     # Queue events on the session for the caller to drain AFTER it sends
     # the ack on the wire. We cannot await the emitter from here without
     # inverting the ack-first / events-second wire ordering, so the
@@ -569,8 +746,13 @@ async def drain_pending_events(session: CockpitSession, emitter: EventEmitter) -
 
 
 __all__ = [
+    "ERR_INTERNAL",
+    "ERR_MISSING_ENVELOPE_KEY",
+    "ERR_UNKNOWN_COMMAND",
+    "ERR_VALIDATION",
     "EventEmitter",
     "HandlerResult",
+    "WS_ERROR_CODES",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",

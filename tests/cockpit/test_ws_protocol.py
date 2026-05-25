@@ -220,16 +220,23 @@ def test_command_ack_minimal_form_has_ok_only() -> None:
     ack: protocol.CommandAck = {"request_id": "req-1", "ok": True}
     assert ack["ok"] is True
     assert ack.get("error") is None
+    # PR 14: the categorical error fields are also absent on success acks.
+    assert ack.get("code") is None
+    assert ack.get("message") is None
 
 
-def test_command_ack_with_error_has_error_message() -> None:
+def test_command_ack_with_categorical_error_has_code_and_message() -> None:
+    """PR 14 wire shape — ``code`` + ``message`` replace the legacy ``error`` field."""
+
     ack: protocol.CommandAck = {
         "request_id": "req-1",
         "ok": False,
-        "error": "no current candidate",
+        "code": protocol.ERR_VALIDATION,
+        "message": "no current candidate",
     }
     assert ack["ok"] is False
-    assert ack["error"] == "no current candidate"
+    assert ack["code"] == "validation_error"
+    assert ack["message"] == "no current candidate"
 
 
 def test_command_ack_with_candidate_for_set_depth() -> None:

@@ -157,7 +157,9 @@ def test_regen_without_active_profile_returns_error(cockpit_ws: object) -> None:
     ack = send_cmd(cockpit_ws, "regen")
 
     assert ack["ok"] is False
-    assert "no active profile" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "validation_error"
+    assert "no active profile" in ack["message"]
 
 
 def test_regen_with_preview_on_emits_mutation_previewed_event(cockpit_ws: object) -> None:

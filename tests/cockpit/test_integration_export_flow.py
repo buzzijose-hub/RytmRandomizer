@@ -93,7 +93,9 @@ def test_export_unknown_profile_id_returns_error(cockpit_ws: object) -> None:
     )
 
     assert ack["ok"] is False
-    assert "unknown profile_id" in ack["error"]
+    # PR 14: categorical envelope (``code``/``message`` replace ``error``).
+    assert ack["code"] == "validation_error"
+    assert "unknown profile_id" in ack["message"]
 
 
 def test_export_invalid_target_returns_error(cockpit_ws: object) -> None:
@@ -107,7 +109,8 @@ def test_export_invalid_target_returns_error(cockpit_ws: object) -> None:
     )
 
     assert ack["ok"] is False
-    assert "target must be" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "target must be" in ack["message"]
 
 
 def test_export_json_matches_builtin_scene_definition(cockpit_ws: object) -> None:

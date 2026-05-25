@@ -273,19 +273,22 @@ def test_unknown_command_type_returns_error_ack(cockpit_ws: object) -> None:
 
     assert ack["request_id"] == "rt-bad"
     assert ack["ok"] is False
-    assert "unknown command" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "unknown_command"
+    assert "unknown command" in ack["message"]
 
 
 def test_envelope_missing_command_key_returns_error_ack(cockpit_ws: object) -> None:
-    """An envelope lacking ``command`` returns ``ok=False, error="missing key: 'command'"``."""
+    """An envelope lacking ``command`` returns ``ok=False, code=missing_envelope_key``."""
 
     cockpit_ws.send_json({"request_id": "rt-no-cmd"})  # type: ignore[attr-defined]
     ack = cockpit_ws.receive_json()  # type: ignore[attr-defined]
 
     assert ack["request_id"] == "rt-no-cmd"
     assert ack["ok"] is False
-    assert "missing key" in ack["error"]
-    assert "command" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "missing_envelope_key"
+    assert "command" in ack["message"]
 
 
 def test_envelope_command_missing_type_returns_error_ack(cockpit_ws: object) -> None:
@@ -298,7 +301,9 @@ def test_envelope_command_missing_type_returns_error_ack(cockpit_ws: object) -> 
 
     assert ack["request_id"] == "rt-no-type"
     assert ack["ok"] is False
-    assert "missing key" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "missing_envelope_key"
+    assert "type" in ack["message"]
 
 
 def test_envelope_missing_request_id_still_dispatches(cockpit_ws: object) -> None:

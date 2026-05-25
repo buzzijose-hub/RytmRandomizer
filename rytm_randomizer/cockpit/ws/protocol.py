@@ -83,6 +83,47 @@ HANDSHAKE_AUTH_FAILED: Final[Literal["auth_failed"]] = "auth_failed"
 MESSAGE_TOO_LARGE_CODE: Final[Literal["message_too_large"]] = "message_too_large"
 """An incoming frame exceeded the per-message byte cap (SX1)."""
 
+# ---------------------------------------------------------------------------
+# Categorical WS error envelope codes (CODE_REVIEW.md PR 14 / RR4f).
+#
+# Every error ack returned by :func:`cockpit.ws.handlers.handle_command`
+# carries one of these strings in its ``code`` field. Clients (the
+# desktop TypeScript surface, future log shippers) branch on the value
+# *deterministically* -- never on the human-readable ``message`` field,
+# which is free to be reworded without a protocol bump.
+#
+# These constants are the wire-format authority; the handlers module
+# re-exports them via its ``__all__`` so callers inside the package can
+# import either symbol. The companion :data:`WS_ERROR_CODES` tuple lets
+# tests + the protocol layer enumerate the complete set in one place.
+# ---------------------------------------------------------------------------
+
+ERR_UNKNOWN_COMMAND: Final[Literal["unknown_command"]] = "unknown_command"
+"""The ``command.type`` discriminator wasn't in :data:`COMMAND_TYPES`."""
+
+ERR_MISSING_ENVELOPE_KEY: Final[Literal["missing_envelope_key"]] = "missing_envelope_key"
+"""The top-level envelope lacked ``command`` or the inner body lacked ``type``."""
+
+ERR_VALIDATION: Final[Literal["validation_error"]] = "validation_error"
+"""A handler rejected the command (bad id, missing precondition, value error)."""
+
+ERR_INTERNAL: Final[Literal["internal_error"]] = "internal_error"
+"""A handler raised an unhandled exception -- last-line safety net for bugs."""
+
+WS_ERROR_CODES: Final[tuple[str, ...]] = (
+    ERR_UNKNOWN_COMMAND,
+    ERR_MISSING_ENVELOPE_KEY,
+    ERR_VALIDATION,
+    ERR_INTERNAL,
+)
+"""All categorical WS error codes -- the protocol's wire-format authority.
+
+Order is documentation-only (the tuple semantics are *set-like* for the
+client). Tests use this constant to verify every emitted ``code`` field
+is one of the four; future log shippers use it to seed allow-lists for
+alert routing.
+"""
+
 # WebSocket close codes (RFC 6455). Both halves of the protocol use the
 # same numerics; pinning them as constants keeps the server and the test
 # suite from drifting out of sync on the next refactor.
@@ -290,8 +331,14 @@ class CommandEnvelope(TypedDict):
 class CommandAck(TypedDict, total=False):
     """Server's reply to a :class:`CommandEnvelope`.
 
-    ``request_id`` and ``ok`` are always present; ``error`` is only set
-    when ``ok=False`` (and carries a one-line human-readable reason).
+    ``request_id`` and ``ok`` are always present. On ``ok=False`` two
+    additional fields ride: ``code`` (one of :data:`WS_ERROR_CODES`,
+    stable identifier the client branches on) and ``message`` (a short
+    operator-safe canonical string; never ``str(exc)`` per CODE_REVIEW.md
+    PR 14 / RR4f). The legacy ``error`` field is reserved for backward
+    compatibility but is no longer populated by handlers -- branch on
+    ``code`` instead.
+
     The remaining fields are command-specific and only populated for the
     commands documented below; everything else is left out (``total=False``
     means absent keys are legal, not a typing violation):
@@ -310,6 +357,8 @@ class CommandAck(TypedDict, total=False):
 
     request_id: str
     ok: bool
+    code: str | None
+    message: str | None
     error: str | None
     candidate: dict | None
     send_plan: dict | None
@@ -424,6 +473,10 @@ __all__ = [
     "COMMAND_UNDO",
     "CommandAck",
     "CommandEnvelope",
+    "ERR_INTERNAL",
+    "ERR_MISSING_ENVELOPE_KEY",
+    "ERR_UNKNOWN_COMMAND",
+    "ERR_VALIDATION",
     "EVENT_HISTORY_UPDATED",
     "EVENT_MUTATION_PREVIEWED",
     "EVENT_PROFILE_CHANGED",
@@ -452,5 +505,6 @@ __all__ = [
     "SnapshotChangedEvent",
     "TogglePreviewCommand",
     "UndoCommand",
+    "WS_ERROR_CODES",
     "WS_SUBPROTOCOL",
 ]
