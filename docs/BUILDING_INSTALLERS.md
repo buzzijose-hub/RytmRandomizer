@@ -87,14 +87,46 @@ active.
 The Tauri bundle is a process supervisor. When the operator launches
 the cockpit binary, the Rust shell in `desktop/shell/src/main.rs`:
 
-1. Starts the embedded web frontend in the Tauri window.
-2. Spawns the Python sidecar (`python -m rytm_randomizer.cockpit`) as
-   a child process, picking up `RYTM_RAND_WS_PORT` if set.
-3. Bridges the two over WebSocket on `127.0.0.1:<port>` (default 4317).
+1. **Allocates a per-launch token file path** under the user's data dir
+   (e.g. `%APPDATA%\rytm-randomizer\cockpit-ws-token` on Windows,
+   `~/Library/Application Support/rytm-randomizer/cockpit-ws-token` on
+   macOS, `~/.local/share/rytm-randomizer/cockpit-ws-token` on Linux).
+   This path is owned by the user-private app data dir; the shell creates
+   the parent directory with platform-appropriate permissions.
+2. **Sets `RYTM_RAND_WS_TOKEN_FILE` in the sidecar's environment** to
+   the path from step 1 BEFORE spawning the sidecar. This is REQUIRED
+   for the cockpit to work post CODE_REVIEW.md sweep (PR 1): the sidecar
+   mints a fresh token on every boot, writes it to the path the env var
+   names, and refuses every WS command until the first frame echoes the
+   token under `hmac.compare_digest`. A shell that fails to set the env
+   var falls back to the dev-default `~/.rytm-randomizer/cockpit-ws-token`,
+   which still works but is not the production-recommended path.
+3. Optionally sets `RYTM_RAND_WS_PORT` (default 4317) and
+   `WIZARD_SOURCE_ROOTS` (default `~/.rytm-randomizer/wizard-sources/`)
+   per the operator's preferences.
+4. Starts the embedded web frontend in the Tauri window.
+5. Spawns the Python sidecar (`python -m rytm_randomizer.cockpit`) as
+   a child process with the env from steps 2–3 applied.
+6. **Reads the token back from the same file** (the sidecar has now
+   written it) and hands it to the web frontend via Tauri's IPC so the
+   first WS frame the React client sends can be
+   `{"type": "hello", "token": "<urlsafe>"}`.
+7. Bridges the two over WebSocket on `127.0.0.1:<port>` (default 4317),
+   negotiating the subprotocol `rytm-rand-cockpit-v1` (defence-in-depth
+   on top of the token).
 
-When the window closes, the shell terminates the sidecar. The operator
+When the window closes, the shell terminates the sidecar and removes
+the per-launch token file (the file mode is `0o600` on POSIX; on Windows
+the user-private app data dir already restricts access). The operator
 never has to manage the sidecar lifecycle directly — the bundle owns
 both halves.
+
+**Why the env var is mandatory for a release bundle:** the dev default
+prints the token to stdout for interactive copy-paste. A bundled
+release has no stdout the operator sees, so the only way for the Tauri
+shell to learn the token is to set the env var, spawn the sidecar, and
+read the file the sidecar writes to that path. A shell that skips this
+step ships a sidecar the cockpit window cannot connect to.
 
 **Phase 3 export CLI is shipped inside the same Tauri bundle.** The
 Phase 3 Model Export Pipeline (`cockpit-export-profile-model` plus the

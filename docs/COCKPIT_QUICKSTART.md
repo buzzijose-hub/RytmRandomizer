@@ -104,6 +104,7 @@ Verify the sidecar starts:
 ```bash
 python -m rytm_randomizer.cockpit
 # Expected: "Cockpit WebSocket server listening on 127.0.0.1:4317"
+# In dev mode you ALSO see: "[cockpit] WS token: <43-char urlsafe>"
 # Stop with Ctrl-C.
 ```
 
@@ -114,6 +115,59 @@ RYTM_RAND_WS_PORT=4318 python -m rytm_randomizer.cockpit
 ```
 
 The same env var configures the Tauri shell when it spawns the sidecar.
+
+### 2.1 The WebSocket handshake token (post CODE_REVIEW.md sweep)
+
+Every time the sidecar boots it mints a fresh per-launch HMAC token via
+`secrets.token_urlsafe(32)`. Every WebSocket client (the Tauri shell, an
+integration test, a curl-driven debugger) MUST echo that token in its
+first frame or the sidecar closes the connection with code `1008`
+(`auth_required` / `auth_failed`). This is what stops a foreign browser
+tab from driving the cockpit when you forget to close the window.
+
+**Where the token lives:**
+
+| Environment | Path | How the client reads it |
+|---|---|---|
+| Interactive dev (no env var) | `~/.rytm-randomizer/cockpit-ws-token` (mode `0o600`) | Printed to stdout when the sidecar starts; also readable from the file. |
+| Production / Tauri-spawned | path set in `RYTM_RAND_WS_TOKEN_FILE` env var | Tauri sets the env var to a path it controls, then reads the file back. |
+
+**Token lifecycle:** the token is regenerated on every sidecar restart;
+the file is overwritten so a stale token cannot survive across restarts.
+File mode `0o600` is best-effort on Windows (`$HOME` is already
+user-private; the chmod call is harmless if it fails on platforms that
+don't honour POSIX bits).
+
+**Per-message size cap (SX1).** Inbound frames are checked against
+`RYTM_RAND_WS_MAX_MESSAGE_BYTES` (default 1 MiB) BEFORE `json.loads`.
+Override only if you have a legitimate reason (very large profile
+exports the sidecar replays in a test); the default is generous.
+
+**Subprotocol gate (L8).** The sidecar negotiates the subprotocol
+`rytm-rand-cockpit-v1` on `accept()`. A casual `new WebSocket(url)` from
+a browser tab without the subprotocol fails the upgrade before our
+handler runs — this is defence-in-depth on top of the token.
+
+**Wizard source paths (C2/H4).** The wizard's `wizard_add_source`
+command validates every `location` string through `WizardPathPolicy.validate(location)`.
+Paths outside the allow-list (default `~/.rytm-randomizer/wizard-sources/`,
+overridable via `WIZARD_SOURCE_ROOTS` — a `:`-separated list on POSIX, `;` on
+Windows) are rejected with a categorical reason that never echoes the
+rejected path back over the wire. Symlinks are rejected before
+`resolve()` would chase them. If your inspiration sources live elsewhere
+on disk, set `WIZARD_SOURCE_ROOTS` before starting the sidecar:
+
+```bash
+# POSIX
+WIZARD_SOURCE_ROOTS="$HOME/Music/inspiration:$HOME/Sounds/kits" python -m rytm_randomizer.cockpit
+
+# Windows PowerShell
+$env:WIZARD_SOURCE_ROOTS="C:\Users\you\Music\inspiration;C:\Users\you\Sounds\kits"
+python -m rytm_randomizer.cockpit
+```
+
+An empty or whitespace value silently falls back to the default root so
+a typo never disables the policy.
 
 ---
 
