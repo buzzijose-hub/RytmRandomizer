@@ -20,6 +20,10 @@ runs identically on the embedded firmware.
 
 from __future__ import annotations
 
+from .cli import (
+    COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND,
+    handle_export_profile_model,
+)
 from .model_format import (
     FORMAT_VERSION,
     MAGIC,
@@ -43,6 +47,7 @@ from .verifier import (
 )
 
 __all__ = [
+    "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
     "FORMAT_VERSION",
     "Header",
     "MAGIC",
@@ -52,6 +57,7 @@ __all__ = [
     "SUPPORTED_FORMAT_VERSIONS",
     "SignedBlob",
     "VerificationResult",
+    "handle_export_profile_model",
     "pack_profile_model",
     "pack_signed",
     "sign_profile_blob",

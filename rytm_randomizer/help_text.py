@@ -562,6 +562,9 @@ USAGE = (
     "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
     "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
     "[--label <text>] [--json] | "
+    "cockpit-export-profile-model --profile-id <id> --profiles-dir <path> "
+    "--output <file.rymp> [--key-hex <hex> --key-id <label>] "
+    "[--unsigned] [--overwrite] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -2335,6 +2338,50 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+_COCKPIT_EXPORT_PROFILE_MODEL_SAFETY_LINES = (
+    "passive/read-only against profile registry",
+    "writes a single export artifact via atomic write",
+    "no MIDI sending",
+    "no port opening",
+    "no hardware mutation",
+    "no hardware required",
+    "no network access",
+    "no cockpit sidecar connection",
+)
+
+
+def _cockpit_export_profile_model_help():
+    return f"""RytmRandomizer passive CLI: cockpit-export-profile-model
+
+Usage:
+  python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> --unsigned
+  python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> --key-hex <hex> --key-id <label>
+  python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> --unsigned --overwrite --json
+  python -m rytm_randomizer.cli cockpit-export-profile-model --help
+
+Arguments:
+  --profile-id <id>          Profile id to export (required)
+  --profiles-dir <path>      Directory containing the profile registry (required)
+  --output <file.rymp>       Destination .rymp file (required)
+  --key-hex <hex>            HMAC-SHA256 key as hex string (requires --key-id)
+  --key-id <label>           Operator-visible label for the signing key
+  --unsigned                 Export without a signing envelope
+  --overwrite                Replace --output if it already exists
+  --json                     Emit a JSON ack instead of text
+
+Behavior:
+  Packs the requested ProfileModel into the portable RYMP binary, optionally
+  HMAC-SHA256-signs it, atomically writes the bytes to --output, then verifies
+  the bytes on disk by reading them back and running the cockpit verifier.
+  The ack reports profile metadata, bytes written, whether an existing file
+  was overwritten, the signed/unsigned mode, and the verification result.
+  Either --key-hex/--key-id (signed) or --unsigned must be supplied explicitly —
+  there is no silent default. --key-hex and --unsigned are mutually exclusive.
+
+Safety:
+{_safety_block(_COCKPIT_EXPORT_PROFILE_MODEL_SAFETY_LINES)}"""
+
+
 def resolve_help_text(key: str) -> str:
     text = HELP_TEXT[key]
     return text() if callable(text) else text
@@ -2438,6 +2485,7 @@ Usage:
   python -m rytm_randomizer.cli style-performance-arc-live-gui-desktop-render-harness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--json]
   python -m rytm_randomizer.cli style-performance-arc-live-gui-cockpit-boundary-readiness-report (--description <text>|--audio <path>|--library <dir>) (--capture-description <text>|--capture-audio <path>|--capture-library <dir>) [--rytm <syx-path>] [--analog-four <syx-path>] [--scope dual|rytm-only|analog-four-only|a4-only] [--rank N] [--total-minutes N] [--segment-minutes N] [--discovery-start N] [--discovery-end N] [--cue N] [--lookahead N] [--matches N] [--takes N] [--slot capture-001] [--label <text>] [--capture-prefix <text>] [--sidecar-label <text>] [--screen-label <text>] [--layout <key>] [--viewport desktop|tablet|compact] [--render-target desktop-sidecar|test-harness|operator-dashboard] [--density standard|compact] [--overlay-label <text>] [--frame-label <text>] [--interaction-label <text>] [--reducer-label <text>] [--controller-label <text>] [--playback-label <text>] [--validation-label <text>] [--harness-label <text>] [--readiness-label <text>] [--bridge-label <text>] [--blueprint-label <text>] [--desktop-shell operator-dashboard|desktop-sidecar|test-harness] [--app-plan-label <text>] [--framework-target desktop-python|web-desktop|test-harness] [--component-contract-label <text>] [--selector-prefix <text>] [--view-model-label <text>] [--state-prefix <text>] [--render-contract-label <text>] [--render-harness-label <text>] [--runner-label <text>] [--boundary-label <text>] [--hardware-entrypoint <command>] [--passive-entrypoint <command>] [--ws-port-env <name>] [--json]
   python -m rytm_randomizer.cli cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) [--label <text>] [--json]
+  python -m rytm_randomizer.cli cockpit-export-profile-model --profile-id <id> --profiles-dir <path> --output <file.rymp> [--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]
   python -m rytm_randomizer.cli inspect-command <key>
   python -m rytm_randomizer.cli inspect-scene <key>
   python -m rytm_randomizer.cli inspect-group-profile <key>
@@ -2624,6 +2672,8 @@ Commands:
                     Compose passive GUI desktop render harnesses into cockpit boundary readiness.
   cockpit-send-plan-readiness-report
                     Explain prepared cockpit SEND plan readiness for operator review.
+  cockpit-export-profile-model
+                    Export a cockpit ProfileModel (pack + sign + atomic write + verify).
   inspect-command    Inspect passive command metadata by key.
   inspect-scene      Inspect passive scene metadata by key.
   inspect-group-profile
@@ -2971,6 +3021,7 @@ Safety:
         _style_performance_arc_live_gui_cockpit_boundary_readiness_report_help
     ),
     "cockpit-send-plan-readiness-report": _cockpit_send_plan_readiness_report_help,
+    "cockpit-export-profile-model": _cockpit_export_profile_model_help,
     "dual-machine-target-report": """RytmRandomizer passive CLI: dual-machine-target-report
 
 Usage:
