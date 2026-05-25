@@ -54,12 +54,40 @@ Per ``docs/PLAN_REQUIREMENTS.md``:
 
 from __future__ import annotations
 
+import importlib
+import pkgutil
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, Final
 
 _REGISTRY_NAME: Final[str] = "cli"
+
+# Module path prefixes that ``discover_all`` MUST NOT import. Entries are
+# matched as ``fullname == prefix`` or ``fullname.startswith(prefix + ".")``
+# so a prefix like ``rytm_randomizer._internal`` excludes both the package
+# and every submodule under it.
+#
+# Rationale per entry:
+#
+# * ``rytm_randomizer.cli`` — importing the dispatcher from inside its
+#   own self-discovery hook would create a circular import (cli.py
+#   imports cli_registry, which would re-import cli.py).
+# * ``rytm_randomizer.app`` — the active runtime entrypoint; importing
+#   it pulls the active stack (MIDI providers, sender) into ``sys.modules``
+#   which the ``test_no_side_effects`` architecture test forbids for
+#   passive callers.
+# * ``rytm_randomizer.cli_registry`` — would cause re-entrant import of
+#   this module from inside its own discovery walk.
+#
+# To add a skip-entry, append the fully-qualified module / package name
+# below and document the reason on a comment line above it. Do NOT add
+# wildcards or regexes — exact-or-prefix match is the whole vocabulary.
+_DISCOVERY_SKIP_PREFIXES: Final[tuple[str, ...]] = (
+    "rytm_randomizer.cli",
+    "rytm_randomizer.cli_registry",
+    "rytm_randomizer.app",
+)
 
 
 @dataclass(frozen=True)
@@ -147,6 +175,56 @@ def all_commands() -> Mapping[str, CliCommand]:
     """
 
     return MappingProxyType(_COMMANDS)
+
+
+def _should_skip(fullname: str) -> bool:
+    """Return True if ``fullname`` is excluded from import-time discovery.
+
+    Exact-match or prefix-with-dot semantics so an entry like
+    ``rytm_randomizer.cli`` excludes ``rytm_randomizer.cli`` itself AND
+    ``rytm_randomizer.cli.subthing`` (if any), but NOT
+    ``rytm_randomizer.cli_registry`` (no dot boundary).
+    """
+
+    for prefix in _DISCOVERY_SKIP_PREFIXES:
+        if fullname == prefix or fullname.startswith(prefix + "."):
+            return True
+    return False
+
+
+def discover_all(package_root: str = "rytm_randomizer") -> None:
+    """Walk ``package_root`` and import every submodule once.
+
+    Each module's import-time ``register(...)`` call fires as a side
+    effect; this replaces the hand-maintained ``lazy_commands`` table
+    that previously lived inside ``cli.py``. Modules in
+    :data:`_DISCOVERY_SKIP_PREFIXES` are excluded — see the comment block
+    on that constant for the per-entry rationale.
+
+    Idempotent: ``importlib.import_module`` is a no-op for already-loaded
+    modules, and each module's ``register(...)`` call only runs at first
+    import. Re-running :func:`discover_all` therefore does not raise
+    :class:`ValueError` ("already registered") on the second call.
+
+    Failures while importing an individual submodule are surfaced
+    immediately — :func:`discover_all` deliberately does NOT swallow
+    :class:`ImportError`, because a broken module that silently fails
+    discovery would manifest as "your CLI command vanished" with no
+    diagnostic. If a module is *intentionally* unimportable in the
+    current environment, the right fix is to add its dotted name to
+    :data:`_DISCOVERY_SKIP_PREFIXES` with a comment explaining why.
+    """
+
+    package = importlib.import_module(package_root)
+    package_path = getattr(package, "__path__", None)
+    if package_path is None:
+        return  # The root is a module, not a package — nothing to walk.
+
+    for module_info in pkgutil.walk_packages(package_path, prefix=f"{package_root}."):
+        fullname = module_info.name
+        if _should_skip(fullname):
+            continue
+        importlib.import_module(fullname)
 
 
 def default_error_formatter(exc: Exception) -> str:

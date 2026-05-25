@@ -12,6 +12,18 @@ def _registered_command_exit_code(args):
     from . import cli_registry
 
     lazy_commands = {
+        "mock-mapper-report": (
+            "rytm_randomizer.reports",
+            "MOCK_MAPPER_REPORT_CLI_COMMAND",
+        ),
+        "runtime-plan-report": (
+            "rytm_randomizer.reports",
+            "RUNTIME_PLAN_REPORT_CLI_COMMAND",
+        ),
+        "active-boundary-report": (
+            "rytm_randomizer.reports",
+            "ACTIVE_BOUNDARY_REPORT_CLI_COMMAND",
+        ),
         "rytm-12-pad-machine-matrix-report": (
             "rytm_randomizer.reports.rytm_machine_matrix",
             "RYTM_MACHINE_MATRIX_CLI_COMMAND",
@@ -744,27 +756,6 @@ def main(argv=None):
         from .project_status_report import format_project_status_report_json
 
         sys.stdout.write(format_project_status_report_json())
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["mock-mapper-report"]:
-        from .reports import format_mock_mapper_report
-
-        sys.stdout.write("\n".join(format_mock_mapper_report()))
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["runtime-plan-report"]:
-        from .reports import format_runtime_plan_report
-
-        sys.stdout.write("\n".join(format_runtime_plan_report()))
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["active-boundary-report"]:
-        from .reports import format_active_boundary_report
-
-        sys.stdout.write("\n".join(format_active_boundary_report()))
         sys.stdout.write("\n")
         return 0
 
