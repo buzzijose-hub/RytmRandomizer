@@ -273,3 +273,66 @@ def test_export_pipeline_round_trip_byte_identical() -> None:
         "even though to_dict() matches. Check StyleTrait/TraitPadWeight "
         "tuple ordering or dataclass eq semantics."
     )
+
+
+# ---------------------------------------------------------------------------
+# Signed-envelope overhead
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "key_id",
+    [
+        "",
+        "k",
+        "test-key",
+        "buzzi-2026-key",
+        "x" * 64,
+        "x" * 255,
+    ],
+)
+def test_export_pipeline_signed_envelope_overhead_matches_real_pack_signed(
+    key_id: str,
+) -> None:
+    """The analytic envelope-overhead formula MUST match :func:`pack_signed`.
+
+    Regression guard: the rehearsal report
+    (:mod:`rytm_randomizer.reports.cockpit_export_rehearsal`) projects
+    the signed file size from
+    :func:`~rytm_randomizer.cockpit.export.signed_envelope_overhead_bytes`
+    without actually invoking the signer. That projection is what the
+    operator sees in the pre-flight check before clicking EXPORT. If a
+    future refactor changes the wire layout in :mod:`.signing` (a wider
+    length prefix, an extra reserved field, a different signature size)
+    without also updating the formula, the rehearsal would silently
+    under- or over-predict the bytes-on-disk.
+
+    This test pins the formula to the real ``pack_signed`` output across
+    several key-id lengths (including the 255-byte uint8 maximum). Any
+    drift between formula and wire layout fails here at the first
+    parametrization that diverges.
+    """
+
+    from rytm_randomizer.cockpit.export import (
+        SIGNATURE_ALGO_HMAC_SHA256,
+        pack_signed,
+        sign_profile_blob,
+        signed_envelope_overhead_bytes,
+    )
+
+    payload = b"X" * 100
+    blob = sign_profile_blob(payload, key=b"\x00" * 32, key_id=key_id)
+    envelope = pack_signed(blob)
+
+    expected = signed_envelope_overhead_bytes(
+        algo=SIGNATURE_ALGO_HMAC_SHA256,
+        key_id=key_id,
+    )
+    actual = len(envelope) - len(payload)
+    assert actual == expected, (
+        f"signed envelope overhead for key_id={key_id!r}: pack_signed "
+        f"produced a {actual}-byte wrapper but the analytic formula "
+        f"signed_envelope_overhead_bytes predicted {expected}. The "
+        "rehearsal report's would-write size has drifted from the real "
+        "wire format — bump the formula or revert the wire-format change."
+    )

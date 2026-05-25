@@ -38,6 +38,7 @@ from .signing import (
     SignedBlob,
     pack_signed,
     sign_profile_blob,
+    signed_envelope_overhead_bytes,
     unpack_signed,
 )
 from .verifier import (
@@ -74,6 +75,7 @@ __all__ = [
     "pack_profile_model",
     "pack_signed",
     "sign_profile_blob",
+    "signed_envelope_overhead_bytes",
     "unpack_profile_model",
     "unpack_signed",
     "verify_signed_blob",
