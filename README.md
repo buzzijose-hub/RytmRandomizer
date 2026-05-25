@@ -14,6 +14,8 @@ The **Cockpit** is the new GUI surface for live performance — a Tauri desktop 
 
 **Create your first profile via the wizard.** Phase 2 adds an in-cockpit **Profile Wizard** — click the "Create profile…" button in the Mutation Panel to launch it. The wizard walks you through four steps: naming the profile, adding inspiration sources (folders of SysEx kits, audio files, or artist / album / song references), analyzing each source through the existing `style_analysis/` pipeline plus a SysEx kit analyzer and a built-in artist-reference lookup, and reviewing the derived `StyleTrait` bars and pad mapping before saving. Saving writes the new `kind="user"` profile to `~/.rytm-randomizer/profiles/` and the cockpit's `ProfileChips` picks it up automatically. The wizard is passive by construction — it never opens a MIDI port and never sends MIDI. See [`docs/superpowers/specs/2026-05-24-profile-wizard-design.md`](docs/superpowers/specs/2026-05-24-profile-wizard-design.md) for the full design and [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) for the operator walkthrough.
 
+**Export a profile for hardware.** Phase 3 ships the export pipeline (`cockpit-export-profile-model` + `cockpit-export-rehearsal-report`); see [`docs/COCKPIT_QUICKSTART.md`](docs/COCKPIT_QUICKSTART.md) §5c.
+
 **Launching the cockpit (dev loop):**
 
 ```bash
