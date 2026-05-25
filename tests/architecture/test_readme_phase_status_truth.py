@@ -95,7 +95,9 @@ def _badge_status_for(phase_label: str) -> str | None:
     """
 
     pattern = re.compile(
-        r"!\[" + re.escape(phase_label) + r"[^\]]*\]\(https://img\.shields\.io/badge/([^)]+)\.svg\)",
+        r"!\["
+        + re.escape(phase_label)
+        + r"[^\]]*\]\(https://img\.shields\.io/badge/([^)]+)\.svg\)",
     )
     match = pattern.search(_readme_text())
     if match is None:
@@ -300,11 +302,10 @@ def test_shipped_phases_appear_in_the_roadmap_section() -> None:
         block = phase_block_match.group(0).lower()
         if "shipped" not in block:
             drift.append(
-                f"{phase}: roadmap entry does not mark this shipped "
-                "(witness exists on disk)"
+                f"{phase}: roadmap entry does not mark this shipped " "(witness exists on disk)"
             )
     assert not drift, (
         "README Roadmap section is out of sync with shipped status:\n  "
         + "\n  ".join(drift)
-        + "\nFlip the roadmap entry from ✅ / \U0001F6A7 / \U0001F52E to ✅ + 'shipped'."
+        + "\nFlip the roadmap entry from ✅ / \U0001f6a7 / \U0001f52e to ✅ + 'shipped'."
     )

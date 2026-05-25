@@ -114,82 +114,84 @@ _STATUS_MARKER_PATTERN: Final[re.Pattern[str]] = re.compile(
 # 3. The companion test ``test_grandfathered_set_only_contains_real_files``
 #    enforces that every entry corresponds to an actual file — so renaming
 #    or deleting a plan automatically prunes its allowlist entry.
-_GRANDFATHERED_PLANS_WITHOUT_STATUS: Final[frozenset[str]] = frozenset({
-    "2026-05-19-dual-machine-strategy-redo",
-    "2026-05-19-rytm-12-pad-machine-matrix",
-    "2026-05-20-rytm-snapshot-file-intelligence",
-    "2026-05-20-rytm-snapshot-mutation-operator-preview",
-    "2026-05-20-rytm-snapshot-mutation-routing",
-    "2026-05-20-rytm-snapshot-pad-compatibility",
-    "2026-05-21-a4-snapshot-style-readiness-bundle-pr15",
-    "2026-05-21-analog-four-style-mock-preview-pr12",
-    "2026-05-21-analog-four-style-mutation-intent-pr66",
-    "2026-05-21-analog-four-style-routing-report-pr60",
-    "2026-05-21-analog-four-style-snapshot-routing-pr59",
-    "2026-05-21-dual-machine-style-mock-preview-pr13",
-    "2026-05-21-dual-machine-style-mutation-intent-pr67",
-    "2026-05-21-dual-machine-style-routing-report-pr61",
-    "2026-05-21-dual-snapshot-style-kit-readiness-bundle-pr16",
-    "2026-05-21-dual-style-kit-selection-pr17",
-    "2026-05-21-live-cue-sheet-pr28",
-    "2026-05-21-live-performance-set-plan-pr20",
-    "2026-05-21-live-rehearsal-session-packet-pr25",
-    "2026-05-21-live-render-bundle-pr27",
-    "2026-05-21-live-style-audition-set-pr19",
-    "2026-05-21-reference-arc-audition-packet-pr23",
-    "2026-05-21-reference-arc-rehearsal-manifest-pr24",
-    "2026-05-21-reference-discovery-slider-routing-pr63",
-    "2026-05-21-reference-performance-arc-presets-pr21",
-    "2026-05-21-reference-performance-arc-readiness-matrix-pr22",
-    "2026-05-21-rytm-style-mutation-bias-pr65",
-    "2026-05-21-rytm-style-mutation-intent-pr64",
-    "2026-05-21-rytm-style-mutation-render-plan-pr10",
-    "2026-05-21-rytm-style-render-mock-pr11",
-    "2026-05-21-rytm-style-snapshot-routing-pr58",
-    "2026-05-21-style-profile-foundation",
-    "2026-05-21-style-routing-json-payloads-pr62",
-    "2026-05-21-style-selection-snapshot-plan-pr18",
-    "2026-05-21-style-target-vector-pr57",
-    "2026-05-22-live-analyzer-handoff",
-    "2026-05-22-live-analyzer-targets",
-    "2026-05-22-live-gui-analyzer-readiness-pr43",
-    "2026-05-22-live-gui-capture-queue-pr45",
-    "2026-05-22-live-gui-rehearsal-session-pr44",
-    "2026-05-22-live-performance-command-deck-pr37",
-    "2026-05-22-live-performance-control-surface",
-    "2026-05-22-live-performance-runbook",
-    "2026-05-22-live-performance-state-packet-pr38",
-    "2026-05-22-live-performance-transition-timeline-pr36",
-    "2026-05-22-live-set-cockpit-packet-pr34",
-    "2026-05-22-live-show-export-pr35",
-    "2026-05-22-live-stage-rehearsal-state-pr33",
-    "2026-05-22-live-stage-snapshot-routing-pr32",
-    "2026-05-22-pr-reviewer-request-automation",
-    "2026-05-23-live-gui-action-reducer",
-    "2026-05-23-live-gui-analyzer-frame",
-    "2026-05-23-live-gui-analyzer-overlay",
-    "2026-05-23-live-gui-capture-review",
-    "2026-05-23-live-gui-cockpit-boundary-readiness",
-    "2026-05-23-live-gui-controller-state",
-    "2026-05-23-live-gui-desktop-app-plan",
-    "2026-05-23-live-gui-desktop-blueprint",
-    "2026-05-23-live-gui-desktop-component-contract",
-    "2026-05-23-live-gui-desktop-render-contract",
-    "2026-05-23-live-gui-desktop-render-harness",
-    "2026-05-23-live-gui-desktop-view-model",
-    "2026-05-23-live-gui-implementation-bridge",
-    "2026-05-23-live-gui-interaction-script",
-    "2026-05-23-live-gui-playback-transcript",
-    "2026-05-23-live-gui-playback-validation",
-    "2026-05-23-live-gui-render-tree",
-    "2026-05-23-live-gui-screen-contract",
-    "2026-05-23-live-gui-sidecar-session",
-    "2026-05-23-live-gui-test-harness-contract",
-    "2026-05-23-live-gui-test-harness-readiness",
-    "2026-05-24-cockpit-send-plan-operator-readiness",
-    "2026-05-24-cockpit-send-plan-readiness",
-    "2026-05-24-phase-3-export-pipeline",
-})
+_GRANDFATHERED_PLANS_WITHOUT_STATUS: Final[frozenset[str]] = frozenset(
+    {
+        "2026-05-19-dual-machine-strategy-redo",
+        "2026-05-19-rytm-12-pad-machine-matrix",
+        "2026-05-20-rytm-snapshot-file-intelligence",
+        "2026-05-20-rytm-snapshot-mutation-operator-preview",
+        "2026-05-20-rytm-snapshot-mutation-routing",
+        "2026-05-20-rytm-snapshot-pad-compatibility",
+        "2026-05-21-a4-snapshot-style-readiness-bundle-pr15",
+        "2026-05-21-analog-four-style-mock-preview-pr12",
+        "2026-05-21-analog-four-style-mutation-intent-pr66",
+        "2026-05-21-analog-four-style-routing-report-pr60",
+        "2026-05-21-analog-four-style-snapshot-routing-pr59",
+        "2026-05-21-dual-machine-style-mock-preview-pr13",
+        "2026-05-21-dual-machine-style-mutation-intent-pr67",
+        "2026-05-21-dual-machine-style-routing-report-pr61",
+        "2026-05-21-dual-snapshot-style-kit-readiness-bundle-pr16",
+        "2026-05-21-dual-style-kit-selection-pr17",
+        "2026-05-21-live-cue-sheet-pr28",
+        "2026-05-21-live-performance-set-plan-pr20",
+        "2026-05-21-live-rehearsal-session-packet-pr25",
+        "2026-05-21-live-render-bundle-pr27",
+        "2026-05-21-live-style-audition-set-pr19",
+        "2026-05-21-reference-arc-audition-packet-pr23",
+        "2026-05-21-reference-arc-rehearsal-manifest-pr24",
+        "2026-05-21-reference-discovery-slider-routing-pr63",
+        "2026-05-21-reference-performance-arc-presets-pr21",
+        "2026-05-21-reference-performance-arc-readiness-matrix-pr22",
+        "2026-05-21-rytm-style-mutation-bias-pr65",
+        "2026-05-21-rytm-style-mutation-intent-pr64",
+        "2026-05-21-rytm-style-mutation-render-plan-pr10",
+        "2026-05-21-rytm-style-render-mock-pr11",
+        "2026-05-21-rytm-style-snapshot-routing-pr58",
+        "2026-05-21-style-profile-foundation",
+        "2026-05-21-style-routing-json-payloads-pr62",
+        "2026-05-21-style-selection-snapshot-plan-pr18",
+        "2026-05-21-style-target-vector-pr57",
+        "2026-05-22-live-analyzer-handoff",
+        "2026-05-22-live-analyzer-targets",
+        "2026-05-22-live-gui-analyzer-readiness-pr43",
+        "2026-05-22-live-gui-capture-queue-pr45",
+        "2026-05-22-live-gui-rehearsal-session-pr44",
+        "2026-05-22-live-performance-command-deck-pr37",
+        "2026-05-22-live-performance-control-surface",
+        "2026-05-22-live-performance-runbook",
+        "2026-05-22-live-performance-state-packet-pr38",
+        "2026-05-22-live-performance-transition-timeline-pr36",
+        "2026-05-22-live-set-cockpit-packet-pr34",
+        "2026-05-22-live-show-export-pr35",
+        "2026-05-22-live-stage-rehearsal-state-pr33",
+        "2026-05-22-live-stage-snapshot-routing-pr32",
+        "2026-05-22-pr-reviewer-request-automation",
+        "2026-05-23-live-gui-action-reducer",
+        "2026-05-23-live-gui-analyzer-frame",
+        "2026-05-23-live-gui-analyzer-overlay",
+        "2026-05-23-live-gui-capture-review",
+        "2026-05-23-live-gui-cockpit-boundary-readiness",
+        "2026-05-23-live-gui-controller-state",
+        "2026-05-23-live-gui-desktop-app-plan",
+        "2026-05-23-live-gui-desktop-blueprint",
+        "2026-05-23-live-gui-desktop-component-contract",
+        "2026-05-23-live-gui-desktop-render-contract",
+        "2026-05-23-live-gui-desktop-render-harness",
+        "2026-05-23-live-gui-desktop-view-model",
+        "2026-05-23-live-gui-implementation-bridge",
+        "2026-05-23-live-gui-interaction-script",
+        "2026-05-23-live-gui-playback-transcript",
+        "2026-05-23-live-gui-playback-validation",
+        "2026-05-23-live-gui-render-tree",
+        "2026-05-23-live-gui-screen-contract",
+        "2026-05-23-live-gui-sidecar-session",
+        "2026-05-23-live-gui-test-harness-contract",
+        "2026-05-23-live-gui-test-harness-readiness",
+        "2026-05-24-cockpit-send-plan-operator-readiness",
+        "2026-05-24-cockpit-send-plan-readiness",
+        "2026-05-24-phase-3-export-pipeline",
+    }
+)
 
 
 def _is_plan_file(path: Path) -> bool:
@@ -198,9 +200,7 @@ def _is_plan_file(path: Path) -> bool:
     if path.suffix != ".md":
         return False
     name = path.name.lower()
-    if any(name.endswith(suffix) for suffix in _NOT_A_PLAN_SUFFIXES):
-        return False
-    return True
+    return not any(name.endswith(suffix) for suffix in _NOT_A_PLAN_SUFFIXES)
 
 
 def _extract_status_value(plan_text: str) -> str | None:
@@ -388,7 +388,9 @@ def test_shipped_status_plans_should_link_a_pr_number() -> None:
 
     violations: list[str] = []
     for plan_path in _collect_plan_files():
-        head = "\n".join(plan_path.read_text(encoding="utf-8").splitlines()[:_STATUS_HEADER_SCAN_LINES])
+        head = "\n".join(
+            plan_path.read_text(encoding="utf-8").splitlines()[:_STATUS_HEADER_SCAN_LINES]
+        )
         for match in _STATUS_MARKER_PATTERN.finditer(head):
             value = match.group(1).strip().lower()
             if value.startswith(("shipped", "merged")):
@@ -403,7 +405,6 @@ def test_shipped_status_plans_should_link_a_pr_number() -> None:
                         "historical record links the plan to its merge."
                     )
                 break
-    assert not violations, (
-        "Plans marked shipped/merged without a PR reference:\n  "
-        + "\n  ".join(violations)
+    assert not violations, "Plans marked shipped/merged without a PR reference:\n  " + "\n  ".join(
+        violations
     )
