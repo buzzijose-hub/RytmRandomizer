@@ -1626,17 +1626,6 @@ def _build_duplicate_index() -> dict[tuple[str, str], tuple[str, ...]]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Gate 17 RED-until-PR-3-lands: the cli.py:57-122 ``atomic_write`` / "
-        "``WriteResult`` / ``default_export_dir`` fallback block is still "
-        "on disk and hot-duplicates the canonical writer.py surface. PR 3 "
-        "of CODE_REVIEW.md deletes the fallback; when it lands this xfail "
-        "will XPASS — strict=True will surface that as a failure, and the "
-        "next contributor must remove this marker to lock the test in GREEN."
-    ),
-)
 def test_no_duplicated_abstraction_surfaces() -> None:
     """Gate 17 — every new module surveys the abstraction catalog.
 
