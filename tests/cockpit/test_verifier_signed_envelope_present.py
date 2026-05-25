@@ -17,14 +17,12 @@ from __future__ import annotations
 import pytest
 
 from rytm_randomizer.cockpit.export import (
-    SIGNATURE_ALGO_HMAC_SHA256,
     pack_profile_model,
     pack_signed,
     sign_profile_blob,
     verify_signed_blob,
     verify_unsigned_payload,
 )
-from rytm_randomizer.cockpit.export.signing import SignedBlob
 
 pytestmark = pytest.mark.fast
 
