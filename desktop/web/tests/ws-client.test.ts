@@ -183,6 +183,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
@@ -296,6 +297,35 @@ describe('CockpitClient — connect / open / status', () => {
     expect(h.currentSocket().sent).toEqual([
       JSON.stringify({ type: 'hello', token: 'resolver-token' }),
     ]);
+  });
+
+  it('treats browser token storage read failures as a missing token', () => {
+    const warnings: unknown[] = [];
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage denied');
+    });
+    const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([]);
+    expect(
+      warnings.some((w) => Array.isArray(w) && String(w[0]).includes('auth token unavailable')),
+    ).toBe(true);
+  });
+
+  it('closes the socket when sending the hello frame fails', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({
+      authToken: 'token-for-test',
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    h.client.connect();
+    h.currentSocket().primeSendError(new Error('handshake send failed'));
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().closeCalls).toHaveLength(1);
+    expect(
+      warnings.some((w) => Array.isArray(w) && String(w[0]).includes('handshake send failed')),
+    ).toBe(true);
   });
 
   it('emits status transitions: connecting → connected', () => {
