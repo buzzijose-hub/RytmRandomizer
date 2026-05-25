@@ -37,6 +37,10 @@ test.describe('wizard analyze failure', () => {
     await page.getByTestId('wizard-draft-display-name').fill('ghost.wav');
     await page.getByTestId('wizard-draft-confirm').click();
 
+    // Wait for the sidecar to echo the server-minted source into the list before
+    // advancing; the Analyze button is disabled while the source list is still empty.
+    await expect(page.getByTestId('wizard-source-empty')).toBeHidden();
+
     await page.getByTestId('wizard-next').click();
     await expect(page.getByTestId('wizard-analyze-step')).toBeVisible();
 
