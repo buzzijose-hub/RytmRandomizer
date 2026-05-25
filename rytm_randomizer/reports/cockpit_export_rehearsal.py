@@ -14,13 +14,20 @@ the cockpit GUI. It answers "what would actually get written?" for a
   #104's send-plan rehearsal surface shape so a single GUI consumer
   pattern can ingest both surfaces.
 
-The report is **strictly passive**: importing it opens no ports, performs
-no I/O writes, never invokes the signer/verifier or writer modules
-(WS-A/WS-B own those), and never instantiates a real export CLI. It only
-*reads* the ``ProfileRegistry`` plus ``pack_profile_model`` to compute
-what *would* be emitted. The Phase 3 keystore is not yet available; the
-``--key-id`` option therefore travels as a metadata label only — actual
-key lookup is deferred to Phase 3.5.
+The report is **strictly passive** in the sense the cockpit means by that
+word: no I/O writes, no port opens, no sidecar connection, no GUI launch,
+no MIDI sending, no irreversible action of any kind. It is *not* "imports
+nothing from ``cockpit.export``" — the rehearsal deliberately calls
+:func:`~rytm_randomizer.cockpit.export.pack_profile_model` (pure compute:
+MessagePack-encode plus CRC32) and
+:func:`~rytm_randomizer.cockpit.export.signed_envelope_overhead_bytes`
+(an analytic formula derived from the wire layout) so the rehearsal can
+report the exact would-write size without having to invoke the signer or
+the writer. Both calls have no side effects.
+
+The Phase 3 keystore is not yet available; the ``--key-id`` option
+therefore travels as a metadata label only — actual key lookup is
+deferred to Phase 3.5.
 """
 
 from __future__ import annotations
@@ -35,7 +42,12 @@ from typing import Final, Literal
 
 from ..cli_registry import CliCommand, register
 from ..cockpit.data import ProfileModel
-from ..cockpit.export import FORMAT_VERSION, pack_profile_model
+from ..cockpit.export import (
+    FORMAT_VERSION,
+    SIGNATURE_ALGO_HMAC_SHA256,
+    pack_profile_model,
+    signed_envelope_overhead_bytes,
+)
 from ..cockpit.export.model_format import compute_crc
 from ..cockpit.profiles import ProfileRegistry, default_profiles_dir
 from .formatter import (
@@ -54,11 +66,6 @@ _DEFAULT_SURFACE_LABEL: Final[str] = "Cockpit export rehearsal surface"
 _COMMAND_NAME: Final[str] = "cockpit-export-rehearsal-report"
 _OUTPUT_EXTENSION: Final[str] = ".rymp"
 _DEFAULT_OUTPUT_DIR: Final[Path] = Path("~/.rytm-randomizer/exports")
-# Phase 3 punt: WS-A's signer lives in cockpit/export/signing.py which this
-# module deliberately does not import. The signed-envelope size estimate is
-# the rehearsal payload + a fixed wrapper budget kept in code review with WS-A.
-# The exact bytes will be re-confirmed when the keystore lands in Phase 3.5.
-_SIGNED_ENVELOPE_OVERHEAD_BYTES: Final[int] = 256
 
 SAFETY_LINES: Final[tuple[str, ...]] = (
     "passive/read-only",
@@ -663,8 +670,22 @@ def _resolve_output_path(
     return str(_default_output_path(profile.profile_id, profile.model_version))
 
 
-def _signed_size(payload_size: int) -> int:
-    return payload_size + _SIGNED_ENVELOPE_OVERHEAD_BYTES
+def _signed_size(payload_size: int, *, key_id: str) -> int:
+    """Return the exact would-write size of a signed envelope.
+
+    Composes the analytic
+    :func:`~rytm_randomizer.cockpit.export.signed_envelope_overhead_bytes`
+    with the rehearsal's already-computed ``payload_size`` so the report
+    surfaces the same byte count the real
+    :func:`~rytm_randomizer.cockpit.export.pack_signed` would later emit
+    — no estimate, no upper-bound padding, no guessing.
+    """
+
+    overhead = signed_envelope_overhead_bytes(
+        algo=SIGNATURE_ALGO_HMAC_SHA256,
+        key_id=key_id,
+    )
+    return payload_size + overhead
 
 
 def _surface_status_and_screen(
@@ -725,7 +746,11 @@ def build_cockpit_export_rehearsal_report(
     profile = _resolve_profile(profile_id, profiles_dir)
     payload, payload_crc_hex = _compute_payload(profile)
     payload_size = len(payload)
-    signed_size = _signed_size(payload_size) if signed else None
+    signed_size = (
+        _signed_size(payload_size, key_id=resolved_key_id)
+        if signed and resolved_key_id is not None
+        else None
+    )
     resolved_output_path = _resolve_output_path(
         profile=profile,
         explicit_output=output_path,

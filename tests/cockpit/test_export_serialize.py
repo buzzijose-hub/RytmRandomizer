@@ -31,6 +31,7 @@ from rytm_randomizer.cockpit.export.model_format import (
     compute_crc,
     pack_crc,
 )
+from rytm_randomizer.cockpit.export.serialize import _pack_with_version_override
 
 pytestmark = pytest.mark.fast
 
@@ -155,7 +156,11 @@ def test_unpack_rejects_bad_magic() -> None:
 
 def test_unpack_rejects_unsupported_format_version() -> None:
     profile = _make_profile()
-    blob = pack_profile_model(profile, format_version=99)
+    # The public ``pack_profile_model`` no longer accepts a
+    # ``format_version`` kwarg (it would silently produce blobs the
+    # unpacker rejects). Use the test-only ``_pack_with_version_override``
+    # to drive the parser's rejection path explicitly.
+    blob = _pack_with_version_override(profile, format_version=99)
     with pytest.raises(ValueError, match="unsupported format_version"):
         unpack_profile_model(blob)
 
