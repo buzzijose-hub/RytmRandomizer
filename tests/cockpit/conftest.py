@@ -34,6 +34,7 @@ from __future__ import annotations
 from collections.abc import Generator, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Final
 
 import pytest
 from fastapi.testclient import TestClient
@@ -42,8 +43,21 @@ from rytm_randomizer.cockpit.data import PadState, Snapshot
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
+from rytm_randomizer.cockpit.ws.protocol import HELLO_FRAME_TYPE, WS_SUBPROTOCOL
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+
+TEST_WS_TOKEN: Final[str] = "test-token-only-for-pytest-do-not-use-in-prod"
+"""The fixed handshake token every cockpit test fixture passes to ``create_app``.
+
+Per CODE_REVIEW.md PR 1 (finding C1), ``create_app`` now requires a
+non-empty per-launch token and refuses to start without one. The test
+suite uses a single hard-coded value so every fixture, helper, and
+direct ``create_app`` call site can agree on what the client sends in
+its ``hello`` frame without threading a fresh token through each
+parameter list. Cockpit tests never bind a real port, so the literal
+never leaves the process.
+"""
 
 pytestmark = pytest.mark.fast
 
@@ -101,28 +115,50 @@ def cockpit_client(tmp_path: Path) -> Generator[TestClient, None, None]:
         device=MockDeviceAdapter(initial=initial),
     )
     session.history_store.initial(initial)
-    app = create_app(session)
+    app = create_app(session, token=TEST_WS_TOKEN)
     with TestClient(app) as client:
         yield client
 
 
 @pytest.fixture
 def cockpit_ws(cockpit_client: TestClient) -> Iterator[object]:
-    """Open a WebSocket, drain the bootstrap quartet, yield the live socket.
+    """Open a WebSocket, complete the handshake, drain bootstrap, yield the live socket.
 
-    Tests that need to inspect the bootstrap events themselves should open
-    their own connection through :func:`cockpit_client` and call
-    :func:`collect_initial_events`. This fixture is for tests that operate
-    in the steady-state command loop and need the buffer empty on entry.
+    Per CODE_REVIEW.md PR 1 finding C1, the cockpit WS endpoint now
+    requires a handshake before the bootstrap quartet fires. This
+    fixture:
+
+    1. Connects on the pinned :data:`WS_SUBPROTOCOL` so the server
+       accepts the upgrade (L8).
+    2. Sends ``{"type": "hello", "token": TEST_WS_TOKEN}`` and reads the
+       ``{"ok": true}`` ack (C1).
+    3. Drains the four bootstrap events emitted by
+       :func:`emit_initial_events` so the first ``receive_json`` inside
+       the test body is the response to its first command.
+
+    Tests that need to inspect the bootstrap events themselves should
+    open their own connection through :func:`cockpit_client`, call
+    :func:`complete_handshake`, and then :func:`collect_initial_events`.
     """
 
-    with cockpit_client.websocket_connect("/ws") as ws:
-        # Drain the four bootstrap events emitted by ``emit_initial_events``
-        # so the first ``receive_json`` inside the test body is the
-        # response to its first command, not a leftover bootstrap frame.
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         for _ in range(4):
             ws.receive_json()
         yield ws
+
+
+def complete_handshake(ws: object, token: str = TEST_WS_TOKEN) -> dict:
+    """Send the ``hello`` frame, read the ack, return it.
+
+    Centralises the handshake the live :func:`cockpit_ws` fixture and
+    the direct-``create_app`` tests both rely on. Returns the ack so
+    negative-path tests can assert on the ``ok`` / ``code`` fields when
+    a non-default token is passed.
+    """
+
+    ws.send_json({"type": HELLO_FRAME_TYPE, "token": token})  # type: ignore[attr-defined]
+    return ws.receive_json()  # type: ignore[attr-defined]
 
 
 def collect_initial_events(ws: object, count: int = 4) -> list[dict]:
@@ -177,9 +213,11 @@ def prepare_send_plan(ws: object, request_id: str = "req-prepare-send-plan") -> 
 
 
 __all__ = [
+    "TEST_WS_TOKEN",
     "cockpit_client",
     "cockpit_ws",
     "collect_initial_events",
+    "complete_handshake",
     "drain_events",
     "prepare_send_plan",
     "send_cmd",

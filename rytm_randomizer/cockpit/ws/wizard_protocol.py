@@ -151,8 +151,25 @@ class WizardStartCommand(TypedDict):
 class WizardSetMetadataCommand(TypedDict, total=False):
     """``wizard_set_metadata { name?, description? }`` — update header fields.
 
-    Both fields are optional; absent keys leave the corresponding state
-    field unchanged.
+    Both fields are optional and use **three-state wire semantics**, so a
+    client can express both "leave the field alone" and "clear the field"
+    distinctly (the C4 fix in CODE_REVIEW.md PR 1):
+
+    * **key missing from the command body** → leave the corresponding
+      state field unchanged. Models "I didn't touch this control."
+    * **key present with value ``null``** → clear the corresponding state
+      field (the handler calls ``with_metadata(name="")`` /
+      ``with_metadata(description="")``). Models the operator emptying
+      the input box.
+    * **key present with a string value** → set the corresponding state
+      field to that string verbatim.
+
+    The handler distinguishes "missing" from "explicit ``None``" via the
+    ``"name" in cmd`` / ``"description" in cmd`` membership check rather
+    than ``cmd.get("name")`` (which collapses both into ``None`` and
+    re-introduces the C4 inversion). The ``total=False`` annotation
+    encodes the per-key optionality so static type checkers also see the
+    distinction.
     """
 
     type: Literal["wizard_set_metadata"]

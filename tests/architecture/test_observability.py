@@ -94,6 +94,13 @@ ALLOW_LIST_PRINT_UI: frozenset[str] = frozenset(
         "rytm_randomizer/midi_io.py",
         # Mutation core -- monolith-parity "X mutation / Y depth" banners.
         "rytm_randomizer/randomization.py",
+        # Cockpit entrypoint -- prints the per-launch WS handshake token to
+        # stdout in dev mode so the spawning shell can read it without
+        # reaching into the filesystem (production / Tauri-spawned launches
+        # set RYTM_RAND_WS_TOKEN_FILE and skip the print). This is the only
+        # legitimate stdout UI in cockpit/, added by CODE_REVIEW.md PR 1.
+        # All other observability in the cockpit goes through the logger.
+        "rytm_randomizer/cockpit/__main__.py",
     }
 )
 

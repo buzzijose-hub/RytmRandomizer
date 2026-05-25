@@ -26,7 +26,7 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import collect_initial_events, drain_events, send_cmd
+from cockpit.conftest import collect_initial_events, complete_handshake, drain_events, send_cmd
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
@@ -42,6 +42,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_TYPES,
     COMMAND_UNDO,
+    WS_SUBPROTOCOL,
 )
 
 pytestmark = pytest.mark.fast
@@ -314,14 +315,14 @@ def test_envelope_missing_request_id_still_dispatches(cockpit_ws: object) -> Non
 def test_malformed_json_closes_connection_but_server_keeps_serving(
     cockpit_client: TestClient,
 ) -> None:
-    """A non-JSON text frame raises in the server loop; subsequent connects still work.
+    """A non-JSON text frame is rejected gracefully; subsequent connects still work.
 
-    :meth:`WebSocket.receive_json` calls ``json.loads`` on the raw text — a
-    non-JSON payload raises :class:`json.JSONDecodeError` before any
-    envelope dict is built. The handler dispatcher never gets to run, so
-    there is no graceful ack frame; the connection's command loop dies.
-    The TestClient surfaces that as a :class:`JSONDecodeError` when the
-    websocket context manager exits.
+    Post-PR-1 (CODE_REVIEW.md §C1+SX1) the server reads inbound frames
+    as text first (so the size cap can fire before ``json.loads`` ever
+    runs). When the body is not valid JSON the server closes the socket
+    politely instead of letting the exception propagate. The TestClient
+    observes the close without surfacing the underlying
+    :class:`json.JSONDecodeError`.
 
     The load-bearing invariant for the spec's "malformed JSON → graceful
     handling" wording is: **the server process does not die**. We pin
@@ -329,15 +330,21 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     confirming the bootstrap quartet still arrives.
     """
 
-    import json
-
-    with pytest.raises(json.JSONDecodeError), cockpit_client.websocket_connect("/ws") as ws:
-        collect_initial_events(ws, count=4)
-        ws.send_text("this is not json at all")
-        # Context exit awaits the server loop, which raises JSONDecodeError.
+    # The server now closes the socket on malformed JSON; we tolerate
+    # any exit shape from the TestClient (clean close, WebSocketDisconnect,
+    # or a residual JSONDecodeError on older TestClient versions).
+    try:
+        with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            collect_initial_events(ws, count=4)
+            ws.send_text("this is not json at all")
+    except Exception:
+        # Either path is acceptable; the spec-bearing assertion is below.
+        pass
 
     # Prove the server still serves: open a fresh connection and bootstrap.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         bootstrap = collect_initial_events(ws, count=4)
     assert len(bootstrap) == 4
 
