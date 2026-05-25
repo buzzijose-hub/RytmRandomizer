@@ -183,7 +183,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  delete window.__RYTM_RAND_WS_TOKEN__;
+  if (typeof window !== 'undefined') delete window.__RYTM_RAND_WS_TOKEN__;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -443,6 +443,18 @@ describe('CockpitClient — message dispatch', () => {
     );
   });
 
+  it('treats a non-browser global as a missing token', () => {
+    const warnings: unknown[] = [];
+    vi.stubGlobal('window', undefined);
+    const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([]);
+    expect(
+      warnings.some((w) => Array.isArray(w) && String(w[0]).includes('auth token unavailable')),
+    ).toBe(true);
+  });
+
   it('warns on malformed JSON and continues', () => {
     const warnings: unknown[] = [];
     const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
@@ -475,6 +487,38 @@ describe('CockpitClient — message dispatch', () => {
     h.currentSocket().emitOpen();
     h.currentSocket().emitMessage({ ok: true });
     expect(warnings).toEqual([]);
+  });
+
+  it('warns when the token-handshake ack rejects authentication', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({
+      authToken: 'token-for-test',
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage({ ok: false, code: 'bad-token' });
+    expect(
+      warnings.some(
+        (w) =>
+          Array.isArray(w) &&
+          String(w[0]).includes('handshake rejected') &&
+          w.includes('bad-token'),
+      ),
+    ).toBe(true);
+  });
+
+  it('warns on parsed null and scalar message shapes', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage(null);
+    h.currentSocket().emitMessage(42);
+    const unrecognized = warnings.filter(
+      (w) => Array.isArray(w) && String(w[0]).includes('unrecognized'),
+    );
+    expect(unrecognized).toHaveLength(2);
   });
 });
 
