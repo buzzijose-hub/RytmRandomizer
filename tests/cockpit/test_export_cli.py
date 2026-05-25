@@ -714,3 +714,292 @@ def test_cli_dispatch_registers_command(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert output.exists()
+
+
+# ---------------------------------------------------------------------------
+# SX2 — --key-env env-var key-material delivery (vs --key-hex argv leak)
+# ---------------------------------------------------------------------------
+
+
+def test_signed_export_with_key_env_writes_round_trippable_blob(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``--key-env <NAME>`` reads the key from the env var (NEVER from argv).
+
+    Regression guard for CODE_REVIEW.md SX2: the signing key must never
+    appear in ``/proc/<pid>/cmdline``. The recommended channel is
+    ``--key-env <ENV_VAR_NAME>``; the env var name is what hits argv,
+    not the key itself.
+    """
+
+    profile = _make_profile()
+    _save_profile(tmp_path, profile)
+    output = tmp_path / "out.rymp"
+
+    monkeypatch.setenv("RYTM_RAND_KEY_HEX_TEST", _KEY_HEX)
+    exit_code = handle_export_profile_model(
+        [
+            "--profile-id",
+            profile.profile_id,
+            "--profiles-dir",
+            str(tmp_path),
+            "--output",
+            str(output),
+            "--key-env",
+            "RYTM_RAND_KEY_HEX_TEST",
+            "--key-id",
+            _KEY_ID,
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    ack = _read_json(capsys.readouterr().out)
+    assert ack["ok"] is True
+    assert ack["signed"] is True
+    # The key value (the hex literal) must NOT appear anywhere in the
+    # captured stdout — the ack only carries the key_id label.
+    captured_out = json.dumps(ack)
+    assert _KEY_HEX not in captured_out, (
+        "signing key hex leaked into the export ack — the ack must only "
+        "carry the key_id label, never the key value."
+    )
+
+
+def test_key_env_with_unset_env_var_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``--key-env`` names an unset env var → categorical validation error."""
+
+    profile = _make_profile()
+    _save_profile(tmp_path, profile)
+
+    monkeypatch.delenv("RYTM_RAND_KEY_HEX_TEST_UNSET", raising=False)
+    exit_code = handle_export_profile_model(
+        [
+            "--profile-id",
+            profile.profile_id,
+            "--profiles-dir",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "out.rymp"),
+            "--key-env",
+            "RYTM_RAND_KEY_HEX_TEST_UNSET",
+            "--key-id",
+            _KEY_ID,
+        ]
+    )
+
+    assert exit_code == 2
+    err = capsys.readouterr().out
+    assert "RYTM_RAND_KEY_HEX_TEST_UNSET" in err
+    assert "unset" in err or "empty" in err
+
+
+def test_key_env_with_empty_env_var_errors(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``--key-env`` names an empty env var → categorical validation error."""
+
+    profile = _make_profile()
+    _save_profile(tmp_path, profile)
+
+    monkeypatch.setenv("RYTM_RAND_KEY_HEX_TEST_EMPTY", "")
+    exit_code = handle_export_profile_model(
+        [
+            "--profile-id",
+            profile.profile_id,
+            "--profiles-dir",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "out.rymp"),
+            "--key-env",
+            "RYTM_RAND_KEY_HEX_TEST_EMPTY",
+            "--key-id",
+            _KEY_ID,
+        ]
+    )
+
+    assert exit_code == 2
+    err = capsys.readouterr().out
+    assert "RYTM_RAND_KEY_HEX_TEST_EMPTY" in err
+
+
+def test_key_hex_and_key_env_are_mutually_exclusive(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Passing both --key-hex and --key-env produces a validation error.
+
+    Picking one of the two channels is an operator-side decision; we
+    refuse to silently prefer one. SX2 specifically wants this
+    fail-loud behavior so a CI script that "adds belt + suspenders"
+    can't accidentally re-enable the argv-leak path.
+    """
+
+    profile = _make_profile()
+    _save_profile(tmp_path, profile)
+
+    monkeypatch.setenv("RYTM_RAND_KEY_HEX_TEST", _KEY_HEX)
+    exit_code = handle_export_profile_model(
+        [
+            "--profile-id",
+            profile.profile_id,
+            "--profiles-dir",
+            str(tmp_path),
+            "--output",
+            str(tmp_path / "out.rymp"),
+            "--key-hex",
+            _KEY_HEX,
+            "--key-env",
+            "RYTM_RAND_KEY_HEX_TEST",
+            "--key-id",
+            _KEY_ID,
+        ]
+    )
+
+    assert exit_code == 2
+    err = capsys.readouterr().out
+    assert "mutually exclusive" in err
+
+
+class _CapturingHandler:
+    """Minimal logging.Handler that records every emitted LogRecord.
+
+    The package logger has ``propagate=False`` so pytest's ``caplog``
+    (which hooks the root logger) cannot see SX2's deprecation event.
+    Attaching this handler directly to the package logger captures
+    records at the source.
+    """
+
+    def __init__(self) -> None:
+        import logging as _logging
+
+        self._logging = _logging
+        self.records: list[_logging.LogRecord] = []
+        self.level = _logging.DEBUG
+
+    def handle(self, record):  # type: ignore[no-untyped-def]
+        self.records.append(record)
+
+    def createLock(self):  # type: ignore[no-untyped-def]
+        return None
+
+
+def _attach_package_probe():  # type: ignore[no-untyped-def]
+    """Attach a probe handler to the package logger and return (handler, detach)."""
+
+    import logging as _logging
+
+    pkg = _logging.getLogger("rytm_randomizer.cockpit.export.cli")
+    handler = _CapturingHandler()
+    pkg.addHandler(handler)  # type: ignore[arg-type]
+    prior_level = pkg.level
+    pkg.setLevel(_logging.DEBUG)
+
+    def detach() -> None:
+        pkg.removeHandler(handler)  # type: ignore[arg-type]
+        pkg.setLevel(prior_level)
+
+    return handler, detach
+
+
+def test_key_hex_emits_deprecation_log_event(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Using --key-hex emits a structured ``deprecated_key_hex_argv_used`` log.
+
+    Regression guard for SX2: every --key-hex invocation must fire a
+    warning operators can grep for. If a future refactor swaps the
+    warning channel out, this test fails and the contributor gets a
+    pointer to the SX2 docstring.
+    """
+
+    profile = _make_profile()
+    _save_profile(tmp_path, profile)
+
+    handler, detach = _attach_package_probe()
+    try:
+        exit_code = handle_export_profile_model(
+            [
+                "--profile-id",
+                profile.profile_id,
+                "--profiles-dir",
+                str(tmp_path),
+                "--output",
+                str(tmp_path / "out.rymp"),
+                "--key-hex",
+                _KEY_HEX,
+                "--key-id",
+                _KEY_ID,
+            ]
+        )
+        capsys.readouterr()
+    finally:
+        detach()
+
+    assert exit_code == 0
+    dep_events = [r for r in handler.records if r.getMessage() == "deprecated_key_hex_argv_used"]
+    assert dep_events, (
+        "Using --key-hex must emit one structured 'deprecated_key_hex_argv_used' "
+        "log record so operators can spot argv-leak invocations in shipped logs. "
+        "Captured: " + ", ".join(r.getMessage() for r in handler.records)
+    )
+    # The key value itself must NEVER appear in any log record (the
+    # whole point of SX2 is to never log secrets).
+    for record in handler.records:
+        assert (
+            _KEY_HEX not in record.getMessage()
+        ), f"signing key hex leaked into log message: {record.getMessage()!r}"
+        for value in record.__dict__.values():
+            if isinstance(value, str):
+                assert (
+                    _KEY_HEX not in value
+                ), f"signing key hex leaked into log record extra: {value!r}"
+
+
+def test_key_env_does_not_emit_deprecation_log_event(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The recommended --key-env channel does NOT emit the SX2 warning."""
+
+    profile = _make_profile()
+    _save_profile(tmp_path, profile)
+
+    monkeypatch.setenv("RYTM_RAND_KEY_HEX_TEST", _KEY_HEX)
+    handler, detach = _attach_package_probe()
+    try:
+        exit_code = handle_export_profile_model(
+            [
+                "--profile-id",
+                profile.profile_id,
+                "--profiles-dir",
+                str(tmp_path),
+                "--output",
+                str(tmp_path / "out.rymp"),
+                "--key-env",
+                "RYTM_RAND_KEY_HEX_TEST",
+                "--key-id",
+                _KEY_ID,
+            ]
+        )
+        capsys.readouterr()
+    finally:
+        detach()
+
+    assert exit_code == 0
+    dep_events = [r for r in handler.records if r.getMessage() == "deprecated_key_hex_argv_used"]
+    assert not dep_events, (
+        "The secure --key-env channel must NOT emit the SX2 deprecation "
+        "warning. Captured deprecation records: " + repr(dep_events)
+    )

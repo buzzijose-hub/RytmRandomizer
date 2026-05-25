@@ -6,6 +6,7 @@ behind a single passive subcommand::
     python -m rytm_randomizer.cli cockpit-export-profile-model \\
         --profile-id <id> --profiles-dir <path> \\
         --output <file.rymp> \\
+        [--key-env <ENV_VAR_NAME> --key-id <label>] \\
         [--key-hex <hexkey> --key-id <label>] \\
         [--unsigned] [--overwrite] [--json]
 
@@ -20,14 +21,36 @@ The flow on success:
    post-write integrity check operators rely on.
 6. Emit a structured ack (JSON if ``--json``, otherwise text).
 
+Key-material delivery (CODE_REVIEW.md SX2)
+------------------------------------------
+
+The signing key is hex-encoded bytes. Two channels are accepted:
+
+* **``--key-env <ENV_VAR_NAME>``** — the RECOMMENDED path. The CLI reads
+  the named env var and uses its value as the key hex. The env var
+  contents NEVER appear in ``/proc/<pid>/cmdline``, so a second local
+  user cannot capture the key by listing processes. CI/Tauri/shell
+  invocations should always use this path.
+* **``--key-hex <hex>``** — DEPRECATED (kept for backward compat). The
+  key hex appears verbatim in ``/proc/<pid>/cmdline`` on Linux/macOS
+  and in ``Get-Process`` output on Windows for the brief window the
+  subcommand runs; any local user with read access to the process
+  table can capture it. A structured warning is logged whenever this
+  path is used so operators can spot it in CI logs.
+
+The two are mutually exclusive — passing both raises a validation
+error rather than silently picking one.
+
 Validation rules (every failure produces ``ok=False`` and a non-zero exit
 code — no exceptions ever escape the handler):
 
-* ``--key-hex`` AND ``--unsigned``: mutually exclusive.
-* ``--key-hex`` without ``--key-id``: ``key-id`` required when key is given.
-* ``--key-id`` without ``--key-hex``: ``key-hex`` required when id is given.
-* Neither ``--key-hex`` nor ``--unsigned``: explicit choice required.
-* ``--key-hex`` not valid hex: rejected before file work.
+* Any key flag AND ``--unsigned``: mutually exclusive.
+* Any key flag without ``--key-id``: ``key-id`` required when key is given.
+* ``--key-id`` without any key flag: a key channel is required.
+* Both ``--key-env`` and ``--key-hex``: mutually exclusive — pick one.
+* ``--key-env`` names an unset / empty env var: reported with the name.
+* Key value not valid hex: rejected before file work.
+* Neither key channel nor ``--unsigned``: explicit choice required.
 * ``--profile-id`` not in registry: reported with the offending id.
 * Missing required value for any option: usage hint.
 
@@ -40,6 +63,7 @@ rather than silently swapping in a behavioural near-duplicate).
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 from collections.abc import Sequence
@@ -77,9 +101,17 @@ _COMMAND_NAME: Final[str] = "cockpit-export-profile-model"
 _USAGE: Final[str] = (
     f"{_COMMAND_NAME} usage: "
     "--profile-id <id> --profiles-dir <path> --output <file.rymp> "
-    "[--key-hex <hex> --key-id <label>] [--unsigned] [--overwrite] [--json]"
+    "[--key-env <ENV_VAR_NAME> | --key-hex <hex>] --key-id <label> "
+    "[--unsigned] [--overwrite] [--json]"
 )
 """Single-line usage string echoed on parse errors."""
+
+_KEY_HEX_DEPRECATION_LOG_EVENT: Final[str] = "deprecated_key_hex_argv_used"
+"""Structured log event name for SX2 --key-hex deprecation warnings.
+
+Operators grep this event in CI / Tauri logs to spot environments still
+delivering keys via argv. The event is emitted exactly once per CLI
+invocation that uses ``--key-hex``."""
 
 
 @dataclass(frozen=True)
@@ -95,6 +127,7 @@ class _CliOptions:
     profiles_dir: Path
     output: Path
     key_hex: str | None
+    key_env: str | None
     key_id: str | None
     unsigned: bool
     overwrite: bool
@@ -121,6 +154,7 @@ def _parse_args(args: Sequence[str]) -> _CliOptions:
     profiles_dir: Path | None = None
     output: Path | None = None
     key_hex: str | None = None
+    key_env: str | None = None
     key_id: str | None = None
     unsigned = False
     overwrite = False
@@ -137,6 +171,8 @@ def _parse_args(args: Sequence[str]) -> _CliOptions:
             output = Path(_pop_value(remaining, option))
         elif option == "--key-hex":
             key_hex = _pop_value(remaining, option)
+        elif option == "--key-env":
+            key_env = _pop_value(remaining, option)
         elif option == "--key-id":
             key_id = _pop_value(remaining, option)
         elif option == "--unsigned":
@@ -160,6 +196,7 @@ def _parse_args(args: Sequence[str]) -> _CliOptions:
         profiles_dir=profiles_dir,
         output=output,
         key_hex=key_hex,
+        key_env=key_env,
         key_id=key_id,
         unsigned=unsigned,
         overwrite=overwrite,
@@ -170,29 +207,96 @@ def _parse_args(args: Sequence[str]) -> _CliOptions:
 def _validate(options: _CliOptions) -> None:
     """Cross-field semantic validation. Raises :class:`ValueError` on failure."""
 
-    has_key = options.key_hex is not None
+    has_hex = options.key_hex is not None
+    has_env = options.key_env is not None
+    has_key = has_hex or has_env
     has_key_id = options.key_id is not None
 
+    if has_hex and has_env:
+        raise ValueError(
+            "--key-hex and --key-env are mutually exclusive. Pick one channel "
+            "for the signing key (prefer --key-env for security — SX2)."
+        )
     if has_key and options.unsigned:
-        raise ValueError("--key-hex and --unsigned are mutually exclusive")
+        raise ValueError(
+            "--key-hex/--key-env and --unsigned are mutually exclusive — "
+            "a key flag implies a signed export"
+        )
     if has_key and not has_key_id:
-        raise ValueError("--key-id is required when --key-hex is provided")
+        raise ValueError("--key-id is required when --key-hex/--key-env is provided")
     if has_key_id and not has_key:
-        raise ValueError("--key-hex is required when --key-id is provided")
+        raise ValueError("--key-hex or --key-env is required when --key-id is provided")
     if not has_key and not options.unsigned:
         raise ValueError(
-            "must explicitly choose --key-hex/--key-id (signed) "
-            "or --unsigned — no silent default"
+            "must explicitly choose --key-env/--key-id (preferred), "
+            "--key-hex/--key-id (deprecated — SX2), or --unsigned "
+            "— no silent default"
         )
 
 
-def _decode_key(key_hex: str) -> bytes:
-    """Decode a hex-encoded signing key or raise ``ValueError`` on bad input."""
+def _resolve_key_hex(options: _CliOptions) -> str:
+    """Return the hex-encoded key for ``options``.
+
+    Reads from ``--key-env`` (preferred) or ``--key-hex`` (deprecated).
+    The two are mutually exclusive at the validation layer, so exactly
+    one channel is set when this function runs.
+
+    The ``--key-hex`` path emits a structured deprecation log event
+    so operators can spot environments still leaking keys via
+    ``/proc/<pid>/cmdline``. The fix: switch the caller to
+    ``--key-env RYTM_RAND_KEY_HEX`` and set the env var instead.
+
+    Raises ``ValueError`` if ``--key-env`` names an env var that is
+    unset or empty — without that check the operator gets a confusing
+    "key is empty hex" error one layer down.
+    """
+
+    if options.key_env is not None:
+        # ``--key-env`` is the secure path — value lives in the
+        # process environ, not argv, so /proc/<pid>/cmdline doesn't
+        # leak it.
+        raw = os.environ.get(options.key_env)
+        if raw is None or raw == "":
+            raise ValueError(
+                f"--key-env {options.key_env!r} names an env var that is "
+                "unset or empty. Set the env var to the hex-encoded key "
+                "before invoking the export command."
+            )
+        return raw
+    # ``--key-hex`` path — log a deprecation warning so operators can
+    # find argv-leak invocations in shipped log streams. The key bytes
+    # themselves are NEVER logged (only the deprecation marker).
+    _logger.warning(
+        _KEY_HEX_DEPRECATION_LOG_EVENT,
+        extra={
+            "channel": "argv",
+            "recommendation": "use --key-env <ENV_VAR_NAME> instead",
+            "vulnerability": "SX2",
+        },
+    )
+    # ``--key-hex`` must be set here per the _validate XOR contract.
+    # Belt-and-braces: if a future refactor breaks the invariant, fail
+    # loud with a recognisable message rather than returning ``None``.
+    if options.key_hex is None:  # pragma: no cover - validator contract
+        raise ValueError(
+            "_resolve_key_hex called with neither --key-env nor --key-hex set "
+            "(validator contract broken — fix _validate)"
+        )
+    return options.key_hex
+
+
+def _decode_key(key_hex: str, *, source: str) -> bytes:
+    """Decode a hex-encoded signing key or raise ``ValueError`` on bad input.
+
+    ``source`` is a short label such as ``"--key-env <NAME>"`` or
+    ``"--key-hex"`` used in the error message so the operator knows
+    which channel produced the bad hex.
+    """
 
     try:
         return bytes.fromhex(key_hex)
     except ValueError as exc:
-        raise ValueError(f"--key-hex is invalid hex: {exc}") from exc
+        raise ValueError(f"{source} is invalid hex: {exc}") from exc
 
 
 def _verification_to_dict(*, blob: bytes, signed: bool, key: bytes | None) -> dict[str, object]:
@@ -354,8 +458,14 @@ def handle_export_profile_model(args: Sequence[str]) -> int:
         _validate(options)
 
         key_bytes: bytes | None = None
-        if options.key_hex is not None and options.key_id is not None:
-            key_bytes = _decode_key(options.key_hex)
+        if (options.key_hex is not None or options.key_env is not None) and (
+            options.key_id is not None
+        ):
+            key_hex = _resolve_key_hex(options)
+            source = (
+                f"--key-env {options.key_env!r}" if options.key_env is not None else "--key-hex"
+            )
+            key_bytes = _decode_key(key_hex, source=source)
 
         # Local import keeps the cockpit-data import out of the hot path
         # for ``--help`` and parse-failure invocations.
