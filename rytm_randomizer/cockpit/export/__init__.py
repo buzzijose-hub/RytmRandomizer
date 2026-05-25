@@ -16,6 +16,15 @@ The on-disk shape is intentionally tiny (typical profile < 100 KB), versioned
 fields don't break old loaders), and language-agnostic (MessagePack has
 implementations in C, Rust, Python, JavaScript) so the GUI-produced model
 runs identically on the embedded firmware.
+
+The package ``__all__`` is intentionally narrow: it lists only the
+consumer-facing surface (the WS handlers, the CLI dispatcher, the
+rehearsal report, and the architecture / integration test suite).
+Implementation-detail names (atomic-writer helpers, default-export
+subdir constant, internal dataclasses) remain reachable via the
+submodule path — ``cockpit.export.writer.atomic_write`` etc. — but are
+deliberately omitted here so future readers see the genuine public
+contract at a glance.
 """
 
 from __future__ import annotations
@@ -33,44 +42,25 @@ from .model_format import (
 from .serialize import pack_profile_model, unpack_profile_model
 from .signing import (
     SIGNATURE_ALGO_HMAC_SHA256,
-    SIGNATURE_FORMAT_VERSION,
     SIGNATURE_HEADER_MAGIC,
-    SignedBlob,
     pack_signed,
     sign_profile_blob,
     signed_envelope_overhead_bytes,
     unpack_signed,
 )
 from .verifier import (
-    VerificationResult,
     verify_signed_blob,
     verify_unsigned_payload,
-)
-from .writer import (
-    DEFAULT_EXPORT_SUBDIR,
-    WriteError,
-    WriteResult,
-    atomic_write,
-    default_export_dir,
-    write_signed_export,
 )
 
 __all__ = [
     "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
-    "DEFAULT_EXPORT_SUBDIR",
     "FORMAT_VERSION",
     "Header",
     "MAGIC",
     "SIGNATURE_ALGO_HMAC_SHA256",
-    "SIGNATURE_FORMAT_VERSION",
     "SIGNATURE_HEADER_MAGIC",
     "SUPPORTED_FORMAT_VERSIONS",
-    "SignedBlob",
-    "VerificationResult",
-    "WriteError",
-    "WriteResult",
-    "atomic_write",
-    "default_export_dir",
     "handle_export_profile_model",
     "pack_profile_model",
     "pack_signed",
@@ -80,5 +70,4 @@ __all__ = [
     "unpack_signed",
     "verify_signed_blob",
     "verify_unsigned_payload",
-    "write_signed_export",
 ]

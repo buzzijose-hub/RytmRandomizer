@@ -592,10 +592,7 @@ def format_preview_command_report(command_key):
             "RytmRandomizer passive command preview",
             f"Command: {command}",
             "Found: False",
-            (
-                "Message: Command preview not found. No MIDI was sent. "
-                "No command executed. No hardware was mutated."
-            ),
+            "Message: Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
             f"Safety summary: {report['safety_summary']}",
         ]
 
@@ -639,10 +636,7 @@ def format_preview_scene_report(scene_key):
             "RytmRandomizer passive scene preview",
             f"Scene: {key}",
             "Found: False",
-            (
-                "Message: Scene preview not found. No MIDI was sent. "
-                "No scene executed. No command executed. No hardware was mutated."
-            ),
+            "Message: Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.",
         ]
 
     metadata = report["metadata"]
@@ -684,10 +678,7 @@ def format_preview_group_profile_report(profile_key):
             "RytmRandomizer passive group profile preview",
             f"Group profile: {key}",
             "Found: False",
-            (
-                "Message: Group profile preview not found. No MIDI was sent. "
-                "No command executed. No hardware was mutated."
-            ),
+            "Message: Group profile preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
         ]
 
     metadata = report["metadata"]
@@ -787,8 +778,7 @@ def main(argv=None):
     if args and args[0] == "dual-machine-target-report":
         if len(args) != 2:
             sys.stderr.write(
-                "Usage: python -m rytm_randomizer.cli "
-                "dual-machine-target-report <rytm|a4|both>\n"
+                "Usage: python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>\n"
             )
             return 2
 

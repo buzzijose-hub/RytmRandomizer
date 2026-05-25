@@ -104,10 +104,9 @@ class WriteError(DataError, OSError):
       (``tests/architecture/test_observability.py``) recognises the
       raise as a taxonomy member.
 
-    Mirrors :class:`rytm_randomizer.cockpit.wizard.errors.WizardSourcePathError`
-    (``DataError`` + :class:`FileNotFoundError`) and
-    :class:`rytm_randomizer.cockpit.wizard.builder.EmptyAnalysisError`
-    (``DataError`` + :class:`ValueError`).
+    Mirrors the multi-inheritance pattern used by :mod:`.signing` for
+    its own ``DataError``-tagged failures (the primary consumer of this
+    writer).
     """
 
     fingerprint: ClassVar[str] = "export.write.failed"

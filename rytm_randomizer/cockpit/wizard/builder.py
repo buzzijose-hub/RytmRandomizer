@@ -170,7 +170,9 @@ def build_profile(
         EmptyAnalysisError: If no job in ``jobs`` has ``status == "ok"``.
     """
 
-    del description  # accepted for API symmetry; no ProfileModel field today.
+    # ``description`` is intentionally unused today -- accepted for API symmetry
+    # with the wizard handler and forward compatibility when a description
+    # field lands on :class:`ProfileModel`. See the docstring above.
 
     ok_jobs = tuple(job for job in jobs if job.status == _OK_STATUS)
     if not ok_jobs:

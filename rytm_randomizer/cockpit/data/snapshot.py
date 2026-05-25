@@ -91,15 +91,15 @@ class PadState:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: PadStateDict) -> Self:
         """Restore from a dict produced by :meth:`to_dict` (or a JSON load)."""
 
         params_obj = data["params"]
         if not isinstance(params_obj, Mapping):
             raise TypeError(f"params must be a Mapping; got {type(params_obj).__name__}")
         return cls(
-            pad_id=int(data["pad_id"]),  # type: ignore[arg-type]
-            machine=str(data["machine"]),
+            pad_id=data["pad_id"],
+            machine=data["machine"],
             params={str(k): int(v) for k, v in params_obj.items()},
         )
 
@@ -148,7 +148,7 @@ class Snapshot:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: SnapshotDict) -> Self:
         """Restore from a dict produced by :meth:`to_dict`."""
 
         pads_obj = data["pads"]
@@ -158,12 +158,12 @@ class Snapshot:
         scene_slot_obj = data["scene_slot"]
         bpm_obj = data["bpm"]
         return cls(
-            snapshot_id=str(data["snapshot_id"]),
-            device=str(data["device"]),
-            captured_at=datetime.fromisoformat(str(data["captured_at"])),
+            snapshot_id=data["snapshot_id"],
+            device=data["device"],
+            captured_at=datetime.fromisoformat(data["captured_at"]),
             pads=pads,
-            scene_slot=None if scene_slot_obj is None else str(scene_slot_obj),
-            bpm=None if bpm_obj is None else float(bpm_obj),  # type: ignore[arg-type]
+            scene_slot=scene_slot_obj,
+            bpm=bpm_obj,
         )
 
 

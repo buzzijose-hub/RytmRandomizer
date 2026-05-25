@@ -244,7 +244,7 @@ def _build_profile_changed(profile: Any) -> dict:
 # ---------------------------------------------------------------------------
 
 
-async def _handle_wizard_start(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_start(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Begin a fresh wizard session and attach it to ``session.active_wizard``.
 
     Replaces any in-flight wizard wholesale -- the previous session is
@@ -258,7 +258,6 @@ async def _handle_wizard_start(cmd: dict, session: CockpitSession) -> HandlerRes
     silently destroying minutes of work.
     """
 
-    del cmd
     wizard_id = new_ulid()
     state = WizardState.empty(wizard_id)
     previous = session.active_wizard
@@ -480,7 +479,7 @@ async def _handle_wizard_remove_source(cmd: dict, session: CockpitSession) -> Ha
     )
 
 
-async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_analyze(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Run the analyzer across every source; emit ``analysis_progress`` per job.
 
     Per-job lifecycle: ``pending`` → ``analyzing`` (progress=0.0, traits=())
@@ -495,7 +494,6 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
     while a long analysis is in flight.
     """
 
-    del cmd
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
@@ -559,10 +557,9 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
     return HandlerResult(ack={"ok": True}, events=events)
 
 
-async def _handle_wizard_review(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_review(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Build the candidate :class:`ProfileModel` from OK jobs + store it on the state."""
 
-    del cmd
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
@@ -578,7 +575,7 @@ async def _handle_wizard_review(cmd: dict, session: CockpitSession) -> HandlerRe
     )
 
 
-async def _handle_wizard_save(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_save(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Persist the candidate profile via :meth:`ProfileRegistry.save`.
 
     Emits both :data:`EVENT_PROFILE_CREATED` (wizard-specific) AND
@@ -590,7 +587,6 @@ async def _handle_wizard_save(cmd: dict, session: CockpitSession) -> HandlerResu
     a clean slate.
     """
 
-    del cmd
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
@@ -610,7 +606,7 @@ async def _handle_wizard_save(cmd: dict, session: CockpitSession) -> HandlerResu
     )
 
 
-async def _handle_wizard_cancel(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_cancel(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Drop the in-flight wizard session.
 
     Idempotent: cancelling when no wizard is active still returns
@@ -618,7 +614,6 @@ async def _handle_wizard_cancel(cmd: dict, session: CockpitSession) -> HandlerRe
     which is true either way.
     """
 
-    del cmd
     session.active_wizard = None
     return HandlerResult(ack={"ok": True})
 

@@ -9,7 +9,6 @@ packets and readiness metadata; it does not open MIDI ports or touch hardware.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Literal, Self, TypedDict, cast
 
@@ -140,13 +139,13 @@ class SendPlanPacket:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: SendPlanPacketDict) -> Self:
         return cls(
-            pad_id=int(data["pad_id"]),
-            parameter=str(data["parameter"]),
-            channel=int(data["channel"]),
-            control=int(data["control"]),
-            value=int(data["value"]),
+            pad_id=data["pad_id"],
+            parameter=data["parameter"],
+            channel=data["channel"],
+            control=data["control"],
+            value=data["value"],
         )
 
 
@@ -217,7 +216,7 @@ class CockpitSendPlan:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: CockpitSendPlanDict) -> Self:
         packets_obj = data["packets"]
         locked_obj = data["locked_pad_ids"]
         blocked_obj = data["blocked_reasons"]
@@ -235,7 +234,7 @@ class CockpitSendPlan:
         # ``test_send_plan_rejects_unknown_status_and_reasons`` regex can match
         # on the wire field name.
         try:
-            safety_status = narrow_status(str(data["safety_status"]))
+            safety_status = narrow_status(data["safety_status"])
         except ValueError as exc:
             raise ValueError(f"invalid safety_status: {exc}") from exc
         # ``blocked_reasons`` is deliberately NOT narrowed element-wise here:
@@ -251,12 +250,12 @@ class CockpitSendPlan:
             tuple(str(reason) for reason in blocked_obj),
         )
         return cls(
-            plan_id=str(data["plan_id"]),
-            candidate_id=str(data["candidate_id"]),
-            source_snapshot_id=str(data["source_snapshot_id"]),
-            profile_id=str(data["profile_id"]),
-            ready=bool(data["ready"]),
-            readiness_reason=narrow_readiness_reason(str(data["readiness_reason"])),
+            plan_id=data["plan_id"],
+            candidate_id=data["candidate_id"],
+            source_snapshot_id=data["source_snapshot_id"],
+            profile_id=data["profile_id"],
+            ready=data["ready"],
+            readiness_reason=narrow_readiness_reason(data["readiness_reason"]),
             safety_status=safety_status,
             packets=tuple(SendPlanPacket.from_dict(packet) for packet in packets_obj),
             locked_pad_ids=frozenset(int(pad_id) for pad_id in locked_obj),

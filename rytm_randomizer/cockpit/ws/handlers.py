@@ -60,6 +60,7 @@ from __future__ import annotations
 import base64
 import json
 import time
+from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any, Final, Protocol, runtime_checkable
@@ -241,6 +242,33 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
 # ---------------------------------------------------------------------------
 
 
+# Bounded LRU memoization for :func:`_recompute_candidate` (CODE_REVIEW.md
+# M12). ``mutate(snapshot, profile, depth, seed)`` is a pure function (modulo
+# the fresh ``candidate_id`` ULID), so identical four-input tuples produce
+# semantically identical candidates. The cockpit UI repeatedly recomputes
+# the same candidate during toggle_preview / regen / set_pad_lock churn
+# while the operator is still iterating on the same (snapshot, profile,
+# depth, seed) tuple — caching elides the redundant ``mutate`` calls
+# entirely.
+#
+# Key: ``(snapshot_id, profile_id, depth, seed)``. The snapshot id changes
+# every time the device captures a new snapshot, and the profile id is the
+# ULID of the active profile, so two cache keys can only collide when the
+# operator is genuinely asking for the same candidate. ``depth`` is a
+# float; equality on the snapped slider values (0.10..0.90 step 0.01) is
+# exact under IEEE-754 because the UI emits floats with at most two
+# fractional decimal digits — but to be safe the cache lookup falls back
+# to the engine on any miss.
+#
+# Size: 16 entries is small enough that the cache occupies trivial memory
+# (~16 ``MutationCandidate`` instances per session) and large enough to
+# absorb the common "regen this depth a few times, then nudge depth, then
+# regen a few more" iteration pattern operators show in the v10 UX
+# mockups.
+_RECOMPUTE_CACHE_MAXSIZE: Final[int] = 16
+_recompute_cache: OrderedDict[tuple[str, str, float, int], MutationCandidate] = OrderedDict()
+
+
 def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
     """Recompute and store the current candidate, or ``None`` if not ready.
 
@@ -248,13 +276,35 @@ def _recompute_candidate(session: CockpitSession) -> MutationCandidate | None:
     With no active profile, we clear ``current_candidate`` to ``None`` and
     return ``None`` — the UI then sees an empty ghost overlay even with
     the preview toggle on.
+
+    Memoized via :data:`_recompute_cache` (a bounded LRU keyed on the four
+    pure inputs ``(snapshot_id, profile_id, depth, seed)``) so toggling
+    preview / locking a pad / regenerating with unchanged depth + seed
+    returns the prior candidate without re-running :func:`mutate`. The
+    cache survives across handler invocations within a single Python
+    process — the cockpit session is one process — and is bounded at
+    :data:`_RECOMPUTE_CACHE_MAXSIZE` entries so it cannot grow unbounded
+    if the operator churns through many depth values.
     """
 
     if session.active_profile is None:
         session.current_candidate = None
         return None
     snapshot = session.device.capture_snapshot()
+    key = (snapshot.snapshot_id, session.active_profile.profile_id, session.depth, session.seed)
+    cached = _recompute_cache.get(key)
+    if cached is not None:
+        # LRU touch — re-insert moves the key to the most-recent end.
+        _recompute_cache.move_to_end(key)
+        session.current_candidate = cached
+        return cached
     candidate = mutate(snapshot, session.active_profile, session.depth, session.seed)
+    _recompute_cache[key] = candidate
+    # Evict the least-recently-used entry once over capacity. ``popitem
+    # (last=False)`` removes the front (oldest) entry; with the touch
+    # above this is the classic OrderedDict-as-LRU pattern.
+    if len(_recompute_cache) > _RECOMPUTE_CACHE_MAXSIZE:
+        _recompute_cache.popitem(last=False)
     session.current_candidate = candidate
     return candidate
 
@@ -424,8 +474,8 @@ async def _handle_toggle_preview(cmd: dict, session: CockpitSession) -> HandlerR
     )
 
 
-async def _handle_regen(cmd: dict, session: CockpitSession) -> HandlerResult:
-    del cmd  # regen has no body fields
+async def _handle_regen(_cmd: dict, session: CockpitSession) -> HandlerResult:
+    # regen has no body fields
     if session.active_profile is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no active profile; select one before regen")
@@ -447,8 +497,7 @@ async def _handle_regen(cmd: dict, session: CockpitSession) -> HandlerResult:
     )
 
 
-async def _handle_prepare_send_plan(cmd: dict, session: CockpitSession) -> HandlerResult:
-    del cmd
+async def _handle_prepare_send_plan(_cmd: dict, session: CockpitSession) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -472,8 +521,7 @@ async def _handle_prepare_send_plan(cmd: dict, session: CockpitSession) -> Handl
     )
 
 
-async def _handle_send(cmd: dict, session: CockpitSession) -> HandlerResult:
-    del cmd
+async def _handle_send(_cmd: dict, session: CockpitSession) -> HandlerResult:
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -577,8 +625,7 @@ async def _handle_load_snapshot(cmd: dict, session: CockpitSession) -> HandlerRe
     )
 
 
-async def _handle_undo(cmd: dict, session: CockpitSession) -> HandlerResult:
-    del cmd
+async def _handle_undo(_cmd: dict, session: CockpitSession) -> HandlerResult:
     if not session.history_store.can_undo:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "nothing to undo"))
     history = session.history_store.undo()
@@ -617,10 +664,9 @@ async def _handle_export_profile_model(cmd: dict, session: CockpitSession) -> Ha
 # Dispatcher — the single public entry point exported to server.py.
 # ---------------------------------------------------------------------------
 
-_HANDLERS: dict[
-    str,
-    Callable[[dict, CockpitSession], Awaitable[HandlerResult]],
-] = {
+HandlerFn = Callable[[dict, CockpitSession], Awaitable[HandlerResult]]
+
+_CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_SELECT_PROFILE: _handle_select_profile,
     COMMAND_SET_DEPTH: _handle_set_depth,
     COMMAND_SET_PAD_LOCK: _handle_set_pad_lock,
@@ -633,6 +679,39 @@ _HANDLERS: dict[
     COMMAND_UNDO: _handle_undo,
     COMMAND_EXPORT_PROFILE_MODEL: _handle_export_profile_model,
 }
+
+#: Backwards-compatibility alias for the legacy ``_HANDLERS`` symbol some
+#: tests may import directly. IH5 renamed the core table to
+#: :data:`_CORE_HANDLERS` so the registry-of-registries naming reads
+#: clearly alongside :func:`_resolve_handler`. Kept as a thin alias rather
+#: than dropped wholesale so the rename does not snag downstream importers.
+_HANDLERS = _CORE_HANDLERS
+
+
+def _resolve_handler(cmd_type: str) -> HandlerFn | None:
+    """Resolve a command type to its handler, preserving wizard lazy-load.
+
+    IH5: the dispatcher previously hand-branched on
+    ``cmd_type.startswith("wizard_")`` to pick between two dispatch
+    tables. This helper centralises that decision so :func:`handle_command`
+    does a single registry lookup. The wizard module is still imported
+    lazily -- only when a ``wizard_*`` command actually lands -- so the
+    cockpit boot path that never touches the wizard still does not pay
+    the wizard's import cost.
+
+    Returns ``None`` when no handler is registered for ``cmd_type``; the
+    dispatcher converts that into an ``ERR_UNKNOWN_COMMAND`` ack.
+    """
+
+    if cmd_type in _CORE_HANDLERS:
+        return _CORE_HANDLERS[cmd_type]
+    if cmd_type.startswith("wizard_"):
+        # Lazy import keeps the wizard dispatcher table out of the import
+        # graph of cockpit boot paths that never touch the wizard.
+        from .wizard_handlers import WIZARD_HANDLERS  # noqa: PLC0415
+
+        return WIZARD_HANDLERS.get(cmd_type)
+    return None
 
 
 async def handle_command(envelope: dict, session: CockpitSession) -> dict:
@@ -722,15 +801,13 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
                 f"envelope missing required key: {missing_key!r}",
             ),
         }
-    if isinstance(cmd_type, str) and cmd_type.startswith("wizard_"):
-        # Delegate the wizard-namespaced commands to the wizard surface.
-        # Lazy-import keeps the wizard dispatcher table out of the import
-        # graph of cockpit boot paths that never touch the wizard.
-        from .wizard_handlers import WIZARD_HANDLERS
-
-        handler = WIZARD_HANDLERS.get(cmd_type)
-    else:
-        handler = _HANDLERS.get(cmd_type)
+    # IH5: single dispatch surface via :func:`_resolve_handler` --
+    # collapses the prior inline ``cmd_type.startswith("wizard_")``
+    # branch into one registry-of-registries lookup. The wizard table is
+    # still imported lazily inside :func:`_resolve_handler` so cockpit
+    # boot paths that never touch a ``wizard_*`` command do not pay the
+    # wizard's import cost.
+    handler = _resolve_handler(cmd_type) if isinstance(cmd_type, str) else None
     # OBS O2 — bucket label for the RED counters. Use the actual cmd_type
     # if it's a string; non-string types collapse to the same "<unknown>"
     # label the operation span uses, so the operator sees one consistent

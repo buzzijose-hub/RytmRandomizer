@@ -301,6 +301,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             path,
             type(exc).__name__,
             exc,
+            extra={"event": "profile_registry.file_read.permission_denied"},
         )
         raise ProfileRegistryAccessError(f"permission denied reading {path}") from exc
     except FileNotFoundError as exc:
@@ -312,6 +313,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             path,
             type(exc).__name__,
             exc,
+            extra={"event": "profile_registry.file_read.vanished"},
         )
         return None
     except OSError as exc:
@@ -327,6 +329,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
                 path,
                 type(exc).__name__,
                 exc.errno,
+                extra={"event": "profile_registry.file_read.permission_denied"},
             )
             raise ProfileRegistryAccessError(f"permission denied reading {path}") from exc
         _logger.warning(
@@ -334,6 +337,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             path,
             type(exc).__name__,
             exc,
+            extra={"event": "profile_registry.file_read.os_error"},
         )
         return None
     except json.JSONDecodeError as exc:
@@ -342,6 +346,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             path,
             type(exc).__name__,
             exc,
+            extra={"event": "profile_registry.file_parse.malformed_json"},
         )
         return None
     if not isinstance(data, dict):
@@ -349,6 +354,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             "Skipping profile file %s: top-level JSON must be an object, got %s",
             path,
             type(data).__name__,
+            extra={"event": "profile_registry.file_parse.non_object_root"},
         )
         return None
     try:
@@ -359,6 +365,7 @@ def _safe_load_profile(path: Path) -> ProfileModel | None:
             path,
             type(exc).__name__,
             exc,
+            extra={"event": "profile_registry.file_parse.invalid_profile"},
         )
         return None
 

@@ -132,6 +132,41 @@ def test_mutate_copies_snapshot_id_and_profile_id() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Output pad_delta ordering — pins the engine's "defensive sort" invariant
+# (mutate.py line 196-199). CODE_REVIEW.md P6.
+# ---------------------------------------------------------------------------
+
+
+def test_mutate_emits_pad_deltas_sorted_by_pad_id() -> None:
+    """``mutate`` MUST emit ``pad_deltas`` sorted ascending by ``pad_id``.
+
+    The engine iterates ``sorted(snapshot.pads, key=lambda p: p.pad_id)``
+    so downstream consumers (the WS event serializer, the C port, the
+    parity capture) can rely on a stable, pad-id-ordered output regardless
+    of any future relaxation in the :class:`Snapshot` constructor's
+    ascending-order invariant. Today the constructor enforces it; if a
+    refactor ever loosens that contract the defensive sort still holds
+    here. This test pins that contract on the output side.
+
+    Three pads with non-adjacent pad_ids (1, 3, 7) exercise more than two
+    elements so a "preserved insertion order" implementation would fail
+    on the same fixture if the constructor were changed.
+    """
+
+    pads = (
+        PadState(pad_id=1, machine="bd", params={"k": 64}),
+        PadState(pad_id=3, machine="sd", params={"k": 64}),
+        PadState(pad_id=7, machine="ch", params={"k": 64}),
+    )
+    snap = _snapshot(pads=pads)
+    prof = _profile()
+    c = mutate(snap, prof, depth=0.5, seed=42)
+    pad_ids = [pd.pad_id for pd in c.pad_deltas]
+    assert pad_ids == sorted(pad_ids), f"pad_deltas not sorted by pad_id: {pad_ids}"
+    assert pad_ids == [1, 3, 7]
+
+
+# ---------------------------------------------------------------------------
 # Variance — different seeds must produce different outputs
 # ---------------------------------------------------------------------------
 

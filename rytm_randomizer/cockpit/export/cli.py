@@ -1,5 +1,8 @@
 """End-to-end export CLI for cockpit ``ProfileModel`` artifacts.
 
+WHAT
+====
+
 Drives the full pack → (optional sign) → atomic write → verify pipeline
 behind a single passive subcommand::
 
@@ -10,27 +13,29 @@ behind a single passive subcommand::
         [--key-hex <hexkey> --key-id <label>] \\
         [--unsigned] [--overwrite] [--json]
 
-The flow on success:
+The success flow is:
 
-1. Load the ``ProfileModel`` from ``ProfileRegistry(profiles_dir).get(profile_id)``.
+1. Load the ``ProfileModel`` from
+   ``ProfileRegistry(profiles_dir).get(profile_id)``.
 2. Pack it via :func:`pack_profile_model`.
-3. If signing is requested, :func:`sign_profile_blob` + :func:`pack_signed`
-   the payload; otherwise emit the raw ``RYMP`` blob.
+3. If signing is requested, :func:`sign_profile_blob` +
+   :func:`pack_signed` the payload; otherwise emit the raw ``RYMP``
+   blob.
 4. :func:`atomic_write` the envelope to ``output``.
-5. Read the bytes back and :func:`verify_signed_blob` them — this is the
-   post-write integrity check operators rely on.
+5. Read the bytes back and :func:`verify_signed_blob` them.
 6. Emit a structured ack (JSON if ``--json``, otherwise text).
 
-Key-material delivery (CODE_REVIEW.md SX2)
-------------------------------------------
+WHY
+===
 
-The signing key is hex-encoded bytes. Two channels are accepted:
+The key-material delivery split (``--key-env`` vs ``--key-hex``) closes
+a specific local-user secret-exfiltration class:
 
-* **``--key-env <ENV_VAR_NAME>``** — the RECOMMENDED path. The CLI reads
-  the named env var and uses its value as the key hex. The env var
-  contents NEVER appear in ``/proc/<pid>/cmdline``, so a second local
-  user cannot capture the key by listing processes. CI/Tauri/shell
-  invocations should always use this path.
+* **``--key-env <ENV_VAR_NAME>``** — the RECOMMENDED path. The CLI
+  reads the named env var and uses its value as the key hex. The env
+  var contents NEVER appear in ``/proc/<pid>/cmdline``, so a second
+  local user cannot capture the key by listing processes.
+  CI/Tauri/shell invocations should always use this path.
 * **``--key-hex <hex>``** — DEPRECATED (kept for backward compat). The
   key hex appears verbatim in ``/proc/<pid>/cmdline`` on Linux/macOS
   and in ``Get-Process`` output on Windows for the brief window the
@@ -40,6 +45,11 @@ The signing key is hex-encoded bytes. Two channels are accepted:
 
 The two are mutually exclusive — passing both raises a validation
 error rather than silently picking one.
+
+The post-write verify step (5 above) closes a second bug class:
+on-disk corruption / partial-write / mis-signed envelopes are caught
+inside the CLI run rather than at first-import time by the consumer
+loading the artifact.
 
 Validation rules (every failure produces ``ok=False`` and a non-zero exit
 code — no exceptions ever escape the handler):
@@ -54,10 +64,26 @@ code — no exceptions ever escape the handler):
 * ``--profile-id`` not in registry: reported with the offending id.
 * Missing required value for any option: usage hint.
 
-The signing surface comes from sibling modules (``signing``, ``verifier``);
-the atomic-write surface comes from sibling :mod:`.writer` (a hard import:
-if the writer module is missing the import fails loudly at module load
-rather than silently swapping in a behavioural near-duplicate).
+The signing surface comes from sibling modules (``signing``,
+``verifier``); the atomic-write surface comes from sibling
+:mod:`.writer` (a hard import: if the writer module is missing the
+import fails loudly at module load rather than silently swapping in a
+behavioural near-duplicate).
+
+REFERENCES
+==========
+
+* ``rytm_randomizer/cockpit/export/serialize.py`` — :func:`pack_profile_model`.
+* ``rytm_randomizer/cockpit/export/signing.py`` — :func:`sign_profile_blob` /
+  :func:`pack_signed`.
+* ``rytm_randomizer/cockpit/export/verifier.py`` — :func:`verify_signed_blob`.
+* ``rytm_randomizer/cockpit/export/writer.py`` — :func:`atomic_write`.
+* CODE_REVIEW.md SX2 — the local-user secret-exfiltration finding behind
+  the ``--key-env`` vs ``--key-hex`` split.
+* CODE_REVIEW.md Gate 17 — the hard-import-or-fail rule behind the
+  unconditional ``from .writer import ...`` above.
+* CODE_REVIEW.md P7 — the docstring-reorder finding behind this header
+  structure.
 """
 
 from __future__ import annotations
@@ -96,7 +122,11 @@ loggers) can wire their structured events without touching this file's
 imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _COMMAND_NAME: Final[str] = "cockpit-export-profile-model"
-"""Subcommand token registered with the cli dispatcher."""
+"""Subcommand token registered with the cli dispatcher.
+
+This constant is the source of truth for the subcommand name; the
+module docstring above mirrors the literal in its operator-facing
+usage examples. Keep them in sync when renaming."""
 
 _USAGE: Final[str] = (
     f"{_COMMAND_NAME} usage: "

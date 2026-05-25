@@ -199,14 +199,14 @@ class InspirationSource:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: InspirationSourceDict) -> Self:
         return cls(
-            source_id=str(data["source_id"]),
-            kind=narrow_kind(str(data["kind"])),
-            mode=narrow_mode(str(data["mode"])),
-            location=str(data["location"]),
-            display_name=str(data["display_name"]),
-            added_at=datetime.fromisoformat(str(data["added_at"])),
+            source_id=data["source_id"],
+            kind=narrow_kind(data["kind"]),
+            mode=narrow_mode(data["mode"]),
+            location=data["location"],
+            display_name=data["display_name"],
+            added_at=datetime.fromisoformat(data["added_at"]),
         )
 
 
@@ -253,7 +253,7 @@ class AnalysisJob:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: AnalysisJobDict) -> Self:
         traits_obj = data["extracted_traits"]
         if not isinstance(traits_obj, (list, tuple)):
             raise TypeError(
@@ -261,10 +261,10 @@ class AnalysisJob:
             )
         error_obj = data["error"]
         return cls(
-            source_id=str(data["source_id"]),
-            status=narrow_status(str(data["status"])),
-            progress=float(data["progress"]),  # type: ignore[arg-type]
-            error=None if error_obj is None else str(error_obj),
+            source_id=data["source_id"],
+            status=narrow_status(data["status"]),
+            progress=data["progress"],
+            error=error_obj,
             extracted_traits=tuple(StyleTrait.from_dict(t) for t in traits_obj),
         )
 
@@ -439,7 +439,7 @@ class WizardState:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: WizardStateDict) -> Self:
         sources_obj = data["sources"]
         jobs_obj = data["jobs"]
         if not isinstance(sources_obj, (list, tuple)):
@@ -459,10 +459,10 @@ class WizardState:
                 f"got {type(candidate_obj).__name__}"
             )
         return cls(
-            wizard_id=str(data["wizard_id"]),
-            step=narrow_step(str(data["step"])),
-            name=None if name_obj is None else str(name_obj),
-            description=None if description_obj is None else str(description_obj),
+            wizard_id=data["wizard_id"],
+            step=narrow_step(data["step"]),
+            name=name_obj,
+            description=description_obj,
             sources=tuple(InspirationSource.from_dict(s) for s in sources_obj),
             jobs=tuple(AnalysisJob.from_dict(j) for j in jobs_obj),
             candidate_profile=candidate_profile,
