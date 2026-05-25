@@ -641,7 +641,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/rytm_style_mutation_mock_preview.py",
             "rytm_randomizer/reports/rytm_style_mutation_render_plan.py",
             "rytm_randomizer/reports/rytm_style_snapshot_routing.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
         ),
         (
             "func",
@@ -769,7 +769,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/rytm_style_mutation_intent.py",
             "rytm_randomizer/reports/rytm_style_mutation_render_plan.py",
             "rytm_randomizer/reports/rytm_style_snapshot_routing.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/_helpers.py",
             "rytm_randomizer/reports/style_profiles.py",
         ),
         (
@@ -783,7 +783,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_stage_rehearsal_state.py",
             "rytm_randomizer/reports/live_stage_snapshot_routing.py",
             "rytm_randomizer/reports/live_transition_timeline.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/live_render_bundle.py",
         ),
         (
             "func",
@@ -894,7 +894,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_show_export.py",
             "rytm_randomizer/reports/live_stage_rehearsal_state.py",
             "rytm_randomizer/reports/live_stage_snapshot_routing.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/_helpers.py",
         ),
         (
             "func",
@@ -1019,7 +1019,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
         (
             "func",
             "_parse_no_args",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
             "rytm_randomizer/reports/style_profiles.py",
             "rytm_randomizer/reports/style_targets.py",
         ),
@@ -1063,7 +1063,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/rytm_style_mutation_mock_preview.py",
             "rytm_randomizer/reports/rytm_style_mutation_render_plan.py",
             "rytm_randomizer/reports/rytm_style_snapshot_routing.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
         ),
         (
             "func",
@@ -1089,12 +1089,12 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_stage_rehearsal_state.py",
             "rytm_randomizer/reports/live_stage_snapshot_routing.py",
             "rytm_randomizer/reports/live_transition_timeline.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
         ),
         (
             "func",
             "_parse_query",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
             "rytm_randomizer/reports/style_profiles.py",
         ),
         (
@@ -1168,7 +1168,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_stage_rehearsal_state.py",
             "rytm_randomizer/reports/live_stage_snapshot_routing.py",
             "rytm_randomizer/reports/live_transition_timeline.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
         ),
         (
             "func",
@@ -1181,7 +1181,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "_readiness_count",
             "rytm_randomizer/reports/dual_machine_style_live_audition.py",
             "rytm_randomizer/reports/dual_machine_style_performance_set_plan.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/readiness.py",
         ),
         (
             "func",
@@ -1209,7 +1209,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_set_cockpit.py",
             "rytm_randomizer/reports/live_stage_rehearsal_state.py",
             "rytm_randomizer/reports/live_stage_snapshot_routing.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/reference_match.py",
         ),
         (
             "func",
@@ -1345,7 +1345,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
         (
             "func",
             "_safety_lines",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/_helpers.py",
             "rytm_randomizer/reports/style_profiles.py",
             "rytm_randomizer/reports/style_targets.py",
         ),
@@ -1358,7 +1358,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
         (
             "func",
             "_search_text",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/_helpers.py",
             "rytm_randomizer/reports/style_profiles.py",
         ),
         (
@@ -1398,7 +1398,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_gui_rehearsal_session.py",
             "rytm_randomizer/reports/live_gui_screen_contract.py",
             "rytm_randomizer/reports/live_gui_sidecar_session.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/reference_match.py",
         ),
         (
             "func",
@@ -1421,13 +1421,13 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "func",
             "_stage_card_lines",
             "rytm_randomizer/reports/live_performance_runbook.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/live_cue_sheet.py",
         ),
         (
             "func",
             "_stage_packet_lines",
             "rytm_randomizer/reports/live_performance_runbook.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/live_cue_sheet.py",
         ),
         (
             "func",
@@ -1457,7 +1457,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/live_show_export.py",
             "rytm_randomizer/reports/live_stage_rehearsal_state.py",
             "rytm_randomizer/reports/live_stage_snapshot_routing.py",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/_helpers.py",
         ),
         (
             "func",
@@ -1550,7 +1550,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
         (
             "func",
             "_write_lines",
-            "rytm_randomizer/reports/style_performance_arcs.py",
+            "rytm_randomizer/reports/style_performance/cli.py",
             "rytm_randomizer/reports/style_profiles.py",
             "rytm_randomizer/reports/style_targets.py",
         ),
