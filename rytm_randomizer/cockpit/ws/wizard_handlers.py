@@ -139,21 +139,60 @@ async def _handle_wizard_start(cmd: dict, session: CockpitSession) -> HandlerRes
 
 
 async def _handle_wizard_set_metadata(cmd: dict, session: CockpitSession) -> HandlerResult:
-    """Apply ``name`` / ``description`` from the command body to the wizard state."""
+    """Apply ``name`` / ``description`` from the command body to the wizard state.
+
+    Wire semantics (three-state, per the C4 fix in CODE_REVIEW.md PR 1):
+
+    * key missing from ``cmd`` → leave the corresponding state field
+      unchanged (passes ``None`` to :meth:`WizardState.with_metadata`,
+      which documents ``None`` as "leave unchanged").
+    * key present with JSON ``null`` → clear the corresponding state
+      field (passes ``""`` to :meth:`WizardState.with_metadata`, which
+      documents ``""`` as "cleared").
+    * key present with a string value → set the corresponding state field
+      to that string verbatim.
+
+    The branch on ``"name" in cmd`` (and likewise ``"description"``) is
+    load-bearing: ``cmd.get("name")`` would collapse "missing" and
+    "explicit ``null``" into the same ``None``, re-introducing the
+    documented-contract inversion C4 was filed against.
+    """
 
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
-    name_raw = cmd.get("name")
-    description_raw = cmd.get("description")
-    name = None if name_raw is None else str(name_raw)
-    description = None if description_raw is None else str(description_raw)
+    name = _resolve_metadata_field(cmd, "name")
+    description = _resolve_metadata_field(cmd, "description")
     new_state = wizard.state.with_metadata(name=name, description=description)
     wizard.state = new_state
     return HandlerResult(
         ack={"ok": True, "state": new_state.to_dict()},
         events=[_build_wizard_state_changed(new_state)],
     )
+
+
+def _resolve_metadata_field(cmd: dict, key: str) -> str | None:
+    """Translate one wire-level ``set_metadata`` field into ``with_metadata`` input.
+
+    Three-state wire → two-sentinel pure helper:
+
+    * key missing → return ``None`` (``with_metadata`` reads ``None`` as
+      "leave unchanged").
+    * key present and ``None`` → return ``""`` (``with_metadata`` reads
+      ``""`` as "cleared").
+    * key present and any other value → return ``str(value)``.
+
+    Kept as a small named helper so the dispatcher stays readable and the
+    three-state mapping is asserted once in unit tests rather than
+    duplicated for ``name`` and ``description``.
+    """
+
+    if key not in cmd:
+        return None
+    raw = cmd[key]
+    if raw is None:
+        return ""
+    return str(raw)
 
 
 async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> HandlerResult:

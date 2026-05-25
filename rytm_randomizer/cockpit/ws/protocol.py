@@ -39,6 +39,62 @@ from typing import Final, Literal, TypedDict
 from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
 
 # ---------------------------------------------------------------------------
+# Handshake constants (the cockpit-WS C1/L8 hardening surface).
+#
+# A WebSocket connection on ``/ws`` is rejected before any cockpit command
+# fires unless the client (1) requests the pinned subprotocol so a stray
+# browser tab fails the handshake before our code runs, and (2) sends a
+# ``hello`` frame whose ``token`` matches the per-launch HMAC token loaded
+# by ``__main__.py``. The constants here are the wire-format authority for
+# both halves and are exported so the server, the tests, and any future
+# TypeScript client all agree on the exact strings.
+#
+# See CODE_REVIEW.md PR 1 (findings C1 + L8) for the threat model.
+# ---------------------------------------------------------------------------
+
+WS_SUBPROTOCOL: Final[Literal["rytm-rand-cockpit-v1"]] = "rytm-rand-cockpit-v1"
+"""The pinned WebSocket subprotocol name.
+
+Clients MUST request this subprotocol via the ``Sec-WebSocket-Protocol``
+header (``new WebSocket(url, "rytm-rand-cockpit-v1")``). The server
+echoes it back on accept. Browser tabs that open a casual
+``new WebSocket(url)`` without a subprotocol fail the upgrade and never
+reach the handshake — cheap defence-in-depth (L8).
+"""
+
+HELLO_FRAME_TYPE: Final[Literal["hello"]] = "hello"
+"""The discriminator the first WS frame from the client MUST carry.
+
+The frame shape is ``{"type": "hello", "token": "<urlsafe>"}``. Any
+other first-frame type is treated as a malformed handshake and the
+socket is closed with policy-violation code 1008.
+"""
+
+# Failure codes carried on the handshake / size-cap rejection acks. These
+# are echoed into the ack's ``code`` field so a programmatic client can
+# branch on them without scraping the human-readable error string.
+
+HANDSHAKE_AUTH_REQUIRED: Final[Literal["auth_required"]] = "auth_required"
+"""First frame missing / malformed / not a ``hello`` envelope (C1)."""
+
+HANDSHAKE_AUTH_FAILED: Final[Literal["auth_failed"]] = "auth_failed"
+"""First frame was a well-formed ``hello`` but the token did not match (C1)."""
+
+MESSAGE_TOO_LARGE_CODE: Final[Literal["message_too_large"]] = "message_too_large"
+"""An incoming frame exceeded the per-message byte cap (SX1)."""
+
+# WebSocket close codes (RFC 6455). Both halves of the protocol use the
+# same numerics; pinning them as constants keeps the server and the test
+# suite from drifting out of sync on the next refactor.
+
+CLOSE_CODE_POLICY_VIOLATION: Final[int] = 1008
+"""Used on handshake auth failure (C1) — RFC 6455 § 7.4.1."""
+
+CLOSE_CODE_MESSAGE_TOO_BIG: Final[int] = 1009
+"""Used on size-cap rejection (SX1) — RFC 6455 § 7.4.1."""
+
+
+# ---------------------------------------------------------------------------
 # Event-type discriminators (server → client)
 #
 # The discriminator strings appear on the wire as the ``type`` field of every
@@ -352,6 +408,8 @@ class ExportProfileModelCommand(TypedDict):
 
 
 __all__ = [
+    "CLOSE_CODE_MESSAGE_TOO_BIG",
+    "CLOSE_CODE_POLICY_VIOLATION",
     "COMMAND_EXPORT_PROFILE_MODEL",
     "COMMAND_LOAD_SNAPSHOT",
     "COMMAND_PREPARE_SEND_PLAN",
@@ -374,8 +432,12 @@ __all__ = [
     "EVENT_SNAPSHOT_CHANGED",
     "EVENT_TYPES",
     "ExportProfileModelCommand",
+    "HANDSHAKE_AUTH_FAILED",
+    "HANDSHAKE_AUTH_REQUIRED",
+    "HELLO_FRAME_TYPE",
     "HistoryUpdatedEvent",
     "LoadSnapshotCommand",
+    "MESSAGE_TOO_LARGE_CODE",
     "MutationPreviewedEvent",
     "PrepareSendPlanCommand",
     "ProfileChangedEvent",
@@ -390,4 +452,5 @@ __all__ = [
     "SnapshotChangedEvent",
     "TogglePreviewCommand",
     "UndoCommand",
+    "WS_SUBPROTOCOL",
 ]

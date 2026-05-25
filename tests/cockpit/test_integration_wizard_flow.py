@@ -44,14 +44,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from cockpit.conftest import drain_events, send_cmd
+from cockpit.conftest import TEST_WS_TOKEN, complete_handshake, drain_events, send_cmd
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import wizard_handlers
-from rytm_randomizer.cockpit.ws.protocol import EVENT_PROFILE_CHANGED
+from rytm_randomizer.cockpit.ws.protocol import EVENT_PROFILE_CHANGED, WS_SUBPROTOCOL
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.cockpit.ws.wizard_protocol import (
@@ -200,9 +200,14 @@ def test_wizard_save_writes_profile_file_to_disk_and_is_listable(tmp_path: Path)
     history.initial(device.capture_snapshot())
     registry = ProfileRegistry(profiles_dir=tmp_path)
     session = CockpitSession(profile_registry=registry, history_store=history, device=device)
-    app = create_app(session)
+    app = create_app(session, token=TEST_WS_TOKEN)
 
-    with TestClient(app) as client, client.websocket_connect("/ws") as ws:
+    with (
+        TestClient(app) as client,
+        client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
+    ):
+        # Complete the per-launch handshake before the bootstrap quartet (C1).
+        complete_handshake(ws)
         # Drain the bootstrap quartet.
         for _ in range(4):
             ws.receive_json()
@@ -272,9 +277,13 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
     session_one = CockpitSession(
         profile_registry=registry_one, history_store=history_one, device=device_one
     )
-    app_one = create_app(session_one)
+    app_one = create_app(session_one, token=TEST_WS_TOKEN)
 
-    with TestClient(app_one) as client_one, client_one.websocket_connect("/ws") as ws_one:
+    with (
+        TestClient(app_one) as client_one,
+        client_one.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_one,
+    ):
+        complete_handshake(ws_one)
         for _ in range(4):
             ws_one.receive_json()
         send_cmd(ws_one, "wizard_start")
@@ -308,9 +317,13 @@ def test_wizard_saved_profile_is_visible_to_new_connections(tmp_path: Path) -> N
     session_two = CockpitSession(
         profile_registry=registry_two, history_store=history_two, device=device_two
     )
-    app_two = create_app(session_two)
+    app_two = create_app(session_two, token=TEST_WS_TOKEN)
 
-    with TestClient(app_two) as client_two, client_two.websocket_connect("/ws") as ws_two:
+    with (
+        TestClient(app_two) as client_two,
+        client_two.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_two,
+    ):
+        complete_handshake(ws_two)
         for _ in range(4):
             ws_two.receive_json()
         select_ack = send_cmd(
@@ -422,14 +435,18 @@ def test_wizard_analyzer_failure_marks_job_failed_over_ws(
     history.initial(device.capture_snapshot())
     registry = ProfileRegistry(profiles_dir=tmp_path)
     session = CockpitSession(profile_registry=registry, history_store=history, device=device)
-    app = create_app(session)
+    app = create_app(session, token=TEST_WS_TOKEN)
 
     def _boom(_source: object) -> tuple:
         raise RuntimeError("analyzer crashed: simulated")
 
     monkeypatch.setattr(wizard_handlers, "analyze_source", _boom)
 
-    with TestClient(app) as client, client.websocket_connect("/ws") as ws:
+    with (
+        TestClient(app) as client,
+        client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws,
+    ):
+        complete_handshake(ws)
         for _ in range(4):
             ws.receive_json()
         send_cmd(ws, "wizard_start")

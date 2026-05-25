@@ -233,6 +233,78 @@ def test_wizard_set_metadata_leaves_omitted_fields_unchanged(tmp_path: Path) -> 
     assert session.active_wizard.state.description == "initial-desc"  # type: ignore[union-attr]
 
 
+# ---------------------------------------------------------------------------
+# C4 — three-state wire semantics for ``wizard_set_metadata``.
+# Missing key → unchanged; explicit ``null`` → cleared; string → set.
+# ---------------------------------------------------------------------------
+
+
+def test_wizard_set_metadata_null_name_clears_field(tmp_path: Path) -> None:
+    """JSON ``null`` clears the field (C4 fix).
+
+    Previously the handler treated ``None`` as "leave unchanged", which
+    inverted the documented :meth:`WizardState.with_metadata` contract.
+    The fix routes explicit ``null`` to ``with_metadata(name="")`` so the
+    field actually clears.
+    """
+
+    session = _make_session(tmp_path)
+    wizard = _attach_wizard(session)
+    wizard.state = wizard.state.with_metadata(name="initial", description="initial-desc")
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("wizard_set_metadata", name=None),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.active_wizard.state.name == ""  # type: ignore[union-attr]
+    # description was not touched (key was absent in the envelope body)
+    assert session.active_wizard.state.description == "initial-desc"  # type: ignore[union-attr]
+
+
+def test_wizard_set_metadata_null_description_clears_field(tmp_path: Path) -> None:
+    """JSON ``null`` clears description while leaving name alone (C4 fix)."""
+
+    session = _make_session(tmp_path)
+    wizard = _attach_wizard(session)
+    wizard.state = wizard.state.with_metadata(name="initial", description="initial-desc")
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("wizard_set_metadata", description=None),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.active_wizard.state.name == "initial"  # type: ignore[union-attr]
+    assert session.active_wizard.state.description == ""  # type: ignore[union-attr]
+
+
+def test_wizard_set_metadata_missing_keys_leave_state_unchanged(tmp_path: Path) -> None:
+    """No ``name`` / ``description`` keys → both fields preserved (C4 fix).
+
+    Distinct from the prior test: this asserts the "missing" branch
+    behaves differently from the "explicit ``null``" branch — exactly
+    the inversion C4 catches.
+    """
+
+    session = _make_session(tmp_path)
+    wizard = _attach_wizard(session)
+    wizard.state = wizard.state.with_metadata(name="initial", description="initial-desc")
+    recorder = _Recorder()
+
+    # Envelope intentionally carries neither ``name`` nor ``description``.
+    ack = _dispatch(_envelope("wizard_set_metadata"), session, recorder)
+
+    assert ack["ok"] is True
+    assert session.active_wizard.state.name == "initial"  # type: ignore[union-attr]
+    assert session.active_wizard.state.description == "initial-desc"  # type: ignore[union-attr]
+
+
 def test_wizard_set_metadata_without_active_wizard_returns_error(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorder = _Recorder()
