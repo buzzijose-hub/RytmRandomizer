@@ -320,6 +320,12 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # ValueError so ``except ValueError`` callers still work AND the
         # conformance check sees a taxonomy member.
         "EmptyAnalysisError",
+        # Cockpit Profile Wizard path-policy (CODE_REVIEW PR 2 / C2):
+        # re-homed under DataError + ValueError so ``except ValueError``
+        # callers still work AND the conformance check sees a taxonomy
+        # member. Mirrors the WizardSourcePathError / EmptyAnalysisError
+        # dual-inheritance pattern.
+        "WizardSourcePathRejected",
         # Cockpit Phase 3 export writer: re-homed under DataError +
         # OSError so ``except OSError`` callers still work AND the
         # conformance check sees a taxonomy member. Mirrors the

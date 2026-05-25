@@ -41,9 +41,12 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from typing import Any, Final
 
+from ...observability.logging import get_logger
 from ..data.ulid import new_ulid
 from ..wizard.analyze import analyze_source
 from ..wizard.builder import build_profile
+from ..wizard.errors import WizardSourcePathError
+from ..wizard.path_policy import WizardPathPolicy, WizardSourcePathRejected
 from ..wizard.state import (
     AnalysisJob,
     InspirationSource,
@@ -65,7 +68,42 @@ from .wizard_protocol import (
     EVENT_PROFILE_CREATED,
     EVENT_WIZARD_STATE_CHANGED,
 )
-from .wizard_session import WizardSession
+from .wizard_session import WizardSession, _utcnow
+
+_logger = get_logger(__name__)
+"""Module logger for wizard handler diagnostics.
+
+Used for the categorical analyzer-failure log lines (H4) and the
+wizard-replacement warning (M11). The structured ``extra=`` payload
+captures the full detail (paths, exception types, ages) that the WS ack
+intentionally hides from the operator's browser.
+"""
+
+# ---------------------------------------------------------------------------
+# Module-level wizard path policy
+# ---------------------------------------------------------------------------
+
+#: Default policy used by :func:`_handle_wizard_add_source` when the session
+#: does not carry its own. Read from the ``WIZARD_SOURCE_ROOTS`` env var at
+#: import time so a deployment can pin the allow-list without touching code.
+#: Tests override this via :func:`_set_path_policy` so per-test ``tmp_path``
+#: roots are exercised without leaking into the global env.
+_PATH_POLICY: WizardPathPolicy = WizardPathPolicy.from_env()
+
+
+def _set_path_policy(policy: WizardPathPolicy) -> None:
+    """Override the module-level :class:`WizardPathPolicy` (testing only).
+
+    The production cockpit reads the policy at import time via
+    :meth:`WizardPathPolicy.from_env`. Tests that want to pin a
+    ``tmp_path`` root call this helper from their fixture; the
+    ``monkeypatch`` fixture restores the original value at teardown via
+    :meth:`pytest.MonkeyPatch.setattr`.
+    """
+
+    global _PATH_POLICY
+    _PATH_POLICY = policy
+
 
 # ---------------------------------------------------------------------------
 # Analyzer failure surface
@@ -84,6 +122,58 @@ _ANALYZER_FAILURE_EXCEPTIONS: Final[tuple[type[BaseException], ...]] = (
     ValueError,
     RuntimeError,
 )
+
+
+# ---------------------------------------------------------------------------
+# Categorical analyzer-failure reason set (H4 — sanitize the error path)
+# ---------------------------------------------------------------------------
+
+#: Fixed categorical reasons that :func:`_handle_wizard_analyze` reports in
+#: :attr:`AnalysisJob.error`. The actual exception message (which often
+#: includes the source path) is NEVER forwarded over the wire -- it is
+#: logged server-side via :data:`_logger` at WARNING level for operators.
+REASON_PATH_NOT_FOUND: Final[str] = "path_not_found"
+REASON_UNSUPPORTED_FORMAT: Final[str] = "unsupported_format"
+REASON_READ_FAILED: Final[str] = "read_failed"
+REASON_ANALYSIS_FAILED: Final[str] = "analysis_failed"
+
+ANALYZER_FAILURE_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        REASON_PATH_NOT_FOUND,
+        REASON_UNSUPPORTED_FORMAT,
+        REASON_READ_FAILED,
+        REASON_ANALYSIS_FAILED,
+    }
+)
+
+
+def _categorical_reason(exc: BaseException) -> str:
+    """Map an analyzer failure exception to one of :data:`ANALYZER_FAILURE_REASONS`.
+
+    Mapping is by exception type:
+
+    * :class:`WizardSourcePathError` /
+      :class:`WizardSourcePathRejected` / :class:`FileNotFoundError`
+      → ``"path_not_found"`` (path missing on disk OR rejected by the
+      allow-list; the WS surface intentionally collapses both so the
+      caller cannot distinguish a typo from a forbidden path).
+    * :class:`ValueError` → ``"unsupported_format"`` (the analyzer
+      dispatcher raises ValueError for unsupported ``(kind, mode)`` pairs
+      and for non-file/non-dir kit paths).
+    * :class:`OSError` → ``"read_failed"`` (a permission / I/O error
+      reading the file).
+    * Everything else in :data:`_ANALYZER_FAILURE_EXCEPTIONS` →
+      ``"analysis_failed"`` (the catch-all reason for runtime failures
+      inside the analyzer).
+    """
+
+    if isinstance(exc, (WizardSourcePathError, WizardSourcePathRejected, FileNotFoundError)):
+        return REASON_PATH_NOT_FOUND
+    if isinstance(exc, ValueError):
+        return REASON_UNSUPPORTED_FORMAT
+    if isinstance(exc, OSError):
+        return REASON_READ_FAILED
+    return REASON_ANALYSIS_FAILED
 
 
 # ---------------------------------------------------------------------------
@@ -123,17 +213,41 @@ def _build_profile_changed(profile: Any) -> dict:
 async def _handle_wizard_start(cmd: dict, session: CockpitSession) -> HandlerResult:
     """Begin a fresh wizard session and attach it to ``session.active_wizard``.
 
-    Replaces any in-flight wizard wholesale — the previous session is
+    Replaces any in-flight wizard wholesale -- the previous session is
     dropped. (The web UI guards against starting a new wizard while one
     is in flight, but the server tolerates the race rather than reject.)
+
+    M11: when a replacement happens the previous wizard's ``wizard_id``
+    and accumulated age are emitted via :data:`_logger` at WARNING level
+    AND surfaced on the ack as ``previous_wizard_id`` so the operator's
+    UI can offer a "restore previous wizard" affordance instead of
+    silently destroying minutes of work.
     """
 
     del cmd
     wizard_id = new_ulid()
     state = WizardState.empty(wizard_id)
+    previous = session.active_wizard
+    previous_wizard_id: str | None = None
+    if previous is not None:
+        previous_wizard_id = previous.wizard_id
+        age_seconds = max(0.0, (_utcnow() - previous.started_at).total_seconds())
+        _logger.warning(
+            "wizard_replaced",
+            extra={
+                "previous_wizard_id": previous.wizard_id,
+                "previous_state_age_seconds": age_seconds,
+                "previous_step": previous.state.step,
+                "previous_source_count": len(previous.state.sources),
+                "new_wizard_id": wizard_id,
+            },
+        )
     session.active_wizard = WizardSession(wizard_id=wizard_id, state=state)
+    ack: dict[str, Any] = {"ok": True, "wizard_id": wizard_id}
+    if previous_wizard_id is not None:
+        ack["previous_wizard_id"] = previous_wizard_id
     return HandlerResult(
-        ack={"ok": True, "wizard_id": wizard_id},
+        ack=ack,
         events=[_build_wizard_state_changed(state)],
     )
 
@@ -161,9 +275,18 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
 
     Field-level validation (kind/mode/location/display_name) is delegated
     to :meth:`InspirationSource.__post_init__`, which raises ``ValueError``
-    with the same diagnostic the manual check would have produced — caught
+    with the same diagnostic the manual check would have produced -- caught
     here and surfaced as an ack-level ``ok=False`` so the wire shape is
     unchanged.
+
+    C2: ``file`` / ``folder`` mode locations are validated against the
+    module-level :class:`WizardPathPolicy` BEFORE the source dataclass
+    is constructed. Rejected paths return a categorical ack
+    (``code="wizard_source_path_rejected"``) that never echoes the
+    rejected path -- the full detail is logged server-side via
+    :data:`_logger` at WARNING level. Reference-mode sources (free-text
+    artist / album names) skip the policy: there is no filesystem path
+    to validate.
     """
 
     wizard = session.active_wizard
@@ -173,6 +296,31 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
     mode = str(cmd.get("mode", ""))
     location = str(cmd.get("location", ""))
     display_name = str(cmd.get("display_name", ""))
+
+    # C2: filesystem-mode sources MUST land inside an allow-listed root.
+    # Reference-mode sources are free-text identifiers and skip the policy.
+    if mode in ("file", "folder"):
+        try:
+            _PATH_POLICY.validate(location)
+        except WizardSourcePathRejected as exc:
+            _logger.warning(
+                "wizard_source_path_rejected",
+                extra={
+                    "reason": str(exc),
+                    "location": location,
+                    "mode": mode,
+                    "kind": kind,
+                    "wizard_id": wizard.wizard_id,
+                },
+            )
+            return HandlerResult(
+                ack={
+                    "ok": False,
+                    "code": "wizard_source_path_rejected",
+                    "error": str(exc),
+                }
+            )
+
     source_id = new_ulid()
     try:
         source = InspirationSource(
@@ -247,11 +395,31 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
         try:
             traits = await asyncio.to_thread(analyze_source, source)
         except _ANALYZER_FAILURE_EXCEPTIONS as exc:
+            # H4: never echo the analyzer message back over the wire --
+            # ``extract_from_audio`` / the SysEx analyzer routinely raise
+            # exceptions whose str() embeds the source path, which would
+            # let a hostile WS peer probe the filesystem via the error
+            # field. Map to a categorical reason and log the full detail
+            # server-side instead.
+            reason = _categorical_reason(exc)
+            _logger.warning(
+                "wizard_analyzer_failure",
+                extra={
+                    "reason": reason,
+                    "source_id": source.source_id,
+                    "source_kind": source.kind,
+                    "source_mode": source.mode,
+                    "source_location": source.location,
+                    "exception_type": type(exc).__name__,
+                    "exception_message": str(exc),
+                    "wizard_id": wizard.wizard_id,
+                },
+            )
             terminal_job = AnalysisJob(
                 source_id=source.source_id,
                 status="failed",
                 progress=1.0,
-                error=str(exc),
+                error=reason,
                 extracted_traits=(),
             )
         else:
@@ -352,4 +520,11 @@ WIZARD_HANDLERS: dict[
 }
 
 
-__all__ = ["WIZARD_HANDLERS"]
+__all__ = [
+    "ANALYZER_FAILURE_REASONS",
+    "REASON_ANALYSIS_FAILED",
+    "REASON_PATH_NOT_FOUND",
+    "REASON_READ_FAILED",
+    "REASON_UNSUPPORTED_FORMAT",
+    "WIZARD_HANDLERS",
+]
