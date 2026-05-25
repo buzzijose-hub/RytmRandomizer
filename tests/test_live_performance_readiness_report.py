@@ -15,7 +15,6 @@ def test_live_performance_readiness_report_builds_gui_and_analyzer_gates(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_performance_readiness import (
         build_style_performance_arc_live_readiness_report,
         format_style_performance_arc_live_readiness_report,
@@ -73,7 +72,6 @@ def test_live_performance_readiness_from_state_covers_blocked_state_edges(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_performance_readiness import (
         build_style_performance_arc_live_readiness_from_state,
         format_style_performance_arc_live_readiness_report,
@@ -134,7 +132,6 @@ def test_live_performance_readiness_from_state_covers_ready_and_review_edges(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_performance_readiness import (
         build_style_performance_arc_live_readiness_from_state,
     )
@@ -210,7 +207,6 @@ def test_live_performance_readiness_cli_dispatch_json_and_errors(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 
@@ -281,7 +277,6 @@ def test_live_performance_readiness_cli_dispatch_json_and_errors(
 
 def test_live_performance_readiness_parser_and_source_edges(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_performance_readiness import (
         STYLE_PERFORMANCE_ARC_LIVE_READINESS_CLI_COMMAND,
         _parse_cli_args,

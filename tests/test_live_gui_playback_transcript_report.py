@@ -55,7 +55,6 @@ def _feature_report(
 
 def _controller_state(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_controller_state import (
         build_style_performance_arc_live_gui_controller_state_report,
     )
@@ -232,7 +231,6 @@ def test_live_gui_playback_transcript_parser_builder_and_cli_edges(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.reports.live_gui_playback_transcript import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_PLAYBACK_TRANSCRIPT_CLI_COMMAND,

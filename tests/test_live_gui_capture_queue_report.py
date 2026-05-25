@@ -51,7 +51,6 @@ def test_live_gui_capture_queue_builds_slots_jobs_and_json_from_description(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
         format_style_performance_arc_live_gui_capture_queue_report,
@@ -131,7 +130,6 @@ def test_live_gui_capture_queue_marks_guarded_rehearsal_sessions(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_from_rehearsal_session,
     )
@@ -163,7 +161,6 @@ def test_live_gui_capture_queue_preserves_custom_nonready_session_status(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_from_rehearsal_session,
     )
@@ -193,7 +190,6 @@ def test_live_gui_capture_queue_guards_red_ready_takes_and_custom_timing(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_from_rehearsal_session,
     )
@@ -228,7 +224,6 @@ def test_live_gui_capture_queue_replays_audio_library_and_feature_sources(
     monkeypatch: pytest.MonkeyPatch,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_queue import (
         build_style_performance_arc_live_gui_capture_queue_report,
     )
@@ -283,7 +278,6 @@ def test_live_gui_capture_queue_cli_dispatches_json_text_errors_and_help(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 
@@ -363,7 +357,6 @@ def test_live_gui_capture_queue_parser_validates_sources_counts_and_labels(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_analyzer_readiness import (
         build_style_performance_arc_live_gui_analyzer_readiness_report,
     )

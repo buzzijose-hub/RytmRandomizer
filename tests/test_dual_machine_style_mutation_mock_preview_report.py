@@ -385,7 +385,6 @@ def test_dual_machine_style_mutation_mock_preview_cli_handler_reports_text(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.dual_machine_style_mutation_mock_preview import (
         _handle_cli_report,
     )
@@ -425,7 +424,6 @@ def test_dual_machine_style_mutation_mock_preview_cli_handler_reports_json(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.dual_machine_style_mutation_mock_preview import (
         _handle_cli_report,
     )

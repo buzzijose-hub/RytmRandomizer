@@ -421,7 +421,6 @@ def test_style_snapshot_routing_cli_handler_reports_plan(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_style_snapshot_routing import _handle_cli_report
 
     payload = rytm_real_layout_kit_payload(name=b"STYLE")
@@ -444,7 +443,6 @@ def test_style_snapshot_routing_cli_handler_reports_json(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_style_snapshot_routing import _handle_cli_report
 
     payload = rytm_real_layout_kit_payload(name=b"JSONSTYLE")

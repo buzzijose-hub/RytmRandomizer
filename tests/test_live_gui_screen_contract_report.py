@@ -51,7 +51,6 @@ def _feature_report(
 
 def _sidecar_report(tmp_path: Path, *, take_count: int = 2):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_review import (
         build_style_performance_arc_live_gui_capture_review_report,
     )
@@ -174,7 +173,6 @@ def test_live_gui_screen_contract_builds_deterministic_screen_packet_from_sideca
 
 def test_live_gui_screen_contract_maps_repeat_and_hold_states(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_review import (
         build_style_performance_arc_live_gui_capture_review_report,
     )
@@ -294,7 +292,6 @@ def test_live_gui_screen_contract_parser_builder_and_cli_edges(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
     from rytm_randomizer.reports.live_gui_screen_contract import (

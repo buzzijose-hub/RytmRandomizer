@@ -48,7 +48,6 @@ def _feature_report(
 
 def test_live_analyzer_targets_report_builds_rehearsal_target_packet(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_targets import (
         build_style_performance_arc_live_analyzer_targets_report,
         format_style_performance_arc_live_analyzer_targets_report,
@@ -114,7 +113,6 @@ def test_live_analyzer_targets_report_builds_rehearsal_target_packet(tmp_path: P
 
 def test_live_analyzer_targets_from_handoff_covers_unknown_feature_edges(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_handoff import (
         build_style_performance_arc_live_analyzer_handoff_report,
     )
@@ -149,7 +147,6 @@ def test_live_analyzer_targets_cover_measured_audio_and_energy_shapes(
     monkeypatch: pytest.MonkeyPatch,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_targets import (
         build_style_performance_arc_live_analyzer_targets_report,
     )
@@ -206,7 +203,6 @@ def test_live_analyzer_targets_cli_dispatch_json_and_errors(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 

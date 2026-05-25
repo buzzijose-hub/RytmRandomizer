@@ -55,7 +55,6 @@ def _feature_report(
 
 def _readiness_report(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_test_harness_readiness import (
         build_style_performance_arc_live_gui_test_harness_readiness_report,
     )
@@ -288,7 +287,6 @@ def test_live_gui_implementation_bridge_wrapper_and_parser_support_custom_labels
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_implementation_bridge import (
         build_style_performance_arc_live_gui_implementation_bridge_report,
         parse_style_performance_arc_live_gui_implementation_bridge_cli_args,
@@ -339,7 +337,6 @@ def test_live_gui_implementation_bridge_handler_outputs_text_json_and_errors(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_implementation_bridge import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_IMPLEMENTATION_BRIDGE_CLI_COMMAND,
         _format_cli_error,

@@ -51,7 +51,6 @@ def test_live_gui_rehearsal_session_builds_task_and_take_packet_from_description
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_rehearsal_session import (
         build_style_performance_arc_live_gui_rehearsal_session_report,
         format_style_performance_arc_live_gui_rehearsal_session_report,
@@ -131,7 +130,6 @@ def test_live_gui_rehearsal_session_marks_warning_review_guarded_for_manual_temp
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_analyzer_readiness import (
         build_style_performance_arc_live_gui_analyzer_readiness_report,
     )
@@ -173,7 +171,6 @@ def test_live_gui_rehearsal_session_tracks_guarded_thresholds_and_red_cues(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_targets import (
         StylePerformanceArcLiveAnalyzerWarningThreshold,
     )
@@ -221,7 +218,6 @@ def test_live_gui_rehearsal_session_preserves_upstream_nonready_gui_status(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_analyzer_readiness import (
         build_style_performance_arc_live_gui_analyzer_readiness_report,
     )
@@ -249,7 +245,6 @@ def test_live_gui_rehearsal_session_replays_audio_and_feature_report_sources(
     monkeypatch: pytest.MonkeyPatch,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_rehearsal_session import (
         build_style_performance_arc_live_gui_rehearsal_session_report,
     )
@@ -287,7 +282,6 @@ def test_live_gui_rehearsal_session_cli_dispatches_json_text_errors_and_help(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 
@@ -365,7 +359,6 @@ def test_live_gui_rehearsal_session_parser_validates_sources_takes_and_label(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_rehearsal_session import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_REHEARSAL_SESSION_CLI_COMMAND,
         _parse_cli_args,

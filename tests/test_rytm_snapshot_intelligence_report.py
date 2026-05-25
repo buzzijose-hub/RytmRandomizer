@@ -302,7 +302,6 @@ def test_rytm_snapshot_intelligence_cli_handler_reads_first_supported_frame(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
 
     bad_frame = bytes([0xF0, 0x00, 0x20, 0x3C, 0x05, 0x00, 0xF7])
@@ -324,7 +323,6 @@ def test_rytm_snapshot_intelligence_cli_handler_reads_requested_supported_slot(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
 
     first_payload = rytm_real_layout_kit_payload(name=b"FIRSTKIT")
@@ -347,7 +345,6 @@ def test_rytm_snapshot_intelligence_cli_handler_lists_supported_slots(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
 
     first_payload = rytm_real_layout_kit_payload(name=b"FIRSTKIT")
@@ -372,7 +369,6 @@ def test_rytm_snapshot_intelligence_cli_handler_reports_out_of_range_slot(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_snapshot_intelligence import _handle_cli_report
 
     path = tmp_path / "bank.syx"

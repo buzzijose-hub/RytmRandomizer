@@ -50,7 +50,6 @@ def test_live_analyzer_handoff_report_builds_gui_analyzer_packet_when_descriptio
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_handoff import (
         build_style_performance_arc_live_analyzer_handoff_report,
         format_style_performance_arc_live_analyzer_handoff_report,
@@ -116,7 +115,6 @@ def test_live_analyzer_handoff_from_control_surface_covers_status_and_empty_edge
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_handoff import (
         build_style_performance_arc_live_analyzer_handoff_from_control_surface,
         format_style_performance_arc_live_analyzer_handoff_report,
@@ -165,7 +163,6 @@ def test_live_analyzer_handoff_covers_feature_report_audio_and_match_edges(
     monkeypatch: pytest.MonkeyPatch,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_handoff import (
         build_style_performance_arc_live_analyzer_handoff_report,
         format_style_performance_arc_live_analyzer_handoff_report,
@@ -245,7 +242,6 @@ def test_live_analyzer_handoff_cli_dispatch_json_and_errors(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 

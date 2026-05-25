@@ -53,7 +53,6 @@ def test_live_gui_sidecar_session_builds_single_gui_contract_from_capture_review
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_review import (
         build_style_performance_arc_live_gui_capture_review_report,
     )
@@ -148,7 +147,6 @@ def test_live_gui_sidecar_session_builds_single_gui_contract_from_capture_review
 
 def test_live_gui_sidecar_session_maps_repeat_and_hold_statuses(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_review import (
         build_style_performance_arc_live_gui_capture_review_report,
     )
@@ -194,7 +192,6 @@ def test_live_gui_sidecar_session_maps_repeat_and_hold_statuses(tmp_path: Path):
 
 def test_live_gui_sidecar_session_covers_replay_and_fallback_edges(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_capture_review import (
         StylePerformanceArcLiveGuiCaptureMetricReview,
         build_style_performance_arc_live_gui_capture_review_report,
@@ -374,7 +371,6 @@ def test_live_gui_sidecar_session_covers_replay_and_fallback_edges(tmp_path: Pat
 
 def test_live_gui_sidecar_session_parser_and_builder_edges(tmp_path: Path):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.reports.live_gui_sidecar_session import (
         STYLE_PERFORMANCE_ARC_LIVE_GUI_SIDECAR_SESSION_CLI_COMMAND,
@@ -536,7 +532,6 @@ def test_live_gui_sidecar_session_cli_dispatches_json_text_errors_and_help(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 

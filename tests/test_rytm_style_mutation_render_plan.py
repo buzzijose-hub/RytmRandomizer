@@ -314,7 +314,6 @@ def test_style_mutation_render_plan_cli_handler_reports_json(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_style_mutation_render_plan import _handle_cli_report
 
     payload = rytm_real_layout_kit_payload(name=b"RENDER")
@@ -343,7 +342,6 @@ def test_style_mutation_render_plan_cli_handler_reports_text(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.reports.rytm_style_mutation_render_plan import _handle_cli_report
 
     payload = rytm_real_layout_kit_payload(name=b"RENTEXT")

@@ -15,7 +15,6 @@ def test_live_control_surface_report_builds_gui_dashboard_and_analyzer_cards(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_control_surface import (
         build_style_performance_arc_live_control_surface_report,
         format_style_performance_arc_live_control_surface_report,
@@ -86,7 +85,6 @@ def test_live_control_surface_from_readiness_covers_blocked_and_ready_edges(
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_control_surface import (
         build_style_performance_arc_live_control_surface_from_readiness,
         format_style_performance_arc_live_control_surface_report,
@@ -208,7 +206,6 @@ def test_live_control_surface_cli_dispatch_json_and_errors(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 

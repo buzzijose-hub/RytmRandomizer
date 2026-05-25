@@ -50,7 +50,6 @@ def test_live_gui_analyzer_readiness_builds_operator_bundle_when_reference_is_de
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_analyzer_readiness import (
         build_style_performance_arc_live_gui_analyzer_readiness_report,
         format_style_performance_arc_live_gui_analyzer_readiness_report,
@@ -132,7 +131,6 @@ def test_live_gui_analyzer_readiness_from_targets_keeps_warning_and_no_lookahead
     tmp_path: Path,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_analyzer_targets import (
         build_style_performance_arc_live_analyzer_targets_report,
     )
@@ -175,7 +173,6 @@ def test_live_gui_analyzer_readiness_covers_measured_audio_source_and_watch_warn
     monkeypatch: pytest.MonkeyPatch,
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.reports.live_gui_analyzer_readiness import (
         build_style_performance_arc_live_gui_analyzer_readiness_report,
     )
@@ -209,7 +206,6 @@ def test_live_gui_analyzer_readiness_cli_dispatches_json_text_errors_and_help(
     capsys: pytest.CaptureFixture[str],
 ):
     from conftest import dual_machine_reference_bank_files
-
     from rytm_randomizer.cli import main
     from rytm_randomizer.help_text import resolve_help_text
 

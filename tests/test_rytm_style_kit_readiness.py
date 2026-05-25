@@ -23,7 +23,6 @@ def _rytm_bank_file(tmp_path: Path) -> Path:
 
 def test_rytm_snapshot_payload_fingerprint_is_stable():
     from conftest import rytm_real_layout_kit_payload
-
     from rytm_randomizer.devices.strategies.analog_rytm_snapshot_decoder import (
         AnalogRytmSnapshotDecoder,
         rytm_snapshot_payload_fingerprint,
