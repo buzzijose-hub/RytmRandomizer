@@ -147,23 +147,27 @@ def test_export_pipeline_public_surface_is_stable() -> None:
             "importable is a packaging error)."
         )
 
-    # Optional signing/verifier names — WS-A may not have merged yet.
-    # Probe via getattr-with-default so this test does NOT block until
-    # WS-A is in. When they do land, this assertion turns into a noop
-    # because the names will simply be present.
-    sign_fn = getattr(export, "sign_profile_model", None)
-    verify_fn = getattr(export, "verify_profile_model", None)
-    if sign_fn is not None or verify_fn is not None:
-        # If either side has merged, BOTH should be present — a signer
-        # without a verifier is a broken contract.
-        assert sign_fn is not None, (
-            "verify_profile_model is exposed but sign_profile_model is not; "
-            "the signing envelope is a pair — expose both or neither."
-        )
-        assert verify_fn is not None, (
-            "sign_profile_model is exposed but verify_profile_model is not; "
-            "the signing envelope is a pair — expose both or neither."
-        )
+    # WS-A signing surface has merged: the real names are
+    # ``sign_profile_blob`` (an HMAC-SHA256 signer that returns a
+    # :class:`SignedBlob`) and ``verify_signed_blob`` (the receiver-side
+    # verifier that returns a :class:`VerificationResult` without ever
+    # raising). The earlier probe used the wrong names
+    # (``sign_profile_model`` / ``verify_profile_model``) and so was a
+    # silent no-op; pinning the real pair here makes any future
+    # rename or removal a loud test failure.
+    sign_fn = getattr(export, "sign_profile_blob", None)
+    verify_fn = getattr(export, "verify_signed_blob", None)
+    assert sign_fn is not None, (
+        "rytm_randomizer.cockpit.export must expose 'sign_profile_blob' "
+        "(the HMAC-SHA256 signer). The Phase 4 firmware build's Python "
+        "encoder pairs ``sign_profile_blob`` with ``verify_signed_blob`` "
+        "— removing either silently breaks the firmware tooling."
+    )
+    assert verify_fn is not None, (
+        "rytm_randomizer.cockpit.export must expose 'verify_signed_blob' "
+        "(the receiver-side verifier). Signing without verification is a "
+        "broken contract — the firmware loader has no way to validate."
+    )
 
 
 # ---------------------------------------------------------------------------
