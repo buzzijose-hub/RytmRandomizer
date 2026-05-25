@@ -65,6 +65,7 @@ from typing import Any, Final, Protocol, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
+from ...observability.tracing import operation
 from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
@@ -694,39 +695,48 @@ async def handle_command(envelope: dict, session: CockpitSession) -> dict:
             "request_id": request_id,
             **_error_ack(ERR_UNKNOWN_COMMAND, f"unknown command: {cmd_type!r}"),
         }
-    try:
-        result = await handler(cmd, session)
-    except (KeyError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
-        # PR 14 / RR4f: never echo the underlying exception text back
-        # over the wire -- exception messages routinely embed filesystem
-        # paths, profile ids the server has rejected, or stack-traceable
-        # details. Map to a categorical code and surface the full
-        # forensic record via :data:`_logger` so operators can still
-        # correlate. ``repr(exc)`` is used in the structured ``extra``
-        # payload (rather than ``str(exc)``) so the AST guard in
-        # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
-        # stays at floor 0 for this file -- ``repr`` still carries the
-        # exception type + args for forensic purposes.
-        code, message = _classify_handler_exception(exc)
-        _logger.warning(
-            "handler_exception",
-            extra={
-                "code": code,
-                "cmd_type": cmd_type,
-                "exception_type": type(exc).__name__,
-                "exception_repr": repr(exc),
-                "request_id": request_id,
-            },
-        )
-        return {"request_id": request_id, **_error_ack(code, message)}
-    # Queue events on the session for the caller to drain AFTER it sends
-    # the ack on the wire. We cannot await the emitter from here without
-    # inverting the ack-first / events-second wire ordering, so the
-    # dispatcher hands ownership of the queue to
-    # :func:`drain_pending_events` via the real ``pending_events`` field
-    # on :class:`CockpitSession`.
-    session.pending_events = list(result.events)
-    return {"request_id": request_id, **result.ack}
+    # OBS O1 — wrap the handler invocation in operation() so every log
+    # call inside the handler chain carries this request_id as the
+    # op_id correlator. Operators correlating "the cockpit hung when I
+    # hit SEND" reports can grep `op_id` in JSON-mode logs and see
+    # every breadcrumb the dispatcher + handler + downstream emitted
+    # during that one client request — wizard analyzer, atomic_write,
+    # signing, verifier, etc.
+    op_name = f"ws.{cmd_type}" if isinstance(cmd_type, str) else "ws.unknown"
+    with operation(op_name, logger=_logger, request_id=request_id):
+        try:
+            result = await handler(cmd, session)
+        except (KeyError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
+            # PR 14 / RR4f: never echo the underlying exception text back
+            # over the wire -- exception messages routinely embed filesystem
+            # paths, profile ids the server has rejected, or stack-traceable
+            # details. Map to a categorical code and surface the full
+            # forensic record via :data:`_logger` so operators can still
+            # correlate. ``repr(exc)`` is used in the structured ``extra``
+            # payload (rather than ``str(exc)``) so the AST guard in
+            # ``tests/architecture/test_no_raw_exception_messages_on_wire.py``
+            # stays at floor 0 for this file -- ``repr`` still carries the
+            # exception type + args for forensic purposes.
+            code, message = _classify_handler_exception(exc)
+            _logger.warning(
+                "handler_exception",
+                extra={
+                    "code": code,
+                    "cmd_type": cmd_type,
+                    "exception_type": type(exc).__name__,
+                    "exception_repr": repr(exc),
+                    "request_id": request_id,
+                },
+            )
+            return {"request_id": request_id, **_error_ack(code, message)}
+        # Queue events on the session for the caller to drain AFTER it sends
+        # the ack on the wire. We cannot await the emitter from here without
+        # inverting the ack-first / events-second wire ordering, so the
+        # dispatcher hands ownership of the queue to
+        # :func:`drain_pending_events` via the real ``pending_events`` field
+        # on :class:`CockpitSession`.
+        session.pending_events = list(result.events)
+        return {"request_id": request_id, **result.ack}
 
 
 async def drain_pending_events(session: CockpitSession, emitter: EventEmitter) -> None:
