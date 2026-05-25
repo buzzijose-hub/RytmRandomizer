@@ -50,7 +50,9 @@ jobs:
           - os: macos-latest
             artifact_glob: "dist/*.pkg"
           - os: ubuntu-latest
-            artifact_glob: "dist/*.AppImage dist/*.deb"
+            artifact_glob: |
+              dist/*.AppImage
+              dist/*.deb
 
     steps:
       - name: Checkout
@@ -81,8 +83,9 @@ jobs:
 
       - name: Install ALSA + AppImage tooling (Linux)
         if: runner.os == 'Linux'
-        # libasound2: runtime ALSA shared library required by Briefcase's
-        #   Linux system package dependency check.
+        # libasound2t64: concrete Ubuntu 24.04 provider for libasound2,
+        #   the runtime ALSA shared library required by Briefcase's Linux
+        #   system package dependency check.
         # libasound2-dev: python-rtmidi C-extension link target.
         # libfuse2: required to *run* an AppImage (and briefcase smoke-
         #   tests the artifact post-build).
@@ -90,7 +93,7 @@ jobs:
         #   under the host system python3, not setup-python's toolcache.
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2 libasound2-dev libfuse2 python3-venv
+          sudo apt-get install -y libasound2t64 libasound2-dev libfuse2 python3-venv
 
       # ----- Briefcase install + build. -----
 
