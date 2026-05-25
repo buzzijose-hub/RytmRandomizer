@@ -96,6 +96,20 @@ When the window closes, the shell terminates the sidecar. The operator
 never has to manage the sidecar lifecycle directly — the bundle owns
 both halves.
 
+**Phase 3 export CLI is shipped inside the same Tauri bundle.** The
+Phase 3 Model Export Pipeline (`cockpit-export-profile-model` plus the
+passive `cockpit-export-rehearsal-report`; see
+[`docs/superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md`](superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md)
+and [`docs/COCKPIT_QUICKSTART.md` §5c](COCKPIT_QUICKSTART.md#5c-exporting-a-profile-for-hardware))
+adds no new system dependency — HMAC + SHA-256 + CRC32 are stdlib and
+MessagePack is already a Phase 1 dependency. Both CLI entry points run
+through the same Python sidecar that powers the cockpit, so launching
+the export from inside the Tauri shell uses the bundled sidecar's
+`python -m rytm_randomizer.cli cockpit-export-profile-model ...` entry
+without spawning a second interpreter. Operators who installed only the
+Briefcase CLI artifact (no GUI) get the same export entry on PATH; the
+bundle and the CLI artifact share the export pipeline byte-for-byte.
+
 ### CI
 
 `.github/workflows/installers.yml` has a `desktop-bundle` matrix job

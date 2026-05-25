@@ -292,6 +292,113 @@ and returns you to the cockpit with no profile written.
 
 ---
 
+## 5c. Exporting a profile for hardware
+
+Phase 3 introduces the **Model Export Pipeline** — the CLI and passive
+report that turn a profile from `~/.rytm-randomizer/profiles/<id>.json`
+into a signed, byte-stable `.rymp` file the Phase 4 hardware loader
+will read directly from an SD card or flash. The pipeline runs entirely
+on your machine: it never opens a MIDI port, never makes a network
+call, and uses only Python stdlib (HMAC-SHA256 + CRC32) plus the
+MessagePack dependency already shipped with the cockpit. See
+[`docs/superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md`](superpowers/specs/2026-05-24-phase-3-export-pipeline-design.md)
+for the full design.
+
+The walkthrough below picks up where §5b ended — you have at least one
+saved profile under `~/.rytm-randomizer/profiles/` and you want to ship
+it as a `.rymp` file for the hardware (or for sharing).
+
+1. **Pre-flight: rehearse the export.** Run the passive rehearsal
+   report first to see exactly what bytes WOULD be written without
+   actually writing anything:
+
+   ```bash
+   rytm-randomizer cockpit-export-rehearsal-report \
+       --profile-id <id> \
+       --profiles-dir ~/.rytm-randomizer/profiles \
+       --key-id <label>
+   ```
+
+   The report prints the same panels the GUI surfaces: profile
+   identity, payload length, projected signature length, key resolution
+   status, and the verification result the pipeline WOULD return if the
+   bytes were written and re-read. The `--json` flag emits the same
+   data as deterministic JSON (sort_keys) for tooling. The report
+   writes nothing, opens no MIDI port, makes no network call — it is
+   passive by construction, pinned by
+   `tests/architecture/test_export_pipeline_invariants.py`.
+
+2. **Execute the export.** Once the rehearsal report says the export
+   would succeed (`status: ready`), run the real CLI:
+
+   ```bash
+   rytm-randomizer cockpit-export-profile-model \
+       --profile-id <id> \
+       --output ~/profiles/my-profile.rymp \
+       --key-id <label>
+   ```
+
+   The CLI orchestrates the full pipeline:
+
+   - Resolves the profile from the registry (the same
+     `ProfileRegistry.load(profile_id)` the cockpit uses).
+   - Packs it through `pack_profile_model` to the Phase 1 binary
+     format (`RYMP` magic + format version + model version +
+     MessagePack payload + CRC32 trailer).
+   - Signs the packed bytes with HMAC-SHA256 over `algo || 0x1f ||
+     key_id || 0x1f || payload`, wrapping the result in the Phase 3
+     `RYMS` envelope.
+   - Writes the envelope to `--output` ATOMICALLY: a temp file in the
+     same directory is fsync'd to durable storage, then `os.replace`'d
+     onto the target path. The write either fully succeeds or leaves
+     the target path untouched — there is no observable partial-write
+     state, even across power loss.
+   - Post-flight verifies the written file end-to-end. The verifier
+     dispatches on the leading magic (`RYMS` -> envelope check + inner
+     CRC; `RYMP` -> plain CRC; anything else -> `bad_magic`) and
+     returns a typed `VerificationResult`. Never raises.
+
+   If you do not yet have a keystore set up, the `--unsigned` flag
+   writes the Phase 1 packed bytes directly (no envelope). Unsigned
+   `.rymp` files carry integrity (CRC32) but not authenticity (no
+   signature). A future hardware loader may refuse them; the
+   recommended path is to set up a keystore (Phase 3.5) once you intend
+   to ship a profile to hardware.
+
+3. **Verify the result.** The CLI prints the verification outcome
+   inline at the end of the export. A successful export ends with:
+
+   ```text
+   file written: /Users/you/profiles/my-profile.rymp
+   bytes:       4_217
+   signed:      yes (hmac-sha256, key_id="<label>")
+   verified:    ok
+   ```
+
+   A non-zero exit code means the file was written but failed
+   post-flight verification — that should never happen in normal use
+   and indicates a bug the operator should report; do not trust the
+   file.
+
+4. **What the `.rymp` file is good for.** The output is the same
+   format the Phase 4 hardware loader will consume. The bytes are
+   stable across releases (the magic, format version, and signing
+   algorithm are pinned by architecture invariants). You can copy the
+   file to an SD card, share it with another operator, archive it
+   alongside the source profile JSON, or feed it back through
+   `cockpit-export-rehearsal-report --plan-file <path>` to inspect its
+   contents without re-deriving them from the source profile. When
+   Phase 4's hardware ships, the same `.rymp` will load directly from
+   flash — no re-export step needed.
+
+If you want to inspect or share a `.rymp` file you did not create, run
+the rehearsal report against the file rather than the profile id. The
+report will tell you which key id signed it, the signature outcome
+against any key you provide via `--key-bytes`, and the profile's name +
+trait set + pad-mapping summary.
+
+---
+
 ## 6. Connecting to real hardware
 
 The cockpit defaults to a **mock device adapter**: it opens no MIDI port
