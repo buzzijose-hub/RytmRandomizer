@@ -11,6 +11,28 @@ pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES_DIR = Path(__file__).resolve().parent / "fixtures"
+
+
+def _operator_docs_text() -> str:
+    """Return the concatenated operator-facing docs (README + CLI_REFERENCE).
+
+    Historically the README carried the full CLI command appendix and every
+    ``test_readme_mentions_*`` assertion read straight from ``README.md``.
+    The product-facing README rewrite moved the deep command reference into
+    ``docs/CLI_REFERENCE.md`` to keep the landing page scannable; the
+    operator-facing invariant -- "every passive CLI command is documented
+    for an operator who reads our docs" -- is unchanged, it just spans two
+    files now. This helper reads BOTH and returns the joined text so the
+    existing assertions keep working without each having to know the
+    layout. New tests should call this helper too.
+    """
+
+    readme = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    cli_ref_path = PROJECT_ROOT / "docs" / "CLI_REFERENCE.md"
+    cli_ref = cli_ref_path.read_text(encoding="utf-8") if cli_ref_path.exists() else ""
+    return readme + "\n" + cli_ref
+
+
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
@@ -2116,28 +2138,28 @@ def test_dual_machine_style_snapshot_routing_report_unknown_style_fails_safely(t
 
 
 def test_readme_mentions_rytm_machine_matrix_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "rytm-12-pad-machine-matrix-report" in text
     assert "12-pad machine matrix" in text
 
 
 def test_readme_mentions_rytm_snapshot_pad_compatibility_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "rytm-snapshot-pad-compatibility-report" in text
     assert "snapshot-pad compatibility" in text
 
 
 def test_readme_mentions_rytm_snapshot_intelligence_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "rytm-snapshot-intelligence-report" in text
     assert "snapshot intelligence" in text
 
 
 def test_readme_mentions_rytm_snapshot_mutation_preview_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "rytm-snapshot-mutation-preview-report" in text
     assert "snapshot mutation preview" in text
@@ -2145,70 +2167,70 @@ def test_readme_mentions_rytm_snapshot_mutation_preview_report_command():
 
 
 def test_readme_mentions_style_profile_commands():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-profile-report" in text
     assert "style profiles" in text
 
 
 def test_readme_mentions_analog_four_style_snapshot_routing_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "analog-four-style-snapshot-routing-report" in text
     assert "Analog Four style snapshot routing" in text
 
 
 def test_readme_mentions_dual_machine_style_snapshot_routing_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "dual-machine-style-snapshot-routing-report" in text
     assert "dual-machine style snapshot routing" in text
 
 
 def test_readme_mentions_dual_machine_style_selection_mock_preview_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "dual-machine-style-selection-mock-preview-report" in text
     assert "selection mock preview" in text
 
 
 def test_readme_mentions_dual_machine_style_live_audition_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "dual-machine-style-live-audition-report" in text
     assert "live audition" in text
 
 
 def test_readme_mentions_dual_machine_style_performance_set_plan_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "dual-machine-style-performance-set-plan-report" in text
     assert "performance set plan" in text
 
 
 def test_readme_mentions_style_performance_arc_live_cue_sheet_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-cue-sheet-report" in text
     assert "live cue sheet" in text
 
 
 def test_readme_mentions_style_performance_arc_reference_match_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-reference-match-report" in text
     assert "reference-match" in text
 
 
 def test_readme_mentions_style_performance_arc_live_runbook_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-runbook-report" in text
     assert "live runbook" in text
 
 
 def test_readme_mentions_style_performance_arc_stage_routing_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-stage-routing-report" in text
     assert "stage routing" in text
@@ -2216,7 +2238,7 @@ def test_readme_mentions_style_performance_arc_stage_routing_report_command():
 
 
 def test_readme_mentions_style_performance_arc_stage_rehearsal_state_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-stage-rehearsal-state-report" in text
     assert "stage rehearsal" in text
@@ -2224,7 +2246,7 @@ def test_readme_mentions_style_performance_arc_stage_rehearsal_state_report_comm
 
 
 def test_readme_mentions_style_performance_arc_live_show_export_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-show-export-report" in text
     assert "live show export" in text
@@ -2232,7 +2254,7 @@ def test_readme_mentions_style_performance_arc_live_show_export_report_command()
 
 
 def test_readme_mentions_style_performance_arc_live_transition_timeline_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-transition-timeline-report" in text
     assert "live transition timeline" in text
@@ -2240,7 +2262,7 @@ def test_readme_mentions_style_performance_arc_live_transition_timeline_report_c
 
 
 def test_readme_mentions_style_performance_arc_live_command_deck_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-command-deck-report" in text
     assert "live command deck" in text
@@ -2248,7 +2270,7 @@ def test_readme_mentions_style_performance_arc_live_command_deck_report_command(
 
 
 def test_readme_mentions_style_performance_arc_live_state_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-state-report" in text
     assert "live state packet" in text
@@ -2256,7 +2278,7 @@ def test_readme_mentions_style_performance_arc_live_state_report_command():
 
 
 def test_readme_mentions_style_performance_arc_live_control_surface_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-control-surface-report" in text
     assert "control surface" in text
@@ -2264,7 +2286,7 @@ def test_readme_mentions_style_performance_arc_live_control_surface_report_comma
 
 
 def test_readme_mentions_style_performance_arc_live_analyzer_handoff_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-analyzer-handoff-report" in text
     assert "analyzer handoff" in text
@@ -2272,7 +2294,7 @@ def test_readme_mentions_style_performance_arc_live_analyzer_handoff_report_comm
 
 
 def test_readme_mentions_style_performance_arc_live_analyzer_targets_report_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-analyzer-targets-report" in text
     assert "analyzer target" in text
@@ -2280,7 +2302,7 @@ def test_readme_mentions_style_performance_arc_live_analyzer_targets_report_comm
 
 
 def test_readme_mentions_style_performance_arc_live_gui_analyzer_readiness_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-analyzer-readiness-report" in text
     assert "GUI/audio-analyzer readiness bundle" in text
@@ -2288,7 +2310,7 @@ def test_readme_mentions_style_performance_arc_live_gui_analyzer_readiness_comma
 
 
 def test_readme_mentions_style_performance_arc_live_gui_rehearsal_session_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-rehearsal-session-report" in text
     assert "GUI rehearsal session packet" in text
@@ -2296,7 +2318,7 @@ def test_readme_mentions_style_performance_arc_live_gui_rehearsal_session_comman
 
 
 def test_readme_mentions_style_performance_arc_live_gui_capture_queue_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-capture-queue-report" in text
     assert "GUI/audio analyzer capture queue" in text
@@ -2304,7 +2326,7 @@ def test_readme_mentions_style_performance_arc_live_gui_capture_queue_command():
 
 
 def test_readme_mentions_style_performance_arc_live_gui_capture_review_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-capture-review-report" in text
     assert "GUI/audio analyzer capture review" in text
@@ -2312,7 +2334,7 @@ def test_readme_mentions_style_performance_arc_live_gui_capture_review_command()
 
 
 def test_readme_mentions_style_performance_arc_live_gui_sidecar_session_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-sidecar-session-report" in text
     assert "sidecar-ready GUI state" in text
@@ -2320,7 +2342,7 @@ def test_readme_mentions_style_performance_arc_live_gui_sidecar_session_command(
 
 
 def test_readme_mentions_style_performance_arc_live_gui_screen_contract_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-screen-contract-report" in text
     assert "GUI screen contract" in text
@@ -2328,7 +2350,7 @@ def test_readme_mentions_style_performance_arc_live_gui_screen_contract_command(
 
 
 def test_readme_mentions_style_performance_arc_live_gui_render_tree_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-render-tree-report" in text
     assert "GUI render tree" in text
@@ -2336,7 +2358,7 @@ def test_readme_mentions_style_performance_arc_live_gui_render_tree_command():
 
 
 def test_readme_mentions_style_performance_arc_live_gui_analyzer_overlay_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-analyzer-overlay-report" in text
     assert "GUI analyzer overlay" in text
@@ -2344,7 +2366,7 @@ def test_readme_mentions_style_performance_arc_live_gui_analyzer_overlay_command
 
 
 def test_readme_mentions_style_performance_arc_live_gui_analyzer_frame_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-analyzer-frame-report" in text
     assert "GUI analyzer frame" in text
@@ -2352,7 +2374,7 @@ def test_readme_mentions_style_performance_arc_live_gui_analyzer_frame_command()
 
 
 def test_readme_mentions_style_performance_arc_live_gui_interaction_script_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-interaction-script-report" in text
     assert "GUI interaction script" in text
@@ -2360,7 +2382,7 @@ def test_readme_mentions_style_performance_arc_live_gui_interaction_script_comma
 
 
 def test_readme_mentions_style_performance_arc_live_gui_action_reducer_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-action-reducer-report" in text
     assert "GUI action reducer" in text
@@ -2368,7 +2390,7 @@ def test_readme_mentions_style_performance_arc_live_gui_action_reducer_command()
 
 
 def test_readme_mentions_style_performance_arc_live_gui_controller_state_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-controller-state-report" in text
     assert "GUI controller state" in text
@@ -2376,7 +2398,7 @@ def test_readme_mentions_style_performance_arc_live_gui_controller_state_command
 
 
 def test_readme_mentions_style_performance_arc_live_gui_playback_transcript_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-playback-transcript-report" in text
     assert "GUI playback transcript" in text
@@ -2384,7 +2406,7 @@ def test_readme_mentions_style_performance_arc_live_gui_playback_transcript_comm
 
 
 def test_readme_mentions_style_performance_arc_live_gui_playback_validation_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-playback-validation-report" in text
     assert "GUI playback validation" in text
@@ -2392,7 +2414,7 @@ def test_readme_mentions_style_performance_arc_live_gui_playback_validation_comm
 
 
 def test_readme_mentions_style_performance_arc_live_gui_test_harness_contract_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-test-harness-contract-report" in text
     assert "GUI test-harness contract" in text
@@ -2400,7 +2422,7 @@ def test_readme_mentions_style_performance_arc_live_gui_test_harness_contract_co
 
 
 def test_readme_mentions_style_performance_arc_live_gui_test_harness_readiness_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-test-harness-readiness-report" in text
     assert "GUI test-harness readiness" in text
@@ -2408,7 +2430,7 @@ def test_readme_mentions_style_performance_arc_live_gui_test_harness_readiness_c
 
 
 def test_readme_mentions_style_performance_arc_live_gui_implementation_bridge_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-implementation-bridge-report" in text
     assert "GUI implementation bridge" in text
@@ -2416,7 +2438,7 @@ def test_readme_mentions_style_performance_arc_live_gui_implementation_bridge_co
 
 
 def test_readme_mentions_style_performance_arc_live_gui_desktop_blueprint_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-desktop-blueprint-report" in text
     assert "GUI desktop blueprint" in text
@@ -2424,7 +2446,7 @@ def test_readme_mentions_style_performance_arc_live_gui_desktop_blueprint_comman
 
 
 def test_readme_mentions_style_performance_arc_live_gui_desktop_app_plan_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-desktop-app-plan-report" in text
     assert "GUI desktop app plan" in text
@@ -2432,7 +2454,7 @@ def test_readme_mentions_style_performance_arc_live_gui_desktop_app_plan_command
 
 
 def test_readme_mentions_style_performance_arc_live_gui_desktop_component_contract_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-desktop-component-contract-report" in text
     assert "GUI desktop component contract" in text
@@ -2440,7 +2462,7 @@ def test_readme_mentions_style_performance_arc_live_gui_desktop_component_contra
 
 
 def test_readme_mentions_style_performance_arc_live_gui_desktop_view_model_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-desktop-view-model-report" in text
     assert "GUI desktop view model" in text
@@ -2448,7 +2470,7 @@ def test_readme_mentions_style_performance_arc_live_gui_desktop_view_model_comma
 
 
 def test_readme_mentions_style_performance_arc_live_gui_desktop_render_contract_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-desktop-render-contract-report" in text
     assert "GUI desktop render contract" in text
@@ -2456,7 +2478,7 @@ def test_readme_mentions_style_performance_arc_live_gui_desktop_render_contract_
 
 
 def test_readme_mentions_style_performance_arc_live_gui_desktop_render_harness_command():
-    text = (PROJECT_ROOT / "README.md").read_text(encoding="utf-8")
+    text = _operator_docs_text()
 
     assert "style-performance-arc-live-gui-desktop-render-harness-report" in text
     assert "GUI desktop render harness" in text

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" role="img" aria-label="Export pipeline — pack, sign, write, verify">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#13171f"/>
+      <stop offset="100%" stop-color="#0c0f15"/>
+    </linearGradient>
+    <marker id="ah3" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffcf7c"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="320" fill="url(#bg4)"/>
+  <text x="640" y="40" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#f5f5f5" text-anchor="middle" letter-spacing="3">
+    PHASE 3 · EXPORT PIPELINE
+  </text>
+  <text x="640" y="62" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="500" fill="#8c93a0" text-anchor="middle">
+    ProfileModel → versioned binary → optional signing → atomic file write → integrity verify
+  </text>
+  <g font-family="Helvetica, Arial, sans-serif">
+    <!-- 6 nodes -->
+    <g transform="translate(60,120)">
+      <rect width="140" height="80" rx="10" fill="#1c2230" stroke="#2a3140"/>
+      <text x="70" y="32" font-size="13" font-weight="700" fill="#9be8a0" text-anchor="middle">ProfileModel</text>
+      <text x="70" y="50" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">in-memory frozen</text>
+      <text x="70" y="64" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">dataclass tree</text>
+    </g>
+    <path d="M 200 160 L 230 160" stroke="#ffcf7c" stroke-width="2" fill="none" marker-end="url(#ah3)"/>
+    <text x="215" y="148" font-size="9" font-weight="500" fill="#5b6573" text-anchor="middle">pack</text>
+    <g transform="translate(240,120)">
+      <rect width="140" height="80" rx="10" fill="#1c2230" stroke="#2a3140"/>
+      <text x="70" y="32" font-size="13" font-weight="700" fill="#f5f5f5" text-anchor="middle">RYMP packed</text>
+      <text x="70" y="50" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">magic + fmt_ver +</text>
+      <text x="70" y="64" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">payload + CRC32</text>
+    </g>
+    <path d="M 380 160 L 410 160" stroke="#ffcf7c" stroke-width="2" fill="none" marker-end="url(#ah3)"/>
+    <text x="395" y="148" font-size="9" font-weight="500" fill="#5b6573" text-anchor="middle">sign</text>
+    <g transform="translate(420,120)">
+      <rect width="160" height="80" rx="10" fill="#1c2230" stroke="#2a3140"/>
+      <text x="80" y="32" font-size="13" font-weight="700" fill="#f5f5f5" text-anchor="middle">RYMS envelope</text>
+      <text x="80" y="50" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">HMAC-SHA256</text>
+      <text x="80" y="64" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">+ key_id + payload</text>
+    </g>
+    <path d="M 580 160 L 610 160" stroke="#ffcf7c" stroke-width="2" fill="none" marker-end="url(#ah3)"/>
+    <text x="595" y="148" font-size="9" font-weight="500" fill="#5b6573" text-anchor="middle">write</text>
+    <g transform="translate(620,120)">
+      <rect width="160" height="80" rx="10" fill="#1c2230" stroke="#2a3140"/>
+      <text x="80" y="32" font-size="13" font-weight="700" fill="#f5f5f5" text-anchor="middle">atomic file</text>
+      <text x="80" y="50" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">temp · fsync · replace</text>
+      <text x="80" y="64" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">POSIX + Windows</text>
+    </g>
+    <path d="M 780 160 L 810 160" stroke="#ffcf7c" stroke-width="2" fill="none" marker-end="url(#ah3)"/>
+    <text x="795" y="148" font-size="9" font-weight="500" fill="#5b6573" text-anchor="middle">verify</text>
+    <g transform="translate(820,120)">
+      <rect width="160" height="80" rx="10" fill="#1c2230" stroke="#2a3140"/>
+      <text x="80" y="32" font-size="13" font-weight="700" fill="#f5f5f5" text-anchor="middle">VerificationResult</text>
+      <text x="80" y="50" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">never raises</text>
+      <text x="80" y="64" font-size="10" font-weight="500" fill="#8c93a0" text-anchor="middle">ok + reason</text>
+    </g>
+    <path d="M 980 160 L 1010 160" stroke="#ffcf7c" stroke-width="2" fill="none" marker-end="url(#ah3)"/>
+    <text x="995" y="148" font-size="9" font-weight="500" fill="#5b6573" text-anchor="middle">ship</text>
+    <g transform="translate(1020,108)">
+      <rect width="200" height="104" rx="10" fill="#9be8a0" stroke="#7dc285"/>
+      <text x="100" y="34" font-size="13" font-weight="800" fill="#0c0f15" text-anchor="middle">buzzi-v1.0.0.rymp</text>
+      <text x="100" y="58" font-size="10" font-weight="600" fill="#0c0f15" text-anchor="middle">~ 8 KB · shareable</text>
+      <text x="100" y="74" font-size="10" font-weight="600" fill="#0c0f15" text-anchor="middle">version-pinned</text>
+      <text x="100" y="90" font-size="10" font-weight="700" fill="#0c0f15" text-anchor="middle">→ Phase 4 hardware</text>
+    </g>
+    <!-- rehearsal hint below -->
+    <g transform="translate(80,238)">
+      <rect width="1120" height="60" rx="10" fill="#11161f" stroke="#1f2530" stroke-dasharray="3 3"/>
+      <text x="20" y="28" font-size="11" font-weight="700" fill="#ffcf7c" letter-spacing="2">REHEARSAL · PASSIVE</text>
+      <text x="20" y="48" font-size="11" font-weight="500" fill="#8c93a0">
+        cockpit-export-rehearsal-report --profile-id buzzi  →  shows file path · size · CRC · signing status BEFORE anything is written. Same panel/binding shape as PR #104.
+      </text>
+    </g>
+  </g>
+</svg>

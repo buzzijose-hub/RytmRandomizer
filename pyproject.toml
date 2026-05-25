@@ -8,7 +8,11 @@ version = "1.34.0"
 description = "A MIDI randomizer/mutator for the Elektron Analog Rytm MK2."
 readme = "README.md"
 requires-python = ">=3.9"
-license = "Apache-2.0"
+# PolyForm Noncommercial 1.0.0 — free for personal / non-commercial use.
+# Commercial use (paid product, hosted service, OEM bundle, etc.) requires
+# a separate commercial license; see LICENSE for the full terms.
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 dependencies = [
     # Elektron-critical pins. mido encodes the wire-format MIDI messages
     # the Analog Rytm MK2 receives over the cable; python-rtmidi drives the
@@ -261,8 +265,8 @@ project_name = "RytmRandomizer"
 bundle = "com.rytmrandomizer"
 version = "1.34.0"
 url = "https://github.com/misteredr/RytmRandomizer"
-license = "Apache-2.0"
-author = "RytmRandomizer contributors"
+license = "PolyForm-Noncommercial-1.0.0"
+author = "Jose Buzzi and Edward Rosado"
 author_email = "rytm-randomizer@example.com"
 
 [tool.briefcase.app.rytm-randomizer]
