@@ -24,6 +24,7 @@ import hashlib
 import hmac
 from dataclasses import dataclass
 
+from ...observability.logging import get_logger
 from .model_format import (
     MAGIC,
     SUPPORTED_FORMAT_VERSIONS,
@@ -36,6 +37,13 @@ from .signing import (
     SUPPORTED_SIGNATURE_FORMAT_VERSIONS,
     unpack_signed,
 )
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit ProfileModel verifier. Bound here so
+future structured log calls (per-failure-reason metric increments,
+verification breadcrumbs) can land in the package's structured stream
+without touching this file's imports. See ``OBSERVABILITY_REVIEW.md``
+Phase 5."""
 
 # ---------------------------------------------------------------------------
 # VerificationResult dataclass

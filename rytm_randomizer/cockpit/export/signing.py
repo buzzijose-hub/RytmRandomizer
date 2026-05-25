@@ -36,6 +36,14 @@ import struct
 from dataclasses import dataclass
 from typing import Final
 
+from ...observability.logging import get_logger
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit ProfileModel signing envelope. Bound
+here so future structured log calls (key rotation breadcrumbs, algo /
+key_id telemetry) can land in the package's structured stream without
+touching this file's imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
+
 # ---------------------------------------------------------------------------
 # Format constants
 # ---------------------------------------------------------------------------

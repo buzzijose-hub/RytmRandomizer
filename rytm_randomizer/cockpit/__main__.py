@@ -49,12 +49,19 @@ from typing import Final
 
 import uvicorn
 
+from ..observability.logging import get_logger
 from .data import PadState, Snapshot, new_ulid
 from .device import MockDeviceAdapter
 from .history import HistoryStore
 from .profiles import ProfileRegistry, default_profiles_dir
 from .ws.server import create_app
 from .ws.session import CockpitSession
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit sidecar entrypoint (token provisioning,
+port resolution, uvicorn boot). Bound here so PR O6 (arch tests on
+hot-path loggers) can wire its structured events without touching this
+file's imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _DEFAULT_HOST = "127.0.0.1"
 """Loopback only — never expose the cockpit to a routable interface in Phase 1."""

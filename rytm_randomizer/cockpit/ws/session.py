@@ -37,11 +37,18 @@ import secrets
 from dataclasses import dataclass, field
 from typing import Final
 
+from ...observability.logging import get_logger
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..device import DeviceAdapter
 from ..history import HistoryStore
 from ..profiles import ProfileRegistry
 from .wizard_session import WizardSession
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit per-process session container. Bound
+here so future structured log calls land in the package's structured
+stream without touching this file's imports. See
+``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 DEFAULT_DEPTH: Final[float] = 0.45
 """Default depth value matching the v10 UX mockup (slider mid-position, 45%)."""

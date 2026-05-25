@@ -40,6 +40,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final
 
+from ...observability.logging import get_logger
 from ...style_analysis.extractor import extract_from_audio
 from ...style_analysis.feature_report import FeatureReport
 from ..data.profile_model import StyleTrait
@@ -47,6 +48,13 @@ from . import reference_analyzer, sysex_analyzer
 from .errors import WizardSourcePathError
 from .state import InspirationSource, Kind, Mode
 from .trait_math import average_trait_tuples, build_canonical_traits, neutral_traits
+
+_logger = get_logger(__name__)
+"""Module logger for the wizard analysis dispatcher. Bound here so
+future structured log calls (per-source dispatch breadcrumbs, folder
+iteration progress) can land in the package's structured stream
+without touching this file's imports. See ``OBSERVABILITY_REVIEW.md``
+Phase 5."""
 
 #: Audio extensions accepted by the audio path.
 _AUDIO_EXTENSIONS: Final[tuple[str, ...]] = (".wav", ".mp3", ".flac", ".aif", ".aiff")

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...observability.logging import get_logger
 from ..data import (
     MutationCandidate,
     PadDelta,
@@ -37,6 +38,12 @@ from ..data import (
     new_ulid,
 )
 from .prng import xorshift32
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit mutation engine. Bound here so future
+structured log calls (per-mutation telemetry, sampled-DEBUG candidate
+audit lines) can land in the package's structured stream without
+touching this file's imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _CC_MIN: Final[int] = 0
 """Minimum Rytm CC value."""

@@ -50,6 +50,7 @@ import msgpack
 
 from ...cli_registry import CliCommand
 from ...cli_registry import register as _registry_register
+from ...observability.logging import get_logger
 from .serialize import pack_profile_model
 from .signing import pack_signed, sign_profile_blob
 from .verifier import verify_signed_blob, verify_unsigned_payload
@@ -61,6 +62,12 @@ from .verifier import verify_signed_blob, verify_unsigned_payload
 # project-typed ``WriteError``) is exactly the divergence Gate 17 was
 # lifted to prevent.
 from .writer import WriteError, WriteResult, atomic_write, default_export_dir
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit export CLI. Bound here so PR O2 (RED
+metrics for the export pipeline) and PR O6 (arch tests on hot-path
+loggers) can wire their structured events without touching this file's
+imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _COMMAND_NAME: Final[str] = "cockpit-export-profile-model"
 """Subcommand token registered with the cli dispatcher."""

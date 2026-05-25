@@ -44,6 +44,14 @@ from pathlib import Path
 from typing import Final
 
 from ...observability.errors import DataError
+from ...observability.logging import get_logger
+
+_logger = get_logger(__name__)
+"""Module logger for the atomic export writer. Bound here so future
+structured log calls (durability breadcrumbs around fsync / atomic
+replace, disk-full / permission-denied diagnostics) can land in the
+package's structured stream without touching this file's imports.
+See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 # ---------------------------------------------------------------------------
 # Constants

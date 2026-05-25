@@ -59,11 +59,19 @@ from __future__ import annotations
 from typing import Final
 
 from ...observability.errors import DataError
+from ...observability.logging import get_logger
 from ..data.profile_model import ProfileModel, StyleTrait, TraitPadWeight
 from ..data.types import Kind, TransitionCurve
 from ..data.ulid import new_ulid
 from .pad_mapping import TRAIT_TO_PAD
 from .state import AnalysisJob
+
+_logger = get_logger(__name__)
+"""Module logger for the wizard ProfileBuilder. Bound here so future
+structured log calls (per-build trait-aggregation breadcrumbs,
+EmptyAnalysisError context) can land in the package's structured stream
+without touching this file's imports. See ``OBSERVABILITY_REVIEW.md``
+Phase 5."""
 
 # ---------------------------------------------------------------------------
 # Constants — the Phase 2 fixed-version contract

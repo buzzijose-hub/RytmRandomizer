@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 
+from ...observability.logging import get_logger
 from ..data import (
     CockpitSendPlan,
     MutationCandidate,
@@ -20,6 +21,12 @@ from ..data import (
     Snapshot,
     synthetic_parameter_cc,
 )
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit send-plan builder. Bound here so future
+structured log calls (per-plan packet/blocked-reason breadcrumbs) can
+land in the package's structured stream without touching this file's
+imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _DEFAULT_MIDI_CHANNEL = 0
 
