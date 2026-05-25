@@ -54,3 +54,9 @@ Docs/Session_Logs/latest_closeout_summary.txt
 !.claude/agents/
 !.claude/settings.json
 docs-scratch/
+
+# Dead-code audit scratch directory (vulture / ts-prune / AST scanner outputs).
+# The architecture test ``tests/architecture/test_no_unreferenced_top_level_symbols.py``
+# embeds the production AST scanner; this directory is just a workspace for
+# rerunning surveys ad-hoc. See DEAD_CODE_AUDIT.md for the methodology.
+_deadcode/
