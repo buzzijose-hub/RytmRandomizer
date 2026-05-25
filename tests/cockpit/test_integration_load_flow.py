@@ -82,8 +82,11 @@ def test_load_snapshot_unknown_id_returns_error(cockpit_ws: object) -> None:
     )
 
     assert ack["ok"] is False
-    # ``HistoryStore.load`` raises a KeyError whose str payload includes the id.
-    assert "01HXY5Q9PJM00000000FAKEID0" in ack["error"]
+    # PR 14: categorical envelope. The unknown id is echoed in the
+    # canonical ``message`` (the client already supplied it, so echoing
+    # it back is fine -- no exception detail leaks to the wire).
+    assert ack["code"] == "validation_error"
+    assert "01HXY5Q9PJM00000000FAKEID0" in ack["message"]
 
 
 def test_load_snapshot_emits_snapshot_then_history(cockpit_ws: object) -> None:

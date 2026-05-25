@@ -153,10 +153,34 @@ a violation merge:
 2. **`.claude/settings.json`** — Claude Code agent review (8 steps).
 3. **`.codex/hooks.json`** — codex agent review (8 steps, via re-prompt).
 4. **CI** — the `architecture` job in `.github/workflows/test.yml` runs
-   `pytest tests/architecture/` (16 test files, ~234 tests) on every PR and
-   is a **required status check**. It mechanically re-checks the compliance
-   subset server-side (import direction, house style, data-not-code, side
-   effects, no-`Any`, device-Protocol enforcement, README freshness, ...).
+   `pytest tests/architecture/` on every PR and is a **required status check**.
+   It mechanically re-checks the compliance subset server-side (import
+   direction, house style, data-not-code, side effects, no-`Any`,
+   device-Protocol enforcement, README freshness, ...) AND the nine
+   CODE_REVIEW.md prevention tests from the 2026-05-25 sweep:
+   - `test_no_unauthenticated_ws_endpoints.py` — every `@app.websocket(...)`
+     handler must reference the handshake-token symbol (prevents C1 regression).
+   - `test_no_unconstrained_path_inputs.py` — wire-handlers that accept a
+     `location: str` must go through `WizardPathPolicy.validate` before any
+     filesystem op (prevents C2).
+   - `test_no_raw_exception_messages_on_wire.py` — handlers that catch
+     exceptions must not put `str(exc)` into the response envelope (prevents H4).
+   - `test_no_silent_overwrite_writes.py` — `Path.write_text` /
+     `Path.write_bytes` in cockpit code must route through the canonical
+     `atomic_write` (prevents M7).
+   - `test_no_side_channel_session_attrs.py` — forbids
+     `setattr(session, ...)` for names not declared on the `CockpitSession`
+     dataclass (prevents H1).
+   - `test_no_str_in_literal_position.py` — forbids
+     `# type: ignore[arg-type]` to launder `str` into a `Literal` (prevents
+     P1 + H2; use a `narrow_*` helper).
+   - `test_final_constants.py` — top-level module constants must carry
+     `Final[T]` (Gate 12; 282-entry grandfather floor).
+   - `test_abstraction_reuse.py` — flags duplicated canonical surfaces for
+     `atomic_write` / `pack_signed` / similar (Gate 17; prevents C3 class).
+   - `test_cli_no_inline_arms.py` — forbids new `if args == [...]` inline
+     arms in `cli.py`; new commands must register via
+     `cli_registry.CliCommand.register(...)` (prevents H7 + IH4 + IH5).
 
 Layers 1-3 are local and fast; layer 4 is the server-side guarantee. The
 agent hooks (2, 3) and `just review` catch the **judgement-level** findings

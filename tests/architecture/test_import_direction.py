@@ -342,7 +342,42 @@ def test_no_package_module_imports_monolith() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Rule 9: no eager `import mido` / `from mido` anywhere in the package
+# Rule 9: observability/ must not import cockpit/wizard/* (CODE_REVIEW.md M15)
+# ---------------------------------------------------------------------------
+
+
+def test_observability_does_not_import_cockpit_wizard() -> None:
+    """``observability/*`` may NOT import from ``cockpit/wizard/*``.
+
+    CODE_REVIEW.md M15: ``cockpit.wizard.builder`` raises
+    :class:`EmptyAnalysisError` (a ``DataError + ValueError`` dual-inheritance
+    type from :mod:`observability.errors`). The direction
+    ``cockpit.wizard -> observability`` is the intended layer order. A
+    future contributor moving the error class the other way (or having
+    observability reach into the wizard for any reason) would invert the
+    layer graph -- this test pins the one-way arrow.
+
+    Observability is the cross-cutting concern every layer above it may
+    use (logging, errors, metrics, tracing); the wizard is a specific
+    feature surface above it. The arrow points UP only.
+    """
+
+    violations: list[str] = []
+    for path in sorted((PACKAGE_ROOT / "observability").rglob("*.py")):
+        for lineno, fq in _imported_package_modules(path):
+            if fq == f"{PACKAGE_NAME}.cockpit.wizard" or fq.startswith(
+                f"{PACKAGE_NAME}.cockpit.wizard."
+            ):
+                violations.append(f"{path.relative_to(PROJECT_ROOT)}:{lineno} imports {fq}")
+    assert not violations, (
+        "observability/* must not import from cockpit/wizard/* "
+        "(observability is a cross-cutting concern below the cockpit "
+        "feature layers). Violations:\n  " + "\n  ".join(violations)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Rule 10: no eager `import mido` / `from mido` anywhere in the package
 # ---------------------------------------------------------------------------
 
 
@@ -375,4 +410,5 @@ if __name__ == "__main__":
     test_nothing_in_package_imports_app()
     test_cli_is_passive()
     test_no_package_module_imports_monolith()
+    test_observability_does_not_import_cockpit_wizard()
     test_no_eager_mido_import_in_package()

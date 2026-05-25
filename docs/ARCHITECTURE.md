@@ -754,6 +754,190 @@ contributor discipline).
 
 ---
 
+## 6.5 Cockpit WebSocket security contract (post CODE_REVIEW.md sweep, 2026-05)
+
+The cockpit sidecar exposes a single `/ws` endpoint on `127.0.0.1:4317`. "Loopback only"
+is not a security boundary by itself — any local process (including a browser tab the
+operator opens) can dial `ws://127.0.0.1:4317/ws`. The CODE_REVIEW.md sweep replaced
+"loopback only protects us" with an explicit four-layer contract.
+
+### 6.5.1 Wire contract (every connection)
+
+Every `/ws` connection performs four steps in fixed order, all enforced in
+`rytm_randomizer/cockpit/ws/server.py`:
+
+1. **Pinned subprotocol upgrade.** The server calls `accept(subprotocol="rytm-rand-cockpit-v1")`.
+   Casual `new WebSocket(url)` clients (e.g. a foreign browser tab) omit the subprotocol
+   and fail the upgrade before our handler runs. Constant lives at
+   `cockpit/ws/protocol.py:WS_SUBPROTOCOL`.
+2. **HMAC handshake (per-launch token).** The first frame MUST be
+   `{"type": "hello", "token": "<urlsafe>"}`. The token is compared against the
+   per-launch token loaded at server boot under `hmac.compare_digest` (constant-time).
+   Rejection paths close the socket with policy-violation code `1008` after writing a
+   typed ack (`auth_required` / `auth_failed`) so a programmatic client can branch.
+3. **Bootstrap event quartet.** `emit_initial_events` sends `session_status`,
+   `snapshot_changed`, `profile_changed`, `history_updated` so the UI renders a complete
+   first frame.
+4. **Size-capped command loop.** Each inbound frame is checked against
+   `_DEFAULT_MAX_MESSAGE_BYTES` (1 MiB; override via `RYTM_RAND_WS_MAX_MESSAGE_BYTES`)
+   *before* `json.loads`. Oversize frames are rejected with `message_too_large` + close
+   code `1009`. `WebSocket.receive_json` is deliberately not used — it buffers unbounded
+   input before parsing.
+
+### 6.5.2 Per-launch token provisioning
+
+`rytm_randomizer/cockpit/__main__.py` mints the token via `secrets.token_urlsafe(32)`
+on every boot and writes it to:
+
+| Mode | Path | How the client reads it |
+|---|---|---|
+| **Production / Tauri-spawned** | `RYTM_RAND_WS_TOKEN_FILE` (env var) | The Tauri shell sets the env var to a path it controls, then reads the file back after spawning the sidecar. |
+| **Interactive dev** | `~/.rytm-randomizer/cockpit-ws-token` | The token is also printed to stdout so a developer can copy it directly. |
+
+File mode is set to `0o600` (best-effort on Windows — the platform's ACL model does
+not map cleanly to POSIX bits, and `$HOME` is already user-private). The token is
+*always* freshly generated on launch; a stale token from a prior session is overwritten.
+
+`create_app(session, *, token: str)` REJECTS an empty token at construction time — the
+sidecar refuses to start with a broken authenticator rather than ship one that accepts
+the empty string.
+
+### 6.5.3 `WizardPathPolicy` — wizard source path allow-list
+
+`rytm_randomizer/cockpit/wizard/path_policy.py` defines the policy object the
+wizard's WS handler consults before passing a `location: str` to any filesystem
+operation. Without this layer a hostile WS peer could ask the cockpit to read
+arbitrary files the sidecar user has read access to (`/etc/passwd`, `~/.ssh/*`, etc.);
+the analyzer's byte statistics would then leak back over the wire as four floats per
+source — a textbook fingerprinting oracle.
+
+**Contract** (`WizardPathPolicy.validate(location) -> Path`, raises
+`WizardSourcePathRejected`):
+
+1. Reject empty strings.
+2. Reject if the user-supplied path OR any parent component is a symlink (chasing a
+   symlink defeats the allow-list).
+3. Resolve via `Path.expanduser().resolve(strict=False)`.
+4. Reject if the resolved path does not exist.
+5. Accept iff the resolved path is `is_relative_to` at least one configured root.
+
+**Roots:** `WIZARD_SOURCE_ROOTS` env (a `os.pathsep`-separated list) configures the
+allow-list. When unset the single default root is `~/.rytm-randomizer/wizard-sources/`.
+An empty / whitespace value falls back to the default so a typo never disables the
+policy.
+
+**Categorical errors:** `WizardSourcePathRejected.args[0]` is one of
+`"path is empty"`, `"path traverses a symlink"`, `"path does not exist"`,
+`"path is outside the allowed roots"`. The rejected path is NEVER included in the
+message — it goes to the server log via the WS handler, never back over the wire.
+
+### 6.5.4 Wire-boundary `narrow_*` Literal helpers
+
+Wire-bound `from_dict` constructors used to do `kind=str(data["kind"])  # type: ignore[arg-type]`
+to launder a runtime `str` into a `Literal` type. That suppressed mypy without buying
+any actual validation — bad data silently produced a typed-but-invalid instance.
+
+`rytm_randomizer/cockpit/data/types.py` and `cockpit/data/send_plan.py` /
+`cockpit/wizard/state.py` now expose a family of `narrow_*` helpers:
+
+| Helper | Type | Where used |
+|---|---|---|
+| `narrow_kind(s)` | `Kind` | `ProfileModel.from_dict`, wizard source kinds |
+| `narrow_history_kind(s)` | `HistoryKind` | `HistoryEntry.from_dict` |
+| `narrow_via(s)` | `Via` | `HistoryEntry.from_dict` |
+| `narrow_status(s)` | `Status` | `MutationCandidate.from_dict`, wizard job status, mutation safety |
+| `narrow_transition_curve(s)` | `TransitionCurve` | `SendPlanPacket.from_dict` |
+| `narrow_readiness_reason(s)` | `ReadinessReason` | `CockpitSendPlan.from_dict` |
+| `narrow_mode(s)` | `Mode` | `InspirationSource.from_dict` |
+| `narrow_step(s)` | `Step` | `WizardState.from_dict` |
+
+Each helper checks membership in the Literal's tuple of valid values and raises
+`ValueError` otherwise. Type checkers see the narrowed Literal returned by the helper;
+the `# type: ignore[arg-type]` comments are gone (17 removed in PR 5). The matching
+arch test `tests/architecture/test_no_str_in_literal_position.py` forbids the smell
+from reappearing.
+
+### 6.5.5 Canonical `atomic_write` surface
+
+`rytm_randomizer/cockpit/export/writer.py:atomic_write` is the single canonical
+"durably write bytes to disk" surface in the package. The previous `cli.py` carried
+a 60-LOC try/except-ImportError fallback re-implementation with subtly different
+error taxonomy (raised `ValueError` instead of `FileExistsError`; raw `OSError`
+instead of `WriteError`; different default dir). That fallback was deleted in PR 3
+(C3) — `cli.py` now hard-imports `WriteResult`, `atomic_write`, `default_export_dir`
+from `writer.py` and fails loudly at module load if the import is broken.
+
+`ProfileRegistry.save` (`cockpit/profiles/registry.py`) also routes through
+`atomic_write(target, encoded, overwrite=False)`. The function returns `None`
+(the previous unused `-> Path` return was dead surface — IH2). `_safe_load_profile`
+now distinguishes `PermissionError` (loud) from genuine "this one file is malformed"
+(warn, skip) so a permission-denied profile directory no longer presents identically
+to corrupted JSON.
+
+The matching arch tests `tests/architecture/test_abstraction_reuse.py` and
+`tests/architecture/test_no_silent_overwrite_writes.py` enforce that no second
+canonical `atomic_write` surface appears in cockpit code and that no module
+sidesteps it with raw `Path.write_text` / `Path.write_bytes`.
+
+### 6.5.6 `pending_events` as a real `CockpitSession` field
+
+The `handle_command` flow needs to send the ack BEFORE draining handler-queued
+events (spec § "The Three Protocols": ack-first, events-second). Previously the
+handler stashed events on the session via `session._pending_events = ...  # type: ignore[attr-defined]`
+— a side-channel attribute with no field on the dataclass, three `type: ignore`
+comments, and concurrent-connection clobber risk.
+
+`CockpitSession` now declares `pending_events: list[dict] = field(default_factory=list)`
+as a real field. The `handle_command(envelope, session)` signature dropped its
+unused `emitter` parameter (IH3) — `drain_pending_events(session, emitter)` reads
+the field after the dispatcher returns. The arch test
+`tests/architecture/test_no_side_channel_session_attrs.py` forbids
+`setattr(session, ...)` for names not declared on the dataclass.
+
+### 6.5.7 Exact signed-envelope size formula
+
+`rytm_randomizer/cockpit/export/signing.py:signed_envelope_overhead_bytes(algo, key_id)`
+returns the exact wrapper size:
+
+```
+4 + 2 + 1 + len(algo) + 1 + len(key_id) + 1 + 32 + 4
+= 45 + len(algo_utf8) + len(key_id_utf8)
+```
+
+(`magic` + `format_version` + `algo_len + algo` + `key_id_len + key_id` +
+`sig_len + signature(32)` + `payload_len`). The function raises `ValueError` for
+any `algo` other than `"hmac-sha256"` so a caller cannot silently project a size
+for an algorithm the signer would reject.
+
+`reports/cockpit_export_rehearsal.py` now derives the rehearsal report's
+"signed-envelope size" projection from this formula (H6 + M4). The previous
+hard-coded `_SIGNED_ENVELOPE_OVERHEAD_BYTES = 256` constant was wrong by up to
+~190 bytes depending on `key_id` length.
+
+`pack_profile_model(format_version=)` is now restricted to `Literal[1]` so the
+test-only seam can no longer produce a blob the unpacker will reject.
+
+### 6.5.8 TypedDicts at every wire boundary
+
+Gate 6 forbids `Mapping[str, Any]` DTOs. `Mapping[str, object]` was used in 11
+`from_dict` signatures as an `Any`-with-a-hat workaround. Each cockpit dataclass
+now ships a matching `*Dict` TypedDict next to it:
+
+| Dataclass | TypedDict | Module |
+|---|---|---|
+| `PadState` / `Snapshot` | `PadStateDict` / `SnapshotDict` | `cockpit/data/snapshot.py` |
+| `StyleTrait` / `TraitPadWeight` / `ProfileModel` | `StyleTraitDict` / `TraitPadWeightDict` / `ProfileModelDict` | `cockpit/data/profile_model.py` |
+| `PadDelta` / `MutationCandidate` | `PadDeltaDict` / `MutationCandidateDict` | `cockpit/data/mutation_candidate.py` |
+| `SendPlanPacket` / `CockpitSendPlan` | `SendPlanPacketDict` / `CockpitSendPlanDict` | `cockpit/data/send_plan.py` |
+| `HistoryEntry` / `History` | `HistoryEntryDict` / `HistoryDict` | `cockpit/data/history.py` |
+| `InspirationSource` / `AnalysisJob` / `WizardState` | `InspirationSourceDict` / `AnalysisJobDict` / `WizardStateDict` | `cockpit/wizard/state.py` |
+
+`from_dict(data)` accepts the TypedDict (or a Mapping that matches its shape).
+This is the M1 + P2 fix — `from_dict` now expresses its wire contract in the type
+system instead of widening to `object`.
+
+---
+
 ## 7. Enforcement summary
 
 The rules above are mechanically enforced by:

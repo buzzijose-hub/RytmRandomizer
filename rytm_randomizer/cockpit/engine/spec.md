@@ -138,8 +138,114 @@ new_value  = clamp(0, current + round_half_away_from_zero(delta), 127)
 ```
 
 * **Float type:** IEEE-754 double precision (Python `float`, C `double`). The reordering of operations matters — the spec'd expression `(r - 0.5) * 2.0 * scale` avoids `r * 2 * scale - scale` (which can lose precision when `scale` dominates).
-* **Rounding:** `round_half_away_from_zero` (C's `round()` behavior, NOT Python's banker's rounding). The Python implementation provides this explicitly because `round(0.5) == 0` in Python but `1` in C.
+* **Rounding:** `round_half_away_from_zero` (C's `round()` behavior, NOT Python's banker's rounding). The Python implementation provides this explicitly because `round(0.5) == 0` in Python but `1` in C. See §6a "Rounding & Negative Zero" for the boundary contract and IEEE-754 caveats that govern every reference implementation.
 * **Clamping:** standard min/max to `[0, 127]`.
+
+---
+
+## 6a. Rounding & Negative Zero
+
+The half-away-from-zero rounding helper is small but **load-bearing**: it is the single point where IEEE-754 sign quirks can fork the byte output between language ports. The contract below is normative; pinned by `tests/cockpit/test_engine_conformance_edge_cases.py`.
+
+### Python reference (the canonical implementation)
+
+```python
+def _round_half_away_from_zero(value: float) -> int:
+    if value >= 0.0:
+        return int(value + 0.5)
+    return -int(-value + 0.5)
+```
+
+The branch predicate is **`value >= 0.0`**, NOT a "sign bit" check. This is deliberate.
+
+### IEEE-754 negative zero
+
+Negative zero (`-0.0`) is a distinct IEEE-754 bit pattern from positive zero (`+0.0`), but the two are equal under `==` and `>=`. In every reference language we care about:
+
+| Predicate | Returns for `-0.0` | Returns for `+0.0` |
+| --- | --- | --- |
+| `value == 0.0` | `true` | `true` |
+| `value >= 0.0` | `true` | `true` |
+| `value > 0.0` | `false` | `false` |
+| `signbit(value)` / `is_sign_negative` | `true` | `false` |
+| `is_sign_positive` (Rust `f64`) | **`false`** | `true` |
+
+The helper's branch predicate is `value >= 0.0`, so `-0.0` takes the **positive** branch:
+
+* `_round_half_away_from_zero(-0.0)` → `int(-0.0 + 0.5)` → `int(0.5)` → `0`.
+* `_round_half_away_from_zero(+0.0)` → `int(0.0 + 0.5)` → `int(0.5)` → `0`.
+
+Both zeros round to integer `0`. Good.
+
+### The Rust gotcha (**read this**)
+
+Rust's `f64::is_sign_positive` returns `false` for `-0.0`. A port that writes
+
+```rust
+// WRONG — diverges from the Python reference on -0.0 and ALL of (-0.5, 0.0).
+fn round_half_away_from_zero(value: f64) -> i32 {
+    if value.is_sign_positive() {
+        (value + 0.5) as i32
+    } else {
+        -((-value + 0.5) as i32)
+    }
+}
+```
+
+…will take the **negative** branch for `-0.0` (still returns 0 by coincidence) and for every value in `(-0.5, 0.0)` (returns 0 there too, so the bug stays latent until someone supplies `-0.0` via the inverse cosine of `1.0` or any other operation that materializes the negative zero — then the byte-equality with Python/C breaks).
+
+**Always use `value >= 0.0` as the branch predicate.** Python, C, and Rust all evaluate `(-0.0) >= 0.0` as `true`; that's the semantic the reference implementation depends on.
+
+### Worked boundary examples
+
+| Input | Python branch | Result | Notes |
+| --- | --- | --- | --- |
+| `+0.0` | `value >= 0.0` ⇒ positive | `int(0.0 + 0.5)` ⇒ `0` | Trivial. |
+| `-0.0` | `value >= 0.0` ⇒ positive (Python/C/Rust all agree under `>=`) | `int(-0.0 + 0.5)` ⇒ `int(0.5)` ⇒ `0` | Diverges from `is_sign_positive`-based Rust. |
+| `+0.5` | positive | `int(0.5 + 0.5)` ⇒ `1` | Ties round AWAY from zero. C's `round(0.5)` is `1`. Python's built-in `round(0.5)` is `0` (banker's) — we deliberately disagree. |
+| `-0.5` | `value >= 0.0` ⇒ false ⇒ negative branch | `-int(0.5 + 0.5)` ⇒ `-int(1.0)` ⇒ `-1` | Ties round AWAY from zero. C's `round(-0.5)` is `-1`. Python's built-in `round(-0.5)` is `0` — again, we disagree. |
+| `+1.5` | positive | `int(1.5 + 0.5)` ⇒ `2` |  |
+| `-1.5` | negative | `-int(1.5 + 0.5)` ⇒ `-2` |  |
+| `+2.5` | positive | `int(2.5 + 0.5)` ⇒ `3` | Banker's would give `2`. |
+| `-2.5` | negative | `-int(2.5 + 0.5)` ⇒ `-3` | Banker's would give `-2`. |
+
+### C99 reference implementation
+
+```c
+#include <stdint.h>
+#include <math.h>  /* round() also works, but spelling it out is clearer for portability. */
+
+int32_t round_half_away_from_zero(double value) {
+    if (value >= 0.0) {
+        return (int32_t)(value + 0.5);
+    } else {
+        return -(int32_t)(-value + 0.5);
+    }
+}
+```
+
+C's `(int)` cast truncates toward zero, so `(int)(0.5 + 0.5) == 1` and `(int)(-0.5 + 0.5) == 0`. C99 `round()` from `<math.h>` already implements round-half-away-from-zero and is allowable as a drop-in if the port author confirms the platform libm respects C99 semantics (most do; embedded toolchains sometimes don't — use the explicit form above to be safe).
+
+### Rust reference implementation
+
+```rust
+pub fn round_half_away_from_zero(value: f64) -> i32 {
+    // Branch on `value >= 0.0`, NOT `value.is_sign_positive()`.
+    // `(-0.0) >= 0.0` is `true` in Rust; `(-0.0).is_sign_positive()` is `false`.
+    // The former matches the Python and C reference implementations bit-for-bit.
+    if value >= 0.0 {
+        (value + 0.5) as i32
+    } else {
+        -((-value + 0.5) as i32)
+    }
+}
+```
+
+Rust's `as i32` truncates toward zero just like C's `(int)` cast, so the formulas are line-for-line equivalent across the three languages.
+
+### Reachability through the engine PRNG path
+
+For completeness: the cockpit engine's PRNG (`xorshift32` from a non-zero state) cannot produce `raw == 0`, so `r = raw / 2^32` lies strictly in `(0.0, 1.0)`. Consequently `(r - 0.5) * 2.0` is in `(-1.0, 1.0)` — neither `-0.5` nor `-0.0` is reachable at the unit level — and with the smallest realistic `scale ≈ 6.35` the product `(r - 0.5) * 2.0 * scale` has magnitude ≥ `2^-28`, far above the subnormal-underflow threshold that would be required to materialize `-0.0`. The helper still must handle these boundary inputs correctly because a future spec extension (or a unit-test driving the helper directly) can supply them; the table-driven test pins the contract regardless of which inputs the engine itself can reach. See `tests/cockpit/test_engine_conformance_edge_cases.py::test_mutate_reaches_negative_zero_via_prng`.
 
 **Result rules:**
 
@@ -245,5 +351,6 @@ Note the `expected` object excludes `candidate_id`. Implementations populate tha
 * `tests/cockpit/test_engine_prng.py` — locks the PRNG reference sequence.
 * `tests/cockpit/test_engine_mutate.py` — determinism, variance, scaling, clamping tests.
 * `tests/cockpit/test_engine_conformance.py` — drives the JSON fixture corpus.
+* `tests/cockpit/test_engine_conformance_edge_cases.py` — pins the §6a rounding contract (±0.0, ±0.5, table-driven boundary matrix) and the P6 defensive-sort guards.
 * `tests/cockpit/fixtures/engine_conformance/*.json` — the byte-frozen reference output.
 * `docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md` — parent design doc.

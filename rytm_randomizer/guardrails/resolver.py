@@ -27,7 +27,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Callable
+from typing import Callable, ClassVar
 
 from ..observability.errors import BoundaryError
 from ..observability.logging import get_logger
@@ -96,6 +96,8 @@ class GuardrailResolutionError(BoundaryError):
     a caller can ``except BoundaryError`` and catch every guardrails
     boundary failure (validation + resolution) uniformly.
     """
+
+    fingerprint: ClassVar[str] = "guardrail.resolve.failed"
 
 
 @dataclass(frozen=True)

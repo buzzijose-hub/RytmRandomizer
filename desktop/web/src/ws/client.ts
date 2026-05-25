@@ -39,7 +39,8 @@ export type WebSocketLike = Pick<
   readyState: number;
 };
 
-export type WebSocketFactory = (url: string) => WebSocketLike;
+export type WebSocketFactory = (url: string, protocols?: string | string[]) => WebSocketLike;
+export type AuthTokenResolver = () => string | null;
 
 export interface ClientLogger {
   debug?: (msg: string, ...rest: unknown[]) => void;
@@ -50,13 +51,21 @@ export interface ClientLogger {
   error?: (msg: string, ...rest: unknown[]) => void;
 }
 
-
+declare global {
+  interface Window {
+    __RYTM_RAND_WS_TOKEN__?: string;
+  }
+}
 
 export interface CockpitClientOptions {
   /** Full WebSocket URL. Default: `ws://127.0.0.1:4317/ws`. */
   url?: string;
   /** Inject a custom WebSocket factory (used by tests). */
   webSocketFactory?: WebSocketFactory;
+  /** Explicit per-launch WS handshake token. */
+  authToken?: string | null;
+  /** Resolve the per-launch WS handshake token lazily on socket open. */
+  authTokenResolver?: AuthTokenResolver;
   /** Inject a request-id generator (used by tests for determinism). */
   requestIdGenerator?: () => string;
   /** Inject a setTimeout (used by tests with fake timers). */
@@ -86,15 +95,18 @@ interface PendingCommand {
 // ---------- Constants ----------
 
 export const DEFAULT_WS_URL = 'ws://127.0.0.1:4317/ws';
+export const WS_SUBPROTOCOL = 'rytm-rand-cockpit-v1';
+export const HELLO_FRAME_TYPE = 'hello';
+export const WS_AUTH_TOKEN_STORAGE_KEY = 'rytm-rand-ws-token';
 const DEFAULT_INITIAL_RECONNECT_DELAY_MS = 500;
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 10_000;
 const DEFAULT_ACK_TIMEOUT_MS = 5_000;
 
 // ---------- Helpers ----------
 
-function defaultWebSocketFactory(url: string): WebSocketLike {
+function defaultWebSocketFactory(url: string, protocols?: string | string[]): WebSocketLike {
   // `WebSocket` is provided by the browser/jsdom.
-  return new WebSocket(url) as unknown as WebSocketLike;
+  return new WebSocket(url, protocols) as unknown as WebSocketLike;
 }
 
 function defaultRequestIdGenerator(): string {
@@ -103,11 +115,32 @@ function defaultRequestIdGenerator(): string {
   return `req_${Date.now().toString(36)}_${rand}`;
 }
 
+function defaultAuthTokenResolver(): string | null {
+  if (typeof window === 'undefined') return null;
+  if (typeof window.__RYTM_RAND_WS_TOKEN__ === 'string' && window.__RYTM_RAND_WS_TOKEN__ !== '') {
+    return window.__RYTM_RAND_WS_TOKEN__;
+  }
+  try {
+    const stored = window.localStorage.getItem(WS_AUTH_TOKEN_STORAGE_KEY);
+    return stored !== null && stored !== '' ? stored : null;
+  } catch {
+    return null;
+  }
+}
+
+function isHandshakeAck(msg: unknown): msg is { ok: boolean; code?: string } {
+  if (msg === null || typeof msg !== 'object') return false;
+  const obj = msg as Record<string, unknown>;
+  return !('request_id' in obj) && typeof obj.ok === 'boolean';
+}
+
 // ---------- Client ----------
 
 export class CockpitClient {
   private readonly url: string;
   private readonly webSocketFactory: WebSocketFactory;
+  private readonly authToken: string | null | undefined;
+  private readonly authTokenResolver: AuthTokenResolver;
   private readonly requestIdGenerator: () => string;
   private readonly setTimeoutImpl: typeof setTimeout;
   private readonly clearTimeoutImpl: typeof clearTimeout;
@@ -137,6 +170,8 @@ export class CockpitClient {
   constructor(opts: CockpitClientOptions = {}) {
     this.url = opts.url ?? DEFAULT_WS_URL;
     this.webSocketFactory = opts.webSocketFactory ?? defaultWebSocketFactory;
+    this.authToken = opts.authToken;
+    this.authTokenResolver = opts.authTokenResolver ?? defaultAuthTokenResolver;
     this.requestIdGenerator = opts.requestIdGenerator ?? defaultRequestIdGenerator;
     this.setTimeoutImpl = opts.setTimeoutImpl ?? globalThis.setTimeout.bind(globalThis);
     this.clearTimeoutImpl = opts.clearTimeoutImpl ?? globalThis.clearTimeout.bind(globalThis);
@@ -249,7 +284,7 @@ export class CockpitClient {
 
   private openSocket(): void {
     this.setStatus(this.reconnectAttempt === 0 ? 'connecting' : 'reconnecting');
-    const sock = this.webSocketFactory(this.url);
+    const sock = this.webSocketFactory(this.url, WS_SUBPROTOCOL);
     this.socket = sock;
     // The `Event_` and `CloseEvent_` types are erased to `Event` / `CloseEvent` at runtime.
     sock.addEventListener('open', this.onOpen as unknown as EventListener);
@@ -275,6 +310,13 @@ export class CockpitClient {
   private handleOpen(): void {
     this.logger.info?.('cockpit ws connected', this.url);
     this.reconnectAttempt = 0;
+    try {
+      this.sendHandshake();
+    } catch (err) {
+      this.logger.warn?.('cockpit ws handshake send failed', err);
+      this.socket?.close();
+      return;
+    }
     this.setStatus('connected');
   }
 
@@ -300,6 +342,10 @@ export class CockpitClient {
       this.pending.delete(parsed.request_id);
       this.clearTimeoutImpl(pending.timeoutHandle);
       pending.resolve(parsed);
+      return;
+    }
+    if (isHandshakeAck(parsed)) {
+      if (!parsed.ok) this.logger.warn?.('cockpit ws handshake rejected', parsed.code);
       return;
     }
     if (isEvent(parsed)) {
@@ -372,6 +418,16 @@ export class CockpitClient {
         this.logger.error?.('cockpit ws status handler threw', err);
       }
     }
+  }
+
+  private sendHandshake(): void {
+    const token = this.authToken !== undefined ? this.authToken : this.authTokenResolver();
+    if (token === null || token === '') {
+      this.logger.warn?.('cockpit ws auth token unavailable; waiting for server close');
+      return;
+    }
+    const sock = this.socket as WebSocketLike;
+    sock.send(JSON.stringify({ type: HELLO_FRAME_TYPE, token }));
   }
 }
 

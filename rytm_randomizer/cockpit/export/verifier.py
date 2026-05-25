@@ -24,6 +24,7 @@ import hashlib
 import hmac
 from dataclasses import dataclass
 
+from ...observability.logging import get_logger
 from .model_format import (
     MAGIC,
     SUPPORTED_FORMAT_VERSIONS,
@@ -36,6 +37,13 @@ from .signing import (
     SUPPORTED_SIGNATURE_FORMAT_VERSIONS,
     unpack_signed,
 )
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit ProfileModel verifier. Bound here so
+future structured log calls (per-failure-reason metric increments,
+verification breadcrumbs) can land in the package's structured stream
+without touching this file's imports. See ``OBSERVABILITY_REVIEW.md``
+Phase 5."""
 
 # ---------------------------------------------------------------------------
 # VerificationResult dataclass
@@ -65,6 +73,25 @@ class VerificationResult:
             parseable. Same rules as ``expected_key_id``.
         payload_size: The size in bytes of the inner ``RYMP`` payload, when
             parseable. ``None`` if we never got that far.
+        signed_envelope_present: ``True`` iff the verifier successfully
+            parsed a signing envelope from the input bytes. Disambiguates
+            two ``ok=True, reason="unsigned_payload"`` cases that PR-2-vintage
+            verifier code couldn't tell apart (H3 from CODE_REVIEW.md):
+
+            1. **Caller passed no key against an envelope that has one**:
+               ``signed_envelope_present=True``. The bytes WERE signed; the
+               receiver chose not to verify the signature. CRC-only assurance.
+            2. **Bytes are a bare RYMP payload with no envelope**:
+               ``signed_envelope_present=False``. There's no signature to
+               verify; CRC is the only integrity check available regardless
+               of whether a key was passed.
+
+            Receivers that demand provenance for sensitive operations should
+            reject cases 1 AND 2 (any ``reason="unsigned_payload"``). Receivers
+            that ONLY care about non-tampered transport over a trusted
+            channel can accept case 1 if the operator explicitly opted out
+            of signature verification. The distinguisher gives them the
+            information; the policy decision is theirs.
     """
 
     ok: bool
@@ -72,6 +99,7 @@ class VerificationResult:
     expected_key_id: str | None
     expected_algorithm: str | None
     payload_size: int | None
+    signed_envelope_present: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -114,6 +142,10 @@ def verify_signed_blob(
     except ValueError as exc:
         return _classify_envelope_error(str(exc))
 
+    # ``signed_envelope_present=True`` from here down — the envelope parsed
+    # cleanly, so receivers can use ``result.signed_envelope_present`` to
+    # tell "no key was provided to verify a signature THAT EXISTS" from
+    # "the bytes were never signed in the first place" (H3 disambiguator).
     if expected_key_id is not None and blob.key_id != expected_key_id:
         return VerificationResult(
             ok=False,
@@ -121,6 +153,7 @@ def verify_signed_blob(
             expected_key_id=blob.key_id,
             expected_algorithm=blob.algorithm,
             payload_size=len(blob.payload),
+            signed_envelope_present=True,
         )
 
     if key is not None:
@@ -132,6 +165,7 @@ def verify_signed_blob(
                 expected_key_id=blob.key_id,
                 expected_algorithm=blob.algorithm,
                 payload_size=len(blob.payload),
+                signed_envelope_present=True,
             )
 
     inner = _check_unsigned_payload_bytes(blob.payload)
@@ -142,6 +176,7 @@ def verify_signed_blob(
             expected_key_id=blob.key_id,
             expected_algorithm=blob.algorithm,
             payload_size=inner.payload_size,
+            signed_envelope_present=True,
         )
 
     reason = "ok" if key is not None else "unsigned_payload"
@@ -151,6 +186,7 @@ def verify_signed_blob(
         expected_key_id=blob.key_id,
         expected_algorithm=blob.algorithm,
         payload_size=len(blob.payload),
+        signed_envelope_present=True,
     )
 
 

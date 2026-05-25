@@ -38,7 +38,7 @@ from dataclasses import is_dataclass
 from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, ClassVar
 
 from ..observability.errors import StateError
 from ..observability.logging import get_logger
@@ -102,6 +102,8 @@ class IllegalStateTransitionError(StateError):
     callers can ``except StateError`` to catch every state-machine
     violation in the package uniformly.
     """
+
+    fingerprint: ClassVar[str] = "guardrail.profile.illegal_transition"
 
 
 # ---------------------------------------------------------------------------

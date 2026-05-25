@@ -20,7 +20,7 @@ The Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import collect_initial_events
+from cockpit.conftest import collect_initial_events, complete_handshake
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
@@ -28,6 +28,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_PROFILE_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
+    WS_SUBPROTOCOL,
 )
 
 pytestmark = pytest.mark.fast
@@ -36,7 +37,8 @@ pytestmark = pytest.mark.fast
 def test_initial_events_on_connect(cockpit_client: TestClient) -> None:
     """On connect, server emits session_status, snapshot_changed, profile_changed, history_updated."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         events = collect_initial_events(ws, count=4)
 
     types = {e["type"] for e in events}
@@ -51,7 +53,8 @@ def test_initial_events_on_connect(cockpit_client: TestClient) -> None:
 def test_initial_events_order_is_stable(cockpit_client: TestClient) -> None:
     """The bootstrap quartet arrives in the documented order (status → snapshot → profile → history)."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         events = collect_initial_events(ws, count=4)
 
     types_in_order = [e["type"] for e in events]
@@ -66,7 +69,8 @@ def test_initial_events_order_is_stable(cockpit_client: TestClient) -> None:
 def test_initial_session_status_marks_mock_mode(cockpit_client: TestClient) -> None:
     """Mock device adapter reports ``mode='mock'``, ``armed=False``, ``midi_port=None``."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         events = collect_initial_events(ws, count=4)
 
     status = next(e for e in events if e["type"] == EVENT_SESSION_STATUS)
@@ -79,7 +83,8 @@ def test_initial_session_status_marks_mock_mode(cockpit_client: TestClient) -> N
 def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClient) -> None:
     """The bootstrap snapshot event reflects the 4-pad reference layout."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         events = collect_initial_events(ws, count=4)
 
     snapshot = next(e for e in events if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
@@ -91,7 +96,8 @@ def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClien
 def test_initial_profile_event_is_null_on_fresh_session(cockpit_client: TestClient) -> None:
     """No profile is active on connect; the profile_changed event payload is ``None``."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         events = collect_initial_events(ws, count=4)
 
     profile = next(e for e in events if e["type"] == EVENT_PROFILE_CHANGED)["profile"]
@@ -101,7 +107,8 @@ def test_initial_profile_event_is_null_on_fresh_session(cockpit_client: TestClie
 def test_initial_history_event_has_root_entry(cockpit_client: TestClient) -> None:
     """The bootstrap history strip carries the root snapshot as ``current_id``."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         events = collect_initial_events(ws, count=4)
 
     history = next(e for e in events if e["type"] == EVENT_HISTORY_UPDATED)["history"]

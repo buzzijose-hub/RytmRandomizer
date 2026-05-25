@@ -41,9 +41,17 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import ClassVar, Final
 
 from ...observability.errors import DataError
+from ...observability.logging import get_logger
+
+_logger = get_logger(__name__)
+"""Module logger for the atomic export writer. Bound here so future
+structured log calls (durability breadcrumbs around fsync / atomic
+replace, disk-full / permission-denied diagnostics) can land in the
+package's structured stream without touching this file's imports.
+See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -96,11 +104,12 @@ class WriteError(DataError, OSError):
       (``tests/architecture/test_observability.py``) recognises the
       raise as a taxonomy member.
 
-    Mirrors :class:`rytm_randomizer.cockpit.wizard.errors.WizardSourcePathError`
-    (``DataError`` + :class:`FileNotFoundError`) and
-    :class:`rytm_randomizer.cockpit.wizard.builder.EmptyAnalysisError`
-    (``DataError`` + :class:`ValueError`).
+    Mirrors the multi-inheritance pattern used by :mod:`.signing` for
+    its own ``DataError``-tagged failures (the primary consumer of this
+    writer).
     """
+
+    fingerprint: ClassVar[str] = "export.write.failed"
 
 
 # ---------------------------------------------------------------------------

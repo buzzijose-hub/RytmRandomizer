@@ -11,16 +11,52 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import Final, Self, TypedDict
 
 from .types import (
     KIND_VALUES,
     TRANSITION_CURVE_VALUES,
     Kind,
     TransitionCurve,
+    narrow_kind,
+    narrow_transition_curve,
 )
+
+
+class StyleTraitDict(TypedDict):
+    """Wire shape of :class:`StyleTrait` (M1/P2)."""
+
+    name: str
+    value: float
+
+
+class TraitPadWeightDict(TypedDict):
+    """Wire shape of :class:`TraitPadWeight` (M1/P2)."""
+
+    trait: str
+    pad_id: int
+    weight: float
+
+
+class ProfileModelDict(TypedDict):
+    """Wire shape of :class:`ProfileModel` (M1/P2).
+
+    Literal-valued ``kind`` / ``transition_curve`` keys are typed as
+    plain ``str`` because the wire layer may receive any string —
+    runtime narrowing in :meth:`ProfileModel.from_dict` is the
+    validation boundary.
+    """
+
+    profile_id: str
+    name: str
+    kind: str
+    model_version: str
+    traits: list[StyleTraitDict]
+    pad_mappings: list[TraitPadWeightDict]
+    transition_curve: str
+    source_summary: str
+
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -56,10 +92,10 @@ class StyleTrait:
         return {"name": self.name, "value": self.value}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: StyleTraitDict) -> Self:
         return cls(
-            name=str(data["name"]),
-            value=float(data["value"]),  # type: ignore[arg-type]
+            name=data["name"],
+            value=data["value"],
         )
 
 
@@ -86,11 +122,11 @@ class TraitPadWeight:
         return {"trait": self.trait, "pad_id": self.pad_id, "weight": self.weight}
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: TraitPadWeightDict) -> Self:
         return cls(
-            trait=str(data["trait"]),
-            pad_id=int(data["pad_id"]),  # type: ignore[arg-type]
-            weight=float(data["weight"]),  # type: ignore[arg-type]
+            trait=data["trait"],
+            pad_id=data["pad_id"],
+            weight=data["weight"],
         )
 
 
@@ -128,6 +164,12 @@ class ProfileModel:
                 "transition_curve must be one of "
                 f"{TRANSITION_CURVE_VALUES}; got {self.transition_curve!r}"
             )
+        # Rebuilding ``known_trait_names`` per ``__post_init__`` is intentional:
+        # ``ProfileModel`` is a frozen dataclass, traits/pad_mappings are tuples,
+        # and this set is the defensive validation invariant that every
+        # pad_mapping points at a declared trait. Construction is rare relative
+        # to read paths, the set is bounded by the canonical trait count (<10),
+        # and caching would couple validation to mutability we don't have here.
         known_trait_names = {t.name for t in self.traits}
         for mapping in self.pad_mappings:
             if mapping.trait not in known_trait_names:
@@ -146,7 +188,7 @@ class ProfileModel:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: ProfileModelDict) -> Self:
         traits_obj = data["traits"]
         mappings_obj = data["pad_mappings"]
         if not isinstance(traits_obj, (list, tuple)):
@@ -154,15 +196,22 @@ class ProfileModel:
         if not isinstance(mappings_obj, (list, tuple)):
             raise TypeError(f"pad_mappings must be a list/tuple; got {type(mappings_obj).__name__}")
         return cls(
-            profile_id=str(data["profile_id"]),
-            name=str(data["name"]),
-            kind=str(data["kind"]),  # type: ignore[arg-type]
-            model_version=str(data["model_version"]),
+            profile_id=data["profile_id"],
+            name=data["name"],
+            kind=narrow_kind(data["kind"]),
+            model_version=data["model_version"],
             traits=tuple(StyleTrait.from_dict(t) for t in traits_obj),
             pad_mappings=tuple(TraitPadWeight.from_dict(m) for m in mappings_obj),
-            transition_curve=str(data["transition_curve"]),  # type: ignore[arg-type]
-            source_summary=str(data["source_summary"]),
+            transition_curve=narrow_transition_curve(data["transition_curve"]),
+            source_summary=data["source_summary"],
         )
 
 
-__all__ = ["ProfileModel", "StyleTrait", "TraitPadWeight"]
+__all__ = [
+    "ProfileModel",
+    "ProfileModelDict",
+    "StyleTrait",
+    "StyleTraitDict",
+    "TraitPadWeight",
+    "TraitPadWeightDict",
+]

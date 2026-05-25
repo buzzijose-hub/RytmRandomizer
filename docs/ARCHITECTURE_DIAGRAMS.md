@@ -2424,3 +2424,243 @@ sequenceDiagram
   embedded C-portable loader. The architecture invariant test pins
   every magic, every format-version constant, the supported algorithm
   set, and the signature lengths — drift fails CI loudly.
+
+## 33. Cockpit WebSocket Handshake Sequence (post CODE_REVIEW.md sweep)
+
+The CODE_REVIEW.md sweep (PR 1, C1) replaced "loopback only protects us"
+with an explicit per-launch token handshake. The full handshake — pinned
+subprotocol upgrade, hello frame, constant-time token compare,
+size-capped command loop — is exercised on **every** connection. This
+sequence is the authoritative shape of the auth boundary; mismatched
+behaviour fails `tests/architecture/test_no_unauthenticated_ws_endpoints.py`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor TauriShell as Tauri shell<br/>(release: auto-spawn;<br/>dev: human operator)
+    participant TokenFile as $RYTM_RAND_WS_TOKEN_FILE<br/>(or ~/.rytm-randomizer/cockpit-ws-token)
+    participant Sidecar as cockpit/__main__.py<br/>(python -m rytm_randomizer.cockpit)
+    participant Server as cockpit/ws/server.py<br/>create_app(session, token=...)
+    participant Endpoint as @app.websocket("/ws")
+    participant Dispatcher as handlers.handle_command
+
+    Note over Sidecar: BOOT
+    Sidecar->>Sidecar: secrets.token_urlsafe(32)
+    Sidecar->>TokenFile: write token (mode 0o600,<br/>best-effort on Windows)
+    Sidecar->>Server: create_app(session, token=...)
+    Note over Server: refuses to start if<br/>token is empty (C1 hardening)
+    Server->>Endpoint: register /ws with closure<br/>capturing expected_token
+
+    Note over TauriShell: CLIENT CONNECTS
+    TauriShell->>TokenFile: read token
+    TokenFile-->>TauriShell: "<urlsafe>"
+    TauriShell->>Endpoint: WebSocket upgrade<br/>Sec-WebSocket-Protocol: rytm-rand-cockpit-v1
+
+    Endpoint->>Endpoint: accept(subprotocol=WS_SUBPROTOCOL)
+    Note over Endpoint: L8 — casual new WebSocket(url)<br/>without subprotocol fails upgrade
+
+    Note over Endpoint: HANDSHAKE (C1)
+    TauriShell->>Endpoint: {"type": "hello", "token": "<urlsafe>"}
+    Endpoint->>Endpoint: hmac.compare_digest(token, expected_token)<br/>(constant-time)
+
+    alt token matches
+        Endpoint-->>TauriShell: {"ok": true}
+        Note over Endpoint: BOOTSTRAP
+        Endpoint-->>TauriShell: session_status<br/>snapshot_changed<br/>profile_changed<br/>history_updated
+        Note over Endpoint: COMMAND LOOP (SX1)
+        loop until disconnect
+            TauriShell->>Endpoint: text frame
+            Endpoint->>Endpoint: len(frame.encode("utf-8"))<br/>≤ RYTM_RAND_WS_MAX_MESSAGE_BYTES<br/>(default 1 MiB)
+            alt frame ≤ cap
+                Endpoint->>Dispatcher: handle_command(envelope, session)
+                Dispatcher-->>Endpoint: ack
+                Endpoint-->>TauriShell: ack
+                Endpoint->>Endpoint: drain_pending_events(session, emitter)
+                Endpoint-->>TauriShell: queued events
+            else frame > cap
+                Endpoint-->>TauriShell: {"ok": false,<br/>"code": "message_too_large"}
+                Endpoint--xTauriShell: close(1009)
+            end
+        end
+    else token missing / malformed
+        Endpoint-->>TauriShell: {"ok": false,<br/>"code": "auth_required"}
+        Endpoint--xTauriShell: close(1008)
+    else token mismatch
+        Endpoint-->>TauriShell: {"ok": false,<br/>"code": "auth_failed"}
+        Endpoint--xTauriShell: close(1008)
+    end
+```
+
+**Notes:**
+
+- **Per-launch token; never persisted across restarts.** `secrets.token_urlsafe(32)`
+  on every boot; the token file is overwritten so a stale token cannot survive a
+  cockpit restart. This is why a foreign browser tab that snapshotted the path
+  earlier still can't authenticate.
+- **`hmac.compare_digest`, not `==`.** Naive `==` is variable-time and leaks the
+  prefix length under a timing attack. The compare is the only constant-time
+  primitive in the path.
+- **`accept(subprotocol=WS_SUBPROTOCOL)` is the L8 fix.** Browser tabs that call
+  `new WebSocket(url)` omit the `Sec-WebSocket-Protocol` header; the upgrade
+  negotiation fails before our handler runs. This is defence-in-depth on top of
+  the token, not a replacement for it.
+- **Size cap is checked on raw text BEFORE `json.loads`.** `receive_json` buffers
+  unbounded input before parsing. We call `receive_text` then `len(raw.encode("utf-8"))`
+  so a hostile client can't OOM the sidecar by streaming a gigabyte payload.
+- **Ack-first, events-second.** The dispatcher returns an ack; `drain_pending_events`
+  fires only after the client has the correlated ack. This is why
+  `pending_events` is a real `CockpitSession` field (H1) — the handler queues, the
+  endpoint drains, no side-channel `setattr`.
+
+## 34. Cockpit C4 Component Diagram — Security Layer Overlay (Phase 1 + CODE_REVIEW.md sweep)
+
+This refines [§28 Cockpit & Profile-Model C4 Component Diagram (Phase 1)](#28-cockpit--profile-model-c4-component-diagram-phase-1)
+to show where the new security boundaries (token, subprotocol, size cap,
+path policy) plug in. The Phase 1 components are unchanged; the new
+boxes are dashed.
+
+```mermaid
+flowchart LR
+    subgraph "Tauri shell process"
+        Shell["Tauri shell<br/>(spawns sidecar,<br/>injects RYTM_RAND_WS_TOKEN_FILE)"]
+        TokenReader["token-file reader<br/>(shell side)"]
+        WebFrontend["React frontend<br/>(WS client)"]
+        Shell --> WebFrontend
+        Shell --> TokenReader
+        TokenReader --> WebFrontend
+    end
+
+    subgraph "Filesystem (per-operator, $HOME)"
+        TokenFile["cockpit-ws-token<br/>(0o600, per-launch)"]
+        WizardRoots["WIZARD_SOURCE_ROOTS<br/>(default ~/.rytm-randomizer/<br/>wizard-sources/)"]
+        Profiles["~/.rytm-randomizer/<br/>profiles/*.json"]
+    end
+
+    subgraph "Python sidecar process"
+        Main["__main__.py<br/>(mints token,<br/>writes file,<br/>builds session)"]
+        TokenProvision["_provision_token()"]
+        Server["ws/server.py<br/>create_app(session, token=...)"]
+        SubprotocolGate["Subprotocol gate<br/>(rytm-rand-cockpit-v1)<br/>L8"]
+        Handshake["Handshake<br/>hmac.compare_digest<br/>C1"]
+        SizeCap["Per-message size cap<br/>SX1<br/>(default 1 MiB)"]
+        Dispatcher["handlers.handle_command"]
+        WizardDispatcher["wizard_handlers.handle_wizard_command"]
+        PathPolicy["WizardPathPolicy.validate<br/>C2 + H4"]
+        Session["CockpitSession<br/>(pending_events: list[dict]<br/>real field — H1)"]
+        Writer["cockpit/export/writer.py<br/>atomic_write<br/>(single canonical surface — C3)"]
+        Registry["ProfileRegistry.save<br/>(routes through writer.atomic_write<br/>— M7 + M6)"]
+    end
+
+    Main --> TokenProvision
+    TokenProvision --> TokenFile
+    TokenProvision --> Server
+    Server --> SubprotocolGate
+    SubprotocolGate --> Handshake
+    Handshake --> SizeCap
+    SizeCap --> Dispatcher
+    Dispatcher --> WizardDispatcher
+    WizardDispatcher --> PathPolicy
+    PathPolicy --> WizardRoots
+    Dispatcher --> Session
+    Dispatcher --> Registry
+    Registry --> Writer
+    Writer --> Profiles
+
+    WebFrontend -.->|"text frame ≤ cap"| SubprotocolGate
+    WebFrontend -.->|"first frame:<br/>hello + token"| Handshake
+
+    style SubprotocolGate stroke-dasharray: 5 5,stroke:#a44
+    style Handshake stroke-dasharray: 5 5,stroke:#a44
+    style SizeCap stroke-dasharray: 5 5,stroke:#a44
+    style PathPolicy stroke-dasharray: 5 5,stroke:#a44
+    style TokenFile stroke-dasharray: 5 5,stroke:#a44
+    style Writer fill:#efe,stroke:#474
+```
+
+**What changed vs §28:**
+
+- `SubprotocolGate`, `Handshake`, `SizeCap`, `PathPolicy`, `TokenFile`
+  are all dashed-red — they are the new boundaries introduced by the
+  CODE_REVIEW.md sweep (PRs 1 + 2).
+- The `Writer` box is now the SINGLE green source of truth for "write
+  bytes to disk." The old `cli.py` fallback implementation was deleted in
+  PR 3 (C3); `ProfileRegistry.save` now routes through it (PR 7, M7) so
+  both export and profile-save use the same atomic primitive.
+- `Session` carries `pending_events` as a real declared field, not a
+  smuggled attribute (PR 4, H1).
+- The arch tests `test_no_unauthenticated_ws_endpoints`,
+  `test_no_unconstrained_path_inputs`, `test_no_silent_overwrite_writes`,
+  `test_no_side_channel_session_attrs`, and `test_abstraction_reuse`
+  hard-fail CI if any dashed-red boundary is bypassed or if a second
+  canonical `atomic_write` surface appears.
+
+## 35. Export Pipeline (Phase 3 + CODE_REVIEW.md sweep) — Single Canonical atomic_write
+
+Refines [§32 Cockpit · Export Pipeline (Phase 3)](#32-cockpit--export-pipeline-phase-3)
+to show the post-sweep wire: there is exactly ONE `atomic_write` surface
+in the package, and the rehearsal report derives its envelope-size
+projection from the analytic formula in `signing.py` instead of a
+hard-coded 256-byte estimate.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Operator as Operator
+    participant CLI as cockpit/export/cli.py<br/>(NO fallback — hard-imports writer.py)
+    participant Registry as profiles/registry.py<br/>ProfileRegistry
+    participant Pack as serialize.py<br/>pack_profile_model<br/>(format_version: Literal[1])
+    participant Sign as signing.py<br/>signed_envelope_overhead_bytes<br/>+ pack_signed
+    participant Writer as writer.py<br/>atomic_write<br/>(THE canonical surface)
+    participant Verifier as verifier.py<br/>verify_file (never raises)
+    participant Disk as ~/exports/&lt;id&gt;.rymp
+    participant Rehearsal as reports/<br/>cockpit_export_rehearsal.py
+
+    Note over CLI,Verifier: PR 3 deleted the 60-LOC fallback atomic_write<br/>from cli.py. The hard import on line 1 means a missing<br/>writer.py fails loudly at module load, never silently<br/>switches to divergent behaviour.
+
+    Operator->>CLI: cockpit-export-profile-model<br/>--profile-id X --output Y --key-hex ...
+    CLI->>Registry: load(profile_id)
+    Registry-->>CLI: ProfileModel
+    CLI->>Pack: pack_profile_model(profile)
+    Pack-->>CLI: payload (RYMP || ver=1 || ... || crc32)
+    CLI->>Sign: pack_signed(payload, algo, key_id, sig)
+    Sign-->>CLI: signed envelope (RYMS || ... || payload)
+    CLI->>Writer: atomic_write(output, envelope, overwrite=False)
+    Writer->>Disk: NamedTemporaryFile in same dir<br/>+ fsync + os.replace
+    Writer-->>CLI: WriteResult (FileExistsError on collision,<br/>WriteError on OSError — both classified)
+    CLI->>Verifier: verify_file(output, key_resolver=...)
+    Verifier->>Disk: read envelope
+    Verifier-->>CLI: VerificationResult(ok=True, reason="ok", signed=True)
+    CLI-->>Operator: ack
+
+    Note over Rehearsal,Sign: PARALLEL: passive rehearsal report
+    Rehearsal->>Sign: signed_envelope_overhead_bytes(algo, key_id)
+    Note over Sign: returns 45 + len(algo) + len(key_id)<br/>— exact, not the old 256-byte estimate
+    Sign-->>Rehearsal: overhead_bytes (e.g. 70 for v1 defaults)
+    Rehearsal-->>Operator: projected file size = payload_len + overhead
+
+    Note over Registry,Writer: PR 7 (M7) — ProfileRegistry.save now ALSO routes<br/>through writer.atomic_write, so wizard saves get the<br/>same overwrite=False discipline as exports.
+```
+
+**Notes:**
+
+- **Single canonical `atomic_write` surface (PR 3, C3).** The previous
+  `cli.py` carried a try/except-ImportError fallback that diverged on
+  three observable points (overwrite refusal class, OSError wrap, default
+  dir). That entire block is gone; `cli.py` does
+  `from .writer import WriteResult, atomic_write, default_export_dir`
+  unconditionally and a broken `writer.py` fails at import.
+- **Exact envelope-size formula (PR 10, H6).** `signed_envelope_overhead_bytes(*, algo, key_id)`
+  computes `45 + len(algo_utf8) + len(key_id_utf8)`. For the v1 defaults
+  `algo="hmac-sha256"` + `key_id="buzzi-2026-key"` the overhead is exactly
+  70 bytes. The rehearsal report derives its projection from this function
+  so the report and the actual writer agree byte-for-byte.
+- **`pack_profile_model(format_version=)` is `Literal[1]` (M4).** The
+  test-only seam that produced a blob the unpacker would reject is gone.
+- **`ProfileRegistry.save` reuses the canonical writer (PR 7, M7).** The
+  wizard's save path inherits `overwrite=False`, atomic temp + fsync +
+  os.replace, and the classified `WriteError` taxonomy.
+- **`_safe_load_profile` distinguishes error classes (PR 7, M6).**
+  `PermissionError` is loud (refuses to start with a denied profile dir);
+  malformed JSON is warn-and-skip (the rest of the registry still loads).
+- **The arch test `test_abstraction_reuse.py` (PR 13, Gate 17) flags any
+  module that grows a second canonical surface for these primitives.**

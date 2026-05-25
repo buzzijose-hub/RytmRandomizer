@@ -94,6 +94,13 @@ ALLOW_LIST_PRINT_UI: frozenset[str] = frozenset(
         "rytm_randomizer/midi_io.py",
         # Mutation core -- monolith-parity "X mutation / Y depth" banners.
         "rytm_randomizer/randomization.py",
+        # Cockpit entrypoint -- prints the per-launch WS handshake token to
+        # stdout in dev mode so the spawning shell can read it without
+        # reaching into the filesystem (production / Tauri-spawned launches
+        # set RYTM_RAND_WS_TOKEN_FILE and skip the print). This is the only
+        # legitimate stdout UI in cockpit/, added by CODE_REVIEW.md PR 1.
+        # All other observability in the cockpit goes through the logger.
+        "rytm_randomizer/cockpit/__main__.py",
     }
 )
 
@@ -320,12 +327,33 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # ValueError so ``except ValueError`` callers still work AND the
         # conformance check sees a taxonomy member.
         "EmptyAnalysisError",
+        # Cockpit Profile Wizard path-policy (CODE_REVIEW PR 2 / C2):
+        # re-homed under DataError + ValueError so ``except ValueError``
+        # callers still work AND the conformance check sees a taxonomy
+        # member. Mirrors the WizardSourcePathError / EmptyAnalysisError
+        # dual-inheritance pattern.
+        "WizardSourcePathRejected",
         # Cockpit Phase 3 export writer: re-homed under DataError +
         # OSError so ``except OSError`` callers still work AND the
         # conformance check sees a taxonomy member. Mirrors the
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
+        # classified load errors. ``ProfileAlreadyExistsError``
+        # multi-inherits :class:`DataError` + :class:`FileExistsError`
+        # and is raised by :meth:`ProfileRegistry.save` when the target
+        # file exists and ``overwrite=False`` (the default).
+        # ``ProfileRegistryAccessError`` multi-inherits
+        # :class:`DataError` + :class:`PermissionError` and is raised
+        # during :meth:`ProfileRegistry._safe_load_profile` when an
+        # EACCES/EPERM blocks reading a profile the operator owns —
+        # the cockpit refuses to boot rather than silently presenting
+        # an empty registry. Both follow the WriteError /
+        # EmptyAnalysisError / WizardSourcePathError dual-inheritance
+        # pattern.
+        "ProfileAlreadyExistsError",
+        "ProfileRegistryAccessError",
     }
 )
 

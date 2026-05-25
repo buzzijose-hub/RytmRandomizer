@@ -36,6 +36,18 @@ git checkout -- .agents/skills      # re-materialize as a real symlink
 
 Verify with `ls .agents/skills/` — it should list the learned-skill directories. If your environment genuinely cannot use symlinks, read the skills directly from [`.claude/skills/learned/`](.claude/skills/learned/); the catalog is in [`CONTRIBUTING.md` § Skill catalog](CONTRIBUTING.md#skill-catalog).
 
+### Shared agent memory — read [`agent-memory/INDEX.md`](agent-memory/INDEX.md)
+
+Project-scoped agent memory (workflow feedback, project facts, reference) lives in [`agent-memory/`](agent-memory/) at the repo root. **Read [`agent-memory/INDEX.md`](agent-memory/INDEX.md) at session start.** Per-memory files use the same YAML-frontmatter shape as Claude Code's local `~/.claude/projects/<id>/memory/` store, so memories can migrate freely between the two. The in-repo store is the **canonical** version — every agent on every machine reads the same observations, no per-tool sync needed.
+
+What lives there (current set):
+
+- **Workflow feedback** — "no cascade PRs", "maximum parallelization + worktrees", "cleanup worktrees as you go", "code review fan-out per dimension"
+- **Project facts** — kit-first sysex generator workflow, Python tooling pitfalls (CI py3.11 / `-o addopts=''` trap)
+- **Reference** — pre-push hook Windows Store python shim fix (PR #110), the shared-memory pattern itself
+
+How to add a new memory: create `agent-memory/<slug>.md` with the standard frontmatter (`name`, `description`, `metadata.type`), add a one-line entry to `INDEX.md`, commit. The next agent on the next machine sees it without configuration. See [`agent-memory/reference_shared_agent_memory_pattern.md`](agent-memory/reference_shared_agent_memory_pattern.md) for the full pattern.
+
 ## Before you do anything
 
 1. **Read [`CONTRIBUTING.md`](CONTRIBUTING.md)** — the developer handbook. It has 22 sections; the most load-bearing are:

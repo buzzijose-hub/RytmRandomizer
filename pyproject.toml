@@ -215,6 +215,11 @@ ignore = [
 "tests/**" = [
     "S101", "S105", "S110", "S311", "S603", "S607",
     "E402", "B007", "B011", "B017", "B904",
+    # SIM117 (nested `with` -> single multi-context `with`) — most test
+    # files prefer the explicit nested form for readability when the
+    # outer context is a TestClient + the inner is a websocket. The
+    # combined form is harder to debug when the inner block raises.
+    "SIM117",
 ]
 # Top-level conftest.py self-heals the local git pre-push hook on
 # the first pytest run in any worktree (see conftest.py docstring).

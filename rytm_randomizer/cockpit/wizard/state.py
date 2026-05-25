@@ -26,10 +26,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from dataclasses import replace as _dc_replace
 from datetime import datetime
-from typing import Final, Literal, Self
+from typing import Final, Literal, Self, TypedDict, cast
 
-from ..data.profile_model import ProfileModel, StyleTrait
+from ..data.profile_model import ProfileModel, ProfileModelDict, StyleTrait, StyleTraitDict
+from ..data.types import _safe_repr
 
 # ---------------------------------------------------------------------------
 # Literal types + Final runtime tuples (Gate 10: single source of truth per enum)
@@ -59,6 +61,91 @@ Step = Literal["name", "add", "analyze", "review"]
 
 STEP_VALUES: Final[tuple[Step, ...]] = ("name", "add", "analyze", "review")
 """Runtime tuple of every :data:`Step` literal (advance order)."""
+
+
+# ---------------------------------------------------------------------------
+# Narrowing helpers — earn the wire-side Literal at runtime, then cast.
+# ---------------------------------------------------------------------------
+
+
+def narrow_kind(s: str) -> Kind:
+    """Narrow ``s`` to wizard :data:`Kind` or raise :class:`ValueError`.
+
+    Mirrors :func:`rytm_randomizer.cockpit.data.types.narrow_kind` for the
+    wizard's own :data:`Kind` alias (which uses a different value set —
+    ``"kit"`` / ``"sound"`` / ``"song"`` / ``"album"`` / ``"artist"`` vs.
+    the data-layer ``"scene"`` / ``"user"``).
+    """
+
+    if s in KIND_VALUES:
+        return cast(Kind, s)
+    raise ValueError(f"invalid kind: {_safe_repr(s)}; expected one of {KIND_VALUES}")
+
+
+def narrow_mode(s: str) -> Mode:
+    """Narrow ``s`` to :data:`Mode` or raise :class:`ValueError`."""
+
+    if s in MODE_VALUES:
+        return cast(Mode, s)
+    raise ValueError(f"invalid mode: {_safe_repr(s)}; expected one of {MODE_VALUES}")
+
+
+def narrow_status(s: str) -> Status:
+    """Narrow ``s`` to wizard :data:`Status` or raise :class:`ValueError`."""
+
+    if s in STATUS_VALUES:
+        return cast(Status, s)
+    raise ValueError(f"invalid status: {_safe_repr(s)}; expected one of {STATUS_VALUES}")
+
+
+def narrow_step(s: str) -> Step:
+    """Narrow ``s`` to :data:`Step` or raise :class:`ValueError`."""
+
+    if s in STEP_VALUES:
+        return cast(Step, s)
+    raise ValueError(f"invalid step: {_safe_repr(s)}; expected one of {STEP_VALUES}")
+
+
+# ---------------------------------------------------------------------------
+# Wire-shape TypedDicts (M1/P2 — explicit dict shapes for callers + IDEs)
+#
+# Literal-valued fields (``kind`` / ``mode`` / ``status`` / ``step``) are
+# typed as plain ``str`` because the wire layer may receive any string —
+# runtime narrowing in each ``from_dict`` is the validation boundary.
+# ---------------------------------------------------------------------------
+
+
+class InspirationSourceDict(TypedDict):
+    """Wire shape of :class:`InspirationSource`."""
+
+    source_id: str
+    kind: str
+    mode: str
+    location: str
+    display_name: str
+    added_at: str  # ISO 8601
+
+
+class AnalysisJobDict(TypedDict):
+    """Wire shape of :class:`AnalysisJob`."""
+
+    source_id: str
+    status: str
+    progress: float
+    error: str | None
+    extracted_traits: list[StyleTraitDict]
+
+
+class WizardStateDict(TypedDict):
+    """Wire shape of :class:`WizardState`."""
+
+    wizard_id: str
+    step: str
+    name: str | None
+    description: str | None
+    sources: list[InspirationSourceDict]
+    jobs: list[AnalysisJobDict]
+    candidate_profile: ProfileModelDict | None
 
 
 # ---------------------------------------------------------------------------
@@ -112,14 +199,14 @@ class InspirationSource:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: InspirationSourceDict) -> Self:
         return cls(
-            source_id=str(data["source_id"]),
-            kind=str(data["kind"]),  # type: ignore[arg-type]
-            mode=str(data["mode"]),  # type: ignore[arg-type]
-            location=str(data["location"]),
-            display_name=str(data["display_name"]),
-            added_at=datetime.fromisoformat(str(data["added_at"])),
+            source_id=data["source_id"],
+            kind=narrow_kind(data["kind"]),
+            mode=narrow_mode(data["mode"]),
+            location=data["location"],
+            display_name=data["display_name"],
+            added_at=datetime.fromisoformat(data["added_at"]),
         )
 
 
@@ -166,7 +253,7 @@ class AnalysisJob:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: AnalysisJobDict) -> Self:
         traits_obj = data["extracted_traits"]
         if not isinstance(traits_obj, (list, tuple)):
             raise TypeError(
@@ -174,10 +261,10 @@ class AnalysisJob:
             )
         error_obj = data["error"]
         return cls(
-            source_id=str(data["source_id"]),
-            status=str(data["status"]),  # type: ignore[arg-type]
-            progress=float(data["progress"]),  # type: ignore[arg-type]
-            error=None if error_obj is None else str(error_obj),
+            source_id=data["source_id"],
+            status=narrow_status(data["status"]),
+            progress=data["progress"],
+            error=error_obj,
             extracted_traits=tuple(StyleTrait.from_dict(t) for t in traits_obj),
         )
 
@@ -352,7 +439,7 @@ class WizardState:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: WizardStateDict) -> Self:
         sources_obj = data["sources"]
         jobs_obj = data["jobs"]
         if not isinstance(sources_obj, (list, tuple)):
@@ -372,10 +459,10 @@ class WizardState:
                 f"got {type(candidate_obj).__name__}"
             )
         return cls(
-            wizard_id=str(data["wizard_id"]),
-            step=str(data["step"]),  # type: ignore[arg-type]
-            name=None if name_obj is None else str(name_obj),
-            description=None if description_obj is None else str(description_obj),
+            wizard_id=data["wizard_id"],
+            step=narrow_step(data["step"]),
+            name=name_obj,
+            description=description_obj,
             sources=tuple(InspirationSource.from_dict(s) for s in sources_obj),
             jobs=tuple(AnalysisJob.from_dict(j) for j in jobs_obj),
             candidate_profile=candidate_profile,
@@ -393,16 +480,20 @@ def _replace(state: WizardState, **changes: object) -> WizardState:
     Using ``dataclasses.replace`` directly here means ``mypy`` resolves the
     return type to ``WizardState`` (matching the ``Self``-annotated helpers
     above without contaminating each call site with a cast).
-    """
 
-    from dataclasses import replace as _dc_replace
+    Import of ``replace`` moved to module top in L3 (CODE_REVIEW.md) —
+    the prior in-function ``from dataclasses import replace as _dc_replace``
+    was paying the import cost on every call.
+    """
 
     return _dc_replace(state, **changes)  # type: ignore[arg-type]
 
 
 __all__ = [
     "AnalysisJob",
+    "AnalysisJobDict",
     "InspirationSource",
+    "InspirationSourceDict",
     "KIND_VALUES",
     "Kind",
     "MODE_VALUES",
@@ -412,4 +503,9 @@ __all__ = [
     "Status",
     "Step",
     "WizardState",
+    "WizardStateDict",
+    "narrow_kind",
+    "narrow_mode",
+    "narrow_status",
+    "narrow_step",
 ]

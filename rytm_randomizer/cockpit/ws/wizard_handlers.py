@@ -41,13 +41,18 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from typing import Any, Final
 
+from ...observability.logging import get_logger
 from ..data.ulid import new_ulid
 from ..wizard.analyze import analyze_source
 from ..wizard.builder import build_profile
+from ..wizard.errors import WizardSourcePathError
+from ..wizard.path_policy import WizardPathPolicy, WizardSourcePathRejected
 from ..wizard.state import (
     AnalysisJob,
     InspirationSource,
     WizardState,
+    narrow_kind,
+    narrow_mode,
 )
 from .handlers import HandlerResult
 from .protocol import EVENT_PROFILE_CHANGED
@@ -65,7 +70,42 @@ from .wizard_protocol import (
     EVENT_PROFILE_CREATED,
     EVENT_WIZARD_STATE_CHANGED,
 )
-from .wizard_session import WizardSession
+from .wizard_session import WizardSession, _utcnow
+
+_logger = get_logger(__name__)
+"""Module logger for wizard handler diagnostics.
+
+Used for the categorical analyzer-failure log lines (H4) and the
+wizard-replacement warning (M11). The structured ``extra=`` payload
+captures the full detail (paths, exception types, ages) that the WS ack
+intentionally hides from the operator's browser.
+"""
+
+# ---------------------------------------------------------------------------
+# Module-level wizard path policy
+# ---------------------------------------------------------------------------
+
+#: Default policy used by :func:`_handle_wizard_add_source` when the session
+#: does not carry its own. Read from the ``WIZARD_SOURCE_ROOTS`` env var at
+#: import time so a deployment can pin the allow-list without touching code.
+#: Tests override this via :func:`_set_path_policy` so per-test ``tmp_path``
+#: roots are exercised without leaking into the global env.
+_PATH_POLICY: WizardPathPolicy = WizardPathPolicy.from_env()
+
+
+def _set_path_policy(policy: WizardPathPolicy) -> None:
+    """Override the module-level :class:`WizardPathPolicy` (testing only).
+
+    The production cockpit reads the policy at import time via
+    :meth:`WizardPathPolicy.from_env`. Tests that want to pin a
+    ``tmp_path`` root call this helper from their fixture; the
+    ``monkeypatch`` fixture restores the original value at teardown via
+    :meth:`pytest.MonkeyPatch.setattr`.
+    """
+
+    global _PATH_POLICY
+    _PATH_POLICY = policy
+
 
 # ---------------------------------------------------------------------------
 # Analyzer failure surface
@@ -84,6 +124,90 @@ _ANALYZER_FAILURE_EXCEPTIONS: Final[tuple[type[BaseException], ...]] = (
     ValueError,
     RuntimeError,
 )
+
+
+# ---------------------------------------------------------------------------
+# Categorical analyzer-failure reason set (H4 — sanitize the error path)
+# ---------------------------------------------------------------------------
+
+#: Fixed categorical reasons that :func:`_handle_wizard_analyze` reports in
+#: :attr:`AnalysisJob.error`. The actual exception message (which often
+#: includes the source path) is NEVER forwarded over the wire -- it is
+#: logged server-side via :data:`_logger` at WARNING level for operators.
+REASON_PATH_NOT_FOUND: Final[str] = "path_not_found"
+REASON_UNSUPPORTED_FORMAT: Final[str] = "unsupported_format"
+REASON_READ_FAILED: Final[str] = "read_failed"
+REASON_ANALYSIS_FAILED: Final[str] = "analysis_failed"
+
+ANALYZER_FAILURE_REASONS: Final[frozenset[str]] = frozenset(
+    {
+        REASON_PATH_NOT_FOUND,
+        REASON_UNSUPPORTED_FORMAT,
+        REASON_READ_FAILED,
+        REASON_ANALYSIS_FAILED,
+    }
+)
+
+
+# ---------------------------------------------------------------------------
+# Categorical wire-error codes + sanitized messages (H4 follow-up — PR 9)
+# ---------------------------------------------------------------------------
+#
+# PR 9 drained the two remaining wire-side ``str(exc)`` sites in this
+# module (``_handle_wizard_add_source`` policy-rejected path + field
+# validation). The pattern is the same as the analyzer-failure surface:
+# the wire carries a fixed ``code`` plus a short fixed ``error`` string;
+# the raw exception detail (which may embed user-supplied input) is
+# logged server-side via :data:`_logger.warning` so the operator running
+# the cockpit retains forensic context for triage.
+
+#: Wire ``code`` for path policy rejections in ``wizard_add_source``.
+#: Pre-PR-9 the ack already carried this code but echoed ``str(exc)``
+#: into ``error``. The underlying :class:`WizardSourcePathRejected`
+#: messages were already categorical ("path is empty", "path traverses
+#: a symlink", etc.), but the str-call pattern would silently leak if a
+#: future exception type with a richer message were added. Now the
+#: ``error`` field is the fixed string below and the categorical
+#: rejection reason lives only in the ``reason`` log-extra.
+CODE_WIZARD_SOURCE_PATH_REJECTED: Final[str] = "wizard_source_path_rejected"
+ERROR_WIZARD_SOURCE_PATH_REJECTED: Final[str] = "source path rejected by policy"
+
+#: Wire ``code`` + fixed ``error`` string for field-level validation
+#: failures in ``wizard_add_source`` (invalid ``kind`` / ``mode``,
+#: empty ``location`` / ``display_name``, etc.). The raw ValueError
+#: message — which echoes the operator's own input — goes only into
+#: the server log via :data:`_logger.warning`.
+CODE_WIZARD_HANDLER_ERROR: Final[str] = "wizard_handler_error"
+ERROR_WIZARD_INVALID_SOURCE: Final[str] = "invalid source field"
+
+
+def _categorical_reason(exc: BaseException) -> str:
+    """Map an analyzer failure exception to one of :data:`ANALYZER_FAILURE_REASONS`.
+
+    Mapping is by exception type:
+
+    * :class:`WizardSourcePathError` /
+      :class:`WizardSourcePathRejected` / :class:`FileNotFoundError`
+      → ``"path_not_found"`` (path missing on disk OR rejected by the
+      allow-list; the WS surface intentionally collapses both so the
+      caller cannot distinguish a typo from a forbidden path).
+    * :class:`ValueError` → ``"unsupported_format"`` (the analyzer
+      dispatcher raises ValueError for unsupported ``(kind, mode)`` pairs
+      and for non-file/non-dir kit paths).
+    * :class:`OSError` → ``"read_failed"`` (a permission / I/O error
+      reading the file).
+    * Everything else in :data:`_ANALYZER_FAILURE_EXCEPTIONS` →
+      ``"analysis_failed"`` (the catch-all reason for runtime failures
+      inside the analyzer).
+    """
+
+    if isinstance(exc, (WizardSourcePathError, WizardSourcePathRejected, FileNotFoundError)):
+        return REASON_PATH_NOT_FOUND
+    if isinstance(exc, ValueError):
+        return REASON_UNSUPPORTED_FORMAT
+    if isinstance(exc, OSError):
+        return REASON_READ_FAILED
+    return REASON_ANALYSIS_FAILED
 
 
 # ---------------------------------------------------------------------------
@@ -120,34 +244,72 @@ def _build_profile_changed(profile: Any) -> dict:
 # ---------------------------------------------------------------------------
 
 
-async def _handle_wizard_start(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_start(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Begin a fresh wizard session and attach it to ``session.active_wizard``.
 
-    Replaces any in-flight wizard wholesale — the previous session is
+    Replaces any in-flight wizard wholesale -- the previous session is
     dropped. (The web UI guards against starting a new wizard while one
     is in flight, but the server tolerates the race rather than reject.)
+
+    M11: when a replacement happens the previous wizard's ``wizard_id``
+    and accumulated age are emitted via :data:`_logger` at WARNING level
+    AND surfaced on the ack as ``previous_wizard_id`` so the operator's
+    UI can offer a "restore previous wizard" affordance instead of
+    silently destroying minutes of work.
     """
 
-    del cmd
     wizard_id = new_ulid()
     state = WizardState.empty(wizard_id)
+    previous = session.active_wizard
+    previous_wizard_id: str | None = None
+    if previous is not None:
+        previous_wizard_id = previous.wizard_id
+        age_seconds = max(0.0, (_utcnow() - previous.started_at).total_seconds())
+        _logger.warning(
+            "wizard_replaced",
+            extra={
+                "previous_wizard_id": previous.wizard_id,
+                "previous_state_age_seconds": age_seconds,
+                "previous_step": previous.state.step,
+                "previous_source_count": len(previous.state.sources),
+                "new_wizard_id": wizard_id,
+            },
+        )
     session.active_wizard = WizardSession(wizard_id=wizard_id, state=state)
+    ack: dict[str, Any] = {"ok": True, "wizard_id": wizard_id}
+    if previous_wizard_id is not None:
+        ack["previous_wizard_id"] = previous_wizard_id
     return HandlerResult(
-        ack={"ok": True, "wizard_id": wizard_id},
+        ack=ack,
         events=[_build_wizard_state_changed(state)],
     )
 
 
 async def _handle_wizard_set_metadata(cmd: dict, session: CockpitSession) -> HandlerResult:
-    """Apply ``name`` / ``description`` from the command body to the wizard state."""
+    """Apply ``name`` / ``description`` from the command body to the wizard state.
+
+    Wire semantics (three-state, per the C4 fix in CODE_REVIEW.md PR 1):
+
+    * key missing from ``cmd`` → leave the corresponding state field
+      unchanged (passes ``None`` to :meth:`WizardState.with_metadata`,
+      which documents ``None`` as "leave unchanged").
+    * key present with JSON ``null`` → clear the corresponding state
+      field (passes ``""`` to :meth:`WizardState.with_metadata`, which
+      documents ``""`` as "cleared").
+    * key present with a string value → set the corresponding state field
+      to that string verbatim.
+
+    The branch on ``"name" in cmd`` (and likewise ``"description"``) is
+    load-bearing: ``cmd.get("name")`` would collapse "missing" and
+    "explicit ``null``" into the same ``None``, re-introducing the
+    documented-contract inversion C4 was filed against.
+    """
 
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
-    name_raw = cmd.get("name")
-    description_raw = cmd.get("description")
-    name = None if name_raw is None else str(name_raw)
-    description = None if description_raw is None else str(description_raw)
+    name = _resolve_metadata_field(cmd, "name")
+    description = _resolve_metadata_field(cmd, "description")
     new_state = wizard.state.with_metadata(name=name, description=description)
     wizard.state = new_state
     return HandlerResult(
@@ -156,35 +318,142 @@ async def _handle_wizard_set_metadata(cmd: dict, session: CockpitSession) -> Han
     )
 
 
+def _resolve_metadata_field(cmd: dict, key: str) -> str | None:
+    """Translate one wire-level ``set_metadata`` field into ``with_metadata`` input.
+
+    Three-state wire → two-sentinel pure helper:
+
+    * key missing → return ``None`` (``with_metadata`` reads ``None`` as
+      "leave unchanged").
+    * key present and ``None`` → return ``""`` (``with_metadata`` reads
+      ``""`` as "cleared").
+    * key present and any other value → return ``str(value)``.
+
+    Kept as a small named helper so the dispatcher stays readable and the
+    three-state mapping is asserted once in unit tests rather than
+    duplicated for ``name`` and ``description``.
+    """
+
+    if key not in cmd:
+        return None
+    raw = cmd[key]
+    if raw is None:
+        return ""
+    return str(raw)
+
+
 async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> HandlerResult:
     """Append an :class:`InspirationSource` to the wizard state.
 
     Field-level validation (kind/mode/location/display_name) is delegated
     to :meth:`InspirationSource.__post_init__`, which raises ``ValueError``
-    with the same diagnostic the manual check would have produced — caught
+    with the same diagnostic the manual check would have produced -- caught
     here and surfaced as an ack-level ``ok=False`` so the wire shape is
     unchanged.
+
+    C2: ``file`` / ``folder`` mode locations are validated against the
+    module-level :class:`WizardPathPolicy` BEFORE the source dataclass
+    is constructed. Rejected paths return a categorical ack
+    (``code="wizard_source_path_rejected"``) that never echoes the
+    rejected path -- the full detail is logged server-side via
+    :data:`_logger` at WARNING level. Reference-mode sources (free-text
+    artist / album names) skip the policy: there is no filesystem path
+    to validate.
     """
 
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
-    kind = str(cmd.get("kind", ""))
-    mode = str(cmd.get("mode", ""))
+    kind_raw = str(cmd.get("kind", ""))
+    mode_raw = str(cmd.get("mode", ""))
     location = str(cmd.get("location", ""))
     display_name = str(cmd.get("display_name", ""))
+
+    # C2: filesystem-mode sources MUST land inside an allow-listed root.
+    # Reference-mode sources are free-text identifiers and skip the policy.
+    # We compare the RAW wire string (pre-narrowing) here so that even
+    # invalid kinds are still validated for path-traversal if they
+    # claim a filesystem mode — the narrow_* call later will catch and
+    # surface the kind error after the path is shown to be safe.
+    if mode_raw in ("file", "folder"):
+        try:
+            _PATH_POLICY.validate(location)
+        except WizardSourcePathRejected as exc:
+            # H4 follow-up (PR 9): the wire ack carries only the fixed
+            # categorical code + sanitized error string. The full
+            # rejection reason (still categorical, but extensible) is
+            # logged server-side as the ``reason`` extra so future
+            # triage retains the detail. The ``str(exc)`` call stays
+            # off the wire — it now appears only inside the logger
+            # extras dict, which the architecture ratchet counts but
+            # accepts as server-side log context.
+            _logger.warning(
+                "wizard_source_path_rejected",
+                extra={
+                    "reason": str(exc),
+                    "location": location,
+                    "mode": mode_raw,
+                    "kind": kind_raw,
+                    "wizard_id": wizard.wizard_id,
+                },
+            )
+            return HandlerResult(
+                ack={
+                    "ok": False,
+                    "code": CODE_WIZARD_SOURCE_PATH_REJECTED,
+                    "error": ERROR_WIZARD_SOURCE_PATH_REJECTED,
+                }
+            )
+
     source_id = new_ulid()
+    # narrow_kind / narrow_mode raise ValueError on invalid wire values;
+    # ``InspirationSource.__post_init__`` raises ValueError for missing
+    # / out-of-set fields. Both fall through to the same sanitized
+    # ack envelope below.
+    #
+    # H4 follow-up (PR 9): the raw ValueError message echoes the
+    # operator's own input (e.g. ``invalid kind: 'bogus'``). The
+    # message itself is not sensitive — it does not leak filesystem
+    # paths — but the ``str(exc)`` on-the-wire pattern is the H4
+    # anti-pattern this module ratchets against, because the next
+    # exception type added to the catch arm might. We emit a fixed
+    # categorical code + short fixed error string instead, and log
+    # the full detail server-side for triage.
     try:
+        kind = narrow_kind(kind_raw)
+        mode = narrow_mode(mode_raw)
         source = InspirationSource(
             source_id=source_id,
-            kind=kind,  # type: ignore[arg-type]
-            mode=mode,  # type: ignore[arg-type]
+            kind=kind,
+            mode=mode,
             location=location,
             display_name=display_name,
             added_at=datetime.now(timezone.utc),
         )
     except ValueError as exc:
-        return HandlerResult(ack={"ok": False, "error": str(exc)})
+        # ``exc_info=exc`` attaches the full exception (type, message,
+        # traceback) to the log record without an explicit ``str(exc)``
+        # call. The architecture ratchet
+        # (``tests/architecture/test_no_raw_exception_messages_on_wire.py``)
+        # counts ``str(<bound-exc>)`` literally, so this idiom keeps
+        # forensic detail server-side while staying under the floor.
+        _logger.warning(
+            "wizard_add_source_invalid",
+            exc_info=exc,
+            extra={
+                "exception_type": type(exc).__name__,
+                "kind": kind_raw,
+                "mode": mode_raw,
+                "wizard_id": wizard.wizard_id,
+            },
+        )
+        return HandlerResult(
+            ack={
+                "ok": False,
+                "code": CODE_WIZARD_HANDLER_ERROR,
+                "error": ERROR_WIZARD_INVALID_SOURCE,
+            }
+        )
     new_state = wizard.state.with_source(source)
     wizard.state = new_state
     return HandlerResult(
@@ -210,7 +479,7 @@ async def _handle_wizard_remove_source(cmd: dict, session: CockpitSession) -> Ha
     )
 
 
-async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_analyze(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Run the analyzer across every source; emit ``analysis_progress`` per job.
 
     Per-job lifecycle: ``pending`` → ``analyzing`` (progress=0.0, traits=())
@@ -225,7 +494,6 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
     while a long analysis is in flight.
     """
 
-    del cmd
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
@@ -247,11 +515,31 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
         try:
             traits = await asyncio.to_thread(analyze_source, source)
         except _ANALYZER_FAILURE_EXCEPTIONS as exc:
+            # H4: never echo the analyzer message back over the wire --
+            # ``extract_from_audio`` / the SysEx analyzer routinely raise
+            # exceptions whose str() embeds the source path, which would
+            # let a hostile WS peer probe the filesystem via the error
+            # field. Map to a categorical reason and log the full detail
+            # server-side instead.
+            reason = _categorical_reason(exc)
+            _logger.warning(
+                "wizard_analyzer_failure",
+                extra={
+                    "reason": reason,
+                    "source_id": source.source_id,
+                    "source_kind": source.kind,
+                    "source_mode": source.mode,
+                    "source_location": source.location,
+                    "exception_type": type(exc).__name__,
+                    "exception_message": str(exc),
+                    "wizard_id": wizard.wizard_id,
+                },
+            )
             terminal_job = AnalysisJob(
                 source_id=source.source_id,
                 status="failed",
                 progress=1.0,
-                error=str(exc),
+                error=reason,
                 extracted_traits=(),
             )
         else:
@@ -269,10 +557,9 @@ async def _handle_wizard_analyze(cmd: dict, session: CockpitSession) -> HandlerR
     return HandlerResult(ack={"ok": True}, events=events)
 
 
-async def _handle_wizard_review(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_review(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Build the candidate :class:`ProfileModel` from OK jobs + store it on the state."""
 
-    del cmd
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
@@ -288,7 +575,7 @@ async def _handle_wizard_review(cmd: dict, session: CockpitSession) -> HandlerRe
     )
 
 
-async def _handle_wizard_save(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_save(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Persist the candidate profile via :meth:`ProfileRegistry.save`.
 
     Emits both :data:`EVENT_PROFILE_CREATED` (wizard-specific) AND
@@ -300,7 +587,6 @@ async def _handle_wizard_save(cmd: dict, session: CockpitSession) -> HandlerResu
     a clean slate.
     """
 
-    del cmd
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
@@ -320,7 +606,7 @@ async def _handle_wizard_save(cmd: dict, session: CockpitSession) -> HandlerResu
     )
 
 
-async def _handle_wizard_cancel(cmd: dict, session: CockpitSession) -> HandlerResult:
+async def _handle_wizard_cancel(_cmd: dict, session: CockpitSession) -> HandlerResult:
     """Drop the in-flight wizard session.
 
     Idempotent: cancelling when no wizard is active still returns
@@ -328,7 +614,6 @@ async def _handle_wizard_cancel(cmd: dict, session: CockpitSession) -> HandlerRe
     which is true either way.
     """
 
-    del cmd
     session.active_wizard = None
     return HandlerResult(ack={"ok": True})
 
@@ -352,4 +637,15 @@ WIZARD_HANDLERS: dict[
 }
 
 
-__all__ = ["WIZARD_HANDLERS"]
+__all__ = [
+    "ANALYZER_FAILURE_REASONS",
+    "CODE_WIZARD_HANDLER_ERROR",
+    "CODE_WIZARD_SOURCE_PATH_REJECTED",
+    "ERROR_WIZARD_INVALID_SOURCE",
+    "ERROR_WIZARD_SOURCE_PATH_REJECTED",
+    "REASON_ANALYSIS_FAILED",
+    "REASON_PATH_NOT_FOUND",
+    "REASON_READ_FAILED",
+    "REASON_UNSUPPORTED_FORMAT",
+    "WIZARD_HANDLERS",
+]

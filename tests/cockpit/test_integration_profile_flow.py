@@ -45,8 +45,10 @@ def test_select_profile_unknown_id_returns_error(cockpit_ws: object) -> None:
     ack = send_cmd(cockpit_ws, "select_profile", profile_id="scene-does-not-exist")
 
     assert ack["ok"] is False
-    assert "unknown profile_id" in ack["error"]
-    assert "scene-does-not-exist" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "validation_error"
+    assert "unknown profile_id" in ack["message"]
+    assert "scene-does-not-exist" in ack["message"]
 
 
 def test_select_profile_switching_emits_event_per_switch(cockpit_ws: object) -> None:

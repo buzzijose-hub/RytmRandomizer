@@ -17,6 +17,7 @@ import msgpack
 from rytm_randomizer.cockpit.data import ProfileModel
 
 from .model_format import (
+    FORMAT_VERSION,
     SUPPORTED_FORMAT_VERSIONS,
     build_header,
     compute_crc,
@@ -26,7 +27,7 @@ from .model_format import (
 )
 
 
-def pack_profile_model(profile: ProfileModel, *, format_version: int = 1) -> bytes:
+def pack_profile_model(profile: ProfileModel) -> bytes:
     """Serialize ``profile`` to the portable binary format.
 
     The returned bytes are ready to write to disk (``Path.write_bytes``) or
@@ -40,13 +41,40 @@ def pack_profile_model(profile: ProfileModel, *, format_version: int = 1) -> byt
     runtime can route a freshly loaded blob to the right inference code
     without first MessagePack-decoding the body.
 
+    The emitted ``format_version`` is always the current
+    :data:`~.model_format.FORMAT_VERSION`. Tests that need to exercise the
+    parser's rejection path for unsupported versions must use the private
+    :func:`_pack_with_version_override` helper — keeping the public surface
+    free of a ``format_version`` kwarg prevents callers from silently
+    producing blobs the unpacker would immediately reject.
+
     Args:
         profile: The model to serialize.
-        format_version: The header ``format_version`` to emit. Defaults to
-            the current :data:`~.model_format.FORMAT_VERSION`; callers can
-            pin an older value to produce a blob a legacy reader will
-            accept, or pass an unsupported value to exercise the parser's
-            rejection path in tests.
+
+    Returns:
+        The full binary blob (header + MessagePack payload + CRC32 trailer).
+    """
+
+    return _pack_with_version_override(profile, format_version=FORMAT_VERSION)
+
+
+def _pack_with_version_override(profile: ProfileModel, *, format_version: int) -> bytes:
+    """Test-only seam: serialize ``profile`` with an explicit ``format_version``.
+
+    The public :func:`pack_profile_model` deliberately omits a
+    ``format_version`` kwarg so callers cannot accidentally emit a blob
+    the unpacker will reject (the parser only accepts versions in
+    :data:`~.model_format.SUPPORTED_FORMAT_VERSIONS`). Tests that need to
+    drive the rejection path — or pin an older accepted version on the
+    wire — go through this helper instead.
+
+    Args:
+        profile: The model to serialize.
+        format_version: The header ``format_version`` to emit. May be any
+            value :func:`~.model_format.build_header` accepts (the header
+            builder enforces only the uint16 field width); the parser's
+            ``SUPPORTED_FORMAT_VERSIONS`` check is the gate that
+            distinguishes legal from illegal values.
 
     Returns:
         The full binary blob (header + MessagePack payload + CRC32 trailer).

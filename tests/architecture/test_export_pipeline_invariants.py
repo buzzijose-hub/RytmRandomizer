@@ -50,7 +50,7 @@ EXPORT_ROOT: Final[Path] = PROJECT_ROOT / "rytm_randomizer" / "cockpit" / "expor
 # ---------------------------------------------------------------------------
 
 
-def test_export_pipeline_format_magic_is_RYMP() -> None:
+def test_export_pipeline_format_magic_is_rymp() -> None:
     """The on-disk magic prefix must remain exactly ``b"RYMP"``.
 
     Regression guard: the Phase 4 firmware reader's first sanity check is
@@ -147,23 +147,27 @@ def test_export_pipeline_public_surface_is_stable() -> None:
             "importable is a packaging error)."
         )
 
-    # Optional signing/verifier names — WS-A may not have merged yet.
-    # Probe via getattr-with-default so this test does NOT block until
-    # WS-A is in. When they do land, this assertion turns into a noop
-    # because the names will simply be present.
-    sign_fn = getattr(export, "sign_profile_model", None)
-    verify_fn = getattr(export, "verify_profile_model", None)
-    if sign_fn is not None or verify_fn is not None:
-        # If either side has merged, BOTH should be present — a signer
-        # without a verifier is a broken contract.
-        assert sign_fn is not None, (
-            "verify_profile_model is exposed but sign_profile_model is not; "
-            "the signing envelope is a pair — expose both or neither."
-        )
-        assert verify_fn is not None, (
-            "sign_profile_model is exposed but verify_profile_model is not; "
-            "the signing envelope is a pair — expose both or neither."
-        )
+    # WS-A signing surface has merged: the real names are
+    # ``sign_profile_blob`` (an HMAC-SHA256 signer that returns a
+    # :class:`SignedBlob`) and ``verify_signed_blob`` (the receiver-side
+    # verifier that returns a :class:`VerificationResult` without ever
+    # raising). The earlier probe used the wrong names
+    # (``sign_profile_model`` / ``verify_profile_model``) and so was a
+    # silent no-op; pinning the real pair here makes any future
+    # rename or removal a loud test failure.
+    sign_fn = getattr(export, "sign_profile_blob", None)
+    verify_fn = getattr(export, "verify_signed_blob", None)
+    assert sign_fn is not None, (
+        "rytm_randomizer.cockpit.export must expose 'sign_profile_blob' "
+        "(the HMAC-SHA256 signer). The Phase 4 firmware build's Python "
+        "encoder pairs ``sign_profile_blob`` with ``verify_signed_blob`` "
+        "— removing either silently breaks the firmware tooling."
+    )
+    assert verify_fn is not None, (
+        "rytm_randomizer.cockpit.export must expose 'verify_signed_blob' "
+        "(the receiver-side verifier). Signing without verification is a "
+        "broken contract — the firmware loader has no way to validate."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -268,4 +272,67 @@ def test_export_pipeline_round_trip_byte_identical() -> None:
         "Round-tripped ProfileModel does not compare equal to the original "
         "even though to_dict() matches. Check StyleTrait/TraitPadWeight "
         "tuple ordering or dataclass eq semantics."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Signed-envelope overhead
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "key_id",
+    [
+        "",
+        "k",
+        "test-key",
+        "buzzi-2026-key",
+        "x" * 64,
+        "x" * 255,
+    ],
+)
+def test_export_pipeline_signed_envelope_overhead_matches_real_pack_signed(
+    key_id: str,
+) -> None:
+    """The analytic envelope-overhead formula MUST match :func:`pack_signed`.
+
+    Regression guard: the rehearsal report
+    (:mod:`rytm_randomizer.reports.cockpit_export_rehearsal`) projects
+    the signed file size from
+    :func:`~rytm_randomizer.cockpit.export.signed_envelope_overhead_bytes`
+    without actually invoking the signer. That projection is what the
+    operator sees in the pre-flight check before clicking EXPORT. If a
+    future refactor changes the wire layout in :mod:`.signing` (a wider
+    length prefix, an extra reserved field, a different signature size)
+    without also updating the formula, the rehearsal would silently
+    under- or over-predict the bytes-on-disk.
+
+    This test pins the formula to the real ``pack_signed`` output across
+    several key-id lengths (including the 255-byte uint8 maximum). Any
+    drift between formula and wire layout fails here at the first
+    parametrization that diverges.
+    """
+
+    from rytm_randomizer.cockpit.export import (
+        SIGNATURE_ALGO_HMAC_SHA256,
+        pack_signed,
+        sign_profile_blob,
+        signed_envelope_overhead_bytes,
+    )
+
+    payload = b"X" * 100
+    blob = sign_profile_blob(payload, key=b"\x00" * 32, key_id=key_id)
+    envelope = pack_signed(blob)
+
+    expected = signed_envelope_overhead_bytes(
+        algo=SIGNATURE_ALGO_HMAC_SHA256,
+        key_id=key_id,
+    )
+    actual = len(envelope) - len(payload)
+    assert actual == expected, (
+        f"signed envelope overhead for key_id={key_id!r}: pack_signed "
+        f"produced a {actual}-byte wrapper but the analytic formula "
+        f"signed_envelope_overhead_bytes predicted {expected}. The "
+        "rehearsal report's would-write size has drifted from the real "
+        "wire format — bump the formula or revert the wire-format change."
     )

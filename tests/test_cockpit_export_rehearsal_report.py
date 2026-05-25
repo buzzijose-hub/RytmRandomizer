@@ -664,3 +664,50 @@ def test_cockpit_export_rehearsal_import_does_not_pull_export_side_effect_module
         check=True,
     )
     assert result.stdout == ""
+
+
+# ---------------------------------------------------------------------------
+# CODE_REVIEW.md H6 — sane-range pin on the signed-envelope overhead
+# ---------------------------------------------------------------------------
+
+
+def test_cockpit_export_rehearsal_signed_envelope_overhead_within_sane_range() -> None:
+    """The analytic envelope overhead must stay in a plausible byte range.
+
+    CODE_REVIEW.md **H6** retired a hard-coded
+    ``_SIGNED_ENVELOPE_OVERHEAD_BYTES = 256`` constant in favor of
+    :func:`rytm_randomizer.cockpit.export.signed_envelope_overhead_bytes`,
+    which derives the wrapper size from the real
+    :mod:`rytm_randomizer.cockpit.export.signing` wire layout. The
+    finding's "pin in an arch test" recommendation is satisfied by this
+    one-line sanity check: across the realistic spread of operator key
+    ids (empty through a typical ~32-byte label plus a multibyte utf-8
+    name) the overhead stays inside 50-300 bytes — narrow enough that a
+    future wire-format mistake (e.g. promoting ``payload_len`` from
+    uint32 to uint64, or dropping the algorithm-name field) would burst
+    the band immediately, but wide enough to absorb plausible additions
+    like a per-envelope nonce. The uint8-maximum 255-byte key_id is
+    out-of-band for normal operator workflows and is exercised by the
+    byte-for-byte tests below; this guard targets realistic inputs.
+
+    The byte-for-byte agreement with :func:`pack_signed` is pinned by
+    :mod:`tests.cockpit.test_signed_envelope_overhead` and by
+    :mod:`tests.architecture.test_export_pipeline_invariants`; this test
+    is the inexpensive regression guard at the rehearsal-surface layer.
+    """
+
+    from rytm_randomizer.cockpit.export import (
+        SIGNATURE_ALGO_HMAC_SHA256,
+        signed_envelope_overhead_bytes,
+    )
+
+    for key_id in ("", "k", "test-key", "buzzi-2026-key", "buzzi-\U0001f941", "x" * 32):
+        overhead = signed_envelope_overhead_bytes(
+            algo=SIGNATURE_ALGO_HMAC_SHA256,
+            key_id=key_id,
+        )
+        assert 50 <= overhead <= 300, (
+            f"signed-envelope overhead for key_id={key_id!r} is {overhead} bytes, "
+            "outside the sane 50-300 range — the wire format likely changed; "
+            "see CODE_REVIEW.md H6."
+        )

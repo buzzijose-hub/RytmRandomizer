@@ -28,14 +28,22 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...observability.logging import get_logger
 from ..data import (
     MutationCandidate,
     PadDelta,
     ProfileModel,
     Snapshot,
+    Status,
     new_ulid,
 )
 from .prng import xorshift32
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit mutation engine. Bound here so future
+structured log calls (per-mutation telemetry, sampled-DEBUG candidate
+audit lines) can land in the package's structured stream without
+touching this file's imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _CC_MIN: Final[int] = 0
 """Minimum Rytm CC value."""
@@ -73,14 +81,20 @@ _DEPTH_ARMED_CEIL: Final[float] = 0.65
 """Strictly below this depth the candidate is ``armed``; above-or-equal is ``high_risk``."""
 
 
-def _classify_safety(depth: float) -> str:
-    """Map a depth value to the canonical ``Status`` string.
+def _classify_safety(depth: float) -> Status:
+    """Map a depth value to the canonical ``Status`` literal.
 
     Thresholds (matching ``spec.md`` §"Safety status"):
 
     * ``depth < 0.30`` → ``"safe"``
     * ``0.30 <= depth < 0.65`` → ``"armed"``
     * ``depth >= 0.65`` → ``"high_risk"``
+
+    Return type is the :data:`Status` literal alias so the caller does not
+    need a ``# type: ignore[arg-type]`` to feed the result into
+    :class:`MutationCandidate.safety_status`; the literal narrowing is
+    earned by the branching here (each return statement returns a value
+    that is statically a member of :data:`Status`).
     """
 
     if depth < _DEPTH_SAFE_CEIL:
@@ -223,7 +237,7 @@ def mutate(
         depth=depth,
         seed=seed,
         pad_deltas=tuple(pad_deltas),
-        safety_status=safety_status,  # type: ignore[arg-type]
+        safety_status=safety_status,
         estimated_midi_msgs=total_changed,
     )
 

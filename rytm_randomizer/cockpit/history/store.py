@@ -28,8 +28,16 @@ state machine implements.
 from __future__ import annotations
 
 from rytm_randomizer.observability.errors import StateError
+from rytm_randomizer.observability.logging import get_logger
 
 from ..data import History, HistoryEntry, Snapshot, Via
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit in-memory history store. Bound here so
+future structured log calls (snapshot-chain mutation breadcrumbs:
+append / undo / load / promote-to-saved) can land in the package's
+structured stream without touching this file's imports. See
+``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 
 class HistoryStore:

@@ -18,10 +18,42 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Self
+from typing import Self, TypedDict
 
-from .snapshot import Snapshot
-from .types import HISTORY_KIND_VALUES, VIA_VALUES, HistoryKind, Via
+from .snapshot import Snapshot, SnapshotDict
+from .types import (
+    HISTORY_KIND_VALUES,
+    VIA_VALUES,
+    HistoryKind,
+    Via,
+    narrow_history_kind,
+    narrow_via,
+)
+
+
+class HistoryEntryDict(TypedDict):
+    """Wire shape of :class:`HistoryEntry` (M1/P2 — replaces ``Mapping[str, object]``).
+
+    ``snapshot`` is a nested :class:`SnapshotDict`; the optional fields
+    accept ``None`` because the root entry of a fresh session has no
+    parent and no "via" cause. The literal-valued ``kind`` / ``via``
+    keys are NOT typed as their ``Literal`` aliases because the wire
+    layer may receive any string — runtime narrowing in
+    :meth:`HistoryEntry.from_dict` is the validation boundary.
+    """
+
+    snapshot: SnapshotDict
+    kind: str
+    parent_id: str | None
+    via: str | None
+    label: str | None
+
+
+class HistoryDict(TypedDict):
+    """Wire shape of :class:`History` (M1/P2)."""
+
+    entries: list[HistoryEntryDict]
+    current_id: str
 
 
 @dataclass(frozen=True)
@@ -56,7 +88,7 @@ class HistoryEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: HistoryEntryDict) -> Self:
         snap_obj = data["snapshot"]
         if not isinstance(snap_obj, Mapping):
             raise TypeError(f"snapshot must be a Mapping; got {type(snap_obj).__name__}")
@@ -65,10 +97,10 @@ class HistoryEntry:
         label_obj = data["label"]
         return cls(
             snapshot=Snapshot.from_dict(snap_obj),
-            kind=str(data["kind"]),  # type: ignore[arg-type]
-            parent_id=None if parent_obj is None else str(parent_obj),
-            via=None if via_obj is None else str(via_obj),  # type: ignore[arg-type]
-            label=None if label_obj is None else str(label_obj),
+            kind=narrow_history_kind(data["kind"]),
+            parent_id=parent_obj,
+            via=None if via_obj is None else narrow_via(via_obj),
+            label=label_obj,
         )
 
 
@@ -107,14 +139,14 @@ class History:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: HistoryDict) -> Self:
         entries_obj = data["entries"]
         if not isinstance(entries_obj, (list, tuple)):
             raise TypeError(f"entries must be a list/tuple; got {type(entries_obj).__name__}")
         return cls(
             entries=tuple(HistoryEntry.from_dict(e) for e in entries_obj),
-            current_id=str(data["current_id"]),
+            current_id=data["current_id"],
         )
 
 
-__all__ = ["History", "HistoryEntry"]
+__all__ = ["History", "HistoryDict", "HistoryEntry", "HistoryEntryDict"]

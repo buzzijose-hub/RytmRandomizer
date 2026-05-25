@@ -62,12 +62,6 @@ export const candidate: MutationCandidate = {
   estimated_midi_msgs: 12,
 };
 
-export const highRiskCandidate: MutationCandidate = {
-  ...candidate,
-  candidate_id: 'cand-risk',
-  safety_status: 'high_risk',
-};
-
 export const sendPlan: CockpitSendPlan = {
   plan_id: 'sendplan-1',
   candidate_id: 'cand-1',
@@ -112,13 +106,6 @@ export const profile: ProfileModel = {
   source_summary: '5 sources · 1,243 analyzed signals',
 };
 
-export const sceneProfile: ProfileModel = {
-  ...profile,
-  profile_id: 'scene-industrial',
-  name: 'Industrial',
-  kind: 'scene',
-};
-
 export const history: History = {
   entries: [
     { snapshot, kind: 'auto', parent_id: null, via: null, label: null },
@@ -161,11 +148,6 @@ export const availableProfiles = [
 ];
 
 // ---------- FakeClient ----------
-
-export interface SendRecord {
-  command: Command;
-  ack: { resolve: (ack: CommandAck) => void; reject: (err: Error) => void };
-}
 
 export class FakeCockpitClient {
   sent: Command[] = [];

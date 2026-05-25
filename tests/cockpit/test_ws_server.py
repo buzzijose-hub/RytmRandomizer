@@ -45,9 +45,12 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_SEND_PLAN_CHANGED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
+    WS_SUBPROTOCOL,
 )
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+
+from .conftest import TEST_WS_TOKEN, complete_handshake
 
 pytestmark = pytest.mark.fast
 
@@ -112,8 +115,15 @@ def session_factory(tmp_path: Path):
 
 
 def _recv_initial_events(ws) -> list[dict]:
-    """Drain the four bootstrap events the endpoint emits on connect."""
+    """Run the handshake then drain the four bootstrap events.
 
+    Per CODE_REVIEW.md PR 1 finding C1, the cockpit WS endpoint now
+    requires a handshake before bootstrap fires. Folding the handshake
+    into this helper keeps every existing test in this file working
+    against the hardened endpoint without per-call edits.
+    """
+
+    complete_handshake(ws)
     return [ws.receive_json() for _ in range(4)]
 
 
@@ -145,10 +155,10 @@ def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
 
 def test_connect_emits_four_initial_events_in_order(session_factory) -> None:
     session = session_factory()
-    app = create_app(session)
+    app = create_app(session, token=TEST_WS_TOKEN)
     client = TestClient(app)
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         events = _recv_initial_events(ws)
 
     types_emitted = [e["type"] for e in events]
@@ -170,9 +180,9 @@ def test_connect_emits_four_initial_events_in_order(session_factory) -> None:
 def test_select_profile_command_emits_profile_changed(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "select_profile", profile_id=profile.profile_id)
         events_after = _drain(ws, 1)
@@ -191,9 +201,9 @@ def test_set_depth_with_preview_off_returns_candidate_no_event(session_factory) 
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "set_depth", depth=0.55)
         # No follow-up events expected — set test buffer expectation
@@ -211,9 +221,9 @@ def test_set_depth_with_preview_on_emits_mutation_previewed(session_factory) -> 
     session = session_factory(profile=profile)
     session.active_profile = profile
     session.preview_on = True
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "set_depth", depth=0.55)
         event = ws.receive_json()
@@ -227,9 +237,9 @@ def test_toggle_preview_on_then_off_cycle(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack_on = _send_command(ws, "req-1", "toggle_preview", on=True)
         event_on = ws.receive_json()
@@ -254,9 +264,9 @@ def test_regen_returns_new_candidate(session_factory) -> None:
     session = session_factory(profile=profile)
     session.active_profile = profile
     original_seed = session.seed
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "regen")
 
@@ -274,9 +284,9 @@ def test_send_after_set_depth_emits_five_events(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_depth", depth=0.55)  # primes candidate
         _prepare_send_plan(ws)
@@ -303,9 +313,9 @@ def test_send_respects_pad_lock(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_pad_lock", pad_id=1, locked=True)
         _send_command(ws, "req-2", "set_depth", depth=0.55)
@@ -327,9 +337,9 @@ def test_undo_after_send_emits_snapshot_and_history(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_depth", depth=0.55)
         _prepare_send_plan(ws)
@@ -352,9 +362,9 @@ def test_undo_after_send_emits_snapshot_and_history(session_factory) -> None:
 def test_save_promotes_entry_and_resets_unsaved_sends(session_factory) -> None:
     session = session_factory()
     session.unsaved_sends = 2
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "save", label="industrial-peak")
         events_after = _drain(ws, 2)
@@ -376,9 +386,9 @@ def test_load_snapshot_jumps_to_past_entry(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
     session.active_profile = profile
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         _send_command(ws, "req-1", "set_depth", depth=0.55)
         _prepare_send_plan(ws)
@@ -405,9 +415,9 @@ def test_load_snapshot_jumps_to_past_entry(session_factory) -> None:
 def test_export_profile_model_binary_returns_blob(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(
             ws,
@@ -425,9 +435,9 @@ def test_export_profile_model_binary_returns_blob(session_factory) -> None:
 def test_export_profile_model_json_returns_serialisable_json(session_factory) -> None:
     profile = _profile()
     session = session_factory(profile=profile)
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(
             ws,
@@ -449,14 +459,16 @@ def test_export_profile_model_json_returns_serialisable_json(session_factory) ->
 
 def test_unknown_command_returns_error_ack(session_factory) -> None:
     session = session_factory()
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         ack = _send_command(ws, "req-1", "totally_made_up_command")
 
     assert ack["ok"] is False
-    assert "unknown command" in ack["error"]
+    # PR 14: categorical envelope (``code``/``message`` replace ``error``).
+    assert ack["code"] == "unknown_command"
+    assert "unknown command" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -468,9 +480,9 @@ def test_endpoint_handles_clean_disconnect(session_factory) -> None:
     """Closing the WebSocket exits the server loop without raising."""
 
     session = session_factory()
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         # Closing the context manager triggers WebSocketDisconnect server-side.
     # If the disconnect path raises, TestClient surfaces the exception above.
@@ -480,9 +492,9 @@ def test_endpoint_round_trip_supports_multiple_commands(session_factory) -> None
     """Verify the command loop survives several round-trips per connection."""
 
     session = session_factory()
-    client = TestClient(create_app(session))
+    client = TestClient(create_app(session, token=TEST_WS_TOKEN))
 
-    with client.websocket_connect("/ws") as ws:
+    with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         _recv_initial_events(ws)
         for i in range(5):
             ack = _send_command(ws, f"req-{i}", "set_pad_lock", pad_id=1, locked=bool(i % 2))

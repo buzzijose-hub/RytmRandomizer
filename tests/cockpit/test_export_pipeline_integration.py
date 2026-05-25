@@ -369,24 +369,26 @@ def test_rehearsal_payload_crc_matches_export(
     assert rehearsal.payload_crc_hex == expected_crc_hex
 
 
-def test_rehearsal_signed_size_is_conservative_upper_bound_on_real_export(
+def test_rehearsal_signed_size_matches_real_export_exactly(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Rehearsal's ``signed_size`` is a conservative upper-bound on the real signed file size.
+    """Rehearsal's ``signed_size`` is the **exact** real signed file size.
 
-    WS-D estimates the signed envelope size as ``payload_size + 256``
-    (see ``_SIGNED_ENVELOPE_OVERHEAD_BYTES`` in
-    :mod:`rytm_randomizer.reports.cockpit_export_rehearsal`). The real
-    envelope wrapper for HMAC-SHA256 with a short key_id is closer to ~50
-    bytes, so the rehearsal value is intentionally conservative.
+    Post-PR10 the rehearsal no longer carries a 256-byte upper-bound
+    estimate (``_SIGNED_ENVELOPE_OVERHEAD_BYTES``). It now composes the
+    analytic
+    :func:`~rytm_randomizer.cockpit.export.signed_envelope_overhead_bytes`
+    formula derived directly from
+    :mod:`rytm_randomizer.cockpit.export.signing`'s wire layout, so the
+    reported size and the real-file size MUST agree byte-for-byte.
 
     The contract this test enforces is the operationally-meaningful one:
 
-    * the rehearsal MUST be >= the actual size (operators never get a
-      surprise larger file than the rehearsal predicted), and
-    * the gap stays inside the documented WS-D overhead budget (so a
-      future signer change that blows the envelope past the budget gets
-      caught).
+    * the rehearsal MUST equal the actual size (operators see the exact
+      bytes the writer will emit, not an upper-bound padding), and
+    * any future signer change that drifts the wire layout gets caught
+      here as a one-byte mismatch instead of silently fitting inside an
+      opaque 256-byte budget.
     """
 
     _isolate_user_home(monkeypatch, tmp_path)
@@ -419,16 +421,13 @@ def test_rehearsal_signed_size_is_conservative_upper_bound_on_real_export(
     assert export.returncode == 0, export.stderr or export.stdout
 
     actual_size = output.stat().st_size
-    # Conservative upper-bound contract: rehearsal MUST NOT under-predict.
-    assert rehearsal.signed_size >= actual_size, (
-        f"rehearsal signed_size={rehearsal.signed_size} is smaller than the "
-        f"actual signed file size={actual_size}; the rehearsal must never "
-        "under-predict (operators rely on it as an upper bound)."
-    )
-    # And it stays inside the documented WS-D budget (256-byte overhead).
-    assert rehearsal.signed_size - actual_size <= 256, (
-        f"rehearsal signed_size={rehearsal.signed_size} vs actual={actual_size} "
-        "drifted past the WS-D 256-byte envelope-overhead budget."
+    # Exact-match contract: rehearsal predicts the real bytes-on-disk,
+    # not a conservative upper bound.
+    assert rehearsal.signed_size == actual_size, (
+        f"rehearsal signed_size={rehearsal.signed_size} does not match the "
+        f"actual signed file size={actual_size}; the rehearsal uses the "
+        "analytic signed_envelope_overhead_bytes formula and must agree "
+        "with pack_signed byte-for-byte."
     )
 
 
@@ -1103,7 +1102,10 @@ def test_build_test_profile_round_trips_through_registry(tmp_path: Path) -> None
 
     profile = _build_test_profile()
     registry = ProfileRegistry(tmp_path)
-    saved_path = registry.save(profile)
+    registry.save(profile)
+    # PR 7 — IH2: save() returns None; derive the on-disk path
+    # explicitly from the profile id.
+    saved_path = tmp_path / "user" / f"{profile.profile_id}.json"
     assert saved_path.exists()
     loaded = registry.get(profile.profile_id)
     assert loaded is not None

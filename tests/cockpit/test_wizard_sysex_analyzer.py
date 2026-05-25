@@ -10,8 +10,15 @@ Tests pin each branch:
 * folder of multiple files (equal-weighted averaging);
 * folder with no matching files -> neutral profile;
 * missing path -> ``FileNotFoundError``;
-* non-Path argument -> ``TypeError``;
+* non-Path argument -> ``ValueError``;
 * non-file / non-dir path -> ``ValueError``.
+
+CODE_REVIEW.md M5: the analyzer emits placeholder trait names
+(``_bytes_mean`` / ``_bytes_stddev`` / ``_bytes_density`` /
+``_bytes_distinct``) rather than the canonical
+:data:`WIZARD_TRAIT_NAMES`, because byte-statistics on a SysEx kit
+dump carry no musical meaning. The tests pin the placeholder names
+verbatim so a future rename surfaces here.
 """
 
 from __future__ import annotations
@@ -22,9 +29,18 @@ import pytest
 
 from rytm_randomizer.cockpit.data.profile_model import StyleTrait
 from rytm_randomizer.cockpit.wizard.sysex_analyzer import extract_kit_traits
-from rytm_randomizer.cockpit.wizard.traits import WIZARD_TRAIT_NAMES
 
 pytestmark = pytest.mark.fast
+
+# Placeholder trait names emitted by the Phase 2 sysex analyzer
+# (mirror of :data:`sysex_analyzer._PLACEHOLDER_TRAIT_NAMES`; kept
+# duplicated here so tests do not import private names).
+_PLACEHOLDER_TRAIT_NAMES: tuple[str, ...] = (
+    "_bytes_stddev",
+    "_bytes_mean",
+    "_bytes_density",
+    "_bytes_distinct",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +54,7 @@ def _by_name(traits: tuple[StyleTrait, ...]) -> dict[str, float]:
 
 def _is_neutral(traits: tuple[StyleTrait, ...]) -> bool:
     by_name = _by_name(traits)
-    return all(by_name.get(n) == pytest.approx(0.5) for n in WIZARD_TRAIT_NAMES)
+    return all(by_name.get(n) == pytest.approx(0.5) for n in _PLACEHOLDER_TRAIT_NAMES)
 
 
 # ---------------------------------------------------------------------------
@@ -52,54 +68,54 @@ def test_known_bytes_fixture_produces_expected_traits(tmp_path: Path) -> None:
     Use a 4096-byte all-zero kit: byte mean = 0, stddev = 0,
     distinct = 1, length = 4096.
 
-    Expected:
-      * metallic_tension = 0 / 255 = 0.0
-      * rolling_low_end = 1.0 - (0 / 127.5) = 1.0 (zero variance == max roll)
-      * hat_density = 4096 / 8192 = 0.5
-      * filter_motion = 1 / 256 ~= 0.00390625
+    Expected (CODE_REVIEW.md M5 — placeholder names):
+      * _bytes_mean = 0 / 255 = 0.0
+      * _bytes_stddev = 1.0 - (0 / 127.5) = 1.0 (zero variance == max value)
+      * _bytes_density = 4096 / 8192 = 0.5
+      * _bytes_distinct = 1 / 256 ~= 0.00390625
     """
 
     path = tmp_path / "all_zero.syx"
     path.write_bytes(bytes(4096))
     traits = extract_kit_traits(path)
     by_name = _by_name(traits)
-    assert tuple(t.name for t in traits) == WIZARD_TRAIT_NAMES
-    assert by_name["metallic_tension"] == pytest.approx(0.0)
-    assert by_name["rolling_low_end"] == pytest.approx(1.0)
-    assert by_name["hat_density"] == pytest.approx(0.5)
-    assert by_name["filter_motion"] == pytest.approx(1.0 / 256.0)
+    assert tuple(t.name for t in traits) == _PLACEHOLDER_TRAIT_NAMES
+    assert by_name["_bytes_mean"] == pytest.approx(0.0)
+    assert by_name["_bytes_stddev"] == pytest.approx(1.0)
+    assert by_name["_bytes_density"] == pytest.approx(0.5)
+    assert by_name["_bytes_distinct"] == pytest.approx(1.0 / 256.0)
 
 
 def test_full_byte_range_fixture_drives_distinct_to_one(tmp_path: Path) -> None:
     """A file containing every byte value 0..255 exactly once.
 
-    Statistics:
-      * mean = 127.5 -> metallic_tension = 0.5
-      * stddev = sqrt(((0..255 - 127.5)^2 mean)) ~= 73.9 -> rolling = 1.0 - (73.9/127.5)
-      * length = 256 -> hat_density = 256 / 8192 = 0.03125
-      * distinct = 256 -> filter_motion = 1.0
+    Statistics (CODE_REVIEW.md M5 — placeholder names):
+      * mean = 127.5 -> _bytes_mean = 0.5
+      * stddev = sqrt(((0..255 - 127.5)^2 mean)) ~= 73.9 -> _bytes_stddev = 1.0 - (73.9/127.5)
+      * length = 256 -> _bytes_density = 256 / 8192 = 0.03125
+      * distinct = 256 -> _bytes_distinct = 1.0
     """
 
     path = tmp_path / "full_range.syx"
     path.write_bytes(bytes(range(256)))
     traits = extract_kit_traits(path)
     by_name = _by_name(traits)
-    assert by_name["metallic_tension"] == pytest.approx(127.5 / 255.0)
-    assert by_name["filter_motion"] == pytest.approx(1.0)
-    assert by_name["hat_density"] == pytest.approx(256.0 / 8192.0)
-    # rolling = 1 - (stddev / 127.5); stddev of uniform 0..255 ~= 73.9.
+    assert by_name["_bytes_mean"] == pytest.approx(127.5 / 255.0)
+    assert by_name["_bytes_distinct"] == pytest.approx(1.0)
+    assert by_name["_bytes_density"] == pytest.approx(256.0 / 8192.0)
+    # _bytes_stddev = 1 - (stddev / 127.5); stddev of uniform 0..255 ~= 73.9.
     # Just assert the inverted-stddev branch fires and lands < 1.
-    assert 0.0 < by_name["rolling_low_end"] < 1.0
+    assert 0.0 < by_name["_bytes_stddev"] < 1.0
 
 
 def test_long_file_clamps_density_to_one(tmp_path: Path) -> None:
-    """A kit larger than 8192 bytes saturates ``hat_density`` at 1.0."""
+    """A kit larger than 8192 bytes saturates ``_bytes_density`` at 1.0."""
 
     path = tmp_path / "long.syx"
     path.write_bytes(b"\x00" * 16384)
     traits = extract_kit_traits(path)
     by_name = _by_name(traits)
-    assert by_name["hat_density"] == pytest.approx(1.0)
+    assert by_name["_bytes_density"] == pytest.approx(1.0)
 
 
 def test_empty_file_returns_neutral_profile(tmp_path: Path) -> None:
@@ -111,10 +127,10 @@ def test_empty_file_returns_neutral_profile(tmp_path: Path) -> None:
     assert _is_neutral(traits)
 
 
-def test_extreme_byte_split_clamps_rolling_at_zero(tmp_path: Path) -> None:
+def test_extreme_byte_split_clamps_stddev_at_zero(tmp_path: Path) -> None:
     """Half-zero / half-255 produces the maximum possible byte stddev (127.5).
 
-    With ``stddev / 127.5`` exactly = 1, ``rolling = 1 - 1 = 0.0`` --
+    With ``stddev / 127.5`` exactly = 1, ``_bytes_stddev = 1 - 1 = 0.0`` --
     the inverted-stddev branch lands at the clamp's lower edge.
     """
 
@@ -122,7 +138,7 @@ def test_extreme_byte_split_clamps_rolling_at_zero(tmp_path: Path) -> None:
     path.write_bytes(b"\x00" * 64 + b"\xff" * 64)
     traits = extract_kit_traits(path)
     by_name = _by_name(traits)
-    assert by_name["rolling_low_end"] == pytest.approx(0.0)
+    assert by_name["_bytes_stddev"] == pytest.approx(0.0)
 
 
 # ---------------------------------------------------------------------------
@@ -157,13 +173,13 @@ def test_folder_averages_per_file_results(tmp_path: Path) -> None:
     traits = extract_kit_traits(folder)
     by_name = _by_name(traits)
 
-    # File A: metallic=0, rolling=1, density=0.5, motion=1/256
-    # File B: metallic=1, rolling=1 (stddev=0 too), density=0.5, motion=1/256
-    # Averages: metallic=0.5, rolling=1, density=0.5, motion=1/256
-    assert by_name["metallic_tension"] == pytest.approx(0.5)
-    assert by_name["rolling_low_end"] == pytest.approx(1.0)
-    assert by_name["hat_density"] == pytest.approx(0.5)
-    assert by_name["filter_motion"] == pytest.approx(1.0 / 256.0)
+    # File A: _bytes_mean=0, _bytes_stddev=1, _bytes_density=0.5, _bytes_distinct=1/256
+    # File B: _bytes_mean=1, _bytes_stddev=1 (stddev=0 too), _bytes_density=0.5, _bytes_distinct=1/256
+    # Averages: _bytes_mean=0.5, _bytes_stddev=1, _bytes_density=0.5, _bytes_distinct=1/256
+    assert by_name["_bytes_mean"] == pytest.approx(0.5)
+    assert by_name["_bytes_stddev"] == pytest.approx(1.0)
+    assert by_name["_bytes_density"] == pytest.approx(0.5)
+    assert by_name["_bytes_distinct"] == pytest.approx(1.0 / 256.0)
 
 
 def test_folder_skips_non_syx_files(tmp_path: Path) -> None:
@@ -229,12 +245,20 @@ def test_missing_path_raises_filenotfounderror(tmp_path: Path) -> None:
         extract_kit_traits(tmp_path / "does-not-exist.syx")
 
 
-def test_non_path_argument_raises_typeerror() -> None:
-    """The contract is ``path: pathlib.Path`` -- anything else is a bug."""
+def test_non_path_argument_raises_valueerror() -> None:
+    """The contract is ``path: pathlib.Path`` -- anything else is a bug.
 
-    with pytest.raises(TypeError, match="path must be a pathlib.Path"):
+    Raised as :class:`ValueError` (not :class:`TypeError`) so the wizard
+    analyzer surface speaks a single error vocabulary --
+    :class:`~rytm_randomizer.cockpit.wizard.errors.WizardSourcePathError`
+    for path-policy violations + :class:`ValueError` for every other
+    operator-supplied bad value (see ``L11`` reconcile in
+    ``sysex_analyzer.extract_kit_traits``).
+    """
+
+    with pytest.raises(ValueError, match="path must be a pathlib.Path"):
         extract_kit_traits("string-path-not-allowed")  # type: ignore[arg-type]
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError):
         extract_kit_traits(42)  # type: ignore[arg-type]
 
 

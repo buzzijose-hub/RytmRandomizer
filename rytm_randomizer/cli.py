@@ -12,6 +12,18 @@ def _registered_command_exit_code(args):
     from . import cli_registry
 
     lazy_commands = {
+        "mock-mapper-report": (
+            "rytm_randomizer.reports",
+            "MOCK_MAPPER_REPORT_CLI_COMMAND",
+        ),
+        "runtime-plan-report": (
+            "rytm_randomizer.reports",
+            "RUNTIME_PLAN_REPORT_CLI_COMMAND",
+        ),
+        "active-boundary-report": (
+            "rytm_randomizer.reports",
+            "ACTIVE_BOUNDARY_REPORT_CLI_COMMAND",
+        ),
         "rytm-12-pad-machine-matrix-report": (
             "rytm_randomizer.reports.rytm_machine_matrix",
             "RYTM_MACHINE_MATRIX_CLI_COMMAND",
@@ -580,10 +592,7 @@ def format_preview_command_report(command_key):
             "RytmRandomizer passive command preview",
             f"Command: {command}",
             "Found: False",
-            (
-                "Message: Command preview not found. No MIDI was sent. "
-                "No command executed. No hardware was mutated."
-            ),
+            "Message: Command preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
             f"Safety summary: {report['safety_summary']}",
         ]
 
@@ -627,10 +636,7 @@ def format_preview_scene_report(scene_key):
             "RytmRandomizer passive scene preview",
             f"Scene: {key}",
             "Found: False",
-            (
-                "Message: Scene preview not found. No MIDI was sent. "
-                "No scene executed. No command executed. No hardware was mutated."
-            ),
+            "Message: Scene preview not found. No MIDI was sent. No scene executed. No command executed. No hardware was mutated.",
         ]
 
     metadata = report["metadata"]
@@ -672,10 +678,7 @@ def format_preview_group_profile_report(profile_key):
             "RytmRandomizer passive group profile preview",
             f"Group profile: {key}",
             "Found: False",
-            (
-                "Message: Group profile preview not found. No MIDI was sent. "
-                "No command executed. No hardware was mutated."
-            ),
+            "Message: Group profile preview not found. No MIDI was sent. No command executed. No hardware was mutated.",
         ]
 
     metadata = report["metadata"]
@@ -751,27 +754,6 @@ def main(argv=None):
         sys.stdout.write("\n")
         return 0
 
-    if args == ["mock-mapper-report"]:
-        from .reports import format_mock_mapper_report
-
-        sys.stdout.write("\n".join(format_mock_mapper_report()))
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["runtime-plan-report"]:
-        from .reports import format_runtime_plan_report
-
-        sys.stdout.write("\n".join(format_runtime_plan_report()))
-        sys.stdout.write("\n")
-        return 0
-
-    if args == ["active-boundary-report"]:
-        from .reports import format_active_boundary_report
-
-        sys.stdout.write("\n".join(format_active_boundary_report()))
-        sys.stdout.write("\n")
-        return 0
-
     if args == ["mock-runtime-active-bridge-report"]:
         from .reports import format_mock_runtime_active_bridge_report
 
@@ -796,8 +778,7 @@ def main(argv=None):
     if args and args[0] == "dual-machine-target-report":
         if len(args) != 2:
             sys.stderr.write(
-                "Usage: python -m rytm_randomizer.cli "
-                "dual-machine-target-report <rytm|a4|both>\n"
+                "Usage: python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>\n"
             )
             return 2
 

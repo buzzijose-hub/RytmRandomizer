@@ -39,6 +39,103 @@ from typing import Final, Literal, TypedDict
 from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
 
 # ---------------------------------------------------------------------------
+# Handshake constants (the cockpit-WS C1/L8 hardening surface).
+#
+# A WebSocket connection on ``/ws`` is rejected before any cockpit command
+# fires unless the client (1) requests the pinned subprotocol so a stray
+# browser tab fails the handshake before our code runs, and (2) sends a
+# ``hello`` frame whose ``token`` matches the per-launch HMAC token loaded
+# by ``__main__.py``. The constants here are the wire-format authority for
+# both halves and are exported so the server, the tests, and any future
+# TypeScript client all agree on the exact strings.
+#
+# See CODE_REVIEW.md PR 1 (findings C1 + L8) for the threat model.
+# ---------------------------------------------------------------------------
+
+WS_SUBPROTOCOL: Final[Literal["rytm-rand-cockpit-v1"]] = "rytm-rand-cockpit-v1"
+"""The pinned WebSocket subprotocol name.
+
+Clients MUST request this subprotocol via the ``Sec-WebSocket-Protocol``
+header (``new WebSocket(url, "rytm-rand-cockpit-v1")``). The server
+echoes it back on accept. Browser tabs that open a casual
+``new WebSocket(url)`` without a subprotocol fail the upgrade and never
+reach the handshake — cheap defence-in-depth (L8).
+"""
+
+HELLO_FRAME_TYPE: Final[Literal["hello"]] = "hello"
+"""The discriminator the first WS frame from the client MUST carry.
+
+The frame shape is ``{"type": "hello", "token": "<urlsafe>"}``. Any
+other first-frame type is treated as a malformed handshake and the
+socket is closed with policy-violation code 1008.
+"""
+
+# Failure codes carried on the handshake / size-cap rejection acks. These
+# are echoed into the ack's ``code`` field so a programmatic client can
+# branch on them without scraping the human-readable error string.
+
+HANDSHAKE_AUTH_REQUIRED: Final[Literal["auth_required"]] = "auth_required"
+"""First frame missing / malformed / not a ``hello`` envelope (C1)."""
+
+HANDSHAKE_AUTH_FAILED: Final[Literal["auth_failed"]] = "auth_failed"
+"""First frame was a well-formed ``hello`` but the token did not match (C1)."""
+
+MESSAGE_TOO_LARGE_CODE: Final[Literal["message_too_large"]] = "message_too_large"
+"""An incoming frame exceeded the per-message byte cap (SX1)."""
+
+# ---------------------------------------------------------------------------
+# Categorical WS error envelope codes (CODE_REVIEW.md PR 14 / RR4f).
+#
+# Every error ack returned by :func:`cockpit.ws.handlers.handle_command`
+# carries one of these strings in its ``code`` field. Clients (the
+# desktop TypeScript surface, future log shippers) branch on the value
+# *deterministically* -- never on the human-readable ``message`` field,
+# which is free to be reworded without a protocol bump.
+#
+# These constants are the wire-format authority; the handlers module
+# re-exports them via its ``__all__`` so callers inside the package can
+# import either symbol. The companion :data:`WS_ERROR_CODES` tuple lets
+# tests + the protocol layer enumerate the complete set in one place.
+# ---------------------------------------------------------------------------
+
+ERR_UNKNOWN_COMMAND: Final[Literal["unknown_command"]] = "unknown_command"
+"""The ``command.type`` discriminator wasn't in :data:`COMMAND_TYPES`."""
+
+ERR_MISSING_ENVELOPE_KEY: Final[Literal["missing_envelope_key"]] = "missing_envelope_key"
+"""The top-level envelope lacked ``command`` or the inner body lacked ``type``."""
+
+ERR_VALIDATION: Final[Literal["validation_error"]] = "validation_error"
+"""A handler rejected the command (bad id, missing precondition, value error)."""
+
+ERR_INTERNAL: Final[Literal["internal_error"]] = "internal_error"
+"""A handler raised an unhandled exception -- last-line safety net for bugs."""
+
+WS_ERROR_CODES: Final[tuple[str, ...]] = (
+    ERR_UNKNOWN_COMMAND,
+    ERR_MISSING_ENVELOPE_KEY,
+    ERR_VALIDATION,
+    ERR_INTERNAL,
+)
+"""All categorical WS error codes -- the protocol's wire-format authority.
+
+Order is documentation-only (the tuple semantics are *set-like* for the
+client). Tests use this constant to verify every emitted ``code`` field
+is one of the four; future log shippers use it to seed allow-lists for
+alert routing.
+"""
+
+# WebSocket close codes (RFC 6455). Both halves of the protocol use the
+# same numerics; pinning them as constants keeps the server and the test
+# suite from drifting out of sync on the next refactor.
+
+CLOSE_CODE_POLICY_VIOLATION: Final[int] = 1008
+"""Used on handshake auth failure (C1) — RFC 6455 § 7.4.1."""
+
+CLOSE_CODE_MESSAGE_TOO_BIG: Final[int] = 1009
+"""Used on size-cap rejection (SX1) — RFC 6455 § 7.4.1."""
+
+
+# ---------------------------------------------------------------------------
 # Event-type discriminators (server → client)
 #
 # The discriminator strings appear on the wire as the ``type`` field of every
@@ -234,8 +331,14 @@ class CommandEnvelope(TypedDict):
 class CommandAck(TypedDict, total=False):
     """Server's reply to a :class:`CommandEnvelope`.
 
-    ``request_id`` and ``ok`` are always present; ``error`` is only set
-    when ``ok=False`` (and carries a one-line human-readable reason).
+    ``request_id`` and ``ok`` are always present. On ``ok=False`` two
+    additional fields ride: ``code`` (one of :data:`WS_ERROR_CODES`,
+    stable identifier the client branches on) and ``message`` (a short
+    operator-safe canonical string; never ``str(exc)`` per CODE_REVIEW.md
+    PR 14 / RR4f). The legacy ``error`` field is reserved for backward
+    compatibility but is no longer populated by handlers -- branch on
+    ``code`` instead.
+
     The remaining fields are command-specific and only populated for the
     commands documented below; everything else is left out (``total=False``
     means absent keys are legal, not a typing violation):
@@ -254,6 +357,8 @@ class CommandAck(TypedDict, total=False):
 
     request_id: str
     ok: bool
+    code: str | None
+    message: str | None
     error: str | None
     candidate: dict | None
     send_plan: dict | None
@@ -352,6 +457,8 @@ class ExportProfileModelCommand(TypedDict):
 
 
 __all__ = [
+    "CLOSE_CODE_MESSAGE_TOO_BIG",
+    "CLOSE_CODE_POLICY_VIOLATION",
     "COMMAND_EXPORT_PROFILE_MODEL",
     "COMMAND_LOAD_SNAPSHOT",
     "COMMAND_PREPARE_SEND_PLAN",
@@ -366,6 +473,10 @@ __all__ = [
     "COMMAND_UNDO",
     "CommandAck",
     "CommandEnvelope",
+    "ERR_INTERNAL",
+    "ERR_MISSING_ENVELOPE_KEY",
+    "ERR_UNKNOWN_COMMAND",
+    "ERR_VALIDATION",
     "EVENT_HISTORY_UPDATED",
     "EVENT_MUTATION_PREVIEWED",
     "EVENT_PROFILE_CHANGED",
@@ -374,8 +485,12 @@ __all__ = [
     "EVENT_SNAPSHOT_CHANGED",
     "EVENT_TYPES",
     "ExportProfileModelCommand",
+    "HANDSHAKE_AUTH_FAILED",
+    "HANDSHAKE_AUTH_REQUIRED",
+    "HELLO_FRAME_TYPE",
     "HistoryUpdatedEvent",
     "LoadSnapshotCommand",
+    "MESSAGE_TOO_LARGE_CODE",
     "MutationPreviewedEvent",
     "PrepareSendPlanCommand",
     "ProfileChangedEvent",
@@ -390,4 +505,6 @@ __all__ = [
     "SnapshotChangedEvent",
     "TogglePreviewCommand",
     "UndoCommand",
+    "WS_ERROR_CODES",
+    "WS_SUBPROTOCOL",
 ]

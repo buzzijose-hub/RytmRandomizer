@@ -20,9 +20,36 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import Final, Self, TypedDict
 
-from .types import STATUS_VALUES, Status
+from .types import STATUS_VALUES, Status, narrow_status
+
+
+class PadDeltaDict(TypedDict):
+    """Wire shape of :class:`PadDelta` (M1/P2)."""
+
+    pad_id: int
+    proposed_params: Mapping[str, int]
+    changed_keys: list[str]
+
+
+class MutationCandidateDict(TypedDict):
+    """Wire shape of :class:`MutationCandidate` (M1/P2).
+
+    ``safety_status`` is typed as plain ``str`` because the wire layer
+    may receive any value; runtime narrowing in
+    :meth:`MutationCandidate.from_dict` is the validation boundary.
+    """
+
+    candidate_id: str
+    source_snapshot_id: str
+    profile_id: str
+    depth: float
+    seed: int
+    pad_deltas: list[PadDeltaDict]
+    safety_status: str
+    estimated_midi_msgs: int
+
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -63,7 +90,7 @@ class PadDelta:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: PadDeltaDict) -> Self:
         proposed_obj = data["proposed_params"]
         changed_obj = data["changed_keys"]
         if not isinstance(proposed_obj, Mapping):
@@ -71,7 +98,7 @@ class PadDelta:
         if not isinstance(changed_obj, (list, tuple, frozenset, set)):
             raise TypeError(f"changed_keys must be an iterable; got {type(changed_obj).__name__}")
         return cls(
-            pad_id=int(data["pad_id"]),  # type: ignore[arg-type]
+            pad_id=data["pad_id"],
             proposed_params={str(k): int(v) for k, v in proposed_obj.items()},
             changed_keys=frozenset(str(k) for k in changed_obj),
         )
@@ -124,20 +151,25 @@ class MutationCandidate:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: MutationCandidateDict) -> Self:
         deltas_obj = data["pad_deltas"]
         if not isinstance(deltas_obj, (list, tuple)):
             raise TypeError(f"pad_deltas must be a list/tuple; got {type(deltas_obj).__name__}")
         return cls(
-            candidate_id=str(data["candidate_id"]),
-            source_snapshot_id=str(data["source_snapshot_id"]),
-            profile_id=str(data["profile_id"]),
-            depth=float(data["depth"]),  # type: ignore[arg-type]
-            seed=int(data["seed"]),  # type: ignore[arg-type]
+            candidate_id=data["candidate_id"],
+            source_snapshot_id=data["source_snapshot_id"],
+            profile_id=data["profile_id"],
+            depth=data["depth"],
+            seed=data["seed"],
             pad_deltas=tuple(PadDelta.from_dict(d) for d in deltas_obj),
-            safety_status=str(data["safety_status"]),  # type: ignore[arg-type]
-            estimated_midi_msgs=int(data["estimated_midi_msgs"]),  # type: ignore[arg-type]
+            safety_status=narrow_status(data["safety_status"]),
+            estimated_midi_msgs=data["estimated_midi_msgs"],
         )
 
 
-__all__ = ["MutationCandidate", "PadDelta"]
+__all__ = [
+    "MutationCandidate",
+    "MutationCandidateDict",
+    "PadDelta",
+    "PadDeltaDict",
+]

@@ -36,6 +36,14 @@ import struct
 from dataclasses import dataclass
 from typing import Final
 
+from ...observability.logging import get_logger
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit ProfileModel signing envelope. Bound
+here so future structured log calls (key rotation breadcrumbs, algo /
+key_id telemetry) can land in the package's structured stream without
+touching this file's imports. See ``OBSERVABILITY_REVIEW.md`` Phase 5."""
+
 # ---------------------------------------------------------------------------
 # Format constants
 # ---------------------------------------------------------------------------
@@ -58,6 +66,13 @@ SIGNATURE_ALGO_HMAC_SHA256: Final[str] = "hmac-sha256"
 
 # Struct format strings for the fixed-width prefix.
 _FIXED_PREFIX_STRUCT: Final[struct.Struct] = struct.Struct(">4sH")
+
+# Single-byte length prefix used three times in pack_signed (algo,
+# key_id, signature). Precompiled once instead of `bytes([len(...)])`
+# at each call site — same wire bytes, but the intent reads cleaner
+# and matches the existing "_*_STRUCT for every fixed-width field"
+# pattern below (L1 from CODE_REVIEW.md).
+_LEN_BYTE_STRUCT: Final[struct.Struct] = struct.Struct(">B")
 """magic (4s) + format_version (uint16)."""
 
 _PAYLOAD_LEN_STRUCT: Final[struct.Struct] = struct.Struct(">I")
@@ -73,6 +88,22 @@ _SIGNATURE_MAX_LEN: Final[int] = 0xFF
 
 # uint32 maximum for the payload-length field.
 _PAYLOAD_MAX_LEN: Final[int] = 0xFFFF_FFFF
+
+# Fixed-width contributions to the wrapper around the inner payload.
+# Used both by :func:`pack_signed` (via the assembly expression) and by
+# :func:`signed_envelope_overhead_bytes` (the analytic formula). Keeping
+# the constants here means a future field-width change cannot drift the
+# formula away from the actual wire layout — both consumers read the same
+# source of truth.
+_ALGO_LEN_PREFIX_BYTES: Final[int] = 1  # uint8 algo_len
+_KEY_ID_LEN_PREFIX_BYTES: Final[int] = 1  # uint8 key_id_len
+_SIG_LEN_PREFIX_BYTES: Final[int] = 1  # uint8 sig_len
+
+# HMAC-SHA256 always produces a 32-byte digest. The wire format reserves
+# a uint8 length prefix for the signature so future algorithms (up to 255
+# bytes) can share the envelope, but :func:`sign_profile_blob` only emits
+# HMAC-SHA256 today.
+_HMAC_SHA256_SIGNATURE_LEN: Final[int] = hashlib.sha256().digest_size  # 32
 
 
 # ---------------------------------------------------------------------------
@@ -181,11 +212,11 @@ def pack_signed(blob: SignedBlob) -> bytes:
 
     return (
         _FIXED_PREFIX_STRUCT.pack(SIGNATURE_HEADER_MAGIC, SIGNATURE_FORMAT_VERSION)
-        + bytes([len(algo_bytes)])
+        + _LEN_BYTE_STRUCT.pack(len(algo_bytes))
         + algo_bytes
-        + bytes([len(key_id_bytes)])
+        + _LEN_BYTE_STRUCT.pack(len(key_id_bytes))
         + key_id_bytes
-        + bytes([len(blob.signature)])
+        + _LEN_BYTE_STRUCT.pack(len(blob.signature))
         + blob.signature
         + _PAYLOAD_LEN_STRUCT.pack(payload_len)
         + blob.payload
@@ -258,6 +289,91 @@ def unpack_signed(data: bytes) -> SignedBlob:
 
 
 # ---------------------------------------------------------------------------
+# Envelope size — analytic
+# ---------------------------------------------------------------------------
+
+
+def signed_envelope_overhead_bytes(*, algo: str, key_id: str) -> int:
+    """Return the exact byte count of the signed envelope wrapper.
+
+    The wrapper is everything :func:`pack_signed` prepends to (and appends
+    around) the inner ``payload`` bytes. For a given ``(algo, key_id)`` the
+    overhead is fixed; only ``len(payload)`` varies. Callers that want to
+    project the size of a real signed export without invoking the signer
+    can do ``len(payload) + signed_envelope_overhead_bytes(...)``.
+
+    The formula mirrors the wire layout documented at module level:
+
+    =======================  ==========  ============================
+    Field                    Bytes       Notes
+    =======================  ==========  ============================
+    magic                    4           ``b"RYMS"``
+    format_version           2           uint16 BE
+    algo_len                 1           uint8
+    algo                     len(algo)   utf-8 encoded
+    key_id_len               1           uint8
+    key_id                   len(key_id) utf-8 encoded
+    sig_len                  1           uint8
+    signature                32          HMAC-SHA256 digest size
+    payload_len              4           uint32 BE
+    =======================  ==========  ============================
+
+    Total ::
+
+        4 + 2 + 1 + len(algo) + 1 + len(key_id) + 1 + 32 + 4
+        = 45 + len(algo_utf8) + len(key_id_utf8)
+
+    For the v1 default of ``algo="hmac-sha256"`` (11 utf-8 bytes) and a
+    ``key_id`` like ``"buzzi-2026-key"`` (14 utf-8 bytes) the overhead is
+    therefore ``45 + 11 + 14 = 70`` bytes.
+
+    Args:
+        algo: The algorithm name that would be written into the envelope.
+            Only ``"hmac-sha256"`` is supported in v1; passing anything
+            else raises :class:`ValueError` so a caller cannot silently
+            project a size for an algorithm the signer will reject.
+        key_id: The operator-supplied key label that would travel with
+            the envelope. The formula tracks its utf-8 length exactly —
+            callers using multibyte key ids get the right answer.
+
+    Returns:
+        The number of bytes the wrapper adds around the payload.
+
+    Raises:
+        ValueError: ``algo`` is not :data:`SIGNATURE_ALGO_HMAC_SHA256`,
+            ``algo`` exceeds 255 utf-8 bytes, or ``key_id`` exceeds 255
+            utf-8 bytes.
+    """
+
+    if algo != SIGNATURE_ALGO_HMAC_SHA256:
+        raise ValueError(
+            f"algo must be {SIGNATURE_ALGO_HMAC_SHA256!r} (only HMAC-SHA256 "
+            f"is supported in v1); got {algo!r}"
+        )
+    algo_bytes = algo.encode("utf-8")
+    if len(algo_bytes) > _ALGO_MAX_LEN:
+        raise ValueError(
+            "algo must encode to at most " f"{_ALGO_MAX_LEN} utf-8 bytes; got {len(algo_bytes)}"
+        )
+    key_id_bytes = key_id.encode("utf-8")
+    if len(key_id_bytes) > _KEY_ID_MAX_LEN:
+        raise ValueError(
+            "key_id must encode to at most "
+            f"{_KEY_ID_MAX_LEN} utf-8 bytes; got {len(key_id_bytes)}"
+        )
+    return (
+        _FIXED_PREFIX_LEN  # magic (4) + format_version (2)
+        + _ALGO_LEN_PREFIX_BYTES
+        + len(algo_bytes)
+        + _KEY_ID_LEN_PREFIX_BYTES
+        + len(key_id_bytes)
+        + _SIG_LEN_PREFIX_BYTES
+        + _HMAC_SHA256_SIGNATURE_LEN
+        + _PAYLOAD_LEN_FIELD_LEN
+    )
+
+
+# ---------------------------------------------------------------------------
 # Internal length-prefixed readers
 # ---------------------------------------------------------------------------
 
@@ -307,5 +423,6 @@ __all__ = [
     "SignedBlob",
     "pack_signed",
     "sign_profile_blob",
+    "signed_envelope_overhead_bytes",
     "unpack_signed",
 ]

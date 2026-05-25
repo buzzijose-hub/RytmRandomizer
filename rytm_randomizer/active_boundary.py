@@ -15,6 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
+from typing import ClassVar
 
 from .mock_message_mapper import map_group_profile_to_mock_messages
 from .mock_midi import MidiMessage, MockMidiSender
@@ -83,6 +84,8 @@ class ActiveBoundaryError(BoundaryError, ValueError):
     ``ValueError`` is kept as an additional base for backward-compatibility
     with any ``except ValueError`` caller.
     """
+
+    fingerprint: ClassVar[str] = "boundary.active.invalid_input"
 
 
 def _result_metadata(

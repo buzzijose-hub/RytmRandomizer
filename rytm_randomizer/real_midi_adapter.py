@@ -18,7 +18,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 from .mock_midi import MidiMessage
 from .observability.errors import MidiError
@@ -32,6 +32,8 @@ class RealMidiDependencyError(MidiError, RuntimeError):
     backward-compatibility with any ``except RuntimeError`` caller.
     """
 
+    fingerprint: ClassVar[str] = "midi.port.dependency_missing"
+
 
 class RealMidiPortError(MidiError, RuntimeError):
     """Raised when MIDI port selection fails safely.
@@ -41,6 +43,8 @@ class RealMidiPortError(MidiError, RuntimeError):
     backward-compatibility with any ``except RuntimeError`` caller.
     """
 
+    fingerprint: ClassVar[str] = "midi.port.open_failed"
+
 
 class RealMidiSendError(MidiError, RuntimeError):
     """Raised when a send request cannot be translated safely.
@@ -49,6 +53,8 @@ class RealMidiSendError(MidiError, RuntimeError):
     taxonomy. ``RuntimeError`` is kept as an additional base for
     backward-compatibility with any ``except RuntimeError`` caller.
     """
+
+    fingerprint: ClassVar[str] = "midi.send.failed"
 
 
 class RealMidiOutputPort(Protocol):

@@ -9,11 +9,45 @@ packets and readiness metadata; it does not open MIDI ports or touch hardware.
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Literal, Self
+from typing import Final, Literal, Self, TypedDict, cast
 
-from .types import STATUS_VALUES, Status
+from .types import STATUS_VALUES, Status, _safe_repr, narrow_status
+
+
+class SendPlanPacketDict(TypedDict):
+    """Wire shape of :class:`SendPlanPacket` (M1/P2)."""
+
+    pad_id: int
+    parameter: str
+    channel: int
+    control: int
+    value: int
+
+
+class CockpitSendPlanDict(TypedDict):
+    """Wire shape of :class:`CockpitSendPlan` (M1/P2).
+
+    ``readiness_reason`` and ``safety_status`` are typed as plain
+    ``str`` because the wire layer may receive any value; runtime
+    narrowing in :meth:`CockpitSendPlan.from_dict` is the validation
+    boundary. ``estimated_midi_msgs`` and ``pad_count`` are written by
+    :meth:`CockpitSendPlan.to_dict` for the wire consumer but are
+    derived (not stored on the dataclass), so they're marked
+    NotRequired on inbound payloads.
+    """
+
+    plan_id: str
+    candidate_id: str
+    source_snapshot_id: str
+    profile_id: str
+    ready: bool
+    readiness_reason: str
+    safety_status: str
+    packets: list[SendPlanPacketDict]
+    locked_pad_ids: list[int]
+    blocked_reasons: list[str]
+
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -36,6 +70,23 @@ READINESS_REASON_VALUES: Final[tuple[ReadinessReason, ...]] = (
     "source_snapshot_mismatch",
     "no_sendable_changes",
 )
+
+
+def narrow_readiness_reason(s: str) -> ReadinessReason:
+    """Narrow ``s`` to :data:`ReadinessReason` or raise :class:`ValueError`.
+
+    Mirrors :func:`rytm_randomizer.cockpit.data.types.narrow_kind` and
+    siblings — runtime membership check, then :func:`typing.cast` is sound
+    because the check just proved the literal value. Error messages
+    sanitize untrusted input through ``_safe_repr`` so a wire payload with
+    huge / control-character content cannot bloat a log line.
+    """
+
+    if s in READINESS_REASON_VALUES:
+        return cast(ReadinessReason, s)
+    raise ValueError(
+        "invalid readiness_reason: " f"{_safe_repr(s)}; expected one of {READINESS_REASON_VALUES}"
+    )
 
 
 def synthetic_parameter_cc(parameter: str) -> int:
@@ -88,13 +139,13 @@ class SendPlanPacket:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: SendPlanPacketDict) -> Self:
         return cls(
-            pad_id=int(data["pad_id"]),
-            parameter=str(data["parameter"]),
-            channel=int(data["channel"]),
-            control=int(data["control"]),
-            value=int(data["value"]),
+            pad_id=data["pad_id"],
+            parameter=data["parameter"],
+            channel=data["channel"],
+            control=data["control"],
+            value=data["value"],
         )
 
 
@@ -165,7 +216,7 @@ class CockpitSendPlan:
         }
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, object]) -> Self:
+    def from_dict(cls, data: CockpitSendPlanDict) -> Self:
         packets_obj = data["packets"]
         locked_obj = data["locked_pad_ids"]
         blocked_obj = data["blocked_reasons"]
@@ -177,24 +228,48 @@ class CockpitSendPlan:
             raise TypeError(
                 f"blocked_reasons must be a list/tuple; got {type(blocked_obj).__name__}"
             )
+        # narrow_status raises "invalid status: ..."; the cockpit wire field is
+        # named ``safety_status`` (the dataclass attribute name), so re-raise
+        # with the field-qualified prefix so log readers + the existing
+        # ``test_send_plan_rejects_unknown_status_and_reasons`` regex can match
+        # on the wire field name.
+        try:
+            safety_status = narrow_status(data["safety_status"])
+        except ValueError as exc:
+            raise ValueError(f"invalid safety_status: {exc}") from exc
+        # ``blocked_reasons`` is deliberately NOT narrowed element-wise here:
+        # ``__post_init__`` produces a single aggregated error ("blocked_reasons
+        # contains unknown values: [...]") that lists every unknown entry at
+        # once, which is more useful to operators debugging a malformed wire
+        # payload than N individual ``invalid readiness_reason`` errors. The
+        # ``cast`` is sound at runtime because ``__post_init__`` rejects any
+        # element that is not in :data:`READINESS_REASON_VALUES` before the
+        # dataclass is observed by callers.
+        blocked_reasons = cast(
+            tuple[ReadinessReason, ...],
+            tuple(str(reason) for reason in blocked_obj),
+        )
         return cls(
-            plan_id=str(data["plan_id"]),
-            candidate_id=str(data["candidate_id"]),
-            source_snapshot_id=str(data["source_snapshot_id"]),
-            profile_id=str(data["profile_id"]),
-            ready=bool(data["ready"]),
-            readiness_reason=str(data["readiness_reason"]),  # type: ignore[arg-type]
-            safety_status=str(data["safety_status"]),  # type: ignore[arg-type]
+            plan_id=data["plan_id"],
+            candidate_id=data["candidate_id"],
+            source_snapshot_id=data["source_snapshot_id"],
+            profile_id=data["profile_id"],
+            ready=data["ready"],
+            readiness_reason=narrow_readiness_reason(data["readiness_reason"]),
+            safety_status=safety_status,
             packets=tuple(SendPlanPacket.from_dict(packet) for packet in packets_obj),
             locked_pad_ids=frozenset(int(pad_id) for pad_id in locked_obj),
-            blocked_reasons=tuple(str(reason) for reason in blocked_obj),  # type: ignore[arg-type]
+            blocked_reasons=blocked_reasons,
         )
 
 
 __all__ = [
     "CockpitSendPlan",
+    "CockpitSendPlanDict",
     "READINESS_REASON_VALUES",
     "ReadinessReason",
     "SendPlanPacket",
+    "SendPlanPacketDict",
+    "narrow_readiness_reason",
     "synthetic_parameter_cc",
 ]

@@ -13,6 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CockpitClient,
   DEFAULT_WS_URL,
+  WS_AUTH_TOKEN_STORAGE_KEY,
+  WS_SUBPROTOCOL,
   type ClientLogger,
   type ConnectionStatus,
   type WebSocketLike,
@@ -36,13 +38,15 @@ class FakeWebSocket implements WebSocketLike {
 
   readyState = FakeWebSocket.CONNECTING;
   readonly url: string;
+  readonly protocols: string | string[] | undefined;
   readonly sent: string[] = [];
   readonly closeCalls: number[] = [];
   private throwOnSend: Error | null = null;
   private readonly listeners = new Map<string, Set<(ev: unknown) => void>>();
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url;
+    this.protocols = protocols;
   }
 
   addEventListener(type: string, listener: (ev: unknown) => void): void {
@@ -139,6 +143,8 @@ interface HarnessOpts {
   maxReconnectDelayMs?: number;
   ackTimeoutMs?: number;
   logger?: ClientLogger;
+  authToken?: string | null;
+  authTokenResolver?: () => string | null;
 }
 
 function makeHarness(opts: HarnessOpts = {}): Harness {
@@ -151,10 +157,12 @@ function makeHarness(opts: HarnessOpts = {}): Harness {
     initialReconnectDelayMs: opts.initialReconnectDelayMs,
     maxReconnectDelayMs: opts.maxReconnectDelayMs,
     ackTimeoutMs: opts.ackTimeoutMs,
+    authToken: opts.authToken,
+    authTokenResolver: opts.authTokenResolver,
     requestIdGenerator: () => `r${++counter}`,
     logger: opts.logger,
-    webSocketFactory: (url) => {
-      const fake = new FakeWebSocket(url);
+    webSocketFactory: (url, protocols) => {
+      const fake = new FakeWebSocket(url, protocols);
       fakes.push(fake);
       return fake;
     },
@@ -175,6 +183,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  if (typeof window !== 'undefined') delete window.__RYTM_RAND_WS_TOKEN__;
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
@@ -184,6 +194,11 @@ afterEach(() => {
 describe('CockpitClient — defaults & constants', () => {
   it('exposes the default WS URL', () => {
     expect(DEFAULT_WS_URL).toBe('ws://127.0.0.1:4317/ws');
+  });
+
+  it('exposes the pinned cockpit WS subprotocol and browser token storage key', () => {
+    expect(WS_SUBPROTOCOL).toBe('rytm-rand-cockpit-v1');
+    expect(WS_AUTH_TOKEN_STORAGE_KEY).toBe('rytm-rand-ws-token');
   });
 
   it('constructs with all defaults applied and reports closed status', () => {
@@ -220,8 +235,8 @@ describe('CockpitClient — defaults & constants', () => {
       url: 'ws://test/ws',
       disableReconnect: true,
       requestIdGenerator: () => 'r1',
-      webSocketFactory: (url) => {
-        const socket = new FakeWebSocket(url);
+      webSocketFactory: (url, protocols) => {
+        const socket = new FakeWebSocket(url, protocols);
         sockets.push(socket);
         return socket;
       },
@@ -259,6 +274,82 @@ describe('CockpitClient — connect / open / status', () => {
     h.client.connect();
     h.client.connect(); // second call
     expect(h.fakes.length).toBe(1);
+  });
+
+  it('requests the pinned subprotocol when opening the browser WebSocket', () => {
+    const h = makeHarness();
+    h.client.connect();
+    expect(h.currentSocket().protocols).toBe(WS_SUBPROTOCOL);
+  });
+
+  it('sends the hello frame with the configured token when the socket opens', () => {
+    const h = makeHarness({ authToken: 'token-for-test' });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'token-for-test' }),
+    ]);
+  });
+
+  it('resolves the hello token lazily from the configured resolver', () => {
+    const h = makeHarness({ authTokenResolver: () => 'resolver-token' });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'resolver-token' }),
+    ]);
+  });
+
+  it('resolves the hello token from the browser launch global before storage', () => {
+    const storageRead = vi.spyOn(Storage.prototype, 'getItem');
+    window.__RYTM_RAND_WS_TOKEN__ = 'browser-token';
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(storageRead).not.toHaveBeenCalled();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'browser-token' }),
+    ]);
+  });
+
+  it('falls back to browser token storage when the launch global is empty', () => {
+    window.__RYTM_RAND_WS_TOKEN__ = '';
+    vi.spyOn(Storage.prototype, 'getItem').mockReturnValue('storage-token');
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'storage-token' }),
+    ]);
+  });
+
+  it('treats browser token storage read failures as a missing token', () => {
+    const warnings: unknown[] = [];
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('storage denied');
+    });
+    const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([]);
+    expect(
+      warnings.some((w) => Array.isArray(w) && String(w[0]).includes('auth token unavailable')),
+    ).toBe(true);
+  });
+
+  it('closes the socket when sending the hello frame fails', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({
+      authToken: 'token-for-test',
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    h.client.connect();
+    h.currentSocket().primeSendError(new Error('handshake send failed'));
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().closeCalls).toHaveLength(1);
+    expect(
+      warnings.some((w) => Array.isArray(w) && String(w[0]).includes('handshake send failed')),
+    ).toBe(true);
   });
 
   it('emits status transitions: connecting → connected', () => {
@@ -352,6 +443,18 @@ describe('CockpitClient — message dispatch', () => {
     );
   });
 
+  it('treats a non-browser global as a missing token', () => {
+    const warnings: unknown[] = [];
+    vi.stubGlobal('window', undefined);
+    const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([]);
+    expect(
+      warnings.some((w) => Array.isArray(w) && String(w[0]).includes('auth token unavailable')),
+    ).toBe(true);
+  });
+
   it('warns on malformed JSON and continues', () => {
     const warnings: unknown[] = [];
     const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
@@ -372,6 +475,50 @@ describe('CockpitClient — message dispatch', () => {
     expect(warnings.some((w) => Array.isArray(w) && String(w[0]).includes('unrecognized'))).toBe(
       true,
     );
+  });
+
+  it('treats the token-handshake ack as transport setup noise, not an unknown message', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({
+      authToken: 'token-for-test',
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage({ ok: true });
+    expect(warnings).toEqual([]);
+  });
+
+  it('warns when the token-handshake ack rejects authentication', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({
+      authToken: 'token-for-test',
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage({ ok: false, code: 'bad-token' });
+    expect(
+      warnings.some(
+        (w) =>
+          Array.isArray(w) &&
+          String(w[0]).includes('handshake rejected') &&
+          w.includes('bad-token'),
+      ),
+    ).toBe(true);
+  });
+
+  it('warns on parsed null and scalar message shapes', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage(null);
+    h.currentSocket().emitMessage(42);
+    const unrecognized = warnings.filter(
+      (w) => Array.isArray(w) && String(w[0]).includes('unrecognized'),
+    );
+    expect(unrecognized).toHaveLength(2);
   });
 });
 
@@ -693,8 +840,8 @@ describe('CockpitClient — default request id generator path (no injection)', (
       url: 'ws://test/ws',
       ackTimeoutMs: 1_000,
       disableReconnect: true,
-      webSocketFactory: (url) => {
-        last = new FakeWebSocket(url);
+      webSocketFactory: (url, protocols) => {
+        last = new FakeWebSocket(url, protocols);
         return last;
       },
     });

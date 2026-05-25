@@ -56,13 +56,22 @@ See ``docs/superpowers/specs/2026-05-24-profile-wizard-design.md``
 
 from __future__ import annotations
 
-from typing import Final
+from typing import ClassVar, Final
 
 from ...observability.errors import DataError
+from ...observability.logging import get_logger
 from ..data.profile_model import ProfileModel, StyleTrait, TraitPadWeight
+from ..data.types import Kind, TransitionCurve
 from ..data.ulid import new_ulid
 from .pad_mapping import TRAIT_TO_PAD
 from .state import AnalysisJob
+
+_logger = get_logger(__name__)
+"""Module logger for the wizard ProfileBuilder. Bound here so future
+structured log calls (per-build trait-aggregation breadcrumbs,
+EmptyAnalysisError context) can land in the package's structured stream
+without touching this file's imports. See ``OBSERVABILITY_REVIEW.md``
+Phase 5."""
 
 # ---------------------------------------------------------------------------
 # Constants — the Phase 2 fixed-version contract
@@ -71,11 +80,22 @@ from .state import AnalysisJob
 _MODEL_VERSION: Final[str] = "1.0.0"
 """Initial-build model version. Re-analysis bumps the patch level upstream."""
 
-_PROFILE_KIND: Final[str] = "user"
-"""Every wizard-built profile is a user profile (vs. developer-curated scenes)."""
+_PROFILE_KIND: Final[Kind] = "user"
+"""Every wizard-built profile is a user profile (vs. developer-curated scenes).
 
-_TRANSITION_CURVE: Final[str] = "progressive"
-"""Default mutation transition shape for user-authored profiles."""
+Typed as :data:`Kind` (not bare ``str``) so the type checker accepts the
+:class:`ProfileModel.kind` field assignment below without a
+``# type: ignore`` — the literal-string ``"user"`` is statically a member
+of the :data:`Kind` alias.
+"""
+
+_TRANSITION_CURVE: Final[TransitionCurve] = "progressive"
+"""Default mutation transition shape for user-authored profiles.
+
+Typed as :data:`TransitionCurve` (not bare ``str``) for the same reason
+as :data:`_PROFILE_KIND` — the literal value is statically a member of
+the alias, so no cast / type-ignore is needed at the call site.
+"""
 
 _OK_STATUS: Final[str] = "ok"
 """Only :class:`AnalysisJob` instances with this status contribute traits."""
@@ -103,6 +123,8 @@ class EmptyAnalysisError(DataError, ValueError):
     Mirrors :class:`rytm_randomizer.cockpit.wizard.errors.
     WizardSourcePathError`, which uses the same dual-inheritance pattern.
     """
+
+    fingerprint: ClassVar[str] = "wizard.builder.empty_analysis"
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +170,9 @@ def build_profile(
         EmptyAnalysisError: If no job in ``jobs`` has ``status == "ok"``.
     """
 
-    del description  # accepted for API symmetry; no ProfileModel field today.
+    # ``description`` is intentionally unused today -- accepted for API symmetry
+    # with the wizard handler and forward compatibility when a description
+    # field lands on :class:`ProfileModel`. See the docstring above.
 
     ok_jobs = tuple(job for job in jobs if job.status == _OK_STATUS)
     if not ok_jobs:
@@ -169,11 +193,11 @@ def build_profile(
     return ProfileModel(
         profile_id=new_ulid(),
         name=name,
-        kind=_PROFILE_KIND,  # type: ignore[arg-type]
+        kind=_PROFILE_KIND,
         model_version=_MODEL_VERSION,
         traits=traits,
         pad_mappings=pad_mappings,
-        transition_curve=_TRANSITION_CURVE,  # type: ignore[arg-type]
+        transition_curve=_TRANSITION_CURVE,
         source_summary=source_summary,
     )
 

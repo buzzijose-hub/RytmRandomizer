@@ -210,17 +210,22 @@ def test_reference_mode_unknown_name_returns_neutral_profile() -> None:
 
 
 def test_kit_kind_with_file_mode_routes_to_sysex_analyzer(tmp_path: Path) -> None:
-    """``kind="kit", mode="file"`` reads bytes through the sysex analyzer."""
+    """``kind="kit", mode="file"`` reads bytes through the sysex analyzer.
+
+    CODE_REVIEW.md M5: the sysex analyzer emits placeholder ``_bytes_*``
+    trait names rather than the canonical wizard trait names because the
+    byte statistics carry no musical meaning.
+    """
 
     path = tmp_path / "kit.syx"
     path.write_bytes(bytes(4096))
     source = _source(kind="kit", mode="file", location=str(path), display_name="kit.syx")
     traits = analyze_source(source)
     by_name = _by_name(traits)
-    # all-zero file -> metallic 0.0, rolling 1.0, density 0.5
-    assert by_name["metallic_tension"] == pytest.approx(0.0)
-    assert by_name["rolling_low_end"] == pytest.approx(1.0)
-    assert by_name["hat_density"] == pytest.approx(0.5)
+    # all-zero file -> _bytes_mean 0.0, _bytes_stddev 1.0, _bytes_density 0.5
+    assert by_name["_bytes_mean"] == pytest.approx(0.0)
+    assert by_name["_bytes_stddev"] == pytest.approx(1.0)
+    assert by_name["_bytes_density"] == pytest.approx(0.5)
 
 
 def test_kit_kind_with_folder_mode_routes_to_sysex_analyzer(tmp_path: Path) -> None:
@@ -233,8 +238,8 @@ def test_kit_kind_with_folder_mode_routes_to_sysex_analyzer(tmp_path: Path) -> N
     source = _source(kind="kit", mode="folder", location=str(folder), display_name="kits/")
     traits = analyze_source(source)
     by_name = _by_name(traits)
-    # average of all-zero (0.0) and all-0xff (1.0) -> 0.5
-    assert by_name["metallic_tension"] == pytest.approx(0.5)
+    # average of all-zero (_bytes_mean=0.0) and all-0xff (_bytes_mean=1.0) -> 0.5
+    assert by_name["_bytes_mean"] == pytest.approx(0.5)
 
 
 # ---------------------------------------------------------------------------

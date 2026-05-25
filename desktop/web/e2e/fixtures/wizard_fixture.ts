@@ -19,11 +19,13 @@
 
 import { test as base, expect } from '@playwright/test';
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import * as net from 'node:net';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { WS_AUTH_TOKEN_STORAGE_KEY } from '../../src/ws/client';
 
 // ESM doesn't expose CommonJS' `__dirname`; derive it from `import.meta.url`.
 // Playwright's TS runner reports `import.meta.url` even when the file is
@@ -109,6 +111,7 @@ async function stopSidecar(child: ChildProcessWithoutNullStreams): Promise<void>
 export interface SidecarHandle {
   readonly process: ChildProcessWithoutNullStreams;
   readonly profilesRoot: string;
+  readonly token: string;
   readonly host: string;
   readonly port: number;
   /** stderr accumulator for diagnostic surfacing on failure. */
@@ -125,13 +128,11 @@ interface WizardFixtures {
  * directory) per test.
  */
 export const test = base.extend<WizardFixtures>({
-  // Per-test sidecar with an isolated profiles dir. Playwright's fixture
-  // signature requires the first parameter to be a destructured fixtures
-  // bag; we don't need any built-in fixtures so we accept and ignore it.
-  //
-  // eslint-disable-next-line no-empty-pattern
-  sidecar: async ({}, use, testInfo) => {
+  // Per-test sidecar with an isolated profiles dir. The `page` fixture is used
+  // to inject the freshly-minted WS token before each spec navigates.
+  sidecar: async ({ page }, use, testInfo) => {
     const tmpRoot = mkdtempSync(path.join(tmpdir(), 'rytm-wizard-e2e-'));
+    const tokenFile = path.join(tmpRoot, 'cockpit-ws-token');
     const python = resolvePythonBinary();
     const cwd = resolveRepoRoot();
 
@@ -143,6 +144,8 @@ export const test = base.extend<WizardFixtures>({
       APPDATA: tmpRoot,
       // Force the sidecar onto the well-known port the web client dials.
       RYTM_RAND_WS_PORT: String(SIDECAR_PORT),
+      RYTM_RAND_WS_TOKEN_FILE: tokenFile,
+      WIZARD_SOURCE_ROOTS: tmpRoot,
       // Unbuffer Python stdio so error tracebacks surface promptly in CI logs.
       PYTHONUNBUFFERED: '1',
     };
@@ -161,16 +164,17 @@ export const test = base.extend<WizardFixtures>({
       stderr.text += chunk.toString('utf8');
     });
 
-    const handle: SidecarHandle = {
-      process: child,
-      profilesRoot: tmpRoot,
-      host: SIDECAR_HOST,
-      port: SIDECAR_PORT,
-      stderr,
-    };
-
+    let token: string;
     try {
       await waitForSidecarPort(SIDECAR_HOST, SIDECAR_PORT, SIDECAR_BOOT_TIMEOUT_MS);
+      token = readFileSync(tokenFile, 'utf8').trim();
+      await page.addInitScript(
+        ({ storageKey, token: injectedToken }) => {
+          window.localStorage.setItem(storageKey, injectedToken);
+          window.__RYTM_RAND_WS_TOKEN__ = injectedToken;
+        },
+        { storageKey: WS_AUTH_TOKEN_STORAGE_KEY, token },
+      );
     } catch (err) {
       await stopSidecar(child);
       rmSync(tmpRoot, { recursive: true, force: true });
@@ -178,6 +182,15 @@ export const test = base.extend<WizardFixtures>({
         `failed to boot rytm sidecar: ${String(err)}\nstderr:\n${stderr.text}`,
       );
     }
+
+    const handle: SidecarHandle = {
+      process: child,
+      profilesRoot: tmpRoot,
+      token,
+      host: SIDECAR_HOST,
+      port: SIDECAR_PORT,
+      stderr,
+    };
 
     try {
       await use(handle);

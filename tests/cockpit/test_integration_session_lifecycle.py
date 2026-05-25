@@ -25,6 +25,7 @@ from __future__ import annotations
 import pytest
 from cockpit.conftest import (
     collect_initial_events,
+    complete_handshake,
     drain_events,
     prepare_send_plan,
     send_cmd,
@@ -35,6 +36,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_SESSION_STATUS,
     EVENT_SNAPSHOT_CHANGED,
+    WS_SUBPROTOCOL,
 )
 
 pytestmark = pytest.mark.fast
@@ -49,14 +51,16 @@ def test_pad_locks_persist_across_reconnect(cockpit_client: TestClient) -> None:
     """A pad lock set in connection #1 is still set on the bootstrap of connection #2."""
 
     # Connection #1: set pad 3 locked, then close.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         collect_initial_events(ws, count=4)
         ack = send_cmd(ws, "set_pad_lock", pad_id=3, locked=True)
         assert ack["ok"] is True
 
     # Connection #2: same session, lock should still be set.
     # We verify indirectly by arming a SEND and checking pad 3 is unchanged.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         collect_initial_events(ws, count=4)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
@@ -75,7 +79,8 @@ def test_unsaved_sends_persists_across_reconnect(cockpit_client: TestClient) -> 
     """The ``unsaved_sends`` counter survives the disconnect/reconnect cycle."""
 
     # Connection #1: do one SEND, then disconnect.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         collect_initial_events(ws, count=4)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
@@ -85,7 +90,8 @@ def test_unsaved_sends_persists_across_reconnect(cockpit_client: TestClient) -> 
         drain_events(ws, 5)
 
     # Connection #2: the bootstrap ``session_status`` carries the preserved count.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         bootstrap = collect_initial_events(ws, count=4)
 
     status = next(e for e in bootstrap if e["type"] == EVENT_SESSION_STATUS)
@@ -96,7 +102,8 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
     """The snapshot chain (root + sends) survives a reconnect — the strip rehydrates."""
 
     # Connection #1: SEND twice → chain of 3 entries (root + 2 sends).
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         collect_initial_events(ws, count=4)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         drain_events(ws, 1)
@@ -110,7 +117,8 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
         drain_events(ws, 5)
 
     # Connection #2: the bootstrap history event reflects all 3 entries.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         bootstrap = collect_initial_events(ws, count=4)
 
     history = next(e for e in bootstrap if e["type"] == EVENT_HISTORY_UPDATED)["history"]
@@ -120,13 +128,15 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
 def test_saved_entry_persists_across_reconnect(cockpit_client: TestClient) -> None:
     """A SAVE done in connection #1 is reflected in connection #2's bootstrap."""
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         collect_initial_events(ws, count=4)
         ack = send_cmd(ws, "save", label="boot-kit")
         assert ack["ok"] is True
         drain_events(ws, 2)
 
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         bootstrap = collect_initial_events(ws, count=4)
 
     history = next(e for e in bootstrap if e["type"] == EVENT_HISTORY_UPDATED)["history"]
@@ -140,14 +150,16 @@ def test_clean_disconnect_does_not_leak_pending_events(
     """Disconnecting between command + drain doesn't crash subsequent connections."""
 
     # Connection #1: send a command but disconnect before draining its events.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         collect_initial_events(ws, count=4)
         send_cmd(ws, "select_profile", profile_id="scene-industrial")
         # NOTE: deliberately do NOT drain_events(ws, 1) — close mid-stream.
 
     # Connection #2: bootstrap still works; the leftover events from #1
     # are bound to that closed socket and do not bleed into the new one.
-    with cockpit_client.websocket_connect("/ws") as ws:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+        complete_handshake(ws)
         bootstrap = collect_initial_events(ws, count=4)
 
     assert {e["type"] for e in bootstrap} == {
@@ -169,9 +181,11 @@ def test_two_concurrent_clients_see_same_bootstrap_snapshot(
     """Two clients connecting at the same time both bootstrap the same snapshot id."""
 
     with (
-        cockpit_client.websocket_connect("/ws") as ws_a,
-        cockpit_client.websocket_connect("/ws") as ws_b,
+        cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a,
+        cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b,
     ):
+        complete_handshake(ws_a)
+        complete_handshake(ws_b)
         events_a = collect_initial_events(ws_a, count=4)
         events_b = collect_initial_events(ws_b, count=4)
 
@@ -185,13 +199,15 @@ def test_concurrent_clients_share_session_state_after_command(
 ) -> None:
     """A SAVE issued by client A is observable on client B's next bootstrap."""
 
-    with cockpit_client.websocket_connect("/ws") as ws_a:
+    with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a:
+        complete_handshake(ws_a)
         collect_initial_events(ws_a, count=4)
         send_cmd(ws_a, "save", label="from-client-a")
         drain_events(ws_a, 2)
 
         # Open a brand-new connection while the first is still alive.
-        with cockpit_client.websocket_connect("/ws") as ws_b:
+        with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b:
+            complete_handshake(ws_b)
             events_b = collect_initial_events(ws_b, count=4)
 
     history_b = next(e for e in events_b if e["type"] == EVENT_HISTORY_UPDATED)["history"]
@@ -203,9 +219,11 @@ def test_concurrent_clients_independent_command_loops(cockpit_client: TestClient
     """Each connection has its own command loop; acks correlate per connection."""
 
     with (
-        cockpit_client.websocket_connect("/ws") as ws_a,
-        cockpit_client.websocket_connect("/ws") as ws_b,
+        cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_a,
+        cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws_b,
     ):
+        complete_handshake(ws_a)
+        complete_handshake(ws_b)
         collect_initial_events(ws_a, count=4)
         collect_initial_events(ws_b, count=4)
 

@@ -18,8 +18,9 @@ dispatcher branch in ``rytm_randomizer/cockpit/ws/handlers.py``.
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ from rytm_randomizer.cockpit.data import PadState, Snapshot, StyleTrait
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
+from rytm_randomizer.cockpit.wizard.path_policy import WizardPathPolicy
 from rytm_randomizer.cockpit.wizard.state import (
     AnalysisJob,
     InspirationSource,
@@ -110,7 +112,7 @@ def _envelope(cmd_type: str, request_id: str = "req-1", **body: Any) -> dict:
 
 def _dispatch(envelope: dict, session: CockpitSession, recorder: _Recorder) -> dict:
     async def _go() -> dict:
-        ack = await handle_command(envelope, session, recorder)
+        ack = await handle_command(envelope, session)
         await drain_pending_events(session, recorder)
         return ack
 
@@ -143,7 +145,10 @@ def test_dispatcher_returns_error_for_unknown_wizard_command(tmp_path: Path) -> 
     ack = _dispatch(_envelope("wizard_not_a_real_command"), session, recorder)
 
     assert ack["ok"] is False
-    assert "unknown command" in ack["error"]
+    # PR 14: the shared dispatcher returns the categorical envelope for
+    # the unknown-wizard-command branch too.
+    assert ack["code"] == "unknown_command"
+    assert "unknown command" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -233,6 +238,78 @@ def test_wizard_set_metadata_leaves_omitted_fields_unchanged(tmp_path: Path) -> 
     assert session.active_wizard.state.description == "initial-desc"  # type: ignore[union-attr]
 
 
+# ---------------------------------------------------------------------------
+# C4 — three-state wire semantics for ``wizard_set_metadata``.
+# Missing key → unchanged; explicit ``null`` → cleared; string → set.
+# ---------------------------------------------------------------------------
+
+
+def test_wizard_set_metadata_null_name_clears_field(tmp_path: Path) -> None:
+    """JSON ``null`` clears the field (C4 fix).
+
+    Previously the handler treated ``None`` as "leave unchanged", which
+    inverted the documented :meth:`WizardState.with_metadata` contract.
+    The fix routes explicit ``null`` to ``with_metadata(name="")`` so the
+    field actually clears.
+    """
+
+    session = _make_session(tmp_path)
+    wizard = _attach_wizard(session)
+    wizard.state = wizard.state.with_metadata(name="initial", description="initial-desc")
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("wizard_set_metadata", name=None),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.active_wizard.state.name == ""  # type: ignore[union-attr]
+    # description was not touched (key was absent in the envelope body)
+    assert session.active_wizard.state.description == "initial-desc"  # type: ignore[union-attr]
+
+
+def test_wizard_set_metadata_null_description_clears_field(tmp_path: Path) -> None:
+    """JSON ``null`` clears description while leaving name alone (C4 fix)."""
+
+    session = _make_session(tmp_path)
+    wizard = _attach_wizard(session)
+    wizard.state = wizard.state.with_metadata(name="initial", description="initial-desc")
+    recorder = _Recorder()
+
+    ack = _dispatch(
+        _envelope("wizard_set_metadata", description=None),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    assert session.active_wizard.state.name == "initial"  # type: ignore[union-attr]
+    assert session.active_wizard.state.description == ""  # type: ignore[union-attr]
+
+
+def test_wizard_set_metadata_missing_keys_leave_state_unchanged(tmp_path: Path) -> None:
+    """No ``name`` / ``description`` keys → both fields preserved (C4 fix).
+
+    Distinct from the prior test: this asserts the "missing" branch
+    behaves differently from the "explicit ``null``" branch — exactly
+    the inversion C4 catches.
+    """
+
+    session = _make_session(tmp_path)
+    wizard = _attach_wizard(session)
+    wizard.state = wizard.state.with_metadata(name="initial", description="initial-desc")
+    recorder = _Recorder()
+
+    # Envelope intentionally carries neither ``name`` nor ``description``.
+    ack = _dispatch(_envelope("wizard_set_metadata"), session, recorder)
+
+    assert ack["ok"] is True
+    assert session.active_wizard.state.name == "initial"  # type: ignore[union-attr]
+    assert session.active_wizard.state.description == "initial-desc"  # type: ignore[union-attr]
+
+
 def test_wizard_set_metadata_without_active_wizard_returns_error(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorder = _Recorder()
@@ -276,6 +353,14 @@ def test_wizard_add_source_appends_reference_source(tmp_path: Path) -> None:
 
 
 def test_wizard_add_source_invalid_kind_returns_error(tmp_path: Path) -> None:
+    """Invalid ``kind`` → sanitized ack carrying the fixed wizard-handler error.
+
+    PR 9 / H4 follow-up: the ack no longer echoes the raw ValueError
+    message. The wire surface is now ``code="wizard_handler_error"``
+    plus the short fixed ``error`` string; the raw exception is logged
+    server-side via :data:`_logger.warning`.
+    """
+
     session = _make_session(tmp_path)
     _attach_wizard(session)
     recorder = _Recorder()
@@ -293,10 +378,20 @@ def test_wizard_add_source_invalid_kind_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "kind" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
+    # The operator's own input string ("bogus") must NOT echo back over the wire.
+    assert "bogus" not in ack["error"]
 
 
 def test_wizard_add_source_invalid_mode_returns_error(tmp_path: Path) -> None:
+    """Invalid ``mode`` → same sanitized ack shape as the invalid-kind path.
+
+    Both narrow_kind / narrow_mode raise ValueError; the dispatcher
+    collapses them to the single ``wizard_handler_error`` code. The
+    field-name distinction lives only in the server-side log extra.
+    """
+
     session = _make_session(tmp_path)
     _attach_wizard(session)
     recorder = _Recorder()
@@ -314,7 +409,9 @@ def test_wizard_add_source_invalid_mode_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "mode" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
+    assert "bogus" not in ack["error"]
 
 
 def test_wizard_add_source_without_active_wizard_returns_error(tmp_path: Path) -> None:
@@ -374,7 +471,12 @@ def test_wizard_remove_source_unknown_id_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "missing" in ack["error"]
+    # PR 14: the shared dispatcher catches the ValueError and surfaces
+    # the categorical ``validation_error`` envelope. The ``str(exc)``
+    # (which previously echoed the unknown id) is intentionally not on
+    # the wire -- the full forensic detail lands in the structured log.
+    assert ack["code"] == "validation_error"
+    assert "error" not in ack
 
 
 def test_wizard_remove_source_empty_id_returns_error(tmp_path: Path) -> None:
@@ -442,14 +544,23 @@ def test_wizard_analyze_happy_path_marks_job_ok(
 def test_wizard_analyze_failed_source_marks_job_failed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """When the analyzer raises, the job transitions to ``failed`` with the message."""
+    """When the analyzer raises, the job transitions to ``failed`` with a categorical reason.
+
+    H4: the failure reason is one of
+    :data:`wizard_handlers.ANALYZER_FAILURE_REASONS` -- the analyzer
+    exception message (which often embeds the source path) is NEVER
+    forwarded over the wire. Here ``FileNotFoundError`` maps to
+    ``"path_not_found"`` and the offending path stays out of the ack.
+    """
 
     session = _make_session(tmp_path)
     _attach_wizard(session, with_source=True)
     recorder = _Recorder()
 
+    secret_marker = "no-such-file-marker"
+
     def _boom(source: InspirationSource) -> tuple[StyleTrait, ...]:
-        raise FileNotFoundError("no such file: /tmp/x")
+        raise FileNotFoundError(f"no such file: {secret_marker}")
 
     monkeypatch.setattr(wizard_handlers, "analyze_source", _boom)
 
@@ -460,7 +571,9 @@ def test_wizard_analyze_failed_source_marks_job_failed(
     assert wizard is not None
     job = wizard.state.jobs[0]
     assert job.status == "failed"
-    assert job.error is not None and "no such file" in job.error
+    assert job.error == wizard_handlers.REASON_PATH_NOT_FOUND
+    # The original path / message must NOT leak through.
+    assert job.error is not None and secret_marker not in job.error
     assert job.extracted_traits == ()
 
 
@@ -644,3 +757,188 @@ def test_wizard_cancel_is_idempotent_when_no_wizard_active(tmp_path: Path) -> No
 
     assert ack["ok"] is True
     assert session.active_wizard is None
+
+
+# ---------------------------------------------------------------------------
+# M11 — wizard_start emits telemetry when it replaces an in-flight wizard.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def wizard_handler_caplog(
+    caplog: pytest.LogCaptureFixture,
+) -> pytest.LogCaptureFixture:
+    """Capture wizard-handler warnings even with package logger propagation off.
+
+    The package logger sets ``propagate = False`` at import time (see
+    ``rytm_randomizer.observability.__init__``), so caplog's default
+    root-level handler never sees records emitted by
+    ``rytm_randomizer.cockpit.ws.wizard_handlers``. Attaching
+    ``caplog.handler`` directly to the module logger restores visibility
+    inside the test scope and the teardown removes it cleanly. Mirrors the
+    fixture in ``test_wizard_analyzer_error_sanitization.py``.
+    """
+
+    logger = logging.getLogger("rytm_randomizer.cockpit.ws.wizard_handlers")
+    logger.addHandler(caplog.handler)
+    try:
+        yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
+
+
+def test_wizard_start_replacement_logs_warning_with_previous_id(
+    tmp_path: Path, wizard_handler_caplog: pytest.LogCaptureFixture
+) -> None:
+    """Replacing an in-flight wizard fires a ``wizard_replaced`` WARNING with structure."""
+
+    session = _make_session(tmp_path)
+    previous = _attach_wizard(session, with_source=True)
+    # Backdate ``started_at`` so the age-seconds field has a meaningful value.
+    previous.started_at = datetime.now(timezone.utc) - timedelta(seconds=42)
+    recorder = _Recorder()
+
+    with wizard_handler_caplog.at_level(logging.WARNING):
+        ack = _dispatch(_envelope("wizard_start"), session, recorder)
+
+    assert ack["ok"] is True
+    assert ack["previous_wizard_id"] == previous.wizard_id
+    records = [rec for rec in wizard_handler_caplog.records if rec.message == "wizard_replaced"]
+    assert records, "wizard_replaced WARNING was not emitted"
+    record = records[-1]
+    assert record.levelno == logging.WARNING
+    assert record.previous_wizard_id == previous.wizard_id
+    assert record.new_wizard_id == ack["wizard_id"]
+    assert record.previous_step == previous.state.step
+    assert record.previous_source_count == len(previous.state.sources)
+    age = record.previous_state_age_seconds
+    assert age >= 40.0  # backdated by 42s; allow for clock drift
+
+
+def test_wizard_start_without_replacement_omits_previous_wizard_id(
+    tmp_path: Path, wizard_handler_caplog: pytest.LogCaptureFixture
+) -> None:
+    """A clean start (no in-flight wizard) must NOT include ``previous_wizard_id``."""
+
+    session = _make_session(tmp_path)
+    recorder = _Recorder()
+
+    with wizard_handler_caplog.at_level(logging.WARNING):
+        ack = _dispatch(_envelope("wizard_start"), session, recorder)
+
+    assert ack["ok"] is True
+    assert "previous_wizard_id" not in ack
+    assert [rec for rec in wizard_handler_caplog.records if rec.message == "wizard_replaced"] == []
+
+
+# ---------------------------------------------------------------------------
+# C2 — wizard_add_source enforces the path policy on file/folder modes.
+# ---------------------------------------------------------------------------
+
+
+def test_wizard_add_source_rejects_out_of_root_file_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A file path outside the policy roots is refused categorically."""
+
+    session = _make_session(tmp_path)
+    _attach_wizard(session)
+    # Pin the policy to ``tmp_path / blessed`` so out-of-root means OUTSIDE that subdir.
+    blessed = tmp_path / "blessed"
+    blessed.mkdir()
+    monkeypatch.setattr(
+        wizard_handlers, "_PATH_POLICY", WizardPathPolicy(roots=(blessed.resolve(),))
+    )
+    outside = tmp_path / "outside.syx"
+    outside.write_bytes(b"\x00")
+
+    recorder = _Recorder()
+    ack = _dispatch(
+        _envelope(
+            "wizard_add_source",
+            kind="kit",
+            mode="file",
+            location=str(outside),
+            display_name="rejected kit",
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is False
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_SOURCE_PATH_REJECTED
+    # PR 9 / H4 follow-up: ack["error"] is the fixed sanitized string;
+    # the rejection reason (still categorical) lives only in the
+    # server-side ``reason`` log extra.
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_SOURCE_PATH_REJECTED
+    # The rejected path itself must NOT echo back over the wire.
+    assert str(outside) not in ack["error"]
+    assert "outside.syx" not in ack["error"]
+    # The wizard state was not mutated.
+    assert session.active_wizard.state.sources == ()  # type: ignore[union-attr]
+
+
+def test_wizard_add_source_accepts_in_root_file_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A file inside an allow-listed root passes the policy and lands as a source."""
+
+    session = _make_session(tmp_path)
+    _attach_wizard(session)
+    blessed = tmp_path / "blessed"
+    blessed.mkdir()
+    monkeypatch.setattr(
+        wizard_handlers, "_PATH_POLICY", WizardPathPolicy(roots=(blessed.resolve(),))
+    )
+    target = blessed / "kit.syx"
+    target.write_bytes(b"\x00")
+
+    recorder = _Recorder()
+    ack = _dispatch(
+        _envelope(
+            "wizard_add_source",
+            kind="kit",
+            mode="file",
+            location=str(target),
+            display_name="real kit",
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    sources = session.active_wizard.state.sources  # type: ignore[union-attr]
+    assert len(sources) == 1
+    assert sources[0].location == str(target)
+
+
+def test_wizard_add_source_skips_policy_for_reference_mode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reference-mode locations are free-text and skip the filesystem allow-list."""
+
+    session = _make_session(tmp_path)
+    _attach_wizard(session)
+    blessed = tmp_path / "blessed"
+    blessed.mkdir()
+    monkeypatch.setattr(
+        wizard_handlers, "_PATH_POLICY", WizardPathPolicy(roots=(blessed.resolve(),))
+    )
+
+    recorder = _Recorder()
+    # An artist name is not a filesystem path; it must not be policy-checked.
+    ack = _dispatch(
+        _envelope(
+            "wizard_add_source",
+            kind="artist",
+            mode="reference",
+            location="Surgeon",
+            display_name="Surgeon",
+        ),
+        session,
+        recorder,
+    )
+
+    assert ack["ok"] is True
+    sources = session.active_wizard.state.sources  # type: ignore[union-attr]
+    assert sources[0].location == "Surgeon"

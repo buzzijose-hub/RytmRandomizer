@@ -188,9 +188,7 @@ def compute_crc(header_and_payload: bytes) -> int:
     """Compute the CRC32 trailer of ``header_and_payload`` via :func:`zlib.crc32`.
 
     Wraps :func:`zlib.crc32` so the call site is self-documenting and so the
-    masking to a 32-bit unsigned int is in exactly one place (zlib returns a
-    signed int on some historical platforms; ``& 0xFFFFFFFF`` is the
-    standard normalization).
+    masking to a 32-bit unsigned int lives in exactly one place.
     """
 
     return zlib.crc32(header_and_payload) & 0xFFFFFFFF
