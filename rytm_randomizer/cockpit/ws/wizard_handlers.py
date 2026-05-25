@@ -340,7 +340,11 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
 
     # C2: filesystem-mode sources MUST land inside an allow-listed root.
     # Reference-mode sources are free-text identifiers and skip the policy.
-    if mode in ("file", "folder"):
+    # We compare the RAW wire string (pre-narrowing) here so that even
+    # invalid kinds are still validated for path-traversal if they
+    # claim a filesystem mode — the narrow_* call later will catch and
+    # surface the kind error after the path is shown to be safe.
+    if mode_raw in ("file", "folder"):
         try:
             _PATH_POLICY.validate(location)
         except WizardSourcePathRejected as exc:
@@ -349,8 +353,8 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
                 extra={
                     "reason": str(exc),
                     "location": location,
-                    "mode": mode,
-                    "kind": kind,
+                    "mode": mode_raw,
+                    "kind": kind_raw,
                     "wizard_id": wizard.wizard_id,
                 },
             )

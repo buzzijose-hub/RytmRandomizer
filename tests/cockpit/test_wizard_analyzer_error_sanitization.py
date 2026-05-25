@@ -105,7 +105,10 @@ def _envelope(cmd_type: str, request_id: str = "req-1", **body: Any) -> dict:
 
 def _dispatch(envelope: dict, session: CockpitSession, recorder: _Recorder) -> dict:
     async def _go() -> dict:
-        ack = await handle_command(envelope, session, recorder)
+        # PR 4 (CODE_REVIEW.md H1) dropped the emitter from
+        # handle_command's signature — the emitter is only used by
+        # drain_pending_events below.
+        ack = await handle_command(envelope, session)
         await drain_pending_events(session, recorder)
         return ack
 

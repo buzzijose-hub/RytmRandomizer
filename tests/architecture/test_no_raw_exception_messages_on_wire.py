@@ -56,27 +56,21 @@ WS_DIR: Final[Path] = PROJECT_ROOT / "rytm_randomizer" / "cockpit" / "ws"
 # wizard_handlers.py. The "How to shrink" recipe in the docstring
 # above tells contributors to use the categorical-reason pattern when
 # they touch a grandfathered site.
-_GRANDFATHERED_EXC_STR_SITES: Final[frozenset[tuple[str, int]]] = frozenset(
-    {
-        # handlers.py:405 — generic command-dispatch error envelope.
-        # Slated for fix in CODE_REVIEW.md PR 14 (categorical WS error
-        # envelopes); will move to "{code: <enum>, message: <safe>}".
-        ("rytm_randomizer/cockpit/ws/handlers.py", 405),
-        # handlers.py:535 — same dispatcher; same PR 14 fix.
-        ("rytm_randomizer/cockpit/ws/handlers.py", 535),
-        # wizard_handlers.py — PR 2 refactored these; sites now at the
-        # following lines, each with categorical handling that still
-        # includes a sanitized str(exc) for forensic context (the
-        # categorical reason goes on the wire; the message is logged
-        # server-side only — verified by H4 sanitization tests in
-        # tests/cockpit/test_wizard_analyzer_error_sanitization.py).
-        # PR 14 will tighten further with structured error codes.
-        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 348),
-        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 359),
-        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 374),
-        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 453),
-    }
-)
+# Path + per-file COUNT-floor instead of (path, lineno) because edits
+# shift line numbers; the count stays stable as long as no new str(exc)
+# sites are added.
+_GRANDFATHERED_EXC_STR_PER_FILE: Final[dict[str, int]] = {
+    # handlers.py:405 + :535 — generic command-dispatch error envelope.
+    # Slated for fix in CODE_REVIEW.md PR 14 (categorical WS error codes).
+    "rytm_randomizer/cockpit/ws/handlers.py": 2,
+    # wizard_handlers.py — PR 2 categorical-reason refactor still
+    # includes sanitized str(exc) for forensic context in
+    # server-side-only logging-extra fields (the categorical reason is
+    # what goes on the wire — verified by tests/cockpit/
+    # test_wizard_analyzer_error_sanitization.py). PR 14 will tighten
+    # further with structured error codes.
+    "rytm_randomizer/cockpit/ws/wizard_handlers.py": 4,
+}
 
 
 def _exception_names_in_scope(
@@ -104,8 +98,11 @@ def _exception_names_in_scope(
     return out
 
 
-def _violations_in(path: Path) -> list[str]:
-    """Find ``str(<exc-name>)`` calls that look like wire-payload writes."""
+def _str_exc_call_sites(path: Path) -> list[tuple[int, str, str]]:
+    """Return every ``str(<exc-name>)`` call inside an ``except`` block.
+
+    Returns list of (lineno, exc_name, snippet) tuples.
+    """
 
     source = path.read_text(encoding="utf-8")
     try:
@@ -113,10 +110,8 @@ def _violations_in(path: Path) -> list[str]:
     except SyntaxError:
         return []
 
-    findings: list[str] = []
-
+    out: list[tuple[int, str, str]] = []
     for node in ast.walk(tree):
-        # str(<Name>) call
         if not (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Name)
@@ -125,25 +120,11 @@ def _violations_in(path: Path) -> list[str]:
             and isinstance(node.args[0], ast.Name)
         ):
             continue
-
         exc_names = _exception_names_in_scope(node, tree)
         if node.args[0].id not in exc_names:
-            continue  # not bound by an enclosing except clause
-
-        # We have a str(exception) call inside an except block.
-        rel_posix = path.relative_to(PROJECT_ROOT).as_posix()
-        if (rel_posix, node.lineno) in _GRANDFATHERED_EXC_STR_SITES:
-            continue  # frozen pre-PR-2 violation; tracker covers it
-        snippet = ast.unparse(node)
-        findings.append(
-            f"{rel_posix}:{node.lineno} `{snippet}` — exception variable "
-            f"`{node.args[0].id}` is being converted to a wire string. "
-            "Map to a categorical reason (path_not_found / "
-            "unsupported_format / read_failed / analysis_failed / ...) "
-            "and log the full detail via observability.logging instead."
-        )
-
-    return findings
+            continue
+        out.append((node.lineno, node.args[0].id, ast.unparse(node)))
+    return out
 
 
 def _ws_python_files() -> list[Path]:
@@ -151,22 +132,67 @@ def _ws_python_files() -> list[Path]:
 
 
 def test_no_raw_exception_messages_in_ws_handlers() -> None:
-    """``str(exc)`` inside ``except`` blocks of WS handlers is forbidden.
+    """``str(exc)`` count in WS handlers must stay at or below the floor.
 
     Regression guard: CODE_REVIEW.md H4 was an instance of this exact
     anti-pattern (the wizard analyzer's ``error=str(exc)`` leaked
     filesystem paths back to the WS client). PR 2 added categorical
-    reasons; this test stops the next contributor from regressing.
+    reasons; this test stops the next contributor from regressing by
+    adding more ``str(exc)`` sites in the WS layer.
 
-    Failure message names the file, line, and offending expression.
+    Why count-based instead of line-based: edits in unrelated parts of
+    the file would shift line numbers. The floor counts how many
+    grandfathered sites each file still has; the test fails the moment
+    a new occurrence appears (or fails the companion test below if the
+    floor is artificially raised without the companion shrink).
     """
 
     violations: list[str] = []
     for path in _ws_python_files():
-        violations.extend(_violations_in(path))
+        rel = path.relative_to(PROJECT_ROOT).as_posix()
+        sites = _str_exc_call_sites(path)
+        ceiling = _GRANDFATHERED_EXC_STR_PER_FILE.get(rel, 0)
+        if len(sites) > ceiling:
+            # Show the OFFENDING sites — anything beyond the ceiling.
+            for lineno, exc_name, snippet in sites:
+                violations.append(
+                    f"{rel}:{lineno} `{snippet}` — exception `{exc_name}` "
+                    "becoming a wire string. Floor for this file is "
+                    f"{ceiling}; currently {len(sites)}. Map to a "
+                    "categorical reason and log detail server-side."
+                )
 
     assert not violations, (
         "Raw exception messages reaching the wire — CODE_REVIEW.md H4 "
         "regression. Map to a categorical reason and log detail "
         "server-side:\n  " + "\n  ".join(violations)
+    )
+
+
+def test_grandfathered_exc_str_count_floor_does_not_grow() -> None:
+    """The per-file floor must match (not exceed) the actual count.
+
+    When a PR cleans up one of the grandfathered ``str(exc)`` sites,
+    the contributor MUST lower the matching entry in
+    ``_GRANDFATHERED_EXC_STR_PER_FILE`` to match. This test catches
+    the "I fixed the code but forgot to drain the allowlist" case so
+    the ratchet truly only moves down.
+    """
+
+    redundant: list[str] = []
+    for path in _ws_python_files():
+        rel = path.relative_to(PROJECT_ROOT).as_posix()
+        ceiling = _GRANDFATHERED_EXC_STR_PER_FILE.get(rel, 0)
+        if ceiling == 0:
+            continue
+        actual = len(_str_exc_call_sites(path))
+        if actual < ceiling:
+            redundant.append(
+                f"{rel}: floor is {ceiling} but actual count is {actual}. "
+                f"Lower the entry in _GRANDFATHERED_EXC_STR_PER_FILE to {actual}."
+            )
+
+    assert not redundant, (
+        "Grandfathered floor exceeds actual count — drain the allowlist:"
+        "\n  " + "\n  ".join(redundant)
     )

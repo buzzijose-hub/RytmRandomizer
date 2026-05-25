@@ -191,6 +191,24 @@ def _is_hot(name: str) -> bool:
 # ---------------------------------------------------------------------------
 _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
     {
+        # PR 5 (CODE_REVIEW.md H2+M8+P1): the wizard's Kind / Status
+        # Literal aliases use DIFFERENT value sets than the cockpit-data
+        # ones (wizard: kit/sound/song/album/artist; data: scene/user).
+        # The narrow_* helpers therefore can't be unified — same NAME,
+        # different SEMANTICS. Documented in wizard/state.py:73 with a
+        # docstring cross-reference.
+        (
+            "func",
+            "narrow_kind",
+            "rytm_randomizer/cockpit/data/types.py",
+            "rytm_randomizer/cockpit/wizard/state.py",
+        ),
+        (
+            "func",
+            "narrow_status",
+            "rytm_randomizer/cockpit/data/types.py",
+            "rytm_randomizer/cockpit/wizard/state.py",
+        ),
         (
             "func",
             "_acceptance_checks",
