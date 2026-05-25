@@ -426,7 +426,13 @@ def test_wizard_save_before_review_returns_error(tmp_path: Path) -> None:
 def test_wizard_analyzer_failure_marks_job_failed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """When :func:`analyze_source` raises, the job ends up ``status="failed"``."""
+    """When :func:`analyze_source` raises, the job ends up ``status="failed"``.
+
+    H4: the per-source ``error`` field is a CATEGORICAL reason -- the raw
+    exception message (which routinely embeds the source path) is logged
+    server-side but never echoed onto the wire. ``RuntimeError`` maps to
+    :data:`wizard_handlers.REASON_ANALYSIS_FAILED`.
+    """
 
     session = _make_session(tmp_path)
     _dispatch(_envelope("wizard_start"), session, _Recorder())
@@ -455,8 +461,10 @@ def test_wizard_analyzer_failure_marks_job_failed(
     assert ack["ok"] is True
     job = session.active_wizard.state.jobs[0]
     assert job.status == "failed"
-    assert job.error is not None
-    assert "analyzer crashed" in job.error
+    assert job.error == wizard_handlers.REASON_ANALYSIS_FAILED
+    # The raw exception message must NOT leak through.
+    assert "analyzer crashed" not in job.error
+    assert "simulated failure" not in job.error
     assert job.extracted_traits == ()
 
 

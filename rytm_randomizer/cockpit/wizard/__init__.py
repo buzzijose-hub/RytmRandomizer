@@ -21,6 +21,12 @@ from __future__ import annotations
 
 from .analyze import analyze_source, feature_report_to_traits
 from .errors import WizardSourcePathError
+from .path_policy import (
+    DEFAULT_WIZARD_SOURCE_ROOT,
+    WIZARD_SOURCE_ROOTS_ENV,
+    WizardPathPolicy,
+    WizardSourcePathRejected,
+)
 from .reference_analyzer import lookup_traits
 from .state import (
     KIND_VALUES,
@@ -40,6 +46,7 @@ from .traits import WIZARD_TRAIT_NAMES
 
 __all__ = [
     "AnalysisJob",
+    "DEFAULT_WIZARD_SOURCE_ROOT",
     "InspirationSource",
     "KIND_VALUES",
     "Kind",
@@ -49,8 +56,11 @@ __all__ = [
     "STEP_VALUES",
     "Status",
     "Step",
+    "WIZARD_SOURCE_ROOTS_ENV",
     "WIZARD_TRAIT_NAMES",
+    "WizardPathPolicy",
     "WizardSourcePathError",
+    "WizardSourcePathRejected",
     "WizardState",
     "analyze_source",
     "extract_kit_traits",

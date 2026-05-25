@@ -59,11 +59,19 @@ def extract_kit_traits(path: Path) -> tuple[StyleTrait, ...]:
     ``.syx`` files; in the folder case every matching file is analyzed
     independently and the per-file results are averaged with equal weight.
 
-    Raises ``TypeError`` if ``path`` is not a :class:`pathlib.Path`,
+    Raises ``TypeError`` if ``path`` is not a :class:`pathlib.Path`
+    (Python convention: wrong argument *type* is a TypeError, distinct
+    from a value-out-of-range :class:`ValueError`),
     ``FileNotFoundError`` if it does not exist, and ``ValueError`` if it
     is neither a file nor a directory.
     """
 
+    # L11: keep TypeError (not ValueError) because the violation here is a
+    # wrong argument *type* -- the Python convention is that ValueError
+    # signals "right type, wrong value" while TypeError signals "wrong
+    # type entirely". The surrounding raises in this function use
+    # WizardSourcePathError / ValueError for value-level checks, which is
+    # the correct contrast.
     if not isinstance(path, Path):
         raise TypeError("path must be a pathlib.Path")
     if not path.exists():

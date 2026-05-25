@@ -466,8 +466,14 @@ def test_wizard_analyzer_failure_marks_job_failed_over_ws(
         analyze_events = drain_events(ws, 3)
 
     # The command succeeds; the failure is reported via the job's status.
+    # H4: the wire-level ``error`` field is one of the categorical reasons,
+    # never the raw analyzer message. ``RuntimeError`` maps to
+    # ``"analysis_failed"``; the "analyzer crashed: simulated" string is
+    # logged server-side, not sent to the client.
     assert analyze_ack["ok"] is True
     terminal_job = analyze_events[1]["job"]
     assert terminal_job["status"] == "failed"
-    assert "analyzer crashed" in terminal_job["error"]
+    assert terminal_job["error"] == wizard_handlers.REASON_ANALYSIS_FAILED
+    assert "analyzer crashed" not in terminal_job["error"]
+    assert "simulated" not in terminal_job["error"]
     assert terminal_job["extracted_traits"] == []
