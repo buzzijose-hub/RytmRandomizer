@@ -102,27 +102,35 @@ describe('AddStep — picker UI', () => {
     expect(screen.getByTestId('wizard-draft-mode')).toHaveValue('folder');
   });
 
-  it('confirm button is disabled when either field is blank', () => {
+  it('confirm does not fire onAddSource until both required fields are non-empty', () => {
+    // Cluster-3 a11y fix: confirm button is always enabled; the validate-on-submit
+    // path short-circuits when either field is blank (see form_errors.test.tsx
+    // for the ARIA assertions). Behaviour from the operator's standpoint is the
+    // same — onAddSource only fires when both fields validate.
+    const onAddSource = vi.fn();
     render(
       <AddStep
         sources={[]}
-        onAddSource={vi.fn()}
+        onAddSource={onAddSource}
         onRemoveSource={vi.fn()}
         onBack={vi.fn()}
         onNext={vi.fn()}
       />,
     );
     fireEvent.click(screen.getByTestId('wizard-add-artist'));
-    expect(screen.getByTestId('wizard-draft-confirm')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('wizard-draft-confirm'));
+    expect(onAddSource).not.toHaveBeenCalled();
     fireEvent.change(screen.getByTestId('wizard-draft-location'), {
       target: { value: 'Surgeon' },
     });
     // Display name still blank.
-    expect(screen.getByTestId('wizard-draft-confirm')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('wizard-draft-confirm'));
+    expect(onAddSource).not.toHaveBeenCalled();
     fireEvent.change(screen.getByTestId('wizard-draft-display-name'), {
       target: { value: 'Surgeon' },
     });
-    expect(screen.getByTestId('wizard-draft-confirm')).toBeEnabled();
+    fireEvent.click(screen.getByTestId('wizard-draft-confirm'));
+    expect(onAddSource).toHaveBeenCalledTimes(1);
   });
 
   it('calls onAddSource with the trimmed payload and closes the draft on confirm', () => {
