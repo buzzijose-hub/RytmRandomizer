@@ -130,6 +130,25 @@ def test_tauri_before_build_compiles_the_web_bundle() -> None:
     )
 
 
+def test_tauri_prebuild_commands_resolve_web_from_tauri_workspace() -> None:
+    """Tauri v2 runs before* commands from desktop/, not desktop/shell/."""
+
+    config = json.loads((SHELL_ROOT / "tauri.conf.json").read_text(encoding="utf-8"))
+    build = config.get("build", {})
+    commands = {
+        "beforeDevCommand": build.get("beforeDevCommand", ""),
+        "beforeBuildCommand": build.get("beforeBuildCommand", ""),
+    }
+    assert commands == {
+        "beforeDevCommand": "npm --prefix web run dev",
+        "beforeBuildCommand": "npm --prefix web run build",
+    }, (
+        "Tauri before* commands run with desktop/ as cwd. Use 'npm --prefix web ...' "
+        "so CI resolves desktop/web/package.json instead of root web/package.json. "
+        f"Currently: {commands!r}"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Category 2 — Web router
 #
@@ -343,6 +362,43 @@ def test_release_workflow_builds_tauri_bundle() -> None:
     assert (
         "tauri" in installers.lower()
     ), "installers.yml desktop-bundle job must invoke the Tauri CLI."
+
+
+def test_installer_workflow_runs_linux_briefcase_under_system_python() -> None:
+    """Briefcase Linux system packages require the OS python3 interpreter."""
+
+    installers = (GITHUB_WORKFLOWS / "installers.yml").read_text(encoding="utf-8")
+    linux_apt_match = re.search(r"sudo apt-get install -y (?P<packages>[^\n]+)", installers)
+    assert linux_apt_match is not None, "Linux installer job must install apt packages"
+    linux_packages = set(linux_apt_match.group("packages").split())
+    missing_linux_packages = {
+        "libasound2",
+        "libasound2-dev",
+        "libfuse2",
+        "python3-venv",
+    } - linux_packages
+    assert (
+        not missing_linux_packages
+    ), "Linux installer CI must preinstall Briefcase host dependencies: " + ", ".join(
+        sorted(missing_linux_packages)
+    )
+
+    assert "if: runner.os != 'Linux'" in installers, (
+        "The setup-python Briefcase interpreter must be skipped on Linux; "
+        "Briefcase compares itself against system python3 when building Linux "
+        "system packages and exits 200 on the hosted-toolcache Python."
+    )
+    required_snippets = [
+        "python3-venv",
+        "python3 -m venv .venv-briefcase",
+        ". .venv-briefcase/bin/activate",
+        'echo "$PWD/.venv-briefcase/bin" >> "$GITHUB_PATH"',
+    ]
+    missing = [snippet for snippet in required_snippets if snippet not in installers]
+    assert not missing, (
+        "Linux installer CI must create a system-python venv for Briefcase. "
+        "Missing snippets: " + ", ".join(missing)
+    )
 
 
 # ---------------------------------------------------------------------------
