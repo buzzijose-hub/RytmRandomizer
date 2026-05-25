@@ -248,7 +248,10 @@ def _format_text(payload: dict[str, object]) -> str:
     """Format an ack dict as a human-readable, key: value block."""
 
     lines: list[str] = []
-    for key in (
+    # `field` rather than `key` so it doesn't read as if it shadowed
+    # any of the HMAC-key-related names elsewhere in this module (L2
+    # from CODE_REVIEW.md).
+    for field in (
         "ok",
         "profile_id",
         "profile_name",
@@ -258,16 +261,16 @@ def _format_text(payload: dict[str, object]) -> str:
         "overwrote_existing",
         "signed",
     ):
-        if key in payload:
-            lines.append(f"{key}: {_json_scalar(payload[key])}")
+        if field in payload:
+            lines.append(f"{field}: {_json_scalar(payload[field])}")
     if "key_id" in payload:
         lines.append(f"key_id: {_json_scalar(payload['key_id'])}")
     if "error" in payload:
         lines.append(f"error: {payload['error']}")
     verification = payload.get("verification")
     if isinstance(verification, dict):
-        for key in ("ok", "reason", "expected_key_id", "expected_algorithm", "payload_size"):
-            lines.append(f"verification.{key}: {_json_scalar(verification[key])}")
+        for field in ("ok", "reason", "expected_key_id", "expected_algorithm", "payload_size"):
+            lines.append(f"verification.{field}: {_json_scalar(verification[field])}")
     return "\n".join(lines) + "\n"
 
 

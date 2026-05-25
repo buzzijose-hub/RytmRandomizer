@@ -25,7 +25,7 @@ See ``docs/superpowers/specs/2026-05-24-profile-wizard-design.md``
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as _dc_replace
 from datetime import datetime
 from typing import Final, Literal, Self, TypedDict, cast
 
@@ -479,9 +479,11 @@ def _replace(state: WizardState, **changes: object) -> WizardState:
     Using ``dataclasses.replace`` directly here means ``mypy`` resolves the
     return type to ``WizardState`` (matching the ``Self``-annotated helpers
     above without contaminating each call site with a cast).
-    """
 
-    from dataclasses import replace as _dc_replace
+    Import of ``replace`` moved to module top in L3 (CODE_REVIEW.md) —
+    the prior in-function ``from dataclasses import replace as _dc_replace``
+    was paying the import cost on every call.
+    """
 
     return _dc_replace(state, **changes)  # type: ignore[arg-type]
 

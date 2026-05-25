@@ -113,8 +113,8 @@ def _print_passive_menu() -> None:
         [
             "",
             "Active modes (explicit opt-in required):",
-            "- --arm       open a real MIDI port and run the interactive " "randomizer",
-            "- --dry-run   run the interactive randomizer against the mock " "sender",
+            "- --arm       open a real MIDI port and run the interactive randomizer",
+            "- --dry-run   run the interactive randomizer against the mock sender",
             "",
             USAGE,
         ]

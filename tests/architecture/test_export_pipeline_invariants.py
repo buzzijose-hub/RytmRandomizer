@@ -50,7 +50,7 @@ EXPORT_ROOT: Final[Path] = PROJECT_ROOT / "rytm_randomizer" / "cockpit" / "expor
 # ---------------------------------------------------------------------------
 
 
-def test_export_pipeline_format_magic_is_RYMP() -> None:
+def test_export_pipeline_format_magic_is_rymp() -> None:
     """The on-disk magic prefix must remain exactly ``b"RYMP"``.
 
     Regression guard: the Phase 4 firmware reader's first sanity check is

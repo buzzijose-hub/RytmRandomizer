@@ -66,6 +66,13 @@ SIGNATURE_ALGO_HMAC_SHA256: Final[str] = "hmac-sha256"
 
 # Struct format strings for the fixed-width prefix.
 _FIXED_PREFIX_STRUCT: Final[struct.Struct] = struct.Struct(">4sH")
+
+# Single-byte length prefix used three times in pack_signed (algo,
+# key_id, signature). Precompiled once instead of `bytes([len(...)])`
+# at each call site — same wire bytes, but the intent reads cleaner
+# and matches the existing "_*_STRUCT for every fixed-width field"
+# pattern below (L1 from CODE_REVIEW.md).
+_LEN_BYTE_STRUCT: Final[struct.Struct] = struct.Struct(">B")
 """magic (4s) + format_version (uint16)."""
 
 _PAYLOAD_LEN_STRUCT: Final[struct.Struct] = struct.Struct(">I")
@@ -205,11 +212,11 @@ def pack_signed(blob: SignedBlob) -> bytes:
 
     return (
         _FIXED_PREFIX_STRUCT.pack(SIGNATURE_HEADER_MAGIC, SIGNATURE_FORMAT_VERSION)
-        + bytes([len(algo_bytes)])
+        + _LEN_BYTE_STRUCT.pack(len(algo_bytes))
         + algo_bytes
-        + bytes([len(key_id_bytes)])
+        + _LEN_BYTE_STRUCT.pack(len(key_id_bytes))
         + key_id_bytes
-        + bytes([len(blob.signature)])
+        + _LEN_BYTE_STRUCT.pack(len(blob.signature))
         + blob.signature
         + _PAYLOAD_LEN_STRUCT.pack(payload_len)
         + blob.payload
