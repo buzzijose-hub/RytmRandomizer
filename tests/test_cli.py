@@ -567,6 +567,8 @@ USAGE = (
     "[--render-harness-label <text>] [--runner-label <text>] [--json] | "
     "cockpit-send-plan-readiness-report (--plan-json <json>|--plan-file <path>) "
     "[--label <text>] [--json] | "
+    "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
+    "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
