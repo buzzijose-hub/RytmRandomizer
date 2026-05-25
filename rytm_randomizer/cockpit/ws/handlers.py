@@ -51,6 +51,7 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
 
 from ...observability.errors import RytmRandomizerError
+from ...observability.logging import get_logger
 from ..data import CockpitSendPlan, History, MutationCandidate, Snapshot
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
@@ -74,6 +75,14 @@ from .protocol import (
     EVENT_SNAPSHOT_CHANGED,
 )
 from .session import CockpitSession
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit WS command dispatcher.
+
+Bound here so future structured log calls (PR O1 — request_id correlation,
+PR O2 — RED metrics, PR O4 — fingerprinted error events) land in the
+package's structured stream without touching this file's imports. See
+``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 
 @runtime_checkable

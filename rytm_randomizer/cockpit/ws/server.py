@@ -65,6 +65,7 @@ from typing import Final
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
+from ...observability.logging import get_logger
 from .handlers import (
     EventEmitter,
     drain_pending_events,
@@ -81,6 +82,13 @@ from .protocol import (
     WS_SUBPROTOCOL,
 )
 from .session import CockpitSession
+
+_logger = get_logger(__name__)
+"""Module logger for the cockpit WS server (auth handshake, size-cap,
+command-loop lifecycle). Bound here so PR O1 (request_id correlation)
+and PR O6 (arch tests on hot-path loggers) can wire their structured
+events without touching this file's imports. See
+``OBSERVABILITY_REVIEW.md`` Phase 5."""
 
 _DEFAULT_MAX_MESSAGE_BYTES: Final[int] = 1 * 1024 * 1024
 """Default per-message byte cap — 1 MiB. Override via env var (SX1)."""
