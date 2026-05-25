@@ -145,6 +145,7 @@ export const test = base.extend<WizardFixtures>({
       // Force the sidecar onto the well-known port the web client dials.
       RYTM_RAND_WS_PORT: String(SIDECAR_PORT),
       RYTM_RAND_WS_TOKEN_FILE: tokenFile,
+      WIZARD_SOURCE_ROOTS: tmpRoot,
       // Unbuffer Python stdio so error tracebacks surface promptly in CI logs.
       PYTHONUNBUFFERED: '1',
     };

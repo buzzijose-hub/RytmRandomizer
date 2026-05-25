@@ -1,21 +1,26 @@
 /**
  * Analyzer failure surfaces in the UI as `failed` + a Retry button.
  *
- * Adds an audio source (`kind=sound`) pointing at a path that does not exist.
- * The Python sidecar's audio analyzer raises `WizardSourcePathError` (a
- * subclass of `FileNotFoundError`), which `_handle_wizard_analyze` traps and
- * turns into a job with `status="failed"`. The AnalyzeStep renders the
- * `failed` status and a Retry button (see `wizard-job-retry-<id>`).
+ * Adds a filesystem source that is valid according to the sidecar path policy
+ * but unsupported by the analyzer dispatcher (`kind=artist`, `mode=file`).
+ * `_handle_wizard_analyze` traps the dispatcher's `ValueError` and turns it
+ * into a job with `status="failed"`. The AnalyzeStep renders the `failed`
+ * status and a Retry button (see `wizard-job-retry-<id>`).
  */
+
+import { writeFileSync } from 'node:fs';
+import * as path from 'node:path';
 
 import { expect, test } from './fixtures/wizard_fixture';
 
 test.describe('wizard analyze failure', () => {
-  test('missing audio path → failed job + Retry button', async ({
+  test('unsupported filesystem source -> failed job + Retry button', async ({
     page,
-    sidecar: _sidecar,
+    sidecar,
   }) => {
     test.setTimeout(45_000);
+    const unsupportedSource = path.join(sidecar.profilesRoot, 'unsupported-artist.bin');
+    writeFileSync(unsupportedSource, 'not an analyzer-supported artist reference');
 
     await page.goto('/');
     await expect(page.getByTestId('cockpit-root')).toBeVisible();
@@ -27,14 +32,13 @@ test.describe('wizard analyze failure', () => {
     await page.getByTestId('wizard-next').click();
     await expect(page.getByTestId('wizard-add-step')).toBeVisible();
 
-    // Add a sound source pointing at a bogus path. The draft starts in `file`
-    // mode for `sound` (see DEFAULT_MODE_FOR_KIND in AddStep.tsx).
-    await page.getByTestId('wizard-add-sound').click();
+    // Add an existing file path with an unsupported kind/mode pair. The sidecar
+    // accepts the source, then the Analyze step reports the analyzer failure.
+    await page.getByTestId('wizard-add-artist').click();
     await expect(page.getByTestId('wizard-draft')).toBeVisible();
-    await page
-      .getByTestId('wizard-draft-location')
-      .fill('/definitely/does/not/exist/ghost.wav');
-    await page.getByTestId('wizard-draft-display-name').fill('ghost.wav');
+    await page.getByTestId('wizard-draft-mode').selectOption('file');
+    await page.getByTestId('wizard-draft-location').fill(unsupportedSource);
+    await page.getByTestId('wizard-draft-display-name').fill('unsupported-artist.bin');
     await page.getByTestId('wizard-draft-confirm').click();
 
     // Wait for the sidecar to echo the server-minted source into the list before
@@ -58,7 +62,7 @@ test.describe('wizard analyze failure', () => {
       page.getByTestId('wizard-job-list').getByRole('button', { name: 'Retry' }),
     ).toBeVisible();
 
-    // Review is disabled because no job is OK — guards against the operator
+    // Review is disabled because no job is OK - guards against the operator
     // accidentally building an empty profile.
     await expect(page.getByTestId('wizard-next')).toBeDisabled();
   });
