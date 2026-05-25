@@ -25,7 +25,8 @@ See ``docs/superpowers/specs/2026-05-24-profile-wizard-design.md``
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace as _dc_replace
+from dataclasses import dataclass
+from dataclasses import replace as _dc_replace
 from datetime import datetime
 from typing import Final, Literal, Self, TypedDict, cast
 

@@ -56,9 +56,9 @@ def test_signed_envelope_with_correct_key_carries_present_true() -> None:
 
     assert result.ok is True
     assert result.reason == "ok"
-    assert result.signed_envelope_present is True, (
-        "Envelope parsed successfully → signed_envelope_present must be True"
-    )
+    assert (
+        result.signed_envelope_present is True
+    ), "Envelope parsed successfully → signed_envelope_present must be True"
 
 
 def test_signed_envelope_with_no_key_provided_carries_present_true() -> None:
@@ -99,9 +99,9 @@ def test_bare_unsigned_payload_carries_present_false() -> None:
 
     assert result.ok is True
     assert result.reason == "ok"
-    assert result.signed_envelope_present is False, (
-        "Bare RYMP payload — no envelope was present; the field must be False."
-    )
+    assert (
+        result.signed_envelope_present is False
+    ), "Bare RYMP payload — no envelope was present; the field must be False."
 
 
 def test_envelope_with_wrong_key_id_carries_present_true() -> None:
@@ -135,6 +135,6 @@ def test_truncated_envelope_carries_present_false() -> None:
     result = verify_signed_blob(truncated, key=b"\x00" * 32)
 
     assert result.ok is False
-    assert result.signed_envelope_present is False, (
-        "Envelope failed to parse — discriminator must be False."
-    )
+    assert (
+        result.signed_envelope_present is False
+    ), "Envelope failed to parse — discriminator must be False."
