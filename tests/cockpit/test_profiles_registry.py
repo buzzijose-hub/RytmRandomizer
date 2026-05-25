@@ -135,23 +135,29 @@ def test_save_creates_user_subdir_if_missing(tmp_path: Path) -> None:
     registry = ProfileRegistry(profiles_dir=profiles_dir)
     assert not profiles_dir.exists()
     profile = _make_user_profile()
-    written = registry.save(profile)
+    result = registry.save(profile)
+    # PR 7 — IH2: save() now returns None (the prior ``-> Path`` was
+    # dead surface). The on-disk path is derivable from the profile id.
+    assert result is None
+    written = profiles_dir / "user" / f"{profile.profile_id}.json"
     assert (profiles_dir / "user").is_dir()
     assert written.exists()
     assert written.parent == profiles_dir / "user"
 
 
-def test_save_returns_path_named_after_profile_id(tmp_path: Path) -> None:
+def test_save_writes_to_path_named_after_profile_id(tmp_path: Path) -> None:
     registry = ProfileRegistry(profiles_dir=tmp_path)
     profile = _make_user_profile(profile_id="01HXY5Q9PJM0000000000000ABC")
-    written = registry.save(profile)
-    assert written.name == "01HXY5Q9PJM0000000000000ABC.json"
+    registry.save(profile)
+    written = tmp_path / "user" / "01HXY5Q9PJM0000000000000ABC.json"
+    assert written.exists()
 
 
 def test_save_writes_round_trippable_json(tmp_path: Path) -> None:
     registry = ProfileRegistry(profiles_dir=tmp_path)
     profile = _make_user_profile()
-    written = registry.save(profile)
+    registry.save(profile)
+    written = tmp_path / "user" / f"{profile.profile_id}.json"
     raw = json.loads(written.read_text(encoding="utf-8"))
     assert ProfileModel.from_dict(raw) == profile
 
@@ -193,7 +199,8 @@ def test_reload_drops_cached_entries(tmp_path: Path) -> None:
 
     registry = ProfileRegistry(profiles_dir=tmp_path)
     profile = _make_user_profile()
-    written = registry.save(profile)
+    registry.save(profile)
+    written = tmp_path / "user" / f"{profile.profile_id}.json"
     assert registry.get(profile.profile_id) == profile
     written.unlink()
     registry.reload()
@@ -201,11 +208,16 @@ def test_reload_drops_cached_entries(tmp_path: Path) -> None:
 
 
 def test_save_followed_by_save_overwrites_same_file(tmp_path: Path) -> None:
+    # PR 7 — M7: save defaults to overwrite=False so a retried save for
+    # an existing profile_id must explicitly opt into replacement.
     registry = ProfileRegistry(profiles_dir=tmp_path)
     profile_a = _make_user_profile(name="buzzi")
     profile_b = _make_user_profile(name="buzzi-revised")
-    path_a = registry.save(profile_a)
-    path_b = registry.save(profile_b)
+    registry.save(profile_a)
+    registry.save(profile_b, overwrite=True)
+    # Both writes land in the same file (keyed by profile_id).
+    path_a = tmp_path / "user" / f"{profile_a.profile_id}.json"
+    path_b = tmp_path / "user" / f"{profile_b.profile_id}.json"
     assert path_a == path_b
     # And the in-memory cache reflects the latest write.
     assert registry.get(profile_a.profile_id) == profile_b
@@ -318,7 +330,13 @@ def test_unreadable_file_is_skipped_with_warning(
     tmp_path: Path,
     registry_warning_caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A file that raises ``OSError`` on read is logged + skipped."""
+    """A file that raises a non-permission ``OSError`` on read is logged + skipped.
+
+    PR 7 — M6: the classifier in ``_safe_load_profile`` distinguishes
+    :class:`PermissionError` (refuse to start — see
+    ``test_profile_registry_load_classification.py``) from a generic
+    :class:`OSError` (skip with WARNING — this test).
+    """
 
     user_dir = tmp_path / "user"
     user_dir.mkdir()
@@ -329,7 +347,10 @@ def test_unreadable_file_is_skipped_with_warning(
 
     def boom(self: Path, *args: object, **kwargs: object) -> str:
         if self == target:
-            raise OSError("permission denied")
+            # Bare ``OSError`` without errno=EACCES — exercises the
+            # generic-OSError branch (warn + skip), not the
+            # ``PermissionError`` branch (raise).
+            raise OSError("io error")
         return real_read_text(self, *args, **kwargs)
 
     monkeypatch.setattr(Path, "read_text", boom)
@@ -338,7 +359,7 @@ def test_unreadable_file_is_skipped_with_warning(
         profiles = registry.list_profiles()
     assert len(profiles) == len(BUILTIN_SCENES)
     assert any(
-        "malformed profile file" in r.message.lower() for r in registry_warning_caplog.records
+        "unreadable profile file" in r.message.lower() for r in registry_warning_caplog.records
     )
 
 

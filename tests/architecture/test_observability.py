@@ -326,6 +326,21 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # WizardSourcePathError / EmptyAnalysisError dual-inheritance
         # pattern.
         "WriteError",
+        # Cockpit profile registry (PR 7 — M7 + M6): atomic save +
+        # classified load errors. ``ProfileAlreadyExistsError``
+        # multi-inherits :class:`DataError` + :class:`FileExistsError`
+        # and is raised by :meth:`ProfileRegistry.save` when the target
+        # file exists and ``overwrite=False`` (the default).
+        # ``ProfileRegistryAccessError`` multi-inherits
+        # :class:`DataError` + :class:`PermissionError` and is raised
+        # during :meth:`ProfileRegistry._safe_load_profile` when an
+        # EACCES/EPERM blocks reading a profile the operator owns —
+        # the cockpit refuses to boot rather than silently presenting
+        # an empty registry. Both follow the WriteError /
+        # EmptyAnalysisError / WizardSourcePathError dual-inheritance
+        # pattern.
+        "ProfileAlreadyExistsError",
+        "ProfileRegistryAccessError",
     }
 )
 

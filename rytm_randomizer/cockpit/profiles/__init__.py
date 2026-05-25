@@ -22,10 +22,16 @@ from __future__ import annotations
 
 from .builtin import BUILTIN_SCENES
 from .paths import default_profiles_dir
-from .registry import ProfileRegistry
+from .registry import (
+    ProfileAlreadyExistsError,
+    ProfileRegistry,
+    ProfileRegistryAccessError,
+)
 
 __all__ = [
     "BUILTIN_SCENES",
+    "ProfileAlreadyExistsError",
     "ProfileRegistry",
+    "ProfileRegistryAccessError",
     "default_profiles_dir",
 ]
