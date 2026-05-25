@@ -1,5 +1,7 @@
 # Cockpit Send-Plan Rehearsal Surface
 
+> Status: in-flight (PR #104)
+
 ## Goal
 
 Add a passive GUI-facing rehearsal surface above cockpit send-plan readiness so

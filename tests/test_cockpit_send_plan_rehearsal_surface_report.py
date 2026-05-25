@@ -254,7 +254,180 @@ def test_cockpit_send_plan_rehearsal_surface_cli_accepts_plan_and_readiness_json
     assert captured.err == ""
 
 
+def test_cockpit_send_plan_rehearsal_surface_cli_subprocess_reads_plan_file(
+    tmp_path: Path,
+) -> None:
+    plan_path = tmp_path / "send-plan.json"
+    plan_path.write_text(json.dumps(_plan().to_dict(), sort_keys=True), encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rytm_randomizer.cli",
+            "cockpit-send-plan-rehearsal-surface-report",
+            "--plan-file",
+            str(plan_path),
+            "--json",
+        ],
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["cockpit_send_plan_rehearsal_surface"]["surface_status"] == "ready"
+    assert result.stderr == ""
+
+
+@pytest.mark.parametrize(
+    ("readiness_reason", "blocked_reasons", "expected_next_action"),
+    [
+        (
+            "candidate_high_risk",
+            ("candidate_high_risk",),
+            "Review the high-risk candidate, lower depth or regenerate, then prepare SEND again.",
+        ),
+        (
+            "profile_mismatch",
+            ("profile_mismatch",),
+            "Select the matching profile, regenerate the preview if needed, then prepare SEND again.",
+        ),
+        (
+            "source_snapshot_mismatch",
+            ("source_snapshot_mismatch",),
+            "Reload or refresh the current snapshot, then prepare SEND again.",
+        ),
+        (
+            "no_sendable_changes",
+            ("no_sendable_changes",),
+            "Unlock at least one changed pad or stage a candidate with sendable parameter changes.",
+        ),
+    ],
+)
+def test_cockpit_send_plan_rehearsal_surface_operator_actions_cover_blocked_reasons(
+    readiness_reason: str,
+    blocked_reasons: tuple[str, ...],
+    expected_next_action: str,
+) -> None:
+    from rytm_randomizer.reports.cockpit_send_plan_rehearsal_surface import (
+        build_cockpit_send_plan_rehearsal_surface_report,
+    )
+
+    report = build_cockpit_send_plan_rehearsal_surface_report(
+        _plan(
+            ready=False,
+            readiness_reason=readiness_reason,
+            packets=(),
+            locked_pad_ids=frozenset({1, 2, 3, 4}),
+            blocked_reasons=blocked_reasons,
+        )
+    )
+
+    assert report.surface_status == "blocked"
+    assert report.screen_state == "send-blocked-review"
+    assert report.send_control_state == "disabled"
+    assert report.primary_operator_action == expected_next_action
+
+
+def test_cockpit_send_plan_rehearsal_surface_handles_empty_packet_and_locked_pad_cases() -> None:
+    from rytm_randomizer.reports.cockpit_send_plan_rehearsal_surface import (
+        build_cockpit_send_plan_rehearsal_surface_report,
+        to_cockpit_send_plan_rehearsal_surface_json,
+    )
+
+    report = build_cockpit_send_plan_rehearsal_surface_report(
+        _plan(
+            ready=False,
+            readiness_reason="no_sendable_changes",
+            packets=(),
+            locked_pad_ids=frozenset(range(1, 13)),
+            blocked_reasons=("no_sendable_changes",),
+        )
+    )
+
+    pad_panel = next(panel for panel in report.panels if panel.panel_key == "pad-packets")
+    assert pad_panel.status == "review-needed"
+    assert pad_panel.summary == "0 inert packet rows"
+    assert pad_panel.value_text == "none"
+    assert "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12" in (report.readiness_report.locked_pad_summary)
+    payload = to_cockpit_send_plan_rehearsal_surface_json(report)
+    assert payload["cockpit_send_plan_operator_readiness"]["estimated_midi_msgs"] == 0
+
+
+@pytest.mark.parametrize(
+    ("flag", "filename"),
+    [
+        ("--plan-file", "missing-plan.json"),
+        ("--readiness-file", "missing-readiness.json"),
+    ],
+)
+def test_cockpit_send_plan_rehearsal_surface_cli_missing_files_exit_two(
+    tmp_path: Path,
+    flag: str,
+    filename: str,
+) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rytm_randomizer.cli",
+            "cockpit-send-plan-rehearsal-surface-report",
+            flag,
+            str(tmp_path / filename),
+        ],
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Error:" in result.stderr
+    assert filename in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("flag", "filename", "contents"),
+    [
+        ("--plan-file", "broken-plan.json", "{"),
+        ("--readiness-file", "broken-readiness.json", '{"trailing": true,}'),
+    ],
+)
+def test_cockpit_send_plan_rehearsal_surface_cli_malformed_files_exit_two(
+    tmp_path: Path,
+    flag: str,
+    filename: str,
+    contents: str,
+) -> None:
+    path = tmp_path / filename
+    path.write_text(contents, encoding="utf-8")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rytm_randomizer.cli",
+            "cockpit-send-plan-rehearsal-surface-report",
+            flag,
+            str(path),
+        ],
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert "Error:" in result.stderr
+
+
 def test_cockpit_send_plan_rehearsal_surface_parser_and_handler_errors(
+    tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     from rytm_randomizer.reports.cockpit_send_plan_rehearsal_surface import (
@@ -291,6 +464,14 @@ def test_cockpit_send_plan_rehearsal_surface_parser_and_handler_errors(
                 "--readiness-json",
                 json.dumps({"cockpit_send_plan_operator_readiness": {"label": "broken"}}),
             ]
+        )
+    with pytest.raises(ValueError, match="missing-plan.json"):
+        COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND.args_parser(
+            ["--plan-file", str(tmp_path / "missing-plan.json")]
+        )
+    with pytest.raises(ValueError, match="missing-readiness.json"):
+        COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND.args_parser(
+            ["--readiness-file", str(tmp_path / "missing-readiness.json")]
         )
 
     rc = COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND.handler(

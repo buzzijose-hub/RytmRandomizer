@@ -8,10 +8,16 @@ import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from ..cli_registry import CliCommand, register
 from ..cockpit.data import CockpitSendPlan
+from ._passive_section import (
+    PassiveJsonField,
+    PassiveLineField,
+    passive_dataclass_json,
+    passive_section_lines,
+)
 from .cockpit_send_plan_operator_readiness import (
     CockpitSendPlanOperatorReadinessReport,
     build_cockpit_send_plan_operator_readiness_report,
@@ -25,6 +31,10 @@ from .formatter import (
 )
 from .live_gui_common import format_cli_error as _format_cli_error
 from .live_gui_common import pop_option_value, status_severity
+
+SurfaceStatus = Literal["ready", "blocked"]
+ScreenState = Literal["send-ready-review", "send-blocked-review"]
+SendControlState = Literal["review-required", "disabled"]
 
 REPORT_TITLE: Final[str] = "RytmRandomizer passive cockpit send-plan rehearsal surface"
 SOURCE_MODULE: Final[str] = "reports.cockpit_send_plan_rehearsal_surface"
@@ -61,6 +71,130 @@ _USAGE: Final[str] = (
     "(--plan-json <json>|--plan-file <path>|"
     "--readiness-json <json>|--readiness-file <path>) "
     "[--label <text>] [--json]"
+)
+SURFACE_STATUS_VALUES: Final[tuple[SurfaceStatus, ...]] = ("ready", "blocked")
+SCREEN_STATE_VALUES: Final[tuple[ScreenState, ...]] = (
+    "send-ready-review",
+    "send-blocked-review",
+)
+SEND_CONTROL_STATE_VALUES: Final[tuple[SendControlState, ...]] = (
+    "review-required",
+    "disabled",
+)
+_SURFACE_STATUS_BY_READINESS: Final[dict[str, SurfaceStatus]] = {
+    "ready": "ready",
+    "blocked": "blocked",
+}
+_SCREEN_STATE_BY_STATUS: Final[dict[SurfaceStatus, ScreenState]] = {
+    "ready": "send-ready-review",
+    "blocked": "send-blocked-review",
+}
+_SEND_CONTROL_STATE_BY_STATUS: Final[dict[SurfaceStatus, SendControlState]] = {
+    "ready": "review-required",
+    "blocked": "disabled",
+}
+
+
+@dataclass(frozen=True)
+class CockpitSendPlanRehearsalPanelSpec:
+    """Static identity fields for one rehearsal-surface panel."""
+
+    panel_key: str
+    label: str
+    source_key: str
+
+
+PANEL_SPECS: Final[tuple[CockpitSendPlanRehearsalPanelSpec, ...]] = (
+    CockpitSendPlanRehearsalPanelSpec(
+        panel_key="summary",
+        label="Send plan summary",
+        source_key="cockpit_send_plan_operator_readiness",
+    ),
+    CockpitSendPlanRehearsalPanelSpec(
+        panel_key="pad-packets",
+        label="Prepared pad packets",
+        source_key="pad_summaries",
+    ),
+    CockpitSendPlanRehearsalPanelSpec(
+        panel_key="readiness-checks",
+        label="Readiness checks",
+        source_key="readiness_checks",
+    ),
+    CockpitSendPlanRehearsalPanelSpec(
+        panel_key="safety-locks",
+        label="Passive safety locks",
+        source_key="blocked_actions",
+    ),
+)
+_PANEL_JSON_FIELDS: Final[tuple[PassiveJsonField, ...]] = (
+    PassiveJsonField("panel_key", "panel_key"),
+    PassiveJsonField("label", "label"),
+    PassiveJsonField("status", "status"),
+    PassiveJsonField("severity", "severity"),
+    PassiveJsonField("source_key", "source_key"),
+    PassiveJsonField("summary", "summary"),
+    PassiveJsonField("value_text", "value_text"),
+    PassiveJsonField("passive", "passive"),
+)
+_BINDING_JSON_FIELDS: Final[tuple[PassiveJsonField, ...]] = (
+    PassiveJsonField("state_key", "state_key"),
+    PassiveJsonField("source_json_key", "source_json_key"),
+    PassiveJsonField("label", "label"),
+    PassiveJsonField("value", "value"),
+    PassiveJsonField("required", "required"),
+    PassiveJsonField("passive", "passive"),
+)
+_ACTION_CONTROL_JSON_FIELDS: Final[tuple[PassiveJsonField, ...]] = (
+    PassiveJsonField("action_key", "action_key"),
+    PassiveJsonField("label", "label"),
+    PassiveJsonField("control_state", "control_state"),
+    PassiveJsonField("gate_status", "gate_status"),
+    PassiveJsonField("enabled", "enabled"),
+    PassiveJsonField("bound_state_key", "bound_state_key"),
+    PassiveJsonField("blocked_reason", "blocked_reason"),
+    PassiveJsonField("operator_action", "operator_action"),
+    PassiveJsonField("passive", "passive"),
+)
+_SURFACE_CHECK_JSON_FIELDS: Final[tuple[PassiveJsonField, ...]] = (
+    PassiveJsonField("check_key", "check_key"),
+    PassiveJsonField("label", "label"),
+    PassiveJsonField("status", "status"),
+    PassiveJsonField("severity", "severity"),
+    PassiveJsonField("source_id", "source_id"),
+    PassiveJsonField("message", "message"),
+    PassiveJsonField("operator_action", "operator_action"),
+    PassiveJsonField("passive", "passive"),
+)
+_PANEL_LINE_FIELDS: Final[tuple[PassiveLineField, ...]] = (
+    PassiveLineField("Status", "status"),
+    PassiveLineField("Severity", "severity"),
+    PassiveLineField("Source", "source_key"),
+    PassiveLineField("Summary", "summary"),
+    PassiveLineField("Value", "value_text"),
+    PassiveLineField("Passive", "passive"),
+)
+_BINDING_LINE_FIELDS: Final[tuple[PassiveLineField, ...]] = (
+    PassiveLineField("Source JSON", "source_json_key"),
+    PassiveLineField("Value", "value"),
+    PassiveLineField("Required", "required"),
+    PassiveLineField("Passive", "passive"),
+)
+_ACTION_CONTROL_LINE_FIELDS: Final[tuple[PassiveLineField, ...]] = (
+    PassiveLineField("Control state", "control_state"),
+    PassiveLineField("Gate status", "gate_status"),
+    PassiveLineField("Enabled", "enabled"),
+    PassiveLineField("Bound state", "bound_state_key"),
+    PassiveLineField("Blocked reason", "blocked_reason"),
+    PassiveLineField("Operator action", "operator_action"),
+    PassiveLineField("Passive", "passive"),
+)
+_SURFACE_CHECK_LINE_FIELDS: Final[tuple[PassiveLineField, ...]] = (
+    PassiveLineField("Status", "status"),
+    PassiveLineField("Severity", "severity"),
+    PassiveLineField("Source id", "source_id"),
+    PassiveLineField("Message", "message"),
+    PassiveLineField("Operator action", "operator_action"),
+    PassiveLineField("Passive", "passive"),
 )
 
 
@@ -127,9 +261,9 @@ class CockpitSendPlanRehearsalSurfaceReport:
     surface_version: str
     surface_id: str
     surface_label: str
-    surface_status: str
-    screen_state: str
-    send_control_state: str
+    surface_status: SurfaceStatus
+    screen_state: ScreenState
+    send_control_state: SendControlState
     primary_operator_action: str
     panels: tuple[CockpitSendPlanRehearsalPanel, ...]
     state_bindings: tuple[CockpitSendPlanRehearsalStateBinding, ...]
@@ -170,24 +304,25 @@ def _normalize_nonblank(value: str, *, field: str) -> str:
     return normalized
 
 
-def _screen_state(readiness: CockpitSendPlanOperatorReadinessReport) -> str:
-    if readiness.status == "ready":
-        return "send-ready-review"
-    return "send-blocked-review"
+def _surface_status(readiness: CockpitSendPlanOperatorReadinessReport) -> SurfaceStatus:
+    return _SURFACE_STATUS_BY_READINESS.get(readiness.status, "blocked")
 
 
-def _send_control_state(readiness: CockpitSendPlanOperatorReadinessReport) -> str:
-    if readiness.status == "ready":
-        return "review-required"
-    return "disabled"
+def _screen_state(surface_status: SurfaceStatus) -> ScreenState:
+    return _SCREEN_STATE_BY_STATUS[surface_status]
+
+
+def _send_control_state(surface_status: SurfaceStatus) -> SendControlState:
+    return _SEND_CONTROL_STATE_BY_STATUS[surface_status]
 
 
 def _surface_id(
     readiness: CockpitSendPlanOperatorReadinessReport,
     *,
     surface_label: str,
-    screen_state: str,
-    send_control_state: str,
+    surface_status: SurfaceStatus,
+    screen_state: ScreenState,
+    send_control_state: SendControlState,
 ) -> str:
     payload = "|".join(
         (
@@ -195,7 +330,7 @@ def _surface_id(
             readiness.report_id,
             readiness.send_plan_id,
             readiness.candidate_id,
-            readiness.status,
+            surface_status,
             surface_label,
             screen_state,
             send_control_state,
@@ -206,19 +341,17 @@ def _surface_id(
 
 def _panel(
     *,
-    panel_key: str,
-    label: str,
+    spec: CockpitSendPlanRehearsalPanelSpec,
     status: str,
-    source_key: str,
     summary: str,
     value_text: str,
 ) -> CockpitSendPlanRehearsalPanel:
     return CockpitSendPlanRehearsalPanel(
-        panel_key=panel_key,
-        label=label,
+        panel_key=spec.panel_key,
+        label=spec.label,
         status=status,
         severity=status_severity(status),
-        source_key=source_key,
+        source_key=spec.source_key,
         summary=summary,
         value_text=value_text,
         passive=True,
@@ -238,42 +371,35 @@ def _panels(
         or "none"
     )
     blocked_count = sum(1 for check in readiness.readiness_checks if check.status == "blocked")
-    return (
-        _panel(
-            panel_key="summary",
-            label="Send plan summary",
-            status=readiness.status,
-            source_key="cockpit_send_plan_operator_readiness",
-            summary=f"{readiness.send_plan_id} is {readiness.status}",
-            value_text=(
-                f"{packet_count} packets, {readiness.send_plan.safety_status} safety, "
-                f"blocked reasons: {blocked_reasons}"
-            ),
+    status_by_panel: Final[dict[str, str]] = {
+        "summary": readiness.status,
+        "pad-packets": "ready" if packet_count else "review-needed",
+        "readiness-checks": readiness.status,
+        "safety-locks": "ready",
+    }
+    summary_by_panel: Final[dict[str, str]] = {
+        "summary": f"{readiness.send_plan_id} is {readiness.status}",
+        "pad-packets": f"{packet_count} inert packet rows",
+        "readiness-checks": f"{blocked_count} blocked checks",
+        "safety-locks": f"{len(readiness.blocked_actions)} blocked active actions",
+    }
+    value_by_panel: Final[dict[str, str]] = {
+        "summary": (
+            f"{packet_count} packets, {readiness.send_plan.safety_status} safety, "
+            f"blocked reasons: {blocked_reasons}"
         ),
+        "pad-packets": pad_summary,
+        "readiness-checks": readiness.operator_next_action,
+        "safety-locks": ", ".join(readiness.blocked_actions),
+    }
+    return tuple(
         _panel(
-            panel_key="pad-packets",
-            label="Prepared pad packets",
-            status="ready" if packet_count else "review-needed",
-            source_key="pad_summaries",
-            summary=f"{packet_count} inert packet rows",
-            value_text=pad_summary,
-        ),
-        _panel(
-            panel_key="readiness-checks",
-            label="Readiness checks",
-            status=readiness.status,
-            source_key="readiness_checks",
-            summary=f"{blocked_count} blocked checks",
-            value_text=readiness.operator_next_action,
-        ),
-        _panel(
-            panel_key="safety-locks",
-            label="Passive safety locks",
-            status="ready",
-            source_key="blocked_actions",
-            summary=f"{len(readiness.blocked_actions)} blocked active actions",
-            value_text=", ".join(readiness.blocked_actions),
-        ),
+            spec=spec,
+            status=status_by_panel[spec.panel_key],
+            summary=summary_by_panel[spec.panel_key],
+            value_text=value_by_panel[spec.panel_key],
+        )
+        for spec in PANEL_SPECS
     )
 
 
@@ -297,8 +423,8 @@ def _binding(
 def _state_bindings(
     readiness: CockpitSendPlanOperatorReadinessReport,
     *,
-    screen_state: str,
-    send_control_state: str,
+    screen_state: ScreenState,
+    send_control_state: SendControlState,
 ) -> tuple[CockpitSendPlanRehearsalStateBinding, ...]:
     return (
         _binding(
@@ -343,7 +469,7 @@ def _state_bindings(
 def _action_controls(
     readiness: CockpitSendPlanOperatorReadinessReport,
     *,
-    send_control_state: str,
+    send_control_state: SendControlState,
 ) -> tuple[CockpitSendPlanRehearsalActionControl, ...]:
     return (
         CockpitSendPlanRehearsalActionControl(
@@ -491,8 +617,9 @@ def build_cockpit_send_plan_rehearsal_surface_from_readiness(
     """Build passive GUI-facing rehearsal state from send-plan readiness."""
 
     normalized_label = _normalize_nonblank(surface_label, field="surface_label")
-    screen_state = _screen_state(readiness_report)
-    send_control_state = _send_control_state(readiness_report)
+    surface_status = _surface_status(readiness_report)
+    screen_state = _screen_state(surface_status)
+    send_control_state = _send_control_state(surface_status)
     panels = _panels(readiness_report)
     state_bindings = _state_bindings(
         readiness_report,
@@ -515,11 +642,12 @@ def build_cockpit_send_plan_rehearsal_surface_from_readiness(
         surface_id=_surface_id(
             readiness_report,
             surface_label=normalized_label,
+            surface_status=surface_status,
             screen_state=screen_state,
             send_control_state=send_control_state,
         ),
         surface_label=normalized_label,
-        surface_status=readiness_report.status,
+        surface_status=surface_status,
         screen_state=screen_state,
         send_control_state=send_control_state,
         primary_operator_action=readiness_report.operator_next_action,
@@ -550,54 +678,19 @@ def build_cockpit_send_plan_rehearsal_surface_report(
 
 
 def _panel_json(panel: CockpitSendPlanRehearsalPanel) -> dict[str, object]:
-    return {
-        "panel_key": panel.panel_key,
-        "label": panel.label,
-        "status": panel.status,
-        "severity": panel.severity,
-        "source_key": panel.source_key,
-        "summary": panel.summary,
-        "value_text": panel.value_text,
-        "passive": panel.passive,
-    }
+    return passive_dataclass_json(panel, _PANEL_JSON_FIELDS)
 
 
 def _binding_json(binding: CockpitSendPlanRehearsalStateBinding) -> dict[str, object]:
-    return {
-        "state_key": binding.state_key,
-        "source_json_key": binding.source_json_key,
-        "label": binding.label,
-        "value": binding.value,
-        "required": binding.required,
-        "passive": binding.passive,
-    }
+    return passive_dataclass_json(binding, _BINDING_JSON_FIELDS)
 
 
 def _action_control_json(control: CockpitSendPlanRehearsalActionControl) -> dict[str, object]:
-    return {
-        "action_key": control.action_key,
-        "label": control.label,
-        "control_state": control.control_state,
-        "gate_status": control.gate_status,
-        "enabled": control.enabled,
-        "bound_state_key": control.bound_state_key,
-        "blocked_reason": control.blocked_reason,
-        "operator_action": control.operator_action,
-        "passive": control.passive,
-    }
+    return passive_dataclass_json(control, _ACTION_CONTROL_JSON_FIELDS)
 
 
 def _surface_check_json(check: CockpitSendPlanRehearsalSurfaceCheck) -> dict[str, object]:
-    return {
-        "check_key": check.check_key,
-        "label": check.label,
-        "status": check.status,
-        "severity": check.severity,
-        "source_id": check.source_id,
-        "message": check.message,
-        "operator_action": check.operator_action,
-        "passive": check.passive,
-    }
+    return passive_dataclass_json(check, _SURFACE_CHECK_JSON_FIELDS)
 
 
 def to_cockpit_send_plan_rehearsal_surface_json(
@@ -634,50 +727,35 @@ def to_cockpit_send_plan_rehearsal_surface_json(
 
 
 def _panel_lines(panel: CockpitSendPlanRehearsalPanel) -> list[str]:
-    return [
+    return passive_section_lines(
         f"- {panel.panel_key}: {panel.label}",
-        f"  Status: {panel.status}",
-        f"  Severity: {panel.severity}",
-        f"  Source: {panel.source_key}",
-        f"  Summary: {panel.summary}",
-        f"  Value: {panel.value_text}",
-        f"  Passive: {panel.passive}",
-    ]
+        panel,
+        _PANEL_LINE_FIELDS,
+    )
 
 
 def _binding_lines(binding: CockpitSendPlanRehearsalStateBinding) -> list[str]:
-    return [
+    return passive_section_lines(
         f"- {binding.state_key}: {binding.label}",
-        f"  Source JSON: {binding.source_json_key}",
-        f"  Value: {binding.value}",
-        f"  Required: {binding.required}",
-        f"  Passive: {binding.passive}",
-    ]
+        binding,
+        _BINDING_LINE_FIELDS,
+    )
 
 
 def _action_control_lines(control: CockpitSendPlanRehearsalActionControl) -> list[str]:
-    return [
+    return passive_section_lines(
         f"- {control.action_key}: {control.label}",
-        f"  Control state: {control.control_state}",
-        f"  Gate status: {control.gate_status}",
-        f"  Enabled: {control.enabled}",
-        f"  Bound state: {control.bound_state_key}",
-        f"  Blocked reason: {control.blocked_reason}",
-        f"  Operator action: {control.operator_action}",
-        f"  Passive: {control.passive}",
-    ]
+        control,
+        _ACTION_CONTROL_LINE_FIELDS,
+    )
 
 
 def _surface_check_lines(check: CockpitSendPlanRehearsalSurfaceCheck) -> list[str]:
-    return [
+    return passive_section_lines(
         f"- {check.check_key}: {check.label}",
-        f"  Status: {check.status}",
-        f"  Severity: {check.severity}",
-        f"  Source id: {check.source_id}",
-        f"  Message: {check.message}",
-        f"  Operator action: {check.operator_action}",
-        f"  Passive: {check.passive}",
-    ]
+        check,
+        _SURFACE_CHECK_LINE_FIELDS,
+    )
 
 
 def format_cockpit_send_plan_rehearsal_surface_report(
@@ -734,8 +812,15 @@ def _send_plan_from_json(value: str) -> CockpitSendPlan:
     return CockpitSendPlan.from_dict(decoded)
 
 
+def _read_text_file(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ValueError(f"could not read {path}: {exc}") from exc
+
+
 def _send_plan_from_file(path: Path) -> CockpitSendPlan:
-    return _send_plan_from_json(path.read_text(encoding="utf-8"))
+    return _send_plan_from_json(_read_text_file(path))
 
 
 def _readiness_from_mapping(
@@ -763,7 +848,7 @@ def _readiness_from_json(value: str) -> CockpitSendPlanOperatorReadinessReport:
 
 
 def _readiness_from_file(path: Path) -> CockpitSendPlanOperatorReadinessReport:
-    return _readiness_from_json(path.read_text(encoding="utf-8"))
+    return _readiness_from_json(_read_text_file(path))
 
 
 def parse_cockpit_send_plan_rehearsal_surface_cli_args(
@@ -815,7 +900,7 @@ def parse_cockpit_send_plan_rehearsal_surface_cli_args(
         parsed["send_plan"] = _send_plan_from_file(plan_file)
     elif readiness_json is not None:
         parsed["readiness_report"] = _readiness_from_json(readiness_json)
-    elif readiness_file is not None:
+    else:
         parsed["readiness_report"] = _readiness_from_file(readiness_file)
     return parsed
 
@@ -875,12 +960,17 @@ register(COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND)
 
 __all__ = [
     "COCKPIT_SEND_PLAN_REHEARSAL_SURFACE_CLI_COMMAND",
+    "PANEL_SPECS",
     "REPORT_TITLE",
     "SAFETY_LINES",
+    "SCREEN_STATE_VALUES",
+    "SEND_CONTROL_STATE_VALUES",
     "SEND_PLAN_REHEARSAL_SURFACE_VERSION",
     "SOURCE_MODULE",
+    "SURFACE_STATUS_VALUES",
     "CockpitSendPlanRehearsalActionControl",
     "CockpitSendPlanRehearsalPanel",
+    "CockpitSendPlanRehearsalPanelSpec",
     "CockpitSendPlanRehearsalStateBinding",
     "CockpitSendPlanRehearsalSurfaceCheck",
     "CockpitSendPlanRehearsalSurfaceReport",
