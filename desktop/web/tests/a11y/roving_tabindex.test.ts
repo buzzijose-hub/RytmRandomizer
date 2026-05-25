@@ -11,7 +11,7 @@ import { describe, it, expect } from 'vitest';
 // is required even though every test below is in a `.skip` suite.
 const ROVING_MODULE = ['..', '..', 'src', 'a11y', 'rovingTabindex'].join('/');
 
-describe.skip('rovingTabindex.nextIndex (lands with Task 5)', () => {
+describe('rovingTabindex.nextIndex', () => {
   it('ArrowRight advances by 1', async () => {
     const { nextIndex } = await import(ROVING_MODULE);
     expect(nextIndex(0, 3, 'ArrowRight')).toBe(1);
