@@ -106,9 +106,7 @@ def test_readme_includes_required_visual_assets() -> None:
 
     # The asset files must actually exist on disk — a stale `<img src="...">`
     # tag pointing at a deleted SVG would silently render as a broken image.
-    missing_on_disk = [
-        asset for asset in _REQUIRED_VISUALS if not (PROJECT_ROOT / asset).is_file()
-    ]
+    missing_on_disk = [asset for asset in _REQUIRED_VISUALS if not (PROJECT_ROOT / asset).is_file()]
     assert not missing_on_disk, (
         "README.md references visual assets that do not exist on disk: "
         + ", ".join(missing_on_disk)
@@ -210,9 +208,9 @@ def test_readme_opens_with_hero_banner_and_one_line_pitch() -> None:
         "README.md must reference docs/assets/hero-banner.svg in the "
         "first 30 lines — the hero banner is the product-landing hook."
     )
-    assert "RytmRandomizer" in head, (
-        "README.md must include the project name in the first 30 lines."
-    )
+    assert (
+        "RytmRandomizer" in head
+    ), "README.md must include the project name in the first 30 lines."
 
 
 def test_readme_has_status_badges() -> None:

@@ -31,6 +31,8 @@ def _operator_docs_text() -> str:
     cli_ref_path = PROJECT_ROOT / "docs" / "CLI_REFERENCE.md"
     cli_ref = cli_ref_path.read_text(encoding="utf-8") if cli_ref_path.exists() else ""
     return readme + "\n" + cli_ref
+
+
 USAGE = (
     "Usage: python -m rytm_randomizer.cli [--help] | report | "
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
