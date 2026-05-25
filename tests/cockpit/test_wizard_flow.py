@@ -368,7 +368,12 @@ def test_wizard_remove_source_unknown_id_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "does-not-exist" in ack["error"]
+    # PR 14: the shared dispatcher categorises ``ValueError`` as
+    # ``validation_error`` and the canonical wire ``message`` no longer
+    # echoes the underlying exception text (so the unknown id from the
+    # raised ``ValueError`` is intentionally absent from the wire).
+    assert ack["code"] == "validation_error"
+    assert "error" not in ack
 
 
 def test_wizard_analyze_with_no_sources_succeeds_with_no_per_source_events(
@@ -403,9 +408,12 @@ def test_wizard_review_before_any_ok_job_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("wizard_review"), session, recorder)
 
     assert ack["ok"] is False
-    # ``EmptyAnalysisError`` subclasses ``ValueError`` and the dispatcher
-    # catches that, so the message is the builder's exception text.
-    assert "build_profile" in ack["error"] or "ok" in ack["error"]
+    # PR 14: ``EmptyAnalysisError`` subclasses ``ValueError`` and the
+    # shared dispatcher categorises it as ``validation_error``. The
+    # exception text (which would have echoed ``build_profile``) is
+    # intentionally NOT on the wire -- only the categorical code is.
+    assert ack["code"] == "validation_error"
+    assert "error" not in ack
 
 
 def test_wizard_save_before_review_returns_error(tmp_path: Path) -> None:

@@ -165,7 +165,10 @@ def test_dispatcher_replies_with_error_when_envelope_lacks_command_key(tmp_path:
     ack = _dispatch(envelope, session, recorder)
 
     assert ack["ok"] is False
-    assert "command" in ack["error"]
+    # PR 14: categorical envelope. ``command`` is the missing key the
+    # message echoes back so the operator can fix the malformed envelope.
+    assert ack["code"] == "missing_envelope_key"
+    assert "command" in ack["message"]
     assert ack["request_id"] == "req-1"
 
 
@@ -177,7 +180,8 @@ def test_dispatcher_replies_with_error_when_command_lacks_type(tmp_path: Path) -
     ack = _dispatch(envelope, session, recorder)
 
     assert ack["ok"] is False
-    assert "type" in ack["error"]
+    assert ack["code"] == "missing_envelope_key"
+    assert "type" in ack["message"]
 
 
 def test_dispatcher_replies_with_error_for_unknown_command_type(tmp_path: Path) -> None:
@@ -187,8 +191,9 @@ def test_dispatcher_replies_with_error_for_unknown_command_type(tmp_path: Path) 
     ack = _dispatch(_envelope("not_a_real_command"), session, recorder)
 
     assert ack["ok"] is False
-    assert "unknown command" in ack["error"]
-    assert "not_a_real_command" in ack["error"]
+    assert ack["code"] == "unknown_command"
+    assert "unknown command" in ack["message"]
+    assert "not_a_real_command" in ack["message"]
 
 
 def test_dispatcher_replies_with_error_when_envelope_missing_request_id(tmp_path: Path) -> None:
@@ -206,7 +211,13 @@ def test_dispatcher_replies_with_error_when_envelope_missing_request_id(tmp_path
 def test_dispatcher_catches_handler_exception_into_ok_false(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A bug raising inside a handler must surface as ``ok=False, error=str(exc)``."""
+    """A bug raising inside a handler must surface as ``ok=False, code=internal_error``.
+
+    PR 14 / RR4f: the ``str(exc)`` MUST NOT reach the wire. The categorical
+    code is ``internal_error`` (``RuntimeError`` is in the "genuine bug"
+    bucket) and the wire-level ``message`` is the fixed canonical string.
+    The full exception detail lands in :data:`handlers._logger`.
+    """
 
     session = _make_session(tmp_path)
     recorder = _Recorder()
@@ -218,7 +229,12 @@ def test_dispatcher_catches_handler_exception_into_ok_false(
     ack = _dispatch(_envelope("select_profile", profile_id="p"), session, recorder)
 
     assert ack["ok"] is False
-    assert "deliberate test bug" in ack["error"]
+    assert ack["code"] == "internal_error"
+    # The ``str(exc)`` text MUST NOT appear anywhere in the wire ack.
+    assert "deliberate test bug" not in ack["message"]
+    assert "deliberate test bug" not in str(ack)
+    # The wire shape carries no ``error`` field on PR 14 acks.
+    assert "error" not in ack
 
 
 # ---------------------------------------------------------------------------
@@ -267,7 +283,8 @@ def test_select_profile_unknown_id_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("select_profile", profile_id="nonexistent"), session, recorder)
 
     assert ack["ok"] is False
-    assert "nonexistent" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "nonexistent" in ack["message"]
     assert session.active_profile is None
 
 
@@ -479,7 +496,8 @@ def test_regen_without_active_profile_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("regen"), session, recorder)
 
     assert ack["ok"] is False
-    assert "no active profile" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no active profile" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -494,7 +512,8 @@ def test_prepare_send_plan_without_candidate_returns_error(tmp_path: Path) -> No
     ack = _dispatch(_envelope("prepare_send_plan"), session, recorder)
 
     assert ack["ok"] is False
-    assert "no current candidate" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no current candidate" in ack["message"]
     assert session.current_send_plan is None
     assert recorder.events == []
 
@@ -532,7 +551,8 @@ def test_prepare_send_plan_without_active_profile_returns_error(tmp_path: Path) 
     ack = _dispatch(_envelope("prepare_send_plan"), session, recorder)
 
     assert ack["ok"] is False
-    assert "no active profile" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no active profile" in ack["message"]
     assert session.current_send_plan is None
     assert recorder.events == []
 
@@ -563,7 +583,8 @@ def test_send_with_candidate_but_no_ready_plan_returns_error(tmp_path: Path) -> 
     ack = _dispatch(_envelope("send"), session, recorder)
 
     assert ack["ok"] is False
-    assert "no ready send plan" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no ready send plan" in ack["message"]
     assert recorder.events == []
 
 
@@ -629,7 +650,8 @@ def test_send_without_candidate_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("send"), session, recorder)
 
     assert ack["ok"] is False
-    assert "no current candidate" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no current candidate" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -699,7 +721,8 @@ def test_save_with_empty_history_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("save"), session, recorder)
 
     assert ack["ok"] is False
-    assert "no current snapshot" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no current snapshot" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -734,7 +757,8 @@ def test_load_snapshot_unknown_id_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("load_snapshot", snapshot_id="missing"), session, recorder)
 
     assert ack["ok"] is False
-    assert "missing" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "missing" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -771,7 +795,8 @@ def test_undo_at_root_returns_error(tmp_path: Path) -> None:
     ack = _dispatch(_envelope("undo"), session, recorder)
 
     assert ack["ok"] is False
-    assert "nothing to undo" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "nothing to undo" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -825,7 +850,8 @@ def test_export_profile_model_unknown_profile_returns_error(tmp_path: Path) -> N
     )
 
     assert ack["ok"] is False
-    assert "nonexistent" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "nonexistent" in ack["message"]
 
 
 def test_export_profile_model_bad_target_returns_error(tmp_path: Path) -> None:
@@ -840,7 +866,8 @@ def test_export_profile_model_bad_target_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "target" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "target" in ack["message"]
 
 
 # ---------------------------------------------------------------------------

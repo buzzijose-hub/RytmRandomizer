@@ -60,15 +60,21 @@ WS_DIR: Final[Path] = PROJECT_ROOT / "rytm_randomizer" / "cockpit" / "ws"
 # shift line numbers; the count stays stable as long as no new str(exc)
 # sites are added.
 _GRANDFATHERED_EXC_STR_PER_FILE: Final[dict[str, int]] = {
-    # handlers.py:405 + :535 — generic command-dispatch error envelope.
-    # Slated for fix in CODE_REVIEW.md PR 14 (categorical WS error codes).
-    "rytm_randomizer/cockpit/ws/handlers.py": 2,
+    # handlers.py — formerly carried 2 sites (the load_snapshot KeyError
+    # echo and the dispatcher's generic ``except`` re-raise as a wire
+    # string). CODE_REVIEW.md PR 14 (RR4f) replaced both with categorical
+    # ``{code, message}`` envelopes; the full exception forensic detail
+    # now lands only in ``_logger.warning(..., extra={"exception_repr": ...})``
+    # via :func:`repr` (so this AST guard's ``str(<exc-name>)`` pattern
+    # does not match). Ceiling stays implicit at 0 -- the entry is
+    # intentionally omitted so any future re-introduction trips the
+    # test immediately.
     # wizard_handlers.py — PR 2 categorical-reason refactor still
     # includes sanitized str(exc) for forensic context in
     # server-side-only logging-extra fields (the categorical reason is
     # what goes on the wire — verified by tests/cockpit/
-    # test_wizard_analyzer_error_sanitization.py). PR 14 will tighten
-    # further with structured error codes.
+    # test_wizard_analyzer_error_sanitization.py). PR 14 (handlers.py
+    # scope) does not touch this file; a future PR will tighten further.
     "rytm_randomizer/cockpit/ws/wizard_handlers.py": 4,
 }
 

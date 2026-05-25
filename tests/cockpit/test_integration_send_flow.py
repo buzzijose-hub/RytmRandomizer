@@ -67,7 +67,9 @@ def test_send_without_candidate_returns_error(cockpit_ws: object) -> None:
     ack = send_cmd(cockpit_ws, "send")
 
     assert ack["ok"] is False
-    assert "no current candidate" in ack["error"]
+    # PR 14: categorical envelope.
+    assert ack["code"] == "validation_error"
+    assert "no current candidate" in ack["message"]
 
 
 def test_send_with_candidate_but_no_ready_plan_returns_error(cockpit_ws: object) -> None:
@@ -77,7 +79,8 @@ def test_send_with_candidate_but_no_ready_plan_returns_error(cockpit_ws: object)
     ack = send_cmd(cockpit_ws, "send")
 
     assert ack["ok"] is False
-    assert "no ready send plan" in ack["error"]
+    assert ack["code"] == "validation_error"
+    assert "no ready send plan" in ack["message"]
 
 
 def test_send_bumps_unsaved_sends_in_session_status(cockpit_ws: object) -> None:

@@ -145,7 +145,10 @@ def test_dispatcher_returns_error_for_unknown_wizard_command(tmp_path: Path) -> 
     ack = _dispatch(_envelope("wizard_not_a_real_command"), session, recorder)
 
     assert ack["ok"] is False
-    assert "unknown command" in ack["error"]
+    # PR 14: the shared dispatcher returns the categorical envelope for
+    # the unknown-wizard-command branch too.
+    assert ack["code"] == "unknown_command"
+    assert "unknown command" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
@@ -448,7 +451,12 @@ def test_wizard_remove_source_unknown_id_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "missing" in ack["error"]
+    # PR 14: the shared dispatcher catches the ValueError and surfaces
+    # the categorical ``validation_error`` envelope. The ``str(exc)``
+    # (which previously echoed the unknown id) is intentionally not on
+    # the wire -- the full forensic detail lands in the structured log.
+    assert ack["code"] == "validation_error"
+    assert "error" not in ack
 
 
 def test_wizard_remove_source_empty_id_returns_error(tmp_path: Path) -> None:

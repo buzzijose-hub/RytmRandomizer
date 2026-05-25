@@ -466,7 +466,9 @@ def test_unknown_command_returns_error_ack(session_factory) -> None:
         ack = _send_command(ws, "req-1", "totally_made_up_command")
 
     assert ack["ok"] is False
-    assert "unknown command" in ack["error"]
+    # PR 14: categorical envelope (``code``/``message`` replace ``error``).
+    assert ack["code"] == "unknown_command"
+    assert "unknown command" in ack["message"]
 
 
 # ---------------------------------------------------------------------------
