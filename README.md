@@ -7,7 +7,7 @@
 **A creative cockpit for the Elektron Analog Rytm MK2.**
 **Author a profile · mutate live · ship to hardware as a signed file.**
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
 [![Tests](https://img.shields.io/badge/tests-3%2C700%2B-9be8a0.svg)](#testing)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
@@ -339,7 +339,26 @@ Keep volume moderate for S3B and S4B.
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+**Free for personal and noncommercial use. Commercial license available.**
+
+RytmRandomizer is licensed under the [PolyForm Noncommercial License
+1.0.0](LICENSE) — a [source-available](https://en.wikipedia.org/wiki/Source-available_software)
+license that lets anyone clone, run, modify, share, and contribute to the
+project for any **noncommercial** purpose. That includes hobby projects,
+personal use, research, education, charitable work, and government use.
+
+What requires a separate commercial license:
+
+- Bundling RytmRandomizer (or a derivative) into a paid product
+- Hosting RytmRandomizer as a paid service or SaaS offering
+- OEM bundling, white-label distribution, or paid integrations
+- Any other revenue-generating use
+
+For commercial licensing inquiries, open an issue or contact the project
+owners via the [GitHub project page](https://github.com/buzzijose-hub/RytmRandomizer).
+
+Copyright (c) 2025-2026 Jose Buzzi ([@buzzijose-hub](https://github.com/buzzijose-hub))
+and Edward Rosado ([@edward-rosado](https://github.com/edward-rosado)).
 
 <div align="center">
 
