@@ -8,11 +8,27 @@ static-type form used in dataclass annotations and signatures.
 Validation helpers and runtime guards in sibling modules (e.g.
 ``snapshot.py``, ``profile_model.py``) consume these tuples rather than
 re-inlining the string set.
+
+Narrowing helpers
+-----------------
+
+Each ``Xyz`` Literal also has a ``narrow_xyz(s: str) -> Xyz`` helper that
+takes a raw ``str`` from the wire (or any untyped ``object`` source), checks
+membership against the ``_VALUES`` tuple, and either returns the narrowed
+``Literal`` or raises :class:`ValueError`. These helpers replace the
+``# type: ignore[arg-type]`` "trust me, this string is one of the literals"
+pattern at every wire boundary: the narrow is *earned* at runtime via the
+membership check, then the static type follows from a single
+:func:`typing.cast` call internal to the helper.
+
+The error messages truncate untrusted input to :data:`_ERROR_REPR_MAX_LEN`
+characters so a malicious large blob cannot bloat a log line, and use
+``repr()`` to escape non-printable bytes.
 """
 
 from __future__ import annotations
 
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 # ---------------------------------------------------------------------------
 # ProfileModel.kind
@@ -73,6 +89,86 @@ TRANSITION_CURVE_VALUES: Final[tuple[TransitionCurve, ...]] = (
 """Runtime tuple of every ``TransitionCurve`` literal."""
 
 
+# ---------------------------------------------------------------------------
+# Narrowing helpers — earn the Literal at runtime, then cast.
+# ---------------------------------------------------------------------------
+
+_ERROR_REPR_MAX_LEN: Final[int] = 50
+"""Max length (in source characters) of any untrusted ``str`` echoed in a
+narrow-helper error message. Untrusted input from the wire could be huge or
+contain control characters; truncating + ``repr()``-ing keeps log lines tame
+without losing the value's diagnostic shape for legitimate small inputs."""
+
+
+def _safe_repr(value: str) -> str:
+    """Return a length-bounded, escape-quoted repr of ``value`` for error messages.
+
+    ``repr()`` already escapes non-printable bytes and quotes the string;
+    this wrapper additionally truncates the *source* string to
+    :data:`_ERROR_REPR_MAX_LEN` characters before repring so a 10MB blob
+    on the wire cannot blow up a log line.
+
+    Truncation is appended with a ``"...(truncated)"`` marker INSIDE the
+    repr quotes so a reader can tell the value was cut. The escape work
+    (control characters, embedded quotes) is left to ``repr()``.
+    """
+
+    if len(value) > _ERROR_REPR_MAX_LEN:
+        return repr(value[:_ERROR_REPR_MAX_LEN] + "...(truncated)")
+    return repr(value)
+
+
+def narrow_kind(s: str) -> Kind:
+    """Narrow ``s`` to :data:`Kind` or raise :class:`ValueError`.
+
+    Runtime-checks membership against :data:`KIND_VALUES`. On match,
+    :func:`typing.cast` is sound because we just proved ``s in KIND_VALUES``.
+    On miss, raise ``ValueError`` with a sanitized (truncated) repr of the
+    offending value plus the full allowed set so the failure is debuggable
+    without leaking large untrusted strings into logs.
+    """
+
+    if s in KIND_VALUES:
+        return cast(Kind, s)
+    raise ValueError(f"invalid kind: {_safe_repr(s)}; expected one of {KIND_VALUES}")
+
+
+def narrow_history_kind(s: str) -> HistoryKind:
+    """Narrow ``s`` to :data:`HistoryKind` or raise :class:`ValueError`."""
+
+    if s in HISTORY_KIND_VALUES:
+        return cast(HistoryKind, s)
+    raise ValueError(
+        f"invalid history kind: {_safe_repr(s)}; expected one of {HISTORY_KIND_VALUES}"
+    )
+
+
+def narrow_via(s: str) -> Via:
+    """Narrow ``s`` to :data:`Via` or raise :class:`ValueError`."""
+
+    if s in VIA_VALUES:
+        return cast(Via, s)
+    raise ValueError(f"invalid via: {_safe_repr(s)}; expected one of {VIA_VALUES}")
+
+
+def narrow_status(s: str) -> Status:
+    """Narrow ``s`` to :data:`Status` or raise :class:`ValueError`."""
+
+    if s in STATUS_VALUES:
+        return cast(Status, s)
+    raise ValueError(f"invalid status: {_safe_repr(s)}; expected one of {STATUS_VALUES}")
+
+
+def narrow_transition_curve(s: str) -> TransitionCurve:
+    """Narrow ``s`` to :data:`TransitionCurve` or raise :class:`ValueError`."""
+
+    if s in TRANSITION_CURVE_VALUES:
+        return cast(TransitionCurve, s)
+    raise ValueError(
+        "invalid transition_curve: " f"{_safe_repr(s)}; expected one of {TRANSITION_CURVE_VALUES}"
+    )
+
+
 __all__ = [
     "HISTORY_KIND_VALUES",
     "HistoryKind",
@@ -84,4 +180,9 @@ __all__ = [
     "TransitionCurve",
     "VIA_VALUES",
     "Via",
+    "narrow_history_kind",
+    "narrow_kind",
+    "narrow_status",
+    "narrow_transition_curve",
+    "narrow_via",
 ]

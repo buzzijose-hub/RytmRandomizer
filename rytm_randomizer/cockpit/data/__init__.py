@@ -16,6 +16,7 @@ from .send_plan import (
     CockpitSendPlan,
     ReadinessReason,
     SendPlanPacket,
+    narrow_readiness_reason,
     synthetic_parameter_cc,
 )
 from .snapshot import PadState, Snapshot
@@ -30,6 +31,11 @@ from .types import (
     Status,
     TransitionCurve,
     Via,
+    narrow_history_kind,
+    narrow_kind,
+    narrow_status,
+    narrow_transition_curve,
+    narrow_via,
 )
 from .ulid import new_ulid
 
@@ -57,6 +63,12 @@ __all__ = [
     "TransitionCurve",
     "VIA_VALUES",
     "Via",
+    "narrow_history_kind",
+    "narrow_kind",
+    "narrow_readiness_reason",
+    "narrow_status",
+    "narrow_transition_curve",
+    "narrow_via",
     "new_ulid",
     "synthetic_parameter_cc",
 ]
