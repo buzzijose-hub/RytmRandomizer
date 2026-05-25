@@ -50,13 +50,16 @@ jobs:
           - os: macos-latest
             artifact_glob: "dist/*.pkg"
           - os: ubuntu-latest
-            artifact_glob: "dist/*.AppImage dist/*.deb"
+            artifact_glob: |
+              dist/*.AppImage
+              dist/*.deb
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Set up Python 3.11
+        if: runner.os != 'Linux'
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
@@ -80,17 +83,32 @@ jobs:
 
       - name: Install ALSA + AppImage tooling (Linux)
         if: runner.os == 'Linux'
+        # libasound2t64: concrete Ubuntu 24.04 provider for libasound2,
+        #   the runtime ALSA shared library required by Briefcase's Linux
+        #   system package dependency check.
         # libasound2-dev: python-rtmidi C-extension link target.
         # libfuse2: required to *run* an AppImage (and briefcase smoke-
         #   tests the artifact post-build).
+        # python3-venv: Linux system-package builds must run Briefcase
+        #   under the host system python3, not setup-python's toolcache.
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libfuse2
+          sudo apt-get install -y libasound2t64 libasound2-dev libfuse2 python3-venv
 
       # ----- Briefcase install + build. -----
 
       - name: Install package with installer extras
+        if: runner.os != 'Linux'
         run: pip install -e ".[installer]"
+
+      - name: Install package with installer extras (Linux system Python)
+        if: runner.os == 'Linux'
+        run: |
+          python3 -m venv .venv-briefcase
+          . .venv-briefcase/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[installer]"
+          echo "$PWD/.venv-briefcase/bin" >> "$GITHUB_PATH"
 
       - name: briefcase create
         run: briefcase create

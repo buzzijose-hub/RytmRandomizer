@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import json
 import re
+import tomllib
 from pathlib import Path
 from typing import Final
 
@@ -127,6 +128,25 @@ def test_tauri_before_build_compiles_the_web_bundle() -> None:
         "tauri.conf.json build.beforeBuildCommand must invoke 'npm ... build' so "
         "production bundles always include the latest web assets (including the "
         "wizard surface). Currently: " + repr(before_build)
+    )
+
+
+def test_tauri_prebuild_commands_resolve_web_from_tauri_workspace() -> None:
+    """Tauri v2 runs before* commands from desktop/, not desktop/shell/."""
+
+    config = json.loads((SHELL_ROOT / "tauri.conf.json").read_text(encoding="utf-8"))
+    build = config.get("build", {})
+    commands = {
+        "beforeDevCommand": build.get("beforeDevCommand", ""),
+        "beforeBuildCommand": build.get("beforeBuildCommand", ""),
+    }
+    assert commands == {
+        "beforeDevCommand": "npm --prefix web run dev",
+        "beforeBuildCommand": "npm --prefix web run build",
+    }, (
+        "Tauri before* commands run with desktop/ as cwd. Use 'npm --prefix web ...' "
+        "so CI resolves desktop/web/package.json instead of root web/package.json. "
+        f"Currently: {commands!r}"
     )
 
 
@@ -345,11 +365,73 @@ def test_release_workflow_builds_tauri_bundle() -> None:
     ), "installers.yml desktop-bundle job must invoke the Tauri CLI."
 
 
+def test_installer_workflow_runs_linux_briefcase_under_system_python() -> None:
+    """Briefcase Linux system packages require the OS python3 interpreter."""
+
+    installers = (GITHUB_WORKFLOWS / "installers.yml").read_text(encoding="utf-8")
+    linux_apt_match = re.search(r"sudo apt-get install -y (?P<packages>[^\n]+)", installers)
+    assert linux_apt_match is not None, "Linux installer job must install apt packages"
+    linux_packages = set(linux_apt_match.group("packages").split())
+    missing_linux_packages = {
+        "libasound2t64",
+        "libasound2-dev",
+        "libfuse2",
+        "python3-venv",
+    } - linux_packages
+    assert (
+        not missing_linux_packages
+    ), "Linux installer CI must preinstall Briefcase host dependencies: " + ", ".join(
+        sorted(missing_linux_packages)
+    )
+
+    assert "if: runner.os != 'Linux'" in installers, (
+        "The setup-python Briefcase interpreter must be skipped on Linux; "
+        "Briefcase compares itself against system python3 when building Linux "
+        "system packages and exits 200 on the hosted-toolcache Python."
+    )
+    required_snippets = [
+        "python3-venv",
+        "python3 -m venv .venv-briefcase",
+        ". .venv-briefcase/bin/activate",
+        'echo "$PWD/.venv-briefcase/bin" >> "$GITHUB_PATH"',
+    ]
+    missing = [snippet for snippet in required_snippets if snippet not in installers]
+    assert not missing, (
+        "Linux installer CI must create a system-python venv for Briefcase. "
+        "Missing snippets: " + ", ".join(missing)
+    )
+    linux_artifact_glob = re.search(
+        r"- os: ubuntu-latest\s+artifact_glob:\s+\|\s+dist/\*\.AppImage\s+dist/\*\.deb",
+        installers,
+    )
+    assert linux_artifact_glob is not None, (
+        "Linux installer artifacts must use a YAML block scalar for upload-artifact. "
+        "A space-separated string is treated as one missing path by "
+        "actions/upload-artifact@v7."
+    )
+
+
 # ---------------------------------------------------------------------------
 # Category 5 — Documentation truth
 #
 # Install docs must remain factually correct about what ships where.
 # ---------------------------------------------------------------------------
+
+
+def test_briefcase_linux_runtime_dependency_matches_ubuntu_runner_provider() -> None:
+    """Briefcase's own Linux dependency check must use the concrete package."""
+
+    pyproject = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    linux_config = pyproject["tool"]["briefcase"]["app"]["rytm-randomizer"]["linux"]
+    runtime_requires = set(linux_config["system_runtime_requires"])
+    assert "libasound2t64" in runtime_requires, (
+        "Ubuntu 24.04 exposes ALSA's runtime package as libasound2t64; "
+        "Briefcase validates the configured package names before create/build."
+    )
+    assert "libasound2" not in runtime_requires, (
+        "libasound2 is only a virtual package on GitHub's ubuntu-latest runner, "
+        "so Briefcase exits 200 if pyproject.toml still names it directly."
+    )
 
 
 def test_contributing_does_not_claim_no_rust_crate_required() -> None:

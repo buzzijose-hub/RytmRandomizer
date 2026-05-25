@@ -234,11 +234,7 @@ _PASSIVE_CLI_COMMANDS_LEGACY = (
     ("style-performance-arc-live-gui-desktop-render-harness-report", "--help"),
     ("style-performance-arc-live-gui-cockpit-boundary-readiness-report", "--help"),
     ("cockpit-send-plan-readiness-report", "--help"),
-    # cockpit-send-plan-rehearsal-surface-report ships in PR #104 against
-    # modularize-v1.34; it is intentionally NOT in this legacy tuple because
-    # the Phase 3 bundle branch is based on a modularize-v1.34 commit that
-    # predates PR #104. Once PR #104 merges, the auto-discovery picks up
-    # the new entry automatically and this comment can be deleted.
+    ("cockpit-send-plan-rehearsal-surface-report", "--help"),
     ("cockpit-export-rehearsal-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),

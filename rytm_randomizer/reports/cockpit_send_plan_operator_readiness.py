@@ -12,6 +12,12 @@ from typing import Final
 
 from ..cli_registry import CliCommand, register
 from ..cockpit.data import CockpitSendPlan, ReadinessReason
+from ._passive_section import (
+    PassiveJsonField,
+    PassiveLineField,
+    passive_dataclass_json,
+    passive_section_lines,
+)
 from .formatter import (
     SAFETY_SECTION_HEADER,
     PassiveReportHeader,
@@ -51,6 +57,27 @@ _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(
 _USAGE: Final[str] = (
     "cockpit-send-plan-readiness-report usage: "
     "(--plan-json <json>|--plan-file <path>) [--label <text>] [--json]"
+)
+_PAD_SUMMARY_JSON_FIELDS: Final[tuple[PassiveJsonField, ...]] = (
+    PassiveJsonField("pad_id", "pad_id"),
+    PassiveJsonField("packet_count", "packet_count"),
+    PassiveJsonField("parameter_summary", "parameter_summary"),
+)
+_READINESS_CHECK_JSON_FIELDS: Final[tuple[PassiveJsonField, ...]] = (
+    PassiveJsonField("check_key", "check_key"),
+    PassiveJsonField("label", "label"),
+    PassiveJsonField("status", "status"),
+    PassiveJsonField("severity", "severity"),
+    PassiveJsonField("message", "message"),
+    PassiveJsonField("operator_action", "operator_action"),
+    PassiveJsonField("passive", "passive"),
+)
+_READINESS_CHECK_LINE_FIELDS: Final[tuple[PassiveLineField, ...]] = (
+    PassiveLineField("Status", "status"),
+    PassiveLineField("Severity", "severity"),
+    PassiveLineField("Message", "message"),
+    PassiveLineField("Operator action", "operator_action"),
+    PassiveLineField("Passive", "passive"),
 )
 
 
@@ -320,23 +347,11 @@ def build_cockpit_send_plan_operator_readiness_report(
 
 
 def _pad_summary_json(summary: CockpitSendPlanPadSummary) -> dict[str, object]:
-    return {
-        "pad_id": summary.pad_id,
-        "packet_count": summary.packet_count,
-        "parameter_summary": summary.parameter_summary,
-    }
+    return passive_dataclass_json(summary, _PAD_SUMMARY_JSON_FIELDS)
 
 
 def _readiness_check_json(check: CockpitSendPlanReadinessCheck) -> dict[str, object]:
-    return {
-        "check_key": check.check_key,
-        "label": check.label,
-        "status": check.status,
-        "severity": check.severity,
-        "message": check.message,
-        "operator_action": check.operator_action,
-        "passive": check.passive,
-    }
+    return passive_dataclass_json(check, _READINESS_CHECK_JSON_FIELDS)
 
 
 def to_cockpit_send_plan_operator_readiness_json(
@@ -377,14 +392,11 @@ def _pad_summary_lines(summary: CockpitSendPlanPadSummary) -> list[str]:
 
 
 def _readiness_check_lines(check: CockpitSendPlanReadinessCheck) -> list[str]:
-    return [
+    return passive_section_lines(
         f"- {check.check_key}: {check.label}",
-        f"  Status: {check.status}",
-        f"  Severity: {check.severity}",
-        f"  Message: {check.message}",
-        f"  Operator action: {check.operator_action}",
-        f"  Passive: {check.passive}",
-    ]
+        check,
+        _READINESS_CHECK_LINE_FIELDS,
+    )
 
 
 def format_cockpit_send_plan_operator_readiness_report(

@@ -150,6 +150,17 @@ the per-OS artifacts. The artifacts are attached to each GitHub
 Release alongside the Briefcase outputs, so an operator picks the file
 for their OS regardless of which lineage they want.
 
+Two CI path details are deliberate:
+
+- The Linux Briefcase job installs into a `.venv-briefcase` virtualenv
+  created by the runner's system `python3`. Briefcase Linux system
+  package builds compare their interpreter against the host `python3`;
+  using `actions/setup-python` on Linux exits before `briefcase create`.
+- The Tauri `beforeDevCommand` and `beforeBuildCommand` use
+  `npm --prefix web ...`. Tauri resolves those commands from
+  `desktop/`, so `../web` points at the repository root's missing
+  `web/package.json` instead of `desktop/web/package.json`.
+
 ---
 
 ## Per-OS prerequisites
@@ -189,6 +200,7 @@ similar) and registers a CLI launcher; the user opens Terminal and runs
 |-------------|-----|-----|
 | Python 3.10+ | Briefcase itself | distro package manager |
 | **Docker** | Briefcase builds Linux artifacts inside `manylinux` containers for portability | `apt install docker.io` / equivalent, plus add your user to the `docker` group |
+| ALSA runtime (`libasound2t64` on Ubuntu 24.04+) | Briefcase's Linux system-package dependency check requires the runtime shared-library package on the host | `apt install libasound2t64` on current GitHub-hosted Ubuntu runners; older distros may still use `libasound2` |
 | `libfuse2` | required to **run** an AppImage on the build host (the AppImage filesystem is FUSE-based) | `apt install libfuse2` on Debian/Ubuntu (the package was split out of the default install in Ubuntu 22.04+) |
 | ALSA dev headers (`libasound2-dev`) | `python-rtmidi`'s C extension links against ALSA. Already declared in `pyproject.toml` `system_requires`, but the briefcase build container needs Docker to fetch them | n/a — handled by briefcase |
 | `appimagetool` | only required if building AppImages **outside** Docker | most users won't need this; let briefcase run the Docker path |
@@ -368,6 +380,17 @@ machine).
 - **macOS: "code object is not signed at all"** — Gatekeeper is rejecting
   the unsigned binary. Either fully provision Developer ID signing
   (see above) or run with `--no-sign` for a personal-use build.
+- **Linux: `Package 'libasound2' has no installation candidate`** —
+  Ubuntu 24.04 exposes the runtime as the concrete `libasound2t64`
+  provider. Install `libasound2t64` on current GitHub-hosted runners
+  and keep `pyproject.toml` `system_runtime_requires` aligned with
+  that concrete package name, because Briefcase validates the configured
+  dependency list before `briefcase create`.
+- **Linux CI uploads no artifact even though `dist/*.deb` exists** —
+  keep the `installers.yml` Linux artifact glob as a YAML block scalar
+  with one path per line. `actions/upload-artifact` treats a
+  space-separated `"dist/*.AppImage dist/*.deb"` string as one missing
+  path.
 - **Linux: "AppImage failed to mount"** — the build host is missing
   `libfuse2`. `sudo apt install libfuse2`.
 - **`briefcase create` fails with TOML error** — your `pyproject.toml`

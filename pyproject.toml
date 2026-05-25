@@ -337,9 +337,11 @@ system_requires = [
     "libasound2-dev",
 ]
 # Runtime deps -- ALSA's shared library, not the -dev headers, is what the
-# installed package needs to load python-rtmidi at runtime.
+# installed package needs to load python-rtmidi at runtime. Ubuntu 24.04
+# exposes this as the concrete libasound2t64 package; Briefcase checks the
+# configured package name before create/build.
 system_runtime_requires = [
-    "libasound2",
+    "libasound2t64",
 ]
 
 # AppImage-specific config. Briefcase officially discourages AppImages for
