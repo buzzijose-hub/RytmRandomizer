@@ -13,6 +13,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CockpitClient,
   DEFAULT_WS_URL,
+  WS_AUTH_TOKEN_STORAGE_KEY,
+  WS_SUBPROTOCOL,
   type ClientLogger,
   type ConnectionStatus,
   type WebSocketLike,
@@ -36,13 +38,15 @@ class FakeWebSocket implements WebSocketLike {
 
   readyState = FakeWebSocket.CONNECTING;
   readonly url: string;
+  readonly protocols: string | string[] | undefined;
   readonly sent: string[] = [];
   readonly closeCalls: number[] = [];
   private throwOnSend: Error | null = null;
   private readonly listeners = new Map<string, Set<(ev: unknown) => void>>();
 
-  constructor(url: string) {
+  constructor(url: string, protocols?: string | string[]) {
     this.url = url;
+    this.protocols = protocols;
   }
 
   addEventListener(type: string, listener: (ev: unknown) => void): void {
@@ -139,6 +143,8 @@ interface HarnessOpts {
   maxReconnectDelayMs?: number;
   ackTimeoutMs?: number;
   logger?: ClientLogger;
+  authToken?: string | null;
+  authTokenResolver?: () => string | null;
 }
 
 function makeHarness(opts: HarnessOpts = {}): Harness {
@@ -151,10 +157,12 @@ function makeHarness(opts: HarnessOpts = {}): Harness {
     initialReconnectDelayMs: opts.initialReconnectDelayMs,
     maxReconnectDelayMs: opts.maxReconnectDelayMs,
     ackTimeoutMs: opts.ackTimeoutMs,
+    authToken: opts.authToken,
+    authTokenResolver: opts.authTokenResolver,
     requestIdGenerator: () => `r${++counter}`,
     logger: opts.logger,
-    webSocketFactory: (url) => {
-      const fake = new FakeWebSocket(url);
+    webSocketFactory: (url, protocols) => {
+      const fake = new FakeWebSocket(url, protocols);
       fakes.push(fake);
       return fake;
     },
@@ -184,6 +192,11 @@ afterEach(() => {
 describe('CockpitClient — defaults & constants', () => {
   it('exposes the default WS URL', () => {
     expect(DEFAULT_WS_URL).toBe('ws://127.0.0.1:4317/ws');
+  });
+
+  it('exposes the pinned cockpit WS subprotocol and browser token storage key', () => {
+    expect(WS_SUBPROTOCOL).toBe('rytm-rand-cockpit-v1');
+    expect(WS_AUTH_TOKEN_STORAGE_KEY).toBe('rytm-rand-ws-token');
   });
 
   it('constructs with all defaults applied and reports closed status', () => {
@@ -220,8 +233,8 @@ describe('CockpitClient — defaults & constants', () => {
       url: 'ws://test/ws',
       disableReconnect: true,
       requestIdGenerator: () => 'r1',
-      webSocketFactory: (url) => {
-        const socket = new FakeWebSocket(url);
+      webSocketFactory: (url, protocols) => {
+        const socket = new FakeWebSocket(url, protocols);
         sockets.push(socket);
         return socket;
       },
@@ -259,6 +272,30 @@ describe('CockpitClient — connect / open / status', () => {
     h.client.connect();
     h.client.connect(); // second call
     expect(h.fakes.length).toBe(1);
+  });
+
+  it('requests the pinned subprotocol when opening the browser WebSocket', () => {
+    const h = makeHarness();
+    h.client.connect();
+    expect(h.currentSocket().protocols).toBe(WS_SUBPROTOCOL);
+  });
+
+  it('sends the hello frame with the configured token when the socket opens', () => {
+    const h = makeHarness({ authToken: 'token-for-test' });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'token-for-test' }),
+    ]);
+  });
+
+  it('resolves the hello token lazily from the configured resolver', () => {
+    const h = makeHarness({ authTokenResolver: () => 'resolver-token' });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'resolver-token' }),
+    ]);
   });
 
   it('emits status transitions: connecting → connected', () => {
@@ -372,6 +409,18 @@ describe('CockpitClient — message dispatch', () => {
     expect(warnings.some((w) => Array.isArray(w) && String(w[0]).includes('unrecognized'))).toBe(
       true,
     );
+  });
+
+  it('treats the token-handshake ack as transport setup noise, not an unknown message', () => {
+    const warnings: unknown[] = [];
+    const h = makeHarness({
+      authToken: 'token-for-test',
+      logger: { warn: (...args) => warnings.push(args) },
+    });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage({ ok: true });
+    expect(warnings).toEqual([]);
   });
 });
 
@@ -693,8 +742,8 @@ describe('CockpitClient — default request id generator path (no injection)', (
       url: 'ws://test/ws',
       ackTimeoutMs: 1_000,
       disableReconnect: true,
-      webSocketFactory: (url) => {
-        last = new FakeWebSocket(url);
+      webSocketFactory: (url, protocols) => {
+        last = new FakeWebSocket(url, protocols);
         return last;
       },
     });
