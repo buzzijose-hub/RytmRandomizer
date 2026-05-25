@@ -45,9 +45,18 @@ from .verifier import (
     verify_signed_blob,
     verify_unsigned_payload,
 )
+from .writer import (
+    DEFAULT_EXPORT_SUBDIR,
+    WriteError,
+    WriteResult,
+    atomic_write,
+    default_export_dir,
+    write_signed_export,
+)
 
 __all__ = [
     "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
+    "DEFAULT_EXPORT_SUBDIR",
     "FORMAT_VERSION",
     "Header",
     "MAGIC",
@@ -57,6 +66,10 @@ __all__ = [
     "SUPPORTED_FORMAT_VERSIONS",
     "SignedBlob",
     "VerificationResult",
+    "WriteError",
+    "WriteResult",
+    "atomic_write",
+    "default_export_dir",
     "handle_export_profile_model",
     "pack_profile_model",
     "pack_signed",
@@ -65,4 +78,5 @@ __all__ = [
     "unpack_signed",
     "verify_signed_blob",
     "verify_unsigned_payload",
+    "write_signed_export",
 ]
