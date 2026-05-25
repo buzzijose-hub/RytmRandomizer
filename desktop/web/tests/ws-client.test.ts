@@ -183,6 +183,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  delete window.__RYTM_RAND_WS_TOKEN__;
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -296,6 +297,29 @@ describe('CockpitClient — connect / open / status', () => {
     h.currentSocket().emitOpen();
     expect(h.currentSocket().sent).toEqual([
       JSON.stringify({ type: 'hello', token: 'resolver-token' }),
+    ]);
+  });
+
+  it('resolves the hello token from the browser launch global before storage', () => {
+    const storageRead = vi.spyOn(Storage.prototype, 'getItem');
+    window.__RYTM_RAND_WS_TOKEN__ = 'browser-token';
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(storageRead).not.toHaveBeenCalled();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'browser-token' }),
+    ]);
+  });
+
+  it('falls back to browser token storage when the launch global is empty', () => {
+    window.__RYTM_RAND_WS_TOKEN__ = '';
+    vi.spyOn(Storage.prototype, 'getItem').mockReturnValue('storage-token');
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    expect(h.currentSocket().sent).toEqual([
+      JSON.stringify({ type: 'hello', token: 'storage-token' }),
     ]);
   });
 
