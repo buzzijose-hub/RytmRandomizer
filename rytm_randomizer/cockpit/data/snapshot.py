@@ -17,10 +17,33 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from types import MappingProxyType
-from typing import Final, Self
+from typing import Final, Self, TypedDict
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
+
+
+class PadStateDict(TypedDict):
+    """Wire shape of :class:`PadState` (M1/P2)."""
+
+    pad_id: int
+    machine: str
+    params: Mapping[str, int]
+
+
+class SnapshotDict(TypedDict):
+    """Wire shape of :class:`Snapshot` (M1/P2).
+
+    ``captured_at`` is the ISO 8601 string :meth:`Snapshot.to_dict`
+    emits; ``Snapshot.from_dict`` parses it back into a ``datetime``.
+    """
+
+    snapshot_id: str
+    device: str
+    captured_at: str
+    pads: list[PadStateDict]
+    scene_slot: str | None
+    bpm: float | None
 
 
 def _freeze_params(params: Mapping[str, int]) -> Mapping[str, int]:
@@ -144,4 +167,4 @@ class Snapshot:
         )
 
 
-__all__ = ["PadState", "Snapshot"]
+__all__ = ["PadState", "PadStateDict", "Snapshot", "SnapshotDict"]

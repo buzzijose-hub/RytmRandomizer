@@ -11,9 +11,44 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Literal, Self, cast
+from typing import Final, Literal, Self, TypedDict, cast
 
 from .types import STATUS_VALUES, Status, _safe_repr, narrow_status
+
+
+class SendPlanPacketDict(TypedDict):
+    """Wire shape of :class:`SendPlanPacket` (M1/P2)."""
+
+    pad_id: int
+    parameter: str
+    channel: int
+    control: int
+    value: int
+
+
+class CockpitSendPlanDict(TypedDict):
+    """Wire shape of :class:`CockpitSendPlan` (M1/P2).
+
+    ``readiness_reason`` and ``safety_status`` are typed as plain
+    ``str`` because the wire layer may receive any value; runtime
+    narrowing in :meth:`CockpitSendPlan.from_dict` is the validation
+    boundary. ``estimated_midi_msgs`` and ``pad_count`` are written by
+    :meth:`CockpitSendPlan.to_dict` for the wire consumer but are
+    derived (not stored on the dataclass), so they're marked
+    NotRequired on inbound payloads.
+    """
+
+    plan_id: str
+    candidate_id: str
+    source_snapshot_id: str
+    profile_id: str
+    ready: bool
+    readiness_reason: str
+    safety_status: str
+    packets: list[SendPlanPacketDict]
+    locked_pad_ids: list[int]
+    blocked_reasons: list[str]
+
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -231,9 +266,11 @@ class CockpitSendPlan:
 
 __all__ = [
     "CockpitSendPlan",
+    "CockpitSendPlanDict",
     "READINESS_REASON_VALUES",
     "ReadinessReason",
     "SendPlanPacket",
+    "SendPlanPacketDict",
     "narrow_readiness_reason",
     "synthetic_parameter_cc",
 ]

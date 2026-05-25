@@ -27,9 +27,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final, Literal, Self, cast
+from typing import Final, Literal, Self, TypedDict, cast
 
-from ..data.profile_model import ProfileModel, StyleTrait
+from ..data.profile_model import ProfileModel, ProfileModelDict, StyleTrait, StyleTraitDict
 from ..data.types import _safe_repr
 
 # ---------------------------------------------------------------------------
@@ -103,6 +103,48 @@ def narrow_step(s: str) -> Step:
     if s in STEP_VALUES:
         return cast(Step, s)
     raise ValueError(f"invalid step: {_safe_repr(s)}; expected one of {STEP_VALUES}")
+
+
+# ---------------------------------------------------------------------------
+# Wire-shape TypedDicts (M1/P2 — explicit dict shapes for callers + IDEs)
+#
+# Literal-valued fields (``kind`` / ``mode`` / ``status`` / ``step``) are
+# typed as plain ``str`` because the wire layer may receive any string —
+# runtime narrowing in each ``from_dict`` is the validation boundary.
+# ---------------------------------------------------------------------------
+
+
+class InspirationSourceDict(TypedDict):
+    """Wire shape of :class:`InspirationSource`."""
+
+    source_id: str
+    kind: str
+    mode: str
+    location: str
+    display_name: str
+    added_at: str  # ISO 8601
+
+
+class AnalysisJobDict(TypedDict):
+    """Wire shape of :class:`AnalysisJob`."""
+
+    source_id: str
+    status: str
+    progress: float
+    error: str | None
+    extracted_traits: list[StyleTraitDict]
+
+
+class WizardStateDict(TypedDict):
+    """Wire shape of :class:`WizardState`."""
+
+    wizard_id: str
+    step: str
+    name: str | None
+    description: str | None
+    sources: list[InspirationSourceDict]
+    jobs: list[AnalysisJobDict]
+    candidate_profile: ProfileModelDict | None
 
 
 # ---------------------------------------------------------------------------
@@ -446,7 +488,9 @@ def _replace(state: WizardState, **changes: object) -> WizardState:
 
 __all__ = [
     "AnalysisJob",
+    "AnalysisJobDict",
     "InspirationSource",
+    "InspirationSourceDict",
     "KIND_VALUES",
     "Kind",
     "MODE_VALUES",
@@ -456,6 +500,7 @@ __all__ = [
     "Status",
     "Step",
     "WizardState",
+    "WizardStateDict",
     "narrow_kind",
     "narrow_mode",
     "narrow_status",

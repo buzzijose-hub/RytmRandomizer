@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import Final, Self, TypedDict
 
 from .types import (
     KIND_VALUES,
@@ -23,6 +23,41 @@ from .types import (
     narrow_kind,
     narrow_transition_curve,
 )
+
+
+class StyleTraitDict(TypedDict):
+    """Wire shape of :class:`StyleTrait` (M1/P2)."""
+
+    name: str
+    value: float
+
+
+class TraitPadWeightDict(TypedDict):
+    """Wire shape of :class:`TraitPadWeight` (M1/P2)."""
+
+    trait: str
+    pad_id: int
+    weight: float
+
+
+class ProfileModelDict(TypedDict):
+    """Wire shape of :class:`ProfileModel` (M1/P2).
+
+    Literal-valued ``kind`` / ``transition_curve`` keys are typed as
+    plain ``str`` because the wire layer may receive any string —
+    runtime narrowing in :meth:`ProfileModel.from_dict` is the
+    validation boundary.
+    """
+
+    profile_id: str
+    name: str
+    kind: str
+    model_version: str
+    traits: list[StyleTraitDict]
+    pad_mappings: list[TraitPadWeightDict]
+    transition_curve: str
+    source_summary: str
+
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -167,4 +202,11 @@ class ProfileModel:
         )
 
 
-__all__ = ["ProfileModel", "StyleTrait", "TraitPadWeight"]
+__all__ = [
+    "ProfileModel",
+    "ProfileModelDict",
+    "StyleTrait",
+    "StyleTraitDict",
+    "TraitPadWeight",
+    "TraitPadWeightDict",
+]

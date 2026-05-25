@@ -20,9 +20,36 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import Final, Self, TypedDict
 
 from .types import STATUS_VALUES, Status, narrow_status
+
+
+class PadDeltaDict(TypedDict):
+    """Wire shape of :class:`PadDelta` (M1/P2)."""
+
+    pad_id: int
+    proposed_params: Mapping[str, int]
+    changed_keys: list[str]
+
+
+class MutationCandidateDict(TypedDict):
+    """Wire shape of :class:`MutationCandidate` (M1/P2).
+
+    ``safety_status`` is typed as plain ``str`` because the wire layer
+    may receive any value; runtime narrowing in
+    :meth:`MutationCandidate.from_dict` is the validation boundary.
+    """
+
+    candidate_id: str
+    source_snapshot_id: str
+    profile_id: str
+    depth: float
+    seed: int
+    pad_deltas: list[PadDeltaDict]
+    safety_status: str
+    estimated_midi_msgs: int
+
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -140,4 +167,9 @@ class MutationCandidate:
         )
 
 
-__all__ = ["MutationCandidate", "PadDelta"]
+__all__ = [
+    "MutationCandidate",
+    "MutationCandidateDict",
+    "PadDelta",
+    "PadDeltaDict",
+]

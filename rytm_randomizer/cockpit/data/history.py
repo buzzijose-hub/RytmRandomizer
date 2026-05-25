@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Self
+from typing import Self, TypedDict
 
-from .snapshot import Snapshot
+from .snapshot import Snapshot, SnapshotDict
 from .types import (
     HISTORY_KIND_VALUES,
     VIA_VALUES,
@@ -29,6 +29,31 @@ from .types import (
     narrow_history_kind,
     narrow_via,
 )
+
+
+class HistoryEntryDict(TypedDict):
+    """Wire shape of :class:`HistoryEntry` (M1/P2 — replaces ``Mapping[str, object]``).
+
+    ``snapshot`` is a nested :class:`SnapshotDict`; the optional fields
+    accept ``None`` because the root entry of a fresh session has no
+    parent and no "via" cause. The literal-valued ``kind`` / ``via``
+    keys are NOT typed as their ``Literal`` aliases because the wire
+    layer may receive any string — runtime narrowing in
+    :meth:`HistoryEntry.from_dict` is the validation boundary.
+    """
+
+    snapshot: SnapshotDict
+    kind: str
+    parent_id: str | None
+    via: str | None
+    label: str | None
+
+
+class HistoryDict(TypedDict):
+    """Wire shape of :class:`History` (M1/P2)."""
+
+    entries: list[HistoryEntryDict]
+    current_id: str
 
 
 @dataclass(frozen=True)
@@ -124,4 +149,4 @@ class History:
         )
 
 
-__all__ = ["History", "HistoryEntry"]
+__all__ = ["History", "HistoryDict", "HistoryEntry", "HistoryEntryDict"]
