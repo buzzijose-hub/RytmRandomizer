@@ -31,22 +31,22 @@ code — no exceptions ever escape the handler):
 * ``--profile-id`` not in registry: reported with the offending id.
 * Missing required value for any option: usage hint.
 
-The signing surface comes from sibling modules (``signing``, ``verifier``).
-The atomic-write surface comes from sibling :mod:`.writer` once WS-B
-lands; until then a tiny module-private fallback (see ``# WS-B fallback``
-below) provides the same shape so this module is independently testable.
+The signing surface comes from sibling modules (``signing``, ``verifier``);
+the atomic-write surface comes from sibling :mod:`.writer` (a hard import:
+if the writer module is missing the import fails loudly at module load
+rather than silently swapping in a behavioural near-duplicate).
 """
 
 from __future__ import annotations
 
 import json
-import os
 import sys
-import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
+import msgpack
 
 from ...cli_registry import CliCommand
 from ...cli_registry import register as _registry_register
@@ -54,72 +54,13 @@ from .serialize import pack_profile_model
 from .signing import pack_signed, sign_profile_blob
 from .verifier import verify_signed_blob, verify_unsigned_payload
 
-# WS-B fallback: remove at integration time once WS-B merges its writer.
-try:
-    from .writer import (  # type: ignore[attr-defined]  # noqa: F401
-        WriteResult,
-        atomic_write,
-        default_export_dir,
-    )
-except ImportError:  # pragma: no cover - exercised once WS-B merges
-
-    @dataclass(frozen=True)
-    class WriteResult:  # type: ignore[no-redef]
-        """In-memory record of the bytes written to disk.
-
-        Mirrors the WS-B public surface so callers can swap implementations
-        at integration time without touching this module.
-        """
-
-        path: Path
-        bytes_written: int
-        overwrote_existing: bool
-
-    def default_export_dir() -> Path:  # type: ignore[no-redef]
-        """Operator-facing default directory for cockpit exports.
-
-        Used when ``--output`` is a bare filename. Lives under the user's
-        home so concurrent runs from different worktrees don't collide.
-        """
-
-        return Path.home() / ".rytm-randomizer" / "exports"
-
-    def atomic_write(  # type: ignore[no-redef]
-        path: Path, data: bytes, *, overwrite: bool = False
-    ) -> WriteResult:
-        """Write ``data`` to ``path`` atomically.
-
-        Writes to a sibling temp file first, ``fsync``s, then ``os.replace``s
-        into place so partial writes never appear at ``path``. Refuses to
-        overwrite an existing file unless ``overwrite=True``.
-        """
-
-        existed = path.exists()
-        if existed and not overwrite:
-            # WS-B will use ``FileExistsError`` here; the fallback uses
-            # ``ValueError`` so it stays inside the architecture-allowed
-            # exception taxonomy (TypeError / ValueError / NotImplementedError).
-            raise ValueError(f"refusing to overwrite existing file {path} (pass --overwrite)")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        fd, tmp = tempfile.mkstemp(suffix=".tmp", dir=str(path.parent))
-        try:
-            with os.fdopen(fd, "wb") as handle:
-                handle.write(data)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(tmp, path)
-        except OSError:
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-            raise
-        return WriteResult(
-            path=path.resolve(),
-            bytes_written=len(data),
-            overwrote_existing=existed,
-        )
-
+# Hard import (no try/except fallback): if the writer module is missing
+# this raises ``ImportError`` at module load. Silently substituting a
+# behavioural near-duplicate (different overwrite-refusal exception,
+# different default-export dir, raw ``OSError`` instead of the
+# project-typed ``WriteError``) is exactly the divergence Gate 17 was
+# lifted to prevent.
+from .writer import WriteError, WriteResult, atomic_write, default_export_dir
 
 _COMMAND_NAME: Final[str] = "cockpit-export-profile-model"
 """Subcommand token registered with the cli dispatcher."""
@@ -402,7 +343,28 @@ def handle_export_profile_model(args: Sequence[str]) -> int:
             signed=signed,
             key=key_bytes,
         )
-    except (ValueError, TypeError, OSError) as exc:
+    except (
+        # Validation / arg-parse errors (``_parse_args``, ``_validate``,
+        # ``_decode_key``, ``pack_signed`` width caps, ``serialize`` /
+        # ``model_format`` field-shape errors, ``ProfileModel.from_dict``).
+        ValueError,
+        TypeError,
+        # ``pack_profile_model`` -> ``msgpack.packb`` can raise
+        # ``PackOverflowError`` (an ``OverflowError`` subclass) for an
+        # int that does not fit msgpack's wire range. Catch the broader
+        # ``OverflowError`` so future overflow paths stay swallowed too.
+        OverflowError,
+        # ``atomic_write`` raises ``FileExistsError`` on overwrite
+        # refusal and ``WriteError`` (a ``DataError`` + ``OSError``) on
+        # any underlying ``OSError`` from write / fsync / replace. The
+        # ``OSError`` base catches both.
+        OSError,
+        # ``msgpack.packb`` can raise ``PackException`` (a bare
+        # ``Exception`` subclass) on any other pack failure — type
+        # not serializable, recursion-depth overflow, etc. Caught
+        # explicitly so it does not escape the handler.
+        msgpack.exceptions.PackException,
+    ) as exc:
         ack = _error_payload(str(exc))
         _emit(ack, json_output=json_output)
         return 2
@@ -441,5 +403,12 @@ _registry_register(COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND)
 
 __all__ = [
     "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
+    # Re-exported writer surface so callers that previously imported
+    # these names from this module (when the WS-B fallback lived here)
+    # keep working — the canonical home is :mod:`.writer`.
+    "WriteError",
+    "WriteResult",
+    "atomic_write",
+    "default_export_dir",
     "handle_export_profile_model",
 ]
