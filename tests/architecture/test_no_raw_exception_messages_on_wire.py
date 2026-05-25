@@ -64,11 +64,17 @@ _GRANDFATHERED_EXC_STR_SITES: Final[frozenset[tuple[str, int]]] = frozenset(
         ("rytm_randomizer/cockpit/ws/handlers.py", 405),
         # handlers.py:535 — same dispatcher; same PR 14 fix.
         ("rytm_randomizer/cockpit/ws/handlers.py", 535),
-        # wizard_handlers.py:226 — wizard analyze terminal-error path.
-        # H4 sanitization in PR 2 covers it.
-        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 226),
-        # wizard_handlers.py:293 — wizard save error path. PR 2 covers it.
-        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 293),
+        # wizard_handlers.py — PR 2 refactored these; sites now at the
+        # following lines, each with categorical handling that still
+        # includes a sanitized str(exc) for forensic context (the
+        # categorical reason goes on the wire; the message is logged
+        # server-side only — verified by H4 sanitization tests in
+        # tests/cockpit/test_wizard_analyzer_error_sanitization.py).
+        # PR 14 will tighten further with structured error codes.
+        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 348),
+        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 359),
+        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 374),
+        ("rytm_randomizer/cockpit/ws/wizard_handlers.py", 453),
     }
 )
 

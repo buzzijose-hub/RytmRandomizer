@@ -96,8 +96,27 @@ def _wizard_handler_functions() -> list[tuple[ast.FunctionDef | ast.AsyncFunctio
     return out
 
 
+_FILESYSTEM_OPERATION_MARKERS: Final[frozenset[str]] = frozenset(
+    {
+        # These appear in handler bodies that ACT on a wire-provided
+        # location (as opposed to merely passing it through to storage).
+        # If a handler does any of these AND references `location` AND
+        # does not call WizardPathPolicy, it's the C2 anti-pattern.
+        "read_bytes",
+        "read_text",
+        "iterdir",
+        "exists()",
+        # `Path(...)` construction from a wire string is itself a smell
+        # — the validated path comes BACK from policy.validate(); any
+        # handler that builds a Path() from a string named `location`
+        # is bypassing the policy.
+        "Path(",
+    }
+)
+
+
 def test_wizard_handlers_with_location_route_through_path_policy() -> None:
-    """Any wizard handler that reads ``location`` from the wire must
+    """Any wizard handler that ACTS on ``location`` from the wire must
     validate it through ``WizardPathPolicy`` before touching the filesystem.
 
     Regression guard: CODE_REVIEW.md C2 was an unconstrained-path hole
@@ -105,6 +124,12 @@ def test_wizard_handlers_with_location_route_through_path_policy() -> None:
     this test stops the next contributor from re-introducing the
     pattern under a different handler name or via a different code
     path.
+
+    The check fires on handlers that BOTH reference `location` AND
+    perform a filesystem operation on it (``Path(...)``, ``read_bytes``,
+    etc.). Handlers that only forward the value to storage (e.g.
+    ``_handle_wizard_remove_source`` matching on a source_id) are
+    exempt because they never touch the filesystem.
 
     Failure message names the offending handler and the canonical fix
     recipe.
@@ -119,6 +144,8 @@ def test_wizard_handlers_with_location_route_through_path_policy() -> None:
     for func, body in _wizard_handler_functions():
         if "location" not in body:
             continue  # handler does not touch a location string
+        if not any(marker in body for marker in _FILESYSTEM_OPERATION_MARKERS):
+            continue  # handler doesn't actually act on the path
         if func.name in _HANDLER_GRANDFATHERED_NAMES:
             continue
         if any(symbol in body for symbol in _POLICY_SYMBOL_REFERENCES):
@@ -126,7 +153,7 @@ def test_wizard_handlers_with_location_route_through_path_policy() -> None:
         rel = WIZARD_HANDLERS.relative_to(PROJECT_ROOT)
         violations.append(
             f"{rel}:{func.lineno}:{func.name} — function body references "
-            f"`location` but none of "
+            f"`location` AND performs filesystem ops, but none of "
             f"{sorted(_POLICY_SYMBOL_REFERENCES)}. The handler is "
             "treating an unconstrained wire string as a real filesystem "
             "path. Route it through WizardPathPolicy.validate() before "
