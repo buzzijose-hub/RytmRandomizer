@@ -324,6 +324,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.cockpit.export.cli",
             "COCKPIT_EXPORT_PROFILE_MODEL_CLI_COMMAND",
         ),
+        "cockpit-export-rehearsal-report": (
+            "rytm_randomizer.reports.cockpit_export_rehearsal",
+            "COCKPIT_EXPORT_REHEARSAL_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

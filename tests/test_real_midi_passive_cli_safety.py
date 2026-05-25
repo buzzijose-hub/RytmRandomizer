@@ -81,6 +81,9 @@ PASSIVE_CLI_COMMANDS = (
     ("style-performance-arc-live-gui-desktop-render-contract-report", "--help"),
     ("style-performance-arc-live-gui-desktop-render-harness-report", "--help"),
     ("style-performance-arc-live-gui-cockpit-boundary-readiness-report", "--help"),
+    ("cockpit-send-plan-readiness-report", "--help"),
+    ("cockpit-send-plan-rehearsal-surface-report", "--help"),
+    ("cockpit-export-rehearsal-report", "--help"),
     ("inspect-group-profile", "2"),
     ("preview-group-profile", "2"),
 )
@@ -163,6 +166,9 @@ PASSIVE_CLI_SWEEP_COMMANDS = (
     ("style-performance-arc-live-gui-desktop-render-contract-report", "--help"),
     ("style-performance-arc-live-gui-desktop-render-harness-report", "--help"),
     ("style-performance-arc-live-gui-cockpit-boundary-readiness-report", "--help"),
+    ("cockpit-send-plan-readiness-report", "--help"),
+    ("cockpit-send-plan-rehearsal-surface-report", "--help"),
+    ("cockpit-export-rehearsal-report", "--help"),
 )
 LIVE_GUI_FULL_HANDLER_PASSIVE_COMMANDS = (
     ("style-performance-arc-live-gui-screen-contract-report",),
