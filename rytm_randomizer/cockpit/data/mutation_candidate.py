@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Self
 
-from .types import STATUS_VALUES, Status
+from .types import STATUS_VALUES, Status, narrow_status
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -135,7 +135,7 @@ class MutationCandidate:
             depth=float(data["depth"]),  # type: ignore[arg-type]
             seed=int(data["seed"]),  # type: ignore[arg-type]
             pad_deltas=tuple(PadDelta.from_dict(d) for d in deltas_obj),
-            safety_status=str(data["safety_status"]),  # type: ignore[arg-type]
+            safety_status=narrow_status(str(data["safety_status"])),
             estimated_midi_msgs=int(data["estimated_midi_msgs"]),  # type: ignore[arg-type]
         )
 

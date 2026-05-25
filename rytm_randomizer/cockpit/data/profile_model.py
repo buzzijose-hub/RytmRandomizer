@@ -20,6 +20,8 @@ from .types import (
     TRANSITION_CURVE_VALUES,
     Kind,
     TransitionCurve,
+    narrow_kind,
+    narrow_transition_curve,
 )
 
 _PAD_ID_MIN: Final[int] = 1
@@ -156,11 +158,11 @@ class ProfileModel:
         return cls(
             profile_id=str(data["profile_id"]),
             name=str(data["name"]),
-            kind=str(data["kind"]),  # type: ignore[arg-type]
+            kind=narrow_kind(str(data["kind"])),
             model_version=str(data["model_version"]),
             traits=tuple(StyleTrait.from_dict(t) for t in traits_obj),
             pad_mappings=tuple(TraitPadWeight.from_dict(m) for m in mappings_obj),
-            transition_curve=str(data["transition_curve"]),  # type: ignore[arg-type]
+            transition_curve=narrow_transition_curve(str(data["transition_curve"])),
             source_summary=str(data["source_summary"]),
         )
 

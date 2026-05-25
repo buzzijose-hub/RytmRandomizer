@@ -48,6 +48,8 @@ from ..wizard.state import (
     AnalysisJob,
     InspirationSource,
     WizardState,
+    narrow_kind,
+    narrow_mode,
 )
 from .handlers import HandlerResult
 from .protocol import EVENT_PROFILE_CHANGED
@@ -169,16 +171,22 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
     wizard = session.active_wizard
     if wizard is None:
         return HandlerResult(ack={"ok": False, "error": "no active wizard session"})
-    kind = str(cmd.get("kind", ""))
-    mode = str(cmd.get("mode", ""))
+    kind_raw = str(cmd.get("kind", ""))
+    mode_raw = str(cmd.get("mode", ""))
     location = str(cmd.get("location", ""))
     display_name = str(cmd.get("display_name", ""))
     source_id = new_ulid()
+    # narrow_kind / narrow_mode raise ValueError on invalid wire values; that
+    # gets caught by the same except branch below as
+    # ``InspirationSource.__post_init__``'s validation, so the wire shape
+    # (``{"ok": false, "error": ...}``) is unchanged.
     try:
+        kind = narrow_kind(kind_raw)
+        mode = narrow_mode(mode_raw)
         source = InspirationSource(
             source_id=source_id,
-            kind=kind,  # type: ignore[arg-type]
-            mode=mode,  # type: ignore[arg-type]
+            kind=kind,
+            mode=mode,
             location=location,
             display_name=display_name,
             added_at=datetime.now(timezone.utc),

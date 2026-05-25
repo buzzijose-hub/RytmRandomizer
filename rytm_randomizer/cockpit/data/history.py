@@ -21,7 +21,14 @@ from dataclasses import dataclass
 from typing import Self
 
 from .snapshot import Snapshot
-from .types import HISTORY_KIND_VALUES, VIA_VALUES, HistoryKind, Via
+from .types import (
+    HISTORY_KIND_VALUES,
+    VIA_VALUES,
+    HistoryKind,
+    Via,
+    narrow_history_kind,
+    narrow_via,
+)
 
 
 @dataclass(frozen=True)
@@ -65,9 +72,9 @@ class HistoryEntry:
         label_obj = data["label"]
         return cls(
             snapshot=Snapshot.from_dict(snap_obj),
-            kind=str(data["kind"]),  # type: ignore[arg-type]
+            kind=narrow_history_kind(str(data["kind"])),
             parent_id=None if parent_obj is None else str(parent_obj),
-            via=None if via_obj is None else str(via_obj),  # type: ignore[arg-type]
+            via=None if via_obj is None else narrow_via(str(via_obj)),
             label=None if label_obj is None else str(label_obj),
         )
 

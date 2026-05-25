@@ -60,6 +60,7 @@ from typing import Final
 
 from ...observability.errors import DataError
 from ..data.profile_model import ProfileModel, StyleTrait, TraitPadWeight
+from ..data.types import Kind, TransitionCurve
 from ..data.ulid import new_ulid
 from .pad_mapping import TRAIT_TO_PAD
 from .state import AnalysisJob
@@ -71,11 +72,22 @@ from .state import AnalysisJob
 _MODEL_VERSION: Final[str] = "1.0.0"
 """Initial-build model version. Re-analysis bumps the patch level upstream."""
 
-_PROFILE_KIND: Final[str] = "user"
-"""Every wizard-built profile is a user profile (vs. developer-curated scenes)."""
+_PROFILE_KIND: Final[Kind] = "user"
+"""Every wizard-built profile is a user profile (vs. developer-curated scenes).
 
-_TRANSITION_CURVE: Final[str] = "progressive"
-"""Default mutation transition shape for user-authored profiles."""
+Typed as :data:`Kind` (not bare ``str``) so the type checker accepts the
+:class:`ProfileModel.kind` field assignment below without a
+``# type: ignore`` — the literal-string ``"user"`` is statically a member
+of the :data:`Kind` alias.
+"""
+
+_TRANSITION_CURVE: Final[TransitionCurve] = "progressive"
+"""Default mutation transition shape for user-authored profiles.
+
+Typed as :data:`TransitionCurve` (not bare ``str``) for the same reason
+as :data:`_PROFILE_KIND` — the literal value is statically a member of
+the alias, so no cast / type-ignore is needed at the call site.
+"""
 
 _OK_STATUS: Final[str] = "ok"
 """Only :class:`AnalysisJob` instances with this status contribute traits."""
@@ -169,11 +181,11 @@ def build_profile(
     return ProfileModel(
         profile_id=new_ulid(),
         name=name,
-        kind=_PROFILE_KIND,  # type: ignore[arg-type]
+        kind=_PROFILE_KIND,
         model_version=_MODEL_VERSION,
         traits=traits,
         pad_mappings=pad_mappings,
-        transition_curve=_TRANSITION_CURVE,  # type: ignore[arg-type]
+        transition_curve=_TRANSITION_CURVE,
         source_summary=source_summary,
     )
 
