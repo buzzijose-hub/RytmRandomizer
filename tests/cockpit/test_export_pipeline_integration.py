@@ -1103,7 +1103,10 @@ def test_build_test_profile_round_trips_through_registry(tmp_path: Path) -> None
 
     profile = _build_test_profile()
     registry = ProfileRegistry(tmp_path)
-    saved_path = registry.save(profile)
+    registry.save(profile)
+    # PR 7 — IH2: save() returns None; derive the on-disk path
+    # explicitly from the profile id.
+    saved_path = tmp_path / "user" / f"{profile.profile_id}.json"
     assert saved_path.exists()
     loaded = registry.get(profile.profile_id)
     assert loaded is not None
