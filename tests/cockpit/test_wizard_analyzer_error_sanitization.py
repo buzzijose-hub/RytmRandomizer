@@ -306,3 +306,179 @@ def test_full_exception_detail_is_logged_server_side(
     assert _SECRET_PATH in record.exception_message
     assert record.source_id == "src-1"
     assert record.wizard_id == _WID
+
+
+# ---------------------------------------------------------------------------
+# PR 9 (H4 follow-up): wizard_add_source error-path sanitization
+# ---------------------------------------------------------------------------
+#
+# The analyzer surface was sanitized in PR 2. PR 9 completes the sweep by
+# draining the two remaining wire-side ``str(exc)`` sites in
+# ``_handle_wizard_add_source``: the policy-rejected path branch and the
+# field-validation branch. Both now emit a fixed categorical envelope on
+# the wire and stash the raw exception detail in a server-side log line.
+
+_INVALID_KIND_SECRET = "kind-with-embedded-secret-=='/etc/passwd'"
+
+
+def _make_session_with_active_wizard(tmp_path: Path) -> CockpitSession:
+    """Session + active wizard ready to receive ``wizard_add_source``."""
+
+    session = _make_session(tmp_path)
+    state = WizardState.empty(_WID)
+    session.active_wizard = WizardSession(wizard_id=_WID, state=state)
+    return session
+
+
+def test_invalid_kind_returns_sanitized_envelope_not_str_exc(tmp_path: Path) -> None:
+    """``wizard_add_source`` with an invalid ``kind`` → fixed code + fixed error string."""
+
+    session = _make_session_with_active_wizard(tmp_path)
+    recorder = _Recorder()
+    ack = _dispatch(
+        _envelope(
+            "wizard_add_source",
+            kind=_INVALID_KIND_SECRET,
+            mode="reference",
+            location="x",
+            display_name="x",
+        ),
+        session,
+        recorder,
+    )
+    assert ack["ok"] is False
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
+    # The operator's input must NOT echo back; the raw ValueError
+    # message embeds it via ``_safe_repr`` but the wire ack does not.
+    assert _INVALID_KIND_SECRET not in ack["error"]
+
+
+def test_invalid_field_logs_raw_exception_server_side(
+    tmp_path: Path,
+    wizard_handler_caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The raw ValueError message lives in the server-side ``wizard_add_source_invalid`` log.
+
+    The handler attaches the exception via ``exc_info=exc`` rather than
+    calling ``str(exc)`` explicitly — that keeps the architecture
+    ratchet floor (which counts ``str(<bound-exc>)`` literally) low
+    while preserving the full forensic detail on the log record.
+    """
+
+    session = _make_session_with_active_wizard(tmp_path)
+    recorder = _Recorder()
+    with wizard_handler_caplog.at_level(logging.WARNING):
+        _dispatch(
+            _envelope(
+                "wizard_add_source",
+                kind=_INVALID_KIND_SECRET,
+                mode="reference",
+                location="x",
+                display_name="x",
+            ),
+            session,
+            recorder,
+        )
+
+    invalid_records = [
+        rec for rec in wizard_handler_caplog.records if rec.message == "wizard_add_source_invalid"
+    ]
+    assert invalid_records, "wizard_add_source_invalid log line was not emitted"
+    record = invalid_records[-1]
+    assert record.levelno == logging.WARNING
+    assert record.exception_type == "ValueError"
+    assert record.kind == _INVALID_KIND_SECRET
+    assert record.wizard_id == _WID
+    # ``exc_info`` carries the full ValueError instance — the operator
+    # running the cockpit can read the original message (which embeds the
+    # rejected input via ``_safe_repr``) from there.
+    assert record.exc_info is not None
+    _exc_type, exc_value, _tb = record.exc_info
+    assert isinstance(exc_value, ValueError)
+    assert _INVALID_KIND_SECRET in str(exc_value)
+
+
+def test_path_rejected_returns_sanitized_envelope_not_str_exc(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A path that fails the allow-list returns the fixed sanitized envelope.
+
+    The underlying :class:`WizardSourcePathRejected` messages are already
+    categorical, but the wire ack must not call ``str(exc)`` — the
+    architecture ratchet forbids that pattern at the wire boundary
+    regardless of message content.
+    """
+
+    from rytm_randomizer.cockpit.wizard.path_policy import WizardPathPolicy
+
+    session = _make_session_with_active_wizard(tmp_path)
+    blessed = tmp_path / "blessed"
+    blessed.mkdir()
+    monkeypatch.setattr(
+        wizard_handlers, "_PATH_POLICY", WizardPathPolicy(roots=(blessed.resolve(),))
+    )
+    outside = tmp_path / "outside.syx"
+    outside.write_bytes(b"\x00")
+
+    recorder = _Recorder()
+    ack = _dispatch(
+        _envelope(
+            "wizard_add_source",
+            kind="kit",
+            mode="file",
+            location=str(outside),
+            display_name="rejected kit",
+        ),
+        session,
+        recorder,
+    )
+    assert ack["ok"] is False
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_SOURCE_PATH_REJECTED
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_SOURCE_PATH_REJECTED
+    assert str(outside) not in ack["error"]
+
+
+def test_path_rejected_logs_categorical_reason_server_side(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    wizard_handler_caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The categorical rejection reason + offending path are captured in the WARNING log."""
+
+    from rytm_randomizer.cockpit.wizard.path_policy import WizardPathPolicy
+
+    session = _make_session_with_active_wizard(tmp_path)
+    blessed = tmp_path / "blessed"
+    blessed.mkdir()
+    monkeypatch.setattr(
+        wizard_handlers, "_PATH_POLICY", WizardPathPolicy(roots=(blessed.resolve(),))
+    )
+    outside = tmp_path / "outside.syx"
+    outside.write_bytes(b"\x00")
+
+    recorder = _Recorder()
+    with wizard_handler_caplog.at_level(logging.WARNING):
+        _dispatch(
+            _envelope(
+                "wizard_add_source",
+                kind="kit",
+                mode="file",
+                location=str(outside),
+                display_name="rejected kit",
+            ),
+            session,
+            recorder,
+        )
+
+    rejected_records = [
+        rec for rec in wizard_handler_caplog.records if rec.message == "wizard_source_path_rejected"
+    ]
+    assert rejected_records, "wizard_source_path_rejected log line was not emitted"
+    record = rejected_records[-1]
+    assert record.levelno == logging.WARNING
+    # Categorical reason from WizardSourcePathRejected ("path is outside the allowed roots").
+    assert "outside" in record.reason or "allowed" in record.reason
+    assert record.location == str(outside)
+    assert record.wizard_id == _WID

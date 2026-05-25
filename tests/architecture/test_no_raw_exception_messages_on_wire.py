@@ -63,19 +63,19 @@ _GRANDFATHERED_EXC_STR_PER_FILE: Final[dict[str, int]] = {
     # handlers.py:405 + :535 — generic command-dispatch error envelope.
     # Slated for fix in CODE_REVIEW.md PR 14 (categorical WS error codes).
     "rytm_randomizer/cockpit/ws/handlers.py": 2,
-    # wizard_handlers.py — PR 2 categorical-reason refactor still
-    # includes sanitized str(exc) for forensic context in
-    # server-side-only logging-extra fields (the categorical reason is
-    # what goes on the wire — verified by tests/cockpit/
-    # test_wizard_analyzer_error_sanitization.py). PR 14 will tighten
-    # further with structured error codes.
-    "rytm_randomizer/cockpit/ws/wizard_handlers.py": 4,
+    # wizard_handlers.py — after PR 9 (H4 follow-up sweep) the only
+    # remaining ``str(exc)`` sites in this file are inside server-side
+    # ``_logger.warning(extra={...})`` payloads. The wire-facing ack
+    # envelopes now carry fixed categorical codes + short fixed
+    # ``error`` strings (see :data:`CODE_WIZARD_SOURCE_PATH_REJECTED`
+    # and :data:`CODE_WIZARD_HANDLER_ERROR`). The two grandfathered
+    # entries are intentional forensic context for operators running
+    # the cockpit and never leave the host.
+    "rytm_randomizer/cockpit/ws/wizard_handlers.py": 2,
 }
 
 
-def _exception_names_in_scope(
-    target: ast.AST, tree: ast.AST
-) -> set[str]:
+def _exception_names_in_scope(target: ast.AST, tree: ast.AST) -> set[str]:
     """Return the set of ``except ... as <name>:`` names whose body contains *target*.
 
     We walk the tree, find every ``ExceptHandler`` that has a name and
@@ -192,7 +192,8 @@ def test_grandfathered_exc_str_count_floor_does_not_grow() -> None:
                 f"Lower the entry in _GRANDFATHERED_EXC_STR_PER_FILE to {actual}."
             )
 
-    assert not redundant, (
-        "Grandfathered floor exceeds actual count — drain the allowlist:"
-        "\n  " + "\n  ".join(redundant)
+    assert (
+        not redundant
+    ), "Grandfathered floor exceeds actual count — drain the allowlist:" "\n  " + "\n  ".join(
+        redundant
     )

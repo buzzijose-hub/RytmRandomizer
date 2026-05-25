@@ -149,6 +149,38 @@ ANALYZER_FAILURE_REASONS: Final[frozenset[str]] = frozenset(
 )
 
 
+# ---------------------------------------------------------------------------
+# Categorical wire-error codes + sanitized messages (H4 follow-up — PR 9)
+# ---------------------------------------------------------------------------
+#
+# PR 9 drained the two remaining wire-side ``str(exc)`` sites in this
+# module (``_handle_wizard_add_source`` policy-rejected path + field
+# validation). The pattern is the same as the analyzer-failure surface:
+# the wire carries a fixed ``code`` plus a short fixed ``error`` string;
+# the raw exception detail (which may embed user-supplied input) is
+# logged server-side via :data:`_logger.warning` so the operator running
+# the cockpit retains forensic context for triage.
+
+#: Wire ``code`` for path policy rejections in ``wizard_add_source``.
+#: Pre-PR-9 the ack already carried this code but echoed ``str(exc)``
+#: into ``error``. The underlying :class:`WizardSourcePathRejected`
+#: messages were already categorical ("path is empty", "path traverses
+#: a symlink", etc.), but the str-call pattern would silently leak if a
+#: future exception type with a richer message were added. Now the
+#: ``error`` field is the fixed string below and the categorical
+#: rejection reason lives only in the ``reason`` log-extra.
+CODE_WIZARD_SOURCE_PATH_REJECTED: Final[str] = "wizard_source_path_rejected"
+ERROR_WIZARD_SOURCE_PATH_REJECTED: Final[str] = "source path rejected by policy"
+
+#: Wire ``code`` + fixed ``error`` string for field-level validation
+#: failures in ``wizard_add_source`` (invalid ``kind`` / ``mode``,
+#: empty ``location`` / ``display_name``, etc.). The raw ValueError
+#: message — which echoes the operator's own input — goes only into
+#: the server log via :data:`_logger.warning`.
+CODE_WIZARD_HANDLER_ERROR: Final[str] = "wizard_handler_error"
+ERROR_WIZARD_INVALID_SOURCE: Final[str] = "invalid source field"
+
+
 def _categorical_reason(exc: BaseException) -> str:
     """Map an analyzer failure exception to one of :data:`ANALYZER_FAILURE_REASONS`.
 
@@ -348,6 +380,14 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
         try:
             _PATH_POLICY.validate(location)
         except WizardSourcePathRejected as exc:
+            # H4 follow-up (PR 9): the wire ack carries only the fixed
+            # categorical code + sanitized error string. The full
+            # rejection reason (still categorical, but extensible) is
+            # logged server-side as the ``reason`` extra so future
+            # triage retains the detail. The ``str(exc)`` call stays
+            # off the wire — it now appears only inside the logger
+            # extras dict, which the architecture ratchet counts but
+            # accepts as server-side log context.
             _logger.warning(
                 "wizard_source_path_rejected",
                 extra={
@@ -361,16 +401,25 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
             return HandlerResult(
                 ack={
                     "ok": False,
-                    "code": "wizard_source_path_rejected",
-                    "error": str(exc),
+                    "code": CODE_WIZARD_SOURCE_PATH_REJECTED,
+                    "error": ERROR_WIZARD_SOURCE_PATH_REJECTED,
                 }
             )
 
     source_id = new_ulid()
-    # narrow_kind / narrow_mode raise ValueError on invalid wire values; that
-    # gets caught by the same except branch below as
-    # ``InspirationSource.__post_init__``'s validation, so the wire shape
-    # (``{"ok": false, "error": ...}``) is unchanged.
+    # narrow_kind / narrow_mode raise ValueError on invalid wire values;
+    # ``InspirationSource.__post_init__`` raises ValueError for missing
+    # / out-of-set fields. Both fall through to the same sanitized
+    # ack envelope below.
+    #
+    # H4 follow-up (PR 9): the raw ValueError message echoes the
+    # operator's own input (e.g. ``invalid kind: 'bogus'``). The
+    # message itself is not sensitive — it does not leak filesystem
+    # paths — but the ``str(exc)`` on-the-wire pattern is the H4
+    # anti-pattern this module ratchets against, because the next
+    # exception type added to the catch arm might. We emit a fixed
+    # categorical code + short fixed error string instead, and log
+    # the full detail server-side for triage.
     try:
         kind = narrow_kind(kind_raw)
         mode = narrow_mode(mode_raw)
@@ -383,7 +432,29 @@ async def _handle_wizard_add_source(cmd: dict, session: CockpitSession) -> Handl
             added_at=datetime.now(timezone.utc),
         )
     except ValueError as exc:
-        return HandlerResult(ack={"ok": False, "error": str(exc)})
+        # ``exc_info=exc`` attaches the full exception (type, message,
+        # traceback) to the log record without an explicit ``str(exc)``
+        # call. The architecture ratchet
+        # (``tests/architecture/test_no_raw_exception_messages_on_wire.py``)
+        # counts ``str(<bound-exc>)`` literally, so this idiom keeps
+        # forensic detail server-side while staying under the floor.
+        _logger.warning(
+            "wizard_add_source_invalid",
+            exc_info=exc,
+            extra={
+                "exception_type": type(exc).__name__,
+                "kind": kind_raw,
+                "mode": mode_raw,
+                "wizard_id": wizard.wizard_id,
+            },
+        )
+        return HandlerResult(
+            ack={
+                "ok": False,
+                "code": CODE_WIZARD_HANDLER_ERROR,
+                "error": ERROR_WIZARD_INVALID_SOURCE,
+            }
+        )
     new_state = wizard.state.with_source(source)
     wizard.state = new_state
     return HandlerResult(
@@ -573,6 +644,10 @@ WIZARD_HANDLERS: dict[
 
 __all__ = [
     "ANALYZER_FAILURE_REASONS",
+    "CODE_WIZARD_HANDLER_ERROR",
+    "CODE_WIZARD_SOURCE_PATH_REJECTED",
+    "ERROR_WIZARD_INVALID_SOURCE",
+    "ERROR_WIZARD_SOURCE_PATH_REJECTED",
     "REASON_ANALYSIS_FAILED",
     "REASON_PATH_NOT_FOUND",
     "REASON_READ_FAILED",

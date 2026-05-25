@@ -357,7 +357,12 @@ def test_wizard_set_metadata_before_start_returns_error_over_ws(cockpit_ws: obje
 
 
 def test_wizard_add_source_invalid_kind_returns_error_over_ws(cockpit_ws: object) -> None:
-    """An invalid ``kind`` value returns ``ok=False`` without tearing down the connection."""
+    """An invalid ``kind`` value returns ``ok=False`` without tearing down the connection.
+
+    PR 9 / H4 follow-up: the wire ack now carries the sanitized
+    envelope (``code="wizard_handler_error"`` + fixed ``error`` string)
+    instead of echoing the raw ValueError message back.
+    """
 
     send_cmd(cockpit_ws, "wizard_start")
     drain_events(cockpit_ws, 1)
@@ -373,7 +378,8 @@ def test_wizard_add_source_invalid_kind_returns_error_over_ws(cockpit_ws: object
     )
 
     assert ack["ok"] is False
-    assert "kind" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
 
 
 def test_wizard_save_before_review_returns_error_over_ws(cockpit_ws: object) -> None:

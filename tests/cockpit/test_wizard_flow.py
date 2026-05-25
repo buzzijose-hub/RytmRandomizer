@@ -297,7 +297,12 @@ def test_wizard_set_metadata_before_start_returns_error(tmp_path: Path) -> None:
 
 
 def test_wizard_add_source_invalid_kind_returns_error(tmp_path: Path) -> None:
-    """An unsupported ``kind`` value is rejected by the handler validator."""
+    """An unsupported ``kind`` value is rejected by the handler validator.
+
+    PR 9 / H4 follow-up: the ack carries the fixed sanitized envelope
+    (``code="wizard_handler_error"`` + fixed ``error`` string). The
+    raw ValueError message stays in the server-side log.
+    """
 
     session = _make_session(tmp_path)
     _dispatch(_envelope("wizard_start"), session, _Recorder())
@@ -316,11 +321,16 @@ def test_wizard_add_source_invalid_kind_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "kind" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
 
 
 def test_wizard_add_source_invalid_mode_returns_error(tmp_path: Path) -> None:
-    """An unsupported ``mode`` value is rejected by the handler validator."""
+    """An unsupported ``mode`` value is rejected by the handler validator.
+
+    Wire shape mirrors the invalid-kind test above (single sanitized
+    envelope for every field-validation failure).
+    """
 
     session = _make_session(tmp_path)
     _dispatch(_envelope("wizard_start"), session, _Recorder())
@@ -339,7 +349,8 @@ def test_wizard_add_source_invalid_mode_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "mode" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
 
 
 def test_wizard_remove_source_unknown_id_returns_error(tmp_path: Path) -> None:

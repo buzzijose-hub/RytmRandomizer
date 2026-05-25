@@ -350,6 +350,14 @@ def test_wizard_add_source_appends_reference_source(tmp_path: Path) -> None:
 
 
 def test_wizard_add_source_invalid_kind_returns_error(tmp_path: Path) -> None:
+    """Invalid ``kind`` → sanitized ack carrying the fixed wizard-handler error.
+
+    PR 9 / H4 follow-up: the ack no longer echoes the raw ValueError
+    message. The wire surface is now ``code="wizard_handler_error"``
+    plus the short fixed ``error`` string; the raw exception is logged
+    server-side via :data:`_logger.warning`.
+    """
+
     session = _make_session(tmp_path)
     _attach_wizard(session)
     recorder = _Recorder()
@@ -367,10 +375,20 @@ def test_wizard_add_source_invalid_kind_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "kind" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
+    # The operator's own input string ("bogus") must NOT echo back over the wire.
+    assert "bogus" not in ack["error"]
 
 
 def test_wizard_add_source_invalid_mode_returns_error(tmp_path: Path) -> None:
+    """Invalid ``mode`` → same sanitized ack shape as the invalid-kind path.
+
+    Both narrow_kind / narrow_mode raise ValueError; the dispatcher
+    collapses them to the single ``wizard_handler_error`` code. The
+    field-name distinction lives only in the server-side log extra.
+    """
+
     session = _make_session(tmp_path)
     _attach_wizard(session)
     recorder = _Recorder()
@@ -388,7 +406,9 @@ def test_wizard_add_source_invalid_mode_returns_error(tmp_path: Path) -> None:
     )
 
     assert ack["ok"] is False
-    assert "mode" in ack["error"]
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_HANDLER_ERROR
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_INVALID_SOURCE
+    assert "bogus" not in ack["error"]
 
 
 def test_wizard_add_source_without_active_wizard_returns_error(tmp_path: Path) -> None:
@@ -838,7 +858,11 @@ def test_wizard_add_source_rejects_out_of_root_file_path(
     )
 
     assert ack["ok"] is False
-    assert ack["code"] == "wizard_source_path_rejected"
+    assert ack["code"] == wizard_handlers.CODE_WIZARD_SOURCE_PATH_REJECTED
+    # PR 9 / H4 follow-up: ack["error"] is the fixed sanitized string;
+    # the rejection reason (still categorical) lives only in the
+    # server-side ``reason`` log extra.
+    assert ack["error"] == wizard_handlers.ERROR_WIZARD_SOURCE_PATH_REJECTED
     # The rejected path itself must NOT echo back over the wire.
     assert str(outside) not in ack["error"]
     assert "outside.syx" not in ack["error"]
