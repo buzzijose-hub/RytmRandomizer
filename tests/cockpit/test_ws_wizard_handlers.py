@@ -110,7 +110,7 @@ def _envelope(cmd_type: str, request_id: str = "req-1", **body: Any) -> dict:
 
 def _dispatch(envelope: dict, session: CockpitSession, recorder: _Recorder) -> dict:
     async def _go() -> dict:
-        ack = await handle_command(envelope, session, recorder)
+        ack = await handle_command(envelope, session)
         await drain_pending_events(session, recorder)
         return ack
 

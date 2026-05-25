@@ -87,7 +87,7 @@ def create_app(session: CockpitSession) -> FastAPI:
         try:
             while True:
                 envelope = await websocket.receive_json()
-                ack = await handle_command(envelope, session, emitter)
+                ack = await handle_command(envelope, session)
                 # ack-first, events-second per spec § "The Three Protocols"
                 # — drain whatever the handler queued only after the client
                 # has the ack and can correlate it to their request.

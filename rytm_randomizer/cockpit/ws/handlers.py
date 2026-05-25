@@ -473,15 +473,18 @@ _HANDLERS: dict[
 }
 
 
-async def handle_command(envelope: dict, session: CockpitSession, emitter: EventEmitter) -> dict:
-    """Dispatch a command envelope, send the ack-then-events wire sequence.
+async def handle_command(envelope: dict, session: CockpitSession) -> dict:
+    """Dispatch a command envelope; queue events on the session for post-ack drain.
 
     The envelope shape is ``{request_id, command: {type, ...}}``. The
     return value is the full ack dict with ``request_id`` populated.
-    The dispatcher sends the ack on the wire FIRST (returning it to the
-    caller is what does that — the server endpoint calls
-    :meth:`websocket.send_json` with the return value), then awaits the
-    emitter to push every event in :attr:`HandlerResult.events`.
+    The dispatcher does NOT touch the wire — the caller (the server's
+    command loop, see :func:`server.create_app`) sends the ack via
+    :meth:`websocket.send_json` and then calls
+    :func:`drain_pending_events` to push the events queued on
+    :attr:`CockpitSession.pending_events`. The two-call shape honours
+    the spec's "ack first, then events" contract without forcing the
+    dispatcher to also know how to emit.
 
     Three error paths:
 
@@ -495,9 +498,10 @@ async def handle_command(envelope: dict, session: CockpitSession, emitter: Event
 
     Args:
         envelope: The parsed JSON object the client sent over the WebSocket.
-        session: The per-process state container.
-        emitter: The :class:`EventEmitter` the dispatcher pushes events
-            through after the ack is sent.
+        session: The per-process state container. The dispatcher overwrites
+            :attr:`CockpitSession.pending_events` with the handler's
+            ``HandlerResult.events`` so the caller can drain them after
+            sending the ack.
 
     Returns:
         A fully populated :class:`CommandAck` dict with ``request_id``
@@ -529,20 +533,13 @@ async def handle_command(envelope: dict, session: CockpitSession, emitter: Event
         result = await handler(cmd, session)
     except (KeyError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
         return {"request_id": request_id, "ok": False, "error": str(exc)}
-    # Push events AFTER the ack — the ack itself is sent by the caller when
-    # this coroutine returns the dict below. To honour "ack first then
-    # events", we cannot await the emitter before returning. Instead, the
-    # server wraps this dispatcher in a small loop that:
-    #   1. Calls handle_command(...) → returns the ack dict.
-    #   2. Sends the ack via send_json.
-    #   3. Drains the events the handler attached to the session under a
-    #      private attribute (see below) via the emitter.
-    #
-    # To avoid an out-of-band channel, we stash the events on the session
-    # transiently and the dispatcher's caller (the server's command loop)
-    # reads + clears them after sending the ack. This keeps the wire
-    # ordering correct without re-shaping the public function signature.
-    session._pending_events = list(result.events)  # type: ignore[attr-defined]
+    # Queue events on the session for the caller to drain AFTER it sends
+    # the ack on the wire. We cannot await the emitter from here without
+    # inverting the ack-first / events-second wire ordering, so the
+    # dispatcher hands ownership of the queue to
+    # :func:`drain_pending_events` via the real ``pending_events`` field
+    # on :class:`CockpitSession`.
+    session.pending_events = list(result.events)
     return {"request_id": request_id, **result.ack}
 
 
@@ -555,12 +552,11 @@ async def drain_pending_events(session: CockpitSession, emitter: EventEmitter) -
     via the same dispatcher.
     """
 
-    pending = getattr(session, "_pending_events", None)
-    if not pending:
+    if not session.pending_events:
         return
-    for event in pending:
+    for event in session.pending_events:
         await emitter.send_event(event)
-    session._pending_events = []  # type: ignore[attr-defined]
+    session.clear_pending_events()
 
 
 __all__ = [

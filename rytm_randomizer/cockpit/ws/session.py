@@ -89,5 +89,33 @@ class CockpitSession:
     to be non-``None`` and returns ``ok=False`` otherwise.
     """
 
+    pending_events: list[dict] = field(default_factory=list)
+    """Events the last handler queued for the dispatcher to broadcast post-ack.
+
+    The wire contract is "ack first, then events" (see the spec § "The
+    Three Protocols"). :func:`handlers.handle_command` cannot await the
+    emitter before returning the ack dict, so it stashes the queued
+    events here and the server's command loop calls
+    :func:`handlers.drain_pending_events` immediately after writing the
+    ack to the wire. The field is mutated between request/response — this
+    is intentional and matches the Phase-1 single-tenant scope documented
+    in the module docstring above ("one session per process is the only
+    supported shape"). When multi-tenant lands, the per-session
+    ``pending_events`` will move into the per-connection scope so two
+    connections cannot clobber each other's queues.
+    """
+
+    def clear_pending_events(self) -> None:
+        """Empty the post-ack event queue.
+
+        Called by :func:`handlers.drain_pending_events` once every queued
+        event has been pushed through the emitter. Keeping the reset as a
+        method (instead of an inline ``session.pending_events = []``)
+        documents the mutation at the call-site and gives any future
+        multi-tenant rework a single point to override.
+        """
+
+        self.pending_events = []
+
 
 __all__ = ["DEFAULT_DEPTH", "CockpitSession"]

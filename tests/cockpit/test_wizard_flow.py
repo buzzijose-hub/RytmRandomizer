@@ -120,7 +120,7 @@ def _dispatch(envelope: dict, session: CockpitSession, recorder: _Recorder) -> d
     """
 
     async def _go() -> dict:
-        ack = await handle_command(envelope, session, recorder)
+        ack = await handle_command(envelope, session)
         await drain_pending_events(session, recorder)
         return ack
 
