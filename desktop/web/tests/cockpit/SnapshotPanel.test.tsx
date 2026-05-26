@@ -4,7 +4,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { SnapshotPanel } from '../../src/cockpit/SnapshotPanel';
@@ -24,10 +24,14 @@ function renderWith(previewOn = false): FakeCockpitClient {
 
 describe('SnapshotPanel', () => {
   beforeEach(() => {
-    useCockpitStore.getState().reset();
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
   });
   afterEach(() => {
-    useCockpitStore.getState().reset();
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
   });
 
   it('renders the placeholder when snapshot is null', () => {
@@ -36,45 +40,59 @@ describe('SnapshotPanel', () => {
   });
 
   it('renders one PadCard per pad in the snapshot', () => {
-    useCockpitStore.getState().setSnapshot(snapshot);
-    useCockpitStore.getState().setHistory(history);
+    act(() => {
+      useCockpitStore.getState().setSnapshot(snapshot);
+      useCockpitStore.getState().setHistory(history);
+    });
     renderWith();
     for (const pad of snapshot.pads) {
       expect(screen.getByTestId(`pad-card-${pad.pad_id}`)).toBeInTheDocument();
     }
+    expect(screen.getByTestId('pad-card-12')).toHaveTextContent('BD Acoustic');
+    expect(screen.getByText('12 pads ready for dry-run review')).toBeInTheDocument();
   });
 
   it('shows "PREVIEW ON" in the panel meta when previewOn=true', () => {
-    useCockpitStore.getState().setSnapshot(snapshot);
-    useCockpitStore.getState().setHistory(history);
+    act(() => {
+      useCockpitStore.getState().setSnapshot(snapshot);
+      useCockpitStore.getState().setHistory(history);
+    });
     renderWith(true);
     expect(screen.getByText(/PREVIEW ON/)).toBeInTheDocument();
   });
 
   it('does not show "PREVIEW ON" when previewOn=false', () => {
-    useCockpitStore.getState().setSnapshot(snapshot);
-    useCockpitStore.getState().setHistory(history);
+    act(() => {
+      useCockpitStore.getState().setSnapshot(snapshot);
+      useCockpitStore.getState().setHistory(history);
+    });
     renderWith(false);
     expect(screen.queryByText(/PREVIEW ON/)).not.toBeInTheDocument();
   });
 
   it('renders bpm + scene_slot in the meta when present', () => {
-    useCockpitStore.getState().setSnapshot(snapshot);
+    act(() => {
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
     renderWith();
     expect(screen.getByText(/132 BPM/)).toBeInTheDocument();
     expect(screen.getByText(/scene A01/)).toBeInTheDocument();
   });
 
   it('omits the bpm + scene_slot bits when both are null', () => {
-    useCockpitStore.getState().setSnapshot({ ...snapshot, bpm: null, scene_slot: null });
+    act(() => {
+      useCockpitStore.getState().setSnapshot({ ...snapshot, bpm: null, scene_slot: null });
+    });
     renderWith();
     expect(screen.queryByText(/BPM/)).not.toBeInTheDocument();
     expect(screen.queryByText(/scene/)).not.toBeInTheDocument();
   });
 
   it('propagates the candidate to PadCards as ghost overlays when previewOn=true', () => {
-    useCockpitStore.getState().setSnapshot(snapshot);
-    useCockpitStore.getState().setPreviewCandidate(candidate);
+    act(() => {
+      useCockpitStore.getState().setSnapshot(snapshot);
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+    });
     renderWith(true);
     // pad 1 + pad 3 both have a `tun` proposed in the candidate fixture; scope to pad 1.
     const pad1 = screen.getByTestId('pad-card-1');

@@ -9,6 +9,8 @@
  * and its body is rendered as a card with traits + an EXPORT button.
  */
 
+import { useState } from 'react';
+
 import { useCockpitStore } from '../state';
 import type { ProfileKind, ProfileModel } from '../ws/protocol';
 
@@ -56,6 +58,36 @@ export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
 
 function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element {
   const client = useCockpitClient();
+  const [exportStatus, setExportStatus] = useState<{
+    kind: 'working' | 'success' | 'error';
+    message: string;
+  } | null>(null);
+
+  async function handleExport(): Promise<void> {
+    setExportStatus({ kind: 'working', message: 'Preparing export...' });
+    try {
+      const ack = await client.send({
+        type: 'export_profile_model',
+        profile_id: profile.profile_id,
+        target: 'binary',
+      });
+      if (!ack.ok) {
+        throw new Error(ack.error ?? 'Export rejected by sidecar');
+      }
+
+      const modelBytes = ack.model_bytes_b64 ?? ack.model_bytes ?? '';
+      const byteCount = base64ByteLength(modelBytes);
+      triggerModelDownload(profile, modelBytes);
+      setExportStatus({
+        kind: 'success',
+        message: `Export ready (${byteCount} bytes).`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Export failed';
+      setExportStatus({ kind: 'error', message });
+    }
+  }
+
   return (
     <div className="profile-active-card" data-testid="profile-active-card">
       <div className="name">★ {profile.name}</div>
@@ -75,15 +107,45 @@ function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element 
         className="profile-export-button"
         data-testid="profile-export-button"
         onClick={() => {
-          void client.send({
-            type: 'export_profile_model',
-            profile_id: profile.profile_id,
-            target: 'binary',
-          });
+          void handleExport();
         }}
       >
         ↗ EXPORT MODEL
       </button>
+      {exportStatus === null ? null : (
+        <div className={`profile-export-status ${exportStatus.kind}`} role="status">
+          {exportStatus.message}
+        </div>
+      )}
     </div>
   );
+}
+
+function base64ByteLength(value: string): number {
+  const compact = value.replace(/\s/g, '');
+  if (compact.length === 0) return 0;
+  const padding = compact.endsWith('==') ? 2 : compact.endsWith('=') ? 1 : 0;
+  return Math.max(0, Math.floor((compact.length * 3) / 4) - padding);
+}
+
+function triggerModelDownload(profile: ProfileModel, modelBytesBase64: string): void {
+  if (
+    modelBytesBase64.length === 0 ||
+    typeof window === 'undefined' ||
+    typeof window.atob !== 'function' ||
+    typeof URL === 'undefined' ||
+    typeof URL.createObjectURL !== 'function'
+  ) {
+    return;
+  }
+
+  const binary = window.atob(modelBytesBase64);
+  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+  const blob = new Blob([bytes], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${profile.profile_id}-${profile.model_version}.rymp`;
+  link.click();
+  URL.revokeObjectURL(url);
 }

@@ -110,7 +110,7 @@ _DEFAULT_BPM = 124.0
 
 
 def _default_initial_snapshot() -> Snapshot:
-    """Build a clean, deterministic 4-pad starting snapshot for the mock adapter.
+    """Build a clean, deterministic 12-pad starting snapshot for the mock adapter.
 
     The exact parameter values don't matter for protocol correctness —
     they're a benign placeholder so the cockpit has *something* to render
@@ -126,9 +126,17 @@ def _default_initial_snapshot() -> Snapshot:
         )
         for pad_id, machine in (
             (1, "BD Hard"),
-            (2, "SD Acoustic"),
-            (3, "SY Raw"),
-            (4, "FX Metal"),
+            (2, "SD Classic"),
+            (3, "CH Closed"),
+            (4, "OH Open"),
+            (5, "BT Rim"),
+            (6, "LT Low"),
+            (7, "MT Mid"),
+            (8, "HT High"),
+            (9, "CP Clap"),
+            (10, "RS Riser"),
+            (11, "SY Raw"),
+            (12, "BD Acoustic"),
         )
     )
     return Snapshot(

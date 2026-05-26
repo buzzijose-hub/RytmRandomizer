@@ -64,8 +64,8 @@ def _freeze_params(params: Mapping[str, int]) -> Mapping[str, int]:
 class PadState:
     """The full parameter state of one pad on the device.
 
-    Pads are addressed by 1-based ``pad_id``; today's product scope is pads
-    1..4 but the data model accepts up to 12 (Rytm hardware's full track count).
+    Pads are addressed by 1-based ``pad_id``; the Cockpit dry-run surface
+    renders the full 1..12 Rytm track count.
     """
 
     pad_id: int

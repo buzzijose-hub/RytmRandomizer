@@ -58,9 +58,16 @@ html,
 
 .cockpit-main {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  grid-template-columns: 230px minmax(560px, 1.55fr) minmax(360px, 0.95fr);
   gap: 12px;
   flex: 1;
+}
+
+.cockpit-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
 }
 
 /* ---------- HeaderBar ---------- */
@@ -129,11 +136,117 @@ html,
   color: var(--text-dim);
 }
 
+.snapshot-readiness {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--green);
+}
+
+/* ---------- Device + safety rails ---------- */
+
+.device-rail,
+.safety-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rail-section-title {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.device-card,
+.safety-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.device-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.device-card.active {
+  border-color: rgba(86, 212, 221, 0.55);
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+.device-card h2 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.device-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.device-status,
+.status-pill {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.device-status.ready,
+.status-pill.safe {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.device-status.staged {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.status-pill.armed {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.status-pill.muted {
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+
+.safety-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.status-row,
+.queue-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.status-row strong,
+.queue-row strong {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+}
+
 /* ---------- Pad grid ---------- */
 
 .pad-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -398,6 +511,27 @@ html,
   cursor: pointer;
 }
 
+.profile-export-status {
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.profile-export-status.working {
+  color: var(--text-dim);
+}
+
+.profile-export-status.success {
+  color: var(--green);
+  border-color: rgba(46, 160, 67, 0.55);
+}
+
+.profile-export-status.error {
+  color: var(--danger);
+  border-color: rgba(248, 81, 73, 0.6);
+}
+
 /* ---------- Depth slider ---------- */
 
 .depth-slider {
@@ -521,5 +655,36 @@ html,
   :focus-visible {
     outline: 2px solid Highlight;
     outline-offset: 2px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .cockpit-main {
+    grid-template-columns: 1fr;
+  }
+
+  .device-rail,
+  .safety-rail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .cockpit-root {
+    padding: 10px;
+  }
+
+  .cockpit-header {
+    flex-wrap: wrap;
+  }
+
+  .pad-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pad-card-knobs,
+  .action-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
