@@ -19,8 +19,8 @@ pytestmark = pytest.mark.fast
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 APP_TSX: Final[Path] = PROJECT_ROOT / "desktop" / "web" / "src" / "App.tsx"
 
-# Floor starts at 1 (not wired); Cluster 4 drops to 0.
-_FLOOR: int = 1
+# Floor was 1 (not wired); Cluster 4 dropped to 0.
+_FLOOR: int = 0
 
 
 def _is_announcer_wired() -> bool:

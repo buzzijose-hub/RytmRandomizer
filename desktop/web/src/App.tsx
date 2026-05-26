@@ -13,6 +13,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { LiveRegion } from './a11y';
 import { Cockpit } from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import { Wizard } from './wizard';
@@ -62,17 +63,30 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
 
   if (sessionStatus === null) {
     return (
-      <main className="cockpit-placeholder">
-        <h1>RytmRandomizer · Cockpit</h1>
-        <p>Connecting…</p>
-        <small>status: {connStatus}</small>
-      </main>
+      <>
+        <LiveRegion />
+        <main className="cockpit-placeholder">
+          <h1>RytmRandomizer · Cockpit</h1>
+          <p>Connecting…</p>
+          <small>status: {connStatus}</small>
+        </main>
+      </>
     );
   }
 
   if (isWizardRoute(route)) {
-    return <Wizard client={client} />;
+    return (
+      <>
+        <LiveRegion />
+        <Wizard client={client} />
+      </>
+    );
   }
 
-  return <Cockpit client={client} />;
+  return (
+    <>
+      <LiveRegion />
+      <Cockpit client={client} />
+    </>
+  );
 }

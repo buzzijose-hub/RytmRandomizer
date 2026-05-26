@@ -12,9 +12,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 // is required even though every test below is in a `.skip` suite.
 const ANNOUNCER_MODULE = ['..', '..', 'src', 'a11y', 'announcer'].join('/');
 
-describe.skip('announcer (lands with Task 8)', () => {
-  beforeEach(() => {
+describe('announcer (Task 8 wired)', () => {
+  beforeEach(async () => {
     vi.resetModules();
+    const { _reset } = await import(ANNOUNCER_MODULE);
+    _reset();
   });
 
   it('calls the registered callback with the message', async () => {

@@ -17,6 +17,7 @@
 
 import { create } from 'zustand';
 
+import { announce } from '../a11y';
 import type { CockpitClient, Unsubscribe } from '../ws/client';
 import type {
   AnalysisJob,
@@ -111,12 +112,15 @@ export function bindWizardClient(
   const unsubs: Unsubscribe[] = [
     client.on('wizard_state_changed' as never, ((ev: WizardStateChangedEvent) => {
       store.getState().handleEvent(ev);
+      announce(`Wizard step: ${ev.state.step}`);
     }) as never),
     client.on('analysis_progress' as never, ((ev: AnalysisProgressEvent) => {
       store.getState().handleEvent(ev);
+      announce(`Analysis progress for source ${ev.job.source_id}, status ${ev.job.status}`);
     }) as never),
     client.on('profile_created' as never, ((ev: ProfileCreatedEvent) => {
       store.getState().handleEvent(ev);
+      announce(`Profile created: ${ev.profile.name}`);
     }) as never),
   ];
   return () => {

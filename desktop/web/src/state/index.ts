@@ -6,6 +6,7 @@
  * (not in `store.ts`) so the store stays transport-agnostic.
  */
 
+import { announce } from '../a11y';
 import type { CockpitClient, Unsubscribe } from '../ws/client';
 
 import { useCockpitStore, type CockpitStore } from './store';
@@ -37,20 +38,38 @@ export function bindClientToStore(
 ): Unsubscribe {
   const unsubs: Unsubscribe[] = [
     client.on('snapshot_changed', (ev) => store.getState().setSnapshot(ev.snapshot)),
-    client.on('mutation_previewed', (ev) =>
-      store.getState().setPreviewCandidate(ev.candidate),
-    ),
-    client.on('send_plan_changed', (ev) => store.getState().setSendPlan(ev.send_plan)),
+    client.on('mutation_previewed', (ev) => {
+      store.getState().setPreviewCandidate(ev.candidate);
+      announce(
+        ev.candidate !== null
+          ? `Mutation preview ready, depth ${Math.round(ev.candidate.depth * 100)}%, ${ev.candidate.pad_deltas.length} pads affected`
+          : 'Mutation preview cleared',
+      );
+    }),
+    client.on('send_plan_changed', (ev) => {
+      store.getState().setSendPlan(ev.send_plan);
+      announce(
+        ev.send_plan !== null
+          ? `Send plan ready, ${ev.send_plan.pad_count} pads, ${ev.send_plan.estimated_midi_msgs} parameters`
+          : 'Send plan cleared',
+      );
+    }),
     client.on('history_updated', (ev) => store.getState().setHistory(ev.history)),
-    client.on('profile_changed', (ev) => store.getState().setProfile(ev.profile)),
-    client.on('session_status', (ev) =>
+    client.on('profile_changed', (ev) => {
+      store.getState().setProfile(ev.profile);
+      announce(
+        ev.profile !== null ? `Profile selected: ${ev.profile.name}` : 'Profile cleared',
+      );
+    }),
+    client.on('session_status', (ev) => {
       store.getState().setSessionStatus({
         armed: ev.armed,
         midi_port: ev.midi_port,
         mode: ev.mode,
         unsaved_sends: ev.unsaved_sends,
-      }),
-    ),
+      });
+      announce(`Session status updated, mode ${ev.mode}`);
+    }),
   ];
   return () => {
     for (const off of unsubs) off();
