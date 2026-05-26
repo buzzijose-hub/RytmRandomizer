@@ -90,7 +90,7 @@ def _normalize_status_footer_nonblank(value: str, *, field: str) -> str:
     return normalized
 
 
-def _safety_item(safety_state: str) -> LiveGuiStatusFooterItem:
+def _status_footer_safety_item(safety_state: str) -> LiveGuiStatusFooterItem:
     if safety_state == "mock-safe":
         label = "Mock Safe"
         value = "No hardware will be changed"
@@ -328,7 +328,7 @@ def build_live_gui_status_footer_model(
         raise ValueError("unsaved_send_count must be >= 0")
 
     items = (
-        _safety_item(safety_state),
+        _status_footer_safety_item(safety_state),
         _midi_port_item(
             midi_port_name=normalized_midi_port_name,
             midi_port_open=midi_port_open,
