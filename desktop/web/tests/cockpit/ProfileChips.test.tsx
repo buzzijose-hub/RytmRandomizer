@@ -32,6 +32,23 @@ function setActiveProfile(): void {
   });
 }
 
+function stubDownloadApis(url = 'blob:profile-model'): {
+  createObjectURL: ReturnType<typeof vi.fn>;
+  revokeObjectURL: ReturnType<typeof vi.fn>;
+} {
+  const createObjectURL = vi.fn(() => url);
+  const revokeObjectURL = vi.fn();
+  Object.defineProperty(URL, 'createObjectURL', {
+    configurable: true,
+    value: createObjectURL,
+  });
+  Object.defineProperty(URL, 'revokeObjectURL', {
+    configurable: true,
+    value: revokeObjectURL,
+  });
+  return { createObjectURL, revokeObjectURL };
+}
+
 describe('ProfileChips', () => {
   beforeEach(() => {
     act(() => {
@@ -111,16 +128,7 @@ describe('ProfileChips', () => {
   });
 
   it('clicking EXPORT MODEL downloads the returned model bytes and reports success', async () => {
-    const createObjectURL = vi.fn(() => 'blob:profile-model');
-    const revokeObjectURL = vi.fn();
-    Object.defineProperty(URL, 'createObjectURL', {
-      configurable: true,
-      value: createObjectURL,
-    });
-    Object.defineProperty(URL, 'revokeObjectURL', {
-      configurable: true,
-      value: revokeObjectURL,
-    });
+    const { createObjectURL, revokeObjectURL } = stubDownloadApis();
     const clickSpy = vi
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined);
@@ -147,5 +155,104 @@ describe('ProfileChips', () => {
     const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
     expect(clickedAnchor.download).toBe('user-buzzi-v1.2.0.rymp');
     expect(clickedAnchor.href).toBe('blob:profile-model');
+  });
+
+  it('uses legacy model_bytes and safe fallback filename parts when exporting', async () => {
+    const { createObjectURL, revokeObjectURL } = stubDownloadApis('blob:fallback-model');
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    act(() => {
+      useCockpitStore.getState().setProfile({
+        ...profile,
+        profile_id: '***',
+        model_version: '###',
+      });
+    });
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-legacy-ok',
+      ok: true,
+      model_bytes: 'UllNUHRlc3Q=',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    await screen.findByTestId('profile-export-status');
+    expect(screen.getByTestId('profile-export-status')).toHaveTextContent(
+      'Exported profile-vprofile.rymp',
+    );
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    await waitFor(() => {
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:fallback-model');
+    });
+    const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
+    expect(clickedAnchor.download).toBe('profile-vprofile.rymp');
+  });
+
+  it('reports an export ack error without downloading', async () => {
+    const { createObjectURL } = stubDownloadApis();
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-no',
+      ok: false,
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: Export failed');
+    expect(createObjectURL).not.toHaveBeenCalled();
+    expect(screen.getByTestId('profile-export-button')).not.toBeDisabled();
+  });
+
+  it('reports missing export bytes without downloading', async () => {
+    const { createObjectURL } = stubDownloadApis();
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-empty',
+      ok: true,
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: Export response did not include model bytes');
+    expect(createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('reports empty export bytes without downloading', async () => {
+    const { createObjectURL } = stubDownloadApis();
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-empty-string',
+      ok: true,
+      model_bytes_b64: '',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: Export response did not include model bytes');
+    expect(createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('reports non-error export rejections', async () => {
+    setActiveProfile();
+    const fake = renderWith();
+    fake.nextRejection = 'transport closed' as unknown as Error;
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: transport closed');
   });
 });
