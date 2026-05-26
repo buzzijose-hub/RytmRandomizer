@@ -162,6 +162,21 @@ describe('ProfileChips', () => {
     expect(screen.getByText(/3 bytes/)).toBeInTheDocument();
   });
 
+  it('reports zero bytes for whitespace-only base64 export payloads', async () => {
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-whitespace',
+      ok: true,
+      model_bytes_b64: ' \n\t ',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
+    expect(screen.getByText(/0 bytes/)).toBeInTheDocument();
+  });
+
   it('downloads a binary profile export when browser blob APIs are available', async () => {
     const { createObjectURL, revokeObjectURL } = stubDownloadApis();
     const clickSpy = vi
