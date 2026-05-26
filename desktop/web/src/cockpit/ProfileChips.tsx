@@ -56,14 +56,70 @@ export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
   );
 }
 
+interface ExportStatus {
+  kind: 'working' | 'success' | 'error';
+  message: string;
+}
+
+function safeFilenamePart(value: string): string {
+  const cleaned = value.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+  return cleaned === '' ? 'profile' : cleaned;
+}
+
+function modelFilename(profile: ProfileModel): string {
+  return `${safeFilenamePart(profile.profile_id)}-v${safeFilenamePart(profile.model_version)}.rymp`;
+}
+
+function base64ByteLength(value: string): number {
+  const compact = value.replace(/\s/g, '');
+  if (compact.length === 0) return 0;
+  const padding = compact.endsWith('==') ? 2 : compact.endsWith('=') ? 1 : 0;
+  return Math.max(0, Math.floor((compact.length * 3) / 4) - padding);
+}
+
+function decodeBase64(value: string): Uint8Array {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function downloadProfileModel(modelBytesB64: string, filename: string): boolean {
+  if (
+    typeof window === 'undefined' ||
+    typeof window.atob !== 'function' ||
+    typeof URL === 'undefined' ||
+    typeof URL.createObjectURL !== 'function'
+  ) {
+    return false;
+  }
+
+  const bytes = decodeBase64(modelBytesB64);
+  const payload = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(payload).set(bytes);
+  const blob = new Blob([payload], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+  return true;
+}
+
 function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element {
   const client = useCockpitClient();
-  const [exportStatus, setExportStatus] = useState<{
-    kind: 'working' | 'success' | 'error';
-    message: string;
-  } | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<ExportStatus | null>(null);
 
-  async function handleExport(): Promise<void> {
+  const handleExport = async (): Promise<void> => {
+    const filename = modelFilename(profile);
+    setExporting(true);
     setExportStatus({ kind: 'working', message: 'Preparing export...' });
     try {
       const ack = await client.send({
@@ -75,18 +131,25 @@ function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element 
         throw new Error(ack.error ?? 'Export rejected by sidecar');
       }
 
-      const modelBytes = ack.model_bytes_b64 ?? ack.model_bytes ?? '';
+      const modelBytes = ack.model_bytes_b64 ?? ack.model_bytes;
+      if (modelBytes === undefined || modelBytes === '') {
+        throw new Error('Export response did not include model bytes');
+      }
       const byteCount = base64ByteLength(modelBytes);
-      triggerModelDownload(profile, modelBytes);
+      const downloaded = downloadProfileModel(modelBytes, filename);
       setExportStatus({
         kind: 'success',
-        message: `Export ready (${byteCount} bytes).`,
+        message: downloaded
+          ? `Export ready (${byteCount} bytes). Exported ${filename}.`
+          : `Export ready (${byteCount} bytes).`,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Export failed';
       setExportStatus({ kind: 'error', message });
+    } finally {
+      setExporting(false);
     }
-  }
+  };
 
   return (
     <div className="profile-active-card" data-testid="profile-active-card">
@@ -106,46 +169,20 @@ function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element 
         type="button"
         className="profile-export-button"
         data-testid="profile-export-button"
-        onClick={() => {
-          void handleExport();
-        }}
+        disabled={exporting}
+        onClick={() => void handleExport()}
       >
         ↗ EXPORT MODEL
       </button>
       {exportStatus === null ? null : (
-        <div className={`profile-export-status ${exportStatus.kind}`} role="status">
+        <div
+          className={`profile-export-status ${exportStatus.kind}`}
+          data-testid="profile-export-status"
+          role={exportStatus.kind === 'error' ? 'alert' : 'status'}
+        >
           {exportStatus.message}
         </div>
       )}
     </div>
   );
-}
-
-function base64ByteLength(value: string): number {
-  const compact = value.replace(/\s/g, '');
-  if (compact.length === 0) return 0;
-  const padding = compact.endsWith('==') ? 2 : compact.endsWith('=') ? 1 : 0;
-  return Math.max(0, Math.floor((compact.length * 3) / 4) - padding);
-}
-
-function triggerModelDownload(profile: ProfileModel, modelBytesBase64: string): void {
-  if (
-    modelBytesBase64.length === 0 ||
-    typeof window === 'undefined' ||
-    typeof window.atob !== 'function' ||
-    typeof URL === 'undefined' ||
-    typeof URL.createObjectURL !== 'function'
-  ) {
-    return;
-  }
-
-  const binary = window.atob(modelBytesBase64);
-  const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
-  const blob = new Blob([bytes], { type: 'application/octet-stream' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${profile.profile_id}-${profile.model_version}.rymp`;
-  link.click();
-  URL.revokeObjectURL(url);
 }
