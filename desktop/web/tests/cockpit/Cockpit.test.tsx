@@ -4,7 +4,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 
 import { Cockpit } from '../../src/cockpit/Cockpit';
 import { useCockpitStore } from '../../src/state';
@@ -45,8 +45,9 @@ describe('Cockpit', () => {
     });
     render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
 
-    expect(screen.getByText('Analog Rytm MKII')).toBeInTheDocument();
-    expect(screen.getByText('Analog Four MKII')).toBeInTheDocument();
+    const deviceRail = screen.getByTestId('device-rail');
+    expect(within(deviceRail).getByText('Analog Rytm MKII')).toBeInTheDocument();
+    expect(within(deviceRail).getByText('Analog Four MKII')).toBeInTheDocument();
     expect(screen.getAllByText('Mock Safe').length).toBeGreaterThan(0);
     expect(screen.getAllByText('No MIDI Port Open').length).toBeGreaterThan(0);
     expect(screen.getByText('Simulation / Mock')).toBeInTheDocument();
