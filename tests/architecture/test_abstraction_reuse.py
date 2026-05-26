@@ -1631,6 +1631,22 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "rytm_randomizer/reports/cockpit_export_rehearsal.py",
             "rytm_randomizer/reports/cockpit_send_plan_rehearsal_surface.py",
         ),
+        # FINDING #1 (chore/open-pr-bundle-review): PRs #125 (status footer)
+        # and #127 (safety checklist) both define `_safety_item` independently
+        # because they were authored on disjoint branches and never saw each
+        # other's diff. Reviewer must choose:
+        #   (a) extract to a shared helper in a new
+        #       `rytm_randomizer/reports/_live_gui_shared.py` module, OR
+        #   (b) accept the duplication as cohesive per-surface ownership and
+        #       leave this allowlist entry in place permanently.
+        # Surfaced in the consolidated review PR; entry is provisional pending
+        # reviewer decision.
+        (
+            "func",
+            "_safety_item",
+            "rytm_randomizer/reports/live_gui_safety_checklist_model.py",
+            "rytm_randomizer/reports/live_gui_status_footer_model.py",
+        ),
     }
 )
 
