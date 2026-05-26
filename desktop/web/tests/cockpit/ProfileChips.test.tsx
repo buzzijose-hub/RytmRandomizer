@@ -2,14 +2,17 @@
  * Tests for ProfileChips — chip list, active card, export button.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { ProfileChips } from '../../src/cockpit/ProfileChips';
 import { useCockpitStore } from '../../src/state';
 
 import { FakeCockpitClient, availableProfiles, profile } from './_fixtures';
+
+const originalCreateObjectURL = URL.createObjectURL;
+const originalRevokeObjectURL = URL.revokeObjectURL;
 
 function renderWith(
   available: ReadonlyArray<{ profile_id: string; name: string; kind: 'scene' | 'user' }> = availableProfiles,
@@ -23,6 +26,29 @@ function renderWith(
   return fake;
 }
 
+function setActiveProfile(): void {
+  act(() => {
+    useCockpitStore.getState().setProfile(profile);
+  });
+}
+
+function stubDownloadApis(url = 'blob:profile-model'): {
+  createObjectURL: ReturnType<typeof vi.fn>;
+  revokeObjectURL: ReturnType<typeof vi.fn>;
+} {
+  const createObjectURL = vi.fn(() => url);
+  const revokeObjectURL = vi.fn();
+  Object.defineProperty(URL, 'createObjectURL', {
+    configurable: true,
+    value: createObjectURL,
+  });
+  Object.defineProperty(URL, 'revokeObjectURL', {
+    configurable: true,
+    value: revokeObjectURL,
+  });
+  return { createObjectURL, revokeObjectURL };
+}
+
 describe('ProfileChips', () => {
   beforeEach(() => {
     act(() => {
@@ -30,6 +56,15 @@ describe('ProfileChips', () => {
     });
   });
   afterEach(() => {
+    vi.restoreAllMocks();
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: originalCreateObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: originalRevokeObjectURL,
+    });
     act(() => {
       useCockpitStore.getState().reset();
     });
@@ -48,9 +83,7 @@ describe('ProfileChips', () => {
   });
 
   it('highlights the active chip when its id matches the store profile', () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
-    });
+    setActiveProfile();
     renderWith();
     const activeChip = screen.getByTestId(`profile-chip-${profile.profile_id}`);
     expect(activeChip.className).toBe('profile-chip active');
@@ -63,9 +96,7 @@ describe('ProfileChips', () => {
   });
 
   it('renders the active card with name + traits + meta when a profile is selected', () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
-    });
+    setActiveProfile();
     renderWith();
     const card = screen.getByTestId('profile-active-card');
     expect(card).toHaveTextContent('★ buzzi');
@@ -82,11 +113,10 @@ describe('ProfileChips', () => {
     expect(fake.sent).toEqual([{ type: 'select_profile', profile_id: 'user-buzzi' }]);
   });
 
-  it('clicking EXPORT MODEL emits export_profile_model with target=binary', async () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
-    });
+  it('clicking EXPORT MODEL emits export_profile_model with target=binary', () => {
+    setActiveProfile();
     const fake = renderWith();
+    fake.hang = true;
     fireEvent.click(screen.getByTestId('profile-export-button'));
     expect(fake.sent).toEqual([
       {
@@ -95,107 +125,134 @@ describe('ProfileChips', () => {
         target: 'binary',
       },
     ]);
-    expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
   });
 
-  it('shows a visible export success message when the sidecar returns model bytes', async () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
-    });
+  it('clicking EXPORT MODEL downloads the returned model bytes and reports success', async () => {
+    const { createObjectURL, revokeObjectURL } = stubDownloadApis();
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    setActiveProfile();
     const fake = renderWith();
     fake.ackQueue.push({
       request_id: 'export-ok',
       ok: true,
-      model_bytes_b64: 'cnltcA==',
+      model_bytes_b64: 'UllNUHRlc3Q=',
     });
 
     fireEvent.click(screen.getByTestId('profile-export-button'));
 
-    expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
-    expect(screen.getByText(/4 bytes/)).toBeInTheDocument();
+    await screen.findByTestId('profile-export-status');
+    expect(screen.getByTestId('profile-export-status')).toHaveTextContent(
+      'Exported user-buzzi-v1.2.0.rymp',
+    );
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    await waitFor(() => {
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:profile-model');
+    });
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
+    expect(clickedAnchor.download).toBe('user-buzzi-v1.2.0.rymp');
+    expect(clickedAnchor.href).toBe('blob:profile-model');
   });
 
-  it('reports the byte count for unpadded base64 export payloads', async () => {
+  it('uses legacy model_bytes and safe fallback filename parts when exporting', async () => {
+    const { createObjectURL, revokeObjectURL } = stubDownloadApis('blob:fallback-model');
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
     act(() => {
-      useCockpitStore.getState().setProfile(profile);
+      useCockpitStore.getState().setProfile({
+        ...profile,
+        profile_id: '***',
+        model_version: '###',
+      });
     });
     const fake = renderWith();
     fake.ackQueue.push({
-      request_id: 'export-unpadded',
+      request_id: 'export-legacy-ok',
       ok: true,
-      model_bytes_b64: 'YWJj',
+      model_bytes: 'UllNUHRlc3Q=',
     });
 
     fireEvent.click(screen.getByTestId('profile-export-button'));
 
-    expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
-    expect(screen.getByText(/3 bytes/)).toBeInTheDocument();
+    await screen.findByTestId('profile-export-status');
+    expect(screen.getByTestId('profile-export-status')).toHaveTextContent(
+      'Exported profile-vprofile.rymp',
+    );
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    await waitFor(() => {
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:fallback-model');
+    });
+    const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
+    expect(clickedAnchor.download).toBe('profile-vprofile.rymp');
   });
 
-  it('downloads a binary profile export when browser blob APIs are available', async () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
-    });
+  it('reports an export ack error without downloading', async () => {
+    const { createObjectURL } = stubDownloadApis();
+    setActiveProfile();
     const fake = renderWith();
     fake.ackQueue.push({
-      request_id: 'export-download',
-      ok: true,
-      model_bytes: 'YWI=',
+      request_id: 'export-no',
+      ok: false,
     });
-    const originalCreateObjectUrl = URL.createObjectURL;
-    const originalRevokeObjectUrl = URL.revokeObjectURL;
-    const originalClick = HTMLAnchorElement.prototype.click;
-    const createdUrls: string[] = [];
-    const revokedUrls: string[] = [];
-    const downloads: string[] = [];
-    URL.createObjectURL = ((blob: Blob) => {
-      expect(blob.type).toBe('application/octet-stream');
-      createdUrls.push('blob:profile-model');
-      return 'blob:profile-model';
-    }) as typeof URL.createObjectURL;
-    URL.revokeObjectURL = ((url: string) => {
-      revokedUrls.push(url);
-    }) as typeof URL.revokeObjectURL;
-    HTMLAnchorElement.prototype.click = function click() {
-      downloads.push(this.download);
-    };
-
-    try {
-      fireEvent.click(screen.getByTestId('profile-export-button'));
-
-      expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
-      expect(screen.getByText(/2 bytes/)).toBeInTheDocument();
-      expect(createdUrls).toEqual(['blob:profile-model']);
-      expect(revokedUrls).toEqual(['blob:profile-model']);
-      expect(downloads).toEqual([`${profile.profile_id}-${profile.model_version}.rymp`]);
-    } finally {
-      URL.createObjectURL = originalCreateObjectUrl;
-      URL.revokeObjectURL = originalRevokeObjectUrl;
-      HTMLAnchorElement.prototype.click = originalClick;
-    }
-  });
-
-  it('shows the sidecar rejection reason when export fails', async () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
-    });
-    const fake = renderWith();
-    fake.ackQueue.push({ request_id: 'export-rejected', ok: false });
 
     fireEvent.click(screen.getByTestId('profile-export-button'));
 
-    expect(await screen.findByText('Export rejected by sidecar')).toBeInTheDocument();
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: Export failed');
+    expect(createObjectURL).not.toHaveBeenCalled();
+    expect(screen.getByTestId('profile-export-button')).not.toBeDisabled();
   });
 
-  it('shows a generic export failure when the client rejects with a non-error value', async () => {
-    act(() => {
-      useCockpitStore.getState().setProfile(profile);
+  it('reports missing export bytes without downloading', async () => {
+    const { createObjectURL } = stubDownloadApis();
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-empty',
+      ok: true,
     });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: Export response did not include model bytes');
+    expect(createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('reports empty export bytes without downloading', async () => {
+    const { createObjectURL } = stubDownloadApis();
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-empty-string',
+      ok: true,
+      model_bytes_b64: '',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: Export response did not include model bytes');
+    expect(createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('reports non-error export rejections', async () => {
+    setActiveProfile();
     const fake = renderWith();
     fake.nextRejection = 'transport closed' as unknown as Error;
 
     fireEvent.click(screen.getByTestId('profile-export-button'));
 
-    expect(await screen.findByText('Export failed')).toBeInTheDocument();
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveAttribute('role', 'alert');
+    expect(status).toHaveTextContent('Export failed: transport closed');
   });
 });
