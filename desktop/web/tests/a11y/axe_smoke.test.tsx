@@ -13,9 +13,12 @@ import { runAxe, violationSummary } from './__helpers__/axe';
 
 // Floor map: component-name → expected violation count. Each fix-cluster
 // task drops the matching entry to 0 (or removes it once fully clean).
-const FLOORS: Record<string, number> = {
+// `as const` narrows the value type so direct property access returns
+// `number` instead of `number | undefined` (which would otherwise fail
+// `toBeLessThanOrEqual(number)` strict typing).
+const FLOORS = {
   ProfileToggle: 0, // already clean per audit
-};
+} as const;
 
 describe('axe-core smoke (WCAG 2.2 AA)', () => {
   it('ProfileToggle has no violations beyond the floor', async () => {
