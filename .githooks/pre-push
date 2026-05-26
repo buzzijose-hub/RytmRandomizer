@@ -24,14 +24,19 @@ set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
-# Prefer python3, fall back to python (Windows installs often expose only
-# `python`). If neither resolves, skip rather than hard-fail the push — the
-# CI `architecture` job is the server-side backstop.
-if command -v python3 >/dev/null 2>&1; then
-    PY=python3
-elif command -v python >/dev/null 2>&1; then
-    PY=python
-else
+# Prefer a Python command that both resolves and runs. On Windows, Git's shell
+# may see the Microsoft Store `python3` execution alias before the real
+# interpreter; `command -v` succeeds for that alias even though invoking it
+# fails. Probe each candidate before selecting it.
+PY=
+for candidate in python3 python py; do
+    if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c 'import sys' >/dev/null 2>&1; then
+        PY=$candidate
+        break
+    fi
+done
+
+if [[ -z "$PY" ]]; then
     echo "[pre-push] python not found — skipping local gate; CI will enforce it." >&2
     exit 0
 fi
