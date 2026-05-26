@@ -86,8 +86,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "--validate-one-cc",
         action="store_true",
         help=(
-            "Dry-run-only outbound validation helper. Builds one inert mock CC "
-            "message through MockMidiSender; opens no ports and sends no MIDI."
+            "One-CC outbound validation helper. With --dry-run it records one "
+            "inert mock CC and opens no port; with --arm it prompts for an "
+            "output port, sends exactly one real CC, closes the port, and exits."
         ),
     )
     parser.add_argument(
