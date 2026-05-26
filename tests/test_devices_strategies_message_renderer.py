@@ -157,6 +157,26 @@ def test_channel_property_returns_constructed_channel() -> None:
     assert renderer.channel == 9
 
 
+def test_renderer_preserves_explicit_track_channels_zero_through_eleven() -> None:
+    """Renderer can emit CC triples on every observed Rytm track channel."""
+
+    from rytm_randomizer.devices.strategies import AnalogRytmMessageRenderer
+
+    _snap, event, plan = _make_fixtures()
+
+    for channel in range(12):
+        renderer = AnalogRytmMessageRenderer(channel=channel)
+
+        assert renderer.to_cc_triple(event, plan) == (channel, 74, 42)
+        message = renderer.to_mock_message(event, plan)
+        assert message.channel == channel
+        assert message.control == 74
+        assert message.value == 42
+        assert message.metadata["pad"] == 1
+        assert message.metadata["profile_key"] == "2"
+        assert message.metadata["parameter"] == "FLT Frequency"
+
+
 # ---------------------------------------------------------------------------
 # 4. to_mock_message: happy path
 # ---------------------------------------------------------------------------

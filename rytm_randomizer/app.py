@@ -82,6 +82,29 @@ def _build_parser() -> argparse.ArgumentParser:
             "Implies that --debug controls the level. Defaults to off."
         ),
     )
+    parser.add_argument(
+        "--validate-one-cc",
+        action="store_true",
+        help=(
+            "Dry-run-only outbound validation helper. Builds one inert mock CC "
+            "message through MockMidiSender; opens no ports and sends no MIDI."
+        ),
+    )
+    parser.add_argument(
+        "--channel",
+        type=int,
+        help="Validation channel for --validate-one-cc. Must be 0 through 11.",
+    )
+    parser.add_argument(
+        "--control",
+        type=int,
+        help="Validation CC number for --validate-one-cc. Must be 0 through 127.",
+    )
+    parser.add_argument(
+        "--value",
+        type=int,
+        help="Validation CC value for --validate-one-cc. Must be 0 through 127.",
+    )
     return parser
 
 
@@ -272,6 +295,136 @@ def _run_dry_run() -> int:
     return exit_code
 
 
+def _require_validation_range(name: str, value: int | None, low: int, high: int) -> int | None:
+    """Return ``value`` when it is present and inside the inclusive range."""
+
+    if value is None:
+        sys.stderr.write(f"--validate-one-cc requires --{name}.\n")
+        return None
+    if value < low or value > high:
+        sys.stderr.write(f"{name} must be in [{low}, {high}].\n")
+        return None
+    return value
+
+
+def _skip_validation_sleep(_seconds: float) -> None:
+    """Keep the validation helper deterministic and fast."""
+
+    return None
+
+
+def _run_dry_run_one_cc_validation(channel: int, control: int, value: int) -> int:
+    """Build exactly one inert CC through the mock sender and report it."""
+
+    from .midi_io import send_cc
+    from .mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    send_cc(
+        sender,
+        control,
+        value,
+        channel=channel,
+        sleep=_skip_validation_sleep,
+    )
+
+    lines = [
+        "RytmRandomizer one-CC outbound validation",
+        "mock only: True",
+        "no hardware: True",
+        "no port opened: True",
+        "no real MIDI: True",
+        f"channel: {channel}",
+        f"control: {control}",
+        f"value: {value}",
+        f"Mock sender captured {len(sender.sent_messages)} message(s).",
+    ]
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
+def _run_armed_one_cc_validation(channel: int, control: int, value: int) -> int:
+    """Open one real MIDI output, send one CC, close the port, and exit."""
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --validate-one-cc failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm --validate-one-cc failed: no real MIDI output ports available. "
+            "Connect the Analog Rytm and retry.\n"
+        )
+        return 1
+
+    port_name = _choose_arm_port_name(output_names)
+    if port_name is None:
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --validate-one-cc failed: {exc}\n")
+        return 1
+
+    try:
+        from .midi_io import send_cc
+
+        send_cc(port, control, value, channel=channel)
+    except (OSError, RuntimeError, AttributeError) as exc:
+        sys.stderr.write(f"--arm --validate-one-cc send failed: {exc}\n")
+        return 1
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("validation_port_close_failed_best_effort")
+
+    lines = [
+        "RytmRandomizer one-CC outbound hardware validation",
+        "armed: True",
+        "hardware observation required: True",
+        "sent real MIDI: True",
+        f"port: {port_name}",
+        f"channel: {channel}",
+        f"control: {control}",
+        f"value: {value}",
+        "Sent exactly one CC message.",
+    ]
+    sys.stdout.write("\n".join(lines))
+    sys.stdout.write("\n")
+    return 0
+
+
+def _run_validate_one_cc(args: argparse.Namespace) -> int:
+    """Validate and run the dry-run-only one-CC helper."""
+
+    if not args.arm and not args.dry_run:
+        sys.stderr.write("--validate-one-cc requires --dry-run or --arm.\n")
+        return 1
+
+    channel = _require_validation_range("channel", args.channel, 0, 11)
+    control = _require_validation_range("control", args.control, 0, 127)
+    value = _require_validation_range("value", args.value, 0, 127)
+    if channel is None or control is None or value is None:
+        return 1
+
+    if args.arm:
+        return _run_armed_one_cc_validation(channel, control, value)
+    return _run_dry_run_one_cc_validation(channel, control, value)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the RytmRandomizer entry point. Returns an int exit code."""
 
@@ -298,6 +451,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
     )
 
+    if args.validate_one_cc:
+        return _run_validate_one_cc(args)
     if args.arm:
         return _run_arm()
     if args.dry_run:

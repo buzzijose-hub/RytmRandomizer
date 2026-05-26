@@ -121,10 +121,16 @@ line-length = 100
 # cannot parse and the safety check rejects with exit 1. Keep target-version
 # pinned to the matrix to guarantee dev formatting == CI formatting.
 target-version = ["py39", "py310", "py311"]
+extend-exclude = '''
+/(
+  \.worktrees
+)/
+'''
 
 [tool.isort]
 profile = "black"
 line_length = 100
+skip = [".worktrees", "Backups", "Exports", "LegacyScripts"]
 
 [tool.ruff]
 line-length = 100

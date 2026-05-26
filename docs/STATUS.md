@@ -1,9 +1,44 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-19. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-26: First outbound 12-track CC hardware validation completed on the
+  Analog Rytm MKII over USB. The explicit armed one-CC helper sent exactly one
+  CC per track using mido channels 0-11, and the operator confirmed each
+  expected pad changed with no cross-pad changes or weird behavior. Evidence:
+  `docs/hardware-validation/2026-05-26-outbound-12-track-cc-results.md`.
+- 2026-05-26: Armed one-CC outbound validation helper added to
+  `rytm_randomizer.app`. The command
+  `python -m rytm_randomizer.app --arm --validate-one-cc --channel 0 --control 17 --value 64`
+  prompts for the selected MIDI output, sends exactly one CC, closes the port,
+  prints a confirmation, and exits. It is for explicitly approved
+  disposable-kit hardware validation only, one track at a time.
+- 2026-05-26: Dry-run one-CC outbound validation helper added to
+  `rytm_randomizer.app`. The command
+  `python -m rytm_randomizer.app --dry-run --validate-one-cc --channel 0 --control 17 --value 64`
+  records exactly one inert mock CC through `MockMidiSender`; it opens no port,
+  sends no MIDI, and imports no real MIDI library.
+- 2026-05-26: Outbound validation command-surface check completed. The app has
+  `--arm`, `--dry-run`, and the one-CC `--validate-one-cc` helper. Real
+  outbound 12-track validation remains limited to the explicit one-CC
+  disposable-kit runbook until each track is observed by the operator.
+- 2026-05-26: First outbound validation receive model selected for the next
+  gated hardware pass: per-track channel model, Track N to mido channel N - 1.
+  This is a validation-session decision only; the current renderer default and
+  V1.34-compatible selected/default-channel behavior remain unchanged.
+- 2026-05-26: First outbound 12-track CC validation plan created at
+  `docs/superpowers/plans/2026-05-26-first-outbound-12-track-cc-validation.md`.
+  The plan separates the already-proven passive input channel map from the
+  not-yet-proven outbound receive model. It requires mock-only channel tests
+  before any disposable-kit armed hardware pass.
+- 2026-05-26: Passive Rytm USB input channel-map hardware validation completed
+  and documented in `docs/MANUAL_HARDWARE_VALIDATION.md`. Tracks 1-12 were
+  observed from manual hardware knob movement on mido channels 0-11. The pass
+  opened only the Rytm input port, opened no output port, sent no MIDI, and did
+  not validate outbound software sends. Future outbound validation remains a
+  separate gated `--arm` step.
 - 2026-05-20: Rytm snapshot-pad compatibility checkpoint started from the clean post-PR #48 base. This PR adds a passive report that separates legal pad-machine selection from snapshot-mutation readiness across all 12 Rytm pads. Pads with V1.34-backed mutable profiles report ready; selectable-only pads report a clear blocked reason. No hardware sends or runtime mutation are introduced.
 - 2026-05-19: Rytm 12-pad machine matrix checkpoint started. The implementation adds a passive OS 1.72 pad-machine compatibility catalog and report so pads 1-12 can be validated before armed 12-pad mutation. Pad 10 is explicitly treated as OH / Open Hihat, while XT Classic remains limited to LT/MT/HT tom pads. This is read-only reporting only; hardware sends and runtime mutation remain gated.
 - 2026-05-19: Code-review governance deepened. The `code-review` skill + `code-reviewer` agent grew **Step 7** (abstraction reuse / genericization — survey every new module/class against the existing-abstraction catalog) and **Step 8** (architecture-doc + diagram freshness). `docs/PLAN_REQUIREMENTS.md` correspondingly grew to **18 gates** (Gate 17 = abstraction reuse, Gate 18 = doc/diagram freshness); the count was bumped across all governance docs and the PR template. The post-push review is now **automatic for every agent with zero copy-paste**: a new shared `scripts/code_review_gate.py` (3 modes — `cli`/`codex-hook`/`git-hook`) runs the mechanical gates (lint + architecture + V1.34 parity), and three mechanisms call it — `.claude/settings.json` (Claude Code agent hook), the **new `.codex/hooks.json`** (codex `PostToolUse` hook; emits `additionalContext` to re-prompt codex for the 8-step review, since codex skips `agent`-type handlers), and the **new `.githooks/pre-push`** (universal, blocks the push for any tool). `just review` runs the full review on demand with environment-detected agent dispatch. `just install` + the dev container now set `core.hooksPath`. See `docs/CODE_REVIEW_HOOK_SETUP.md`.
