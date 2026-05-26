@@ -1,5 +1,7 @@
 # ADA AA Accessibility Implementation Plan
 
+> Status: in-flight (Phase A + B + C.12 landed on `feat/ada-aa-accessibility`; C.13 push + PR open pending)
+>
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship one bundled PR that makes the RytmRandomizer desktop UI fully WCAG 2.2 AA compliant, drivable without a mouse, and usable with NVDA + VoiceOver, with a multi-layer automated test suite and 9 Python architecture guards using the RR4 ratchet pattern.
