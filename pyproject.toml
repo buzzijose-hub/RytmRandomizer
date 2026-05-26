@@ -37,14 +37,15 @@ dev = [
     "pytest-sugar>=1,<2",
     "pytest-xdist>=3,<4",
     # WS-G/WS-E cockpit tests exercise ProfileModel export plus the
-    # FastAPI/Uvicorn WebSocket sidecar; mirrored from the [cockpit] extra
-    # below so CI's ``pip install -e .[dev]`` picks them up without having
-    # to chain extras.
+    # FastAPI/Uvicorn WebSocket sidecar and the Profile Wizard analyzer;
+    # mirrored from the [cockpit] and [style] extras below so CI's
+    # ``pip install -e .[dev]`` picks them up without chaining extras.
     "msgpack>=1.0.0,<2",
     "fastapi>=0.110.0",
     "httpx>=0.27.0,<1",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # WS-V style analysis: audio feature extraction (Layer 1 of the four-layer
 # guardrails system). Only pulled in by users running real audio analyses;
@@ -65,17 +66,17 @@ style = [
 # WS-E cockpit WebSocket server (Phase 1 sidecar): FastAPI exposes one
 # WebSocket endpoint at /ws; uvicorn[standard] hosts it under
 # ``python -m rytm_randomizer.cockpit``; ``websockets`` is the underlying
-# ASGI WS transport FastAPI/Starlette consume. None of these reach the
-# MIDI boundary, so the versions are not Elektron-critical. Pinned with
-# a floor that matches the Phase 1 reference implementation (the
-# WebSocket / FastAPI / Starlette stack stabilized around these floors
-# and the protocol is intentionally JSON, so a future minor bump should
-# stay drop-in).
+# ASGI WS transport FastAPI/Starlette consume. The same sidecar also hosts
+# the Profile Wizard analyzer, so the cockpit runtime includes the style
+# audio stack. None of these reach the MIDI boundary, so the versions are
+# not Elektron-critical. Pinned with floors that match the reference
+# implementation and keep the JSON protocol drop-in compatible.
 cockpit = [
     "msgpack>=1.0.0,<2",
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.27.0",
     "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # Native end-user installer toolchain. Kept separate from `dev` so the test
 # suite stays lean and contributors are not forced to install briefcase just
@@ -296,10 +297,18 @@ sources = ["rytm_randomizer"]
 console_app = true
 # Runtime deps -- briefcase resolves these from the same Python ecosystem
 # pip uses, so the wheels (including python-rtmidi's platform-specific
-# C-extension wheels) get bundled into the installer.
+# C-extension wheels) get bundled into the installer. The GUI itself ships
+# via Tauri, but the packaged Python runtime must still include the cockpit
+# sidecar/export/analyzer deps because the desktop shell launches
+# ``python -m rytm_randomizer.cockpit``.
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # Placeholder icon. installer-assets/icon.svg is a text placeholder; the
 # release engineer must supply rendered PNGs (Windows .ico, macOS .icns,
@@ -322,12 +331,22 @@ min_os_version = "11.0"
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 
 [tool.briefcase.app.rytm-randomizer.linux]
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]
 # python-rtmidi builds its C extension against ALSA on Linux. Without the
 # ALSA dev headers in the build environment, the wheel build fails. Listing
@@ -363,4 +382,9 @@ system_requires = [
 requires = [
     "mido==1.3.3",
     "python-rtmidi==1.5.8",
+    "msgpack>=1.0.0,<2",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+    "websockets>=12.0",
+    "librosa>=0.11,<2",
 ]

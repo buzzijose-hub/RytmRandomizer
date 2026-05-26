@@ -42,8 +42,9 @@ their own per-OS output.
 The Cockpit GUI (and therefore the Phase 2 Profile Wizard layered on
 top of it) ships as a **Tauri 2 bundle**, built from `desktop/shell/`.
 That bundle is the only way an end user gets the wizard surface; the
-Briefcase `.msi` / `.pkg` / `.deb` / AppImage carry the passive CLI
-and the armed runtime, nothing GUI.
+Briefcase `.msi` / `.pkg` / `.deb` / AppImage carry the passive CLI,
+armed runtime, and Python sidecar dependencies, but nothing from the
+React/Tauri GUI tree.
 
 ### Local build
 
@@ -78,9 +79,9 @@ These are GUI installers (the operator double-clicks the file), unlike
 the CLI-oriented Briefcase artifacts. They embed the web frontend from
 `desktop/web/dist/` and they expect the Python sidecar's
 `python -m rytm_randomizer.cockpit` entry point to be reachable on PATH
-at launch time — typically because the operator has also installed the
-Briefcase artifact, or has the editable `pip install -e .` checkout
-active.
+at launch time - typically because the operator has also installed the
+Briefcase artifact, or has an editable `pip install -e ".[cockpit]"`
+or `pip install -e ".[dev]"` checkout active.
 
 ### Runtime supervision
 

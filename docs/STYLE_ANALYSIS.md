@@ -21,7 +21,7 @@ typed Guardrail Profile contract in
 `rytm_randomizer/guardrails/schema.py` (already shipped by WS-W's first
 step); WS-V *produces* it, WS-W *validates and consumes* it.
 
-## Installing the `style` extra
+## Installing audio analysis support
 
 Layer 1's deterministic audio extraction relies on
 [`librosa`](https://librosa.org/). It is an **optional** dependency -
@@ -30,11 +30,14 @@ description-only path (or only the rest of the package) is not paying
 for the heavy audio stack.
 
 ```bash
-# Core install (description-only path works; no audio measurement):
+# Local development / cockpit manual testing:
 pip install -e ".[dev]"
 
-# Full audio-extraction install:
-pip install -e ".[style,dev]"
+# Sidecar-only cockpit install:
+pip install -e ".[cockpit]"
+
+# Minimal style-analysis install without the cockpit stack:
+pip install -e ".[style]"
 ```
 
 If you call `extract_from_audio` / `extract_from_partial` /
