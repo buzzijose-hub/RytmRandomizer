@@ -180,10 +180,42 @@ export const DEFAULT_LIVE_READINESS_MODEL: LiveReadinessModel = {
     passed_count: 4,
     total_count: 4,
     items: [
-      safetyItem('conflicting-sessions', 0, 'No conflicting sessions', 'passed', 'No conflicting sessions detected'),
-      safetyItem('guards-enabled', 1, 'All guards enabled', 'passed', 'All safety guards enabled'),
-      safetyItem('snapshot-compatible', 2, 'Snapshot compatibility verified', 'passed', 'Snapshot compatibility verified'),
-      safetyItem('parameter-limits', 3, 'Parameter limits within safe range', 'passed', 'Parameter limits within safe range'),
+      safetyItem(
+        'conflicting-sessions',
+        0,
+        'No conflicting sessions',
+        'passed',
+        'safe',
+        'No conflicting sessions detected',
+        'No action required.',
+      ),
+      safetyItem(
+        'guards-enabled',
+        1,
+        'All guards enabled',
+        'passed',
+        'safe',
+        'All safety guards enabled',
+        'No action required.',
+      ),
+      safetyItem(
+        'snapshot-compatible',
+        2,
+        'Snapshot compatibility verified',
+        'passed',
+        'safe',
+        'Snapshot compatibility verified',
+        'No action required.',
+      ),
+      safetyItem(
+        'parameter-limits',
+        3,
+        'Parameter limits within safe range',
+        'passed',
+        'safe',
+        'Parameter limits within safe range',
+        'No action required.',
+      ),
     ],
     arm_gate: {
       key: 'arm-hardware',
@@ -288,10 +320,10 @@ export const DEFAULT_LIVE_READINESS_MODEL: LiveReadinessModel = {
     selected_port_name: null,
     available_ports: [],
     safety_checks: [
-      hardwareCheck('no-conflicting-sessions', 'no-conflicting-sessions', true),
-      hardwareCheck('guards-enabled', 'guards-enabled', true),
-      hardwareCheck('snapshot-compatible', 'snapshot-compatible', true),
-      hardwareCheck('parameter-limits-safe', 'parameter-limits-safe', true),
+      hardwareCheck('no-conflicting-sessions', 'no-conflicting-sessions', true, 'passed'),
+      hardwareCheck('guards-enabled', 'guards-enabled', true, 'passed'),
+      hardwareCheck('snapshot-compatible', 'snapshot-compatible', true, 'passed'),
+      hardwareCheck('parameter-limits-safe', 'parameter-limits-safe', true, 'passed'),
     ],
     safety_check_count: 4,
     safety_checks_passed: 4,
@@ -560,16 +592,18 @@ function safetyItem(
   order: number,
   label: string,
   status: string,
+  severity: string,
   message: string,
+  operatorAction: string,
 ): LiveGuiSafetyChecklistItemDict {
   return {
     key,
     order,
     label,
     status,
-    severity: status === 'passed' ? 'safe' : 'critical',
+    severity,
     message,
-    operator_action: status === 'passed' ? 'No action required.' : 'Resolve before arm review.',
+    operator_action: operatorAction,
     test_id: `safety-checklist-${key}`,
   };
 }
@@ -675,12 +709,13 @@ function hardwareCheck(
   key: string,
   label: string,
   passed: boolean,
+  status: string,
 ): LiveGuiHardwareRailSafetyCheckDict {
   return {
     key,
     label,
     passed,
-    status: passed ? 'passed' : 'failed',
+    status,
     test_id: `hardware-rail-safety-${key}`,
   };
 }
