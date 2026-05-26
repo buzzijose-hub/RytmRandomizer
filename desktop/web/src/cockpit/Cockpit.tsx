@@ -28,6 +28,7 @@ import '../a11y/srOnly.css';
 import { CockpitClientProvider } from './context';
 import { DeviceRail } from './DeviceRail';
 import { HeaderBar } from './HeaderBar';
+import { LiveReadinessPanel } from './LiveReadinessPanel';
 import { MutationPanel } from './MutationPanel';
 import { SafetyRail } from './SafetyRail';
 import { SnapshotPanel } from './SnapshotPanel';
@@ -71,7 +72,10 @@ export function Cockpit({
         <HeaderBar />
         <div className="cockpit-main">
           <DeviceRail />
-          <SnapshotPanel previewOn={previewOn} />
+          <div className="cockpit-center-stack">
+            <SnapshotPanel previewOn={previewOn} />
+            <LiveReadinessPanel />
+          </div>
           <div className="cockpit-side-stack">
             <MutationPanel
               availableProfiles={availableProfiles}
