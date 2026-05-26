@@ -144,7 +144,11 @@ function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element 
           : `Export ready (${byteCount} bytes).`,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Export failed';
+      const detail = error instanceof Error ? error.message : String(error);
+      const message =
+        detail === 'Export rejected by sidecar' || detail.startsWith('Export failed')
+          ? detail
+          : `Export failed: ${detail}`;
       setExportStatus({ kind: 'error', message });
     } finally {
       setExporting(false);
