@@ -2,14 +2,17 @@
  * Tests for ProfileChips — chip list, active card, export button.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { ProfileChips } from '../../src/cockpit/ProfileChips';
 import { useCockpitStore } from '../../src/state';
 
 import { FakeCockpitClient, availableProfiles, profile } from './_fixtures';
+
+const originalCreateObjectURL = URL.createObjectURL;
+const originalRevokeObjectURL = URL.revokeObjectURL;
 
 function renderWith(
   available: ReadonlyArray<{ profile_id: string; name: string; kind: 'scene' | 'user' }> = availableProfiles,
@@ -23,12 +26,31 @@ function renderWith(
   return fake;
 }
 
+function setActiveProfile(): void {
+  act(() => {
+    useCockpitStore.getState().setProfile(profile);
+  });
+}
+
 describe('ProfileChips', () => {
   beforeEach(() => {
-    useCockpitStore.getState().reset();
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
   });
   afterEach(() => {
-    useCockpitStore.getState().reset();
+    vi.restoreAllMocks();
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: originalCreateObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: originalRevokeObjectURL,
+    });
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
   });
 
   it('renders an empty-state message when available is empty', () => {
@@ -44,7 +66,7 @@ describe('ProfileChips', () => {
   });
 
   it('highlights the active chip when its id matches the store profile', () => {
-    useCockpitStore.getState().setProfile(profile);
+    setActiveProfile();
     renderWith();
     const activeChip = screen.getByTestId(`profile-chip-${profile.profile_id}`);
     expect(activeChip.className).toBe('profile-chip active');
@@ -57,7 +79,7 @@ describe('ProfileChips', () => {
   });
 
   it('renders the active card with name + traits + meta when a profile is selected', () => {
-    useCockpitStore.getState().setProfile(profile);
+    setActiveProfile();
     renderWith();
     const card = screen.getByTestId('profile-active-card');
     expect(card).toHaveTextContent('★ buzzi');
@@ -75,8 +97,9 @@ describe('ProfileChips', () => {
   });
 
   it('clicking EXPORT MODEL emits export_profile_model with target=binary', () => {
-    useCockpitStore.getState().setProfile(profile);
+    setActiveProfile();
     const fake = renderWith();
+    fake.hang = true;
     fireEvent.click(screen.getByTestId('profile-export-button'));
     expect(fake.sent).toEqual([
       {
@@ -85,5 +108,44 @@ describe('ProfileChips', () => {
         target: 'binary',
       },
     ]);
+  });
+
+  it('clicking EXPORT MODEL downloads the returned model bytes and reports success', async () => {
+    const createObjectURL = vi.fn(() => 'blob:profile-model');
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-ok',
+      ok: true,
+      model_bytes_b64: 'UllNUHRlc3Q=',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    await screen.findByTestId('profile-export-status');
+    expect(screen.getByTestId('profile-export-status')).toHaveTextContent(
+      'Exported user-buzzi-v1.2.0.rymp',
+    );
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    await waitFor(() => {
+      expect(revokeObjectURL).toHaveBeenCalledWith('blob:profile-model');
+    });
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    const clickedAnchor = clickSpy.mock.contexts[0] as HTMLAnchorElement;
+    expect(clickedAnchor.download).toBe('user-buzzi-v1.2.0.rymp');
+    expect(clickedAnchor.href).toBe('blob:profile-model');
   });
 });

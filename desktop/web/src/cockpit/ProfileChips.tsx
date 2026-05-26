@@ -9,6 +9,8 @@
  * and its body is rendered as a card with traits + an EXPORT button.
  */
 
+import { useState } from 'react';
+
 import { useCockpitStore } from '../state';
 import type { ProfileKind, ProfileModel } from '../ws/protocol';
 
@@ -54,8 +56,79 @@ export function ProfileChips({ available }: ProfileChipsProps): JSX.Element {
   );
 }
 
+interface ExportStatus {
+  tone: 'ok' | 'error';
+  message: string;
+}
+
+function safeFilenamePart(value: string): string {
+  const cleaned = value.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+  return cleaned === '' ? 'profile' : cleaned;
+}
+
+function modelFilename(profile: ProfileModel): string {
+  return `${safeFilenamePart(profile.profile_id)}-v${safeFilenamePart(profile.model_version)}.rymp`;
+}
+
+function decodeBase64(value: string): Uint8Array {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function downloadProfileModel(modelBytesB64: string, filename: string): void {
+  const bytes = decodeBase64(modelBytesB64);
+  const payload = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(payload).set(bytes);
+  const blob = new Blob([payload], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.rel = 'noopener';
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
 function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element {
   const client = useCockpitClient();
+  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<ExportStatus | null>(null);
+
+  const handleExport = async (): Promise<void> => {
+    const filename = modelFilename(profile);
+    setExporting(true);
+    setExportStatus(null);
+    try {
+      const ack = await client.send({
+        type: 'export_profile_model',
+        profile_id: profile.profile_id,
+        target: 'binary',
+      });
+      if (!ack.ok) {
+        throw new Error(ack.error ?? 'Export failed');
+      }
+      const modelBytesB64 = ack.model_bytes_b64 ?? ack.model_bytes;
+      if (modelBytesB64 === undefined || modelBytesB64 === '') {
+        throw new Error('Export response did not include model bytes');
+      }
+      downloadProfileModel(modelBytesB64, filename);
+      setExportStatus({ tone: 'ok', message: `Exported ${filename}` });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setExportStatus({ tone: 'error', message: `Export failed: ${message}` });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="profile-active-card" data-testid="profile-active-card">
       <div className="name">★ {profile.name}</div>
@@ -74,16 +147,20 @@ function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element 
         type="button"
         className="profile-export-button"
         data-testid="profile-export-button"
-        onClick={() => {
-          void client.send({
-            type: 'export_profile_model',
-            profile_id: profile.profile_id,
-            target: 'binary',
-          });
-        }}
+        disabled={exporting}
+        onClick={() => void handleExport()}
       >
         ↗ EXPORT MODEL
       </button>
+      {exportStatus === null ? null : (
+        <p
+          className="panel-meta"
+          data-testid="profile-export-status"
+          role={exportStatus.tone === 'error' ? 'alert' : 'status'}
+        >
+          {exportStatus.message}
+        </p>
+      )}
     </div>
   );
 }
