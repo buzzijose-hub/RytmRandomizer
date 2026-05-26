@@ -37,9 +37,15 @@ for (const route of ROUTES) {
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
     const violations = results.violations.length;
-    expect(
-      violations,
-      `${route}: ${results.violations.map((v) => v.id).join(', ')}`,
-    ).toBeLessThanOrEqual(FLOORS[route]);
+    const detail = results.violations
+      .map((v) => {
+        const targets = v.nodes
+          .slice(0, 3)
+          .map((n) => n.target.join(' > '))
+          .join('; ');
+        return `${v.id} (${v.impact}): ${v.help} — ${targets}`;
+      })
+      .join('\n  ');
+    expect(violations, `${route}:\n  ${detail}`).toBeLessThanOrEqual(FLOORS[route]);
   });
 }
