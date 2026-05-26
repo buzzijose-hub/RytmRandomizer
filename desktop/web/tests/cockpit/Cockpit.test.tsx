@@ -50,7 +50,7 @@ describe('Cockpit', () => {
     expect(within(deviceRail).getByText('Analog Four MKII')).toBeInTheDocument();
     expect(screen.getAllByText('Mock Safe').length).toBeGreaterThan(0);
     expect(screen.getAllByText('No MIDI Port Open').length).toBeGreaterThan(0);
-    expect(screen.getByText('Simulation / Mock')).toBeInTheDocument();
+    expect(within(screen.getByTestId('safety-rail')).getByText('Simulation / Mock')).toBeInTheDocument();
   });
 
   it('uses a sensible default profile list when none is provided', () => {
