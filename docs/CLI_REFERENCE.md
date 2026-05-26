@@ -88,6 +88,22 @@ python -m rytm_randomizer.cli rytm-style-kit-readiness-report KITS.syx jose_core
 
 ---
 
+## Reference-style blueprint (Rytm + Analog Four)
+
+`reference-style-blueprint-report` translates a description, audio file,
+or library folder into an influence-only starting blueprint: 12 Analog
+Rytm pad roles, 4 Analog Four track roles, normalized traits, depth caps,
+parameter focus lanes, modulation ideas, and passive safety flags. It
+does not create patterns, write files, open ports, or send MIDI.
+
+```bash
+python -m rytm_randomizer.cli reference-style-blueprint-report --description "Glenn Wilson style industrial pressure" --json
+python -m rytm_randomizer.cli reference-style-blueprint-report --audio reference.wav
+python -m rytm_randomizer.cli reference-style-blueprint-report --library reference-folder
+```
+
+---
+
 ## Analog Four — style routing + mutation planning
 
 | Command | Description |

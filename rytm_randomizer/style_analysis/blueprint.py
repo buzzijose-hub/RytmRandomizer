@@ -12,8 +12,7 @@ import json
 from dataclasses import dataclass, replace
 from typing import Final
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
-
+from ..guardrails.schema import Confidence, SourceType
 from .feature_report import FeatureReport, compute_feature_report_hash
 
 BLUEPRINT_VERSION: Final[str] = "reference-style-blueprint-v1"

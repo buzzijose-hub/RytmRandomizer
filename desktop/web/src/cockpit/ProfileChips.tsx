@@ -178,11 +178,19 @@ function ActiveProfileCard({ profile }: { profile: ProfileModel }): JSX.Element 
       >
         ↗ EXPORT MODEL
       </button>
-      {exportStatus === null ? null : (
+      {exportStatus?.kind === 'error' ? (
+        <div
+          className="profile-export-status error"
+          data-testid="profile-export-status"
+          role="alert"
+        >
+          {exportStatus.message}
+        </div>
+      ) : exportStatus === null ? null : (
         <div
           className={`profile-export-status ${exportStatus.kind}`}
           data-testid="profile-export-status"
-          role={exportStatus.kind === 'error' ? 'alert' : 'status'}
+          role="status"
         >
           {exportStatus.message}
         </div>

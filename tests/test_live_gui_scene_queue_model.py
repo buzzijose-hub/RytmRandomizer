@@ -31,6 +31,15 @@ def test_scene_queue_model_exposes_all_v134_scenes_and_risk_states() -> None:
     assert wild.depth_tokens == ("strong",)
 
 
+def test_scene_queue_depth_lookup_tables_are_immutable() -> None:
+    from rytm_randomizer.reports import live_gui_scene_queue_model as scene_queue
+
+    with pytest.raises(TypeError):
+        scene_queue._DEPTH_PERCENT["micro"] = 99
+    with pytest.raises(TypeError):
+        scene_queue._DEPTH_RANK["strong"] = 0
+
+
 def test_scene_queue_model_builds_preview_queue_and_passive_payload() -> None:
     from rytm_randomizer.reports.live_gui_scene_queue_model import (
         build_live_gui_scene_queue_model,

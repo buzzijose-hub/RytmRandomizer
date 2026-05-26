@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Final, TypedDict
 
 from ..data import INTENSITY_PLANS, SCENE_PRESETS
@@ -33,16 +34,20 @@ BLOCKED_ACTIONS: Final[tuple[str, ...]] = (
     "execute_scene",
 )
 DEFAULT_QUEUE_KEYS: Final[tuple[str, ...]] = ("s1", "s1a", "s2", "s3", "s4")
-_DEPTH_PERCENT: Final[dict[str, int]] = {
-    "micro": 15,
-    "groove": 42,
-    "strong": 68,
-}
-_DEPTH_RANK: Final[dict[str, int]] = {
-    "micro": 1,
-    "groove": 2,
-    "strong": 3,
-}
+_DEPTH_PERCENT: Final[Mapping[str, int]] = MappingProxyType(
+    {
+        "micro": 15,
+        "groove": 42,
+        "strong": 68,
+    }
+)
+_DEPTH_RANK: Final[Mapping[str, int]] = MappingProxyType(
+    {
+        "micro": 1,
+        "groove": 2,
+        "strong": 3,
+    }
+)
 
 ScenePresetMap = Mapping[str, Mapping[str, str]]
 IntensityPlanMap = Mapping[str, Mapping[int, Sequence[tuple[str, str]]]]

@@ -56,9 +56,9 @@ cargo install tauri-cli --version "^2"
 cargo tauri build
 ```
 
-A `just desktop-bundle` recipe wraps the same steps once the CI
-workstream adds it to the `Justfile`; until then, copy the block
-above. The recipe and the manual block produce identical output.
+The `just desktop-bundle` recipe wraps the same steps for local builds
+and CI parity. The recipe and the manual block produce identical
+output.
 
 The first `cargo tauri build` on a cold Rust cache is multi-minute;
 subsequent builds finish in seconds because `desktop/shell/target/`

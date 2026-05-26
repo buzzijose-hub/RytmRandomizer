@@ -28,8 +28,7 @@ pulls librosa in for users who need real audio measurement.
 
 from __future__ import annotations
 
-from rytm_randomizer.guardrails.schema import Confidence, SourceType
-
+from ..guardrails.schema import Confidence, SourceType
 from .blueprint import (
     AnalogFourTrackBlueprint,
     ReferenceStyleBlueprint,
