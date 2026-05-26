@@ -19,7 +19,10 @@ describe('NameStep', () => {
     );
     expect(screen.getByTestId('wizard-name-input')).toHaveValue('');
     expect(screen.getByTestId('wizard-description-input')).toHaveValue('');
-    expect(screen.getByTestId('wizard-next')).toBeDisabled();
+    // Cluster-3 a11y fix: Next stays focusable so SR / keyboard users can
+    // trigger validation and hear the resulting error. Submission is gated
+    // by the validate-on-submit path in handleSubmit, not the disabled attr.
+    expect(screen.getByTestId('wizard-next')).toBeEnabled();
   });
 
   it('seeds the inputs with the initial values when present', () => {
@@ -36,20 +39,27 @@ describe('NameStep', () => {
     expect(screen.getByTestId('wizard-next')).toBeEnabled();
   });
 
-  it('keeps Next disabled when the name is only whitespace', () => {
+  it('does not call onSubmit when the name is only whitespace (validation guard)', () => {
+    // Cluster-3 a11y fix: button is no longer `disabled`; instead the click
+    // is allowed and the submit handler short-circuits on the whitespace check
+    // (with an aria-alert exercised by tests/a11y/form_errors.test.tsx).
+    const onSubmit = vi.fn();
     render(
       <NameStep
         initialName={null}
         initialDescription={null}
-        onSubmit={vi.fn()}
+        onSubmit={onSubmit}
         onCancel={vi.fn()}
       />,
     );
     fireEvent.change(screen.getByTestId('wizard-name-input'), { target: { value: '   ' } });
-    expect(screen.getByTestId('wizard-next')).toBeDisabled();
+    fireEvent.click(screen.getByTestId('wizard-next'));
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('does not call onSubmit when the disabled button is clicked', () => {
+  it('does not call onSubmit when the name field is blank (validation guard)', () => {
+    // Cluster-3 a11y fix: click is allowed; validate-on-submit prevents the
+    // forward call. See tests/a11y/form_errors.test.tsx for the ARIA assertions.
     const onSubmit = vi.fn();
     render(
       <NameStep

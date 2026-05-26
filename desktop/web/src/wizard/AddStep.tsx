@@ -10,9 +10,14 @@
  *
  *   The accumulated source list renders below with a remove button per row. The "Analyze"
  *   action below is disabled until at least one source is added.
+ *
+ *   Draft submission is validated on click (Cluster-3 a11y fix): if either required
+ *   field is blank, a `role="alert"` region is rendered, the offending input is marked
+ *   `aria-invalid="true"`, `aria-describedby` is wired to the alert, and keyboard focus
+ *   moves to the first invalid field. This satisfies WCAG 2.2 §3.3.1 / §3.3.3.
  */
 
-import { useState, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 
 import type {
   InspirationSource,
@@ -20,6 +25,8 @@ import type {
   WizardSourceMode,
 } from '../types/wizard_protocol';
 import { KIND_DISPLAY_ORDER, KIND_STRATEGY } from './kinds';
+
+const DRAFT_ERROR_ID = 'wizard-draft-error';
 
 export interface AddStepProps {
   sources: ReadonlyArray<InspirationSource>;
@@ -110,6 +117,9 @@ export function AddStep({
   const [draft, setDraft] = useState<PickerDraft | null>(null);
   const [location, setLocation] = useState<string>('');
   const [displayName, setDisplayName] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const locationRef = useRef<HTMLInputElement>(null);
+  const displayNameRef = useRef<HTMLInputElement>(null);
   const opener = openDialog ?? defaultOpenDialog;
 
   const openDraft = (kind: WizardSourceKind): void => {
@@ -117,12 +127,14 @@ export function AddStep({
     setDraft({ kind, mode });
     setLocation('');
     setDisplayName('');
+    setError(null);
   };
 
   const closeDraft = (): void => {
     setDraft(null);
     setLocation('');
     setDisplayName('');
+    setError(null);
   };
 
   const handleBrowse = async (currentDraft: PickerDraft): Promise<void> => {
@@ -138,9 +150,26 @@ export function AddStep({
     }
   };
 
+  /**
+   * Validate `location` first, then `display_name`. The first-failing field
+   * captures focus + describes itself via `aria-describedby` pointing at the
+   * single `role="alert"` region rendered below the draft. This is the WCAG
+   * 2.2 §3.3.1 / §3.3.3 error-identification pattern.
+   */
   const handleConfirm = (currentDraft: PickerDraft): void => {
     const trimmedLocation = location.trim();
     const trimmedName = displayName.trim();
+    if (trimmedLocation === '') {
+      setError('Location is required.');
+      locationRef.current?.focus();
+      return;
+    }
+    if (trimmedName === '') {
+      setError('Display name is required.');
+      displayNameRef.current?.focus();
+      return;
+    }
+    setError(null);
     onAddSource({
       kind: currentDraft.kind,
       mode: currentDraft.mode,
@@ -153,7 +182,12 @@ export function AddStep({
   const setMode = (currentDraft: PickerDraft, e: ChangeEvent<HTMLSelectElement>): void => {
     setDraft({ ...currentDraft, mode: e.target.value as WizardSourceMode });
     setLocation('');
+    setError(null);
   };
+
+  const locationInvalid = error === 'Location is required.';
+  const displayNameInvalid = error === 'Display name is required.';
+  const hasError = error !== null;
 
   return (
     <section className="wizard-panel" data-testid="wizard-add-step">
@@ -198,6 +232,10 @@ export function AddStep({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. Surgeon"
+                ref={locationRef}
+                aria-required="true"
+                aria-invalid={locationInvalid}
+                aria-describedby={locationInvalid ? DRAFT_ERROR_ID : undefined}
               />
             </label>
           ) : (
@@ -210,6 +248,10 @@ export function AddStep({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder={draft.mode === 'folder' ? '/path/to/folder' : '/path/to/file'}
+                  ref={locationRef}
+                  aria-required="true"
+                  aria-invalid={locationInvalid}
+                  aria-describedby={locationInvalid ? DRAFT_ERROR_ID : undefined}
                 />
                 <button
                   type="button"
@@ -232,8 +274,17 @@ export function AddStep({
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="shown in the source list"
+              ref={displayNameRef}
+              aria-required="true"
+              aria-invalid={displayNameInvalid}
+              aria-describedby={displayNameInvalid ? DRAFT_ERROR_ID : undefined}
             />
           </label>
+          {hasError && (
+            <div id={DRAFT_ERROR_ID} role="alert" className="wizard-field-error">
+              {error}
+            </div>
+          )}
           <div className="wizard-draft-actions">
             <button
               type="button"
@@ -247,7 +298,6 @@ export function AddStep({
               type="button"
               className="wizard-button primary"
               data-testid="wizard-draft-confirm"
-              disabled={location.trim() === '' || displayName.trim() === ''}
               onClick={() => handleConfirm(draft)}
             >
               Add source

@@ -41,7 +41,11 @@ export function Knob({ label, value, ghostValue = null }: KnobProps): JSX.Elemen
   const ghostAngle = valueToAngle(ghostValue ?? value);
   return (
     <div className="knob" data-testid={`knob-${label}`}>
-      <div className="knob-dial" aria-label={`${label} value ${value}`}>
+      <div
+        className="knob-dial"
+        role="img"
+        aria-label={`${label} value ${value}`}
+      >
         <div
           className="knob-indicator"
           data-testid={`knob-indicator-${label}`}

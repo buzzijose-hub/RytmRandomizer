@@ -23,6 +23,8 @@ import { useState } from 'react';
 import type { ProfileKind } from '../ws/protocol';
 import type { CockpitClient } from '../ws/client';
 
+import '../a11y/srOnly.css';
+
 import { CockpitClientProvider } from './context';
 import { HeaderBar } from './HeaderBar';
 import { MutationPanel } from './MutationPanel';
@@ -62,7 +64,8 @@ export function Cockpit({
 
   return (
     <CockpitClientProvider client={client}>
-      <div className="cockpit-root" data-testid="cockpit-root">
+      <main className="cockpit-root" data-testid="cockpit-root">
+        <h1 className="sr-only">RytmRandomizer · Cockpit</h1>
         <HeaderBar />
         <div className="cockpit-main">
           <SnapshotPanel previewOn={previewOn} />
@@ -72,7 +75,7 @@ export function Cockpit({
             onTogglePreview={setPreviewOn}
           />
         </div>
-      </div>
+      </main>
     </CockpitClientProvider>
   );
 }

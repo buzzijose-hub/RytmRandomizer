@@ -9,10 +9,19 @@
  * Cockpit. The router uses the browser `hashchange` event so `window.location.hash = ...`
  * (used by both MutationPanel's wizard launcher and the wizard's post-save navigation)
  * is enough to switch surfaces without pulling in a routing library.
+ *
+ * A11y wiring
+ * -----------
+ * - `<LiveRegion />` mounts the global aria-live region (Cluster 4 — announcer).
+ * - `useDocumentTitle` sets per-route document.title (Cluster 6 — landmarks).
+ * - `useFocusOnRouteChange` moves focus to the route container on hash change
+ *   (Cluster 5 — focus management). Each return branch wraps its content in a
+ *   `<div ref={routeRootRef} tabIndex={-1}>` so the hook has a focusable target.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
 import { Cockpit } from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import { Wizard } from './wizard';
@@ -48,6 +57,7 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
   const sessionStatus = useCockpitStore((s) => s.sessionStatus);
   const [connStatus, setConnStatus] = useState<ConnectionStatus>(client.getStatus());
   const route = useHashRoute();
+  const routeRootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unbind = bindClientToStore(client);
@@ -60,19 +70,48 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
     };
   }, [client]);
 
+  useDocumentTitle(
+    sessionStatus === null
+      ? 'RytmRandomizer · Connecting'
+      : isWizardRoute(route)
+        ? 'RytmRandomizer · Profile Wizard'
+        : 'RytmRandomizer · Cockpit',
+  );
+
+  useFocusOnRouteChange(routeRootRef, [route, sessionStatus === null]);
+
   if (sessionStatus === null) {
     return (
-      <main className="cockpit-placeholder">
-        <h1>RytmRandomizer · Cockpit</h1>
-        <p>Connecting…</p>
-        <small>status: {connStatus}</small>
-      </main>
+      <>
+        <LiveRegion />
+        <div ref={routeRootRef} tabIndex={-1}>
+          <main className="cockpit-placeholder">
+            <h1>RytmRandomizer · Cockpit</h1>
+            <p>Connecting…</p>
+            <small>status: {connStatus}</small>
+          </main>
+        </div>
+      </>
     );
   }
 
   if (isWizardRoute(route)) {
-    return <Wizard client={client} />;
+    return (
+      <>
+        <LiveRegion />
+        <div ref={routeRootRef} tabIndex={-1}>
+          <Wizard client={client} />
+        </div>
+      </>
+    );
   }
 
-  return <Cockpit client={client} />;
+  return (
+    <>
+      <LiveRegion />
+      <div ref={routeRootRef} tabIndex={-1}>
+        <Cockpit client={client} />
+      </div>
+    </>
+  );
 }
