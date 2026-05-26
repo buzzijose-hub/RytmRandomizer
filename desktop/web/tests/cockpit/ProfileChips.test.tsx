@@ -114,4 +114,88 @@ describe('ProfileChips', () => {
     expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
     expect(screen.getByText(/4 bytes/)).toBeInTheDocument();
   });
+
+  it('reports the byte count for unpadded base64 export payloads', async () => {
+    act(() => {
+      useCockpitStore.getState().setProfile(profile);
+    });
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-unpadded',
+      ok: true,
+      model_bytes_b64: 'YWJj',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
+    expect(screen.getByText(/3 bytes/)).toBeInTheDocument();
+  });
+
+  it('downloads a binary profile export when browser blob APIs are available', async () => {
+    act(() => {
+      useCockpitStore.getState().setProfile(profile);
+    });
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-download',
+      ok: true,
+      model_bytes: 'YWI=',
+    });
+    const originalCreateObjectUrl = URL.createObjectURL;
+    const originalRevokeObjectUrl = URL.revokeObjectURL;
+    const originalClick = HTMLAnchorElement.prototype.click;
+    const createdUrls: string[] = [];
+    const revokedUrls: string[] = [];
+    const downloads: string[] = [];
+    URL.createObjectURL = ((blob: Blob) => {
+      expect(blob.type).toBe('application/octet-stream');
+      createdUrls.push('blob:profile-model');
+      return 'blob:profile-model';
+    }) as typeof URL.createObjectURL;
+    URL.revokeObjectURL = ((url: string) => {
+      revokedUrls.push(url);
+    }) as typeof URL.revokeObjectURL;
+    HTMLAnchorElement.prototype.click = function click() {
+      downloads.push(this.download);
+    };
+
+    try {
+      fireEvent.click(screen.getByTestId('profile-export-button'));
+
+      expect(await screen.findByText(/Export ready/)).toBeInTheDocument();
+      expect(screen.getByText(/2 bytes/)).toBeInTheDocument();
+      expect(createdUrls).toEqual(['blob:profile-model']);
+      expect(revokedUrls).toEqual(['blob:profile-model']);
+      expect(downloads).toEqual([`${profile.profile_id}-${profile.model_version}.rymp`]);
+    } finally {
+      URL.createObjectURL = originalCreateObjectUrl;
+      URL.revokeObjectURL = originalRevokeObjectUrl;
+      HTMLAnchorElement.prototype.click = originalClick;
+    }
+  });
+
+  it('shows the sidecar rejection reason when export fails', async () => {
+    act(() => {
+      useCockpitStore.getState().setProfile(profile);
+    });
+    const fake = renderWith();
+    fake.ackQueue.push({ request_id: 'export-rejected', ok: false });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    expect(await screen.findByText('Export rejected by sidecar')).toBeInTheDocument();
+  });
+
+  it('shows a generic export failure when the client rejects with a non-error value', async () => {
+    act(() => {
+      useCockpitStore.getState().setProfile(profile);
+    });
+    const fake = renderWith();
+    fake.nextRejection = 'transport closed' as unknown as Error;
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    expect(await screen.findByText('Export failed')).toBeInTheDocument();
+  });
 });
