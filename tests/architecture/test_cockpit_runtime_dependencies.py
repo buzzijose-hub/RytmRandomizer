@@ -11,6 +11,7 @@ pytestmark = pytest.mark.fast
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+SAFE_FASTAPI_REQUIREMENT = "fastapi>=0.110.0,<0.136.3"
 
 
 def _pyproject() -> dict[str, object]:
@@ -67,4 +68,28 @@ def test_briefcase_runtime_contains_cockpit_and_style_dependencies() -> None:
         "macOS": [],
         "linux": [],
         "windows": [],
+    }
+
+
+def test_cockpit_fastapi_requirement_excludes_flagged_release() -> None:
+    pyproject = _pyproject()
+    optional = _optional_dependencies(pyproject)
+    runtime_targets = {
+        "dev": optional["dev"],
+        "cockpit": optional["cockpit"],
+        **_briefcase_requires(pyproject),
+    }
+
+    fastapi_requirements = {
+        target: [requirement for requirement in requirements if requirement.startswith("fastapi")]
+        for target, requirements in runtime_targets.items()
+    }
+
+    assert fastapi_requirements == {
+        "dev": [SAFE_FASTAPI_REQUIREMENT],
+        "cockpit": [SAFE_FASTAPI_REQUIREMENT],
+        "default": [SAFE_FASTAPI_REQUIREMENT],
+        "macOS": [SAFE_FASTAPI_REQUIREMENT],
+        "linux": [SAFE_FASTAPI_REQUIREMENT],
+        "windows": [SAFE_FASTAPI_REQUIREMENT],
     }

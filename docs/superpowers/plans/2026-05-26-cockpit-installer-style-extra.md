@@ -16,6 +16,8 @@ not install the style analyzer dependency.
 - Make `pip install -e ".[cockpit]"` enough for sidecar-only cockpit runtime.
 - Make Briefcase app runtime requirements include the same cockpit sidecar and
   audio analyzer dependencies for all supported platforms.
+- Cap the cockpit FastAPI resolver below the audited `0.136.3` release while
+  preserving the existing `>=0.110.0` floor.
 - Update installer/manual/style docs so the operator path matches packaging.
 
 ## Non-Goals
