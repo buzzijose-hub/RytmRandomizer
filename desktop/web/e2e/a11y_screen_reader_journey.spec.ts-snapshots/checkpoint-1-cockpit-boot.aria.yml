@@ -6,13 +6,41 @@
   - paragraph: /analog_rytm_mk2 · \d+ BPM/
   - text: Pad 1 BD Hard
   - button "Lock pad 1": 🔓
-  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+ Pad 2 SD Acoustic/
+  - img /TUN value \d+/
+  - text: /TUN \d+/
+  - img /DEC value \d+/
+  - text: /DEC \d+/
+  - img /LEV value \d+/
+  - text: /LEV \d+/
+  - img /FLT value \d+/
+  - text: /FLT \d+ Pad 2 SD Acoustic/
   - button "Lock pad 2": 🔓
-  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+ Pad 3 SY Raw/
+  - img /TUN value \d+/
+  - text: /TUN \d+/
+  - img /DEC value \d+/
+  - text: /DEC \d+/
+  - img /LEV value \d+/
+  - text: /LEV \d+/
+  - img /FLT value \d+/
+  - text: /FLT \d+ Pad 3 SY Raw/
   - button "Lock pad 3": 🔓
-  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+ Pad 4 FX Metal/
+  - img /TUN value \d+/
+  - text: /TUN \d+/
+  - img /DEC value \d+/
+  - text: /DEC \d+/
+  - img /LEV value \d+/
+  - text: /LEV \d+/
+  - img /FLT value \d+/
+  - text: /FLT \d+ Pad 4 FX Metal/
   - button "Lock pad 4": 🔓
-  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+/
+  - img /TUN value \d+/
+  - text: /TUN \d+/
+  - img /DEC value \d+/
+  - text: /DEC \d+/
+  - img /LEV value \d+/
+  - text: /LEV \d+/
+  - img /FLT value \d+/
+  - text: /FLT \d+/
   - heading "Snapshot history" [level=2]
   - button /Load snapshot 01[A-Z0-9]{24}/
   - heading "Mutation Panel" [level=2]
