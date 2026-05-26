@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from ..data import INTENSITY_PLANS, SCENE_PRESETS
 
@@ -67,9 +67,42 @@ class LiveGuiSceneCard:
     passive: bool
 
 
+class LiveGuiSceneCardDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSceneCard`."""
+
+    scene_key: str
+    order: int
+    label: str
+    description: str
+    action: str
+    affected_pads: tuple[int, ...]
+    zone_tokens: tuple[str, ...]
+    depth_tokens: tuple[str, ...]
+    mutation_depth_percent: int
+    dry_run_message_count: int
+    status: str
+    operator_hint: str
+    passive: bool
+
+
 @dataclass(frozen=True)
 class LiveGuiScenePreviewQueueItem:
     """One GUI-ready live preview queue item."""
+
+    scene_key: str
+    queue_index: int
+    queue_position: str
+    label: str
+    status: str
+    estimated_duration_seconds: int
+    mutation_depth_percent: int
+    affected_pads: tuple[int, ...]
+    dry_run_message_count: int
+    passive: bool
+
+
+class LiveGuiScenePreviewQueueItemDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiScenePreviewQueueItem`."""
 
     scene_key: str
     queue_index: int
@@ -93,6 +126,19 @@ class LiveGuiSceneQueueModel:
     queue_status: str
     scene_cards: tuple[LiveGuiSceneCard, ...]
     preview_queue: tuple[LiveGuiScenePreviewQueueItem, ...]
+    safety_lines: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+
+
+class LiveGuiSceneQueueModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSceneQueueModel`."""
+
+    model_version: str
+    source_module: str
+    scene_count: int
+    queue_status: str
+    scene_cards: tuple[LiveGuiSceneCardDict, ...]
+    preview_queue: tuple[LiveGuiScenePreviewQueueItemDict, ...]
     safety_lines: tuple[str, ...]
     blocked_actions: tuple[str, ...]
 
@@ -402,8 +448,11 @@ def format_live_gui_scene_queue_model_report(
 
 __all__ = [
     "LiveGuiSceneCard",
+    "LiveGuiSceneCardDict",
     "LiveGuiScenePreviewQueueItem",
+    "LiveGuiScenePreviewQueueItemDict",
     "LiveGuiSceneQueueModel",
+    "LiveGuiSceneQueueModelDict",
     "build_live_gui_scene_queue_model",
     "format_live_gui_scene_queue_model_report",
     "live_gui_scene_queue_model_payload",

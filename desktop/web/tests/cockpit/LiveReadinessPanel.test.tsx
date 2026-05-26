@@ -5,249 +5,110 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { LiveReadinessPanel, type LiveReadinessModel } from '../../src/cockpit/LiveReadinessPanel';
+import {
+  DEFAULT_LIVE_READINESS_MODEL,
+  LiveReadinessPanel,
+  type LiveReadinessModel,
+} from '../../src/cockpit/LiveReadinessPanel';
 
 import { runAxe, violationSummary } from '../a11y/__helpers__/axe';
 
-const model = {
-  padSurface: {
-    summary: '4 active pads, 8 planned pads',
-    pads: [
-      {
-        pad: 1,
-        trackCode: 'BD',
-        label: 'BD Hard',
-        state: 'active_v134',
-        role: 'kick',
-        machine: 'BD Hard',
-        lockReason: 'ready for dry-run review',
+const model: LiveReadinessModel = {
+  ...DEFAULT_LIVE_READINESS_MODEL,
+  pad_surface: {
+    ...DEFAULT_LIVE_READINESS_MODEL.pad_surface,
+    active_pad_count: 1,
+    planned_pad_count: 1,
+    cards_by_pad: {
+      1: DEFAULT_LIVE_READINESS_MODEL.pad_surface.cards_by_pad[1]!,
+      12: {
+        ...DEFAULT_LIVE_READINESS_MODEL.pad_surface.cards_by_pad[12]!,
+        default_role: 'accent kick',
+        lock_reason: 'awaiting V1.34-compatible mutation routing',
       },
-      {
-        pad: 12,
-        trackCode: 'BD',
-        label: 'BD Acoustic',
-        state: 'planned_expansion',
-        role: 'accent kick',
-        machine: 'BD Acoustic',
-        lockReason: 'awaiting V1.34-compatible mutation routing',
-      },
-    ],
+    },
   },
-  deviceInventory: {
-    devices: [
+  scene_queue: {
+    ...DEFAULT_LIVE_READINESS_MODEL.scene_queue,
+    queue_status: 'review-needed',
+    scene_cards: [
+      DEFAULT_LIVE_READINESS_MODEL.scene_queue.scene_cards[0]!,
       {
-        deviceId: 'analog_rytm_mk2',
-        displayName: 'Analog Rytm MKII',
-        roleSummary: '12-pad drum and sample performance surface',
-        trackCountLabel: '12 tracks',
-        status: 'mock_safe',
-        capabilities: ['snapshot_decode', 'mutation_plan'],
-      },
-      {
-        deviceId: 'analog_four_mk2',
-        displayName: 'Analog Four MKII',
-        roleSummary: '4-track synth performance surface',
-        trackCountLabel: '4 tracks',
-        status: 'mock_safe',
-        capabilities: ['snapshot_decode', 'mock_render'],
-      },
-    ],
-  },
-  sceneQueue: {
-    queueStatus: 'review-needed',
-    scenes: [
-      {
-        sceneKey: 'S0',
-        label: 'Home Clean',
-        description: 'Return to anchors',
-        affectedPads: '1/2/3/4',
-        depthPercent: 15,
-        dryRunMessages: 18,
-        status: 'safe',
-      },
-      {
-        sceneKey: 'S3',
-        label: 'Metallic Pressure',
+        ...DEFAULT_LIVE_READINESS_MODEL.scene_queue.scene_cards[3]!,
         description: 'Grit-forward intensity',
-        affectedPads: '1/2/3/4',
-        depthPercent: 68,
-        dryRunMessages: 93,
-        status: 'high-risk',
       },
     ],
-    previewQueue: [
+    preview_queue: [
       {
-        sceneKey: 'S3',
-        label: 'Metallic Pressure',
-        position: 'current',
-        duration: '32s',
-        status: 'high-risk',
+        ...DEFAULT_LIVE_READINESS_MODEL.scene_queue.preview_queue[3]!,
+        scene_key: 'S3',
+        queue_position: 'current',
       },
     ],
   },
-  statusFooter: {
-    items: [
-      {
-        key: 'safety',
-        label: 'Mock Safe',
-        value: 'No hardware will be changed',
-        severity: 'safe',
-      },
-      {
-        key: 'midi-port',
-        label: 'No MIDI Port Open',
-        value: 'No MIDI port selected',
-        severity: 'safe',
-      },
-    ],
-  },
-  snapshotHistory: {
+  snapshot_history: {
+    ...DEFAULT_LIVE_READINESS_MODEL.snapshot_history,
+    entry_count: 2,
     entries: [
-      {
-        snapshotId: 'snap-1',
-        label: 'Initial snapshot',
-        summary: 'analog_rytm_mk2: 12 pad(s), scene A01, 132 BPM',
-        state: 'past',
-      },
-      {
-        snapshotId: 'snap-3',
-        label: 'industrial-peak',
-        summary: 'analog_rytm_mk2: 12 pad(s), scene A01, 132 BPM',
-        state: 'current',
-      },
+      DEFAULT_LIVE_READINESS_MODEL.snapshot_history.entries[0]!,
+      DEFAULT_LIVE_READINESS_MODEL.snapshot_history.entries[2]!,
     ],
-    controls: [
-      {
-        key: 'undo',
-        label: 'Undo',
-        state: 'enabled',
-        reason: 'Undo to previous snapshot snap-2.',
-      },
-      {
-        key: 'redo',
-        label: 'Redo',
-        state: 'disabled',
-        reason: 'No redo stack modeled yet.',
-      },
-    ],
+    controls: DEFAULT_LIVE_READINESS_MODEL.snapshot_history.controls.slice(0, 2),
   },
-  safetyChecklist: {
-    status: 'blocked',
-    passedLabel: '3 / 4',
+  safety_checklist: {
+    ...DEFAULT_LIVE_READINESS_MODEL.safety_checklist,
+    checklist_status: 'blocked',
+    passed_count: 3,
+    total_count: 4,
     items: [
+      DEFAULT_LIVE_READINESS_MODEL.safety_checklist.items[1]!,
       {
-        key: 'guards-enabled',
-        label: 'All guards enabled',
-        status: 'passed',
-        message: 'All safety guards enabled',
-      },
-      {
-        key: 'snapshot-compatible',
-        label: 'Snapshot compatibility verified',
+        ...DEFAULT_LIVE_READINESS_MODEL.safety_checklist.items[2]!,
         status: 'blocked',
+        severity: 'critical',
         message: 'Snapshot compatibility is not verified',
       },
     ],
-    armGate: {
-      label: 'Arm Hardware',
+    arm_gate: {
+      ...DEFAULT_LIVE_READINESS_MODEL.safety_checklist.arm_gate,
       state: 'blocked',
       reason: 'Resolve blocked safety checklist rows before arming.',
     },
   },
-  commandQueue: {
-    queueStatus: 'queued',
-    commands: [
-      {
-        key: 'queued-command-mutate-pad-11',
-        label: 'Mutate Pad 11 (SY Raw)',
-        status: 'queued',
-        target: 'Pad 11 / SY Raw',
-        messageCount: 8,
-      },
+  command_queue: {
+    ...DEFAULT_LIVE_READINESS_MODEL.command_queue,
+    queued_commands: [DEFAULT_LIVE_READINESS_MODEL.command_queue.queued_commands[1]!],
+    last_actions: [DEFAULT_LIVE_READINESS_MODEL.command_queue.last_actions[0]!],
+    undo_stack: [DEFAULT_LIVE_READINESS_MODEL.command_queue.undo_stack[1]!],
+  },
+  analyzer_panel: {
+    ...DEFAULT_LIVE_READINESS_MODEL.analyzer_panel,
+    reference_label: 'The Bells - Jeff Mills',
+    panel_status: 'ready',
+    bpm: 132,
+    tempo_stability_percent: 86,
+    waveform_bins: [
+      { ...DEFAULT_LIVE_READINESS_MODEL.analyzer_panel.waveform_bins[0]!, value_percent: 64, status: 'active' },
+      { ...DEFAULT_LIVE_READINESS_MODEL.analyzer_panel.waveform_bins[1]!, value_percent: 82, status: 'hot' },
     ],
-    lastActions: [
-      {
-        key: 'last-action-snap-3',
-        label: 'Send snapshot',
-        status: 'current',
-        detail: 'saved snapshot via send',
-      },
-    ],
-    undoStack: [
-      {
-        key: 'undo-stack-snap-2',
-        label: 'Auto snapshot 2',
-        status: 'available',
-      },
+    spectrum_bands: [
+      { ...DEFAULT_LIVE_READINESS_MODEL.analyzer_panel.spectrum_bands[0]!, value_percent: 78, status: 'active' },
+      { ...DEFAULT_LIVE_READINESS_MODEL.analyzer_panel.spectrum_bands[4]!, value_percent: 31, status: 'low' },
     ],
   },
-  analyzerPanel: {
-    title: 'Analyzer (Post-Mutation Preview)',
-    referenceLabel: 'The Bells - Jeff Mills',
-    panelStatus: 'ready',
-    bpmLabel: '132.0 BPM',
-    tempoStabilityLabel: '86%',
-    waveformBins: [
-      { label: 'bin 1', valuePercent: 64, status: 'active' },
-      { label: 'bin 2', valuePercent: 82, status: 'hot' },
-    ],
-    spectrumBands: [
-      { key: 'low', label: 'Low', valuePercent: 78, status: 'active' },
-      { key: 'noise', label: 'Noise', valuePercent: 31, status: 'low' },
-    ],
+  hardware_rail: {
+    ...DEFAULT_LIVE_READINESS_MODEL.hardware_rail,
+    cards: DEFAULT_LIVE_READINESS_MODEL.hardware_rail.cards.slice(0, 2),
   },
-  hardwareRail: {
-    railStatus: 'mock-safe',
-    cards: [
-      {
-        key: 'mock-dry-run',
-        title: 'Mock / Dry Run',
-        status: 'active',
-        summary: 'All changes are simulated. No hardware will be modified.',
-        actions: [
-          {
-            key: 'toggle-dry-run',
-            label: 'Toggle dry run',
-            enabled: false,
-            reason: 'passive GUI state toggle metadata only',
-          },
-        ],
-      },
-      {
-        key: 'midi-port',
-        title: 'MIDI Port',
-        status: 'none',
-        summary: 'No MIDI port selected or opened.',
-        actions: [
-          {
-            key: 'select-midi-port',
-            label: 'Open MIDI Port',
-            enabled: false,
-            reason: 'no passive port labels supplied',
-          },
-        ],
-      },
-    ],
-  },
-  snapshotCompatibility: {
-    statusBadge: 'Limited',
+  snapshot_compatibility: {
+    ...DEFAULT_LIVE_READINESS_MODEL.snapshot_compatibility,
     summary: '8 of 12 pads are snapshot-mutable; 4 are planned/locked.',
     pads: [
-      {
-        pad: 1,
-        label: 'BD Hard',
-        status: 'compatible',
-        machineCountLabel: '7 machines',
-      },
-      {
-        pad: 12,
-        label: 'BD Acoustic',
-        status: 'planned',
-        machineCountLabel: '3 machines',
-      },
+      DEFAULT_LIVE_READINESS_MODEL.snapshot_compatibility.pads[0]!,
+      DEFAULT_LIVE_READINESS_MODEL.snapshot_compatibility.pads[11]!,
     ],
   },
-} satisfies LiveReadinessModel;
+};
 
 describe('LiveReadinessPanel', () => {
   it('renders all passive GUI model surfaces as visible consumers', () => {

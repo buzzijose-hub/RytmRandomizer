@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import asdict, dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from .formatter import (
     SAFETY_SECTION_HEADER,
@@ -67,9 +67,39 @@ class LiveGuiSafetyChecklistItem:
     test_id: str
 
 
+class LiveGuiSafetyChecklistItemDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSafetyChecklistItem`."""
+
+    key: str
+    order: int
+    label: str
+    status: str
+    severity: str
+    message: str
+    operator_action: str
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiArmHardwareGate:
     """Declarative future Arm Hardware control state."""
+
+    key: str
+    label: str
+    state: str
+    enabled: bool
+    reason: str
+    requirements: tuple[str, ...]
+    midi_port_name: str | None
+    midi_port_open: bool
+    hardware_connected: bool
+    send_plan_ready: bool
+    dry_run_complete: bool
+    test_id: str
+
+
+class LiveGuiArmHardwareGateDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiArmHardwareGate`."""
 
     key: str
     label: str
@@ -97,6 +127,22 @@ class LiveGuiSafetyChecklistModel:
     total_count: int
     items: tuple[LiveGuiSafetyChecklistItem, ...]
     arm_gate: LiveGuiArmHardwareGate
+    safety_lines: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    replay_commands: tuple[str, ...]
+
+
+class LiveGuiSafetyChecklistModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSafetyChecklistModel`."""
+
+    safety_checklist_version: str
+    safety_checklist_id: str
+    session_label: str
+    checklist_status: str
+    passed_count: int
+    total_count: int
+    items: tuple[LiveGuiSafetyChecklistItemDict, ...]
+    arm_gate: LiveGuiArmHardwareGateDict
     safety_lines: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -373,8 +419,11 @@ __all__ = [
     "ARM_REQUIREMENTS",
     "BLOCKED_ACTIONS",
     "LiveGuiArmHardwareGate",
+    "LiveGuiArmHardwareGateDict",
     "LiveGuiSafetyChecklistItem",
+    "LiveGuiSafetyChecklistItemDict",
     "LiveGuiSafetyChecklistModel",
+    "LiveGuiSafetyChecklistModelDict",
     "REPORT_TITLE",
     "SAFETY_CHECKLIST_MODEL_VERSION",
     "SAFETY_LINES",

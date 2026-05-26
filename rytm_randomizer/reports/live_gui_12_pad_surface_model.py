@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal, TypeAlias
+from typing import Final, Literal, TypeAlias, TypedDict
 
 from ..data.rytm_machine_catalog import (
     MACHINE_SELECTABLE,
@@ -70,6 +70,24 @@ class LiveGuiRytmPadSurfaceCard:
     primary_machine_labels: tuple[str, ...]
 
 
+class LiveGuiRytmPadSurfaceCardDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiRytmPadSurfaceCard`."""
+
+    pad: int
+    track_code: str
+    label: str
+    surface_state: SurfaceState
+    ui_enabled: bool
+    ui_locked: bool
+    lock_reason: str
+    default_role: str
+    default_machine_label: str
+    legal_machine_count: int
+    snapshot_mutable_machine_count: int
+    selectable_only_machine_count: int
+    primary_machine_labels: tuple[str, ...]
+
+
 @dataclass(frozen=True)
 class LiveGuiRytmTwelvePadSurfaceModel:
     """Passive model the cockpit can consume before the 12-pad UI is wired."""
@@ -79,6 +97,18 @@ class LiveGuiRytmTwelvePadSurfaceModel:
     active_pad_count: int
     planned_pad_count: int
     cards_by_pad: Mapping[int, LiveGuiRytmPadSurfaceCard]
+    blocked_actions: tuple[str, ...]
+    safety: tuple[str, ...]
+
+
+class LiveGuiRytmTwelvePadSurfaceModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiRytmTwelvePadSurfaceModel`."""
+
+    model_version: str
+    pad_count: int
+    active_pad_count: int
+    planned_pad_count: int
+    cards_by_pad: Mapping[int, LiveGuiRytmPadSurfaceCardDict]
     blocked_actions: tuple[str, ...]
     safety: tuple[str, ...]
 
@@ -237,7 +267,9 @@ __all__ = [
     "ACTIVE_V134_PADS",
     "BLOCKED_ACTIONS",
     "LiveGuiRytmPadSurfaceCard",
+    "LiveGuiRytmPadSurfaceCardDict",
     "LiveGuiRytmTwelvePadSurfaceModel",
+    "LiveGuiRytmTwelvePadSurfaceModelDict",
     "PLANNED_LOCK_REASON",
     "REPORT_TITLE",
     "SAFETY_LINES",

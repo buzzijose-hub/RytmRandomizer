@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from .formatter import PassiveReportHeader, passive_report_lines, powershell_literal_arg
 
@@ -61,6 +61,16 @@ class LiveGuiHardwareRailAction:
     test_id: str
 
 
+class LiveGuiHardwareRailActionDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiHardwareRailAction`."""
+
+    key: str
+    label: str
+    enabled: bool
+    reason: str
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiHardwareRailCard:
     """One passive right-rail card for the future GUI."""
@@ -75,9 +85,32 @@ class LiveGuiHardwareRailCard:
     test_id: str
 
 
+class LiveGuiHardwareRailCardDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiHardwareRailCard`."""
+
+    key: str
+    title: str
+    status: str
+    severity: str
+    summary: str
+    details: tuple[str, ...]
+    actions: tuple[LiveGuiHardwareRailActionDict, ...]
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiHardwareRailSafetyCheck:
     """One passive safety-check row."""
+
+    key: str
+    label: str
+    passed: bool
+    status: str
+    test_id: str
+
+
+class LiveGuiHardwareRailSafetyCheckDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiHardwareRailSafetyCheck`."""
 
     key: str
     label: str
@@ -108,6 +141,33 @@ class LiveGuiHardwareRailModel:
     arm_status: str
     arm_locked: bool
     cards: tuple[LiveGuiHardwareRailCard, ...]
+    required_actions: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    replay_commands: tuple[str, ...]
+    safety: tuple[str, ...]
+
+
+class LiveGuiHardwareRailModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiHardwareRailModel`."""
+
+    model_version: str
+    rail_id: str
+    session_label: str
+    device_label: str
+    mode_label: str
+    rail_status: str
+    dry_run_active: bool
+    hardware_requested: bool
+    port_status: str
+    selected_port_name: str | None
+    available_ports: tuple[str, ...]
+    safety_checks: tuple[LiveGuiHardwareRailSafetyCheckDict, ...]
+    safety_check_count: int
+    safety_checks_passed: int
+    failing_safety_checks: tuple[str, ...]
+    arm_status: str
+    arm_locked: bool
+    cards: tuple[LiveGuiHardwareRailCardDict, ...]
     required_actions: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -633,9 +693,13 @@ __all__ = [
     "DEFAULT_MODE_LABEL",
     "DEFAULT_SESSION_LABEL",
     "LiveGuiHardwareRailAction",
+    "LiveGuiHardwareRailActionDict",
     "LiveGuiHardwareRailCard",
+    "LiveGuiHardwareRailCardDict",
     "LiveGuiHardwareRailModel",
+    "LiveGuiHardwareRailModelDict",
     "LiveGuiHardwareRailSafetyCheck",
+    "LiveGuiHardwareRailSafetyCheckDict",
     "MODEL_VERSION",
     "REPORT_TITLE",
     "SAFETY_LINES",

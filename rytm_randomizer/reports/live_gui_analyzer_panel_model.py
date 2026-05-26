@@ -6,7 +6,7 @@ import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final
+from typing import Final, TypedDict
 
 from ..style_analysis.feature_report import FeatureReport
 
@@ -46,6 +46,15 @@ class LiveGuiAnalyzerWaveformBin:
     status: str
 
 
+class LiveGuiAnalyzerWaveformBinDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiAnalyzerWaveformBin`."""
+
+    index: int
+    label: str
+    value_percent: int
+    status: str
+
+
 @dataclass(frozen=True)
 class LiveGuiAnalyzerSpectrumBand:
     """One normalized spectrum band for the future analyzer panel."""
@@ -58,9 +67,29 @@ class LiveGuiAnalyzerSpectrumBand:
     status: str
 
 
+class LiveGuiAnalyzerSpectrumBandDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiAnalyzerSpectrumBand`."""
+
+    key: str
+    label: str
+    low_hz: int
+    high_hz: int
+    value_percent: int
+    status: str
+
+
 @dataclass(frozen=True)
 class LiveGuiAnalyzerPanelControl:
     """One declarative control state for the analyzer panel."""
+
+    key: str
+    label: str
+    enabled: bool
+    status: str
+
+
+class LiveGuiAnalyzerPanelControlDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiAnalyzerPanelControl`."""
 
     key: str
     label: str
@@ -85,6 +114,28 @@ class LiveGuiAnalyzerPanelModel:
     waveform_bins: tuple[LiveGuiAnalyzerWaveformBin, ...]
     spectrum_bands: tuple[LiveGuiAnalyzerSpectrumBand, ...]
     controls: tuple[LiveGuiAnalyzerPanelControl, ...]
+    required_actions: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    safety: Mapping[str, bool]
+    replay_commands: tuple[str, ...]
+
+
+class LiveGuiAnalyzerPanelModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiAnalyzerPanelModel`."""
+
+    title: str
+    panel_model_version: str
+    panel_id: str
+    panel_status: str
+    panel_mode: str
+    reference_label: str
+    source_kind: str
+    confidence: str
+    bpm: float
+    tempo_stability_percent: int
+    waveform_bins: tuple[LiveGuiAnalyzerWaveformBinDict, ...]
+    spectrum_bands: tuple[LiveGuiAnalyzerSpectrumBandDict, ...]
+    controls: tuple[LiveGuiAnalyzerPanelControlDict, ...]
     required_actions: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     safety: Mapping[str, bool]
@@ -427,9 +478,13 @@ def format_live_gui_analyzer_panel_model(
 
 __all__ = [
     "LiveGuiAnalyzerPanelControl",
+    "LiveGuiAnalyzerPanelControlDict",
     "LiveGuiAnalyzerPanelModel",
+    "LiveGuiAnalyzerPanelModelDict",
     "LiveGuiAnalyzerSpectrumBand",
+    "LiveGuiAnalyzerSpectrumBandDict",
     "LiveGuiAnalyzerWaveformBin",
+    "LiveGuiAnalyzerWaveformBinDict",
     "build_live_gui_analyzer_panel_model",
     "format_live_gui_analyzer_panel_model",
     "to_live_gui_analyzer_panel_model_json",

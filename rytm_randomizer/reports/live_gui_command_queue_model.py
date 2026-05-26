@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from ..cockpit.data.history import History, HistoryEntry
 from .formatter import (
@@ -99,9 +99,40 @@ class LiveGuiQueuedCommand:
     test_id: str
 
 
+class LiveGuiQueuedCommandDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiQueuedCommand`."""
+
+    key: str
+    order: int
+    label: str
+    status: str
+    enabled: bool
+    action_type: str
+    target: str
+    dry_run_only: bool
+    estimated_message_count: int
+    operator_action: str
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiLastAction:
     """One recent action row derived from cockpit history metadata."""
+
+    key: str
+    order: int
+    label: str
+    status: str
+    action_type: str
+    snapshot_id: str
+    device: str
+    result: str
+    detail: str
+    test_id: str
+
+
+class LiveGuiLastActionDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiLastAction`."""
 
     key: str
     order: int
@@ -131,6 +162,21 @@ class LiveGuiUndoStackEntry:
     test_id: str
 
 
+class LiveGuiUndoStackEntryDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiUndoStackEntry`."""
+
+    key: str
+    order: int
+    label: str
+    status: str
+    snapshot_id: str
+    is_current: bool
+    is_undo_target: bool
+    is_load_target: bool
+    action_type: str
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiCommandQueueModel:
     """Passive packet consumed by future command queue / action history UI."""
@@ -145,6 +191,24 @@ class LiveGuiCommandQueueModel:
     queued_commands: tuple[LiveGuiQueuedCommand, ...]
     last_actions: tuple[LiveGuiLastAction, ...]
     undo_stack: tuple[LiveGuiUndoStackEntry, ...]
+    safety_lines: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    replay_commands: tuple[str, ...]
+
+
+class LiveGuiCommandQueueModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiCommandQueueModel`."""
+
+    command_queue_version: str
+    command_queue_id: str
+    session_label: str
+    queue_status: str
+    dry_run_active: bool
+    hardware_armed: bool
+    active_command_key: str | None
+    queued_commands: tuple[LiveGuiQueuedCommandDict, ...]
+    last_actions: tuple[LiveGuiLastActionDict, ...]
+    undo_stack: tuple[LiveGuiUndoStackEntryDict, ...]
     safety_lines: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -472,9 +536,13 @@ __all__ = [
     "BLOCKED_ACTIONS",
     "COMMAND_QUEUE_MODEL_VERSION",
     "LiveGuiCommandQueueModel",
+    "LiveGuiCommandQueueModelDict",
     "LiveGuiLastAction",
+    "LiveGuiLastActionDict",
     "LiveGuiQueuedCommand",
+    "LiveGuiQueuedCommandDict",
     "LiveGuiUndoStackEntry",
+    "LiveGuiUndoStackEntryDict",
     "REPORT_TITLE",
     "SAFETY_LINES",
     "SOURCE_MODULE",

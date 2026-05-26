@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from .formatter import PassiveReportHeader, passive_report_lines
 from .rytm_snapshot_pad_compatibility import (
@@ -61,6 +61,24 @@ class LiveGuiSnapshotCompatibilityPad:
     test_id: str
 
 
+class LiveGuiSnapshotCompatibilityPadDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSnapshotCompatibilityPad`."""
+
+    pad: int
+    track_code: str
+    label: str
+    status: str
+    severity: str
+    map_safe: bool
+    snapshot_mutation_enabled: bool
+    allowed_machine_count: int
+    mutable_machine_count: int
+    selectable_machine_count: int
+    lock_reason: str
+    machine_labels: tuple[str, ...]
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiSnapshotCompatibilityModel:
     """Passive snapshot compatibility payload for the future desktop GUI."""
@@ -77,6 +95,27 @@ class LiveGuiSnapshotCompatibilityModel:
     planned_pad_count: int
     view_details_enabled: bool
     pads: tuple[LiveGuiSnapshotCompatibilityPad, ...]
+    required_actions: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    replay_commands: tuple[str, ...]
+    safety: tuple[str, ...]
+
+
+class LiveGuiSnapshotCompatibilityModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSnapshotCompatibilityModel`."""
+
+    model_version: str
+    compatibility_id: str
+    panel_label: str
+    session_label: str
+    compatibility_status: str
+    status_badge: str
+    summary: str
+    pad_count: int
+    snapshot_mutable_pad_count: int
+    planned_pad_count: int
+    view_details_enabled: bool
+    pads: tuple[LiveGuiSnapshotCompatibilityPadDict, ...]
     required_actions: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -317,7 +356,9 @@ __all__ = [
     "DEFAULT_PANEL_LABEL",
     "DEFAULT_SESSION_LABEL",
     "LiveGuiSnapshotCompatibilityModel",
+    "LiveGuiSnapshotCompatibilityModelDict",
     "LiveGuiSnapshotCompatibilityPad",
+    "LiveGuiSnapshotCompatibilityPadDict",
     "MODEL_VERSION",
     "REPORT_TITLE",
     "SAFETY_LINES",

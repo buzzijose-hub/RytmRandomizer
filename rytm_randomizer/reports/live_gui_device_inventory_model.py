@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, TypeAlias
+from typing import Final, TypeAlias, TypedDict
 
 from ..devices import Device, all_devices
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
@@ -77,6 +77,25 @@ class LiveGuiDeviceInventoryCard:
     passive: bool
 
 
+class LiveGuiDeviceInventoryCardDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiDeviceInventoryCard`."""
+
+    device_id: str
+    display_name: str
+    order: int
+    track_count: int
+    default_midi_channel_label: str
+    sysex_manufacturer_id_hex: str
+    role_summary: str
+    port_state: str
+    hardware_state: str
+    mock_state: str
+    can_open_port: bool
+    can_arm_hardware: bool
+    capability_badges: tuple[str, ...]
+    passive: bool
+
+
 @dataclass(frozen=True)
 class LiveGuiDeviceInventoryModel:
     """Passive device-inventory state for a future live GUI device rail."""
@@ -84,6 +103,16 @@ class LiveGuiDeviceInventoryModel:
     model_version: str
     device_count: int
     cards_by_device_id: Mapping[str, LiveGuiDeviceInventoryCard]
+    blocked_actions: tuple[str, ...]
+    safety: tuple[str, ...]
+
+
+class LiveGuiDeviceInventoryModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiDeviceInventoryModel`."""
+
+    model_version: str
+    device_count: int
+    cards_by_device_id: Mapping[str, LiveGuiDeviceInventoryCardDict]
     blocked_actions: tuple[str, ...]
     safety: tuple[str, ...]
 
@@ -230,7 +259,9 @@ __all__ = [
     "CAPABILITY_BADGES",
     "DEVICE_INVENTORY_MODEL_VERSION",
     "LiveGuiDeviceInventoryCard",
+    "LiveGuiDeviceInventoryCardDict",
     "LiveGuiDeviceInventoryModel",
+    "LiveGuiDeviceInventoryModelDict",
     "REPORT_TITLE",
     "SAFETY_LINES",
     "SOURCE_MODULE",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import asdict, dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from ..cockpit.data import History, HistoryEntry
 from .formatter import (
@@ -71,9 +71,43 @@ class LiveGuiSnapshotHistoryEntry:
     test_id: str
 
 
+class LiveGuiSnapshotHistoryEntryDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSnapshotHistoryEntry`."""
+
+    key: str
+    order: int
+    snapshot_id: str
+    label: str
+    kind: str
+    via: str | None
+    parent_id: str | None
+    device: str
+    pad_count: int
+    scene_slot: str | None
+    bpm_label: str
+    is_current: bool
+    is_saved: bool
+    can_load: bool
+    can_undo_to: bool
+    summary: str
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiSnapshotHistoryControl:
     """One declarative undo/load/redo control for the future GUI."""
+
+    key: str
+    order: int
+    label: str
+    enabled: bool
+    target_snapshot_id: str | None
+    reason: str
+    test_id: str
+
+
+class LiveGuiSnapshotHistoryControlDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSnapshotHistoryControl`."""
 
     key: str
     order: int
@@ -96,6 +130,22 @@ class LiveGuiSnapshotHistoryModel:
     entry_count: int
     entries: tuple[LiveGuiSnapshotHistoryEntry, ...]
     controls: tuple[LiveGuiSnapshotHistoryControl, ...]
+    safety_lines: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    replay_commands: tuple[str, ...]
+
+
+class LiveGuiSnapshotHistoryModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiSnapshotHistoryModel`."""
+
+    snapshot_history_version: str
+    snapshot_history_id: str
+    session_label: str
+    current_id: str
+    current_index: int
+    entry_count: int
+    entries: tuple[LiveGuiSnapshotHistoryEntryDict, ...]
+    controls: tuple[LiveGuiSnapshotHistoryControlDict, ...]
     safety_lines: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -374,8 +424,11 @@ def to_live_gui_snapshot_history_model_json(
 __all__ = [
     "BLOCKED_ACTIONS",
     "LiveGuiSnapshotHistoryControl",
+    "LiveGuiSnapshotHistoryControlDict",
     "LiveGuiSnapshotHistoryEntry",
+    "LiveGuiSnapshotHistoryEntryDict",
     "LiveGuiSnapshotHistoryModel",
+    "LiveGuiSnapshotHistoryModelDict",
     "REPORT_TITLE",
     "SAFETY_LINES",
     "SNAPSHOT_HISTORY_MODEL_VERSION",

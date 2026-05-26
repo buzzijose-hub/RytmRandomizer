@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import asdict, dataclass
-from typing import Final
+from typing import Final, TypedDict
 
 from .formatter import (
     SAFETY_SECTION_HEADER,
@@ -70,6 +70,20 @@ class LiveGuiStatusFooterItem:
     test_id: str
 
 
+class LiveGuiStatusFooterItemDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiStatusFooterItem`."""
+
+    key: str
+    order: int
+    label: str
+    value: str
+    state: str
+    severity: str
+    action_label: str
+    action_enabled: bool
+    test_id: str
+
+
 @dataclass(frozen=True)
 class LiveGuiStatusFooterModel:
     """Passive footer packet consumed by future desktop shell chrome."""
@@ -78,6 +92,18 @@ class LiveGuiStatusFooterModel:
     status_footer_id: str
     session_label: str
     items: tuple[LiveGuiStatusFooterItem, ...]
+    safety_lines: tuple[str, ...]
+    blocked_actions: tuple[str, ...]
+    replay_commands: tuple[str, ...]
+
+
+class LiveGuiStatusFooterModelDict(TypedDict):
+    """JSON-ready contract for :class:`LiveGuiStatusFooterModel`."""
+
+    status_footer_version: str
+    status_footer_id: str
+    session_label: str
+    items: tuple[LiveGuiStatusFooterItemDict, ...]
     safety_lines: tuple[str, ...]
     blocked_actions: tuple[str, ...]
     replay_commands: tuple[str, ...]
@@ -412,7 +438,9 @@ __all__ = [
     "BLOCKED_ACTIONS",
     "DEFAULT_APP_VERSION",
     "LiveGuiStatusFooterItem",
+    "LiveGuiStatusFooterItemDict",
     "LiveGuiStatusFooterModel",
+    "LiveGuiStatusFooterModelDict",
     "REPORT_TITLE",
     "SAFETY_LINES",
     "SOURCE_MODULE",
