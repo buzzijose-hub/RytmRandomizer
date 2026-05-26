@@ -1,0 +1,33 @@
+- status: Profile cleared
+- main:
+  - heading "RytmRandomizer · Cockpit" [level=1]
+  - text: "RytmRandomizer · Mock ○ safe port: none no unsaved sends"
+  - heading "Snapshot" [level=2]
+  - paragraph: /analog_rytm_mk2 · \d+ BPM/
+  - text: Pad 1 BD Hard
+  - button "Lock pad 1": 🔓
+  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+ Pad 2 SD Acoustic/
+  - button "Lock pad 2": 🔓
+  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+ Pad 3 SY Raw/
+  - button "Lock pad 3": 🔓
+  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+ Pad 4 FX Metal/
+  - button "Lock pad 4": 🔓
+  - text: /TUN \d+ DEC \d+ LEV \d+ FLT \d+/
+  - heading "Snapshot history" [level=2]
+  - button /Load snapshot 01[A-Z0-9]{24}/
+  - heading "Mutation Panel" [level=2]
+  - tablist:
+    - tab "Scene" [selected]
+    - tab "Inspiration"
+  - button "Industrial"
+  - button "Warehouse"
+  - button "+ Create profile…"
+  - text: /Mutation amount \d+%/
+  - slider "Mutation amount": /\d+\.\d+/
+  - text: /\d+ \d+ \d+ \d+ \d+/
+  - button "◐ PREVIEW (off)"
+  - button "⟳ REGEN"
+  - button "PREPARE" [disabled]
+  - button "SEND ▶" [disabled]
+  - button "↶ UNDO" [disabled]
+  - button "SAVE ↓"

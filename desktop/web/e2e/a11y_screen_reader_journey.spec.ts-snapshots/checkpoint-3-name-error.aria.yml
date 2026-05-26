@@ -1,0 +1,15 @@
+- status: "Wizard step: name"
+- banner:
+  - heading "Create profile" [level=1]
+  - navigation "Wizard steps": 1 Name 2 Add 3 Analyze 4 Review
+- main:
+  - heading "Name your profile" [level=2]
+  - text: Name
+  - textbox "Name":
+    - /placeholder: e.g. buzzi
+  - alert: Name is required.
+  - text: Description (optional)
+  - textbox "Description (optional)":
+    - /placeholder: What is this profile for?
+  - button "Cancel"
+  - button "Next →"
