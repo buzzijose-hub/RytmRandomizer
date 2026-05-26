@@ -22,6 +22,8 @@ pre-release step.
   ```
   pip install -e ".[dev]"
   ```
+  The `dev` extra includes the cockpit sidecar and Profile Wizard audio
+  analyzer dependencies used by the manual GUI flow.
 - Confirm the entry point resolves:
   ```
   rytm-randomizer --help

@@ -63,7 +63,9 @@ USAGE = (
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
-    "style-profile-report | list-style-profiles | inspect-style-profile <key> | "
+    "style-profile-report | reference-style-blueprint-report "
+    "(--description <text>|--audio <path>|--library <dir>) [--json] | "
+    "list-style-profiles | inspect-style-profile <key> | "
     "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
     "style-performance-arc-report | list-style-performance-arcs | "
     "inspect-style-performance-arc <key> | search-style-performance-arcs <query> | "
@@ -1103,6 +1105,26 @@ Behavior:
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
+
+
+def _reference_style_blueprint_report_help():
+    return """RytmRandomizer passive CLI: reference-style-blueprint-report
+
+Usage:
+  python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
+  python -m rytm_randomizer.cli reference-style-blueprint-report --help
+
+Behavior:
+  Translates a style reference into a deterministic passive Analog Rytm plus Analog Four blueprint.
+  Description sources are conservative LOW-confidence. Audio and library sources use the style optional extra.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required"""
 
 
 def _style_target_report_help():
@@ -2498,6 +2520,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
+  python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
   python -m rytm_randomizer.cli search-style-profiles <query>
@@ -2633,6 +2656,8 @@ Commands:
                      Print the passive dual-machine target report.
   style-profile-report
                      Print the passive style profile report.
+  reference-style-blueprint-report
+                     Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
                      List passive style profile keys and names.
   inspect-style-profile
@@ -2967,6 +2992,7 @@ Safety:
         _dual_machine_style_mutation_mock_preview_report_help
     ),
     "style-profile-report": _style_profile_report_help,
+    "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,
     "style-performance-arc-set-plan-report": _style_performance_arc_set_plan_report_help,

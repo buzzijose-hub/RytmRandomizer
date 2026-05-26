@@ -4,36 +4,61 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 
 import { Cockpit } from '../../src/cockpit/Cockpit';
 import { useCockpitStore } from '../../src/state';
 
-import { FakeCockpitClient, availableProfiles, sessionLive, snapshot } from './_fixtures';
+import { FakeCockpitClient, availableProfiles, sessionLive, sessionMock, snapshot } from './_fixtures';
 
 describe('Cockpit', () => {
   beforeEach(() => {
-    useCockpitStore.getState().reset();
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
   });
   afterEach(() => {
-    useCockpitStore.getState().reset();
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
   });
 
   it('renders the root + HeaderBar + both panels', () => {
     const fake = new FakeCockpitClient();
-    useCockpitStore.getState().setSessionStatus(sessionLive);
-    useCockpitStore.getState().setSnapshot(snapshot);
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionLive);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
     render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
     expect(screen.getByTestId('cockpit-root')).toBeInTheDocument();
     expect(screen.getByTestId('header-bar')).toBeInTheDocument();
     expect(screen.getByTestId('snapshot-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('live-readiness-panel')).toBeInTheDocument();
     expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
+  });
+
+  it('renders mock-safe device and safety rails for the dry-run cockpit', () => {
+    const fake = new FakeCockpitClient();
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
+    render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
+
+    const deviceRail = screen.getByTestId('device-rail');
+    expect(within(deviceRail).getByText('Analog Rytm MKII')).toBeInTheDocument();
+    expect(within(deviceRail).getByText('Analog Four MKII')).toBeInTheDocument();
+    expect(screen.getAllByText('Mock Safe').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('No MIDI Port Open').length).toBeGreaterThan(0);
+    expect(within(screen.getByTestId('safety-rail')).getByText('Simulation / Mock')).toBeInTheDocument();
   });
 
   it('uses a sensible default profile list when none is provided', () => {
     const fake = new FakeCockpitClient();
-    useCockpitStore.getState().setSessionStatus(sessionLive);
-    useCockpitStore.getState().setSnapshot(snapshot);
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionLive);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
     render(<Cockpit client={fake.asClient()} />);
     // Default list contains "Industrial" + "Warehouse" scene profiles.
     expect(screen.getByTestId('profile-chip-scene-industrial')).toBeInTheDocument();
@@ -42,8 +67,10 @@ describe('Cockpit', () => {
 
   it('previewOn state lifted to <Cockpit /> propagates between ActionBar and SnapshotPanel', () => {
     const fake = new FakeCockpitClient();
-    useCockpitStore.getState().setSessionStatus(sessionLive);
-    useCockpitStore.getState().setSnapshot(snapshot);
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionLive);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
     render(<Cockpit client={fake.asClient()} />);
     // Initially preview is off.
     expect(screen.queryByText(/PREVIEW ON/)).not.toBeInTheDocument();
