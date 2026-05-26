@@ -26,8 +26,11 @@ import type { CockpitClient } from '../ws/client';
 import '../a11y/srOnly.css';
 
 import { CockpitClientProvider } from './context';
+import { DeviceRail } from './DeviceRail';
 import { HeaderBar } from './HeaderBar';
+import { LiveReadinessPanel } from './LiveReadinessPanel';
 import { MutationPanel } from './MutationPanel';
+import { SafetyRail } from './SafetyRail';
 import { SnapshotPanel } from './SnapshotPanel';
 
 import './styles.css';
@@ -68,12 +71,19 @@ export function Cockpit({
         <h1 className="sr-only">RytmRandomizer · Cockpit</h1>
         <HeaderBar />
         <div className="cockpit-main">
-          <SnapshotPanel previewOn={previewOn} />
-          <MutationPanel
-            availableProfiles={availableProfiles}
-            previewOn={previewOn}
-            onTogglePreview={setPreviewOn}
-          />
+          <DeviceRail />
+          <div className="cockpit-center-stack">
+            <SnapshotPanel previewOn={previewOn} />
+            <LiveReadinessPanel />
+          </div>
+          <div className="cockpit-side-stack">
+            <MutationPanel
+              availableProfiles={availableProfiles}
+              previewOn={previewOn}
+              onTogglePreview={setPreviewOn}
+            />
+            <SafetyRail />
+          </div>
         </div>
       </main>
     </CockpitClientProvider>

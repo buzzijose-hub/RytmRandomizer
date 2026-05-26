@@ -81,7 +81,7 @@ def test_initial_session_status_marks_mock_mode(cockpit_client: TestClient) -> N
 
 
 def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClient) -> None:
-    """The bootstrap snapshot event reflects the 4-pad reference layout."""
+    """The bootstrap snapshot event reflects the 12-pad reference layout."""
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
@@ -89,7 +89,22 @@ def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClien
 
     snapshot = next(e for e in events if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
     pad_ids = [pad["pad_id"] for pad in snapshot["pads"]]
-    assert pad_ids == [1, 2, 3, 4]
+    machines = [pad["machine"] for pad in snapshot["pads"]]
+    assert pad_ids == list(range(1, 13))
+    assert machines == [
+        "BD Hard",
+        "SD Classic",
+        "CH Closed",
+        "OH Open",
+        "BT Rim",
+        "LT Low",
+        "MT Mid",
+        "HT High",
+        "CP Clap",
+        "RS Riser",
+        "SY Raw",
+        "BD Acoustic",
+    ]
     assert snapshot["device"] == "analog_rytm_mk2"
 
 

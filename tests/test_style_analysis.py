@@ -463,13 +463,21 @@ def test_package_reexports_public_surface():
     from rytm_randomizer import style_analysis
 
     expected = {
+        "AnalogFourTrackBlueprint",
+        "Confidence",
         "FeatureReport",
+        "ReferenceStyleBlueprint",
+        "ReferenceTrait",
+        "RytmPadBlueprint",
+        "SourceType",
         "StyleAnalysisDependencyError",
         "analyze_library",
+        "build_reference_style_blueprint",
         "compute_feature_report_hash",
         "extract_from_audio",
         "extract_from_description",
         "extract_from_partial",
+        "reference_style_blueprint_to_dict",
     }
     assert expected == set(style_analysis.__all__)
     for name in expected:

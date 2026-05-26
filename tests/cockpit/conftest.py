@@ -9,7 +9,7 @@ The two top-level fixtures:
 
 * :func:`cockpit_client` — yields a configured :class:`fastapi.testclient.TestClient`
   bound to a freshly-constructed :class:`CockpitSession`. The session is
-  pre-seeded with a 4-pad reference snapshot and a temp-directory-backed
+  pre-seeded with a 12-pad reference snapshot and a temp-directory-backed
   :class:`ProfileRegistry`, so the seven built-in scenes are always
   available without filesystem mutation.
 * :func:`cockpit_ws` — opens a WebSocket connection against
@@ -31,6 +31,7 @@ not from sibling test files, per Gate 11 (fixture deduplication).
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Generator, Iterator
 from datetime import datetime, timezone
 from pathlib import Path
@@ -73,12 +74,13 @@ _FIXED_TIMESTAMP = datetime(2026, 5, 23, 12, 0, 0, tzinfo=timezone.utc)
 
 
 def _make_default_snapshot() -> Snapshot:
-    """Build the 4-pad reference Rytm snapshot every integration test starts with.
+    """Build the 12-pad reference Rytm snapshot every integration test starts with.
 
     Pad layout matches the v10 cockpit mockup and the built-in scenes:
-    pad 1 = BD (kick), pad 2 = SD (snare), pad 3 = SY (synth), pad 4 = FX
-    (filter). Three CC params per pad ensures the mutation engine produces
-    a non-empty ``pad_deltas`` for every pad in every test.
+    the first four pads carry the current scene defaults, and pads 5-12
+    represent the remaining Rytm tracks. Three CC params per pad ensures
+    the mutation engine produces a non-empty ``pad_deltas`` for every pad
+    in every test.
     """
 
     return Snapshot(
@@ -87,17 +89,34 @@ def _make_default_snapshot() -> Snapshot:
         captured_at=_FIXED_TIMESTAMP,
         pads=(
             PadState(pad_id=1, machine="BD Hard", params={"tun": 32, "dec": 80, "lev": 110}),
-            PadState(pad_id=2, machine="SD Acoustic", params={"tun": 40, "dec": 60, "lev": 100}),
-            PadState(pad_id=3, machine="SY Raw", params={"tun": 50, "dec": 70, "lev": 95}),
-            PadState(pad_id=4, machine="FX Metal", params={"tun": 64, "dec": 90, "lev": 85}),
+            PadState(pad_id=2, machine="SD Classic", params={"tun": 40, "dec": 60, "lev": 100}),
+            PadState(pad_id=3, machine="CH Closed", params={"tun": 50, "dec": 70, "lev": 95}),
+            PadState(pad_id=4, machine="OH Open", params={"tun": 64, "dec": 90, "lev": 85}),
+            PadState(pad_id=5, machine="BT Rim", params={"tun": 58, "dec": 72, "lev": 90}),
+            PadState(pad_id=6, machine="LT Low", params={"tun": 45, "dec": 74, "lev": 92}),
+            PadState(pad_id=7, machine="MT Mid", params={"tun": 52, "dec": 68, "lev": 88}),
+            PadState(pad_id=8, machine="HT High", params={"tun": 71, "dec": 55, "lev": 84}),
+            PadState(pad_id=9, machine="CP Clap", params={"tun": 62, "dec": 67, "lev": 96}),
+            PadState(pad_id=10, machine="RS Riser", params={"tun": 75, "dec": 88, "lev": 76}),
+            PadState(pad_id=11, machine="SY Raw", params={"tun": 81, "dec": 38, "lev": 82}),
+            PadState(pad_id=12, machine="BD Acoustic", params={"tun": 36, "dec": 86, "lev": 104}),
         ),
         scene_slot="A01",
         bpm=124.0,
     )
 
 
+def _seed_for_test_node(nodeid: str) -> int:
+    """Return a deterministic non-zero 32-bit seed for one pytest node."""
+
+    seed = int.from_bytes(hashlib.sha256(nodeid.encode("utf-8")).digest()[:4], "big")
+    return seed or 1
+
+
 @pytest.fixture
-def cockpit_client(tmp_path: Path) -> Generator[TestClient, None, None]:
+def cockpit_client(
+    tmp_path: Path, request: pytest.FixtureRequest
+) -> Generator[TestClient, None, None]:
     """Spin up the cockpit WS server in-process against a fresh mock device + temp profile dir.
 
     The session is bootstrapped end-to-end exactly as ``__main__.py`` would
@@ -113,6 +132,7 @@ def cockpit_client(tmp_path: Path) -> Generator[TestClient, None, None]:
         profile_registry=ProfileRegistry(tmp_path),
         history_store=HistoryStore(),
         device=MockDeviceAdapter(initial=initial),
+        seed=_seed_for_test_node(request.node.nodeid),
     )
     session.history_store.initial(initial)
     app = create_app(session, token=TEST_WS_TOKEN)

@@ -279,6 +279,7 @@ cockpit-export-rehearsal-report --profile-id X                        # passive 
 style-performance-arc-live-set-cockpit-report                         # one-screen cockpit packet
 style-performance-arc-live-show-export-report                         # handoff manifest
 style-performance-arc-stage-routing-report                            # cue-by-cue route cards
+reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad + A4 influence blueprint
 
 # Dual-machine targets
 dual-machine-target-report rytm | a4 | both                           # safe target surface
