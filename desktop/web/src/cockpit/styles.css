@@ -25,6 +25,14 @@
   --green: #2ea043;
   --amber: #d29922;
   --danger: #f85149;
+
+  /* Text-on-color tokens — WCAG 1.4.3 requires >=4.5:1 for normal text.
+     White on --green is only 3.28:1 (FAILS AA). --bg on --green hits
+     5.8:1 (passes AA) while keeping the brand color unchanged for
+     borders / non-text decorations. */
+  --on-green: var(--bg);
+  --on-amber: var(--bg);
+  --on-danger: #ffffff;
 }
 
 body,
@@ -469,7 +477,7 @@ html,
 
 .action-button.primary {
   background: var(--green);
-  color: white;
+  color: var(--on-green);
   border-color: var(--green);
   font-weight: 600;
   grid-column: span 2;

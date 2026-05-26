@@ -176,7 +176,11 @@
 
 .wizard-button.primary {
   background: var(--green, #2ea043);
-  color: white;
+  /* WCAG 1.4.3: white on green is 3.28:1 (fails AA). --bg on green
+     hits 5.8:1. The --on-green token is defined in cockpit/styles.css
+     :root which always loads first; fallback to the cockpit bg hex
+     defends against the wizard rendering before cockpit/styles.css. */
+  color: var(--on-green, #0d1117);
   border-color: var(--green, #2ea043);
   font-weight: 600;
 }
