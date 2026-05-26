@@ -4,6 +4,14 @@ Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-26: Second outbound CC validation planning checkpoint created. The
+  next recommended hardware pass is repeatability-first: rerun the same one-CC
+  all-12-track validation from PR #133 before testing any new CC number or
+  mutation behavior. This slice is documentation-only and does not run
+  hardware, open ports, send MIDI, or change code. See
+  `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
+  and
+  `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`.
 - 2026-05-26: First outbound 12-track CC hardware validation completed on the
   Analog Rytm MKII over USB. The explicit armed one-CC helper sent exactly one
   CC per track using mido channels 0-11, and the operator confirmed each

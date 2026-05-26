@@ -205,6 +205,52 @@ every CC for every machine, scenes, group mutation, pattern changes, transport,
 clock, kit-save, project writes, SysEx, unattended sends, or Analog Four
 behavior.
 
+## Second Outbound 12-Track CC Repeatability Validation
+
+This is the next recommended hardware pass, but it is not run by this planning
+slice. The goal is repeatability: prove the first successful all-12 result can
+be repeated before testing any new CC number, mutation command, scene, SysEx, or
+Analog Four behavior.
+
+Planning references:
+
+- `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
+- `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
+
+Use the same one-CC helper and the same message shape:
+
+`python -m rytm_randomizer.app --arm --validate-one-cc --channel N --control 17 --value 64`
+
+Run tracks one at a time:
+
+| Track | Target mido channel | Control | Value | Expected result |
+|---:|---:|---:|---:|---|
+| 1 | 0 | 17 | 64 | Only Track 1 changes |
+| 2 | 1 | 17 | 64 | Only Track 2 changes |
+| 3 | 2 | 17 | 64 | Only Track 3 changes |
+| 4 | 3 | 17 | 64 | Only Track 4 changes |
+| 5 | 4 | 17 | 64 | Only Track 5 changes |
+| 6 | 5 | 17 | 64 | Only Track 6 changes |
+| 7 | 6 | 17 | 64 | Only Track 7 changes |
+| 8 | 7 | 17 | 64 | Only Track 8 changes |
+| 9 | 8 | 17 | 64 | Only Track 9 changes |
+| 10 | 9 | 17 | 64 | Only Track 10 changes |
+| 11 | 10 | 17 | 64 | Only Track 11 changes |
+| 12 | 11 | 17 | 64 | Only Track 12 changes |
+
+Stop immediately if:
+
+- More than one track changes.
+- The wrong track changes.
+- Nothing changes on the intended track.
+- The parameter jump is larger than expected.
+- Any pattern, kit, project, transport, clock, or SysEx behavior appears.
+- The operator is unsure what changed.
+- Monitoring level feels unsafe.
+
+Do not test a new CC number in this pass. If a new parameter needs validation,
+write a separate candidate note first.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the
