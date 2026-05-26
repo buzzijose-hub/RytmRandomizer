@@ -50,23 +50,33 @@ def test_build_session_returns_session_with_initialised_history(
     assert len(session.history_store.current.entries) == 1
     # MockDeviceAdapter (mock-safe default)
     assert session.device.is_armed is False
-    # 4 pads as the v10 UX expects
+    # 12 pads as the dry-run Cockpit expects
     snapshot = session.device.capture_snapshot()
-    assert len(snapshot.pads) == 4
+    assert len(snapshot.pads) == 12
     assert snapshot.bpm == cockpit_main._DEFAULT_BPM
 
 
-def test_default_initial_snapshot_has_four_pads_with_known_machines() -> None:
-    """The helper builds the BD/SD/SY/FX layout the v10 mockup pictures."""
+def test_default_initial_snapshot_has_twelve_rytm_pads_with_known_machines() -> None:
+    """The helper builds the 12-pad Analog Rytm layout the Cockpit pictures."""
 
     snapshot = cockpit_main._default_initial_snapshot()
 
     pads_by_id = {p.pad_id: p for p in snapshot.pads}
-    assert set(pads_by_id) == {1, 2, 3, 4}
-    assert pads_by_id[1].machine == "BD Hard"
-    assert pads_by_id[2].machine == "SD Acoustic"
-    assert pads_by_id[3].machine == "SY Raw"
-    assert pads_by_id[4].machine == "FX Metal"
+    assert set(pads_by_id) == set(range(1, 13))
+    assert [pad.machine for pad in snapshot.pads] == [
+        "BD Hard",
+        "SD Classic",
+        "CH Closed",
+        "OH Open",
+        "BT Rim",
+        "LT Low",
+        "MT Mid",
+        "HT High",
+        "CP Clap",
+        "RS Riser",
+        "SY Raw",
+        "BD Acoustic",
+    ]
     # All pads share the same starter param set
     for pad in snapshot.pads:
         assert set(pad.params) == {"tun", "dec", "lev", "flt"}

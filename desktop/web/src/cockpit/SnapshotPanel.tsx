@@ -37,6 +37,7 @@ export function SnapshotPanel({ previewOn }: SnapshotPanelProps): JSX.Element {
           {snapshot.scene_slot === null ? '' : ` · scene ${snapshot.scene_slot}`}
           {previewOn ? ' · PREVIEW ON' : ''}
         </p>
+        <p className="snapshot-readiness">{snapshot.pads.length} pads ready for dry-run review</p>
       </header>
       <div className="pad-grid">
         {snapshot.pads.map((pad) => (
