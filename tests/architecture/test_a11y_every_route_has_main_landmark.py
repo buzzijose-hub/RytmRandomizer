@@ -31,7 +31,7 @@ ROUTE_FILES: Final[dict[str, Path]] = {
 
 # Floor map: route-name → 0 (compliant) or 1 (missing landmark/h1).
 _GRANDFATHERED: Final[dict[str, int]] = {
-    "cockpit": 1,  # missing <main> + <h1>; Cluster 6 drops to 0
+    "cockpit": 0,  # Cluster 6 added <main> + sr-only <h1>; now compliant
 }
 
 

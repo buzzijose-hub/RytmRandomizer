@@ -13,7 +13,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import { LiveRegion } from './a11y';
+import { LiveRegion, useDocumentTitle } from './a11y';
 import { Cockpit } from './cockpit';
 import { bindClientToStore, useCockpitStore } from './state';
 import { Wizard } from './wizard';
@@ -60,6 +60,14 @@ export function App({ client: injected }: AppProps = {}): JSX.Element {
       client.close();
     };
   }, [client]);
+
+  useDocumentTitle(
+    sessionStatus === null
+      ? 'RytmRandomizer · Connecting'
+      : isWizardRoute(route)
+        ? 'RytmRandomizer · Profile Wizard'
+        : 'RytmRandomizer · Cockpit',
+  );
 
   if (sessionStatus === null) {
     return (
