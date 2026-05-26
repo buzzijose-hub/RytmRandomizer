@@ -28,6 +28,16 @@ pulls librosa in for users who need real audio measurement.
 
 from __future__ import annotations
 
+from rytm_randomizer.guardrails.schema import Confidence, SourceType
+
+from .blueprint import (
+    AnalogFourTrackBlueprint,
+    ReferenceStyleBlueprint,
+    ReferenceTrait,
+    RytmPadBlueprint,
+    build_reference_style_blueprint,
+    reference_style_blueprint_to_dict,
+)
 from .extractor import (
     StyleAnalysisDependencyError,
     extract_from_audio,
@@ -38,11 +48,19 @@ from .feature_report import FeatureReport, compute_feature_report_hash
 from .library import analyze_library
 
 __all__ = [
+    "AnalogFourTrackBlueprint",
+    "Confidence",
     "FeatureReport",
+    "ReferenceStyleBlueprint",
+    "ReferenceTrait",
+    "RytmPadBlueprint",
+    "SourceType",
     "StyleAnalysisDependencyError",
     "analyze_library",
     "compute_feature_report_hash",
+    "build_reference_style_blueprint",
     "extract_from_audio",
     "extract_from_description",
     "extract_from_partial",
+    "reference_style_blueprint_to_dict",
 ]

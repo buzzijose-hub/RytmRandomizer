@@ -110,6 +110,41 @@ digest = compute_feature_report_hash(report)
 # to the exact measurement it was derived from.
 ```
 
+## Reference-style blueprint
+
+The first passive bridge toward the 12-pad Rytm plus Analog Four UI is
+`build_reference_style_blueprint(report)`. It consumes a `FeatureReport`
+and emits a deterministic `ReferenceStyleBlueprint` with:
+
+- six normalized reference traits (`low_end_pressure`,
+  `groove_density`, `metallic_pressure`, `texture_noise`,
+  `arrangement_energy`, `tempo_drive`);
+- all 12 Analog Rytm pad roles, engine-family suggestions, depth caps,
+  and parameter-focus lanes;
+- all 4 Analog Four track roles, voice intents, parameter-focus lanes,
+  and modulation ideas;
+- explicit safety flags proving the artifact is passive, mock-safe,
+  and influence-only.
+
+Run it from the passive CLI without opening ports or sending MIDI:
+
+```bash
+python -m rytm_randomizer.cli reference-style-blueprint-report \
+  --description "rolling metallic techno with heavy low end" --json
+
+python -m rytm_randomizer.cli reference-style-blueprint-report \
+  --audio reference.wav
+
+python -m rytm_randomizer.cli reference-style-blueprint-report \
+  --library reference-folder
+```
+
+Description input stays LOW-confidence and caps mutation depth
+conservatively. Audio/library input uses the optional `style` extra and
+can reach HIGH-confidence measurement, but the resulting blueprint is
+still metadata only. It does not create patterns, write files, launch a
+GUI, open MIDI ports, or send MIDI.
+
 ## Determinism guarantee
 
 For a given audio file, `extract_from_audio` always returns the same
