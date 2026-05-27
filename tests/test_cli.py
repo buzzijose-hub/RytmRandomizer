@@ -92,7 +92,8 @@ USAGE = (
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
-    "style-profile-report | reference-style-blueprint-report "
+    "style-profile-report | style-crates-queue-journal-report [--json] | "
+    "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
     "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
@@ -1065,6 +1066,19 @@ def test_style_profile_report_help_exits_zero_and_safety_matches_report_source()
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
     assert "RytmRandomizer passive CLI: style-profile-report" in help_text
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_style_crates_queue_journal_report_help_exits_zero_and_safety_matches_source():
+    from rytm_randomizer.reports.style_crates_queue_journal import SAFETY_LINES
+
+    result = run_cli("style-crates-queue-journal-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    assert "RytmRandomizer passive CLI: style-crates-queue-journal-report" in help_text
     safety_block = help_text.split("Safety:\n", 1)[1]
     assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
     assert result.stderr == ""
@@ -2719,6 +2733,39 @@ def test_style_profile_report_command_is_deterministic():
     assert second.stderr == ""
 
 
+def test_style_crates_queue_journal_report_command_exits_zero_and_describes_mvp():
+    result = run_cli("style-crates-queue-journal-report")
+    output = normalize_newlines(result.stdout)
+
+    assert result.returncode == 0
+    assert "RytmRandomizer passive style crates queue journal report" in output
+    assert "- Crates: 9" in output
+    assert "dark_hypnotic: Dark Hypnotic" in output
+    assert "industrial_broken: Industrial/Broken" in output
+    assert "Staged Queue:" in output
+    assert "Mutation Journal:" in output
+    assert "Future Danger Modes:" in output
+    assert "- no MIDI sending" in output
+    assert result.stderr == ""
+
+
+def test_style_crates_queue_journal_report_json_exits_zero_and_is_deterministic():
+    first = run_cli("style-crates-queue-journal-report", "--json")
+    second = run_cli("style-crates-queue-journal-report", "--json")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    payload = json.loads(first.stdout)
+    model = payload["style_crates_queue_journal"]
+    assert model["crate_count"] == 9
+    assert model["queue"][0]["crate_key"] == "dark_hypnotic"
+    assert model["journal"][0]["seed"] == "style-journal-warehouse-0001"
+    assert payload["safety"][0] == "passive/read-only"
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
 def test_list_style_profiles_exits_zero_and_lists_keys():
     result = run_cli("list-style-profiles")
     output = normalize_newlines(result.stdout)
@@ -2778,6 +2825,14 @@ def test_search_style_profiles_no_match_exits_zero():
 
 def test_unknown_style_profile_report_arguments_fail_safely():
     result = run_cli("style-profile-report", "--mutate")
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert normalize_newlines(result.stderr) == USAGE
+
+
+def test_unknown_style_crates_queue_journal_arguments_fail_safely():
+    result = run_cli("style-crates-queue-journal-report", "--mutate")
 
     assert result.returncode == 2
     assert result.stdout == ""

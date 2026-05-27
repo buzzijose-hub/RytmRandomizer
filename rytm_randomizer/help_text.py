@@ -65,7 +65,8 @@ USAGE = (
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
-    "style-profile-report | reference-style-blueprint-report "
+    "style-profile-report | style-crates-queue-journal-report [--json] | "
+    "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
     "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
@@ -1106,6 +1107,24 @@ Usage:
 
 Behavior:
   Prints the passive style-profile catalog for techno design intent.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_crates_queue_journal_report_help():
+    from .reports.style_crates_queue_journal import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-crates-queue-journal-report
+
+Usage:
+  python -m rytm_randomizer.cli style-crates-queue-journal-report
+  python -m rytm_randomizer.cli style-crates-queue-journal-report --json
+  python -m rytm_randomizer.cli style-crates-queue-journal-report --help
+
+Behavior:
+  Lists passive Style Crates, staged queue moves, and Mutation Journal entries.
+  This is metadata-only planning for future GUI and hardware-gated workflows.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2525,6 +2544,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
+  python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
@@ -2663,6 +2683,8 @@ Commands:
                      Print the passive dual-machine target report.
   style-profile-report
                      Print the passive style profile report.
+  style-crates-queue-journal-report
+                     Print the passive Style Crates, Queue, and Mutation Journal report.
   reference-style-blueprint-report
                      Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
@@ -3039,6 +3061,7 @@ Safety:
         _dual_machine_style_mutation_mock_preview_report_help
     ),
     "style-profile-report": _style_profile_report_help,
+    "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,
