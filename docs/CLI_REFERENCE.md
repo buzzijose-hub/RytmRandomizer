@@ -46,6 +46,23 @@ python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report \
 
 ---
 
+## Manual feedback packet
+
+`manual-feedback-packet-report` turns installer, cockpit, Profile Wizard,
+analyzer, export, mock-control, pad-scope, and approved hardware-boundary
+observations into deterministic reviewer evidence. It does not launch the GUI,
+run audio analysis, write export files, open MIDI ports, or send MIDI.
+
+```bash
+python -m rytm_randomizer.cli manual-feedback-packet-report
+python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile
+python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json
+```
+
+Scenarios: `full`, `installer`, `profile`, `mock`, `hardware`, `review`.
+
+---
+
 ## Dual-machine target surface
 
 ```bash
@@ -62,6 +79,7 @@ python -m rytm_randomizer.cli dual-machine-target-report both   # both registere
 |---|---|
 | `rytm-12-pad-machine-matrix-report` | Passive Rytm **12-pad machine matrix** with machine compatibility per pad |
 | `rytm-outbound-cc-repeatability-report [--control N] [--value N] [--json]` | Passive all-12-track outbound CC repeatability checklist for the next manual validation pass |
+| `manual-feedback-packet-report [--scenario full|installer|profile|mock|hardware|review] [--json]` | Passive manual feedback packet for installer, wizard, analyzer, export, pad-scope, mock-control, and hardware-boundary review |
 | `rytm-snapshot-pad-compatibility-report` | Passive **snapshot-pad compatibility** report per Rytm pad |
 | `rytm-snapshot-intelligence-report KITS.syx --slot N [--list]` | Passive **snapshot intelligence** for one supported Rytm kit snapshot, or `--list` every supported snapshot in a SysEx dump |
 | `rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth N [--events --limit N]` | Passive **snapshot mutation preview** for one slot at a given depth; with `--events` include mock CC event rows |
