@@ -2492,6 +2492,7 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
@@ -2610,6 +2611,8 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   rytm-12-pad-machine-matrix-report
                      Print the passive Rytm 12-pad machine matrix report.
+  manual-validation-kit-report
+                     Print the passive installer/UI/profile/manual validation kit.
   rytm-snapshot-pad-compatibility-report
                      Print the passive Rytm snapshot-pad compatibility report.
   rytm-snapshot-intelligence-report
@@ -2971,6 +2974,24 @@ Usage:
 
 Behavior:
   Prints the passive all-12-track outbound CC repeatability checklist for the next manual validation pass.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "manual-validation-kit-report": """RytmRandomizer passive CLI: manual-validation-kit-report
+
+Usage:
+  python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
+  python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+  python -m rytm_randomizer.cli manual-validation-kit-report --help
+
+Behavior:
+  Prints a passive installer, cockpit UI, profile workflow, mock rehearsal, single armed-smoke, and evidence closeout checklist for manual validation.
+  Active hardware commands are instruction text only; this report does not execute them.
 
 Safety:
   passive/read-only

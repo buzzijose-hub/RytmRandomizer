@@ -13,6 +13,7 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
@@ -131,6 +132,8 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   rytm-12-pad-machine-matrix-report
                      Print the passive Rytm 12-pad machine matrix report.
+  manual-validation-kit-report
+                     Print the passive installer/UI/profile/manual validation kit.
   rytm-snapshot-pad-compatibility-report
                      Print the passive Rytm snapshot-pad compatibility report.
   rytm-snapshot-intelligence-report

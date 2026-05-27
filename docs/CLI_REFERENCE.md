@@ -46,6 +46,25 @@ python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report \
 
 ---
 
+## Manual validation kit
+
+```bash
+# Full passive checklist for installer/UI/profile/mock/manual hardware smoke testing.
+python -m rytm_randomizer.cli manual-validation-kit-report
+
+# Focus one phase for the current test pass.
+python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+
+# GUI/reviewer-ready JSON.
+python -m rytm_randomizer.cli manual-validation-kit-report --json
+```
+
+The report prints operator instructions only. It does not launch the cockpit,
+run the analyzer, write profile files, open a MIDI port, send MIDI, or execute
+the armed smoke command it includes as manual instruction text.
+
+---
+
 ## Dual-machine target surface
 
 ```bash
