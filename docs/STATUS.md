@@ -4,6 +4,16 @@ Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-26: Second outbound CC repeatability readiness prepared locally. The
+  next recommended hardware pass is repeatability-first: rerun the same one-CC
+  all-12-track validation from PR #133 before testing any new CC number or
+  mutation behavior. The new passive
+  `rytm-outbound-cc-repeatability-report` emits text/JSON checklist metadata
+  for all 12 tracks, stop conditions, blocked actions, and replay commands
+  without running hardware, opening ports, or sending MIDI. See
+  `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
+  and
+  `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`.
 - 2026-05-26: First outbound 12-track CC hardware validation completed on the
   Analog Rytm MKII over USB. The explicit armed one-CC helper sent exactly one
   CC per track using mido channels 0-11, and the operator confirmed each
