@@ -32,6 +32,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_outbound_cc_repeatability",
             "RYTM_OUTBOUND_CC_REPEATABILITY_CLI_COMMAND",
         ),
+        "manual-validation-kit-report": (
+            "rytm_randomizer.reports.manual_validation_kit",
+            "MANUAL_VALIDATION_KIT_CLI_COMMAND",
+        ),
         "manual-feedback-packet-report": (
             "rytm_randomizer.reports.manual_feedback_packet",
             "MANUAL_FEEDBACK_PACKET_CLI_COMMAND",

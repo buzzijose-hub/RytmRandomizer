@@ -29,6 +29,29 @@ pre-release step.
   rytm-randomizer --help
   ```
 
+## Passive Validation Kit
+
+Before launching the installer, opening the cockpit, or arming hardware, print
+the passive validation kit:
+
+```
+python -m rytm_randomizer.cli manual-validation-kit-report
+```
+
+Use `--phase <slug>` to focus the current pass:
+
+```
+python -m rytm_randomizer.cli manual-validation-kit-report --phase installer_bootstrap
+python -m rytm_randomizer.cli manual-validation-kit-report --phase profile_workflow
+python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+python -m rytm_randomizer.cli manual-validation-kit-report --phase armed_smoke
+python -m rytm_randomizer.cli manual-validation-kit-report --phase evidence_closeout
+```
+
+This report is a checklist and evidence prompt only. It does not launch the
+GUI, run analysis, write profile/export files, open a MIDI port, send MIDI, or
+execute the armed smoke command it prints for the operator.
+
 ## Passive USB Input Channel-Map Validation (2026-05-26)
 
 This validation confirmed the Analog Rytm MKII manual track-output channel map
