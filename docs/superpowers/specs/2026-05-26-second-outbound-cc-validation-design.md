@@ -3,14 +3,13 @@
 ## Purpose
 
 Define the next hardware-facing validation step after PR #133 without running
-hardware and without adding new code. The first outbound pass proved that the
-existing one-CC helper can target Rytm tracks 1 through 12 with CC 17 / value
-64. The second pass should prove repeatability before we widen the parameter or
-musical mutation scope.
+hardware. The first outbound pass proved that the existing one-CC helper can
+target Rytm tracks 1 through 12 with CC 17 / value 64. The second pass should
+prove repeatability before we widen the parameter or musical mutation scope.
 
-This document is a planning gate only. It does not authorize an immediate
-hardware run, add a new command, open ports, send MIDI, touch Analog Four, add
-SysEx, or add unattended active behavior.
+This document is a planning and passive-readiness gate only. It does not
+authorize an immediate hardware run, open ports, send MIDI, touch Analog Four,
+add SysEx, or add unattended active behavior.
 
 ## Current Baseline
 
@@ -21,6 +20,8 @@ SysEx, or add unattended active behavior.
   `python -m rytm_randomizer.app --arm --validate-one-cc --channel N --control 17 --value 64`
 - Existing dry-run helper:
   `python -m rytm_randomizer.app --dry-run --validate-one-cc --channel N --control 17 --value 64`
+- Passive repeatability readiness report:
+  `python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report --json`
 - Hardware evidence already recorded:
   `docs/hardware-validation/2026-05-26-outbound-12-track-cc-results.md`
 
@@ -61,6 +62,8 @@ new-parameter discovery.
 The existing app boundary remains the only real MIDI path:
 
 - Passive CLI remains read-only.
+- `rytm-outbound-cc-repeatability-report` emits text/JSON checklist metadata
+  only.
 - Dry-run path records to `MockMidiSender`.
 - Armed path prompts for the output port.
 - Armed path sends exactly one CC and exits.
@@ -90,13 +93,15 @@ The existing app boundary remains the only real MIDI path:
 The planning slice is accepted when:
 
 - The repeatability pass is documented as the recommended next hardware test.
+- The passive CLI can emit the 12-step repeatability checklist as text or JSON.
 - Any new CC/parameter testing is explicitly parked behind a separate candidate
   approval.
 - Manual hardware validation docs include the second-pass runbook.
-- Project status records that this is planning-only.
+- Project status records that this is passive/report-only.
 - Tests/verification pass without requiring hardware.
 
 ## Decision
 
-Proceed with a docs-only second outbound CC validation plan. Do not run hardware
-as part of this slice. Do not add code. Do not expand parameter scope yet.
+Proceed with a passive second outbound CC validation readiness report and
+manual-test plan. Do not run hardware as part of this slice. Do not expand
+parameter scope yet.

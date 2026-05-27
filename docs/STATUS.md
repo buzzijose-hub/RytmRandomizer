@@ -4,11 +4,13 @@ Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
-- 2026-05-26: Second outbound CC validation planning checkpoint created. The
+- 2026-05-26: Second outbound CC repeatability readiness prepared locally. The
   next recommended hardware pass is repeatability-first: rerun the same one-CC
   all-12-track validation from PR #133 before testing any new CC number or
-  mutation behavior. This slice is documentation-only and does not run
-  hardware, open ports, send MIDI, or change code. See
+  mutation behavior. The new passive
+  `rytm-outbound-cc-repeatability-report` emits text/JSON checklist metadata
+  for all 12 tracks, stop conditions, blocked actions, and replay commands
+  without running hardware, opening ports, or sending MIDI. See
   `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
   and
   `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`.

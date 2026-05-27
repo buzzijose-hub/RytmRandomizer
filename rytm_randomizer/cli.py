@@ -28,6 +28,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_machine_matrix",
             "RYTM_MACHINE_MATRIX_CLI_COMMAND",
         ),
+        "rytm-outbound-cc-repeatability-report": (
+            "rytm_randomizer.reports.rytm_outbound_cc_repeatability",
+            "RYTM_OUTBOUND_CC_REPEATABILITY_CLI_COMMAND",
+        ),
         "rytm-snapshot-pad-compatibility-report": (
             "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
             "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",

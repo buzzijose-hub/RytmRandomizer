@@ -61,12 +61,14 @@ python -m rytm_randomizer.cli dual-machine-target-report both   # both registere
 | Command | Description |
 |---|---|
 | `rytm-12-pad-machine-matrix-report` | Passive Rytm **12-pad machine matrix** with machine compatibility per pad |
+| `rytm-outbound-cc-repeatability-report [--control N] [--value N] [--json]` | Passive all-12-track outbound CC repeatability checklist for the next manual validation pass |
 | `rytm-snapshot-pad-compatibility-report` | Passive **snapshot-pad compatibility** report per Rytm pad |
 | `rytm-snapshot-intelligence-report KITS.syx --slot N [--list]` | Passive **snapshot intelligence** for one supported Rytm kit snapshot, or `--list` every supported snapshot in a SysEx dump |
 | `rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth N [--events --limit N]` | Passive **snapshot mutation preview** for one slot at a given depth; with `--events` include mock CC event rows |
 
 ```bash
 python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report --json
 python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report KITS.syx --list
 python -m rytm_randomizer.cli rytm-snapshot-intelligence-report KITS.syx --slot 7

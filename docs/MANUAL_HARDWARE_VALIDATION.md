@@ -217,6 +217,16 @@ Planning references:
 - `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
 - `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
 
+Passive readiness report:
+
+- Text checklist:
+  `python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report`
+- GUI-ready JSON:
+  `python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report --json`
+
+The readiness report only prints the checklist and replay metadata. It does
+not open a port, send MIDI, run the validation, or mutate hardware.
+
 Use the same one-CC helper and the same message shape:
 
 `python -m rytm_randomizer.app --arm --validate-one-cc --channel N --control 17 --value 64`

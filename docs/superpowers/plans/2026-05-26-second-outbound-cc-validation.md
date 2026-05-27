@@ -1,18 +1,18 @@
-# Second Outbound CC Validation Implementation Plan
+# Second Outbound CC Validation Readiness Plan
 
-> Status: proposed
+> Status: draft
 > Requirements reference: This plan follows `docs/PLAN_REQUIREMENTS.md`;
-> because it is documentation-only, code, parity, coverage, dependency, and
-> active-runtime gates are satisfied by non-applicability plus verification
-> that only docs changed.
+> the implemented slice adds one passive report/CLI command plus docs. It does
+> not run hardware, open ports, send MIDI, change V1.34 parity, or alter the
+> active runtime.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Prepare the next safe hardware validation pass by documenting a repeatability-focused second outbound CC test, without running hardware or adding code.
+**Goal:** Prepare the next safe hardware validation pass with a repeatability-focused passive report and manual runbook, without running hardware.
 
-**Architecture:** This is a documentation-only planning slice. It reuses the already-merged one-CC validation helper from `rytm_randomizer.app`, keeps the passive CLI untouched, and parks any new CC/parameter test behind a separate future candidate approval.
+**Architecture:** This is a passive reporting slice under `rytm_randomizer/reports/`. It reuses the already-merged one-CC validation helper from `rytm_randomizer.app` as a printed command, keeps real MIDI behind the existing explicit `--arm` boundary, and parks any new CC/parameter test behind a separate future candidate approval.
 
-**Tech Stack:** Markdown documentation, existing manual hardware validation runbook, existing `python -m rytm_randomizer.app --arm --validate-one-cc ...` command, existing pytest documentation checks.
+**Tech Stack:** Python frozen dataclasses, `CliCommand`, Markdown documentation, existing manual hardware validation runbook, existing `python -m rytm_randomizer.app --arm --validate-one-cc ...` command, focused pytest checks.
 
 ---
 
@@ -30,30 +30,39 @@ PR #133 merged the first outbound Rytm CC validation milestone:
   respectively, with no cross-pad changes and no weird behavior.
 
 The next safe hardware step is a repeatability pass using the same command
-shape, not a new parameter or mutation expansion.
+shape, not a new parameter or mutation expansion. The passive report gives the
+GUI/operator an exact text/JSON checklist before that manual studio pass.
 
 ## File Structure
 
-- Create: `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
+- Create: `rytm_randomizer/reports/rytm_outbound_cc_repeatability.py`
+  - Emits the all-12-track repeatability checklist as text/JSON, with blocked
+    actions, stop conditions, safety lines, and replay commands.
+- Create: `tests/test_rytm_outbound_cc_repeatability_report.py`
+  - Pins report shape, JSON shape, passive imports, CLI text, and CLI JSON.
+- Create/modify: `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
   - Captures the design decision for a repeatability-first second pass.
-- Create: `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
-  - Gives future agents/operators the exact docs-only implementation plan.
+- Create/modify: `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
+  - Gives future agents/operators the exact passive implementation plan.
 - Modify: `docs/MANUAL_HARDWARE_VALIDATION.md`
-  - Adds the second outbound CC validation runbook and stop conditions.
+  - Adds the second outbound CC validation runbook, stop conditions, and
+    passive readiness report command.
 - Modify: `docs/STATUS.md`
-  - Records the planning checkpoint and confirms no hardware was run.
+  - Records the passive readiness checkpoint and confirms no hardware was run.
+- Modify: `docs/CLI_REFERENCE.md`
+  - Documents the new passive CLI command.
 
-No package source, tests, fixtures, CI, dependency pins, or active behavior are
+No fixtures, CI, dependency pins, active behavior, or hardware path are
 modified by this plan.
 
 ## Safety Boundaries
 
-- No code changes.
-- No test changes.
+- Passive report code only.
+- Mock/passive tests only.
 - No real MIDI during this planning slice.
 - No port opening during this planning slice.
 - No hardware required during this planning slice.
-- No new CLI command.
+- New passive CLI command only; no active app command.
 - No scene execution.
 - No group mutation.
 - No SysEx.
@@ -80,17 +89,17 @@ Write the design spec with these decisions:
 - It does not test mutation commands.
 - It does not test scenes, SysEx, transport, clock, kit/project writes, or
   Analog Four.
-- Hardware is not run as part of this docs-only slice.
+- Hardware is not run as part of this passive-readiness slice.
 
 - [ ] **Step 2: Verify the spec says hardware is not run**
 
 Run:
 
 ```powershell
-rg -n "does not authorize|does not require|without running hardware|planning gate" docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md
+rg -n "does not authorize|without running hardware|passive-readiness gate|rytm-outbound-cc-repeatability-report" docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md
 ```
 
-Expected: the spec clearly marks the slice as planning-only.
+Expected: the spec clearly marks the slice as passive/readiness-only.
 
 ---
 
@@ -158,29 +167,30 @@ Expected: the second pass is present and keeps new CC testing parked.
 Add this entry at the top of `## Recent Cleanup`:
 
 ```markdown
-- 2026-05-26: Second outbound CC validation planning checkpoint created.
+- 2026-05-26: Second outbound CC repeatability readiness prepared locally.
   The next recommended hardware pass is repeatability-first: rerun the same
   one-CC all-12-track validation from PR #133 before testing any new CC number
-  or mutation behavior. This slice is documentation-only and does not run
-  hardware, open ports, send MIDI, or change code.
+  or mutation behavior. The passive `rytm-outbound-cc-repeatability-report`
+  command emits text/JSON checklist metadata and does not run hardware, open
+  ports, or send MIDI.
 ```
 
-- [ ] **Step 2: Verify status mentions planning-only**
+- [ ] **Step 2: Verify status mentions passive readiness**
 
 Run:
 
 ```powershell
-rg -n "Second outbound CC validation|documentation-only|does not run hardware" docs/STATUS.md
+rg -n "Second outbound CC repeatability|rytm-outbound-cc-repeatability-report|does not run hardware" docs/STATUS.md
 ```
 
 Expected: the status entry states no hardware was run.
 
 ---
 
-### Task 4: Verify Documentation-Only Scope
+### Task 4: Verify Passive Report Scope
 
 **Files:**
-- No additional file changes.
+- Verify all changed files.
 
 - [ ] **Step 1: Check changed files**
 
@@ -192,31 +202,36 @@ git status --short
 git diff --cached --name-only
 ```
 
-Before staging, `git diff --name-only` should list the modified tracked docs:
-
-- `docs/MANUAL_HARDWARE_VALIDATION.md`
-- `docs/STATUS.md`
-
 Before staging, `git status --short` should list only:
 
+- `docs/CLI_REFERENCE.md`
 - `docs/MANUAL_HARDWARE_VALIDATION.md`
 - `docs/STATUS.md`
 - `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
 - `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
+- `rytm_randomizer/cli.py`
+- `rytm_randomizer/help_text.py`
+- `rytm_randomizer/reports/rytm_outbound_cc_repeatability.py`
+- `tests/test_rytm_outbound_cc_repeatability_report.py`
 
 After staging, the second command should list only:
 
+- `docs/CLI_REFERENCE.md`
 - `docs/MANUAL_HARDWARE_VALIDATION.md`
 - `docs/STATUS.md`
 - `docs/superpowers/specs/2026-05-26-second-outbound-cc-validation-design.md`
 - `docs/superpowers/plans/2026-05-26-second-outbound-cc-validation.md`
+- `rytm_randomizer/cli.py`
+- `rytm_randomizer/help_text.py`
+- `rytm_randomizer/reports/rytm_outbound_cc_repeatability.py`
+- `tests/test_rytm_outbound_cc_repeatability_report.py`
 
 - [ ] **Step 2: Run focused doc checks**
 
 Run:
 
 ```powershell
-python -m pytest tests/test_manual_hardware_validation_doc.py -n 0
+python -m pytest tests/test_manual_hardware_validation_doc.py tests/test_rytm_outbound_cc_repeatability_report.py -n 0
 ```
 
 Expected: PASS.

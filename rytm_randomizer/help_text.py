@@ -2962,6 +2962,23 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required""",
+    "rytm-outbound-cc-repeatability-report": """RytmRandomizer passive CLI: rytm-outbound-cc-repeatability-report
+
+Usage:
+  python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report
+  python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report --json
+  python -m rytm_randomizer.cli rytm-outbound-cc-repeatability-report --help
+
+Behavior:
+  Prints the passive all-12-track outbound CC repeatability checklist for the next manual validation pass.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
