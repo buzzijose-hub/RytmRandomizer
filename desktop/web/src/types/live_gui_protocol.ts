@@ -390,6 +390,55 @@ export interface LiveGuiSnapshotCompatibilityModelDict {
   safety: ReadonlyArray<string>;
 }
 
+export interface LiveGuiDualDeviceRigDeviceDict {
+  device_id: string;
+  display_name: string;
+  order: number;
+  track_count: number;
+  mapped_track_count: number;
+  active_track_count: number;
+  planned_track_count: number;
+  status: string;
+  role_summary: string;
+  port_state: string;
+  hardware_state: string;
+  summary: string;
+  test_id: string;
+}
+
+export interface LiveGuiDualDeviceRigTrackDict {
+  device_id: string;
+  track_number: number;
+  track_label: string;
+  label: string;
+  role: string;
+  state: string;
+  enabled: boolean;
+  source: string;
+  test_id: string;
+}
+
+export interface LiveGuiDualDeviceRigReadinessModelDict {
+  model_version: string;
+  rig_id: string;
+  session_label: string;
+  rig_status: string;
+  total_device_count: number;
+  total_track_count: number;
+  active_track_count: number;
+  planned_track_count: number;
+  pad_surface: LiveGuiRytmTwelvePadSurfaceModelDict;
+  device_inventory: LiveGuiDeviceInventoryModelDict;
+  hardware_rail: LiveGuiHardwareRailModelDict;
+  snapshot_compatibility: LiveGuiSnapshotCompatibilityModelDict;
+  devices: ReadonlyArray<LiveGuiDualDeviceRigDeviceDict>;
+  tracks: ReadonlyArray<LiveGuiDualDeviceRigTrackDict>;
+  required_actions: ReadonlyArray<string>;
+  blocked_actions: ReadonlyArray<string>;
+  replay_commands: ReadonlyArray<string>;
+  safety: ReadonlyArray<string>;
+}
+
 export interface LiveReadinessModel {
   pad_surface: LiveGuiRytmTwelvePadSurfaceModelDict;
   device_inventory: LiveGuiDeviceInventoryModelDict;

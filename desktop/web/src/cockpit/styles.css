@@ -427,6 +427,13 @@ html,
   box-shadow: inset 3px 0 0 var(--cyan);
 }
 
+.device-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .device-card h2 {
   margin: 0 0 4px;
   font-size: 15px;
@@ -457,6 +464,59 @@ html,
 .device-status.staged {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.device-chip-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  gap: 6px;
+}
+
+.device-chip {
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  padding: 7px;
+  background: var(--panel-2);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.device-chip.active {
+  border-color: rgba(86, 212, 221, 0.38);
+}
+
+.device-chip.staged {
+  border-color: rgba(236, 160, 61, 0.38);
+}
+
+.device-chip.locked {
+  color: var(--text-muted);
+  border-color: rgba(149, 164, 188, 0.28);
+}
+
+.device-chip-index {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.device-chip-role {
+  color: var(--text-dim);
+  font-size: 11px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.device-chip.locked .device-chip-role {
+  color: var(--text-muted);
+}
+
+.device-port-state {
+  color: var(--text-dim);
+  font-size: 11px;
 }
 
 .status-pill.armed {
