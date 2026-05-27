@@ -250,6 +250,17 @@ Passive readiness report:
 The readiness report only prints the checklist and replay metadata. It does
 not open a port, send MIDI, run the validation, or mutate hardware.
 
+Manual feedback packet:
+
+- Profile/export/analyzer feedback:
+  `python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile`
+- Hardware-boundary feedback:
+  `python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json`
+
+This packet is also passive. It is for capturing screenshots, sidecar lines,
+stop conditions, and reviewer notes after a manual pass. It does not launch the
+GUI, run analysis, write profile files, open ports, or send MIDI.
+
 Use the same one-CC helper and the same message shape:
 
 `python -m rytm_randomizer.app --arm --validate-one-cc --channel N --control 17 --value 64`

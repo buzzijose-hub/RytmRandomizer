@@ -11,6 +11,8 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "rytm-snapshot-pad-compatibility-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
@@ -572,6 +574,8 @@ USAGE = (
     "[--unsigned] [--overwrite] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -2493,6 +2497,7 @@ Usage:
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
   python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
+  python -m rytm_randomizer.cli manual-feedback-packet-report [--scenario full|installer|profile|mock|hardware|review] [--json]
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
@@ -2613,6 +2618,8 @@ Commands:
                      Print the passive Rytm 12-pad machine matrix report.
   manual-validation-kit-report
                      Print the passive installer/UI/profile/manual validation kit.
+  manual-feedback-packet-report
+                     Print a passive manual testing feedback packet.
   rytm-snapshot-pad-compatibility-report
                      Print the passive Rytm snapshot-pad compatibility report.
   rytm-snapshot-intelligence-report
@@ -2998,6 +3005,29 @@ Safety:
   no MIDI sending
   no port opening
   no command execution
+  no hardware mutation
+  no hardware required""",
+    "manual-feedback-packet-report": """RytmRandomizer passive CLI: manual-feedback-packet-report
+
+Usage:
+  python -m rytm_randomizer.cli manual-feedback-packet-report
+  python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile
+  python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json
+  python -m rytm_randomizer.cli manual-feedback-packet-report --help
+
+Behavior:
+  Prints a deterministic manual feedback packet for installer, cockpit,
+  profile wizard, analyzer, export, mock-control, and approved hardware-boundary
+  observations. The packet is evidence only; it does not run the GUI or analyzer.
+
+Safety:
+  passive/read-only
+  in-memory only
+  no GUI launch
+  no audio analysis
+  no file writes
+  no MIDI sending
+  no port opening
   no hardware mutation
   no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,

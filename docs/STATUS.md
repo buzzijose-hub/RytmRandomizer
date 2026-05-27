@@ -1,9 +1,19 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-27: Passive manual feedback packet prepared locally. The new
+  `manual-feedback-packet-report` command turns current installer, cockpit,
+  Profile Wizard, analyzer, export, pad-scope, mock-control, and approved
+  hardware-boundary observations into deterministic text/JSON reviewer
+  evidence. It supports `full`, `installer`, `profile`, `mock`, `hardware`,
+  and `review` scenarios, and remains evidence-only: no GUI launch, no audio
+  analysis, no file writes, no MIDI ports opened, no MIDI sent, and no hardware
+  behavior. See
+  `docs/superpowers/specs/2026-05-27-manual-feedback-packet-design.md` and
+  `docs/superpowers/plans/2026-05-27-manual-feedback-packet.md`.
 - 2026-05-26: Second outbound CC repeatability readiness prepared locally. The
   next recommended hardware pass is repeatability-first: rerun the same one-CC
   all-12-track validation from PR #133 before testing any new CC number or
