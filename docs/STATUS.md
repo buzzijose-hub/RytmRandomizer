@@ -1,9 +1,19 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-27: Style Crates, Queue, and Mutation Journal passive MVP prepared
+  locally. The new `style-crates-queue-journal-report` command lists curated
+  mutation move crates, a staged set-story/live-scratchpad queue, immutable
+  journal seed/value metadata, future 12-pad danger modes, blocked active
+  actions, deterministic JSON, and replay commands. It does not run an audio
+  analyzer, launch a GUI, write journal files, dispatch queue moves, open MIDI
+  ports, or send MIDI. See
+  `docs/superpowers/specs/2026-05-27-style-crates-queue-journal-design.md`
+  and
+  `docs/superpowers/plans/2026-05-27-style-crates-queue-journal-passive.md`.
 - 2026-05-26: Second outbound CC repeatability readiness prepared locally. The
   next recommended hardware pass is repeatability-first: rerun the same one-CC
   all-12-track validation from PR #133 before testing any new CC number or

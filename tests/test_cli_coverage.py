@@ -86,6 +86,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     style_render_plan_help = resolve_help_text("rytm-style-mutation-render-plan-report")
     style_mock_preview_help = resolve_help_text("rytm-style-mutation-mock-preview-report")
     style_kit_readiness_help = resolve_help_text("rytm-style-kit-readiness-report")
+    style_crates_queue_journal_help = resolve_help_text("style-crates-queue-journal-report")
     a4_style_routing_help = resolve_help_text("analog-four-style-snapshot-routing-report")
     a4_style_intent_help = resolve_help_text("analog-four-style-mutation-intent-report")
     a4_style_mock_preview_help = resolve_help_text("analog-four-style-mutation-mock-preview-report")
@@ -206,6 +207,7 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
 
     assert top_level_help.startswith("RytmRandomizer passive CLI")
     assert "style-performance-arc-live-readiness-report" in top_level_help
+    assert "style-crates-queue-journal-report" in top_level_help
     assert "style-performance-arc-live-control-surface-report" in top_level_help
     assert "style-performance-arc-live-analyzer-handoff-report" in top_level_help
     assert "style-performance-arc-live-analyzer-targets-report" in top_level_help
@@ -259,6 +261,9 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
     )
     assert style_kit_readiness_help.startswith(
         "RytmRandomizer passive CLI: rytm-style-kit-readiness-report"
+    )
+    assert style_crates_queue_journal_help.startswith(
+        "RytmRandomizer passive CLI: style-crates-queue-journal-report"
     )
     assert a4_style_routing_help.startswith(
         "RytmRandomizer passive CLI: analog-four-style-snapshot-routing-report"

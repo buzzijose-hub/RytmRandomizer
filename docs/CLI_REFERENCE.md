@@ -81,11 +81,32 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --s
 
 ```bash
 python -m rytm_randomizer.cli style-profile-report   # list curated style profiles
+python -m rytm_randomizer.cli style-crates-queue-journal-report --json
 python -m rytm_randomizer.cli rytm-style-snapshot-routing-report KITS.syx birmingham_pressure --slot 7 --discovery 10
 python -m rytm_randomizer.cli rytm-style-mutation-intent-report KITS.syx birmingham_pressure --slot 7 --discovery 45
 python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report KITS.syx birmingham_pressure --slot 7 --discovery 45
 python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 7 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli rytm-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
+```
+
+---
+
+## Style Crates + Mutation Journal
+
+`style-crates-queue-journal-report` is the passive MVP for browsing curated
+mutation directions, staging future moves, and keeping replayable favorite
+accidents. It lists Style Crates such as Dark Hypnotic, Peak Time, Hard Groove,
+Dub Pressure, Industrial/Broken, Deep Minimal, Chaos Fills, Transitions, and
+Saved Accidents; a deterministic staged queue; journal seed/value metadata; and
+future danger modes for Live Safe, Studio Wild, Chaos, One-Shot Blast, and
+Evolve Mode.
+
+This command is metadata-only: it does not run an analyzer, write journal
+files, launch a GUI, dispatch queue moves, open MIDI ports, or send MIDI.
+
+```bash
+python -m rytm_randomizer.cli style-crates-queue-journal-report
+python -m rytm_randomizer.cli style-crates-queue-journal-report --json
 ```
 
 ---
