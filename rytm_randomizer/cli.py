@@ -128,6 +128,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",
         ),
+        "style-crates-queue-journal-report": (
+            "rytm_randomizer.reports.style_crates_queue_journal",
+            "STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND",
+        ),
         "reference-style-blueprint-report": (
             "rytm_randomizer.reports.reference_style_blueprint",
             "REFERENCE_STYLE_BLUEPRINT_CLI_COMMAND",
