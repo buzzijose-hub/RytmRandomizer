@@ -32,6 +32,14 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_outbound_cc_repeatability",
             "RYTM_OUTBOUND_CC_REPEATABILITY_CLI_COMMAND",
         ),
+        "manual-validation-kit-report": (
+            "rytm_randomizer.reports.manual_validation_kit",
+            "MANUAL_VALIDATION_KIT_CLI_COMMAND",
+        ),
+        "manual-feedback-packet-report": (
+            "rytm_randomizer.reports.manual_feedback_packet",
+            "MANUAL_FEEDBACK_PACKET_CLI_COMMAND",
+        ),
         "rytm-snapshot-pad-compatibility-report": (
             "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
             "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",
@@ -119,6 +127,10 @@ def _registered_command_exit_code(args):
         "style-profile-report": (
             "rytm_randomizer.reports.style_profiles",
             "STYLE_PROFILE_REPORT_CLI_COMMAND",
+        ),
+        "style-crates-queue-journal-report": (
+            "rytm_randomizer.reports.style_crates_queue_journal",
+            "STYLE_CRATES_QUEUE_JOURNAL_CLI_COMMAND",
         ),
         "reference-style-blueprint-report": (
             "rytm_randomizer.reports.reference_style_blueprint",

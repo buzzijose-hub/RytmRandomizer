@@ -11,6 +11,8 @@ USAGE = (
     "project-status-report [--summary|--json|--check] | mock-mapper-report | runtime-plan-report | "
     "active-boundary-report | mock-runtime-active-bridge-report | "
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "rytm-snapshot-pad-compatibility-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
@@ -63,7 +65,8 @@ USAGE = (
     "inspect-command <key> | "
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
-    "style-profile-report | reference-style-blueprint-report "
+    "style-profile-report | style-crates-queue-journal-report [--json] | "
+    "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "
     "search-style-profiles <query> | style-target-report | inspect-style-target <key> | "
@@ -572,6 +575,8 @@ USAGE = (
     "[--unsigned] [--overwrite] [--json] | "
     "cockpit-export-rehearsal-report --profile-id <id> --profiles-dir <path> "
     "[--key-id <label>] [--unsigned] [--output <path>] [--label <text>] [--json] | "
+    "manual-feedback-packet-report "
+    "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "search-commands <query> | "
     "search-scenes <query> | search-group-profiles <query> | "
     "preview-command <key> | preview-scene <key> | preview-group-profile <key>"
@@ -1102,6 +1107,24 @@ Usage:
 
 Behavior:
   Prints the passive style-profile catalog for techno design intent.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _style_crates_queue_journal_report_help():
+    from .reports.style_crates_queue_journal import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: style-crates-queue-journal-report
+
+Usage:
+  python -m rytm_randomizer.cli style-crates-queue-journal-report
+  python -m rytm_randomizer.cli style-crates-queue-journal-report --json
+  python -m rytm_randomizer.cli style-crates-queue-journal-report --help
+
+Behavior:
+  Lists passive Style Crates, staged queue moves, and Mutation Journal entries.
+  This is metadata-only planning for future GUI and hardware-gated workflows.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2492,6 +2515,8 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
+  python -m rytm_randomizer.cli manual-feedback-packet-report [--scenario full|installer|profile|mock|hardware|review] [--json]
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path>
   python -m rytm_randomizer.cli rytm-snapshot-intelligence-report <syx-path> --list
@@ -2520,6 +2545,7 @@ Usage:
   python -m rytm_randomizer.cli dual-machine-style-mutation-mock-preview-report <rytm-syx-path> <a4-syx-path> <style-key> [--rytm-slot N] [--a4-slot N] [--discovery N] [--events] [--limit N] [--json]
   python -m rytm_randomizer.cli dual-machine-target-report <rytm|a4|both>
   python -m rytm_randomizer.cli style-profile-report
+  python -m rytm_randomizer.cli style-crates-queue-journal-report [--json]
   python -m rytm_randomizer.cli reference-style-blueprint-report (--description <text>|--audio <path>|--library <dir>) [--json]
   python -m rytm_randomizer.cli list-style-profiles
   python -m rytm_randomizer.cli inspect-style-profile <key>
@@ -2610,6 +2636,10 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   rytm-12-pad-machine-matrix-report
                      Print the passive Rytm 12-pad machine matrix report.
+  manual-validation-kit-report
+                     Print the passive installer/UI/profile/manual validation kit.
+  manual-feedback-packet-report
+                     Print a passive manual testing feedback packet.
   rytm-snapshot-pad-compatibility-report
                      Print the passive Rytm snapshot-pad compatibility report.
   rytm-snapshot-intelligence-report
@@ -2656,6 +2686,8 @@ Commands:
                      Print the passive dual-machine target report.
   style-profile-report
                      Print the passive style profile report.
+  style-crates-queue-journal-report
+                     Print the passive Style Crates, Queue, and Mutation Journal report.
   reference-style-blueprint-report
                      Translate a style reference into a passive Rytm plus Analog Four blueprint.
   list-style-profiles
@@ -2979,6 +3011,47 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required""",
+    "manual-validation-kit-report": """RytmRandomizer passive CLI: manual-validation-kit-report
+
+Usage:
+  python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
+  python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+  python -m rytm_randomizer.cli manual-validation-kit-report --help
+
+Behavior:
+  Prints a passive installer, cockpit UI, profile workflow, mock rehearsal, single armed-smoke, and evidence closeout checklist for manual validation.
+  Active hardware commands are instruction text only; this report does not execute them.
+
+Safety:
+  passive/read-only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required""",
+    "manual-feedback-packet-report": """RytmRandomizer passive CLI: manual-feedback-packet-report
+
+Usage:
+  python -m rytm_randomizer.cli manual-feedback-packet-report
+  python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile
+  python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json
+  python -m rytm_randomizer.cli manual-feedback-packet-report --help
+
+Behavior:
+  Prints a deterministic manual feedback packet for installer, cockpit,
+  profile wizard, analyzer, export, mock-control, and approved hardware-boundary
+  observations. The packet is evidence only; it does not run the GUI or analyzer.
+
+Safety:
+  passive/read-only
+  in-memory only
+  no GUI launch
+  no audio analysis
+  no file writes
+  no MIDI sending
+  no port opening
+  no hardware mutation
+  no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
@@ -3009,6 +3082,7 @@ Safety:
         _dual_machine_style_mutation_mock_preview_report_help
     ),
     "style-profile-report": _style_profile_report_help,
+    "style-crates-queue-journal-report": _style_crates_queue_journal_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,
     "style-target-report": _style_target_report_help,
     "style-performance-arc-report": _style_performance_arc_report_help,

@@ -29,6 +29,29 @@ pre-release step.
   rytm-randomizer --help
   ```
 
+## Passive Validation Kit
+
+Before launching the installer, opening the cockpit, or arming hardware, print
+the passive validation kit:
+
+```
+python -m rytm_randomizer.cli manual-validation-kit-report
+```
+
+Use `--phase <slug>` to focus the current pass:
+
+```
+python -m rytm_randomizer.cli manual-validation-kit-report --phase installer_bootstrap
+python -m rytm_randomizer.cli manual-validation-kit-report --phase profile_workflow
+python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+python -m rytm_randomizer.cli manual-validation-kit-report --phase armed_smoke
+python -m rytm_randomizer.cli manual-validation-kit-report --phase evidence_closeout
+```
+
+This report is a checklist and evidence prompt only. It does not launch the
+GUI, run analysis, write profile/export files, open a MIDI port, send MIDI, or
+execute the armed smoke command it prints for the operator.
+
 ## Passive USB Input Channel-Map Validation (2026-05-26)
 
 This validation confirmed the Analog Rytm MKII manual track-output channel map
@@ -226,6 +249,17 @@ Passive readiness report:
 
 The readiness report only prints the checklist and replay metadata. It does
 not open a port, send MIDI, run the validation, or mutate hardware.
+
+Manual feedback packet:
+
+- Profile/export/analyzer feedback:
+  `python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile`
+- Hardware-boundary feedback:
+  `python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json`
+
+This packet is also passive. It is for capturing screenshots, sidecar lines,
+stop conditions, and reviewer notes after a manual pass. It does not launch the
+GUI, run analysis, write profile files, open ports, or send MIDI.
 
 Use the same one-CC helper and the same message shape:
 

@@ -46,6 +46,42 @@ python -m rytm_randomizer.cli cockpit-send-plan-rehearsal-surface-report \
 
 ---
 
+## Manual validation kit
+
+```bash
+# Full passive checklist for installer/UI/profile/mock/manual hardware smoke testing.
+python -m rytm_randomizer.cli manual-validation-kit-report
+
+# Focus one phase for the current test pass.
+python -m rytm_randomizer.cli manual-validation-kit-report --phase mock_rehearsal
+
+# GUI/reviewer-ready JSON.
+python -m rytm_randomizer.cli manual-validation-kit-report --json
+```
+
+The report prints operator instructions only. It does not launch the cockpit,
+run the analyzer, write profile files, open a MIDI port, send MIDI, or execute
+the armed smoke command it includes as manual instruction text.
+
+---
+
+## Manual feedback packet
+
+`manual-feedback-packet-report` turns installer, cockpit, Profile Wizard,
+analyzer, export, mock-control, pad-scope, and approved hardware-boundary
+observations into deterministic reviewer evidence. It does not launch the GUI,
+run audio analysis, write export files, open MIDI ports, or send MIDI.
+
+```bash
+python -m rytm_randomizer.cli manual-feedback-packet-report
+python -m rytm_randomizer.cli manual-feedback-packet-report --scenario profile
+python -m rytm_randomizer.cli manual-feedback-packet-report --scenario hardware --json
+```
+
+Scenarios: `full`, `installer`, `profile`, `mock`, `hardware`, `review`.
+
+---
+
 ## Dual-machine target surface
 
 ```bash
@@ -62,6 +98,7 @@ python -m rytm_randomizer.cli dual-machine-target-report both   # both registere
 |---|---|
 | `rytm-12-pad-machine-matrix-report` | Passive Rytm **12-pad machine matrix** with machine compatibility per pad |
 | `rytm-outbound-cc-repeatability-report [--control N] [--value N] [--json]` | Passive all-12-track outbound CC repeatability checklist for the next manual validation pass |
+| `manual-feedback-packet-report [--scenario full|installer|profile|mock|hardware|review] [--json]` | Passive manual feedback packet for installer, wizard, analyzer, export, pad-scope, mock-control, and hardware-boundary review |
 | `rytm-snapshot-pad-compatibility-report` | Passive **snapshot-pad compatibility** report per Rytm pad |
 | `rytm-snapshot-intelligence-report KITS.syx --slot N [--list]` | Passive **snapshot intelligence** for one supported Rytm kit snapshot, or `--list` every supported snapshot in a SysEx dump |
 | `rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth N [--events --limit N]` | Passive **snapshot mutation preview** for one slot at a given depth; with `--events` include mock CC event rows |
@@ -81,11 +118,32 @@ python -m rytm_randomizer.cli rytm-snapshot-mutation-preview-report KITS.syx --s
 
 ```bash
 python -m rytm_randomizer.cli style-profile-report   # list curated style profiles
+python -m rytm_randomizer.cli style-crates-queue-journal-report --json
 python -m rytm_randomizer.cli rytm-style-snapshot-routing-report KITS.syx birmingham_pressure --slot 7 --discovery 10
 python -m rytm_randomizer.cli rytm-style-mutation-intent-report KITS.syx birmingham_pressure --slot 7 --discovery 45
 python -m rytm_randomizer.cli rytm-style-mutation-render-plan-report KITS.syx birmingham_pressure --slot 7 --discovery 45
 python -m rytm_randomizer.cli rytm-style-mutation-mock-preview-report KITS.syx jose_core_techno --slot 7 --discovery 45 --events --limit 24
 python -m rytm_randomizer.cli rytm-style-kit-readiness-report KITS.syx jose_core_techno --limit 16
+```
+
+---
+
+## Style Crates + Mutation Journal
+
+`style-crates-queue-journal-report` is the passive MVP for browsing curated
+mutation directions, staging future moves, and keeping replayable favorite
+accidents. It lists Style Crates such as Dark Hypnotic, Peak Time, Hard Groove,
+Dub Pressure, Industrial/Broken, Deep Minimal, Chaos Fills, Transitions, and
+Saved Accidents; a deterministic staged queue; journal seed/value metadata; and
+future danger modes for Live Safe, Studio Wild, Chaos, One-Shot Blast, and
+Evolve Mode.
+
+This command is metadata-only: it does not run an analyzer, write journal
+files, launch a GUI, dispatch queue moves, open MIDI ports, or send MIDI.
+
+```bash
+python -m rytm_randomizer.cli style-crates-queue-journal-report
+python -m rytm_randomizer.cli style-crates-queue-journal-report --json
 ```
 
 ---

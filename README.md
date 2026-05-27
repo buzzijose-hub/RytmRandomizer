@@ -274,11 +274,13 @@ The full surface is large — see [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.m
 python -m rytm_randomizer.cockpit                                     # sidecar
 cockpit-export-profile-model --profile-id X --output Y.rymp           # ship a profile (Phase 3)
 cockpit-export-rehearsal-report --profile-id X                        # passive pre-flight
+manual-feedback-packet-report --scenario profile                      # collect installer/wizard/export feedback
 
 # Live-set planning
 style-performance-arc-live-set-cockpit-report                         # one-screen cockpit packet
 style-performance-arc-live-show-export-report                         # handoff manifest
 style-performance-arc-stage-routing-report                            # cue-by-cue route cards
+style-crates-queue-journal-report --json                              # crates, staged moves, journal seeds
 reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad + A4 influence blueprint
 
 # Dual-machine targets

@@ -1,9 +1,36 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-27: Live GUI 12-pad plus Analog Four readiness review follow-up
+  prepared locally. The cockpit `DeviceRail` now builds and renders from the
+  `LiveGuiDualDeviceRigReadinessModelDict` contract it ships, so the Python
+  model, TypeScript protocol, and GUI consumer are coupled instead of leaving a
+  passive model substrate unused. This remains mock-safe UI rendering only: no
+  GUI sidecar launch, no MIDI port enumeration, no port opened, and no MIDI
+  sent.
+- 2026-05-27: Style Crates, Queue, and Mutation Journal passive MVP prepared
+  locally. The new `style-crates-queue-journal-report` command lists curated
+  mutation move crates, a staged set-story/live-scratchpad queue, immutable
+  journal seed/value metadata, future 12-pad danger modes, blocked active
+  actions, deterministic JSON, and replay commands. It does not run an audio
+  analyzer, launch a GUI, write journal files, dispatch queue moves, open MIDI
+  ports, or send MIDI. See
+  `docs/superpowers/specs/2026-05-27-style-crates-queue-journal-design.md`
+  and
+  `docs/superpowers/plans/2026-05-27-style-crates-queue-journal-passive.md`.
+- 2026-05-27: Passive manual feedback packet prepared locally. The new
+  `manual-feedback-packet-report` command turns current installer, cockpit,
+  Profile Wizard, analyzer, export, pad-scope, mock-control, and approved
+  hardware-boundary observations into deterministic text/JSON reviewer
+  evidence. It supports `full`, `installer`, `profile`, `mock`, `hardware`,
+  and `review` scenarios, and remains evidence-only: no GUI launch, no audio
+  analysis, no file writes, no MIDI ports opened, no MIDI sent, and no hardware
+  behavior. See
+  `docs/superpowers/specs/2026-05-27-manual-feedback-packet-design.md` and
+  `docs/superpowers/plans/2026-05-27-manual-feedback-packet.md`.
 - 2026-05-26: Live GUI 12-pad plus Analog Four readiness work started on a
   clean-base bundle. The first pass adds an explicit cockpit device rail for
   all 12 Analog Rytm pads plus four staged Analog Four tracks, and a passive
