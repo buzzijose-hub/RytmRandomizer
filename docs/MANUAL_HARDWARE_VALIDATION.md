@@ -295,6 +295,41 @@ Stop immediately if:
 Do not test a new CC number in this pass. If a new parameter needs validation,
 write a separate candidate note first.
 
+## Analog Four First Outbound Validation Planning
+
+Analog Four validation is a separate path from the Rytm 12-track validation.
+The Rytm result proves the current Rytm studio setup; it does not prove Analog
+Four channels, CC numbers, port names, or receive behavior.
+
+Planning references:
+
+- `docs/superpowers/specs/2026-05-27-analog-four-first-outbound-validation-design.md`
+- `docs/superpowers/plans/2026-05-27-analog-four-first-outbound-validation.md`
+
+Current A4 boundary:
+
+- `AnalogFourDevice` exists through the Device + Strategy seam.
+- Track count is 4.
+- Passive reports and mock-oriented A4 strategy surfaces exist.
+- No A4 outbound hardware validation has been run.
+- No exact A4 CC is approved by this runbook yet.
+
+Before any A4 outbound send:
+
+- confirm the exact Analog Four USB MIDI output port,
+- confirm the A4 receive-channel model,
+- choose one safe CC only from the official manual, observed inbound A4 MIDI,
+  or reviewed A4-specific code/data,
+- prove the candidate through `MockMidiSender`,
+- keep Rytm unused or disconnected for the A4 pass,
+- run one A4 track at a time with Jose present.
+
+Do not reuse the Rytm-shaped `--validate-one-cc` helper as an approved A4
+hardware path until a separate A4-specific implementation gate exists.
+
+Stop immediately if the A4 channel model, CC candidate, output port, or target
+track is unclear.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the
