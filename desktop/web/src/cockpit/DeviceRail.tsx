@@ -13,15 +13,13 @@ import type {
   Snapshot,
 } from '../types';
 
-const ANALOG_FOUR_TRACKS = [
-  { track: 1, label: 'T1', role: 'Bass movement' },
-  { track: 2, label: 'T2', role: 'Lead pressure' },
-  { track: 3, label: 'T3', role: 'Texture motion' },
-  { track: 4, label: 'T4', role: 'FX / texture' },
-] as const;
+import {
+  ANALOG_FOUR_DEVICE_ID,
+  ANALOG_FOUR_TRACKS,
+  type CockpitDeviceId,
+  RYTM_DEVICE_ID,
+} from './devices';
 
-const RYTM_DEVICE_ID = 'analog_rytm_mk2';
-const ANALOG_FOUR_DEVICE_ID = 'analog_four_mk2';
 const DEFAULT_SESSION_LABEL = 'Live Session';
 const ACTIVE_RYTM_PAD_LIMIT = 4;
 
@@ -30,7 +28,12 @@ interface BuildDeviceRailReadinessModelOptions {
   session: SessionStatus | null;
 }
 
-export function DeviceRail(): JSX.Element {
+export interface DeviceRailProps {
+  activeDeviceId: CockpitDeviceId;
+  onSelectDevice: (deviceId: CockpitDeviceId) => void;
+}
+
+export function DeviceRail({ activeDeviceId, onSelectDevice }: DeviceRailProps): JSX.Element {
   const snapshot = useCockpitStore((s) => s.snapshot);
   const session = useCockpitStore((s) => s.sessionStatus);
   const model = buildDeviceRailReadinessModel({ snapshot, session });
@@ -52,8 +55,10 @@ export function DeviceRail(): JSX.Element {
         name={rytmDevice.display_name}
         status={deviceDisplayStatus(rytmDevice)}
         detail={`${rytmDevice.mapped_track_count} pads mapped`}
-        active={true}
+        active={activeDeviceId === RYTM_DEVICE_ID}
         testId={rytmDevice.test_id}
+        selectTestId="device-select-analog-rytm-mk2"
+        onSelect={() => onSelectDevice(RYTM_DEVICE_ID)}
       >
         <div className="device-chip-grid" aria-label="Analog Rytm pad map">
           {rytmTracks.map((track) => (
@@ -73,8 +78,10 @@ export function DeviceRail(): JSX.Element {
         name={analogFourDevice.display_name}
         status={deviceDisplayStatus(analogFourDevice)}
         detail={`${analogFourDevice.planned_track_count} tracks staged`}
-        active={false}
+        active={activeDeviceId === ANALOG_FOUR_DEVICE_ID}
         testId={analogFourDevice.test_id}
+        selectTestId="device-select-analog-four-mk2"
+        onSelect={() => onSelectDevice(ANALOG_FOUR_DEVICE_ID)}
       >
         <div className="device-chip-grid" aria-label="Analog Four staged track map">
           {analogFourTracks.map((track) => (
@@ -130,9 +137,9 @@ export function buildDeviceRailReadinessModel({
   const analogFourTracks = ANALOG_FOUR_TRACKS.map((track) => ({
     device_id: ANALOG_FOUR_DEVICE_ID,
     track_number: track.track,
-    track_label: track.label,
-    label: track.label,
-    role: track.role,
+    track_label: track.trackLabel,
+    label: track.trackLabel,
+    role: track.roleLabel,
     state: 'mock_staged',
     enabled: false,
     source: 'analog-four-staged-plan',
@@ -368,6 +375,8 @@ function DeviceCard({
   detail,
   active,
   testId,
+  selectTestId,
+  onSelect,
   children,
 }: {
   name: string;
@@ -375,6 +384,8 @@ function DeviceCard({
   detail: string;
   active: boolean;
   testId: string;
+  selectTestId: string;
+  onSelect: () => void;
   children: ReactNode;
 }): JSX.Element {
   return (
@@ -390,6 +401,15 @@ function DeviceCard({
         </div>
         <span className={active ? 'device-status ready' : 'device-status staged'}>{status}</span>
       </div>
+      <button
+        type="button"
+        className="device-select-button"
+        aria-pressed={active}
+        data-testid={selectTestId}
+        onClick={onSelect}
+      >
+        {active ? 'Viewing' : 'View'}
+      </button>
       {children}
     </section>
   );

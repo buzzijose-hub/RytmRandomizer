@@ -1,9 +1,18 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-28. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-28: Analog Four cockpit UI surface prepared locally. The cockpit
+  device rail can switch the center panel from the default Analog Rytm MKII
+  12-pad snapshot view to an Analog Four MKII four-track view. The A4 surface
+  shows the existing track roles plus manual-backed mutation zones
+  (oscillators, filters, envelopes, LFO/modulation, effects sends, and deferred
+  drive/NRPN-only work) while preserving the same mock-safe cockpit chrome,
+  locks, preview state, mutation panel, and safety rail. This is UI visibility
+  only: no A4 SEND path, no MIDI renderer change, no port opening, no real MIDI
+  send, and no hardware validation.
 - 2026-05-27: Style crate rehearsal deck prepared locally. The new
   `style-crate-rehearsal-deck-report` command consumes the passive Style
   Crates, staged queue, and Mutation Journal metadata and emits GUI-ready crate

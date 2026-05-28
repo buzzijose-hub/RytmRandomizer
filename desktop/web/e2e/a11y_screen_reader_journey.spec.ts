@@ -40,8 +40,8 @@ test.describe('SR-equivalent journey', () => {
     await expect(deviceStatus.getByRole('region', { name: 'Analog Four MKII' })).toContainText(
       '4 tracks staged',
     );
-    await expect(page.getByTestId('device-rail-a4-track-1')).toContainText('Bass movement');
-    await expect(page.getByTestId('device-rail-a4-track-4')).toContainText('FX / texture');
+    await expect(page.getByTestId('device-rail-a4-track-1')).toContainText('Bass / low pulse');
+    await expect(page.getByTestId('device-rail-a4-track-4')).toContainText('Space / accent');
 
     await expect(
       page.getByRole('heading', { exact: true, level: 2, name: 'Snapshot' }),

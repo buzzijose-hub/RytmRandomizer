@@ -375,6 +375,13 @@ The desktop shell (`desktop/shell/` — Rust + Tauri 2) and the web frontend
 package: they are bundled by `cargo build --release` into a single binary
 that spawns the Python sidecar via `python -m rytm_randomizer.cockpit`.
 
+The web cockpit may render more than one device surface, but device facts
+still come from the shared Device + Strategy layer. The current UI selects
+between the default Analog Rytm MKII 12-pad snapshot view and an Analog Four
+MKII four-track staged view that consumes the existing A4 role/zone vocabulary.
+That A4 surface is visibility-only until the A4 SEND path is separately
+designed, tested, and armed.
+
 ### The Protocol — events out, commands in
 
 The cockpit's wire format is transport-agnostic (WebSocket today; could

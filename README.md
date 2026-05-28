@@ -43,6 +43,7 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 
 | Surface | What it does |
 |---|---|
+| **Device rail** | Switch the cockpit view between the Analog Rytm MKII 12-pad surface and the Analog Four MKII four-track mock/staged surface. |
 | **Snapshot panel** | All 12 pads at a glance, with a ghost overlay showing what the next mutation would change. Lock any pad to protect it. |
 | **Mutation panel** | Pick a profile, set depth (0.10 → 0.90), regen on demand. Every change is deterministic for a given (snapshot, profile, depth, seed). |
 | **History strip** | Saved + auto snapshots. Undo any move. Jump to any past snapshot. |
@@ -50,6 +51,10 @@ A Tauri desktop window backed by a Python sidecar that hosts the mutation engine
 | **Profile chips** | Switch profiles mid-set without losing your snapshot or your locks. |
 
 **Passive by construction.** The cockpit defaults to a mock device adapter. No MIDI port opens until you explicitly `--arm`.
+
+The Analog Four cockpit view is currently visibility-only. It shows four synth
+tracks and the existing A4 strategy zones for dry-run review, but it does not
+add an A4 SEND path, open ports, or send MIDI.
 
 **Sidecar security guarantees** (post CODE_REVIEW.md sweep, 2026-05):
 
