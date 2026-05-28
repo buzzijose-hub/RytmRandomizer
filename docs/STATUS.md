@@ -4,6 +4,16 @@ Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-27: Style crate rehearsal deck prepared locally. The new
+  `style-crate-rehearsal-deck-report` command consumes the passive Style
+  Crates, staged queue, and Mutation Journal metadata and emits GUI-ready crate
+  cards, queue rehearsal cards, journal replay cards, risk labels, recovery
+  actions, blocked active actions, deterministic JSON, and replay commands. It
+  remains passive and mock-safe: no GUI launch, no analyzer invocation, no queue
+  dispatch, no journal writes, no MIDI ports opened, and no MIDI sent. See
+  `docs/superpowers/specs/2026-05-27-style-crate-rehearsal-deck-design.md`
+  and
+  `docs/superpowers/plans/2026-05-27-style-crate-rehearsal-deck.md`.
 - 2026-05-27: Style Crates, Queue, and Mutation Journal passive MVP prepared
   locally. The new `style-crates-queue-journal-report` command lists curated
   mutation move crates, a staged set-story/live-scratchpad queue, immutable
