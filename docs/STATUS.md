@@ -14,6 +14,13 @@ Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to 
   `docs/superpowers/specs/2026-05-27-analog-four-first-outbound-validation-design.md`
   and
   `docs/superpowers/plans/2026-05-27-analog-four-first-outbound-validation.md`.
+- 2026-05-27: Live GUI 12-pad plus Analog Four readiness review follow-up
+  prepared locally. The cockpit `DeviceRail` now builds and renders from the
+  `LiveGuiDualDeviceRigReadinessModelDict` contract it ships, so the Python
+  model, TypeScript protocol, and GUI consumer are coupled instead of leaving a
+  passive model substrate unused. This remains mock-safe UI rendering only: no
+  GUI sidecar launch, no MIDI port enumeration, no port opened, and no MIDI
+  sent.
 - 2026-05-27: Style Crates, Queue, and Mutation Journal passive MVP prepared
   locally. The new `style-crates-queue-journal-report` command lists curated
   mutation move crates, a staged set-story/live-scratchpad queue, immutable
@@ -34,6 +41,12 @@ Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to 
   behavior. See
   `docs/superpowers/specs/2026-05-27-manual-feedback-packet-design.md` and
   `docs/superpowers/plans/2026-05-27-manual-feedback-packet.md`.
+- 2026-05-26: Live GUI 12-pad plus Analog Four readiness work started on a
+  clean-base bundle. The first pass adds an explicit cockpit device rail for
+  all 12 Analog Rytm pads plus four staged Analog Four tracks, and a passive
+  dual-device rig readiness model that composes the existing 12-pad surface,
+  device inventory, hardware rail, and snapshot compatibility packets without
+  launching a GUI, opening MIDI ports, or sending MIDI.
 - 2026-05-26: Second outbound CC repeatability readiness prepared locally. The
   next recommended hardware pass is repeatability-first: rerun the same one-CC
   all-12-track validation from PR #133 before testing any new CC number or
