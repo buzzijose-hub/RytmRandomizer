@@ -4,6 +4,16 @@ Last updated: 2026-05-27. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-27: Analog Four first outbound validation planning prepared locally.
+  The new design and implementation plan define a separate A4 validation
+  ladder: manual-backed or observed channel/CC facts first, mock-only proof
+  second, then later one-track-at-a-time hardware validation only with Jose
+  present. It does not implement an A4 send command, does not widen the
+  Rytm-shaped `--validate-one-cc` helper, does not open ports, and does not
+  send MIDI. See
+  `docs/superpowers/specs/2026-05-27-analog-four-first-outbound-validation-design.md`
+  and
+  `docs/superpowers/plans/2026-05-27-analog-four-first-outbound-validation.md`.
 - 2026-05-27: Live GUI 12-pad plus Analog Four readiness review follow-up
   prepared locally. The cockpit `DeviceRail` now builds and renders from the
   `LiveGuiDualDeviceRigReadinessModelDict` contract it ships, so the Python
