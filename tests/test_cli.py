@@ -93,6 +93,7 @@ USAGE = (
     "dual-machine-target-report <rytm|a4|both> | inspect-scene <key> | "
     "inspect-group-profile <key> | list-commands | list-scenes | list-group-profiles | "
     "style-profile-report | style-crates-queue-journal-report [--json] | "
+    "style-crate-rehearsal-deck-report [--crate <key>] [--json] | "
     "reference-style-blueprint-report "
     "(--description <text>|--audio <path>|--library <dir>) [--json] | "
     "list-style-profiles | inspect-style-profile <key> | "

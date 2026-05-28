@@ -144,6 +144,29 @@ files, launch a GUI, dispatch queue moves, open MIDI ports, or send MIDI.
 ```bash
 python -m rytm_randomizer.cli style-crates-queue-journal-report
 python -m rytm_randomizer.cli style-crates-queue-journal-report --json
+python -m rytm_randomizer.cli style-crate-rehearsal-deck-report
+python -m rytm_randomizer.cli style-crate-rehearsal-deck-report --crate industrial_broken --json
+```
+
+---
+
+## Style Crate Rehearsal Deck
+
+`style-crate-rehearsal-deck-report` consumes the passive Style Crates,
+staged queue, and Mutation Journal metadata and renders GUI-ready rehearsal
+cards. It is the next passive step toward a crate browser and live queue UI:
+crate cards expose primary move, energy, risk, target pads, and operator
+action; queue cards expose staged moves, dry-run-only status, recovery action,
+and risk; journal cards expose replay seeds and guardrail mode.
+
+The optional `--crate <key>` flag filters the deck to one crate. This command
+does not launch the GUI, dispatch queue moves, replay journal entries, open
+MIDI ports, or send MIDI.
+
+```bash
+python -m rytm_randomizer.cli style-crate-rehearsal-deck-report
+python -m rytm_randomizer.cli style-crate-rehearsal-deck-report --json
+python -m rytm_randomizer.cli style-crate-rehearsal-deck-report --crate industrial_broken
 ```
 
 ---
