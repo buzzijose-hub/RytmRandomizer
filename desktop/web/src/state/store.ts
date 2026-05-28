@@ -18,6 +18,7 @@
 
 import { create } from 'zustand';
 
+import type { ConnectionStatus } from '../ws/client';
 import type {
   CockpitSendPlan,
   History,
@@ -36,6 +37,12 @@ export interface SessionStatus {
   unsaved_sends: number;
 }
 
+export interface OperatorLogEntry {
+  id: string;
+  level: 'info' | 'success' | 'error';
+  message: string;
+}
+
 export interface CockpitState {
   snapshot: Snapshot | null;
   previewCandidate: MutationCandidate | null;
@@ -43,6 +50,8 @@ export interface CockpitState {
   profile: ProfileModel | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
+  connectionStatus: ConnectionStatus;
+  operatorLog: OperatorLogEntry[];
 }
 
 export interface CockpitActions {
@@ -52,6 +61,8 @@ export interface CockpitActions {
   setProfile: (profile: ProfileModel | null) => void;
   setSendPlan: (sendPlan: CockpitSendPlan | null) => void;
   setSessionStatus: (status: SessionStatus) => void;
+  setConnectionStatus: (status: ConnectionStatus) => void;
+  appendOperatorLog: (entry: Omit<OperatorLogEntry, 'id'>) => void;
   /** Reset all slices back to null (used on disconnect / shutdown). */
   reset: () => void;
 }
@@ -67,7 +78,17 @@ export const INITIAL_STATE: CockpitState = {
   profile: null,
   sendPlan: null,
   sessionStatus: null,
+  connectionStatus: 'closed',
+  operatorLog: [],
 };
+
+const OPERATOR_LOG_LIMIT = 8;
+let nextOperatorLogId = 0;
+
+function makeOperatorLogId(): string {
+  nextOperatorLogId += 1;
+  return `operator-log-${nextOperatorLogId}`;
+}
 
 // ---------- Store ----------
 
@@ -84,6 +105,17 @@ export function createCockpitStore() {
     setProfile: (profile) => set({ profile }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
     setSessionStatus: (status) => set({ sessionStatus: status }),
+    setConnectionStatus: (status) => set({ connectionStatus: status }),
+    appendOperatorLog: (entry) =>
+      set((state) => ({
+        operatorLog: [
+          ...state.operatorLog,
+          {
+            ...entry,
+            id: makeOperatorLogId(),
+          },
+        ].slice(-OPERATOR_LOG_LIMIT),
+      })),
     reset: () => set({ ...INITIAL_STATE }),
   }));
 }

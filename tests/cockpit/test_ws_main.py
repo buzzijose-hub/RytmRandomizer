@@ -77,9 +77,38 @@ def test_default_initial_snapshot_has_twelve_rytm_pads_with_known_machines() -> 
         "SY Raw",
         "BD Acoustic",
     ]
-    # All pads share the same starter param set
+    # All pads share the operator-facing starter control surface used by the cockpit.
     for pad in snapshot.pads:
-        assert set(pad.params) == {"tun", "dec", "lev", "flt"}
+        assert {
+            "tun",
+            "dec",
+            "lev",
+            "flt",
+            "swt",
+            "snap",
+            "hold",
+            "wave",
+            "tick",
+            "sample_tune",
+            "sample_fine",
+            "sample_bit",
+            "sample_start",
+            "sample_end",
+            "filter_attack",
+            "filter_decay",
+            "filter_sustain",
+            "filter_release",
+            "filter_resonance",
+            "filter_env",
+            "amp_attack",
+            "amp_hold",
+            "amp_decay",
+            "overdrive",
+            "delay",
+            "reverb",
+            "lfo_speed",
+            "lfo_depth",
+        }.issubset(pad.params)
 
 
 def test_default_initial_snapshot_carries_default_device_identifier() -> None:

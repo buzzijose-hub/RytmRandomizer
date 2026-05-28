@@ -26,6 +26,11 @@ describe('SafetyRail', () => {
   it('renders mock-safe defaults before a send plan is prepared', () => {
     act(() => {
       useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setConnectionStatus('connected');
+      useCockpitStore.getState().appendOperatorLog({
+        level: 'info',
+        message: 'WebSocket connected',
+      });
     });
 
     render(<SafetyRail />);
@@ -35,6 +40,9 @@ describe('SafetyRail', () => {
     expect(screen.getByText('No MIDI Port Open')).toBeInTheDocument();
     expect(screen.getByText('Hardware Off')).toBeInTheDocument();
     expect(screen.getByText('Simulation / Mock')).toBeInTheDocument();
+    expect(screen.getByText('Connected')).toBeInTheDocument();
+    expect(screen.getByText('Operator Log')).toBeInTheDocument();
+    expect(screen.getByText('WebSocket connected')).toBeInTheDocument();
     expect(screen.getByText('No send plan prepared')).toBeInTheDocument();
   });
 

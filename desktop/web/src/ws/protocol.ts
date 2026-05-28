@@ -39,7 +39,7 @@ export type ExportTarget = 'binary' | 'json';
 // ---------- Core data abstractions (spec §"Core Data Abstractions") ----------
 
 export interface PadState {
-  pad_id: number; // 1..12 (only 1..4 in product scope today)
+  pad_id: number; // 1..12 Rytm tracks
   machine: string; // e.g. "BD Hard"
   params: Record<string, number>; // per-parameter values (tun, dec, lev, ...)
 }

@@ -21,7 +21,7 @@ import {
   useCockpitStore,
 } from '../state';
 
-import { useCockpitClient } from './context';
+import { useLoggedCommand } from './useLoggedCommand';
 
 export interface ActionBarProps {
   previewOn: boolean;
@@ -29,21 +29,24 @@ export interface ActionBarProps {
 }
 
 export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.Element {
-  const client = useCockpitClient();
+  const sendCommand = useLoggedCommand();
   const candidate = useCockpitStore((s) => s.previewCandidate);
   const canSend = useCockpitStore(selectCanSend);
   const canUndo = useCockpitStore(selectCanUndo);
   const preparedPadCount = useCockpitStore(selectPreparedPadCount);
+  const session = useCockpitStore((s) => s.sessionStatus);
 
   const prepareDisabled = candidate === null;
   const sendDisabled = !canSend;
   const previewLabel = previewOn ? '◐ PREVIEW (on)' : '◐ PREVIEW (off)';
   const padsAffected = preparedPadCount;
+  const isLiveHardware = session?.mode === 'live' && session.armed;
+  const sendLabel = isLiveHardware ? 'SEND' : 'DRY-RUN SEND';
 
   const handleTogglePreview = (): void => {
     const next = !previewOn;
     onTogglePreview(next);
-    void client.send({ type: 'toggle_preview', on: next });
+    sendCommand({ type: 'toggle_preview', on: next });
   };
 
   return (
@@ -62,7 +65,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         className="action-button"
         data-testid="action-regen"
         onClick={() => {
-          void client.send({ type: 'regen' });
+          sendCommand({ type: 'regen' });
         }}
       >
         ⟳ REGEN
@@ -73,7 +76,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         data-testid="action-prepare-send-plan"
         disabled={prepareDisabled}
         onClick={() => {
-          void client.send({ type: 'prepare_send_plan' });
+          sendCommand({ type: 'prepare_send_plan' });
         }}
       >
         PREPARE
@@ -84,10 +87,10 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         data-testid="action-send"
         disabled={sendDisabled}
         onClick={() => {
-          void client.send({ type: 'send' });
+          sendCommand({ type: 'send' });
         }}
       >
-        SEND ▶ {padsAffected === 0 ? '' : `(${padsAffected} pad${padsAffected === 1 ? '' : 's'})`}
+        {sendLabel} ▶ {padsAffected === 0 ? '' : `(${padsAffected} pad${padsAffected === 1 ? '' : 's'})`}
       </button>
       <button
         type="button"
@@ -95,7 +98,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         data-testid="action-undo"
         disabled={!canUndo}
         onClick={() => {
-          void client.send({ type: 'undo' });
+          sendCommand({ type: 'undo' });
         }}
       >
         ↶ UNDO
@@ -105,7 +108,7 @@ export function ActionBar({ previewOn, onTogglePreview }: ActionBarProps): JSX.E
         className="action-button"
         data-testid="action-save"
         onClick={() => {
-          void client.send({ type: 'save' });
+          sendCommand({ type: 'save' });
         }}
       >
         SAVE ↓
