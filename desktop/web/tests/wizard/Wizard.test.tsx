@@ -331,15 +331,16 @@ describe('Wizard container — step handlers', () => {
     expect(screen.getByTestId('wizard-name-step')).toBeInTheDocument();
   });
 
-  it('AddStep next button advances to the analyze step (optimistic)', () => {
+  it('AddStep next button advances to analyze and starts analysis immediately', () => {
     const store = createWizardStore();
     store.getState().handleEvent({
       type: 'wizard_state_changed',
       state: { ...stateAnalyze, step: 'add' },
     });
-    renderWizard({ store });
+    const { client } = renderWizard({ store });
     fireEvent.click(screen.getByTestId('wizard-next'));
     expect(screen.getByTestId('wizard-analyze-step')).toBeInTheDocument();
+    expect(client.sent).toContainEqual({ type: 'wizard_analyze' });
   });
 
   it('AddStep forwards an injected openDialog prop into AddStep', async () => {

@@ -3,6 +3,8 @@ import { useCockpitStore } from '../state';
 export function SafetyRail(): JSX.Element {
   const session = useCockpitStore((s) => s.sessionStatus);
   const sendPlan = useCockpitStore((s) => s.sendPlan);
+  const connectionStatus = useCockpitStore((s) => s.connectionStatus);
+  const operatorLog = useCockpitStore((s) => s.operatorLog);
   const isLive = session?.mode === 'live';
   const hardwareState = session?.armed ? 'Hardware Armed' : 'Hardware Off';
   const portState = session?.midi_port ?? 'No MIDI Port Open';
@@ -12,11 +14,18 @@ export function SafetyRail(): JSX.Element {
   const messageCount = sendPlan?.estimated_midi_msgs ?? 0;
   const readyLabel =
     sendPlan === null ? 'No send plan prepared' : sendPlan.ready ? 'Ready after prepare' : 'Blocked';
+  const connectionLabel =
+    connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1);
 
   return (
     <aside className="safety-rail" data-testid="safety-rail" aria-label="Safety status">
       <section className="safety-card">
         <div className="rail-section-title">Session Safety</div>
+        <StatusRow
+          label="WebSocket"
+          value={connectionLabel}
+          tone={connectionStatus === 'connected' ? 'safe' : 'muted'}
+        />
         <StatusRow label="Status" value={safetyState} tone={safetyState === 'Mock Safe' ? 'safe' : 'armed'} />
         <StatusRow label="MIDI Port" value={portState} tone={session?.midi_port ? 'armed' : 'muted'} />
         <StatusRow label="Hardware" value={hardwareState} tone={session?.armed ? 'armed' : 'muted'} />
@@ -37,6 +46,21 @@ export function SafetyRail(): JSX.Element {
           <span>Readiness</span>
           <strong>{readyLabel}</strong>
         </div>
+      </section>
+
+      <section className="safety-card">
+        <div className="rail-section-title">Operator Log</div>
+        {operatorLog.length === 0 ? (
+          <div className="operator-log-empty">No connection or command errors yet.</div>
+        ) : (
+          <ol className="operator-log-list" data-testid="operator-log-list">
+            {operatorLog.map((entry) => (
+              <li key={entry.id} className={`operator-log-entry ${entry.level}`}>
+                {entry.message}
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
     </aside>
   );

@@ -34,9 +34,9 @@ describe('DeviceRail', () => {
     expect(rytm).toHaveTextContent('Analog Rytm MKII');
     expect(rytm).toHaveTextContent('12 pads mapped');
     expect(within(rytm).getAllByTestId(/device-rail-rytm-pad-/)).toHaveLength(12);
-    const plannedPad = within(rytm).getByTestId('device-rail-rytm-pad-12');
-    expect(plannedPad).toHaveTextContent('BD Acoustic');
-    expect(plannedPad).toHaveClass('locked');
+    const pad12 = within(rytm).getByTestId('device-rail-rytm-pad-12');
+    expect(pad12).toHaveTextContent('BD Acoustic');
+    expect(pad12).toHaveClass('active');
 
     expect(analogFour).toHaveTextContent('Analog Four MKII');
     expect(analogFour).toHaveTextContent('4 tracks staged');
@@ -59,8 +59,8 @@ describe('DeviceRail', () => {
     expect(model.rig_status).toBe('mock-safe');
     expect(model.total_device_count).toBe(2);
     expect(model.total_track_count).toBe(16);
-    expect(model.active_track_count).toBe(4);
-    expect(model.planned_track_count).toBe(12);
+    expect(model.active_track_count).toBe(12);
+    expect(model.planned_track_count).toBe(4);
     expect(model.devices.map((device) => device.device_id)).toEqual([
       'analog_rytm_mk2',
       'analog_four_mk2',
@@ -68,9 +68,9 @@ describe('DeviceRail', () => {
     expect(model.devices[0]).toMatchObject({
       display_name: 'Analog Rytm MKII',
       mapped_track_count: 12,
-      active_track_count: 4,
-      planned_track_count: 8,
-      status: 'limited-active',
+      active_track_count: 12,
+      planned_track_count: 0,
+      status: 'mock-safe',
       port_state: 'No MIDI port open',
     });
     expect(model.devices[1]).toMatchObject({
@@ -89,8 +89,8 @@ describe('DeviceRail', () => {
     expect(model.tracks[11]).toMatchObject({
       device_id: 'analog_rytm_mk2',
       track_number: 12,
-      enabled: false,
-      state: 'planned_expansion',
+      enabled: true,
+      state: 'active_v134',
       source: 'rytm-12-pad-surface',
     });
     expect(model.tracks[15]).toMatchObject({
@@ -109,15 +109,22 @@ describe('DeviceRail', () => {
     });
 
     expect(model.rig_status).toBe('mock-safe');
-    expect(model.total_track_count).toBe(4);
+    expect(model.total_track_count).toBe(16);
     expect(model.active_track_count).toBe(0);
-    expect(model.planned_track_count).toBe(4);
+    expect(model.planned_track_count).toBe(16);
     expect(model.devices[0]).toMatchObject({
       mapped_track_count: 12,
       active_track_count: 0,
       planned_track_count: 12,
       port_state: 'No MIDI port open',
-      status: 'limited-active',
+      status: 'not-loaded',
+    });
+    expect(model.tracks[0]).toMatchObject({
+      device_id: 'analog_rytm_mk2',
+      track_number: 1,
+      enabled: false,
+      state: 'planned_v134',
+      source: 'rytm-12-pad-surface-planned',
     });
     expect(model.snapshot_compatibility).toMatchObject({
       compatibility_id: 'no-snapshot',
@@ -139,5 +146,14 @@ describe('DeviceRail', () => {
     expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Mock Safe');
     expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveTextContent('Mock Staged');
     expect(screen.getByTestId('device-rail')).toHaveTextContent('No MIDI port open');
+  });
+
+  it('renders planned Rytm pads as locked before a snapshot is loaded', () => {
+    render(<DeviceRail />);
+
+    const rytm = screen.getByTestId('device-card-analog-rytm-mk2');
+    expect(within(rytm).getAllByTestId(/device-rail-rytm-pad-/)).toHaveLength(12);
+    expect(within(rytm).getByTestId('device-rail-rytm-pad-1')).toHaveClass('locked');
+    expect(within(rytm).getByTestId('device-rail-rytm-pad-12')).toHaveTextContent('Pad 12');
   });
 });

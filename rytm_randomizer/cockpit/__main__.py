@@ -118,11 +118,55 @@ def _default_initial_snapshot() -> Snapshot:
     overwrites them on the first SEND.
     """
 
+    default_params = {
+        # Synth / machine row, named after the operator-facing Overbridge controls.
+        "tun": 64,
+        "swt": 96,
+        "snap": 28,
+        "dec": 80,
+        "wave": 1,
+        "hold": 32,
+        "tick": 72,
+        "lev": 110,
+        # Sample row.
+        "sample_tune": 64,
+        "sample_fine": 64,
+        "sample_bit": 0,
+        "sample_slot": 0,
+        "sample_start": 0,
+        "sample_end": 120,
+        "sample_loop": 0,
+        "sample_level": 100,
+        # Filter envelope and multimode filter.
+        "filter_attack": 0,
+        "filter_decay": 64,
+        "filter_sustain": 0,
+        "filter_release": 64,
+        "flt": 64,
+        "filter_resonance": 24,
+        "filter_env": 64,
+        # Amp envelope / mixer sends.
+        "amp_attack": 0,
+        "amp_hold": 32,
+        "amp_decay": 75,
+        "pan": 64,
+        "accent": 32,
+        "overdrive": 32,
+        "delay": 0,
+        "reverb": 0,
+        # LFO row.
+        "lfo_speed": 48,
+        "lfo_depth": 0,
+        "lfo_phase": 0,
+        "lfo_fade": 0,
+        "lfo_mult": 16,
+        "lfo_destination": 0,
+    }
     pads = tuple(
         PadState(
             pad_id=pad_id,
             machine=machine,
-            params={"tun": 64, "dec": 80, "lev": 110, "flt": 64},
+            params=default_params,
         )
         for pad_id, machine in (
             (1, "BD Hard"),

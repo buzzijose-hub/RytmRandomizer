@@ -1,16 +1,17 @@
 /**
- * PadCard — one card per pad. Renders the machine name, a LockButton, and a 4-knob row.
+ * PadCard - one card per Rytm pad.
  *
- * Per spec the knob set is taken from the pad's `params` map. We render up to 4 stable knobs
- * (tun, dec, lev, flt) when present; any other params present in the snapshot are skipped from
- * the v10 layout but visible in tooltips on hover (future). The ghost overlay uses the
- * candidate's `proposed_params` for this pad if a preview candidate is available.
+ * The cockpit should expose the same broad control groups an operator sees in
+ * Overbridge/manual workflows: synth, sample, filter envelope, amp envelope, and
+ * LFO. Individual machine engines may not map every parameter yet, so absent
+ * values render as "not mapped" instead of hiding the control surface shape.
  */
 
 import type { MutationCandidate, PadState } from '../ws/protocol';
 
 import { Knob } from './Knob';
 import { LockButton } from './LockButton';
+import { RYTM_PARAMETER_GROUPS, type ParameterDefinition } from './parameterGroups';
 import { usePadLocks } from './usePadLocks';
 
 export interface PadCardProps {
@@ -18,8 +19,6 @@ export interface PadCardProps {
   previewCandidate: MutationCandidate | null;
   previewOn: boolean;
 }
-
-const PRIMARY_KNOBS: ReadonlyArray<string> = ['tun', 'dec', 'lev', 'flt'];
 
 function selectGhostParams(
   padId: number,
@@ -48,20 +47,50 @@ export function PadCard({ pad, previewCandidate, previewOn }: PadCardProps): JSX
         </div>
         <LockButton locked={locked} padId={pad.pad_id} onToggle={() => toggleLock(pad.pad_id)} />
       </div>
-      <div className="pad-card-knobs">
-        {PRIMARY_KNOBS.map((knobKey) => {
-          const value = pad.params[knobKey] ?? 0;
-          const ghostValue = ghostParams === null ? null : ghostParams[knobKey] ?? null;
-          return (
-            <Knob
-              key={knobKey}
-              label={knobKey.toUpperCase()}
-              value={value}
-              ghostValue={ghostValue}
-            />
-          );
-        })}
+      <div className="pad-card-parameter-groups">
+        {RYTM_PARAMETER_GROUPS.map((group) => (
+          <section className="pad-parameter-group" key={group.title}>
+            <h3>{group.title}</h3>
+            <div className="pad-card-knobs">
+              {group.params.map((definition) => (
+                <ParameterSlot
+                  definition={definition}
+                  ghostParams={ghostParams}
+                  key={definition.key}
+                  padParams={pad.params}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
+    </div>
+  );
+}
+
+function ParameterSlot({
+  definition,
+  ghostParams,
+  padParams,
+}: {
+  definition: ParameterDefinition;
+  ghostParams: Record<string, number> | null;
+  padParams: Record<string, number>;
+}): JSX.Element {
+  const value = padParams[definition.key];
+  const ghostValue = ghostParams === null ? null : ghostParams[definition.key] ?? null;
+  if (value === undefined) {
+    return (
+      <div className="parameter-slot missing">
+        <span className="parameter-label">{definition.label}</span>
+        <span className="parameter-missing">not mapped</span>
+      </div>
+    );
+  }
+  return (
+    <div className="parameter-slot">
+      <span className="parameter-label">{definition.label}</span>
+      <Knob label={definition.code} value={value} ghostValue={ghostValue} />
     </div>
   );
 }
