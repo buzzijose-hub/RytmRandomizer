@@ -1,0 +1,17 @@
+RytmRandomizer passive CLI: analog-rytm-midi-catalog-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-rytm-midi-catalog-report
+  python -m rytm_randomizer.cli analog-rytm-midi-catalog-report --help
+
+Behavior:
+  Prints the passive Analog Rytm MKII OS 1.72 MIDI CC/NRPN catalog report.
+
+Safety:
+  passive/read-only
+  manual-backed catalog only
+  no MIDI sending
+  no port opening
+  no command execution
+  no hardware mutation
+  no hardware required

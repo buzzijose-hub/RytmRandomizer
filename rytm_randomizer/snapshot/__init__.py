@@ -12,6 +12,7 @@ from .envelope import (
 )
 from .mock_runtime import BaseMockRuntime, MockRuntime
 from .planner import MutationPlanner
+from .sysex_file import extract_sysex_payloads, read_sysex_payloads_from_path
 
 __all__ = [
     "ELEKTRON_MFR_ID",
@@ -19,8 +20,10 @@ __all__ = [
     "MockRuntime",
     "MutationPlanner",
     "SnapshotDecoder",
+    "extract_sysex_payloads",
     "find_kit_record",
     "format_manufacturer_id",
     "read_ascii_name",
+    "read_sysex_payloads_from_path",
     "unpack_elektron_7bit",
 ]

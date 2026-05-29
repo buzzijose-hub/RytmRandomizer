@@ -16,13 +16,13 @@ rules that future work must respect so the architecture cannot be eroded.
 
 ```mermaid
 flowchart TD
-    app["app.py - entry point<br/>(--arm flag, top of stack)"]
+    app["app.py - entry point<br/>(--arm flag, 12-pad shell, A4 capture/send, top of stack)"]
     cli["cli.py - passive report CLI<br/>(no mido, no engines, no runtime)"]
     shell["shell.py - interactive command loop"]
     sceneRunner["scene_runner.py"]
     groupRunner["group_runner.py"]
-    engines["engines/pad{1,2,3,4}.py"]
-    reports["reports.py + inspection.py<br/>(passive read-only formatters)"]
+    engines["engines/pad{1,2,3,4}.py<br/>+ analog_rytm_12_pad_shell.py"]
+    reports["reports/* + inspection.py<br/>(passive read-only formatters)"]
     midi["midi_io.py + randomization.py"]
     realAdapter["real_midi_adapter.py - Protocol boundary"]
     midoProvider["mido_provider.py - lazy mido provider"]
@@ -33,6 +33,7 @@ flowchart TD
 
     app --> shell
     app --> cli
+    app --> engines
     app --> midoProvider
     app --> realAdapter
 
@@ -93,6 +94,10 @@ on one line for an existing module, you probably need a new module instead.
 | Module                | Responsibility                                                                  |
 | --------------------- | ------------------------------------------------------------------------------- |
 | `data/param_maps.py`  | Per-machine CC maps, anchors, safe ranges, deltas, zones. Pure data.            |
+| `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
+| `data/analog_four_recipes.py` | Manual-backed Analog Four kit recipe definitions. Pure data.       |
+| `data/analog_rytm_midi.py` | Manual-backed Analog Rytm OS 1.72 CC/NRPN catalog and safety status labels. Pure data. |
+| `data/analog_rytm_style_recipes.py` | Curated full-12-pad Analog Rytm style-kit CC MSB recipes. Pure data. |
 | `data/profiles.py`    | The `PROFILES` discovery registry. Composed from `param_maps`.                  |
 | `data/scenes.py`      | The 14 V1.34 `SCENE_PRESETS`. Pure data.                                        |
 | `data/plans.py`       | Group layout, intensity plans, page plans, per-pad mode rotations. Pure data.  |
@@ -101,6 +106,7 @@ on one line for an existing module, you probably need a new module instead.
 | `state/pad_mode.py`   | Frozen per-pad mode-rotation index state + transitions.                         |
 | `state/scene.py`      | Frozen current-scene-name state + transitions.                                  |
 | `state/selection.py`  | Frozen target-pad / channel / isolated-pad selection state + transitions.       |
+| `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
 
 ### Middle (runtime core)
 
@@ -110,8 +116,9 @@ on one line for an existing module, you probably need a new module instead.
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
 | `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, `RealMidiSender`. NO `mido`.     |
-| `mido_provider.py`           | Concrete `mido`-backed provider. `mido` imported lazily INSIDE methods.     |
+| `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
 | `engines/pad1..4.py`         | Per-pad interactive engines. Dependencies injected, no module globals.      |
+| `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 
 ### Mid-upper (orchestration)
 
@@ -126,8 +133,8 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires the `mido_provider` into `shell`.       |
-| `reports.py`          | Consolidated passive in-memory report dispatcher.                               |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe. |
+| `reports/`            | Consolidated passive in-memory reports and shared formatter helpers.             |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 
 ### Frozen reference (NOT in the layered graph)
@@ -262,8 +269,9 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add a new V1.34-equivalent command   | `shell.py` (dispatch) + relevant runner/engine.        | `add-pad-command`         |
 | Add new fact table                   | A new module under `data/` + re-export in `__init__`.  | `extend-data-layer`       |
 | Change MIDI primitives               | `midi_io.py`. Keep `mido` lazy.                        | (architecture review)     |
-| Add new passive report               | `reports.py` (or `inspection.py`) + CLI wire-up.       | (none, follow existing)   |
+| Add new passive report               | `reports/` (or `inspection.py`) + CLI wire-up.         | (none, follow existing)   |
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
+| Add input-only live observation       | Pure state reducer under `state/`, formatter under `reports/`, explicit armed app path. | (architecture review) |
 | **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
 
@@ -365,7 +373,7 @@ cleanup.
 | `mutate_group_with_depth()` | `rytm_randomizer/group_runner.py` | Mirrors the monolith's `mutate_group_with_depth` legacy fallback. Documented in the module docstring; the parity layer asserts byte-for-byte equality against the monolith. |
 | `GroupRuntimeState.loaded` (property) | `rytm_randomizer/state/group.py` | The documented monolith-readiness gate ("all four pads have current state"). Used by parity tests to assert that the group runtime treats partial loads exactly as the monolith did. |
 | `RealMidiSender.send_messages()` | `rytm_randomizer/real_midi_adapter.py` | The public outbound boundary of the real-MIDI adapter. `tests/test_real_midi_adapter_boundary.py` is the boundary contract test that asserts it translates and dispatches messages correctly. Removing it gets rid of the only documented "real-MIDI sender knows how to send" API. |
-| `evaluate_mock_runtime_active_bridge()` | `rytm_randomizer/mock_runtime_active_bridge.py` | The bridge evaluator. The mock-runtime-active-bridge report (`rytm_randomizer/reports.py:BRIDGE_SUMMARY`) names it as a literal string in the report payload ("evaluator": "evaluate_mock_runtime_active_bridge"), so it must keep its exact public name. The CLI source-level test (`tests/test_cli.py`) also asserts that the symbol does not leak into `cli.py`, which means the symbol has to continue to exist to be checked-for. |
+| `evaluate_mock_runtime_active_bridge()` | `rytm_randomizer/mock_runtime_active_bridge.py` | The bridge evaluator. The mock-runtime-active-bridge report (`rytm_randomizer/reports/__init__.py:BRIDGE_SUMMARY`) names it as a literal string in the report payload ("evaluator": "evaluate_mock_runtime_active_bridge"), so it must keep its exact public name. The CLI source-level test (`tests/test_cli.py`) also asserts that the symbol does not leak into `cli.py`, which means the symbol has to continue to exist to be checked-for. |
 
 ### Documented guardrails persistence lifecycle (WS-W)
 

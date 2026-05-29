@@ -6,6 +6,7 @@ import random
 from dataclasses import dataclass, field
 from typing import Final
 
+from ...data import ANALOG_FOUR_SYNTH_TRACK_CC
 from .analog_four_snapshot_decoder import AnalogFourKitSnapshot
 
 MAX_A4_DEPTH: Final[int] = 7
@@ -64,11 +65,12 @@ class AnalogFourMutationPlanner:
 
         rng_seed = (self._seed * 1_000_003) ^ (snapshot.slot * 1009) ^ depth
         rng = random.Random(rng_seed)  # noqa: S311 - non-crypto mutation planning
+        pwm_depth = ANALOG_FOUR_SYNTH_TRACK_CC["OSC1 PWM Depth"]
         events = tuple(
             AnalogFourPlanEvent(
                 track=track,
-                parameter="Filter 1 Frequency",
-                control=74,
+                parameter=pwm_depth.parameter,
+                control=pwm_depth.cc_msb,
                 value=rng.randint(48, 96) if depth else 64,
             )
             for track in range(1, 5)

@@ -14,7 +14,8 @@ injected through the existing ``real_midi_adapter`` boundary
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Iterable
+from typing import TYPE_CHECKING, Protocol
 
 from .observability.logging import get_logger
 from .observability.tracing import operation
@@ -26,6 +27,13 @@ if TYPE_CHECKING:  # pragma: no cover - typing only, never imported at runtime
 __all__ = ["MidoMidiPortProvider", "build_mido_midi_port_provider"]
 
 _logger = get_logger(__name__)
+
+
+class RealMidiInputPort(Protocol):
+    """Minimal input-port protocol for passive pending-message capture."""
+
+    def iter_pending(self) -> Iterable[object]:
+        """Return an iterable of backend-specific pending input messages."""
 
 
 def _import_mido():
@@ -50,8 +58,9 @@ class MidoMidiPortProvider:
     """Real MIDI port provider backed by ``mido``.
 
     Duck-types :class:`rytm_randomizer.real_midi_adapter.RealMidiPortProvider`:
-    it exposes ``list_output_names`` and ``open_output`` so it can be passed to
-    ``RealMidiSender``. ``mido`` is imported lazily inside these methods only.
+    it exposes output methods for ``RealMidiSender`` and input methods for
+    explicit passive capture paths. ``mido`` is imported lazily inside these
+    methods only.
     """
 
     def list_output_names(self) -> tuple[str, ...]:
@@ -75,6 +84,24 @@ class MidoMidiPortProvider:
         ) as exc:  # pragma: no cover - backend specific
             raise RealMidiPortError(
                 "midi_output_discovery_failed",
+                context={"underlying": repr(exc)},
+            ) from exc
+        return tuple(names)
+
+    def list_input_names(self) -> tuple[str, ...]:
+        """Return available hardware MIDI input port names (lazy ``mido``)."""
+
+        mido = _import_mido()
+        try:
+            names = mido.get_input_names()
+        except (
+            OSError,
+            RuntimeError,
+            ImportError,
+            AttributeError,
+        ) as exc:  # pragma: no cover - backend specific
+            raise RealMidiPortError(
+                "midi_input_discovery_failed",
                 context={"underlying": repr(exc)},
             ) from exc
         return tuple(names)
@@ -114,6 +141,33 @@ class MidoMidiPortProvider:
                 ) from exc
             if not callable(getattr(port, "send", None)):
                 raise RealMidiPortError(f"invalid_midi_output_port: {port_name}")
+            return port
+
+    def open_input(self, port_name: str) -> RealMidiInputPort:
+        """Open a hardware MIDI input port by name (lazy ``mido``)."""
+
+        if not isinstance(port_name, str) or not port_name:
+            raise RealMidiPortError("midi_input_port_required")
+
+        with operation("open_input", port_name=port_name):
+            mido = _import_mido()
+            available = self.list_input_names()
+            if port_name not in available:
+                raise RealMidiPortError(f"unknown_midi_input_port: {port_name}")
+            try:
+                port = mido.open_input(port_name)
+            except (
+                OSError,
+                RuntimeError,
+                ImportError,
+                AttributeError,
+            ) as exc:  # pragma: no cover - backend specific
+                raise RealMidiPortError(
+                    f"unavailable_midi_input_port: {port_name}",
+                    context={"underlying": repr(exc)},
+                ) from exc
+            if not callable(getattr(port, "iter_pending", None)):
+                raise RealMidiPortError(f"invalid_midi_input_port: {port_name}")
             return port
 
 

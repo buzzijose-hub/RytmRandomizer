@@ -16,6 +16,7 @@ hardware.
 from __future__ import annotations
 
 from . import (
+    a4_soft_capture,
     anchor,
     anchor_validation,
     group,
@@ -27,6 +28,7 @@ from . import (
 )
 
 __all__ = [
+    "a4_soft_capture",
     "anchor",
     "anchor_validation",
     "group",

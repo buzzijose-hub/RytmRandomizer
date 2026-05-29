@@ -124,6 +124,37 @@ def test_send_cc_respects_injected_channel():
     assert out.sent[0].channel == 3
 
 
+def test_send_nrpn_builds_coarse_data_entry_sequence():
+    _install_fake_mido()
+    from rytm_randomizer.midi_io import send_nrpn
+
+    out = RecordingOut()
+    sleeps: list[float] = []
+    send_nrpn(out, 1, 31, 2, channel=0, sleep=sleeps.append)
+
+    assert [(msg.type, msg.channel, msg.control, msg.value) for msg in out.sent] == [
+        ("control_change", 0, 99, 1),
+        ("control_change", 0, 98, 31),
+        ("control_change", 0, 6, 2),
+    ]
+    assert sleeps == [0.02, 0.02, 0.02]
+
+
+def test_send_nrpn_adds_fine_data_entry_lsb_when_requested():
+    _install_fake_mido()
+    from rytm_randomizer.midi_io import send_nrpn
+
+    out = RecordingOut()
+    send_nrpn(out, 1, 40, 72, value_lsb=64, channel=2, sleep=_no_sleep)
+
+    assert [(msg.channel, msg.control, msg.value) for msg in out.sent] == [
+        (2, 99, 1),
+        (2, 98, 40),
+        (2, 6, 72),
+        (2, 38, 64),
+    ]
+
+
 # ===========================================================================
 # send_machine / send_param / apply_state -- in-process branch coverage with
 # a fake mido (capsys captures the printed output for assertions).

@@ -34,10 +34,19 @@ from .analog_rytm_mutation_planner import (
     RytmMutationPlan,
     RytmPlanEvent,
 )
+from .analog_rytm_performance_mutation import (
+    RytmPerformanceMutationDepth,
+    RytmPerformanceMutationMode,
+    RytmPerformanceMutationPlan,
+    build_rytm_performance_mutation_plan,
+)
 from .analog_rytm_snapshot_decoder import (
     RYTM_KIT_TYPE_BYTE,
     AnalogRytmSnapshotDecoder,
     RytmKitSnapshot,
+    RytmSnapshotMachineFact,
+    RytmSnapshotMachineFacts,
+    rytm_snapshot_payload_fingerprint,
 )
 
 __all__ = [
@@ -57,4 +66,11 @@ __all__ = [
     "RytmKitSnapshot",
     "RytmMutationPlan",
     "RytmPlanEvent",
+    "RytmPerformanceMutationDepth",
+    "RytmPerformanceMutationMode",
+    "RytmPerformanceMutationPlan",
+    "RytmSnapshotMachineFact",
+    "RytmSnapshotMachineFacts",
+    "build_rytm_performance_mutation_plan",
+    "rytm_snapshot_payload_fingerprint",
 ]

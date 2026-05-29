@@ -20,6 +20,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
             "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",
         ),
+        "analog-rytm-midi-catalog-report": (
+            "rytm_randomizer.reports.analog_rytm_midi_catalog",
+            "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
+        ),
     }
     command = cli_registry.get(args[0])
     lazy_command = lazy_commands.get(args[0])

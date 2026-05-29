@@ -66,6 +66,68 @@ rytm-randomizer --arm       # open a real MIDI output port and drive the
 
 `--arm` and `--dry-run` are mutually exclusive: pick one, or neither for the passive menu.
 
+Analog Rytm curated style kits can render all 12 pads. Dry-run first:
+
+```bash
+python -m rytm_randomizer.app --dry-run --rytm-kit-style detroit-deep
+```
+
+Armed sends require a saved/disposable kit and an explicit confirmation flag:
+
+```bash
+python -m rytm_randomizer.app --arm --rytm-kit-style detroit-deep --confirm-rytm-kit-send
+```
+
+Current Rytm styles are `detroit-deep`, `deeper-rolling`, `hard-groove`,
+`banging-warehouse`, `flow-shift`, `hypnotic-pressure`, and `mills-drive`.
+They select legal machines across pads 1-12 and send manual-backed CC MSB
+values; they do not use samples, performance macros, source level, track level,
+or amp volume.
+
+The all-12-pad interactive shell starts from those curated styles, then lets
+you preview, send, undo, reset, and apply role-safe mutations across every pad:
+
+```bash
+python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell
+python -m rytm_randomizer.app --arm --rytm-12-pad-shell --confirm-rytm-12-pad-send
+```
+
+Inside the shell, use `load detroit-deep`, `preview`, `send`, `roll`, `deep`,
+`grit`, `intense`, `warehouse`, `undo`, `reset`, and `q`. Kick filter-frequency
+mutations are clamped to the sub-safe range learned during hardware testing.
+
+Analog Four soft live capture is input-only:
+
+```bash
+python -m rytm_randomizer.app --arm --a4-soft-capture
+```
+
+It opens an Analog Four MIDI input port, observes pending CC messages, labels manual-backed Appendix D CCs, prints a known/unknown state report for tracks 1-4, and sends no MIDI.
+
+Analog Four named parameter sends are active and require an explicit armed
+output-port choice:
+
+```bash
+python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32
+```
+
+The command resolves the parameter through the manual-backed Appendix D CC
+table, sends one CC MSB message, closes the output port, and exits. Channels
+are zero-based mido channels for A4 tracks 1-4, so `--channel 0` targets track
+1.
+
+Analog Four kit recipes are active and also require an explicit armed
+output-port choice:
+
+```bash
+python -m rytm_randomizer.app --arm --a4-kit-recipe detroit-minimal
+```
+
+The recipe command sends a coordinated manual-backed four-track CC recipe,
+closes the output port, and exits. Current recipes are `detroit-minimal` and
+`bell-techno-grid`; `bell-techno-grid` is the more controlled initialized-kit
+target.
+
 ---
 
 ## Developer setup
@@ -120,7 +182,11 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the workflow (planning, TDD, code
 
 ## Scenes and commands
 
-The scene system below is the validated V1.34 layer. These tables are the canonical reference for what commands exist; `rytm_randomizer.shell` dispatches them.
+The scene system below is the validated V1.34 four-pad layer. These tables are
+the canonical reference for what commands exist there; `rytm_randomizer.shell`
+dispatches them. For all-12-pad style mutation, use
+`python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` first, then the
+armed form with `--confirm-rytm-12-pad-send`.
 
 ### Scene system
 
@@ -155,14 +221,21 @@ Pad 4 = BD Acoustic / body + accent pressure lane
 - No new machine profiles.
 - No new MIDI CC mappings.
 - No new parameter ranges.
-- Pads 5-12 have a passive machine matrix report; armed 12-pad runtime mutation remains gated until the follow-up runtime slice.
+- Pads 5-12 have passive matrix/compatibility reports, curated Analog Rytm
+  style kits can actively send full 12-pad manual-backed CC MSB recipes behind
+  `--arm --confirm-rytm-kit-send`, and the all-12-pad shell can mutate loaded
+  style plans behind `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send`.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
+- Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
 - Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
+- Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, observes pending CC messages, prints a known/unknown state report, and sends no MIDI.
+- Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
+- Analog Four kit recipes are active: `python -m rytm_randomizer.app --arm --a4-kit-recipe bell-techno-grid` prompts for an A4 output port, sends a coordinated manual-backed four-track CC recipe, closes the port, and exits.
 
 ### Dual-machine target commands
 
-The passive CLI exposes the current machine target surface and passive 12-pad machine matrix without opening a MIDI port:
+The passive CLI exposes the current machine target surface, passive 12-pad machine matrix, snapshot readiness, and Analog Rytm MIDI catalog without opening a MIDI port:
 
 ```bash
 python -m rytm_randomizer.cli dual-machine-target-report rytm   # Analog Rytm only
@@ -170,9 +243,10 @@ python -m rytm_randomizer.cli dual-machine-target-report a4     # Analog Four on
 python -m rytm_randomizer.cli dual-machine-target-report both   # both registered devices
 python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report   # passive Rytm 12-pad machine compatibility matrix
 python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report   # passive snapshot readiness per Rytm pad
+python -m rytm_randomizer.cli analog-rytm-midi-catalog-report   # passive OS 1.72 Rytm CC/NRPN catalog
 ```
 
-Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
+Aliases: `rytm-only` and `a4-only` are accepted. The reports are passive: they open no MIDI port and send no MIDI. The snapshot-pad compatibility report explains which legal Rytm pad/machine combinations are snapshot-mutable today and which remain selectable-only until the follow-up runtime slice. The Analog Rytm MIDI catalog records OS 1.72 CC/NRPN rows with safety status labels; documented-only rows are not promoted to mutation until a separate approved hardware-validation pass. The Analog Four path is candidate/manifest-gated; do not run armed Analog Four hardware sends until a readiness report says the plan is ready.
 
 ### Recommended quick validation flow
 

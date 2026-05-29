@@ -291,6 +291,20 @@ class _FakeOutputPort:
         self.closed = True
 
 
+class _FakeInputPort:
+    """Duck-types a ``mido`` input port with ``iter_pending`` + ``close``."""
+
+    def __init__(self, messages) -> None:
+        self._messages = tuple(messages)
+        self.closed = False
+
+    def iter_pending(self):
+        return iter(self._messages)
+
+    def close(self) -> None:
+        self.closed = True
+
+
 def _restore_provider_methods(saved):
     """Helper to restore previously monkey-patched provider class attributes."""
 
@@ -298,6 +312,203 @@ def _restore_provider_methods(saved):
 
     for name, value in saved.items():
         setattr(mido_provider.MidoMidiPortProvider, name, value)
+
+
+def test_app_main_a4_soft_capture_requires_arm(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-soft-capture requires --arm" in captured.err
+
+
+def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    message = types.SimpleNamespace(
+        type="control_change",
+        channel=0,
+        control=72,
+        value=96,
+    )
+    fake_input = _FakeInputPort((message,))
+
+    def fake_list_input_names(self):
+        return ("Fake A4 In",)
+
+    def fake_open_input(self, port_name):
+        assert port_name == "Fake A4 In"
+        return fake_input
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("A4 soft capture must not touch MIDI outputs")
+
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        fake_list_input_names,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fake_open_input)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fail_output_call,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "A4 soft live capture" in captured.out
+    assert "Input: Fake A4 In" in captured.out
+    assert "Opened output: False" in captured.out
+    assert "Sent MIDI: False" in captured.out
+    assert "Track 1: 1 observed params" in captured.out
+    assert "- OSC1 Pulsewidth: 96" in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_arm_a4_soft_capture_no_input_ports_returns_one(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda _self: (),
+    )
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "no real MIDI input ports available" in captured.err
+
+
+def test_app_main_arm_a4_soft_capture_invalid_input_choice_returns_one(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_open_input(self, *_args):
+        raise AssertionError("invalid choice must not open input")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda _self: ("Fake A4 In",),
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_open_input)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "not-a-number")
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "invalid MIDI input choice" in captured.err
+
+
+def test_app_main_arm_a4_soft_capture_negative_input_choice_returns_one(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_open_input(self, *_args):
+        raise AssertionError("negative choice must not open input")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda _self: ("Fake A4 In",),
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_open_input)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "-1")
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "invalid MIDI input choice" in captured.err
+
+
+def test_app_main_a4_soft_capture_rejects_validate_one_cc_before_output(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-soft-capture",
+            "--validate-one-cc",
+            "--channel",
+            "0",
+            "--control",
+            "72",
+            "--value",
+            "96",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-soft-capture cannot be combined with --validate-one-cc" in captured.err
+
+
+def test_app_main_a4_soft_capture_rejects_a4_send_param_before_output(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-soft-capture",
+            "--a4-send-param",
+            "--parameter",
+            "OSC1 PWM Depth",
+            "--channel",
+            "0",
+            "--value",
+            "32",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-soft-capture cannot be combined with --a4-send-param" in captured.err
 
 
 def test_app_main_arm_list_output_names_dependency_error_exits_one(capsys):
@@ -520,6 +731,39 @@ def test_app_main_arm_port_choice_out_of_range_returns_one(monkeypatch, capsys):
 
     mido_provider.MidoMidiPortProvider.list_output_names = fake_list
     monkeypatch.setattr("builtins.input", lambda _prompt="": "42")
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "invalid MIDI output choice" in captured.err
+
+
+def test_app_main_arm_port_choice_negative_input_returns_one(monkeypatch, capsys):
+    """Negative output choices must not select from the end of the port list."""
+
+    _seed()
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+
+    saved = {
+        "list_output_names": mido_provider.MidoMidiPortProvider.list_output_names,
+        "open_output": mido_provider.MidoMidiPortProvider.open_output,
+    }
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    def fail_open(self, *_args):
+        raise AssertionError("negative output choice must not open output")
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fail_open
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "-1")
 
     try:
         exit_code = app.main(["--arm"])

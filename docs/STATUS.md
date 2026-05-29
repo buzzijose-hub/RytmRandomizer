@@ -1,9 +1,71 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-29. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-29: First Analog Rytm `live-safe` hardware performance mutation
+  session documented at
+  `docs/hardware-validation/2026-05-29-rytm-live-safe-performance-session.md`.
+  The key lesson was that Pad 1 kick filter frequency must stay anchored near
+  the low current/style value during live-safe sends. Seed `890002068` initially
+  pushed Pad 1 filter frequency to `62`, which killed kick punch; the guardrail
+  was corrected so the same seed now sends `24`, with a regression test locking
+  the safe-depth Pad 1 kick filter window to `21..29`.
+- 2026-05-29: All-12-pad Analog Rytm interactive shell added:
+  `python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` and
+  `python -m rytm_randomizer.app --arm --rytm-12-pad-shell --confirm-rytm-12-pad-send`.
+  The shell loads curated 12-pad style anchors, previews staged plans, sends on
+  explicit `send`, and supports deterministic role-aware `roll`, `deep`,
+  `grit`, `intense`, and `warehouse` mutations with `undo` and `reset`.
+  Kick filter-frequency mutations are clamped to the sub-safe range; samples,
+  performance macros, source level, track level, amp volume, SysEx, transport,
+  pattern changes, and kit/project writes remain out of scope.
+- 2026-05-29: Snapshot-grounded Analog Rytm performance mutation added for
+  current-kit SysEx captures:
+  `python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot <kit.syx> --rytm-performance-mode live-safe`.
+  `live-safe` skips machine switching, varies values by repeatable seed, supports
+  `--rytm-performance-depth safe|balanced|studio`, covers all 12 pads when the
+  filtered plan has legal events, and uses extra Pad 1 kick guardrails to avoid
+  losing punch. Armed sends still require `--arm` plus
+  `--confirm-rytm-performance-send`; the path sends CC MSB messages only, with
+  no SysEx write, kit save, project write, transport, or pattern change.
+- 2026-05-29: Curated Analog Rytm full-kit style recipes added as an explicit
+  active path:
+  `python -m rytm_randomizer.app --arm --rytm-kit-style detroit-deep --confirm-rytm-kit-send`.
+  The dry-run path renders the same recipes through `MockMidiSender`; the armed
+  path prompts for one Rytm output port, sends legal 12-pad machine selections
+  plus manual-backed CC MSB tone/filter/amp-send values, closes the port, and
+  exits. Samples, performance macros, source level, track level, amp volume,
+  NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project
+  writes remain out of scope.
+- 2026-05-29: Analog Rytm OS 1.72 MIDI catalog added as passive/manual-backed
+  data plus `analog-rytm-midi-catalog-report`. The report covers the Appendix C
+  CC/NRPN rows, all machine-specific SRC rows for the 33 known machine
+  profiles, and MIDI note-trigger rows. It opens no port, sends no MIDI, and
+  keeps documented-only rows out of runtime mutation until a separate approved
+  hardware-validation pass.
+- 2026-05-29: Analog Four `bell-techno-grid` kit recipe added as the more
+  controlled initialized-kit target after the broader `detroit-minimal` pass
+  proved too heavy in hardware listening. It uses 32 manual-backed CC events
+  across tracks 1-4.
+- 2026-05-29: Analog Four `detroit-minimal` kit recipe added as an explicit
+  active armed path:
+  `python -m rytm_randomizer.app --arm --a4-kit-recipe detroit-minimal`. It
+  prompts for an A4 output port, sends a coordinated manual-backed four-track
+  CC recipe, closes the output port, and exits without SysEx or kit/project
+  writes.
+- 2026-05-29: Analog Four named parameter send added as an explicit active
+  armed path:
+  `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32`.
+  It resolves the parameter through the manual-backed Appendix D CC table,
+  prompts for an output port, sends exactly one CC MSB message, closes the
+  output port, and exits.
+- 2026-05-29: Analog Four soft live capture added as an explicit input-only
+  armed path: `python -m rytm_randomizer.app --arm --a4-soft-capture`. It opens
+  only an A4 MIDI input port, observes pending CC messages for tracks 1-4,
+  reports known manual-backed parameters plus unknown/ignored counts, closes
+  the input port, and sends no MIDI.
 - 2026-05-26: First outbound 12-track CC hardware validation completed on the
   Analog Rytm MKII over USB. The explicit armed one-CC helper sent exactly one
   CC per track using mido channels 0-11, and the operator confirmed each
@@ -99,7 +161,9 @@ Each step is locked against the V1.34 reference by characterization tests.
 
 - A more detailed `docs/ARCHITECTURE.md` map of the post-decomposition package (planned).
 - Further hardening: coverage policy, lint baseline, type-check baseline.
-- Out of scope for the current runtime: armed pads 5-12 mutation, GUI/capture, audio analysis, and ungated Analog Four hardware sends.
+- Out of scope for the current runtime: GUI/capture, audio analysis,
+  free-text all-row mutation, samples/performance macros, and ungated Analog
+  Four hardware sends.
 
 ## Reference Docs
 

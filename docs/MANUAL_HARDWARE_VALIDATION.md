@@ -203,6 +203,107 @@ every CC for every machine, scenes, group mutation, pattern changes, transport,
 clock, kit-save, project writes, SysEx, unattended sends, or Analog Four
 behavior.
 
+## Passive OS 1.72 MIDI Catalog Boundary
+
+The Analog Rytm MIDI catalog is manual-backed and read-only:
+`python -m rytm_randomizer.cli analog-rytm-midi-catalog-report` opens no MIDI
+port, sends no MIDI, and requires no hardware. It records Appendix C CC/NRPN
+rows, machine-specific SRC rows, and MIDI note trigger rows with safety status
+labels.
+
+Do not treat a documented catalog row as validated runtime mutation support.
+Only rows already covered by the V1.34 mutation maps are marked
+`validated_runtime`; documented-only rows require a separate approved
+disposable-kit hardware-validation pass before any active path can send them.
+
+## Curated Rytm Style Kit Send Validation
+
+This validation is active. It opens one Analog Rytm MIDI output port, sends a
+curated full-12-pad CC MSB recipe, closes the output port, and exits. Run it
+only on a saved or disposable Rytm kit with monitoring volume low.
+
+Dry-run first:
+
+```powershell
+python -m rytm_randomizer.app --dry-run --rytm-kit-style detroit-deep
+```
+
+Armed command:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-kit-style detroit-deep --confirm-rytm-kit-send
+```
+
+Expected:
+
+- Select the Analog Rytm output port.
+- Confirm the command prints `Sent Rytm style kit CC messages.`.
+- Confirm tracks 1-12 receive machine selections plus manual-backed tone,
+  filter, amp-send, and modulation values for the selected style.
+- Confirm no samples, performance macros, source level, track level, amp
+  volume, transport, pattern change, clock, kit-save, project-write, or SysEx
+  behavior appears.
+- Stop immediately if the wrong pad responds, more than one unexpected pad
+  jumps, monitoring level becomes unsafe, or the device shows save/write
+  behavior.
+
+## All-12-Pad Interactive Shell Validation
+
+This validation is active and operator-driven. It opens one Analog Rytm MIDI
+output port, runs a 12-pad shell, and sends only when the operator enters
+`send` inside the shell. Run it only on a saved or disposable kit with
+monitoring volume low.
+
+Dry-run first:
+
+```powershell
+python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell
+```
+
+Suggested dry-run commands:
+
+```text
+load detroit-deep
+roll
+preview
+send
+q
+```
+
+Armed command:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-12-pad-shell --confirm-rytm-12-pad-send
+```
+
+Suggested armed commands:
+
+```text
+load detroit-deep
+preview
+send
+roll
+preview
+send
+q
+```
+
+Expected:
+
+- Select the Analog Rytm output port.
+- Confirm `load detroit-deep` reports 12 pads and a full event count.
+- Confirm `preview` shows `RytmRandomizer 12-pad shell preview`.
+- Confirm `send` prints `sent current 12-pad plan`.
+- Audition all 12 pads after the first send and again after the mutation send.
+- Confirm the kick retains low-end weight; BD filter frequency must stay in
+  the sub-safe range.
+- Confirm no samples, performance macros, source level, track level, amp
+  volume, transport, pattern change, clock, kit-save, project-write, or SysEx
+  behavior appears.
+- Stop immediately if the wrong pad responds, more than one unexpected pad
+  jumps, monitoring level becomes unsafe, the kick disappears, or the device
+  shows save/write behavior.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the
@@ -292,6 +393,76 @@ These checks are manual only. Do not add them to CI.
 5. Run `python -m rytm_randomizer.cli dual-machine-target-report both`.
 6. Confirm both devices are listed.
 7. Do not run armed hardware sends until the A4 readiness report says the plan is ready.
+
+## Analog Four Soft Live Capture Validation
+
+This validation is input-only. It opens the Analog Four MIDI input port, sends
+no MIDI, opens no output port, requests no SysEx, and writes no kit/project
+data.
+
+Command:
+
+```powershell
+python -m rytm_randomizer.app --arm --a4-soft-capture
+```
+
+Expected:
+
+- Select the Analog Four input port.
+- Move one or more A4 controls on tracks 1-4.
+- Press Enter to capture observed pending CCs.
+- Confirm the report lists known manual-backed parameters and marks unknown
+  parameters as untouched.
+- Confirm the report says `Opened output: False` and `Sent MIDI: False`.
+
+## Analog Four Named Parameter Send Validation
+
+This validation is active. It opens one Analog Four MIDI output port, sends one
+manual-backed CC MSB message, closes the output port, and exits. Run it only on
+a saved or disposable A4 kit with monitoring volume low.
+
+Command:
+
+```powershell
+python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32
+```
+
+Expected:
+
+- Select the Analog Four output port.
+- Confirm only track 1 responds, because mido channel 0 corresponds to A4
+  track 1.
+- Confirm the parameter movement matches `OSC1 PWM Depth`.
+- Confirm the command prints `Sent exactly one A4 parameter CC message.`.
+- Stop immediately if the wrong track, more than one track, transport, pattern,
+  kit-save, project-write, or SysEx behavior appears.
+
+## Analog Four Kit Recipe Validation
+
+This validation is active. It opens one Analog Four MIDI output port, sends a
+coordinated manual-backed four-track CC recipe, closes the output port, and
+exits. Run it only on a saved or disposable A4 kit with monitoring volume low.
+
+Command:
+
+```powershell
+python -m rytm_randomizer.app --arm --a4-kit-recipe detroit-minimal
+```
+
+Use `bell-techno-grid` instead of `detroit-minimal` when starting from a newly
+initialized Analog Four project and you want the more controlled bell-techno
+target.
+
+Expected:
+
+- Select the Analog Four output port.
+- Confirm the command prints `Sent A4 kit recipe CC messages.`.
+- Confirm tracks 1-4 change into a tight, percussive, Detroit-minimal style
+  patch shape.
+- Confirm no kit-save, project-write, transport, pattern, clock, or SysEx
+  behavior appears.
+- Stop immediately if the device responds on the wrong tracks or the monitoring
+  level feels unsafe.
 
 ## What to do if a step fails
 
