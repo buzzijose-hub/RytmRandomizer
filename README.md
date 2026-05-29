@@ -281,6 +281,7 @@ style-performance-arc-live-set-cockpit-report                         # one-scre
 style-performance-arc-live-show-export-report                         # handoff manifest
 style-performance-arc-stage-routing-report                            # cue-by-cue route cards
 style-crates-queue-journal-report --json                              # crates, staged moves, journal seeds
+style-crate-rehearsal-deck-report --json                              # GUI-ready crate/queue/journal rehearsal cards
 reference-style-blueprint-report --description "Glenn Wilson pressure" # 12-pad + A4 influence blueprint
 
 # Dual-machine targets
