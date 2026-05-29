@@ -72,4 +72,25 @@ describe('ReviewStep', () => {
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(onBack).toHaveBeenCalledTimes(1);
   });
+
+  it('groups multiple pad mappings under the same trait into one bucket', () => {
+    // Two mappings share the trait `rolling_low_end`. The first hits the
+    // `bucket === undefined` branch (new array); the second hits the
+    // already-exists branch (push onto the existing bucket) — both rendered
+    // under the single trait row.
+    const multiMapping: CandidateProfileModel = {
+      ...candidate,
+      pad_mappings: [
+        { trait: 'rolling_low_end', pad_id: 1, weight: 0.9 },
+        { trait: 'rolling_low_end', pad_id: 5, weight: 0.4 },
+      ],
+    };
+    render(<ReviewStep candidate={multiMapping} onBack={vi.fn()} onSave={vi.fn()} />);
+    expect(
+      screen.getByTestId('wizard-trait-mapping-rolling_low_end-1'),
+    ).toHaveTextContent('→ Pad 1 (weight 0.90)');
+    expect(
+      screen.getByTestId('wizard-trait-mapping-rolling_low_end-5'),
+    ).toHaveTextContent('→ Pad 5 (weight 0.40)');
+  });
 });
