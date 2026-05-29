@@ -17,7 +17,7 @@ function renderWith(node: JSX.Element, fake = new FakeCockpitClient()): FakeCock
 }
 
 describe('PadCard', () => {
-  it('renders the pad title + machine name + 4 primary knobs', () => {
+  it('renders the pad title, machine name, and grouped Overbridge-style parameters', () => {
     const pad = snapshot.pads[0]!;
     renderWith(<PadCard pad={pad} previewCandidate={null} previewOn={false} />);
     expect(screen.getByText('Pad 1')).toBeInTheDocument();
@@ -27,15 +27,26 @@ describe('PadCard', () => {
     expect(within(card).getByTestId('knob-DEC')).toBeInTheDocument();
     expect(within(card).getByTestId('knob-LEV')).toBeInTheDocument();
     expect(within(card).getByTestId('knob-FLT')).toBeInTheDocument();
+    expect(within(card).getByText('Synth')).toBeInTheDocument();
+    expect(within(card).getByText('Sweep Time')).toBeInTheDocument();
+    expect(within(card).getByText('Snap Amount')).toBeInTheDocument();
+    expect(within(card).getByText('Hold Time')).toBeInTheDocument();
+    expect(within(card).getByText('Sample')).toBeInTheDocument();
+    expect(within(card).getByText('Sample Tune')).toBeInTheDocument();
+    expect(within(card).getByText('Filter Envelope')).toBeInTheDocument();
+    expect(within(card).getByText('Filter Frequency')).toBeInTheDocument();
+    expect(within(card).getByText('Amp Envelope')).toBeInTheDocument();
+    expect(within(card).getByText('Overdrive')).toBeInTheDocument();
+    expect(within(card).getByText('LFO')).toBeInTheDocument();
+    expect(within(card).getByText('LFO Speed')).toBeInTheDocument();
   });
 
-  it('falls back to 0 for absent params (pad with empty params)', () => {
+  it('marks absent grouped params as not mapped without hiding the section', () => {
     const pad = snapshot.pads[3]!; // CY Crash, empty params
     renderWith(<PadCard pad={pad} previewCandidate={null} previewOn={false} />);
     const card = screen.getByTestId('pad-card-4');
-    // Each knob renders its current value text; 4 zeros for empty params.
-    const zeros = within(card).getAllByText('0');
-    expect(zeros.length).toBe(4);
+    expect(within(card).getByText('Synth')).toBeInTheDocument();
+    expect(within(card).getAllByText('not mapped').length).toBeGreaterThan(0);
   });
 
   it('renders ghost knobs when previewOn=true and the candidate touches this pad', () => {

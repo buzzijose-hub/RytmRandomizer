@@ -60,7 +60,7 @@ interface TauriDialogModule {
   open: (opts: {
     directory?: boolean;
     multiple?: boolean;
-  }) => Promise<string | string[] | null>;
+  }) => Promise<string | string[] | null | undefined>;
 }
 
 /**
@@ -98,7 +98,7 @@ export async function defaultOpenDialog(mode: 'file' | 'folder'): Promise<string
   try {
     const mod = await __tauriDialogImporter.import();
     const result = await mod.open({ directory: mode === 'folder', multiple: false });
-    if (result === null) return null;
+    if (result === null || result === undefined) return null;
     if (Array.isArray(result)) return result[0] ?? null;
     return result;
   } catch {
@@ -118,6 +118,7 @@ export function AddStep({
   const [location, setLocation] = useState<string>('');
   const [displayName, setDisplayName] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [browseFallbackMessage, setBrowseFallbackMessage] = useState<string | null>(null);
   const locationRef = useRef<HTMLInputElement>(null);
   const displayNameRef = useRef<HTMLInputElement>(null);
   const opener = openDialog ?? defaultOpenDialog;
@@ -128,6 +129,7 @@ export function AddStep({
     setLocation('');
     setDisplayName('');
     setError(null);
+    setBrowseFallbackMessage(null);
   };
 
   const closeDraft = (): void => {
@@ -135,6 +137,7 @@ export function AddStep({
     setLocation('');
     setDisplayName('');
     setError(null);
+    setBrowseFallbackMessage(null);
   };
 
   const handleBrowse = async (currentDraft: PickerDraft): Promise<void> => {
@@ -143,7 +146,14 @@ export function AddStep({
     const dialogMode: 'file' | 'folder' =
       currentDraft.mode === 'folder' ? 'folder' : 'file';
     const picked = await opener(dialogMode);
-    if (picked === null) return;
+    if (picked === null) {
+      setBrowseFallbackMessage(
+        'Browse is unavailable in this shell. Paste the full path instead.',
+      );
+      locationRef.current?.focus();
+      return;
+    }
+    setBrowseFallbackMessage(null);
     setLocation(picked);
     if (displayName === '') {
       setDisplayName(basenameOf(picked));
@@ -183,6 +193,7 @@ export function AddStep({
     setDraft({ ...currentDraft, mode: e.target.value as WizardSourceMode });
     setLocation('');
     setError(null);
+    setBrowseFallbackMessage(null);
   };
 
   const locationInvalid = error === 'Location is required.';
@@ -230,7 +241,10 @@ export function AddStep({
                 type="text"
                 data-testid="wizard-draft-location"
                 value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                onChange={(e) => {
+                  setLocation(e.target.value);
+                  setBrowseFallbackMessage(null);
+                }}
                 placeholder="e.g. Surgeon"
                 ref={locationRef}
                 aria-required="true"
@@ -246,7 +260,10 @@ export function AddStep({
                   type="text"
                   data-testid="wizard-draft-location"
                   value={location}
-                  onChange={(e) => setLocation(e.target.value)}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    setBrowseFallbackMessage(null);
+                  }}
                   placeholder={draft.mode === 'folder' ? '/path/to/folder' : '/path/to/file'}
                   ref={locationRef}
                   aria-required="true"
@@ -265,6 +282,11 @@ export function AddStep({
                 </button>
               </div>
             </label>
+          )}
+          {browseFallbackMessage === null ? null : (
+            <div role="status" className="wizard-field-help">
+              {browseFallbackMessage}
+            </div>
           )}
           <label className="wizard-field">
             <span className="wizard-field-label">display name</span>

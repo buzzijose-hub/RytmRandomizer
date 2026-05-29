@@ -118,7 +118,7 @@ describe('ActionBar', () => {
     expect(fake.sent).toEqual([]);
   });
 
-  it('SEND enabled with safe candidate, shows pad count, and emits send', () => {
+  it('SEND enabled with safe candidate, shows mock-safe dry-run label, and emits send', () => {
     updateStore(() => {
       useCockpitStore.getState().setPreviewCandidate(candidate);
       useCockpitStore.getState().setSendPlan(sendPlan);
@@ -126,9 +126,85 @@ describe('ActionBar', () => {
     const { fake } = renderWith(true);
     const send = screen.getByTestId('action-send');
     expect(send).not.toBeDisabled();
-    expect(send).toHaveTextContent('SEND ▶ (2 pads)');
+    expect(send).toHaveTextContent('DRY-RUN SEND');
+    expect(send).toHaveTextContent('(2 pads)');
     fireEvent.click(send);
     expect(fake.sent).toEqual([{ type: 'send' }]);
+  });
+
+  it('SEND shows the live-hardware label only when the session is live and armed', () => {
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan(sendPlan);
+      useCockpitStore.getState().setSessionStatus({
+        armed: true,
+        midi_port: 'IAC Driver Bus 1',
+        mode: 'live',
+        unsaved_sends: 0,
+      });
+    });
+    renderWith(true);
+    expect(screen.getByTestId('action-send')).toHaveTextContent('SEND');
+    expect(screen.getByTestId('action-send')).not.toHaveTextContent('DRY-RUN SEND');
+  });
+
+  it('logs rejected command acks for operator troubleshooting', async () => {
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan(sendPlan);
+    });
+    const { fake } = renderWith(true);
+    fake.ackQueue.push({ request_id: 'reject-1', ok: false, error: 'sidecar rejected send' });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('action-send'));
+    });
+    expect(useCockpitStore.getState().operatorLog.at(-1)).toMatchObject({
+      level: 'error',
+      message: 'send failed: sidecar rejected send',
+    });
+  });
+
+  it('logs the generic rejection reason when a command ack omits an error', async () => {
+    updateStore(() => {
+      useCockpitStore.getState().setPreviewCandidate(candidate);
+      useCockpitStore.getState().setSendPlan(sendPlan);
+    });
+    const { fake } = renderWith(true);
+    fake.ackQueue.push({ request_id: 'reject-generic', ok: false });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('action-send'));
+      await Promise.resolve();
+    });
+    expect(useCockpitStore.getState().operatorLog.at(-1)).toMatchObject({
+      level: 'error',
+      message: 'send failed: command rejected',
+    });
+  });
+
+  it('logs Error command rejections for operator troubleshooting', async () => {
+    const { fake } = renderWith(true);
+    fake.nextRejection = new Error('socket closed');
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('action-regen'));
+      await Promise.resolve();
+    });
+    expect(useCockpitStore.getState().operatorLog.at(-1)).toMatchObject({
+      level: 'error',
+      message: 'regen failed: socket closed',
+    });
+  });
+
+  it('logs non-Error command rejections for operator troubleshooting', async () => {
+    const { fake } = renderWith(true);
+    fake.nextRejection = 'transport closed';
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('action-regen'));
+      await Promise.resolve();
+    });
+    expect(useCockpitStore.getState().operatorLog.at(-1)).toMatchObject({
+      level: 'error',
+      message: 'regen failed: transport closed',
+    });
   });
 
   it('SEND shows singular "1 pad" when exactly one delta is present', () => {
@@ -137,7 +213,8 @@ describe('ActionBar', () => {
       useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 1 });
     });
     renderWith(true);
-    expect(screen.getByTestId('action-send')).toHaveTextContent('SEND ▶ (1 pad)');
+    expect(screen.getByTestId('action-send')).toHaveTextContent('DRY-RUN SEND');
+    expect(screen.getByTestId('action-send')).toHaveTextContent('(1 pad)');
   });
 
   it('SEND omits the pad-count chip when candidate has zero deltas', () => {
@@ -146,7 +223,7 @@ describe('ActionBar', () => {
       useCockpitStore.getState().setSendPlan({ ...sendPlan, pad_count: 0, packets: [] });
     });
     renderWith(true);
-    expect(screen.getByTestId('action-send')).toHaveTextContent('SEND ▶');
+    expect(screen.getByTestId('action-send')).toHaveTextContent('DRY-RUN SEND');
     expect(screen.getByTestId('action-send').textContent).not.toMatch(/\(\d/);
   });
 

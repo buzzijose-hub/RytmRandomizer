@@ -5,6 +5,10 @@
 //! resets after 60s of clean uptime), and shuts it down cleanly on window
 //! close (SIGTERM, then SIGKILL after 5s).
 
+use std::env;
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::time::Duration;
 
@@ -16,6 +20,14 @@ const MAX_BACKOFF_SECS: u64 = 16;
 pub const BACKOFF_RESET_SECS: u64 = 60;
 /// Grace period between SIGTERM and SIGKILL on shutdown.
 pub const SHUTDOWN_GRACE_SECS: u64 = 5;
+/// Environment variable consumed by the Python cockpit sidecar for token handoff.
+pub const TOKEN_FILE_ENV_VAR: &str = "RYTM_RAND_WS_TOKEN_FILE";
+/// Browser storage key consumed by the cockpit WebSocket client.
+pub const TOKEN_STORAGE_KEY: &str = "rytm-rand-ws-token";
+/// Window property consumed by the cockpit WebSocket client.
+pub const TOKEN_WINDOW_PROPERTY: &str = "__RYTM_RAND_WS_TOKEN__";
+const DEFAULT_TOKEN_DIR: &str = "RytmRandomizer";
+const DEFAULT_TOKEN_FILE: &str = "cockpit-ws-token.txt";
 
 /// Compute the next restart delay given a non-negative consecutive-failure
 /// count.
@@ -29,15 +41,73 @@ pub fn backoff_delay(failures: u32) -> Duration {
     Duration::from_secs(raw.min(MAX_BACKOFF_SECS))
 }
 
+/// Resolve the sidecar token handoff path. Operators may override the path through
+/// `RYTM_RAND_WS_TOKEN_FILE`; otherwise the shell uses a stable per-user temp path.
+pub fn resolve_token_file_path() -> PathBuf {
+    if let Ok(path) = env::var(TOKEN_FILE_ENV_VAR) {
+        if !path.trim().is_empty() {
+            return PathBuf::from(path);
+        }
+    }
+    let base = env::var_os("LOCALAPPDATA")
+        .map(PathBuf::from)
+        .unwrap_or_else(env::temp_dir);
+    base.join(DEFAULT_TOKEN_DIR).join(DEFAULT_TOKEN_FILE)
+}
+
+/// Remove a stale token before launching a fresh sidecar. Missing files are fine.
+pub fn clear_token_file(path: &Path) -> io::Result<()> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(err) => Err(err),
+    }
+}
+
+/// Read and trim the sidecar token file. Missing or whitespace-only files are "not ready".
+pub fn read_token_file(path: &Path) -> io::Result<Option<String>> {
+    match fs::read_to_string(path) {
+        Ok(contents) => {
+            let token = contents.trim();
+            if token.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(token.to_string()))
+            }
+        }
+        Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(None),
+        Err(err) => Err(err),
+    }
+}
+
+/// JavaScript injected into the WebView once the Python sidecar writes its token.
+pub fn token_bootstrap_script(token: &str) -> String {
+    let token_json = serde_json::to_string(token).expect("serialize ws token");
+    let key_json = serde_json::to_string(TOKEN_STORAGE_KEY).expect("serialize token key");
+    format!(
+        "(() => {{ window.{TOKEN_WINDOW_PROPERTY} = {token_json}; try {{ window.localStorage.setItem({key_json}, {token_json}); }} catch (_err) {{}} }})();"
+    )
+}
+
+/// Build the sidecar command so tests can inspect env propagation without spawning.
+pub fn sidecar_command(python_bin: &str, token_file: &Path) -> Command {
+    let mut command = Command::new(python_bin);
+    command
+        .args(["-m", "rytm_randomizer.cockpit"])
+        .env(TOKEN_FILE_ENV_VAR, token_file)
+        .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit());
+    command
+}
+
 /// Spawn the Python sidecar process and return the handle. Caller owns the
 /// child and is responsible for tearing it down via [`shutdown_child`].
-pub fn spawn_sidecar(python_bin: &str) -> std::io::Result<Child> {
+pub fn spawn_sidecar(python_bin: &str, token_file: &Path) -> std::io::Result<Child> {
     log::info!("spawning sidecar: {python_bin} -m rytm_randomizer.cockpit");
-    Command::new(python_bin)
-        .args(["-m", "rytm_randomizer.cockpit"])
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()
+    if let Some(parent) = token_file.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    sidecar_command(python_bin, token_file).spawn()
 }
 
 /// Send a graceful shutdown to the child, wait up to [`SHUTDOWN_GRACE_SECS`],
@@ -94,5 +164,69 @@ mod tests {
     #[test]
     fn backoff_reset_window_is_one_minute() {
         assert_eq!(BACKOFF_RESET_SECS, 60);
+    }
+
+    #[test]
+    fn resolve_token_file_path_honors_env_override() {
+        let prior = std::env::var_os(TOKEN_FILE_ENV_VAR);
+        std::env::set_var(TOKEN_FILE_ENV_VAR, "C:/tmp/override-token.txt");
+        assert_eq!(
+            resolve_token_file_path(),
+            std::path::PathBuf::from("C:/tmp/override-token.txt")
+        );
+        match prior {
+            Some(value) => std::env::set_var(TOKEN_FILE_ENV_VAR, value),
+            None => std::env::remove_var(TOKEN_FILE_ENV_VAR),
+        }
+    }
+
+    #[test]
+    fn sidecar_command_sets_token_file_env() {
+        let command = sidecar_command("python", std::path::Path::new("C:/tmp/ws-token.txt"));
+        let envs: Vec<_> = command
+            .get_envs()
+            .map(|(key, value)| {
+                (
+                    key.to_string_lossy().to_string(),
+                    value.map(|v| v.to_string_lossy().to_string()),
+                )
+            })
+            .collect();
+        assert!(envs.contains(&(
+            TOKEN_FILE_ENV_VAR.to_string(),
+            Some("C:/tmp/ws-token.txt".to_string()),
+        )));
+    }
+
+    #[test]
+    fn read_token_file_trims_and_ignores_missing_or_empty() {
+        let dir =
+            std::env::temp_dir().join(format!("rytm-randomizer-token-test-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("create temp token dir");
+        let missing = dir.join("missing.txt");
+        assert_eq!(read_token_file(&missing).expect("read missing token"), None);
+
+        let empty = dir.join("empty.txt");
+        std::fs::write(&empty, "   \n").expect("write empty token");
+        assert_eq!(read_token_file(&empty).expect("read empty token"), None);
+
+        let token = dir.join("token.txt");
+        std::fs::write(&token, "  abc123  \n").expect("write token");
+        assert_eq!(
+            read_token_file(&token).expect("read token"),
+            Some("abc123".to_string())
+        );
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn token_bootstrap_script_sets_window_property_and_storage_key() {
+        let script = token_bootstrap_script("tok'en\\value");
+        assert!(script.contains("__RYTM_RAND_WS_TOKEN__"));
+        assert!(script.contains("rytm-rand-ws-token"));
+        assert!(script.contains("localStorage.setItem"));
+        assert!(script.contains("tok'en\\\\value"));
     }
 }

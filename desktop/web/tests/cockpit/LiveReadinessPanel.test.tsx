@@ -134,7 +134,12 @@ describe('LiveReadinessPanel', () => {
     render(<LiveReadinessPanel />);
 
     const padSurface = screen.getByTestId('live-12-pad-surface');
+    expect(padSurface).toHaveTextContent('4 active pads, 8 planned pads');
     expect(within(padSurface).getByTestId('live-pad-1')).toHaveTextContent('BD Hard');
+    expect(within(padSurface).getByTestId('live-pad-5')).toHaveTextContent(
+      'awaiting V1.34-compatible mutation routing for pads 5-12',
+    );
+    expect(within(padSurface).getByTestId('live-pad-5')).toHaveClass('planned_v134');
     expect(within(padSurface).getByTestId('live-pad-12')).toHaveTextContent('BD Acoustic');
     expect(screen.getByTestId('live-device-inventory')).toHaveTextContent('Analog Rytm MKII');
     expect(screen.getByTestId('live-device-inventory')).toHaveTextContent('Analog Four MKII');

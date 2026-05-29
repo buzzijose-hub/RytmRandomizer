@@ -96,11 +96,11 @@ describe('ProfileToggle defensive out-of-bounds guard', () => {
 });
 
 /**
- * HistoryStrip roving tabindex — only one dot is in the tab stop at a
- * time. Arrow keys move focus through the strip; Home/End jump to ends.
- * The current snapshot drives the initial tab stop.
+ * HistoryStrip now exposes an expandable recall list. Each snapshot has a
+ * normal Load button, so keyboard access follows native button/tab behavior
+ * instead of the old dot-strip roving-tabindex pattern.
  */
-describe('HistoryStrip roving tabindex', () => {
+describe('HistoryStrip expandable recall list', () => {
   beforeEach(() => {
     useCockpitStore.getState().reset();
   });
@@ -118,67 +118,35 @@ describe('HistoryStrip roving tabindex', () => {
     return fake;
   }
 
-  it('only the current dot has tabindex=0; others are -1', () => {
+  it('renders snapshot rows with the current marker', () => {
     useCockpitStore.getState().setHistory(history);
     renderWith();
-    const dot1 = screen.getByTestId('history-dot-snap-1');
-    const dot2 = screen.getByTestId('history-dot-snap-2');
-    const dot3 = screen.getByTestId('history-dot-snap-3');
-    expect(dot1).toHaveAttribute('tabindex', '-1');
-    expect(dot2).toHaveAttribute('tabindex', '-1');
-    // snap-3 is current_id in the fixture.
-    expect(dot3).toHaveAttribute('tabindex', '0');
+    expect(screen.getByTestId('history-row-snap-1')).toHaveTextContent('snap-1');
+    expect(screen.getByTestId('history-row-snap-2')).toHaveTextContent('auto');
+    expect(screen.getByTestId('history-row-snap-3')).toHaveTextContent('current');
   });
 
-  it('ArrowLeft from the current dot moves the tab stop to the previous dot', () => {
+  it('exposes one load button per snapshot with accessible names', () => {
     useCockpitStore.getState().setHistory(history);
     renderWith();
-    const dot3 = screen.getByTestId('history-dot-snap-3');
-    dot3.focus();
-    fireEvent.keyDown(dot3, { key: 'ArrowLeft' });
-    expect(screen.getByTestId('history-dot-snap-2')).toHaveAttribute('tabindex', '0');
-    expect(screen.getByTestId('history-dot-snap-3')).toHaveAttribute('tabindex', '-1');
+    const buttons = screen.getAllByRole('button', { name: /Load snapshot/i });
+    expect(buttons).toHaveLength(3);
+    expect(screen.getByRole('button', { name: 'Load snapshot snap-1' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Load snapshot industrial-peak' }),
+    ).toBeInTheDocument();
   });
 
-  it('Home jumps the tab stop to the first dot', () => {
+  it('clicking a load button emits load_snapshot for that snapshot', () => {
     useCockpitStore.getState().setHistory(history);
-    renderWith();
-    const dot3 = screen.getByTestId('history-dot-snap-3');
-    dot3.focus();
-    fireEvent.keyDown(dot3, { key: 'Home' });
-    expect(screen.getByTestId('history-dot-snap-1')).toHaveAttribute('tabindex', '0');
+    const fake = renderWith();
+    fireEvent.click(screen.getByRole('button', { name: 'Load snapshot snap-2' }));
+    expect(fake.sent).toEqual([{ type: 'load_snapshot', snapshot_id: 'snap-2' }]);
   });
 
-  it('End jumps the tab stop to the last dot', () => {
+  it('leaves the recall list open by default for keyboard scanning', () => {
     useCockpitStore.getState().setHistory(history);
     renderWith();
-    const dot1 = screen.getByTestId('history-dot-snap-1');
-    // Manually focus dot1 by pressing Home from the current (snap-3) first
-    // so dot1 becomes the focused index, then End advances to the last.
-    const dot3 = screen.getByTestId('history-dot-snap-3');
-    dot3.focus();
-    fireEvent.keyDown(dot3, { key: 'Home' });
-    expect(dot1).toHaveAttribute('tabindex', '0');
-    fireEvent.keyDown(dot1, { key: 'End' });
-    expect(screen.getByTestId('history-dot-snap-3')).toHaveAttribute('tabindex', '0');
-  });
-
-  it('Unknown key on a dot is a no-op', () => {
-    useCockpitStore.getState().setHistory(history);
-    renderWith();
-    const dot3 = screen.getByTestId('history-dot-snap-3');
-    dot3.focus();
-    fireEvent.keyDown(dot3, { key: 'Enter' });
-    // Tab stops unchanged.
-    expect(screen.getByTestId('history-dot-snap-3')).toHaveAttribute('tabindex', '0');
-    expect(screen.getByTestId('history-dot-snap-1')).toHaveAttribute('tabindex', '-1');
-  });
-
-  it('clicking a non-current dot updates the focus index', () => {
-    useCockpitStore.getState().setHistory(history);
-    renderWith();
-    const dot1 = screen.getByTestId('history-dot-snap-1');
-    fireEvent.click(dot1);
-    expect(dot1).toHaveAttribute('tabindex', '0');
+    expect(screen.getByTestId('history-strip')).toHaveAttribute('open');
   });
 });

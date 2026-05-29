@@ -8,6 +8,8 @@
 
 import { useCallback, useState } from 'react';
 
+import { useCockpitStore } from '../state';
+
 import { useCockpitClient } from './context';
 
 export interface PadLocksApi {
@@ -22,6 +24,7 @@ export interface PadLocksApi {
 export function usePadLocks(): PadLocksApi {
   const [locked, setLocked] = useState<ReadonlySet<number>>(() => new Set<number>());
   const client = useCockpitClient();
+  const appendOperatorLog = useCockpitStore((s) => s.appendOperatorLog);
 
   const isLocked = useCallback((padId: number): boolean => locked.has(padId), [locked]);
 
@@ -42,6 +45,10 @@ export function usePadLocks(): PadLocksApi {
         .send({ type: 'set_pad_lock', pad_id: padId, locked: desired })
         .then((ack) => {
           if (!ack.ok) {
+            appendOperatorLog({
+              level: 'error',
+              message: `set_pad_lock failed: ${ack.error ?? 'command rejected'}`,
+            });
             // Roll back on rejection.
             setLocked((prev) => {
               const rolled = new Set(prev);
@@ -54,7 +61,12 @@ export function usePadLocks(): PadLocksApi {
             });
           }
         })
-        .catch(() => {
+        .catch((error: unknown) => {
+          const detail = error instanceof Error ? error.message : String(error);
+          appendOperatorLog({
+            level: 'error',
+            message: `set_pad_lock failed: ${detail}`,
+          });
           // Network / timeout — roll back so the UI doesn't lie to the operator.
           setLocked((prev) => {
             const rolled = new Set(prev);
@@ -67,7 +79,7 @@ export function usePadLocks(): PadLocksApi {
           });
         });
     },
-    [client, locked],
+    [appendOperatorLog, client, locked],
   );
 
   return { locked, isLocked, toggleLock };

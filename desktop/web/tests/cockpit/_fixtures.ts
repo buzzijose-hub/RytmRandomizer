@@ -160,8 +160,8 @@ export const availableProfiles = [
 export class FakeCockpitClient {
   sent: Command[] = [];
   ackQueue: CommandAck[] = [];
-  /** Make the next `send` call reject with this error (consumed once). */
-  nextRejection: Error | null = null;
+  /** Make the next `send` call reject with this value (consumed once). */
+  nextRejection: unknown | null = null;
   /** When true, send() returns a never-resolving promise (used to test no-ack paths). */
   hang = false;
 
