@@ -21,13 +21,23 @@ context.
 - JSON decode:
   `captures/20260528-232829-analog-rytm-current-kit-reassembled.json`
 - Kit name decoded: `KIT 1`
-- Payload fingerprint: `8800dcf6f5467e85`
-- Decoded machine values by pad:
-  `{1: 0, 2: 26, 3: 32, 4: 28, 5: 7, 6: 30, 7: 0, 8: 0, 9: 24, 10: 33, 11: 25, 12: 12}`
-- Important limitation: current SysEx decoder trusts the dump for kit identity
-  and machine identity, but does not yet decode every current SRC/filter/amp
-  knob value. Live-safe still needs conservative anchors until the per-parameter
-  offset decoder is added.
+- Current raw-kit fingerprint: `e882fbf28513c226` (the older JSON sidecar was
+  produced before raw-kit header/trailer stripping was corrected).
+- Decoded machine values by pad after masking the stored high bit:
+  `{1: 0, 2: 26, 3: 32, 4: 28, 5: 7, 6: 8, 7: 8, 8: 8, 9: 24, 10: 33, 11: 25, 12: 12}`
+- The snapshot shell now decodes current SRC/filter/amp/LFO raw-kit fields from
+  the 2610-byte kit payload and stages live-safe CC MSB sends from those
+  captured values. It includes the current loaded machine's SRC rows on all 12
+  pads while still excluding source level, track level, amp volume, and machine
+  switching.
+- The snapshot shell also has session-only guardrails: `mode live|studio`,
+  `depth gentle|normal|strong|wild`, `lock N`, `unlock N`, `pad N
+  gentle|normal|strong|wild|off`, `preset live|kick-safe|all-gentle|studio`,
+  `guards reset`, and `status`. These reset when the shell exits; saved preset
+  persistence remains a later upgrade. `status` separates active pad overrides
+  from inactive overrides parked behind locked pads. Depth lanes are total
+  anchor-relative envelopes, so repeated mutations must not drift away from the
+  received kit by accumulation.
 
 ## Commands That Exist Now
 
@@ -35,7 +45,18 @@ Dry-run the latest captured kit:
 
 ```powershell
 python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot captures\20260528-232829-analog-rytm-current-kit-reassembled.syx --rytm-performance-mode live-safe --rytm-performance-style flow-shift --rytm-performance-depth safe --rytm-performance-seed 890002068
+python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures\20260528-232829-analog-rytm-current-kit-reassembled.syx
 ```
+
+Fresh live snapshot shell:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
+```
+
+Inside that live shell, `kit` or `resnapshot` waits for another Rytm KIT SysEx
+dump from the same selected input, replaces the captured anchor, clears the
+staged mutation, and keeps the current session guardrails.
 
 Armed send of the corrected same-seed plan:
 
@@ -95,28 +116,112 @@ Fix applied:
 
 Corrected plan was sent to hardware after verification.
 
+## Hardware Lesson: Session Presets
+
+Latest live snapshot-shell validation used KIT 4 from the Analog Rytm MKII:
+
+- Live receive: `KIT 4`, fingerprint `3ad9669b30e1ef27`.
+- MIDI input index: `0`, `Elektron Analog Rytm MKII 0`.
+- MIDI output index: `1`, `Elektron Analog Rytm MKII 1`.
+- `preset live` applied `mode: live`, `global depth: gentle`, no locks, no
+  active or inactive overrides, and `active event count: 335`.
+- `preset live` + `4` + `send` sent `335` messages. Pad 1 remained present and
+  stayed inside the gentle kick lane.
+- `preset kick-safe` applied `mode: live`, `global depth: gentle`, `locked pads:
+  1`, no overrides, and `active event count: 306`.
+- `preset kick-safe` + `4` + `changes` omitted Pad 1 entirely; `send` sent
+  `306` messages.
+- `preset all-gentle` cleared locks and overrides, returned to `active event
+  count: 335`, and sent `335` messages after mutation.
+- `preset studio` applied `mode: studio`, `global depth: wild`, no locks, no
+  overrides, and `active event count: 335`. Status showed studio caps of
+  Pad 1=`strong` and pads 2-12=`wild`, and `changes` showed the expected wider
+  deltas.
+- `guards reset` restored `mode: live`, `global depth: normal`, no locks, no
+  active or inactive overrides, and `active event count: 335`.
+- Total shell send count for this validation run: `1311` messages.
+
+Conclusion: the session preset UX is structurally hardware-validated. It should
+remain session-only for now; saved preset persistence is still separate work.
+
+## Hardware Lesson: Pad 1 Foundation Policy
+
+Follow-up studio testing on KIT 5 (`1af76ee2729f862b`) showed that Pad 1 needs a
+stricter kick-foundation role even when it is not fully locked by `preset
+kick-safe`.
+
+- Pre-policy `preset live` and `preset all-gentle` kept Pad 1 active, but still
+  staged and sent Pad 1 filter, LFO, and AMP attack-time changes.
+- Pre-policy `preset studio` made the problem much louder: Pad 1 filter, LFO,
+  AMP attack, and wide source changes moved together, which is too risky for a
+  techno kick foundation.
+- The adopted policy keeps Pad 1 available for controlled character movement,
+  but omits every Pad 1 filter event, every Pad 1 LFO event, and Pad 1
+  `AMP Amp Attack Time` from the active send plan.
+- Pad 1 source tuning parameters now stay within plus or minus 3 of the
+  captured kit value in all modes, including `studio`.
+- `preset kick-safe` remains the full lock option when the kick should be
+  completely untouched.
+
+KIT 13 (`4e32243208cc7fe5`) validated the policy on hardware:
+
+- `preset live` reported `active event count: 326`, omitted Pad 1 filter, LFO,
+  and `AMP Amp Attack Time`, kept Pad 1 `Tune: 59 -> 58`, and sent `326`
+  messages.
+- `again` preserved the same Pad 1 protection and sent `326` messages.
+- `preset studio` + `pad 1 wild` + `S3A` reported `active event count: 326`,
+  kept Pad 1 `Tune: 59 -> 62`, omitted protected Pad 1 pages, and sent `326`
+  messages.
+- `preset kick-safe` fully locked Pad 1, reported `active event count: 313`,
+  showed no `Pad 01` change lines, and sent `313` messages.
+- `preset all-gentle` cleared the Pad 1 lock and returned to `active event
+  count: 326`.
+- Fresh `Y strong` allowed Pad 1 source movement, kept `Tune: 59 -> 60`,
+  omitted protected Pad 1 pages, and sent `326` messages.
+- Fresh `V micro` showed filter-only changes on pads 2-12, no `Pad 01` lines,
+  and sent `326` messages.
+- Zone commands were observed to layer on the current staged plan. Use `fresh`
+  or `Z` before `Y`, `V`, or `N` when testing an anchor-only zone mutation.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
-2. Decode and dry-run before sending. Do not assume the previous capture is still
+2. If the hardware kit changes during the same shell session, type `kit` or
+   `resnapshot`, send a new KIT dump from the Rytm, and confirm the new kit name
+   and fingerprint before mutating.
+3. Decode and dry-run before sending. Do not assume the previous capture is still
    representative if the hardware kit changed.
-3. Inspect Pad 1 values before every send. For live-safe `safe` depth, kick
-   tune and filter frequency should remain near their anchors.
-4. Send one seed at a time and listen.
-5. If the kick loses punch again, stop sending and record the exact seed plus
+4. Inspect Pad 1 values before every send. Pad 1 filter, LFO, and AMP attack
+   controls should be absent from the active send plan, and Pad 1 tune-style
+   source values should stay within plus or minus 3 of the captured kit value.
+5. Start with `preset live` or `preset kick-safe`, then `status` before the
+   first mutation during live validation.
+6. Use `changes` before `send` to confirm later pads show SRC rows such as
+   BT/XT/HH/CY/CB source parameters, not only filters and LFOs.
+7. `Y`, `V`, and `N` layer on the current staged plan. Use `fresh` or `Z` first
+   when you want an anchor-only zone mutation.
+8. `send` repeats the currently staged plan. Type `go` to generate the next
+   variation and send it in one command, or type another mutation command,
+   `again`, or `next` before the next `send` to stage a variation without
+   sending. Repeated variations should stay inside the selected anchor-relative
+   lane.
+9. Use `lock N` for pads that should remain untouched, `pad N strong` or
+   `pad N wild` only for intentional performance moments, and `guards reset`
+   when you want to clear the session guardrails. Locked pads are omitted from
+   the next `send`.
+10. Send one variation at a time and listen.
+11. If the kick loses punch again, stop sending and record the exact command plus
    Pad 1 planned values before changing code.
-6. Do not use `flow-shift` live unless explicitly testing machine switching;
+12. Do not use `flow-shift` live unless explicitly testing machine switching;
    it is a discovery/studio mode until separately validated.
 
 ## Next Engineering Work
 
-- Add the Rytm current-kit per-parameter offset decoder so mutations can anchor
-  to the actual captured SRC/filter/amp values, not just recipe anchors.
+- Collect listening notes for accepted/rejected `preset live`, `preset
+  kick-safe`, `preset all-gentle`, and `preset studio` variations so future
+  ranges can be tightened from real outcomes.
 - Add a plan-inspection CLI/report that prints Pad 1 planned values before armed
   send.
-- Consider a stricter `performance-safe` profile for live sets:
-  - Pad 1 kick: tiny tune window, tiny filter window, delay/reverb locked low.
-  - Non-kick pads: moderate filter/FX/pan variation.
-  - Machine switching locked out unless user explicitly selects studio/discovery.
-- Record accepted and rejected seeds from listening sessions so future ranges can
-  be tightened from real outcomes.
+- Consider whether `send` should optionally support changed-only sends. The
+  current shell sends the full active snapshot plan, which is clearer and
+  repeatable, but can be verbose.

@@ -20,6 +20,12 @@ Flag behavior (Wave 4 / WS-O convergence):
 * ``--dry-run --rytm-12-pad-shell`` / ``--arm --rytm-12-pad-shell``: run the
   all-12-pad interactive style/mutation shell. Armed sends require the
   additional ``--confirm-rytm-12-pad-send`` flag.
+* ``--dry-run --rytm-snapshot-shell`` / ``--arm --rytm-snapshot-shell``: run the
+  all-12-pad current-kit snapshot shell. Armed sends require the additional
+  ``--confirm-rytm-snapshot-shell-send`` flag.
+* ``--arm --rytm-live-snapshot-shell``: receive one current-kit SysEx dump from
+  the Rytm, decode it, and run the all-12-pad snapshot shell from that live
+  anchor. Armed sends require ``--confirm-rytm-snapshot-shell-send``.
 
 This module is import-safe: importing it does not import ``mido`` and does not
 open ports. Those happen lazily inside the ``--arm`` handler only. The
@@ -41,7 +47,7 @@ import logging
 import sys
 from collections.abc import Sequence
 from time import time_ns
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final, Protocol
 
 from .observability.logging import configure_logging as _configure_logging
 from .observability.logging import get_logger as _observability_get_logger
@@ -54,7 +60,20 @@ if TYPE_CHECKING:
         AnalogRytmStyleRecipe,
     )
     from .devices.strategies import RytmPerformanceMutationPlan
+    from .engines.analog_rytm_snapshot_shell import ResnapshotFunc, RytmSnapshotShellAnchor
     from .midi_io import Sender
+
+
+RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS: Final[float] = 120.0
+
+
+class _RytmSysexCaptureProvider(Protocol):
+    def capture_sysex_messages(
+        self,
+        port_name: str,
+        *,
+        timeout_seconds: float,
+    ) -> tuple[bytes, ...]: ...
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -175,6 +194,27 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Required confirmation flag for armed --rytm-12-pad-shell sends.",
     )
     parser.add_argument(
+        "--rytm-snapshot-shell",
+        help=(
+            "Analog Rytm current-kit SysEx file for the all-12-pad snapshot shell. "
+            "Use with --dry-run or --arm --confirm-rytm-snapshot-shell-send."
+        ),
+    )
+    parser.add_argument(
+        "--rytm-live-snapshot-shell",
+        action="store_true",
+        help=(
+            "Armed Analog Rytm live current-kit receive shell. Opens one Rytm MIDI "
+            "input, waits for a KIT SysEx dump, then runs the all-12-pad snapshot "
+            "shell. Requires --arm --confirm-rytm-snapshot-shell-send."
+        ),
+    )
+    parser.add_argument(
+        "--confirm-rytm-snapshot-shell-send",
+        action="store_true",
+        help="Required confirmation flag for armed --rytm-snapshot-shell sends.",
+    )
+    parser.add_argument(
         "--rytm-performance-snapshot",
         help=(
             "Analog Rytm current-kit SysEx file for performance mutation. Use with "
@@ -272,6 +312,12 @@ def _print_passive_menu() -> None:
             "              run the all-12-pad Rytm shell against the mock sender",
             "- --arm --rytm-12-pad-shell --confirm-rytm-12-pad-send",
             "              run the all-12-pad Rytm shell against hardware",
+            "- --dry-run --rytm-snapshot-shell <file.syx>",
+            "              run the all-12-pad current-kit snapshot shell against the mock sender",
+            "- --arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send",
+            "              run the all-12-pad current-kit snapshot shell against hardware",
+            "- --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send",
+            "              receive KIT SysEx live, then run the current-kit snapshot shell",
             "- --dry-run --rytm-performance-snapshot <file.syx>",
             "              preview a snapshot-grounded Rytm performance mutation",
             "- --arm --rytm-performance-snapshot <file.syx> --confirm-rytm-performance-send",
@@ -451,6 +497,33 @@ def _choose_input_port_name(input_names: Sequence[str]) -> str | None:
 
     if chosen_index < 0 or chosen_index >= len(input_names):
         sys.stderr.write("--arm --a4-soft-capture failed: invalid MIDI input choice.\n")
+        return None
+    return input_names[chosen_index]
+
+
+def _choose_rytm_input_port_name(input_names: Sequence[str]) -> str | None:
+    """Prompt the user for the Analog Rytm MIDI input port."""
+
+    sys.stdout.write("\nAvailable MIDI inputs:\n\n")
+    for index, name in enumerate(input_names):
+        sys.stdout.write(f"{index}: {name}\n")
+
+    try:
+        raw = input("\nChoose the Analog Rytm MIDI input number: ").strip()
+    except (EOFError, KeyboardInterrupt, OSError):
+        sys.stderr.write(
+            "--arm --rytm-live-snapshot-shell failed: no MIDI input choice provided.\n"
+        )
+        return None
+
+    try:
+        chosen_index = int(raw)
+    except ValueError:
+        sys.stderr.write("--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.\n")
+        return None
+
+    if chosen_index < 0 or chosen_index >= len(input_names):
+        sys.stderr.write("--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.\n")
         return None
     return input_names[chosen_index]
 
@@ -1151,6 +1224,264 @@ def _run_rytm_12_pad_shell(args: argparse.Namespace) -> int:
     return _run_dry_run_rytm_12_pad_shell()
 
 
+def _load_rytm_snapshot_shell_anchor(snapshot_path: str) -> RytmSnapshotShellAnchor:
+    """Decode a Rytm current-kit SysEx file into a snapshot shell anchor."""
+
+    from .snapshot.sysex_file import read_sysex_payloads_from_path
+
+    payloads = read_sysex_payloads_from_path(snapshot_path)
+    return _build_rytm_snapshot_shell_anchor_from_payloads(payloads)
+
+
+def _build_rytm_snapshot_shell_anchor_from_payloads(
+    payloads: Sequence[bytes],
+) -> RytmSnapshotShellAnchor:
+    """Decode one or more SysEx payloads into a snapshot shell anchor."""
+
+    from .devices.strategies import AnalogRytmSnapshotDecoder
+    from .engines.analog_rytm_snapshot_shell import build_snapshot_shell_anchor
+
+    if not payloads:
+        raise ValueError("no Rytm KIT SysEx payload received")
+    snapshot = AnalogRytmSnapshotDecoder().decode(payloads[0], slot=0)
+    return build_snapshot_shell_anchor(snapshot)
+
+
+def _capture_rytm_snapshot_shell_anchor_from_live_input(
+    provider: _RytmSysexCaptureProvider,
+    input_name: str,
+) -> tuple[RytmSnapshotShellAnchor, tuple[int, ...]]:
+    """Receive one live Rytm KIT SysEx frame and decode it for the shell."""
+
+    from .snapshot.sysex_file import extract_sysex_payloads
+
+    frames = provider.capture_sysex_messages(
+        input_name,
+        timeout_seconds=RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS,
+    )
+    frame_lengths = tuple(len(frame) for frame in frames)
+    payloads = tuple(payload for frame in frames for payload in extract_sysex_payloads(frame))
+    return _build_rytm_snapshot_shell_anchor_from_payloads(payloads), frame_lengths
+
+
+def _write_rytm_live_snapshot_wait_prompt() -> None:
+    sys.stdout.write(
+        "Waiting for Analog Rytm KIT SysEx. On the Rytm, send "
+        "GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT.\n"
+    )
+
+
+def _run_dry_run_rytm_snapshot_shell(anchor: RytmSnapshotShellAnchor) -> int:
+    """Run the current-kit snapshot shell against the mock sender."""
+
+    from .engines.analog_rytm_snapshot_shell import AnalogRytmSnapshotShell
+    from .mock_midi import MockMidiSender
+
+    sender = MockMidiSender()
+    sys.stdout.write(
+        "RytmRandomizer snapshot shell dry-run\n"
+        "mock only: True\n"
+        "no hardware: True\n"
+        "no port opened: True\n"
+        "no real MIDI: True\n"
+    )
+    shell = AnalogRytmSnapshotShell(anchor, sender, skip_sleep=True)
+    exit_code = shell.run()
+    sys.stdout.write(
+        f"Dry-run complete. Mock sender captured {len(sender.sent_messages)} message(s).\n"
+    )
+    return exit_code
+
+
+def _run_armed_rytm_snapshot_shell(
+    anchor: RytmSnapshotShellAnchor,
+    *,
+    resnapshot_func: ResnapshotFunc | None = None,
+) -> int:
+    """Open one real Rytm output, run the snapshot shell, and close the port."""
+
+    from .engines.analog_rytm_snapshot_shell import AnalogRytmSnapshotShell
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        output_names = provider.list_output_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --rytm-snapshot-shell failed: {exc}\n")
+        return 1
+
+    if not output_names:
+        sys.stderr.write(
+            "--arm --rytm-snapshot-shell failed: no real MIDI output ports available. "
+            "Connect the Analog Rytm and retry.\n"
+        )
+        return 1
+
+    port_name = _choose_arm_port_name(output_names)
+    if port_name is None:
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI output: {port_name}\n")
+    try:
+        port = provider.open_output(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --rytm-snapshot-shell failed: {exc}\n")
+        return 1
+
+    shell = AnalogRytmSnapshotShell(
+        anchor,
+        port,
+        resnapshot_func=resnapshot_func,
+        skip_sleep=False,
+    )
+    try:
+        sys.stdout.write(
+            "RytmRandomizer snapshot shell send\n"
+            "armed: True\n"
+            "hardware observation required: True\n"
+            "sent real MIDI: shell-controlled\n"
+            f"port: {port_name}\n"
+            f"kit: {anchor.kit_name}\n"
+            f"fingerprint: {anchor.fingerprint}\n"
+        )
+        exit_code = shell.run()
+    except (OSError, RuntimeError, AttributeError) as exc:
+        sys.stderr.write(f"--arm --rytm-snapshot-shell send failed: {exc}\n")
+        return 1
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("rytm_snapshot_shell_port_close_failed_best_effort")
+
+    sys.stdout.write(f"Snapshot shell sent {shell.state.sent_message_count} message(s).\n")
+    return exit_code
+
+
+def _run_rytm_snapshot_shell(args: argparse.Namespace) -> int:
+    """Validate and run the all-12-pad current-kit snapshot shell."""
+
+    if not args.arm and not args.dry_run:
+        sys.stderr.write("--rytm-snapshot-shell requires --dry-run or --arm.\n")
+        return 1
+    if args.arm and not args.confirm_rytm_snapshot_shell_send:
+        sys.stderr.write(
+            "--rytm-snapshot-shell armed sends require " "--confirm-rytm-snapshot-shell-send.\n"
+        )
+        return 1
+    if args.rytm_snapshot_shell is None or args.rytm_snapshot_shell.strip() == "":
+        sys.stderr.write("--rytm-snapshot-shell requires a SysEx file path.\n")
+        return 1
+
+    try:
+        anchor = _load_rytm_snapshot_shell_anchor(args.rytm_snapshot_shell)
+    except (ValueError, OSError, NotImplementedError, KeyError) as exc:
+        sys.stderr.write(f"--rytm-snapshot-shell failed: {exc}\n")
+        return 1
+
+    if args.arm:
+        return _run_armed_rytm_snapshot_shell(anchor)
+    return _run_dry_run_rytm_snapshot_shell(anchor)
+
+
+def _run_rytm_live_snapshot_shell(args: argparse.Namespace) -> int:
+    """Receive one Rytm KIT SysEx live, then run the armed snapshot shell."""
+
+    if not args.arm:
+        sys.stderr.write("--rytm-live-snapshot-shell requires --arm.\n")
+        return 1
+    if not args.confirm_rytm_snapshot_shell_send:
+        sys.stderr.write(
+            "--rytm-live-snapshot-shell armed sends require "
+            "--confirm-rytm-snapshot-shell-send.\n"
+        )
+        return 1
+
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+
+    provider = build_mido_midi_port_provider()
+    try:
+        input_names = provider.list_input_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --rytm-live-snapshot-shell failed: {exc}\n")
+        return 1
+
+    if not input_names:
+        sys.stderr.write(
+            "--arm --rytm-live-snapshot-shell failed: no real MIDI input ports available. "
+            "Connect the Analog Rytm and retry.\n"
+        )
+        return 1
+
+    input_name = _choose_rytm_input_port_name(input_names)
+    if input_name is None:
+        return 1
+
+    sys.stdout.write("RytmRandomizer live snapshot receive\n")
+    sys.stdout.write("armed: True\n")
+    sys.stdout.write("hardware observation required: True\n")
+    sys.stdout.write(f"Opening MIDI input: {input_name}\n")
+    _write_rytm_live_snapshot_wait_prompt()
+
+    try:
+        anchor, frame_lengths = _capture_rytm_snapshot_shell_anchor_from_live_input(
+            provider,
+            input_name,
+        )
+        for frame_length in frame_lengths:
+            sys.stdout.write(f"received SysEx frame: {frame_length} bytes\n")
+    except KeyboardInterrupt:
+        sys.stderr.write("--arm --rytm-live-snapshot-shell cancelled while waiting for SysEx.\n")
+        return 130
+    except (
+        RealMidiDependencyError,
+        RealMidiPortError,
+        ValueError,
+        OSError,
+        NotImplementedError,
+        KeyError,
+    ) as exc:
+        sys.stderr.write(f"--arm --rytm-live-snapshot-shell failed: {exc}\n")
+        return 1
+
+    sys.stdout.write("received KIT SysEx\n")
+    sys.stdout.write(f"kit: {anchor.kit_name}\n")
+    sys.stdout.write(f"fingerprint: {anchor.fingerprint}\n")
+
+    def resnapshot_func() -> RytmSnapshotShellAnchor | None:
+        _write_rytm_live_snapshot_wait_prompt()
+        try:
+            fresh_anchor, fresh_frame_lengths = _capture_rytm_snapshot_shell_anchor_from_live_input(
+                provider, input_name
+            )
+        except KeyboardInterrupt:
+            sys.stderr.write(
+                "--arm --rytm-live-snapshot-shell resnapshot cancelled while waiting for SysEx.\n"
+            )
+            return None
+        except (
+            RealMidiDependencyError,
+            RealMidiPortError,
+            ValueError,
+            OSError,
+            NotImplementedError,
+            KeyError,
+        ) as exc:
+            sys.stderr.write(f"--arm --rytm-live-snapshot-shell resnapshot failed: {exc}\n")
+            return None
+        for frame_length in fresh_frame_lengths:
+            sys.stdout.write(f"received SysEx frame: {frame_length} bytes\n")
+        sys.stdout.write("received KIT SysEx\n")
+        return fresh_anchor
+
+    return _run_armed_rytm_snapshot_shell(anchor, resnapshot_func=resnapshot_func)
+
+
 def _load_rytm_performance_plan(args: argparse.Namespace) -> RytmPerformanceMutationPlan:
     """Decode the captured Rytm snapshot and build a performance mutation plan."""
 
@@ -1505,6 +1836,85 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")
         return 1
+    if args.rytm_live_snapshot_shell and args.validate_one_cc:
+        sys.stderr.write("--rytm-live-snapshot-shell cannot be combined with --validate-one-cc.\n")
+        return 1
+    if args.rytm_live_snapshot_shell and args.rytm_snapshot_shell:
+        sys.stderr.write(
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-snapshot-shell.\n"
+        )
+        return 1
+    if args.rytm_live_snapshot_shell and args.rytm_12_pad_shell:
+        sys.stderr.write(
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-12-pad-shell.\n"
+        )
+        return 1
+    if args.rytm_live_snapshot_shell and args.rytm_kit_style:
+        sys.stderr.write("--rytm-live-snapshot-shell cannot be combined with --rytm-kit-style.\n")
+        return 1
+    if args.rytm_live_snapshot_shell and args.rytm_performance_snapshot:
+        sys.stderr.write(
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-performance-snapshot.\n"
+        )
+        return 1
+    if args.rytm_live_snapshot_shell and args.a4_soft_capture:
+        sys.stderr.write("--rytm-live-snapshot-shell cannot be combined with --a4-soft-capture.\n")
+        return 1
+    if args.rytm_live_snapshot_shell and args.a4_send_param:
+        sys.stderr.write("--rytm-live-snapshot-shell cannot be combined with --a4-send-param.\n")
+        return 1
+    if args.rytm_live_snapshot_shell and args.a4_send_nrpn_param:
+        sys.stderr.write(
+            "--rytm-live-snapshot-shell cannot be combined with --a4-send-nrpn-param.\n"
+        )
+        return 1
+    if args.rytm_live_snapshot_shell and args.a4_kit_recipe:
+        sys.stderr.write("--rytm-live-snapshot-shell cannot be combined with --a4-kit-recipe.\n")
+        return 1
+    if args.rytm_live_snapshot_shell and args.a4_kit_recipe_nrpn:
+        sys.stderr.write(
+            "--rytm-live-snapshot-shell cannot be combined with --a4-kit-recipe-nrpn.\n"
+        )
+        return 1
+    if args.rytm_snapshot_shell and args.validate_one_cc:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --validate-one-cc.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.rytm_12_pad_shell:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --rytm-12-pad-shell.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.rytm_kit_style:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --rytm-kit-style.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.rytm_performance_snapshot:
+        sys.stderr.write(
+            "--rytm-snapshot-shell cannot be combined with --rytm-performance-snapshot.\n"
+        )
+        return 1
+    if args.rytm_snapshot_shell and args.a4_soft_capture:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --a4-soft-capture.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.a4_send_param:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --a4-send-param.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.a4_send_nrpn_param:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --a4-send-nrpn-param.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.a4_kit_recipe:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --a4-kit-recipe.\n")
+        return 1
+    if args.rytm_snapshot_shell and args.a4_kit_recipe_nrpn:
+        sys.stderr.write("--rytm-snapshot-shell cannot be combined with --a4-kit-recipe-nrpn.\n")
+        return 1
+    if (
+        args.confirm_rytm_snapshot_shell_send
+        and not args.rytm_snapshot_shell
+        and not args.rytm_live_snapshot_shell
+    ):
+        sys.stderr.write(
+            "--confirm-rytm-snapshot-shell-send requires --rytm-snapshot-shell "
+            "or --rytm-live-snapshot-shell.\n"
+        )
+        return 1
     if args.rytm_12_pad_shell and args.validate_one_cc:
         sys.stderr.write("--rytm-12-pad-shell cannot be combined with --validate-one-cc.\n")
         return 1
@@ -1628,6 +2038,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.value_lsb is not None and not args.a4_send_nrpn_param:
         sys.stderr.write("--value-lsb requires --a4-send-nrpn-param.\n")
         return 1
+    if args.rytm_live_snapshot_shell:
+        return _run_rytm_live_snapshot_shell(args)
+    if args.rytm_snapshot_shell:
+        return _run_rytm_snapshot_shell(args)
     if args.rytm_12_pad_shell:
         return _run_rytm_12_pad_shell(args)
     if args.rytm_performance_snapshot:

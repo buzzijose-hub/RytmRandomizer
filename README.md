@@ -96,6 +96,76 @@ Inside the shell, use `load detroit-deep`, `preview`, `send`, `roll`, `deep`,
 `grit`, `intense`, `warehouse`, `undo`, `reset`, and `q`. Kick filter-frequency
 mutations are clamped to the sub-safe range learned during hardware testing.
 
+The all-12-pad snapshot shell starts from a current-kit SysEx dump instead of a
+curated style anchor, then gives you the old V1.34 performance command feel
+across all 12 pads:
+
+```bash
+python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
+python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures/current-kit.syx
+python -m rytm_randomizer.app --arm --rytm-snapshot-shell captures/current-kit.syx --confirm-rytm-snapshot-shell-send
+```
+
+The live command is the fresh-performance workflow: choose the Rytm input, send
+`GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT` from the hardware, then the
+software decodes that received kit and opens the mutation shell. The file-based
+commands remain useful for dry-runs and replaying a saved capture. While an
+armed live snapshot shell is running, `kit` or `resnapshot` waits for one more
+Rytm KIT SysEx dump from the same selected input, replaces the captured anchor,
+clears the staged mutation, and keeps the current session guardrails.
+
+Inside the shell, use `S1A`, `S3A`, `S3B`, `S4B`, `4`, `Y`, `V`, `N`, `Z`,
+`U`, `preview`, `changes`, `send`, `go`, `again`, `next`, `kit`,
+`resnapshot`, `mode`, `depth`, `lock`, `unlock`, `pad`, `preset`,
+`guards reset`, `status`, and `q`. `Y`, `V`, and `N` ask for depth (`micro`,
+`groove`, or `strong`). `send` repeats the currently staged plan; type `go` to
+make the next variation and send it in one step, or type the same mutation
+command again, `again`, or `next` to stage the next variation before sending.
+
+Session guardrails are live-only settings that reset when the shell exits:
+
+```text
+mode live
+depth gentle
+pad 1 gentle
+pad 3 strong
+lock 5
+status
+4
+changes
+send
+go
+preset live
+preset kick-safe
+preset all-gentle
+preset studio
+guards reset
+fresh
+kit
+```
+
+Global mutations respect each pad's session lane. In `live` mode, Pad 1 is
+gentle by default, toms and hats are gentle, pads 2-4 and 11-12 are normal, and
+per-pad overrides can intentionally push selected pads harder. Locked pads are
+left out of armed `send` messages, and `status` separates active pad overrides
+from inactive overrides parked behind locked pads. Session presets apply common
+guardrail setups without persistence: `preset live` is live/gentle with no
+locks, `preset kick-safe` locks Pad 1 while auditioning the rest of the kit,
+`preset all-gentle` clears pad overrides and keeps the whole shell gentle, and
+`preset studio` opens the wider studio/wild lane. `guards reset` clears locks
+and overrides back to the default live/normal profile. Live/studio depth lanes
+are total anchor-relative envelopes, so repeated `4` or `again` commands vary
+the kit inside the selected lane instead of walking farther away from the
+received snapshot. Pad 1 has an additional kick-foundation policy: its filter
+page, LFO page, and AMP attack time are omitted from active sends, while Pad 1
+source tuning parameters stay within plus or minus 3 of their captured-kit
+values. The snapshot shell mutates manual-backed CC MSB rows from the captured
+kit, including the current-machine SRC rows on pads 1-12, keeps machine
+switching off, and avoids samples, performance macros, source level, track
+level, amp volume, SysEx writes, transport, pattern changes, and kit/project
+writes. Zone commands (`Y`, `V`, and `N`) layer on the current staged plan; use
+`fresh` or `Z` first when you want an anchor-only zone mutation.
+
 Analog Four soft live capture is input-only:
 
 ```bash
@@ -225,6 +295,12 @@ Pad 4 = BD Acoustic / body + accent pressure lane
   style kits can actively send full 12-pad manual-backed CC MSB recipes behind
   `--arm --confirm-rytm-kit-send`, and the all-12-pad shell can mutate loaded
   style plans behind `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send`.
+  The all-12-pad snapshot shell can mutate a current-kit SysEx anchor behind
+  `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send`
+  or receive that anchor live behind
+  `--arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send`; in the
+  live shell, `kit` / `resnapshot` can receive a new KIT anchor without
+  restarting the process.
 - Main-prompt `1`, `2`, and `3` remain guarded and send no MIDI.
 - Four-pad scene/global commands auto-load anchors if needed.
 - Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.

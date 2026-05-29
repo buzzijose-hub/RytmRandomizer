@@ -4,6 +4,53 @@ Last updated: 2026-05-29. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-29: Pad 1 kick-foundation policy added to the Analog Rytm snapshot
+  shell. Pad 1 filter-page events, LFO-page events, and `AMP Amp Attack Time`
+  are now omitted from active sends even when Pad 1 is not locked, and Pad 1
+  source tuning parameters are clamped to plus or minus 3 from the captured kit
+  value in live and studio modes. KIT 13 hardware validation covered live,
+  studio, kick-safe, all-gentle, SRC, and filter-zone flows. `fresh` is now a
+  readable alias for `Z`, and zone commands tell operators they layer on the
+  current staged plan unless reset first. `go` now repeats the last mutation
+  variation, or defaults to `4` if none exists, and immediately sends the staged
+  result for one-command audition loops. The armed live snapshot shell also
+  accepts `kit` / `resnapshot` inside `snapshot-12>` to receive one fresh KIT
+  SysEx from the same selected input, replace the captured anchor, clear the
+  staged mutation, and preserve the current session guardrails.
+- 2026-05-29: Session-only Analog Rytm snapshot shell guardrails added. Inside
+  `snapshot-12>`, `mode live|studio`, `depth gentle|normal|strong|wild`,
+  `lock N`, `unlock N`, `pad N gentle|normal|strong|wild|off`, and `status`
+  now let global mutations respect per-pad lanes during the current shell
+  session. Locked pads are omitted from armed `send` messages. Live mode
+  defaults Pad 1, toms, and hats to gentle movement while leaving stronger
+  per-pad overrides available for intentional performance moments. Repeated
+  mutations are clamped to anchor-relative lane envelopes so long live sessions
+  do not drift away from the captured kit by accumulation.
+- 2026-05-29: Snapshot shell current-machine SRC coverage expanded across all
+  12 pads. The captured-kit anchor now includes the loaded machine's documented
+  SRC rows on later pads as well as the V1.34-validated rows, while still
+  excluding source level, track level, amp volume, and machine switching.
+  `changes` now prints those later-pad SRC deltas, and `again` / `next` repeat
+  the last mutation so a live performer can send, generate the next variation,
+  and send again without restarting the SysEx receive flow.
+- 2026-05-29: Live Analog Rytm current-kit receive shell added:
+  `python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send`.
+  The app now opens a Rytm input, waits for the operator to send
+  `SYSEX DUMP > SYSEX SEND > KIT` from the hardware, decodes that received KIT
+  SysEx into the existing all-12-pad snapshot shell anchor, and only then opens
+  the selected Rytm output for explicit `send` commands inside `snapshot-12>`.
+- 2026-05-29: First all-12-pad Analog Rytm current-kit snapshot shell added:
+  `python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell <kit.syx>` and
+  `python -m rytm_randomizer.app --arm --rytm-snapshot-shell <kit.syx> --confirm-rytm-snapshot-shell-send`.
+  The shell anchors to the captured kit dump, exposes old V1.34-feel commands
+  (`S1A`, `S3A`, `S3B`, `S4B`, `4`, `Y`, `V`, `N`, `Z`, `U`, `preview`,
+  `changes`, `send`, `again`, `next`, `q`), covers all 12 pads, and keeps
+  machine switching off by default.
+  It sends CC MSB messages only and leaves samples, performance macros, source
+  level, track level, amp volume, SysEx writes, transport, pattern changes, and
+  kit/project writes out of scope. The Rytm kit decoder now strips the real
+  dump header/trailer and anchors those sends to the 2610-byte raw kit payload
+  fields for SRC, filter, amp, and LFO rows.
 - 2026-05-29: First Analog Rytm `live-safe` hardware performance mutation
   session documented at
   `docs/hardware-validation/2026-05-29-rytm-live-safe-performance-session.md`.

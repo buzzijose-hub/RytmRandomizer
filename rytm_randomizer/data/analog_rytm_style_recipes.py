@@ -10,6 +10,8 @@ from typing import Final, Literal, TypeAlias
 from .analog_rytm_midi import (
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
     MutationStatus,
+    ParameterValueKind,
+    ParameterValueOrientation,
     RiskTier,
     get_machine_src_mappings,
 )
@@ -62,6 +64,10 @@ class AnalogRytmRenderedStyleEvent:
     mutation_status: MutationStatus
     source: RenderedStyleSource
     intent: str
+    value_min: int = 0
+    value_max: int = 127
+    value_kind: ParameterValueKind = "continuous"
+    value_orientation: ParameterValueOrientation = "zero_based"
 
 
 _EXCLUDED_PARAMETERS: Final[frozenset[str]] = frozenset(
@@ -874,6 +880,10 @@ def _machine_select_event(
         mutation_status=mapping.mutation_status,
         source="machine",
         intent=f"select {profile.label}",
+        value_min=mapping.value_min,
+        value_max=mapping.value_max,
+        value_kind=mapping.value_kind,
+        value_orientation=mapping.value_orientation,
     )
 
 
@@ -926,6 +936,10 @@ def _render_parameter_event(
         mutation_status=mapping.mutation_status,
         source=source,
         intent=target.intent,
+        value_min=mapping.value_min,
+        value_max=mapping.value_max,
+        value_kind=mapping.value_kind,
+        value_orientation=mapping.value_orientation,
     )
 
 

@@ -269,6 +269,10 @@ def _live_safe_src_event(
         mutation_status=mapping.mutation_status,
         source="machine_src",
         intent=f"live-safe current {profile.label}: {event.intent}",
+        value_min=mapping.value_min,
+        value_max=mapping.value_max,
+        value_kind=mapping.value_kind,
+        value_orientation=mapping.value_orientation,
     )
 
 

@@ -119,14 +119,15 @@ def test_decode_preserves_raw_payload_on_snapshot() -> None:
 
 
 def test_decode_unpacks_payload_so_planner_can_slice_it() -> None:
-    """``snapshot.unpacked`` must be the 7-bit-unstuffed payload."""
+    """``snapshot.unpacked`` must be the decoded raw kit payload."""
 
     from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
 
     decoder = AnalogRytmSnapshotDecoder()
     snap = decoder.decode(_kit_payload(name=b"X"), slot=0)
 
-    assert len(snap.unpacked) >= 174 + (162 * 11) + 1
+    assert len(snap.unpacked) == 0x0A32
+    assert snap.unpacked[4:5] == b"X"
 
 
 def test_snapshot_exports_machine_fact_types() -> None:

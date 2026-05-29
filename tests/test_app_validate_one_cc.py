@@ -1342,3 +1342,442 @@ def test_app_main_rytm_12_pad_shell_rejects_conflicting_helpers(capsys) -> None:
 
     assert exit_code == 1
     assert "--rytm-12-pad-shell cannot be combined with --validate-one-cc" in captured.err
+
+
+def test_app_main_dry_run_rytm_snapshot_shell_runs_scripted_v134_style_flow(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    from rytm_randomizer import app
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"LIVE")
+    commands = iter(["S1A", "preview", "send", "q"])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(commands))
+
+    exit_code = app.main(["--dry-run", "--rytm-snapshot-shell", str(snapshot_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "RytmRandomizer snapshot shell dry-run" in captured.out
+    assert "mock only: True" in captured.out
+    assert "no hardware: True" in captured.out
+    assert "no port opened: True" in captured.out
+    assert "Loaded kit anchor: LIVE" in captured.out
+    assert "mutation applied: Rolling Light" in captured.out
+    assert "RytmRandomizer snapshot shell preview" in captured.out
+    assert "sent current snapshot plan" in captured.out
+    assert "Dry-run complete. Mock sender captured" in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_dry_run_rytm_snapshot_shell_imports_no_real_midi_library() -> None:
+    result = run_python("""
+import builtins
+import sys
+import tempfile
+from pathlib import Path
+from rytm_randomizer import app
+
+def pack(unpacked):
+    out = bytearray()
+    for start in range(0, len(unpacked), 7):
+        group = unpacked[start:start + 7]
+        header = 0
+        for index, byte in enumerate(group):
+            header |= ((byte >> 7) & 0x01) << index
+        out.append(header)
+        out.extend(byte & 0x7F for byte in group)
+    return bytes(out)
+
+def u14(value):
+    return bytes([(value >> 7) & 0x7F, value & 0x7F])
+
+unpacked = bytearray(bytes([0] * 0x0A32))
+unpacked[0:4] = bytes([0, 0, 0, 6])
+unpacked[4:20] = b"LIVE".ljust(16, b"\\x00")
+for pad in range(12):
+    track_offset = 0x2E + (162 * pad)
+    unpacked[track_offset + 0x7C] = pad
+    unpacked[track_offset + 0x1E] = 40 + pad
+    unpacked[track_offset + 0x20] = 56 + pad
+    unpacked[track_offset + 0x44] = 25 + pad
+    unpacked[track_offset + 0x46] = 11 + pad
+    unpacked[track_offset + 0x52] = 20 + pad
+packed = pack(bytes(unpacked))
+checksum = sum(packed) & 0x3FFF
+size = (len(packed) + 5) & 0x3FFF
+payload = (
+    bytes([0x00, 0x20, 0x3C, 0x07, 0x00, 0x52, 0x01, 0x01, 0x00])
+    + packed
+    + u14(checksum)
+    + u14(size)
+)
+path = Path(tempfile.gettempdir()) / "rr-snapshot-shell-test.syx"
+path.write_bytes(bytes([0xF0]) + payload + bytes([0xF7]))
+commands = iter(["S1A", "send", "q"])
+builtins.input = lambda _prompt="": next(commands)
+exit_code = app.main(["--dry-run", "--rytm-snapshot-shell", str(path)])
+assert exit_code == 0, exit_code
+for module_name in ("mido", "rtmidi", "pythonrtmidi"):
+    assert module_name not in sys.modules, module_name
+""")
+
+    assert result.returncode == 0
+    assert result.stderr == ""
+
+
+def test_app_main_arm_rytm_snapshot_shell_requires_confirmation_before_output(
+    tmp_path: Path, capsys, monkeypatch
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("unconfirmed snapshot shell must not touch MIDI ports")
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"LIVE")
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(["--arm", "--rytm-snapshot-shell", str(snapshot_path)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-snapshot-shell armed sends require --confirm-rytm-snapshot-shell-send" in (
+        captured.err
+    )
+    assert captured.out == ""
+
+
+def test_app_main_arm_rytm_snapshot_shell_sends_fake_mido_and_closes_port(
+    tmp_path: Path, capsys, fake_mido_session, monkeypatch
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class FakeOutputPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+            self.closed = False
+
+        def send(self, message: object) -> None:
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = FakeOutputPort()
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"LIVE")
+    commands = iter(["0", "S1A", "send", "q"])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake Rytm Out",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(commands))
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-snapshot-shell",
+            str(snapshot_path),
+            "--confirm-rytm-snapshot-shell-send",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "RytmRandomizer snapshot shell send" in captured.out
+    assert "Opening MIDI output: Fake Rytm Out" in captured.out
+    assert "sent current snapshot plan" in captured.out
+    assert "Snapshot shell sent" in captured.out
+    assert captured.err == ""
+    assert fake_port.sent
+    assert {message.channel for message in fake_port.sent} == set(range(12))
+    assert all(message.control != 15 for message in fake_port.sent)
+    assert fake_port.closed is True
+
+
+def test_app_main_rytm_snapshot_shell_rejects_conflicting_helpers(tmp_path: Path, capsys) -> None:
+    from rytm_randomizer import app
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"LIVE")
+
+    exit_code = app.main(
+        [
+            "--dry-run",
+            "--rytm-snapshot-shell",
+            str(snapshot_path),
+            "--rytm-12-pad-shell",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-snapshot-shell cannot be combined with --rytm-12-pad-shell" in captured.err
+
+
+def test_app_main_arm_rytm_live_snapshot_shell_receives_kit_then_sends_fake_mido(
+    capsys, fake_mido_session, monkeypatch
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class FakeOutputPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+            self.closed = False
+
+        def send(self, message: object) -> None:
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = FakeOutputPort()
+    frame = elektron_syx_message(rytm_real_layout_kit_payload(name=b"LIVE"))
+    call_order: list[str] = []
+
+    def fake_list_input_names(self):
+        call_order.append("list_input")
+        return ("Fake Rytm In",)
+
+    def fake_capture_sysex_messages(self, port_name: str, *, timeout_seconds: float):
+        assert port_name == "Fake Rytm In"
+        assert timeout_seconds > 0
+        call_order.append("capture")
+        return (frame,)
+
+    def fake_list_output_names(self):
+        assert call_order == ["list_input", "capture"]
+        call_order.append("list_output")
+        return ("Fake Rytm Out",)
+
+    def fake_open_output(self, port_name: str):
+        assert port_name == "Fake Rytm Out"
+        call_order.append("open_output")
+        return fake_port
+
+    commands = iter(["0", "0", "S1A", "send", "q"])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        fake_list_input_names,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "capture_sysex_messages",
+        fake_capture_sysex_messages,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fake_list_output_names,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        fake_open_output,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(commands))
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-live-snapshot-shell",
+            "--confirm-rytm-snapshot-shell-send",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "RytmRandomizer live snapshot receive" in captured.out
+    assert "Opening MIDI input: Fake Rytm In" in captured.out
+    assert f"received SysEx frame: {len(frame)} bytes" in captured.out
+    assert "received KIT SysEx" in captured.out
+    assert "kit: LIVE" in captured.out
+    assert "Opening MIDI output: Fake Rytm Out" in captured.out
+    assert "sent current snapshot plan" in captured.out
+    assert captured.err == ""
+    assert call_order == ["list_input", "capture", "list_output", "open_output"]
+    assert fake_port.sent
+    assert {message.channel for message in fake_port.sent} == set(range(12))
+    assert all(message.control != 15 for message in fake_port.sent)
+    assert fake_port.closed is True
+
+
+def test_app_main_arm_rytm_live_snapshot_shell_can_resnapshot_inside_shell(
+    capsys, fake_mido_session, monkeypatch
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class FakeOutputPort:
+        def __init__(self) -> None:
+            self.sent: list[object] = []
+            self.closed = False
+
+        def send(self, message: object) -> None:
+            self.sent.append(message)
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_port = FakeOutputPort()
+    live_frame = elektron_syx_message(rytm_real_layout_kit_payload(name=b"LIVE"))
+    next_frame = elektron_syx_message(rytm_real_layout_kit_payload(name=b"NEXT"))
+    frames = iter([live_frame, next_frame])
+    call_order: list[str] = []
+
+    def fake_list_input_names(self):
+        call_order.append("list_input")
+        return ("Fake Rytm In",)
+
+    def fake_capture_sysex_messages(self, port_name: str, *, timeout_seconds: float):
+        assert port_name == "Fake Rytm In"
+        assert timeout_seconds > 0
+        call_order.append("capture")
+        return (next(frames),)
+
+    def fake_list_output_names(self):
+        assert call_order == ["list_input", "capture"]
+        call_order.append("list_output")
+        return ("Fake Rytm Out",)
+
+    def fake_open_output(self, port_name: str):
+        assert port_name == "Fake Rytm Out"
+        call_order.append("open_output")
+        return fake_port
+
+    commands = iter(["0", "0", "kit", "S1A", "send", "q"])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        fake_list_input_names,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "capture_sysex_messages",
+        fake_capture_sysex_messages,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fake_list_output_names,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        fake_open_output,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(commands))
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-live-snapshot-shell",
+            "--confirm-rytm-snapshot-shell-send",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "kit: LIVE" in captured.out
+    assert "kit: NEXT" in captured.out
+    assert f"received SysEx frame: {len(live_frame)} bytes" in captured.out
+    assert f"received SysEx frame: {len(next_frame)} bytes" in captured.out
+    assert captured.out.count("received KIT SysEx") == 2
+    assert "replaced captured 12-pad anchor" in captured.out
+    assert "sent current snapshot plan" in captured.out
+    assert captured.err == ""
+    assert call_order == ["list_input", "capture", "list_output", "open_output", "capture"]
+    assert fake_port.sent
+    assert {message.channel for message in fake_port.sent} == set(range(12))
+    assert fake_port.closed is True
+
+
+def test_app_main_arm_rytm_live_snapshot_shell_ctrl_c_returns_cleanly(capsys, monkeypatch) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    def fake_capture_sysex_messages(self, port_name: str, *, timeout_seconds: float):
+        raise KeyboardInterrupt
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("cancelled live snapshot receive must not open output")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake Rytm In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "capture_sysex_messages",
+        fake_capture_sysex_messages,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fail_output_call,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-live-snapshot-shell",
+            "--confirm-rytm-snapshot-shell-send",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 130
+    assert "--arm --rytm-live-snapshot-shell cancelled while waiting for SysEx" in captured.err
+
+
+def test_app_main_arm_rytm_live_snapshot_shell_requires_confirmation_before_input(
+    capsys, monkeypatch
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("unconfirmed live snapshot shell must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "capture_sysex_messages",
+        fail_midi_call,
+        raising=False,
+    )
+
+    exit_code = app.main(["--arm", "--rytm-live-snapshot-shell"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-live-snapshot-shell armed sends require" in captured.err
+    assert captured.out == ""
+
+
+def test_app_main_rytm_live_snapshot_shell_rejects_file_snapshot_conflict(
+    tmp_path: Path, capsys
+) -> None:
+    from rytm_randomizer import app
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"LIVE")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-live-snapshot-shell",
+            "--rytm-snapshot-shell",
+            str(snapshot_path),
+            "--confirm-rytm-snapshot-shell-send",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-live-snapshot-shell cannot be combined with --rytm-snapshot-shell" in (
+        captured.err
+    )

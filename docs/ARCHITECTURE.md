@@ -16,12 +16,12 @@ rules that future work must respect so the architecture cannot be eroded.
 
 ```mermaid
 flowchart TD
-    app["app.py - entry point<br/>(--arm flag, 12-pad shell, A4 capture/send, top of stack)"]
+    app["app.py - entry point<br/>(--arm flag, Rytm shells, A4 capture/send, top of stack)"]
     cli["cli.py - passive report CLI<br/>(no mido, no engines, no runtime)"]
     shell["shell.py - interactive command loop"]
     sceneRunner["scene_runner.py"]
     groupRunner["group_runner.py"]
-    engines["engines/pad{1,2,3,4}.py<br/>+ analog_rytm_12_pad_shell.py"]
+    engines["engines/pad{1,2,3,4}.py<br/>+ analog_rytm_12_pad_shell.py<br/>+ analog_rytm_snapshot_shell.py"]
     reports["reports/* + inspection.py<br/>(passive read-only formatters)"]
     midi["midi_io.py + randomization.py"]
     realAdapter["real_midi_adapter.py - Protocol boundary"]
@@ -119,6 +119,7 @@ on one line for an existing module, you probably need a new module instead.
 | `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
 | `engines/pad1..4.py`         | Per-pad interactive engines. Dependencies injected, no module globals.      |
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
+| `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
 
 ### Mid-upper (orchestration)
 
@@ -133,7 +134,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe. |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe. |
 | `reports/`            | Consolidated passive in-memory reports and shared formatter helpers.             |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 

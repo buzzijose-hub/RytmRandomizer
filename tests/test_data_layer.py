@@ -145,6 +145,18 @@ def test_analog_rytm_manual_catalog_pins_os172_rows_and_safety_statuses():
     assert bd_hard_tune.mutation_status == "validated_runtime"
 
 
+def test_analog_rytm_kit_layout_pins_current_sound_offsets():
+    """Raw-kit offsets must stay aligned with the Rytm track sound layout."""
+
+    assert data.RYTM_KIT_RAW_SIZE == 0x0A32
+    assert data.RYTM_KIT_TRACKS_OFFSET == 0x002E
+    assert data.RYTM_KIT_TRACK_SOUND_SIZE == 162
+    assert data.RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET == 0x00AA
+    assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[1].sound_offset == 0x001E
+    assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[20].sound_offset == 0x0044
+    assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[27].sound_offset == 0x0052
+
+
 def test_analog_four_manual_cc_mapping_matches_pwm_depth_and_filter_frequency():
     """A4 CC labels must follow the Analog Four MKII manual, not MIDI convention."""
 

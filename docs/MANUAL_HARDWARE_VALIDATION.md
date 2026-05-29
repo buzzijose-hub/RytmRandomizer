@@ -304,6 +304,130 @@ Expected:
   jumps, monitoring level becomes unsafe, the kick disappears, or the device
   shows save/write behavior.
 
+## All-12-Pad Snapshot Shell Validation
+
+This validation is active and operator-driven. It starts from a current-kit
+SysEx dump, opens one Analog Rytm MIDI output port in armed mode, and sends only
+when the operator enters `send` inside the shell. Run it only on a saved or
+disposable kit with monitoring volume low.
+
+Fresh live receive command:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send
+```
+
+Fresh live receive flow:
+
+```text
+1. Select the Analog Rytm MIDI input.
+2. When the app prints that it is waiting, use the Rytm front panel:
+   GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT
+3. Press YES on the Rytm to send the KIT dump.
+4. Confirm the app prints received KIT SysEx, kit name, and fingerprint.
+5. Select the Analog Rytm MIDI output.
+6. Use mode live, depth gentle, status, 4, changes, send, go, changes,
+   send, Z, send, q inside snapshot-12>.
+7. To validate a freshly loaded hardware kit without restarting, load the new
+   kit on the Rytm, type `kit` or `resnapshot`, send
+   GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT again, then confirm the app
+   prints the new kit name and fingerprint before mutating or sending.
+```
+
+Dry-run first:
+
+```powershell
+python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell captures\current-kit.syx
+```
+
+Suggested dry-run commands:
+
+```text
+S1A
+preview
+mode live
+depth gentle
+pad 1 gentle
+status
+changes
+send
+again
+changes
+send
+V
+micro
+preview
+Z
+send
+q
+```
+
+Armed command:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-snapshot-shell captures\current-kit.syx --confirm-rytm-snapshot-shell-send
+```
+
+Suggested armed commands:
+
+```text
+preview
+mode live
+depth gentle
+pad 1 gentle
+status
+S1A
+preview
+changes
+send
+again
+changes
+send
+Z
+send
+q
+```
+
+Expected:
+
+- For the live command, no output port is selected until after the KIT SysEx is
+  received and decoded.
+- Confirm `kit` / `resnapshot` waits for a fresh KIT SysEx inside the live
+  shell, replaces the captured anchor, clears the staged mutation, and keeps
+  the current session guardrails.
+- Select the Analog Rytm output port.
+- Confirm startup prints `Loaded kit anchor` with the captured kit name.
+- Confirm `status` shows `mode: live`, the selected global depth, locked pads,
+  and any pad overrides.
+- Confirm `preview` shows `RytmRandomizer snapshot shell preview`.
+- Confirm `changes` shows Pad 1 allowed source/AMP deltas and later-pad source
+  deltas before the first send, with no Pad 1 filter, LFO, or AMP attack-time
+  deltas.
+- Confirm `send` prints `sent current snapshot plan`.
+- Confirm `again` or `next` applies a new variation from the last mutation
+  before the next `send`, while remaining inside the selected anchor-relative
+  lane after repeated mutations.
+- Confirm `go` applies the next variation from the last mutation and sends it in
+  one command.
+- Confirm `Z` and `fresh` restore the captured anchor values for promoted rows.
+- Confirm `Y`, `V`, and `N` print the zone-layering hint, and use `fresh` first
+  when validating an anchor-only zone mutation.
+- Audition all 12 pads after the first send and again after a mutation send.
+- Confirm the kick retains low-end weight; Pad 1 filter, LFO, and AMP attack
+  controls should be omitted from the send plan, and Pad 1 tune-style source
+  controls should remain within plus or minus 3 of the captured kit value.
+- Confirm `lock N` leaves pad N unchanged during the next mutation if testing
+  pad isolation, and confirm locked pads are omitted from the next `send`.
+- Confirm `pad N strong` or `pad N wild` can intentionally push one pad harder
+  than the global depth while the rest of the kit stays controlled.
+- Confirm later pads receive current-machine SRC movement, not only filter/LFO
+  movement.
+- Confirm no machine switching, samples, performance macros, source level,
+  track level, amp volume, transport, pattern change, clock, kit-save,
+  project-write, or SysEx behavior appears.
+- Stop immediately if the wrong pad responds, monitoring level becomes unsafe,
+  the kick disappears, or the device shows save/write behavior.
+
 ## Canonical operator-command flow
 
 These ten commands mirror the V1.34 baseline operator flow and the

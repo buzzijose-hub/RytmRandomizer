@@ -7,6 +7,7 @@ import pytest
 pytestmark = pytest.mark.fast
 
 from rytm_randomizer.data.analog_rytm_midi import (
+    ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER,
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
     ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
     ANALOG_RYTM_MANUAL_CC,
@@ -89,6 +90,41 @@ def test_machine_src_tables_cover_machine_specific_parameter_names() -> None:
     ]
     assert [mapping.cc_msb for mapping in cb_classic] == [mapping.cc_msb for mapping in cb_metallic]
     assert cb_classic[-1].parameter == "Detune"
+
+
+def test_catalog_pins_value_metadata_for_selectors_and_centered_rows() -> None:
+    filter_mode = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("FILTER", "Filter Mode")]
+    assert filter_mode.value_min == 0
+    assert filter_mode.value_max == 6
+    assert filter_mode.value_kind == "selector"
+    assert filter_mode.value_orientation == "zero_based"
+
+    sy_raw_waveform_1 = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("sy_raw", "Waveform 1")]
+    sy_raw_waveform_2 = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("sy_raw", "Waveform 2")]
+    assert sy_raw_waveform_1.value_min == 0
+    assert sy_raw_waveform_1.value_max == 6
+    assert sy_raw_waveform_1.value_kind == "selector"
+    assert sy_raw_waveform_2.value_min == 0
+    assert sy_raw_waveform_2.value_max == 1
+    assert sy_raw_waveform_2.value_kind == "selector"
+
+    sy_raw_tune = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("sy_raw", "Tune")]
+    assert sy_raw_tune.value_min == 0
+    assert sy_raw_tune.value_max == 127
+    assert sy_raw_tune.value_kind == "continuous"
+    assert sy_raw_tune.value_orientation == "centered"
+
+    sy_raw_detune = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("sy_raw", "Osc 2 Detune")]
+    assert sy_raw_detune.value_min == 40
+    assert sy_raw_detune.value_max == 88
+    assert sy_raw_detune.value_kind == "continuous"
+    assert sy_raw_detune.value_orientation == "centered"
+
+    sy_raw_balance = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("sy_raw", "Balance")]
+    assert sy_raw_balance.value_min == 0
+    assert sy_raw_balance.value_max == 127
+    assert sy_raw_balance.value_kind == "continuous"
+    assert sy_raw_balance.value_orientation == "centered"
 
 
 def test_validated_runtime_status_is_limited_to_existing_v134_maps() -> None:

@@ -13,6 +13,8 @@ RiskTier: TypeAlias = Literal["low", "medium", "high"]
 MutationStatus: TypeAlias = Literal[
     "validated_runtime", "documented_only", "locked_default", "forbidden"
 ]
+ParameterValueKind: TypeAlias = Literal["continuous", "selector"]
+ParameterValueOrientation: TypeAlias = Literal["zero_based", "centered"]
 
 
 @dataclass(frozen=True)
@@ -28,6 +30,10 @@ class AnalogRytmCcMapping:
     scope: str
     risk: RiskTier
     mutation_status: MutationStatus
+    value_min: int = 0
+    value_max: int = 127
+    value_kind: ParameterValueKind = "continuous"
+    value_orientation: ParameterValueOrientation = "zero_based"
     machine_key: str | None = None
 
 
@@ -180,6 +186,46 @@ _FORBIDDEN_POLICY_NAMES: Final[tuple[str, ...]] = (
 
 _GeneralRow: TypeAlias = tuple[str, str, int, int | None, int | None, int | None, str]
 _MachineRow: TypeAlias = tuple[str, int]
+_ValueMetadataRow: TypeAlias = tuple[
+    int,
+    int,
+    ParameterValueKind,
+    ParameterValueOrientation,
+]
+
+_DEFAULT_VALUE_METADATA: Final[_ValueMetadataRow] = (
+    0,
+    127,
+    "continuous",
+    "zero_based",
+)
+_VALUE_METADATA_BY_SECTION_AND_PARAMETER: Final[Mapping[tuple[str, str], _ValueMetadataRow]] = (
+    MappingProxyType(
+        {
+            ("COMMON", "Track Machine Type"): (1, 33, "selector", "zero_based"),
+            ("FILTER", "Filter Mode"): (0, 6, "selector", "zero_based"),
+            ("FILTER", "Filter Env Depth"): (0, 127, "continuous", "centered"),
+            ("AMP", "Amp Pan"): (0, 127, "continuous", "centered"),
+            ("LFO", "LFO Multiplier"): (0, 23, "selector", "zero_based"),
+            ("LFO", "LFO Waveform"): (0, 6, "selector", "zero_based"),
+            ("LFO", "LFO Trig Mode"): (0, 4, "selector", "zero_based"),
+            ("LFO", "LFO Depth"): (0, 127, "continuous", "centered"),
+            ("bd_hard", "Waveform"): (0, 2, "selector", "zero_based"),
+            ("bd_classic", "Waveform"): (0, 2, "selector", "zero_based"),
+            ("bd_sharp", "Waveform"): (0, 11, "selector", "zero_based"),
+            ("bd_acoustic", "Waveform"): (0, 11, "selector", "zero_based"),
+            ("dual_vco", "Osc Config"): (0, 79, "selector", "zero_based"),
+            ("sy_raw", "Tune"): (0, 127, "continuous", "centered"),
+            ("sy_raw", "Osc 2 Detune"): (40, 88, "continuous", "centered"),
+            ("sy_raw", "Waveform 1"): (0, 6, "selector", "zero_based"),
+            ("sy_raw", "Waveform 2"): (0, 1, "selector", "zero_based"),
+            ("sy_raw", "Balance"): (0, 127, "continuous", "centered"),
+            ("bt_classic", "Snap Type"): (0, 3, "selector", "zero_based"),
+            ("cy_ride", "Cymbal Type"): (0, 3, "selector", "zero_based"),
+            ("hh_basic", "Osc Reset"): (0, 1, "selector", "zero_based"),
+        }
+    )
+)
 
 _GENERAL_CC_ROWS: Final[tuple[_GeneralRow, ...]] = (
     ("TRIG PARAMETERS", "Note", 3, None, 3, 0, "trig"),
@@ -599,8 +645,19 @@ def _status_for(section: str, parameter: str, machine_key: str | None) -> Mutati
     return "documented_only"
 
 
+def _value_metadata_for(section: str, parameter: str) -> _ValueMetadataRow:
+    return _VALUE_METADATA_BY_SECTION_AND_PARAMETER.get(
+        (section, parameter),
+        _DEFAULT_VALUE_METADATA,
+    )
+
+
 def _general_mapping(row: _GeneralRow) -> AnalogRytmCcMapping:
     section, parameter, cc_msb, cc_lsb, nrpn_msb, nrpn_lsb, scope = row
+    value_min, value_max, value_kind, value_orientation = _value_metadata_for(
+        section,
+        parameter,
+    )
     return AnalogRytmCcMapping(
         section=section,
         parameter=parameter,
@@ -611,11 +668,19 @@ def _general_mapping(row: _GeneralRow) -> AnalogRytmCcMapping:
         scope=scope,
         risk=_risk_for(parameter),
         mutation_status=_status_for(section, parameter, None),
+        value_min=value_min,
+        value_max=value_max,
+        value_kind=value_kind,
+        value_orientation=value_orientation,
     )
 
 
 def _machine_mapping(machine_key: str, row: _MachineRow) -> AnalogRytmCcMapping:
     parameter, cc_msb = row
+    value_min, value_max, value_kind, value_orientation = _value_metadata_for(
+        machine_key,
+        parameter,
+    )
     return AnalogRytmCcMapping(
         section=machine_key,
         parameter=parameter,
@@ -626,6 +691,10 @@ def _machine_mapping(machine_key: str, row: _MachineRow) -> AnalogRytmCcMapping:
         scope="src",
         risk=_risk_for(parameter),
         mutation_status=_status_for(machine_key, parameter, machine_key),
+        value_min=value_min,
+        value_max=value_max,
+        value_kind=value_kind,
+        value_orientation=value_orientation,
         machine_key=machine_key,
     )
 
@@ -644,6 +713,9 @@ _ALL_CC_MAPPINGS: Final[tuple[AnalogRytmCcMapping, ...]] = _GENERAL_CC_MAPPINGS 
     for machine_key in sorted(_MACHINE_SRC_MAPPINGS)
     for mapping in _MACHINE_SRC_MAPPINGS[machine_key]
 )
+ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER: Final[
+    Mapping[tuple[str, str], AnalogRytmCcMapping]
+] = MappingProxyType({(row.section, row.parameter): row for row in _ALL_CC_MAPPINGS})
 
 ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER: Final[Mapping[tuple[str, str], AnalogRytmCcMapping]] = (
     MappingProxyType({(row.section, row.parameter): row for row in _GENERAL_CC_MAPPINGS})
@@ -727,6 +799,7 @@ def get_analog_rytm_catalog_summary() -> AnalogRytmCatalogSummary:
 
 
 __all__ = [
+    "ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER",
     "ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER",
     "ANALOG_RYTM_DOCUMENTED_ONLY_CC",
     "ANALOG_RYTM_FORBIDDEN_POLICY_NAMES",
@@ -739,6 +812,8 @@ __all__ = [
     "AnalogRytmCcMapping",
     "AnalogRytmNoteTrigger",
     "MutationStatus",
+    "ParameterValueKind",
+    "ParameterValueOrientation",
     "RiskTier",
     "get_analog_rytm_catalog_summary",
     "get_machine_src_mappings",
