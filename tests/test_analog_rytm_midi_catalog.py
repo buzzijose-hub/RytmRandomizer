@@ -9,6 +9,7 @@ pytestmark = pytest.mark.fast
 from rytm_randomizer.data.analog_rytm_midi import (
     ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER,
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
+    ANALOG_RYTM_FORBIDDEN_POLICY_NAMES,
     ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
     ANALOG_RYTM_MANUAL_CC,
     ANALOG_RYTM_MANUAL_NOTE_TRIGGERS,
@@ -32,6 +33,13 @@ def test_manual_catalog_covers_appendix_c_counts_and_all_machine_profiles() -> N
     assert summary.machine_profiles_with_src_count == 33
     assert summary.note_trigger_count == 13
     assert summary.pad_count == 12
+
+
+def test_catalog_summary_counts_forbidden_safety_policies() -> None:
+    summary = get_analog_rytm_catalog_summary()
+
+    assert ANALOG_RYTM_FORBIDDEN_POLICY_NAMES
+    assert summary.forbidden_count == len(ANALOG_RYTM_FORBIDDEN_POLICY_NAMES)
 
 
 def test_catalog_pins_representative_general_rows_and_high_resolution_lfo_depth() -> None:

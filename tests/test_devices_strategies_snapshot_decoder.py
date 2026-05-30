@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import rytm_real_layout_kit_payload
+from conftest import pack_elektron_7bit, rytm_real_layout_kit_payload
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.
@@ -207,6 +207,35 @@ def test_decode_rejects_payload_without_rytm_kit_type_byte() -> None:
 
     with pytest.raises(ValueError, match="kit_type_byte 0x07 not"):
         decoder.decode(payload, slot=0)
+
+
+def test_decode_rejects_full_kit_dump_with_wrong_unpacked_size() -> None:
+    from rytm_randomizer.data.analog_rytm_kit_layout import (
+        RYTM_KIT_DUMP_ID,
+        RYTM_SYSEX_PRODUCT_ID,
+    )
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    header = bytes(
+        [
+            0x00,
+            0x20,
+            0x3C,
+            RYTM_SYSEX_PRODUCT_ID,
+            0x00,
+            RYTM_KIT_DUMP_ID,
+            0x01,
+            0x01,
+            0x00,
+        ]
+    )
+    truncated_packed_payload = pack_elektron_7bit(bytes([0x00] * 32))
+    zeroed_checksum_and_size = bytes([0x00, 0x00, 0x00, 0x00])
+
+    payload = header + truncated_packed_payload + zeroed_checksum_and_size
+
+    with pytest.raises(ValueError, match="decoded kit payload has 32 byte"):
+        AnalogRytmSnapshotDecoder().decode(payload, slot=0)
 
 
 # ---------------------------------------------------------------------------

@@ -481,6 +481,11 @@ _MACHINE_SRC_ROWS: Final[Mapping[str, tuple[_MachineRow, ...]]] = MappingProxyTy
             ("Random Claps", 22),
             ("Clap Decay", 23),
         ),
+        # Hardware validation for PR #148 showed that direct outbound live
+        # CC20 on Pads 2 and 3 Dual VCO Osc 2 Detune can put the Rytm in ERR.
+        # Keep the manual row for labels and passive planning, but the live
+        # snapshot shell guards it via _is_live_dual_vco_detune_guarded_event
+        # until a safe detune transport is validated.
         "dual_vco": (
             ("Level", 16),
             ("Osc 1 Tune", 17),
@@ -790,7 +795,7 @@ def get_analog_rytm_catalog_summary() -> AnalogRytmCatalogSummary:
         validated_runtime_count=len(ANALOG_RYTM_VALIDATED_RUNTIME_CC),
         locked_default_count=len(ANALOG_RYTM_LOCKED_DEFAULT_CC),
         documented_only_count=len(ANALOG_RYTM_DOCUMENTED_ONLY_CC),
-        forbidden_count=0,
+        forbidden_count=len(ANALOG_RYTM_FORBIDDEN_POLICY_NAMES),
         machine_profile_count=machine_profile_count,
         machine_profiles_with_src_count=machine_profiles_with_src_count,
         note_trigger_count=len(ANALOG_RYTM_MANUAL_NOTE_TRIGGERS),

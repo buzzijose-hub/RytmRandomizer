@@ -446,7 +446,10 @@ Conclusion: for these live KIT states, the Rytm emits Dual VCO encoder B as
 direct CC20 rather than NRPN. Since outbound CC20 to Pad 2/3 Dual VCO
 `Osc 2 Detune` already produced `ERR`, there is no observed NRPN workaround to
 try. Keep Pad 2/3 Dual VCO detune guarded out of live CC sends unless a future
-hardware procedure proves a different transport safe.
+hardware procedure proves a different transport safe. The current enforcement
+point is `_is_live_dual_vco_detune_guarded_event`; it is a live-CC circuit
+breaker, not a permanent decision to remove Dual VCO detune from future
+sound-design work.
 
 ## Safe Resume Steps For Tomorrow
 

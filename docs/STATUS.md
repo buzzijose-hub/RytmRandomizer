@@ -11,7 +11,10 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
   `machine:dual_vco:Osc 2 Detune`, both reported zero NRPN messages, and both
   had zero unknown CC observations. This confirms there is no observed NRPN
   workaround for the earlier outbound CC20 `ERR`, so Pad 2/3 Dual VCO detune
-  stays guarded out of live CC sends.
+  stays guarded out of live CC sends by
+  `_is_live_dual_vco_detune_guarded_event`. This is a live-CC circuit breaker
+  while a safe detune transport remains unproven, not a claim that the
+  parameter is musically disposable.
 - 2026-05-30: Passive Analog Rytm CC observation path added for the next Dual
   VCO detune investigation. `--arm --rytm-cc-observe` opens only a Rytm MIDI
   input, sends no MIDI, drains pending CCs after Enter, reports raw
