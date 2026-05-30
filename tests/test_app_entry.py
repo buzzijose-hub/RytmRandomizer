@@ -465,6 +465,329 @@ def test_app_main_rytm_cc_observe_rejects_two_snapshot_label_sources(
     assert expected in captured.err
 
 
+@pytest.mark.parametrize(
+    ("argv", "expected"),
+    (
+        (
+            ["--rytm-cc-observe-snapshot", "current-kit.syx"],
+            "--rytm-cc-observe-snapshot requires --rytm-cc-observe",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--validate-one-cc"],
+            "--rytm-live-snapshot-shell cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--rytm-12-pad-shell"],
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-12-pad-shell",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--rytm-kit-style", "industrial"],
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-kit-style",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--rytm-performance-snapshot", "kit.syx"],
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-performance-snapshot",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-soft-capture"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-send-param"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-send-nrpn-param"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-kit-recipe", "acid-core"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-kit-recipe-nrpn"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--validate-one-cc"],
+            "--rytm-snapshot-shell cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--rytm-kit-style", "industrial"],
+            "--rytm-snapshot-shell cannot be combined with --rytm-kit-style",
+        ),
+        (
+            [
+                "--dry-run",
+                "--rytm-snapshot-shell",
+                "kit.syx",
+                "--rytm-performance-snapshot",
+                "kit.syx",
+            ],
+            "--rytm-snapshot-shell cannot be combined with --rytm-performance-snapshot",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-soft-capture"],
+            "--rytm-snapshot-shell cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-send-param"],
+            "--rytm-snapshot-shell cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-send-nrpn-param"],
+            "--rytm-snapshot-shell cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-kit-recipe", "acid-core"],
+            "--rytm-snapshot-shell cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-kit-recipe-nrpn"],
+            "--rytm-snapshot-shell cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-snapshot-shell-send"],
+            "--confirm-rytm-snapshot-shell-send requires --rytm-snapshot-shell",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--rytm-performance-snapshot", "kit.syx"],
+            "--rytm-12-pad-shell cannot be combined with --rytm-performance-snapshot",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-soft-capture"],
+            "--rytm-12-pad-shell cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-send-param"],
+            "--rytm-12-pad-shell cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-send-nrpn-param"],
+            "--rytm-12-pad-shell cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-kit-recipe", "acid-core"],
+            "--rytm-12-pad-shell cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-kit-recipe-nrpn"],
+            "--rytm-12-pad-shell cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-12-pad-send"],
+            "--confirm-rytm-12-pad-send requires --rytm-12-pad-shell",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--validate-one-cc"],
+            "--rytm-performance-snapshot cannot be combined with --validate-one-cc",
+        ),
+        (
+            [
+                "--dry-run",
+                "--rytm-performance-snapshot",
+                "kit.syx",
+                "--rytm-kit-style",
+                "industrial",
+            ],
+            "--rytm-performance-snapshot cannot be combined with --rytm-kit-style",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-soft-capture"],
+            "--rytm-performance-snapshot cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-send-param"],
+            "--rytm-performance-snapshot cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-send-nrpn-param"],
+            "--rytm-performance-snapshot cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            [
+                "--dry-run",
+                "--rytm-performance-snapshot",
+                "kit.syx",
+                "--a4-kit-recipe",
+                "acid-core",
+            ],
+            "--rytm-performance-snapshot cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-kit-recipe-nrpn"],
+            "--rytm-performance-snapshot cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-performance-send"],
+            "--confirm-rytm-performance-send requires --rytm-performance-snapshot",
+        ),
+        (
+            ["--rytm-performance-mode", "live-safe"],
+            "--rytm-performance-mode requires --rytm-performance-snapshot",
+        ),
+        (
+            ["--rytm-performance-style", "flow-shift"],
+            "--rytm-performance-style requires --rytm-performance-snapshot",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-soft-capture"],
+            "--rytm-kit-style cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-send-param"],
+            "--rytm-kit-style cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-send-nrpn-param"],
+            "--rytm-kit-style cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-kit-recipe", "acid-core"],
+            "--rytm-kit-style cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-kit-recipe-nrpn"],
+            "--rytm-kit-style cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-kit-send"],
+            "--confirm-rytm-kit-send requires --rytm-kit-style",
+        ),
+        (
+            ["--arm", "--a4-soft-capture", "--a4-send-nrpn-param"],
+            "--a4-soft-capture cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--arm", "--a4-soft-capture", "--a4-kit-recipe", "acid-core"],
+            "--a4-soft-capture cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--a4-send-nrpn-param", "--validate-one-cc"],
+            "--a4-send-nrpn-param cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--arm", "--a4-send-param", "--a4-send-nrpn-param"],
+            "--a4-send-param cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--arm", "--a4-send-param", "--a4-kit-recipe", "acid-core"],
+            "--a4-send-param cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--a4-send-nrpn-param", "--a4-kit-recipe", "acid-core"],
+            "--a4-send-nrpn-param cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--a4-kit-recipe", "acid-core", "--validate-one-cc"],
+            "--a4-kit-recipe cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--a4-kit-recipe-nrpn"],
+            "--a4-kit-recipe-nrpn requires --a4-kit-recipe",
+        ),
+        (
+            ["--value-lsb", "1"],
+            "--value-lsb requires --a4-send-nrpn-param",
+        ),
+    ),
+)
+def test_app_main_rejects_unsafe_surface_combinations_before_midi(
+    argv,
+    expected,
+    capsys,
+    monkeypatch,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(argv)
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert expected in captured.err
+
+
+@pytest.mark.parametrize(
+    ("chooser_name", "inputs", "input_error", "expected_error"),
+    (
+        (
+            "_choose_input_port_name",
+            ("Fake A4 In",),
+            EOFError,
+            "--arm --a4-soft-capture failed: no MIDI input choice provided.",
+        ),
+        (
+            "_choose_rytm_input_port_name",
+            ("Fake Rytm In",),
+            EOFError,
+            "--arm --rytm-live-snapshot-shell failed: no MIDI input choice provided.",
+        ),
+        (
+            "_choose_rytm_input_port_name",
+            ("Fake Rytm In",),
+            "not-a-number",
+            "--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.",
+        ),
+        (
+            "_choose_rytm_input_port_name",
+            ("Fake Rytm In",),
+            "99",
+            "--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.",
+        ),
+    ),
+)
+def test_app_input_port_choosers_report_invalid_or_missing_choices(
+    chooser_name,
+    inputs,
+    input_error,
+    expected_error,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    if isinstance(input_error, type) and issubclass(input_error, BaseException):
+
+        def raise_input(_prompt=""):
+            raise input_error
+
+        monkeypatch.setattr("builtins.input", raise_input)
+    else:
+        monkeypatch.setattr("builtins.input", lambda _prompt="": input_error)
+
+    chooser = getattr(app, chooser_name)
+
+    assert chooser(inputs) is None
+    captured = capsys.readouterr()
+    assert expected_error in captured.err
+
+
+def test_app_a4_resolvers_accept_display_labels() -> None:
+    _seed()
+    from rytm_randomizer import app
+
+    cc_mapping = app._resolve_a4_manual_cc("OSC1 Pulsewidth")
+    nrpn_mapping = app._resolve_a4_synth_track_nrpn(" osc1 pitch ")
+    recipe = app._resolve_a4_kit_recipe("Detroit Minimal")
+
+    assert cc_mapping is not None
+    assert cc_mapping.parameter == "OSC1 Pulsewidth"
+    assert nrpn_mapping is not None
+    assert nrpn_mapping.parameter == "OSC1 Pitch"
+    assert recipe is not None
+    assert recipe.label == "Detroit Minimal"
+
+
 def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, capsys):
     _seed()
     from rytm_randomizer import app, mido_provider
