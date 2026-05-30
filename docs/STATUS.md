@@ -10,8 +10,9 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
   pads 6-8 get wide/full source discovery with light filter movement, no LFO,
   and AMP limited to overdrive/delay/reverb; pads 5, 9, 10, and 11 keep filter
   and LFO frozen and also limit AMP movement to overdrive/delay/reverb. The
-  macro stages `randomize` only, sends no MIDI by itself, and still preserves
-  the Pad 2/3 Dual VCO `Osc 2 Detune` live-CC circuit breaker.
+  macro stages `randomize` only, sends no MIDI by itself, and inherits the
+  centered Pad 2/3 Dual VCO `Osc 2 Detune` live lane while still guarding the
+  low KIT 13 values that produced `ERR`.
 - 2026-05-28: Analog Four cockpit UI surface prepared locally. The cockpit
   device rail can switch the center panel from the default Analog Rytm MKII
   12-pad snapshot view to an Analog Four MKII four-track view. The A4 surface
@@ -21,17 +22,14 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
   locks, preview state, mutation panel, and safety rail. This is UI visibility
   only: no A4 SEND path, no MIDI renderer change, no port opening, no real MIDI
   send, and no hardware validation.
-- 2026-05-30: Passive observer follow-up completed the Pad 2/Pad 3 Dual VCO
-  detune diagnostic without opening an output or sending MIDI. KIT 15 showed
-  Pad 3 encoder B as direct `CC20` on channel 2, and KIT 14 showed Pad 2
-  encoder B as direct `CC20` on channel 1; both were labeled
-  `machine:dual_vco:Osc 2 Detune`, both reported zero NRPN messages, and both
-  had zero unknown CC observations. This confirms there is no observed NRPN
-  workaround for the earlier outbound CC20 `ERR`, so Pad 2/3 Dual VCO detune
-  stays guarded out of live CC sends by
-  `_is_live_dual_vco_detune_guarded_event`. This is a live-CC circuit breaker
-  while a safe detune transport remains unproven, not a claim that the
-  parameter is musically disposable.
+- 2026-05-30: Dual VCO detune follow-up narrowed the guard from "skip the row"
+  to "only use the proven centered live band." Passive observer runs showed Pad
+  3 on KIT 15 and Pad 2 on KIT 14 emit direct `CC20` for
+  `machine:dual_vco:Osc 2 Detune`, with zero NRPN messages. A later direct
+  outbound one-CC test on KIT 14 sent Pad 2 `CC20` values `79`, `78`, and back
+  to `79` with no visible `ERR`. The live snapshot shell now lets centered
+  Dual VCO detune move between the validated `78..79` values and still guards
+  low KIT 13-style values such as `25`, `24`, `4`, and `3` out of active sends.
 - 2026-05-30: Passive Analog Rytm CC observation path added for the next Dual
   VCO detune investigation. `--arm --rytm-cc-observe` opens only a Rytm MIDI
   input, sends no MIDI, drains pending CCs after Enter, reports raw

@@ -479,6 +479,18 @@ point is `_is_live_dual_vco_detune_guarded_event`; it is a live-CC circuit
 breaker, not a permanent decision to remove Dual VCO detune from future
 sound-design work.
 
+Follow-up outbound isolation on KIT 14 then proved a narrow centered live band:
+
+- Pad 2 same-value `CC20` send at `79` produced no visible `ERR`.
+- Pad 2 one-step `CC20` movement to `78` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `79` produced no visible `ERR`.
+
+Conclusion: Dual VCO detune is not globally unusable over live CC. The unsafe
+KIT 13 low values remain guarded, but centered values `78..79` are now allowed
+as a deliberately narrow live lane so the parameter can participate in sound
+design without re-opening the earlier `ERR` path. The passive observer also saw
+the hardware emit `80`, but outbound `80` has not yet been separately proven.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
