@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 
 import pytest
 
@@ -1957,3 +1958,219 @@ def test_snapshot_shell_changes_command_prints_full_change_log(capsys) -> None:
     assert "RytmRandomizer snapshot shell changes" in captured.out
     assert "Pad 01 bd_hard Tune: 41 -> 42" in captured.out
     assert "Pad 12 cb_classic" in captured.out
+
+
+def test_snapshot_shell_private_selector_role_and_profile_edges() -> None:
+    from rytm_randomizer.engines import analog_rytm_snapshot_shell as shellmod
+
+    anchor = shellmod.build_snapshot_shell_anchor(_snapshot())
+    event = _event_for(anchor.events, pad=2, parameter="Filter Frequency")
+    selector_event = replace(
+        event,
+        parameter="Waveform",
+        value=127,
+        value_kind="selector",
+        value_min=4,
+        value_max=4,
+    )
+    sparse_anchor = replace(
+        anchor,
+        events_by_pad={**anchor.events_by_pad, 1: ()},
+    )
+
+    assert shellmod._preset_guardrails("studio") is not None
+    assert shellmod._randomizer_role_for_machine("ut_noise") == "noise"
+    assert shellmod._randomizer_default_contract_for_pad(sparse_anchor, 1).role == "perc"
+    assert shellmod._normalized_selector_value(127, (4, 4)) == 4
+    assert shellmod._selector_mutated_value(127, 3, (4, 4), wrap=True, single_step=False) == 4
+    assert (
+        shellmod._wide_selector_discovery_value(
+            selector_event,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["4"],
+            1,
+            (4, 4),
+        )
+        == 4
+    )
+    assert shellmod._bias_adjusted_delta(event, 7, "darker") == -7
+    assert (
+        shellmod._tune_policy_delta(event, shellmod.SNAPSHOT_SHELL_COMMANDS["4"], 8, 1, "off") == 0
+    )
+
+    assert shellmod._track_value(_snapshot(), 1, 9999) is None
+    first_lsb = next(iter(RYTM_SOUND_FIELD_BY_NRPN_LSB))
+    truncated = replace(_snapshot(), unpacked=b"")
+    assert shellmod._track_value(truncated, 1, first_lsb) is None
+
+
+def test_snapshot_shell_tune_policy_reverses_at_value_edges() -> None:
+    from rytm_randomizer.engines import analog_rytm_snapshot_shell as shellmod
+
+    anchor = shellmod.build_snapshot_shell_anchor(_snapshot())
+    base_event = _event_for(anchor.events, pad=2, parameter="Tune")
+    low_event = replace(base_event, value=base_event.value_min)
+    high_event = replace(base_event, value=base_event.value_max)
+
+    low_deltas = {
+        shellmod._tune_policy_delta(
+            low_event,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["4"],
+            8,
+            generation,
+            "wide",
+        )
+        for generation in range(1, 16)
+    }
+    high_deltas = {
+        shellmod._tune_policy_delta(
+            high_event,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["4"],
+            8,
+            generation,
+            "wide",
+        )
+        for generation in range(1, 16)
+    }
+
+    assert low_deltas
+    assert all(delta >= 0 for delta in low_deltas)
+    assert high_deltas
+    assert all(delta <= 0 for delta in high_deltas)
+
+
+def test_snapshot_shell_private_zone_and_delta_edges(monkeypatch) -> None:
+    from rytm_randomizer.engines import analog_rytm_snapshot_shell as shellmod
+
+    anchor = shellmod.build_snapshot_shell_anchor(_snapshot())
+    filter_event = _event_for(anchor.events, pad=2, parameter="Filter Frequency")
+    source_event = _event_for(anchor.events, pad=3, parameter="Osc 2 Detune")
+    grit_event = replace(filter_event, parameter="Snap Amount")
+    hat_decay = replace(
+        _event_for(anchor.events, pad=8, parameter="Decay"),
+        machine_key="hh_basic",
+    )
+    kick_pitch = replace(
+        _event_for(anchor.events, pad=1, parameter="Tune"),
+        machine_key="bd_hard",
+    )
+
+    assert shellmod._preset_guardrails("not-a-preset") is None
+    assert shellmod._event_matches_zone(filter_event, "full") is True
+    assert shellmod._event_matches_zone(source_event, "src") is True
+    assert shellmod._event_matches_zone(filter_event, "filter") is True
+    assert shellmod._event_matches_zone(grit_event, "grit") is True
+    with pytest.raises(ValueError, match="unknown snapshot shell zone"):
+        shellmod._event_matches_zone(filter_event, "panic")
+
+    assert (
+        shellmod._base_delta(
+            hat_decay,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["s3b"],
+            8,
+        )
+        < 0
+    )
+    assert (
+        shellmod._base_delta(
+            kick_pitch,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["4"],
+            12,
+        )
+        < 0
+    )
+    assert (
+        shellmod._base_delta(
+            source_event,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["4"],
+            8,
+        )
+        >= 2
+    )
+    assert (
+        shellmod._base_delta(
+            grit_event,
+            shellmod.SNAPSHOT_SHELL_COMMANDS["n"],
+            8,
+        )
+        == 8
+    )
+
+    monkeypatch.setattr(shellmod, "_base_delta", lambda *_args: 0)
+    monkeypatch.setattr(shellmod, "_generation_jitter", lambda *_args: 0)
+    assert (
+        shellmod._delta_with_generation_jitter(
+            filter_event, shellmod.SNAPSHOT_SHELL_COMMANDS["4"], 8, 2
+        )
+        == 1
+    )
+
+
+def test_snapshot_shell_dispatch_validation_edges(capsys, monkeypatch) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), MockMidiSender())
+    monkeypatch.setattr(shell, "_input", lambda _prompt="": "bad-depth")
+
+    commands = (
+        "",
+        "mode",
+        "mode chaos",
+        "mode studio",
+        "depth",
+        "depth noisy",
+        "depth gentle",
+        "tune",
+        "tune nope",
+        "tune off",
+        "lane",
+        "lane nope normal",
+        "lane lfo nope",
+        "lane lfo off",
+        "lock",
+        "lock nope",
+        "unlock 1",
+        "pad",
+        "pad nope strong",
+        "pad 2 role auto",
+        "pad 2 role hat",
+        "pad 2 role alien",
+        "pad 2 amount huge",
+        "pad 2 density grittier",
+        "pad 2 bias full",
+        "pad 2 bias grittier",
+        "pad 2 grittier",
+        "pad 2 unknown value",
+        "pad 2 nonsense",
+        "preset",
+        "preset nope",
+        "preset live",
+        "guards",
+        "guards reset",
+        "again",
+        "Y",
+        "kit",
+        "undo",
+        "rand",
+        "go",
+        "fresh",
+        "help",
+        "preview",
+        "changes",
+        "status",
+        "unknown",
+        "q",
+    )
+
+    results = [shell.dispatch(command) for command in commands]
+    captured = capsys.readouterr()
+
+    assert results[:-1] == [True] * (len(commands) - 1)
+    assert results[-1] is False
+    assert "usage: mode live|studio" in captured.out
+    assert "unknown snapshot shell mode: chaos" in captured.out
+    assert "unknown snapshot shell depth: bad-depth" in captured.out
+    assert "live KIT resnapshot is unavailable" in captured.out
+    assert "unknown snapshot shell command: unknown" in captured.out

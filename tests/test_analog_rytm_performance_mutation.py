@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Literal, cast
 
 import pytest
 
 from conftest import rytm_real_layout_kit_payload
 from rytm_randomizer.data.analog_rytm_style_recipes import AnalogRytmRenderedStyleEvent
+from rytm_randomizer.devices.strategies import RytmKitSnapshot, RytmPerformanceMutationDepth
 
 pytestmark = pytest.mark.fast
 
@@ -31,6 +33,30 @@ def _flow_shift_recipe():
 
 def _parameters(events: Sequence[AnalogRytmRenderedStyleEvent]) -> tuple[str, ...]:
     return tuple(event.parameter for event in events)
+
+
+def _rendered_event(
+    *,
+    pad: int = 1,
+    machine_key: str = "bd_hard",
+    section: str = "FILTER",
+    parameter: str = "Filter Frequency",
+    value: int = 64,
+    source: Literal["machine", "machine_src", "manual"] = "manual",
+) -> AnalogRytmRenderedStyleEvent:
+    return AnalogRytmRenderedStyleEvent(
+        pad=pad,
+        channel=pad - 1,
+        machine_key=machine_key,
+        section=section,
+        parameter=parameter,
+        cc_msb=74,
+        value=value,
+        risk="safe",
+        mutation_status="validated_runtime",
+        source=source,
+        intent="coverage probe",
+    )
 
 
 def _event_shape(
@@ -196,3 +222,109 @@ def test_performance_plan_rejects_unknown_mode() -> None:
             _flow_shift_recipe(),
             mode="panic",  # type: ignore[arg-type]
         )
+
+
+def test_performance_plan_rejects_non_rytm_snapshot() -> None:
+    from rytm_randomizer.devices.strategies import build_rytm_performance_mutation_plan
+
+    bad_snapshot = cast(RytmKitSnapshot, object())
+    with pytest.raises(ValueError, match="snapshot must be a RytmKitSnapshot"):
+        build_rytm_performance_mutation_plan(
+            bad_snapshot,
+            _flow_shift_recipe(),
+            mode="live-safe",
+        )
+
+
+@pytest.mark.parametrize(
+    ("depth", "window", "expected_range", "expected_anchor"),
+    (
+        ("safe", 6, (1, 2), (63, 65)),
+        ("balanced", 14, (3, 4), (62, 66)),
+        ("studio", 32, (5, 6), (61, 67)),
+    ),
+)
+def test_performance_guardrail_depth_windows_cover_all_depths(
+    depth: RytmPerformanceMutationDepth,
+    window: int,
+    expected_range: tuple[int, int],
+    expected_anchor: tuple[int, int],
+) -> None:
+    from rytm_randomizer.devices.strategies import analog_rytm_performance_mutation as mutation
+
+    assert mutation._window_for_depth(depth) == window
+    assert (
+        mutation._range_for_depth(
+            depth,
+            safe=(1, 2),
+            balanced=(3, 4),
+            studio=(5, 6),
+        )
+        == expected_range
+    )
+    assert (
+        mutation._anchor_range(
+            64,
+            depth,
+            safe_window=1,
+            balanced_window=2,
+            studio_window=3,
+        )
+        == expected_anchor
+    )
+
+
+def test_performance_guardrail_rejects_unknown_depth() -> None:
+    from rytm_randomizer.devices.strategies import analog_rytm_performance_mutation as mutation
+
+    bad_depth = cast(RytmPerformanceMutationDepth, "panic")
+    with pytest.raises(ValueError, match="unknown performance mutation depth"):
+        mutation._window_for_depth(bad_depth)
+    with pytest.raises(ValueError, match="unknown performance mutation depth"):
+        mutation._range_for_depth(
+            bad_depth,
+            safe=(1, 2),
+            balanced=(3, 4),
+            studio=(5, 6),
+        )
+
+
+@pytest.mark.parametrize(
+    ("event", "expected_safe", "expected_studio"),
+    (
+        (
+            _rendered_event(pad=2, section="FILTER", parameter="Filter Resonance", value=28),
+            (24, 30),
+            (0, 56),
+        ),
+        (
+            _rendered_event(pad=2, section="AMP", parameter="Amp Delay Send", value=40),
+            (34, 38),
+            (8, 72),
+        ),
+        (
+            _rendered_event(section="AMP", parameter="Amp Pan", value=64),
+            (56, 72),
+            (28, 100),
+        ),
+        (
+            _rendered_event(section="SRC", parameter="Waveform", value=3, source="machine_src"),
+            (1, 5),
+            (0, 21),
+        ),
+        (
+            _rendered_event(section="SRC", parameter="Balance", value=64, source="machine_src"),
+            (59, 69),
+            (36, 92),
+        ),
+    ),
+)
+def test_performance_guardrail_parameter_families_have_depth_ranges(
+    event: AnalogRytmRenderedStyleEvent,
+    expected_safe: tuple[int, int],
+    expected_studio: tuple[int, int],
+) -> None:
+    from rytm_randomizer.devices.strategies import analog_rytm_performance_mutation as mutation
+
+    assert mutation._guardrail_range_for_event(event, "safe") == expected_safe
+    assert mutation._guardrail_range_for_event(event, "studio") == expected_studio

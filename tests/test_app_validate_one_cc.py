@@ -14,6 +14,24 @@ from conftest import elektron_syx_message, rytm_real_layout_kit_payload
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+_MISSING_MODULE = object()
+_REAL_MIDI_MODULE_NAMES = ("mido", "rtmidi", "pythonrtmidi")
+
+
+@pytest.fixture(autouse=True)
+def _restore_mido_module_after_app_test():
+    prior_modules = {
+        module_name: sys.modules.get(module_name, _MISSING_MODULE)
+        for module_name in _REAL_MIDI_MODULE_NAMES
+    }
+    try:
+        yield
+    finally:
+        for module_name, prior in prior_modules.items():
+            if prior is _MISSING_MODULE:
+                sys.modules.pop(module_name, None)
+            else:
+                sys.modules[module_name] = prior
 
 
 def run_python(code: str) -> subprocess.CompletedProcess[str]:
@@ -1946,3 +1964,435 @@ def test_app_main_rytm_live_snapshot_shell_rejects_file_snapshot_conflict(
     assert "--rytm-live-snapshot-shell cannot be combined with --rytm-snapshot-shell" in (
         captured.err
     )
+
+
+def _active_output_case_argv(case: str, snapshot_path: Path) -> list[str]:
+    if case == "a4-param":
+        return [
+            "--arm",
+            "--a4-send-param",
+            "--parameter",
+            "OSC1 PWM Depth",
+            "--channel",
+            "0",
+            "--value",
+            "32",
+        ]
+    if case == "a4-nrpn":
+        return [
+            "--arm",
+            "--a4-send-nrpn-param",
+            "--parameter",
+            "Sync Mode",
+            "--channel",
+            "0",
+            "--value",
+            "2",
+        ]
+    if case == "a4-kit":
+        return ["--arm", "--a4-kit-recipe", "detroit-minimal"]
+    if case == "rytm-kit":
+        return ["--arm", "--rytm-kit-style", "detroit-deep", "--confirm-rytm-kit-send"]
+    if case == "rytm-12":
+        return ["--arm", "--rytm-12-pad-shell", "--confirm-rytm-12-pad-send"]
+    if case == "rytm-snapshot":
+        return [
+            "--arm",
+            "--rytm-snapshot-shell",
+            str(snapshot_path),
+            "--confirm-rytm-snapshot-shell-send",
+        ]
+    if case == "rytm-performance":
+        return [
+            "--arm",
+            "--rytm-performance-snapshot",
+            str(snapshot_path),
+            "--confirm-rytm-performance-send",
+        ]
+    raise AssertionError(f"unknown active output case: {case}")
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "a4-param",
+        "a4-nrpn",
+        "a4-kit",
+        "rytm-kit",
+        "rytm-12",
+        "rytm-snapshot",
+        "rytm-performance",
+    ),
+)
+def test_app_active_output_paths_report_no_ports(case, tmp_path: Path, capsys, monkeypatch) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"NOPORT")
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: (),
+    )
+
+    exit_code = app.main(_active_output_case_argv(case, snapshot_path))
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "no real MIDI output ports available" in captured.err
+
+
+@pytest.mark.parametrize(
+    "case",
+    (
+        "a4-param",
+        "a4-nrpn",
+        "a4-kit",
+        "rytm-kit",
+        "rytm-12",
+        "rytm-snapshot",
+        "rytm-performance",
+    ),
+)
+def test_app_active_output_paths_reject_invalid_port_choice(
+    case,
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    def fail_open_output(self, *_args):
+        raise AssertionError("invalid port choice must not open output")
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"BADPORT")
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake Out",),
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_open_output)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "not-a-number")
+
+    exit_code = app.main(_active_output_case_argv(case, snapshot_path))
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "invalid MIDI output choice" in captured.err
+
+
+@pytest.mark.parametrize(
+    ("case", "inputs"),
+    (
+        ("a4-param", ("0",)),
+        ("a4-nrpn", ("0",)),
+        ("a4-kit", ("0",)),
+        ("rytm-kit", ("0",)),
+        ("rytm-12", ("0", "q")),
+        ("rytm-snapshot", ("0", "q")),
+        ("rytm-performance", ("0",)),
+    ),
+)
+def test_app_active_output_paths_accept_ports_without_close_method(
+    case,
+    inputs,
+    tmp_path: Path,
+    capsys,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.mock_midi import MockMidiSender
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"NOCLOSE")
+    fake_port = MockMidiSender()
+    scripted_inputs = iter(inputs)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        lambda self: ("Fake Out",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_output",
+        lambda self, port_name: fake_port,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    argv = _active_output_case_argv(case, snapshot_path)
+    if case == "a4-nrpn":
+        argv = [*argv, "--value-lsb", "7"]
+
+    exit_code = app.main(argv)
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert "Opening MIDI output: Fake Out" in captured.out
+    assert captured.err == ""
+
+
+def test_app_a4_resolvers_and_recipe_validation_error_edges(capsys, monkeypatch) -> None:
+    from types import MappingProxyType
+
+    from rytm_randomizer import app, data
+    from rytm_randomizer.data.analog_four_midi import AnalogFourCcMapping
+    from rytm_randomizer.data.analog_four_recipes import AnalogFourKitRecipe, AnalogFourRecipeEvent
+
+    assert app._resolve_a4_manual_cc("osc1 pwm depth").parameter == "OSC1 PWM Depth"
+    assert app._resolve_a4_manual_cc("not in the manual") is None
+    assert app._resolve_a4_synth_track_nrpn("not in the nrpn table") is None
+    assert app._resolve_a4_kit_recipe("not a recipe") is None
+
+    invalid_recipes = (
+        AnalogFourKitRecipe("bad-low-track", "Bad", (AnalogFourRecipeEvent(0, "OSC1 Level", 64),)),
+        AnalogFourKitRecipe("bad-high-track", "Bad", (AnalogFourRecipeEvent(5, "OSC1 Level", 64),)),
+        AnalogFourKitRecipe("bad-low-value", "Bad", (AnalogFourRecipeEvent(1, "OSC1 Level", -1),)),
+        AnalogFourKitRecipe(
+            "bad-high-value", "Bad", (AnalogFourRecipeEvent(1, "OSC1 Level", 128),)
+        ),
+        AnalogFourKitRecipe("bad-param", "Bad", (AnalogFourRecipeEvent(1, "No Such Param", 64),)),
+    )
+    for recipe in invalid_recipes:
+        assert app._validate_a4_recipe_events(recipe) is None
+
+    missing_cc = AnalogFourCcMapping(
+        parameter="Synthetic Missing CC",
+        section="TEST",
+        encoder="-",
+        cc_msb=None,
+        cc_lsb=None,
+        nrpn_msb=1,
+        nrpn_lsb=2,
+    )
+    missing_nrpn = AnalogFourCcMapping(
+        parameter="Synthetic Missing NRPN",
+        section="TEST",
+        encoder="-",
+        cc_msb=12,
+        cc_lsb=None,
+        nrpn_msb=None,
+        nrpn_lsb=None,
+    )
+    monkeypatch.setattr(
+        data,
+        "ANALOG_FOUR_MANUAL_CC",
+        MappingProxyType({missing_cc.parameter: missing_cc}),
+    )
+    monkeypatch.setattr(
+        data,
+        "ANALOG_FOUR_SYNTH_TRACK_NRPN",
+        MappingProxyType({missing_nrpn.parameter: missing_nrpn}),
+    )
+    assert (
+        app._validate_a4_recipe_events(
+            AnalogFourKitRecipe(
+                "missing-cc", "Missing", (AnalogFourRecipeEvent(1, missing_cc.parameter, 64),)
+            )
+        )
+        is None
+    )
+    assert (
+        app._validate_a4_recipe_events(
+            AnalogFourKitRecipe(
+                "missing-nrpn",
+                "Missing",
+                (AnalogFourRecipeEvent(1, missing_nrpn.parameter, 64),),
+            ),
+            use_nrpn=True,
+        )
+        is None
+    )
+    captured = capsys.readouterr()
+    assert "recipe event track must be in [1, 4]" in captured.err
+    assert "recipe event value must be in [0, 127]" in captured.err
+    assert "recipe parameter is not in manual CC table" in captured.err
+    assert "recipe parameter has no manual CC address" in captured.err
+    assert "recipe parameter has no manual NRPN address" in captured.err
+
+
+def test_app_misc_guard_and_input_edges(tmp_path: Path, capsys, monkeypatch) -> None:
+    from rytm_randomizer import app, mido_provider
+    from rytm_randomizer.devices.strategies import RytmPerformanceMutationPlan
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"EDGES")
+
+    assert app.main(["--a4-send-param", "--parameter", "", "--channel", "0", "--value", "1"]) == 1
+    assert (
+        app.main(["--arm", "--a4-send-param", "--parameter", "", "--channel", "0", "--value", "1"])
+        == 1
+    )
+    assert (
+        app.main(
+            ["--a4-send-nrpn-param", "--parameter", "Sync Mode", "--channel", "0", "--value", "1"]
+        )
+        == 1
+    )
+    assert (
+        app.main(
+            ["--arm", "--a4-send-nrpn-param", "--parameter", "", "--channel", "0", "--value", "1"]
+        )
+        == 1
+    )
+    assert (
+        app.main(
+            [
+                "--arm",
+                "--a4-send-nrpn-param",
+                "--parameter",
+                "Sync Mode",
+                "--channel",
+                "0",
+                "--value",
+                "1",
+                "--value-lsb",
+                "128",
+            ]
+        )
+        == 1
+    )
+    assert app.main(["--arm", "--a4-kit-recipe", ""]) == 1
+    assert app.main(["--arm", "--rytm-kit-style", ""]) == 1
+    assert app.main(["--rytm-snapshot-shell", str(snapshot_path)]) == 1
+    assert app.main(["--rytm-live-snapshot-shell"]) == 1
+    assert app.main(["--rytm-performance-snapshot", str(snapshot_path)]) == 1
+    with pytest.raises(ValueError, match="no Rytm KIT SysEx payload received"):
+        app._build_rytm_snapshot_shell_anchor_from_payloads(())
+
+    def fake_load_plan(_args):
+        return RytmPerformanceMutationPlan(
+            snapshot=object(),
+            recipe=object(),
+            mode="live-safe",
+            depth="safe",
+            seed=1,
+            events=(),
+            skipped_event_count=0,
+            machine_switching_allowed=False,
+            ready=False,
+            readiness_reason="coverage-not-ready",
+        )
+
+    monkeypatch.setattr(app, "_load_rytm_performance_plan", fake_load_plan)
+    assert app.main(["--dry-run", "--rytm-performance-snapshot", str(snapshot_path)]) == 1
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: (),
+    )
+    assert app.main(["--arm", "--rytm-cc-observe"]) == 1
+    assert (
+        app.main(["--arm", "--rytm-live-snapshot-shell", "--confirm-rytm-snapshot-shell-send"]) == 1
+    )
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake In",),
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "not-a-number")
+    assert app.main(["--arm", "--rytm-cc-observe"]) == 1
+
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_input",
+        lambda self, port_name: (_ for _ in ()).throw(RealMidiPortError("input unavailable")),
+    )
+    assert app.main(["--arm", "--rytm-cc-observe"]) == 1
+
+    captured = capsys.readouterr()
+    assert "--a4-send-param requires --arm" in captured.err
+    assert "--a4-send-param requires --parameter" in captured.err
+    assert "--a4-send-nrpn-param requires --arm" in captured.err
+    assert "value-lsb must be in [0, 127]" in captured.err
+    assert "--rytm-performance-snapshot failed: plan is not ready" in captured.err
+
+
+def test_app_input_observers_accept_ports_without_close_method(capsys, monkeypatch) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class NoCloseInputPort:
+        def iter_pending(self):
+            return iter(())
+
+    scripted_inputs = iter(("0", ""))
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_input",
+        lambda self, port_name: NoCloseInputPort(),
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    assert app.main(["--arm", "--rytm-cc-observe"]) == 0
+    captured = capsys.readouterr()
+    assert "Opening MIDI input: Fake In" in captured.out
+    assert captured.err == ""
+
+    scripted_inputs = iter(("0", ""))
+    assert app.main(["--arm", "--a4-soft-capture"]) == 0
+    captured = capsys.readouterr()
+    assert "Opening MIDI input: Fake In" in captured.out
+    assert captured.err == ""
+
+
+def test_app_direct_none_args_and_live_input_choice_edges(capsys, monkeypatch) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    assert app._run_a4_kit_recipe(types.SimpleNamespace(arm=True, a4_kit_recipe=None)) == 1
+    assert (
+        app._run_rytm_kit_style(
+            types.SimpleNamespace(
+                arm=True,
+                dry_run=False,
+                rytm_kit_style=None,
+            )
+        )
+        == 1
+    )
+    assert (
+        app._run_rytm_snapshot_shell(
+            types.SimpleNamespace(
+                arm=False,
+                dry_run=True,
+                rytm_snapshot_shell=None,
+                confirm_rytm_snapshot_shell_send=False,
+            )
+        )
+        == 1
+    )
+
+    def fail_capture_sysex_messages(self, *_args, **_kwargs):
+        raise AssertionError("invalid input choice must not capture SysEx")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "capture_sysex_messages",
+        fail_capture_sysex_messages,
+        raising=False,
+    )
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "not-a-number")
+    assert (
+        app._run_rytm_live_snapshot_shell(
+            types.SimpleNamespace(
+                arm=True,
+                confirm_rytm_snapshot_shell_send=True,
+            )
+        )
+        == 1
+    )
+
+    captured = capsys.readouterr()
+    assert "--a4-kit-recipe requires a recipe name" in captured.err
+    assert "--rytm-kit-style requires a recipe name" in captured.err
+    assert "--rytm-snapshot-shell requires a SysEx file path" in captured.err
+    assert "--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice" in captured.err

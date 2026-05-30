@@ -37,6 +37,29 @@ def _changed_pads(
     }
 
 
+def _event(
+    *,
+    pad: int = 1,
+    machine_key: str = "bd_hard",
+    section: str = "AMP",
+    parameter: str = "Amp Pan",
+    value: int = 64,
+) -> AnalogRytmRenderedStyleEvent:
+    return AnalogRytmRenderedStyleEvent(
+        pad=pad,
+        channel=pad - 1,
+        machine_key=machine_key,
+        section=section,
+        parameter=parameter,
+        cc_msb=10,
+        value=value,
+        risk="safe",
+        mutation_status="validated_runtime",
+        source="manual",
+        intent="coverage probe",
+    )
+
+
 def test_12_pad_shell_loads_style_without_sending_midi() -> None:
     sender = MockMidiSender()
     shell = AnalogRytm12PadShell(sender)
@@ -158,3 +181,62 @@ def test_12_pad_shell_run_accepts_scripted_commands(capsys) -> None:
     assert "mutation applied: rolling" in captured.out
     assert "sent current 12-pad plan" in captured.out
     assert len(sender.sent_messages) == len(shell.state.current_events)
+
+
+def test_12_pad_role_and_parameter_family_edges() -> None:
+    from rytm_randomizer.engines import analog_rytm_12_pad_shell as shellmod
+
+    assert shellmod.classify_rytm_pad_role("sy_raw") == "synth"
+    assert shellmod.classify_rytm_pad_role("dual_vco") == "synth"
+    assert shellmod.classify_rytm_pad_role("ut_noise") == "utility"
+    assert shellmod.classify_rytm_pad_role("fx_track") == "percussion"
+
+    assert shellmod._twelve_pad_parameter_family("FM Amount") == "drive"
+    assert shellmod._twelve_pad_parameter_family("Snap Amount") == "transient"
+
+
+def test_12_pad_mutation_preserves_and_falls_back_for_edge_values() -> None:
+    events = (
+        _event(parameter="Track Machine Type", value=0),
+        _event(parameter="Amp Pan", value=127),
+    )
+
+    mutated = mutate_12_pad_events(events, "rolling")
+
+    assert mutated[0] == events[0]
+    assert mutated[1].value == 126
+    assert mutated[1].intent == "rolling: role fallback"
+
+
+def test_12_pad_kick_filter_fallback_preserves_sub_weight() -> None:
+    events = (
+        _event(
+            section="FILTER",
+            parameter="Filter Frequency",
+            value=100,
+        ),
+    )
+
+    mutated = mutate_12_pad_events(events, "warehouse")
+
+    assert mutated[0].value <= 32
+    assert "preserve kick sub weight" in mutated[0].intent
+
+
+def test_12_pad_shell_unloaded_and_misc_dispatch_edges(capsys) -> None:
+    shell = AnalogRytm12PadShell(MockMidiSender())
+
+    assert shell.dispatch("") is True
+    assert shell.dispatch("send") is True
+    assert shell.dispatch("undo") is True
+    assert shell.dispatch("reset") is True
+    assert shell.dispatch("help") is True
+    assert shell.dispatch("styles") is True
+    assert shell.dispatch("load") is True
+    assert shell.dispatch("unknown") is True
+
+    captured = capsys.readouterr()
+    assert "load a 12-pad style first" in captured.out
+    assert "available 12-pad styles:" in captured.out
+    assert "load requires a style name" in captured.out
+    assert "unknown 12-pad command: unknown" in captured.out
