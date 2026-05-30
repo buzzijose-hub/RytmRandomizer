@@ -215,6 +215,12 @@ Command:
 python -m rytm_randomizer.app --arm --rytm-cc-observe
 ```
 
+Preferred exact-label command for the Dual VCO diagnostic:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-cc-observe --rytm-cc-observe-live-snapshot
+```
+
 Optional exact-label command when a current-kit SysEx file is available:
 
 ```powershell
@@ -237,9 +243,9 @@ Expected:
 Dual VCO detune diagnostic:
 
 - Reload the known-good kit on the Rytm first.
-- Run `--arm --rytm-cc-observe`, preferably with
-  `--rytm-cc-observe-snapshot current-kit.syx` if the current kit has just been
-  dumped to a file.
+- Run `--arm --rytm-cc-observe --rytm-cc-observe-live-snapshot` and send the
+  current KIT SysEx when prompted. If a file dump already exists, the
+  file-based `--rytm-cc-observe-snapshot current-kit.syx` path is also valid.
 - Select Pad 2, open the Dual VCO SRC page, turn encoder B a tiny amount, then
   press Enter in PowerShell.
 - Repeat for Pad 3.

@@ -154,6 +154,85 @@ def test_app_main_arm_rytm_cc_observe_snapshot_labels_exact_pad_machine(
     assert captured.err == ""
 
 
+def test_app_main_arm_rytm_cc_observe_live_snapshot_labels_exact_pad_machine(
+    capsys,
+    fake_mido_session,
+    monkeypatch,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class FakeInputPort:
+        def __init__(self, messages: tuple[object, ...]) -> None:
+            self._messages = messages
+            self.closed = False
+
+        def iter_pending(self):
+            return iter(self._messages)
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_input = FakeInputPort(
+        (
+            types.SimpleNamespace(
+                type="control_change",
+                channel=1,
+                control=20,
+                value=25,
+            ),
+        )
+    )
+    sysex_frame = elektron_syx_message(rytm_real_layout_kit_payload(name=b"LIVEOBS"))
+
+    def fake_capture_sysex_messages(self, port_name: str, *, timeout_seconds: float):
+        assert port_name == "Fake Rytm In"
+        assert timeout_seconds == app.RYTM_LIVE_SNAPSHOT_CAPTURE_TIMEOUT_SECONDS
+        return (sysex_frame,)
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("Rytm CC observe must not touch MIDI outputs")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake Rytm In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "capture_sysex_messages",
+        fake_capture_sysex_messages,
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_input",
+        lambda self, port_name: fake_input,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_output_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-cc-observe",
+            "--rytm-cc-observe-live-snapshot",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "Waiting for Analog Rytm KIT SysEx" in captured.out
+    assert f"received SysEx frame: {len(sysex_frame)} bytes" in captured.out
+    assert "received KIT SysEx" in captured.out
+    assert "snapshot labels: LIVEOBS" in captured.out
+    assert "- Pad 2 (channel 1) CC20 value 25" in captured.out
+    assert "machine:sd_hard:Tick Level" in captured.out
+    assert "machine:dual_vco:Osc 2 Detune" not in captured.out
+    assert captured.err == ""
+
+
 def test_app_main_validate_one_cc_requires_dry_run_or_arm(capsys) -> None:
     from rytm_randomizer import app
 

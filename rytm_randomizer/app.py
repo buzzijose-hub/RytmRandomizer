@@ -151,6 +151,15 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--rytm-cc-observe-live-snapshot",
+        action="store_true",
+        help=(
+            "Receive one Analog Rytm KIT SysEx from the selected input before "
+            "--rytm-cc-observe and use it for exact labels. Opens no output and "
+            "sends no MIDI."
+        ),
+    )
+    parser.add_argument(
         "--a4-send-param",
         action="store_true",
         help=(
@@ -594,13 +603,44 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
     if port_name is None:
         return 1
 
+    if args.rytm_cc_observe_live_snapshot:
+        sys.stdout.write("Rytm CC observe live snapshot labels\n")
+        sys.stdout.write(f"Opening MIDI input for KIT SysEx: {port_name}\n")
+        _write_rytm_live_snapshot_wait_prompt()
+        try:
+            anchor, frame_lengths = _capture_rytm_snapshot_shell_anchor_from_live_input(
+                provider,
+                port_name,
+            )
+            for frame_length in frame_lengths:
+                sys.stdout.write(f"received SysEx frame: {frame_length} bytes\n")
+        except KeyboardInterrupt:
+            sys.stderr.write("--arm --rytm-cc-observe cancelled while waiting for SysEx.\n")
+            return 130
+        except (
+            RealMidiDependencyError,
+            RealMidiPortError,
+            ValueError,
+            OSError,
+            NotImplementedError,
+            KeyError,
+        ) as exc:
+            sys.stderr.write(f"--arm --rytm-cc-observe failed: {exc}\n")
+            return 1
+        sys.stdout.write("received KIT SysEx\n")
+        exact_cc_lookup = build_rytm_cc_exact_label_lookup(anchor.events)
+        snapshot_label_line = f"snapshot labels: {anchor.kit_name} ({anchor.fingerprint})"
+
     try:
         port = provider.open_input(port_name)
     except (RealMidiDependencyError, RealMidiPortError) as exc:
         sys.stderr.write(f"--arm --rytm-cc-observe failed: {exc}\n")
         return 1
 
-    sys.stdout.write(f"\nOpening MIDI input: {port_name}\n")
+    if args.rytm_cc_observe_live_snapshot:
+        sys.stdout.write(f"\nOpening MIDI input for CC observe: {port_name}\n")
+    else:
+        sys.stdout.write(f"\nOpening MIDI input: {port_name}\n")
     if snapshot_label_line is not None:
         sys.stdout.write(f"{snapshot_label_line}\n")
     sys.stdout.write("Move Rytm controls, then press Enter to capture observed CCs.\n")
@@ -1945,6 +1985,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     if args.rytm_cc_observe_snapshot is not None and not args.rytm_cc_observe:
         sys.stderr.write("--rytm-cc-observe-snapshot requires --rytm-cc-observe.\n")
+        return 1
+    if args.rytm_cc_observe_live_snapshot and not args.rytm_cc_observe:
+        sys.stderr.write("--rytm-cc-observe-live-snapshot requires --rytm-cc-observe.\n")
+        return 1
+    if args.rytm_cc_observe_snapshot is not None and args.rytm_cc_observe_live_snapshot:
+        sys.stderr.write(
+            "--rytm-cc-observe-live-snapshot cannot be combined with "
+            "--rytm-cc-observe-snapshot.\n"
+        )
         return 1
     if args.rytm_cc_observe:
         conflicts = (

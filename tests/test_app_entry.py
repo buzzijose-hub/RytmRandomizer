@@ -336,6 +336,17 @@ def test_app_main_rytm_cc_observe_requires_arm(capsys):
     assert "--rytm-cc-observe requires --arm" in captured.err
 
 
+def test_app_main_rytm_cc_observe_live_snapshot_requires_observe(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--arm", "--rytm-cc-observe-live-snapshot"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-cc-observe-live-snapshot requires --rytm-cc-observe" in captured.err
+
+
 def test_app_main_arm_rytm_cc_observe_opens_only_input_and_reports(monkeypatch, capsys):
     _seed()
     from rytm_randomizer import app, mido_provider
@@ -419,6 +430,39 @@ def test_app_main_rytm_cc_observe_rejects_validate_one_cc_before_output(
 
     assert exit_code == 1
     assert "--rytm-cc-observe cannot be combined with --validate-one-cc" in captured.err
+
+
+def test_app_main_rytm_cc_observe_rejects_two_snapshot_label_sources(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-cc-observe",
+            "--rytm-cc-observe-snapshot",
+            "current-kit.syx",
+            "--rytm-cc-observe-live-snapshot",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    expected = (
+        "--rytm-cc-observe-live-snapshot cannot be combined with " "--rytm-cc-observe-snapshot"
+    )
+    assert expected in captured.err
 
 
 def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, capsys):
