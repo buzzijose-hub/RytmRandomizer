@@ -25,6 +25,18 @@ from hashlib import sha256
 from types import MappingProxyType
 from typing import Final
 
+from ...data.analog_rytm_kit_layout import (
+    RYTM_KIT_DUMP_ID,
+    RYTM_KIT_NAME_LENGTH,
+    RYTM_KIT_NAME_OFFSET,
+    RYTM_KIT_RAW_SIZE,
+    RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
+    RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7,
+    RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET,
+    RYTM_KIT_TRACK_SOUND_SIZE,
+    RYTM_KIT_WORK_BUFFER_DUMP_ID,
+    RYTM_SYSEX_PRODUCT_ID,
+)
 from ...snapshot.envelope import (
     ELEKTRON_MFR_ID,
     find_kit_record,
@@ -71,10 +83,9 @@ class RytmKitSnapshot:
     * ``kit_name`` -- the 16-byte ASCII kit-name field, NUL-stripped.
     * ``raw`` -- the bytes the caller handed to the decoder (after F0/F7
       stripping).
-    * ``unpacked`` -- the 7-bit-unstuffed payload bytes the rest of the
-      decoder operates on.
-    * ``machine_facts`` -- passive decoded pad-machine facts, promoted
-      only when the offsets are verified for mutation routing.
+    * ``unpacked`` -- the decoded raw kit bytes the rest of the decoder
+      operates on after the Elektron SysEx header/trailer and 7-bit packing
+      are removed.
     """
 
     slot: int
@@ -94,36 +105,32 @@ def rytm_snapshot_payload_fingerprint(snapshot: RytmKitSnapshot) -> str:
 # ---------------------------------------------------------------------------
 # Elektron Rytm kit-record offsets (constants).
 #
-# The Analog Rytm MK2 MIDI implementation appendix documents the kit dump
-# layout. After the manufacturer-id prefix, the kit record opens with a
-# 1-byte kit-type byte (0x07 for Rytm kit) followed by the 16-byte kit
-# name field. Subsequent fields (per-track sound records, level/mute/etc.)
-# follow at documented offsets that the per-pad mutation planner consumes.
-#
-# We only decode the kit name in this WS to keep the strategy minimal.
-# The planner needs the full kit record so we surface ``unpacked`` on the
-# snapshot for it to slice.
+# The raw 8-bit kit record is decoded from the Elektron SysEx envelope and
+# then interpreted through the shared Rytm kit-layout data table. The planner
+# and snapshot shell need that raw kit record so we surface it as ``unpacked``
+# on the snapshot for downstream slicing.
 # ---------------------------------------------------------------------------
 
-#: The kit-record type byte that marks the start of an Analog Rytm MK2
-#: kit dump (after the Elektron manufacturer-id prefix). Per the MK2 MIDI
-#: implementation appendix; NOT secret -- any sniffer on the MIDI cable
-#: sees the same byte in every Rytm kit-dump SysEx.
+#: Product/type byte used by older minimal test payloads before the decoder
+#: learned the full Elektron dump header/trailer shape.
 RYTM_KIT_TYPE_BYTE: Final[int] = 0x07
 
-#: Byte offset of the 16-byte ASCII kit name within the unpacked kit payload.
-#: Observed in Jose's OS 1.72 Rytm kit dumps captured via C6.
-_KIT_NAME_OFFSET: Final[int] = 8
+#: Byte offset of the 16-byte ASCII kit name within the raw kit payload.
+#: Observed in real Rytm MKII kit dumps captured from the hardware.
+_KIT_NAME_OFFSET: Final[int] = RYTM_KIT_NAME_OFFSET
 
 #: Fixed length of the ASCII kit-name field. Elektron pads with NULs; the
 #: ``read_ascii_name`` helper strips trailing NULs to surface the clean
 #: operator-facing name.
-_KIT_NAME_LENGTH: Final[int] = 16
+_KIT_NAME_LENGTH: Final[int] = RYTM_KIT_NAME_LENGTH
 
 _TRACK_COUNT: Final[int] = 12
-_TRACK_MACHINE_VALUE_OFFSET: Final[int] = 174
-_TRACK_SOUND_STRIDE: Final[int] = 162
+_TRACK_MACHINE_VALUE_OFFSET: Final[int] = RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET
+_TRACK_SOUND_STRIDE: Final[int] = RYTM_KIT_TRACK_SOUND_SIZE
 _CANDIDATE_ONLY_PADS: Final[frozenset[int]] = frozenset({6, 7, 8})
+_FULL_KIT_DUMP_IDS: Final[frozenset[int]] = frozenset(
+    {RYTM_KIT_DUMP_ID, RYTM_KIT_WORK_BUFFER_DUMP_ID}
+)
 
 
 def _extract_machine_facts(unpacked: bytes) -> RytmSnapshotMachineFacts:
@@ -140,11 +147,12 @@ def _extract_machine_facts(unpacked: bytes) -> RytmSnapshotMachineFacts:
             )
         else:
             raw_value = unpacked[offset]
+            decoded_value = raw_value & 0x7F
             promoted = pad not in _CANDIDATE_ONLY_PADS
             fact = RytmSnapshotMachineFact(
                 pad=pad,
                 raw_machine_value=raw_value,
-                decoded_machine_value=raw_value if promoted else None,
+                decoded_machine_value=decoded_value if promoted else None,
                 promoted=promoted,
                 reason=(
                     "promoted machine fact" if promoted else "candidate-only tom-pad machine fact"
@@ -155,6 +163,53 @@ def _extract_machine_facts(unpacked: bytes) -> RytmSnapshotMachineFacts:
         facts_by_pad=MappingProxyType(facts),
         promoted=all(fact.promoted for fact in facts.values()),
     )
+
+
+def _operator_kit_name(unpacked: bytes) -> str:
+    """Return the display kit name from the unpacked Rytm kit payload."""
+
+    return read_ascii_name(
+        unpacked,
+        offset=_KIT_NAME_OFFSET,
+        length=_KIT_NAME_LENGTH,
+    ).replace("\x00", "")
+
+
+def _looks_like_full_kit_dump(raw: bytes) -> bool:
+    min_length = RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0 + RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7
+    return (
+        len(raw) >= min_length
+        and raw.startswith(ELEKTRON_MFR_ID)
+        and raw[len(ELEKTRON_MFR_ID)] == RYTM_SYSEX_PRODUCT_ID
+        and raw[5] in _FULL_KIT_DUMP_IDS
+    )
+
+
+def _unpack_full_kit_dump(raw: bytes) -> bytes:
+    packed = raw[RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0:-RYTM_KIT_SYSEX_TRAILER_SIZE_WITHOUT_F7]
+    unpacked = unpack_elektron_7bit(packed)
+    if len(unpacked) != RYTM_KIT_RAW_SIZE:
+        raise ValueError(
+            "AnalogRytmSnapshotDecoder.decode: decoded kit payload has "
+            f"{len(unpacked)} byte(s), expected {RYTM_KIT_RAW_SIZE}"
+        )
+    return unpacked
+
+
+def _unpack_legacy_kit_body(raw: bytes) -> bytes:
+    record = find_kit_record(raw, slot=0, kit_type_byte=RYTM_KIT_TYPE_BYTE)
+    unpacked = unpack_elektron_7bit(record[1:])
+    if len(unpacked) >= RYTM_KIT_RAW_SIZE + 4 and unpacked[:4] == bytes(
+        [RYTM_KIT_DUMP_ID, 0x01, 0x01, 0x00]
+    ):
+        return unpacked[4 : 4 + RYTM_KIT_RAW_SIZE]
+    return unpacked
+
+
+def _unpack_kit_payload(raw: bytes) -> bytes:
+    if _looks_like_full_kit_dump(raw):
+        return _unpack_full_kit_dump(raw)
+    return _unpack_legacy_kit_body(raw)
 
 
 # ---------------------------------------------------------------------------
@@ -181,8 +236,8 @@ class AnalogRytmSnapshotDecoder:
         * contain a 7-bit-stuffed payload (high bit clear on every byte).
 
         Returns a :class:`RytmKitSnapshot` whose ``kit_name`` is the
-        decoded operator-facing name and ``unpacked`` is the full 7-bit
-        unstuffed payload for downstream planners to slice.
+        decoded operator-facing name and ``unpacked`` is the raw 8-bit kit
+        payload for downstream planners to slice.
 
         Raises:
             ValueError: if the raw bytes do not start with the Elektron
@@ -202,13 +257,8 @@ class AnalogRytmSnapshotDecoder:
                 "framing bytes before passing to decode()."
             )
 
-        record = find_kit_record(raw, slot=0, kit_type_byte=RYTM_KIT_TYPE_BYTE)
-        # ``find_kit_record`` returns the slice starting at the kit-type
-        # byte; the 7-bit-stuffed payload follows immediately after.
-        # Unpack the entire record so downstream planners see the full
-        # parameter table, not just the prefix.
-        unpacked = unpack_elektron_7bit(record[1:])
-        kit_name = read_ascii_name(unpacked, offset=_KIT_NAME_OFFSET, length=_KIT_NAME_LENGTH)
+        unpacked = _unpack_kit_payload(raw)
+        kit_name = _operator_kit_name(unpacked)
         machine_facts = _extract_machine_facts(unpacked)
         return RytmKitSnapshot(
             slot=slot,

@@ -42,7 +42,12 @@ def extract_sysex_payloads(raw: bytes) -> tuple[bytes, ...]:
 
 
 def read_sysex_payloads_from_path(sysex_path: str | Path) -> tuple[bytes, ...]:
-    """Read ``sysex_path`` and return unframed SysEx payloads."""
+    """Read ``sysex_path`` and return unframed SysEx payloads.
+
+    This is a trusted local-file helper for operator-selected paths. It does
+    not sandbox or root-restrict ``sysex_path``; network-facing callers must
+    add their own allowlist/canonicalization layer before using it.
+    """
 
     path = Path(sysex_path)
     if not path.exists():
@@ -54,3 +59,9 @@ def read_sysex_payloads_from_path(sysex_path: str | Path) -> tuple[bytes, ...]:
     except OSError as exc:
         raise ValueError(f"Could not read SysEx file {path}: {exc}") from exc
     return extract_sysex_payloads(raw)
+
+
+__all__ = [
+    "extract_sysex_payloads",
+    "read_sysex_payloads_from_path",
+]

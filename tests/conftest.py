@@ -158,15 +158,21 @@ def pack_elektron_7bit(unpacked: bytes) -> bytes:
 
 
 def rytm_real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
-    """Build a packed Rytm kit body matching Jose's observed dump layout."""
+    """Build a packed Rytm kit body matching the observed hardware dump layout."""
 
-    from rytm_randomizer.devices.strategies.analog_rytm_snapshot_decoder import (
-        RYTM_KIT_TYPE_BYTE,
+    from rytm_randomizer.data.analog_rytm_kit_layout import (
+        RYTM_KIT_DUMP_ID,
+        RYTM_KIT_RAW_SIZE,
+        RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET,
+        RYTM_KIT_TRACK_SOUND_SIZE,
+        RYTM_KIT_TRACKS_OFFSET,
+        RYTM_SOUND_FIELD_BY_NRPN_LSB,
+        RYTM_SYSEX_PRODUCT_ID,
     )
 
-    unpacked = bytearray(bytes([0x52, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x06]))
-    unpacked.extend(name.ljust(16, b"\x00"))
-    unpacked.extend(bytes([0x00] * 2600))
+    raw = bytearray(bytes([0x00] * RYTM_KIT_RAW_SIZE))
+    raw[0:4] = bytes([0x00, 0x00, 0x00, 0x06])
+    raw[4:20] = name.ljust(16, b"\x00")
     machine_values = {
         1: 0,
         2: 2,
@@ -182,9 +188,40 @@ def rytm_real_layout_kit_payload(name: bytes = b"KIT 1") -> bytes:
         12: 12,
     }
     for pad, value in machine_values.items():
-        unpacked[174 + (162 * (pad - 1))] = value
-    packed = pack_elektron_7bit(bytes(unpacked))
-    return bytes([0x00, 0x20, 0x3C, RYTM_KIT_TYPE_BYTE]) + packed
+        track_offset = RYTM_KIT_TRACKS_OFFSET + (RYTM_KIT_TRACK_SOUND_SIZE * (pad - 1))
+        raw[RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET + (RYTM_KIT_TRACK_SOUND_SIZE * (pad - 1))] = value
+        raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[1].sound_offset] = 40 + pad
+        raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[2].sound_offset] = 50 + pad
+        raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[20].sound_offset] = 24 + pad
+        raw[track_offset + RYTM_SOUND_FIELD_BY_NRPN_LSB[27].sound_offset] = 18 + pad
+    packed = pack_elektron_7bit(bytes(raw))
+    checksum = sum(packed) & 0x3FFF
+    size = (len(packed) + 5) & 0x3FFF
+    trailer = bytes(
+        [
+            (checksum >> 7) & 0x7F,
+            checksum & 0x7F,
+            (size >> 7) & 0x7F,
+            size & 0x7F,
+        ]
+    )
+    return (
+        bytes(
+            [
+                0x00,
+                0x20,
+                0x3C,
+                RYTM_SYSEX_PRODUCT_ID,
+                0x00,
+                RYTM_KIT_DUMP_ID,
+                0x01,
+                0x01,
+                0x00,
+            ]
+        )
+        + packed
+        + trailer
+    )
 
 
 def elektron_syx_message(payload: bytes) -> bytes:
