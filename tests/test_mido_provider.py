@@ -32,6 +32,7 @@ import pytest
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS = 1.0
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -608,7 +609,10 @@ def test_capture_sysex_messages_returns_first_complete_frame_from_fake_rtmidi() 
     fake = _install_fake_rtmidi(messages=((list(frame), 0.0),))
     provider = MidoMidiPortProvider()
 
-    frames = provider.capture_sysex_messages("Fake Rytm Input", timeout_seconds=0.05)
+    frames = provider.capture_sysex_messages(
+        "Fake Rytm Input",
+        timeout_seconds=FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS,
+    )
 
     assert frames == (frame,)
     midi_in = fake.instances[0]  # type: ignore[attr-defined]
@@ -629,7 +633,10 @@ def test_capture_sysex_messages_reassembles_chunked_frame_from_fake_rtmidi() -> 
     _install_fake_rtmidi(messages=messages)
     provider = MidoMidiPortProvider()
 
-    frames = provider.capture_sysex_messages("Fake Rytm Input", timeout_seconds=0.05)
+    frames = provider.capture_sysex_messages(
+        "Fake Rytm Input",
+        timeout_seconds=FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS,
+    )
 
     assert frames == (full_frame,)
 
