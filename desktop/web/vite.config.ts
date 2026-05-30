@@ -1,6 +1,10 @@
-import { defineConfig } from 'vite';
+// `defineConfig` comes from `vitest/config` (not `vite`) so the inline `test:`
+// block type-checks. Vite 8's own `UserConfigExport` does not carry the Vitest
+// `test` field; the `vitest/config` re-export adds it, keeping this single-file
+// config valid for both `vite build` and `vitest`.
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { defineConfig } from 'vitest/config';
 
 // https://vitejs.dev/config/
 // The Tauri shell (WS-H) loads the built artifact from `desktop/web/dist` and proxies dev
