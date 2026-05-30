@@ -2,268 +2,359 @@
 
 The cockpit works with compact UI parameter keys (``tun``, ``dec``,
 ``sample_tune``) while the outbound MIDI path needs the Rytm's real CC
-numbers and per-track MIDI channels. This module keeps that translation in
-the cockpit data layer so SEND preflight can stay deterministic and inert.
+numbers and per-track MIDI channels. The CC facts come from
+``rytm_randomizer.data.analog_rytm_midi`` so this module stays a thin
+projection from cockpit names to the manual-backed catalog.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Final
+
+from ...data.analog_rytm_midi import (
+    ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
+    ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
+)
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
 
-_COMMON_CONTROLS: Final[dict[str, int]] = {
-    "sample_tune": 24,
-    "sample_fine": 25,
-    "sample_bit": 26,
-    "sample_slot": 27,
-    "sample_start": 28,
-    "sample_end": 29,
-    "sample_loop": 30,
-    "sample_level": 31,
-    "filter_attack": 70,
-    "filter_decay": 71,
-    "filter_sustain": 72,
-    "filter_release": 73,
-    "flt": 74,
-    "filter_resonance": 75,
-    "filter_type": 76,
-    "filter_env": 77,
-    "amp_attack": 78,
-    "amp_hold": 79,
-    "amp_decay": 80,
-    "overdrive": 81,
-    "delay": 82,
-    "reverb": 83,
-    "pan": 10,
-    "amp_volume": 7,
-    "lfo_speed": 102,
-    "lfo_mult": 103,
-    "lfo_fade": 104,
-    "lfo_destination": 105,
-    "lfo_wave": 106,
-    "lfo_phase": 107,
-    "lfo_trig": 108,
-    "lfo_depth": 109,
-}
+_COMMON_ALIASES: Final[Mapping[str, tuple[str, str]]] = MappingProxyType(
+    {
+        "sample_tune": ("SAMPLE", "Sample Tune"),
+        "sample_fine": ("SAMPLE", "Sample Fine tune"),
+        "sample_bit": ("SAMPLE", "Sample Bit Reduction"),
+        "sample_slot": ("SAMPLE", "Sample Slot"),
+        "sample_start": ("SAMPLE", "Sample Start"),
+        "sample_end": ("SAMPLE", "Sample End"),
+        "sample_loop": ("SAMPLE", "Sample Loop"),
+        "sample_level": ("SAMPLE", "Sample Level"),
+        "filter_attack": ("FILTER", "Filter Attack Time"),
+        "filter_decay": ("FILTER", "Filter Decay Time"),
+        "filter_sustain": ("FILTER", "Filter Sustain Level"),
+        "filter_release": ("FILTER", "Filter Release Time"),
+        "flt": ("FILTER", "Filter Frequency"),
+        "filter_resonance": ("FILTER", "Filter Resonance"),
+        "filter_type": ("FILTER", "Filter Mode"),
+        "filter_env": ("FILTER", "Filter Env Depth"),
+        "amp_attack": ("AMP", "Amp Attack Time"),
+        "amp_hold": ("AMP", "Amp Hold Time"),
+        "amp_decay": ("AMP", "Amp Decay Time"),
+        "overdrive": ("AMP", "Amp Overdrive"),
+        "delay": ("AMP", "Amp Delay Send"),
+        "reverb": ("AMP", "Amp Reverb Send"),
+        "pan": ("AMP", "Amp Pan"),
+        "amp_volume": ("AMP", "Amp Volume"),
+        "lfo_speed": ("LFO", "LFO Speed"),
+        "lfo_mult": ("LFO", "LFO Multiplier"),
+        "lfo_fade": ("LFO", "LFO Fade In/Out"),
+        "lfo_destination": ("LFO", "LFO Destination"),
+        "lfo_wave": ("LFO", "LFO Waveform"),
+        "lfo_phase": ("LFO", "LFO Start Phase"),
+        "lfo_trig": ("LFO", "LFO Trig Mode"),
+        "lfo_depth": ("LFO", "LFO Depth"),
+    }
+)
 
-_BD_HARD_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "hold": 19,
-    "swt": 20,
-    "snap": 21,
-    "wave": 22,
-    "tick": 23,
-}
+_BD_HARD_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "hold": "Hold",
+        "swt": "Sweep Time",
+        "sweep_depth": "Sweep Depth",
+        "snap": "Sweep Depth",
+        "wave": "Waveform",
+        "tick": "Transient Tick",
+    }
+)
+_BD_SHARP_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "snap": "Sweep Depth",
+        "swt": "Sweep Time",
+        "hold": "Hold Time",
+        "tick": "Tick Level",
+        "wave": "Waveform",
+    }
+)
+_BD_PLASTIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay Time",
+        "sweep_depth": "Sweep Depth",
+        "swt": "Sweep Time",
+        "hold": "Hold Time",
+        "vco_click": "VCO Click",
+        "dust": "Dust Level",
+    }
+)
+_BD_SILKY_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "swt": "Sweep Time",
+        "hold": "Hold",
+        "vco_click": "VCO Click",
+        "dust": "Dust Level",
+    }
+)
+_BD_FM_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "fm_amount": "FM Amount",
+        "swt": "Sweep Time",
+        "fm_sweep_time": "FM Sweep Time",
+        "fm_decay": "FM Decay Time",
+        "fm_tune": "FM Tune",
+    }
+)
+_BD_ACOUSTIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "swt": "Sweep Time",
+        "hold": "Hold Time",
+        "impact": "Impact",
+        "wave": "Waveform",
+    }
+)
+_SD_NATURAL_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Body Decay",
+        "noise_decay": "Noise Decay",
+        "noise_lpf": "Noise LPF",
+        "noise_balance": "Noise Balance",
+        "noise_resonance": "Noise Resonance",
+        "noise_hpf": "Noise HPF",
+    }
+)
+_SD_HARD_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "tick": "Tick Level",
+        "noise_decay": "Noise Decay",
+        "noise_level": "Noise Level",
+        "swt": "Sweep Time",
+    }
+)
+_SD_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "detune": "Detune",
+        "snap": "Snap Amount",
+        "noise_decay": "Noise Decay",
+        "noise_level": "Noise Level",
+        "balance": "Osc Balance",
+    }
+)
+_SD_FM_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "fm_tune": "FM Tune",
+        "fm_decay": "FM Decay Time",
+        "noise_decay": "Noise Decay",
+        "noise_level": "Noise Level",
+        "fm_amount": "FM Amount",
+    }
+)
+_SD_ACOUSTIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "noise_decay": "Noise Decay",
+        "hold": "Hold Time",
+        "noise_level": "Noise Level",
+        "impact": "Impact",
+        "sweep_depth": "Sweep Depth",
+    }
+)
+_RS_HARD_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "tick": "Tick Level",
+        "noise_level": "Noise Level",
+        "symmetry": "Symmetry",
+        "swt": "Sweep Time",
+    }
+)
+_RS_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune Osc 1",
+        "dec": "Decay",
+        "balance": "Osc Balance",
+        "tune_2": "Tune Osc 2",
+        "symmetry": "Symmetry",
+        "noise_level": "Noise Level",
+        "tick": "Tick Level",
+    }
+)
+_BT_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "noise_level": "Noise Level",
+        "snap": "Snap Type",
+    }
+)
+_XT_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "sweep_depth": "Sweep Depth",
+        "swt": "Sweep Time",
+        "noise_decay": "Noise Decay",
+        "noise_level": "Noise Level",
+        "noise_tone": "Noise Tone",
+    }
+)
+_CH_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "color": "Color",
+    }
+)
+_METALLIC_HAT_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay Time",
+    }
+)
+_CP_CLASSIC_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Noise Tone",
+        "dec": "Noise Decay",
+        "clap_number": "Clap Number",
+        "clap_rate": "Clap Rate",
+        "noise_level": "Noise Level",
+        "random_claps": "Random Claps",
+        "clap_decay": "Clap Decay",
+    }
+)
+_SY_RAW_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "lev": "Level",
+        "tun": "Tune",
+        "dec": "Decay",
+        "noise_level": "Noise Level",
+        "detune": "Osc 2 Detune",
+        "wave": "Waveform 1",
+        "wave_2": "Waveform 2",
+        "balance": "Balance",
+    }
+)
 
-_BD_ACOUSTIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "sweep_depth": 19,
-    "swt": 20,
-    "hold": 21,
-    "impact": 22,
-    "wave": 23,
-}
+_MACHINE_PARAMETER_ALIASES: Final[Mapping[str, Mapping[str, str]]] = MappingProxyType(
+    {
+        "bd_hard": _BD_HARD_ALIASES,
+        "bd_classic": _BD_HARD_ALIASES,
+        "bd_sharp": _BD_SHARP_ALIASES,
+        "bd_plastic": _BD_PLASTIC_ALIASES,
+        "bd_silky": _BD_SILKY_ALIASES,
+        "bd_fm": _BD_FM_ALIASES,
+        "bd_acoustic": _BD_ACOUSTIC_ALIASES,
+        "sd_natural": _SD_NATURAL_ALIASES,
+        "sd_hard": _SD_HARD_ALIASES,
+        "sd_classic": _SD_CLASSIC_ALIASES,
+        "sd_acoustic": _SD_ACOUSTIC_ALIASES,
+        "sd_fm": _SD_FM_ALIASES,
+        "rs_classic": _RS_CLASSIC_ALIASES,
+        "rs_hard": _RS_HARD_ALIASES,
+        "bt_classic": _BT_CLASSIC_ALIASES,
+        "xt_classic": _XT_CLASSIC_ALIASES,
+        "ch_classic": _CH_CLASSIC_ALIASES,
+        "oh_classic": _CH_CLASSIC_ALIASES,
+        "ch_metallic": _METALLIC_HAT_ALIASES,
+        "oh_metallic": _METALLIC_HAT_ALIASES,
+        "cp_classic": _CP_CLASSIC_ALIASES,
+        "sy_raw": _SY_RAW_ALIASES,
+    }
+)
 
-_BD_FM_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "fm_amount": 19,
-    "swt": 20,
-    "fm_sweep_time": 21,
-    "fm_decay": 22,
-    "fm_tune": 23,
-}
+_COMMON_CONTROLS: Final[Mapping[str, int]] = MappingProxyType(
+    {
+        compact_key: ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[catalog_key].cc_msb
+        for compact_key, catalog_key in _COMMON_ALIASES.items()
+    }
+)
 
-_BD_SILKY_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "sweep_depth": 19,
-    "swt": 20,
-    "hold": 21,
-    "vco_click": 22,
-    "dust": 23,
-}
-
-_SD_CLASSIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "detune": 19,
-    "snap": 20,
-    "noise_decay": 21,
-    "noise_level": 22,
-    "balance": 23,
-}
-
-_SD_ACOUSTIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "noise_decay": 19,
-    "hold": 20,
-    "noise_level": 21,
-    "impact": 22,
-    "sweep_depth": 23,
-}
-
-_SD_FM_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "fm_tune": 19,
-    "fm_decay": 20,
-    "noise_decay": 21,
-    "noise_level": 22,
-    "fm_amount": 23,
-}
-
-_RS_CLASSIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "balance": 19,
-    "tune_2": 20,
-    "symmetry": 21,
-    "noise_level": 22,
-    "tick": 23,
-}
-
-_RS_HARD_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "sweep_depth": 19,
-    "tick": 20,
-    "noise_level": 21,
-    "symmetry": 22,
-    "swt": 23,
-}
-
-_BT_CLASSIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "sweep_depth": 19,
-    "noise_level": 20,
-    "snap": 21,
-}
-
-_XT_CLASSIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "sweep_depth": 19,
-    "swt": 20,
-    "noise_decay": 21,
-    "noise_level": 22,
-    "noise_tone": 23,
-}
-
-_CH_CLASSIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "color": 19,
-}
-
-_METALLIC_HAT_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-}
-
-_CP_CLASSIC_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "clap_number": 19,
-    "clap_rate": 20,
-    "noise_level": 21,
-    "random_claps": 22,
-    "clap_decay": 23,
-}
-
-_SY_RAW_CONTROLS: Final[dict[str, int]] = {
-    "lev": 16,
-    "tun": 17,
-    "dec": 18,
-    "noise_level": 19,
-    "detune": 20,
-    "wave": 21,
-    "wave_2": 22,
-    "balance": 23,
-}
-
-_MACHINE_CONTROLS: Final[dict[str, dict[str, int]]] = {
-    "bd_hard": _BD_HARD_CONTROLS,
-    "bd_classic": _BD_HARD_CONTROLS,
-    "bd_sharp": _BD_HARD_CONTROLS,
-    "bd_plastic": _BD_SILKY_CONTROLS,
-    "bd_silky": _BD_SILKY_CONTROLS,
-    "bd_fm": _BD_FM_CONTROLS,
-    "bd_acoustic": _BD_ACOUSTIC_CONTROLS,
-    "sd_classic": _SD_CLASSIC_CONTROLS,
-    "sd_acoustic": _SD_ACOUSTIC_CONTROLS,
-    "sd_fm": _SD_FM_CONTROLS,
-    "rs_classic": _RS_CLASSIC_CONTROLS,
-    "rs_hard": _RS_HARD_CONTROLS,
-    "bt_classic": _BT_CLASSIC_CONTROLS,
-    "xt_classic": _XT_CLASSIC_CONTROLS,
-    "ch_classic": _CH_CLASSIC_CONTROLS,
-    "oh_classic": _CH_CLASSIC_CONTROLS,
-    "ch_metallic": _METALLIC_HAT_CONTROLS,
-    "oh_metallic": _METALLIC_HAT_CONTROLS,
-    "cp_classic": _CP_CLASSIC_CONTROLS,
-    "sy_raw": _SY_RAW_CONTROLS,
-}
-
-_MACHINE_ALIASES: Final[dict[str, str]] = {
-    "bd": "bd_hard",
-    "bd hard": "bd_hard",
-    "bd classic": "bd_classic",
-    "bd sharp": "bd_sharp",
-    "bd plastic": "bd_plastic",
-    "bd silky": "bd_silky",
-    "bd fm": "bd_fm",
-    "bd acoustic": "bd_acoustic",
-    "sd": "sd_classic",
-    "sd classic": "sd_classic",
-    "sd acoustic": "sd_acoustic",
-    "sd fm": "sd_fm",
-    "rs": "rs_classic",
-    "rs riser": "rs_classic",
-    "rs classic": "rs_classic",
-    "rs hard": "rs_hard",
-    "bt": "bt_classic",
-    "bt rim": "bt_classic",
-    "bt classic": "bt_classic",
-    "lt low": "xt_classic",
-    "mt mid": "xt_classic",
-    "ht high": "xt_classic",
-    "xt classic": "xt_classic",
-    "ch": "ch_classic",
-    "ch closed": "ch_classic",
-    "ch classic": "ch_classic",
-    "ch metallic": "ch_metallic",
-    "oh": "oh_classic",
-    "oh open": "oh_classic",
-    "oh classic": "oh_classic",
-    "oh metallic": "oh_metallic",
-    "fx metal": "oh_metallic",
-    "cp": "cp_classic",
-    "cp clap": "cp_classic",
-    "cp classic": "cp_classic",
-    "sy": "sy_raw",
-    "sy raw": "sy_raw",
-}
+_MACHINE_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "bd": "bd_hard",
+        "bd hard": "bd_hard",
+        "bd classic": "bd_classic",
+        "bd sharp": "bd_sharp",
+        "bd plastic": "bd_plastic",
+        "bd silky": "bd_silky",
+        "bd fm": "bd_fm",
+        "bd acoustic": "bd_acoustic",
+        "sd": "sd_classic",
+        "sd natural": "sd_natural",
+        "sd hard": "sd_hard",
+        "sd classic": "sd_classic",
+        "sd acoustic": "sd_acoustic",
+        "sd fm": "sd_fm",
+        "rs": "rs_classic",
+        "rs riser": "rs_classic",
+        "rs classic": "rs_classic",
+        "rs hard": "rs_hard",
+        "bt": "bt_classic",
+        "bt rim": "bt_classic",
+        "bt classic": "bt_classic",
+        "lt low": "xt_classic",
+        "mt mid": "xt_classic",
+        "ht high": "xt_classic",
+        "xt classic": "xt_classic",
+        "ch": "ch_classic",
+        "ch closed": "ch_classic",
+        "ch classic": "ch_classic",
+        "ch metallic": "ch_metallic",
+        "oh": "oh_classic",
+        "oh open": "oh_classic",
+        "oh classic": "oh_classic",
+        "oh metallic": "oh_metallic",
+        "fx metal": "oh_metallic",
+        "cp": "cp_classic",
+        "cp clap": "cp_classic",
+        "cp classic": "cp_classic",
+        "sy": "sy_raw",
+        "sy raw": "sy_raw",
+    }
+)
 
 
 def cockpit_pad_channel(pad_id: int) -> int:
@@ -277,9 +368,9 @@ def cockpit_pad_channel(pad_id: int) -> int:
 def cockpit_parameter_control(machine: str, parameter: str) -> int | None:
     """Return the real Rytm CC for ``parameter`` on ``machine``.
 
-    ``None`` means the cockpit does not have a safe mapping for that
-    machine/key pair yet; callers should omit the packet instead of falling
-    back to a synthetic CC.
+    ``None`` means the cockpit does not have a safe compact-key mapping for
+    that machine/key pair yet; callers should omit the packet instead of
+    falling back to a synthetic CC.
     """
 
     machine_key = _machine_key(machine)
@@ -287,6 +378,37 @@ def cockpit_parameter_control(machine: str, parameter: str) -> int | None:
     if controls is not None and parameter in controls:
         return controls[parameter]
     return _COMMON_CONTROLS.get(parameter)
+
+
+def _machine_controls(machine_key: str, aliases: Mapping[str, str]) -> Mapping[str, int]:
+    catalog_controls = {
+        mapping.parameter: mapping.cc_msb
+        for mapping in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE[machine_key]
+    }
+    missing = tuple(
+        sorted(
+            catalog_parameter
+            for catalog_parameter in aliases.values()
+            if catalog_parameter not in catalog_controls
+        )
+    )
+    if missing:
+        joined = ", ".join(missing)
+        raise ValueError(f"missing Analog Rytm catalog row(s) for {machine_key}: {joined}")
+    return MappingProxyType(
+        {
+            compact_key: catalog_controls[catalog_parameter]
+            for compact_key, catalog_parameter in aliases.items()
+        }
+    )
+
+
+_MACHINE_CONTROLS: Final[Mapping[str, Mapping[str, int]]] = MappingProxyType(
+    {
+        machine_key: _machine_controls(machine_key, aliases)
+        for machine_key, aliases in _MACHINE_PARAMETER_ALIASES.items()
+    }
+)
 
 
 def _machine_key(machine: str) -> str:

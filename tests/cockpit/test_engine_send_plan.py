@@ -143,6 +143,66 @@ def test_prepare_send_plan_maps_full_12_pad_controls_to_track_channels() -> None
     ]
 
 
+def test_prepare_send_plan_maps_sd_hard_source_controls_from_catalog() -> None:
+    snapshot = Snapshot(
+        snapshot_id="snapshot-1",
+        device="analog_rytm_mk2",
+        captured_at=_FIXED_TS,
+        pads=(PadState(pad_id=2, machine="SD Hard", params={"tick": 40}),),
+        scene_slot="A01",
+        bpm=124.0,
+    )
+    candidate = MutationCandidate(
+        candidate_id="candidate-sd-hard",
+        source_snapshot_id="snapshot-1",
+        profile_id="profile-1",
+        depth=0.5,
+        seed=42,
+        pad_deltas=(_delta(2, noise_decay=68, swt=99, tick=55),),
+        safety_status="safe",
+        estimated_midi_msgs=3,
+    )
+
+    plan = prepare_send_plan(snapshot, _profile(), candidate, frozenset())
+
+    assert plan is not None
+    assert plan.ready is True
+    assert [packet.to_dict() for packet in plan.packets] == [
+        {"pad_id": 2, "parameter": "noise_decay", "channel": 1, "control": 21, "value": 68},
+        {"pad_id": 2, "parameter": "swt", "channel": 1, "control": 23, "value": 99},
+        {"pad_id": 2, "parameter": "tick", "channel": 1, "control": 20, "value": 55},
+    ]
+
+
+def test_prepare_send_plan_maps_bd_classic_sweep_depth_from_catalog() -> None:
+    snapshot = Snapshot(
+        snapshot_id="snapshot-1",
+        device="analog_rytm_mk2",
+        captured_at=_FIXED_TS,
+        pads=(PadState(pad_id=1, machine="BD Classic", params={"sweep_depth": 21}),),
+        scene_slot="A01",
+        bpm=124.0,
+    )
+    candidate = MutationCandidate(
+        candidate_id="candidate-bd-classic",
+        source_snapshot_id="snapshot-1",
+        profile_id="profile-1",
+        depth=0.5,
+        seed=42,
+        pad_deltas=(_delta(1, sweep_depth=44),),
+        safety_status="safe",
+        estimated_midi_msgs=1,
+    )
+
+    plan = prepare_send_plan(snapshot, _profile(), candidate, frozenset())
+
+    assert plan is not None
+    assert plan.ready is True
+    assert [packet.to_dict() for packet in plan.packets] == [
+        {"pad_id": 1, "parameter": "sweep_depth", "channel": 0, "control": 21, "value": 44}
+    ]
+
+
 def test_prepare_send_plan_blocks_when_changed_parameters_are_not_sendable() -> None:
     candidate = MutationCandidate(
         candidate_id="candidate-unsupported",
