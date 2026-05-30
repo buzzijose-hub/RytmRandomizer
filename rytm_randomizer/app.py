@@ -144,6 +144,13 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--rytm-cc-observe-snapshot",
+        help=(
+            "Optional Analog Rytm current-kit SysEx file for exact labels during "
+            "--rytm-cc-observe. Opens no output and sends no MIDI."
+        ),
+    )
+    parser.add_argument(
         "--a4-send-param",
         action="store_true",
         help=(
@@ -552,10 +559,22 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
     from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
     from .reports.rytm_cc_observe import format_rytm_cc_observe_report
     from .state.rytm_cc_observe import (
+        build_rytm_cc_exact_label_lookup,
         build_rytm_cc_label_lookup,
         empty_rytm_cc_observe_snapshot,
         observe_rytm_cc_message,
     )
+
+    exact_cc_lookup = None
+    snapshot_label_line = None
+    if args.rytm_cc_observe_snapshot is not None:
+        try:
+            anchor = _load_rytm_snapshot_shell_anchor(args.rytm_cc_observe_snapshot)
+        except (ValueError, OSError, NotImplementedError, KeyError) as exc:
+            sys.stderr.write(f"--rytm-cc-observe-snapshot failed: {exc}\n")
+            return 1
+        exact_cc_lookup = build_rytm_cc_exact_label_lookup(anchor.events)
+        snapshot_label_line = f"snapshot labels: {anchor.kit_name} ({anchor.fingerprint})"
 
     provider = build_mido_midi_port_provider()
     try:
@@ -582,6 +601,8 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
         return 1
 
     sys.stdout.write(f"\nOpening MIDI input: {port_name}\n")
+    if snapshot_label_line is not None:
+        sys.stdout.write(f"{snapshot_label_line}\n")
     sys.stdout.write("Move Rytm controls, then press Enter to capture observed CCs.\n")
 
     snapshot = empty_rytm_cc_observe_snapshot()
@@ -598,6 +619,7 @@ def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
                 message,
                 observed_at=monotonic(),
                 cc_lookup=cc_lookup,
+                exact_cc_lookup=exact_cc_lookup,
             )
     finally:
         close = getattr(port, "close", None)
@@ -1920,6 +1942,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")
+        return 1
+    if args.rytm_cc_observe_snapshot is not None and not args.rytm_cc_observe:
+        sys.stderr.write("--rytm-cc-observe-snapshot requires --rytm-cc-observe.\n")
         return 1
     if args.rytm_cc_observe:
         conflicts = (

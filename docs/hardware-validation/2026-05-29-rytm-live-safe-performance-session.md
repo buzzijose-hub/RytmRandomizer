@@ -410,11 +410,18 @@ session. The observer command is:
 python -m rytm_randomizer.app --arm --rytm-cc-observe
 ```
 
+If a fresh current-kit SysEx file is available, prefer:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-cc-observe --rytm-cc-observe-snapshot current-kit.syx
+```
+
 It opens only the Rytm MIDI input, sends no MIDI, and reports raw CC
 channel/control/value observations plus candidate manual labels. If encoder B
 emits a standard NRPN-style CC99/CC98/CC6/CC38 sequence instead of direct CC20,
 the report summarizes the decoded NRPN address and value. This should be the
-next diagnostic before any renewed attempt to randomize Dual VCO detune.
+next diagnostic before any renewed attempt to randomize Dual VCO detune. The
+snapshot option sharpens SRC rows to exact pad/machine labels when available.
 
 ## Safe Resume Steps For Tomorrow
 

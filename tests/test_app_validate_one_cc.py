@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -83,6 +84,74 @@ for module_name in ("mido", "rtmidi", "pythonrtmidi"):
 
     assert result.returncode == 0
     assert result.stderr == ""
+
+
+def test_app_main_arm_rytm_cc_observe_snapshot_labels_exact_pad_machine(
+    capsys,
+    fake_mido_session,
+    monkeypatch,
+    tmp_path,
+) -> None:
+    from rytm_randomizer import app, mido_provider
+
+    class FakeInputPort:
+        def __init__(self, messages: tuple[object, ...]) -> None:
+            self._messages = messages
+            self.closed = False
+
+        def iter_pending(self):
+            return iter(self._messages)
+
+        def close(self) -> None:
+            self.closed = True
+
+    fake_input = FakeInputPort(
+        (
+            types.SimpleNamespace(
+                type="control_change",
+                channel=1,
+                control=20,
+                value=25,
+            ),
+        )
+    )
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("Rytm CC observe must not touch MIDI outputs")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda self: ("Fake Rytm In",),
+    )
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "open_input",
+        lambda self, port_name: fake_input,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_output_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    snapshot_path = _write_rytm_snapshot_file(tmp_path, name=b"OBSERVE")
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-cc-observe",
+            "--rytm-cc-observe-snapshot",
+            str(snapshot_path),
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "snapshot labels: OBSERVE" in captured.out
+    assert "- Pad 2 (channel 1) CC20 value 25" in captured.out
+    assert "machine:sd_hard:Tick Level" in captured.out
+    assert "machine:dual_vco:Osc 2 Detune" not in captured.out
+    assert captured.err == ""
 
 
 def test_app_main_validate_one_cc_requires_dry_run_or_arm(capsys) -> None:

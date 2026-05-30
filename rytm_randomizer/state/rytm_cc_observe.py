@@ -23,6 +23,15 @@ class RytmObserveCcMapping(Protocol):
     scope: str
 
 
+class RytmObserveExactEvent(Protocol):
+    channel: int
+    machine_key: str
+    section: str
+    parameter: str
+    cc_msb: int
+    source: str
+
+
 @dataclass(frozen=True)
 class RytmCcLabel:
     section: str
@@ -123,12 +132,34 @@ def build_rytm_cc_label_lookup(
     )
 
 
+def build_rytm_cc_exact_label_lookup(
+    events: Iterable[RytmObserveExactEvent],
+) -> Mapping[tuple[int, int], tuple[RytmCcLabel, ...]]:
+    grouped: dict[tuple[int, int], list[RytmCcLabel]] = {}
+    for event in events:
+        nrpn_msb, nrpn_lsb = _nrpn_address_for_exact_event(event)
+        label = RytmCcLabel(
+            section=event.section,
+            parameter=event.parameter,
+            scope=event.source,
+            machine_key=(event.machine_key if event.source == "machine_src" else None),
+            nrpn_msb=nrpn_msb,
+            nrpn_lsb=nrpn_lsb,
+        )
+        grouped.setdefault((event.channel, event.cc_msb), []).append(label)
+
+    return MappingProxyType(
+        {key: tuple(sorted(labels, key=_label_sort_key)) for key, labels in sorted(grouped.items())}
+    )
+
+
 def observe_rytm_cc_message(
     snapshot: RytmCcObserveSnapshot,
     message: object,
     *,
     observed_at: float,
     cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]],
+    exact_cc_lookup: Mapping[tuple[int, int], tuple[RytmCcLabel, ...]] | None = None,
 ) -> RytmCcObserveSnapshot:
     if getattr(message, "type", None) != _CONTROL_CHANGE_TYPE:
         return RytmCcObserveSnapshot(
@@ -160,7 +191,12 @@ def observe_rytm_cc_message(
         control=control,
         value=value,
         observed_at=observed_at,
-        labels=cc_lookup.get(control, ()),
+        labels=_labels_for_control(
+            cc_lookup,
+            exact_cc_lookup,
+            channel=channel,
+            control=control,
+        ),
     )
     next_observations = (*snapshot.observations, observed)
     next_nrpn_observations = _next_nrpn_observations(
@@ -168,6 +204,7 @@ def observe_rytm_cc_message(
         next_observations,
         observed,
         cc_lookup,
+        exact_cc_lookup,
     )
     return RytmCcObserveSnapshot(
         observations=next_observations,
@@ -184,6 +221,7 @@ def _next_nrpn_observations(
     observations: tuple[ObservedRytmControl, ...],
     observed: ObservedRytmControl,
     cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]],
+    exact_cc_lookup: Mapping[tuple[int, int], tuple[RytmCcLabel, ...]] | None,
 ) -> tuple[ObservedRytmNrpn, ...]:
     if observed.control == 6:
         nrpn_msb = _latest_control_value(observations, observed.channel, 99)
@@ -199,7 +237,13 @@ def _next_nrpn_observations(
                 nrpn_lsb=nrpn_lsb,
                 value_msb=observed.value,
                 observed_at=observed.observed_at,
-                labels=_labels_for_nrpn(cc_lookup, nrpn_msb=nrpn_msb, nrpn_lsb=nrpn_lsb),
+                labels=_labels_for_nrpn(
+                    cc_lookup,
+                    exact_cc_lookup,
+                    channel=observed.channel,
+                    nrpn_msb=nrpn_msb,
+                    nrpn_lsb=nrpn_lsb,
+                ),
             ),
         )
 
@@ -207,6 +251,20 @@ def _next_nrpn_observations(
         return _attach_value_lsb(previous_nrpn, observed)
 
     return previous_nrpn
+
+
+def _labels_for_control(
+    cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]],
+    exact_cc_lookup: Mapping[tuple[int, int], tuple[RytmCcLabel, ...]] | None,
+    *,
+    channel: int,
+    control: int,
+) -> tuple[RytmCcLabel, ...]:
+    if exact_cc_lookup is not None:
+        exact_labels = exact_cc_lookup.get((channel, control), ())
+        if exact_labels:
+            return exact_labels
+    return cc_lookup.get(control, ())
 
 
 def _latest_control_value(
@@ -247,16 +305,35 @@ def _attach_value_lsb(
 
 def _labels_for_nrpn(
     cc_lookup: Mapping[int, tuple[RytmCcLabel, ...]],
+    exact_cc_lookup: Mapping[tuple[int, int], tuple[RytmCcLabel, ...]] | None,
     *,
+    channel: int,
     nrpn_msb: int,
     nrpn_lsb: int,
 ) -> tuple[RytmCcLabel, ...]:
     labels_by_name: dict[str, RytmCcLabel] = {}
+    if exact_cc_lookup is not None:
+        for key, labels in exact_cc_lookup.items():
+            label_channel, _control = key
+            if label_channel != channel:
+                continue
+            for label in labels:
+                if label.nrpn_msb == nrpn_msb and label.nrpn_lsb == nrpn_lsb:
+                    labels_by_name.setdefault(label.display_name, label)
+        if labels_by_name:
+            return tuple(sorted(labels_by_name.values(), key=_label_sort_key))
+
     for labels in cc_lookup.values():
         for label in labels:
             if label.nrpn_msb == nrpn_msb and label.nrpn_lsb == nrpn_lsb:
                 labels_by_name.setdefault(label.display_name, label)
     return tuple(sorted(labels_by_name.values(), key=_label_sort_key))
+
+
+def _nrpn_address_for_exact_event(event: RytmObserveExactEvent) -> tuple[int | None, int | None]:
+    if event.source == "machine_src" and 16 <= event.cc_msb <= 23:
+        return 1, event.cc_msb - 16
+    return None, None
 
 
 def _machine_key_for(mapping: RytmObserveCcMapping) -> str | None:
@@ -283,11 +360,13 @@ __all__ = [
     "UNKNOWN_POLICY",
     "TRACK_COUNT",
     "RytmObserveCcMapping",
+    "RytmObserveExactEvent",
     "RytmCcLabel",
     "ObservedRytmControl",
     "ObservedRytmNrpn",
     "RytmCcObserveSnapshot",
     "empty_rytm_cc_observe_snapshot",
     "build_rytm_cc_label_lookup",
+    "build_rytm_cc_exact_label_lookup",
     "observe_rytm_cc_message",
 ]

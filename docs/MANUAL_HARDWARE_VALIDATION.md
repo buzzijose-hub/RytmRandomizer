@@ -215,6 +215,12 @@ Command:
 python -m rytm_randomizer.app --arm --rytm-cc-observe
 ```
 
+Optional exact-label command when a current-kit SysEx file is available:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-cc-observe --rytm-cc-observe-snapshot current-kit.syx
+```
+
 Expected:
 
 - Select the Analog Rytm MIDI input port.
@@ -231,7 +237,9 @@ Expected:
 Dual VCO detune diagnostic:
 
 - Reload the known-good kit on the Rytm first.
-- Run `--arm --rytm-cc-observe`.
+- Run `--arm --rytm-cc-observe`, preferably with
+  `--rytm-cc-observe-snapshot current-kit.syx` if the current kit has just been
+  dumped to a file.
 - Select Pad 2, open the Dual VCO SRC page, turn encoder B a tiny amount, then
   press Enter in PowerShell.
 - Repeat for Pad 3.
