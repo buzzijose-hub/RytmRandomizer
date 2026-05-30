@@ -162,6 +162,36 @@ describe('AddStep — picker UI', () => {
     expect(screen.queryByTestId('wizard-draft')).not.toBeInTheDocument();
   });
 
+  it('keeps the draft open when onAddSource synchronously rejects the payload', () => {
+    const onAddSource = vi.fn(() => false);
+    render(
+      <AddStep
+        sources={[]}
+        onAddSource={onAddSource}
+        onRemoveSource={vi.fn()}
+        onBack={vi.fn()}
+        onNext={vi.fn()}
+        submitError="source path rejected by policy"
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId('wizard-add-song'));
+    fireEvent.change(screen.getByTestId('wizard-draft-location'), {
+      target: { value: 'C:\\Users\\Jose Buzzi\\Downloads\\The Bells.wav' },
+    });
+    fireEvent.change(screen.getByTestId('wizard-draft-display-name'), {
+      target: { value: 'The Bells' },
+    });
+    fireEvent.click(screen.getByTestId('wizard-draft-confirm'));
+
+    expect(onAddSource).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('wizard-draft')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-draft-location')).toHaveFocus();
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'source path rejected by policy',
+    );
+  });
+
   it('cancel button closes the draft without firing onAddSource', () => {
     const onAddSource = vi.fn();
     render(

@@ -35,10 +35,11 @@ export interface AddStepProps {
     mode: WizardSourceMode;
     location: string;
     display_name: string;
-  }) => void;
+  }) => boolean | void | Promise<boolean | void>;
   onRemoveSource: (sourceId: string) => void;
   onBack: () => void;
   onNext: () => void;
+  submitError?: string | null;
   /**
    * Optional injection point for tests. Returns the picked path, or null if the user
    * cancelled. The production path dynamically imports `@tauri-apps/plugin-dialog`.
@@ -112,6 +113,7 @@ export function AddStep({
   onRemoveSource,
   onBack,
   onNext,
+  submitError = null,
   openDialog,
 }: AddStepProps): JSX.Element {
   const [draft, setDraft] = useState<PickerDraft | null>(null);
@@ -166,7 +168,7 @@ export function AddStep({
    * single `role="alert"` region rendered below the draft. This is the WCAG
    * 2.2 §3.3.1 / §3.3.3 error-identification pattern.
    */
-  const handleConfirm = (currentDraft: PickerDraft): void => {
+  const handleConfirm = async (currentDraft: PickerDraft): Promise<void> => {
     const trimmedLocation = location.trim();
     const trimmedName = displayName.trim();
     if (trimmedLocation === '') {
@@ -180,12 +182,23 @@ export function AddStep({
       return;
     }
     setError(null);
-    onAddSource({
+    const payload = {
       kind: currentDraft.kind,
       mode: currentDraft.mode,
       location: trimmedLocation,
       display_name: trimmedName,
-    });
+    };
+    const result = onAddSource(payload);
+    if (result instanceof Promise) {
+      const accepted = await result;
+      if (accepted === false) {
+        locationRef.current?.focus();
+        return;
+      }
+    } else if (result === false) {
+      locationRef.current?.focus();
+      return;
+    }
     closeDraft();
   };
 
@@ -198,7 +211,8 @@ export function AddStep({
 
   const locationInvalid = error === 'Location is required.';
   const displayNameInvalid = error === 'Display name is required.';
-  const hasError = error !== null;
+  const visibleError = error ?? submitError;
+  const hasError = visibleError !== null;
 
   return (
     <section className="wizard-panel" data-testid="wizard-add-step">
@@ -304,7 +318,7 @@ export function AddStep({
           </label>
           {hasError && (
             <div id={DRAFT_ERROR_ID} role="alert" className="wizard-field-error">
-              {error}
+              {visibleError}
             </div>
           )}
           <div className="wizard-draft-actions">
@@ -320,7 +334,9 @@ export function AddStep({
               type="button"
               className="wizard-button primary"
               data-testid="wizard-draft-confirm"
-              onClick={() => handleConfirm(draft)}
+              onClick={() => {
+                void handleConfirm(draft);
+              }}
             >
               Add source
             </button>

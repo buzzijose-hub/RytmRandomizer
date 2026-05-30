@@ -12,6 +12,7 @@
 import { useEffect, useState } from 'react';
 
 import type { CockpitClient } from '../ws/client';
+import type { CommandAck } from '../ws/protocol';
 import {
   bindWizardClient,
   selectCandidateProfile,
@@ -25,6 +26,7 @@ import {
 import type {
   WizardSourceKind,
   WizardSourceMode,
+  WizardCommand,
   WizardStep,
 } from '../types/wizard_protocol';
 
@@ -35,6 +37,18 @@ import { ReviewStep } from './ReviewStep';
 import { WizardSteps } from './WizardSteps';
 
 import './styles.css';
+
+function ackErrorMessage(action: string, ack: CommandAck): string {
+  const detail = ack.error?.trim() || ack.code?.trim() || 'command rejected';
+  return `${action} failed: ${detail}`;
+}
+
+function thrownErrorMessage(action: string, error: unknown): string {
+  if (error instanceof Error && error.message.trim() !== '') {
+    return `${action} failed: ${error.message.trim()}`;
+  }
+  return `${action} failed: connection unavailable`;
+}
 
 export interface WizardProps {
   client: CockpitClient;
@@ -80,6 +94,25 @@ export function Wizard({
   const [hasSyncedInitialStep, setHasSyncedInitialStep] = useState<boolean>(
     sliceStep !== null,
   );
+  const [commandError, setCommandError] = useState<string | null>(null);
+
+  const runWizardCommand = async (
+    action: string,
+    command: WizardCommand,
+  ): Promise<boolean> => {
+    setCommandError(null);
+    try {
+      const ack = await sendWizardCommand(client, command);
+      if (!ack.ok) {
+        setCommandError(ackErrorMessage(action, ack));
+        return false;
+      }
+      return true;
+    } catch (error) {
+      setCommandError(thrownErrorMessage(action, error));
+      return false;
+    }
+  };
 
   // Bind WS events into the store + start a wizard session on mount.
   useEffect(() => {
@@ -112,6 +145,7 @@ export function Wizard({
 
   const handleCancel = (): void => {
     void sendWizardCommand(client, { type: 'wizard_cancel' });
+    setCommandError(null);
     (store as unknown as { getState: () => WizardStore }).getState().reset();
     const go = navigate ?? ((hash: string) => {
       window.location.hash = hash;
@@ -120,7 +154,7 @@ export function Wizard({
   };
 
   const handleNameSubmit = (payload: { name: string; description: string | null }): void => {
-    void sendWizardCommand(client, {
+    void runWizardCommand('Set profile metadata', {
       type: 'wizard_set_metadata',
       name: payload.name,
       ...(payload.description === null ? {} : { description: payload.description }),
@@ -133,8 +167,8 @@ export function Wizard({
     mode: WizardSourceMode;
     location: string;
     display_name: string;
-  }): void => {
-    void sendWizardCommand(client, {
+  }): Promise<boolean> => {
+    return runWizardCommand('Add source', {
       type: 'wizard_add_source',
       kind: payload.kind,
       mode: payload.mode,
@@ -144,37 +178,47 @@ export function Wizard({
   };
 
   const handleRemoveSource = (sourceId: string): void => {
-    void sendWizardCommand(client, { type: 'wizard_remove_source', source_id: sourceId });
+    void runWizardCommand('Remove source', {
+      type: 'wizard_remove_source',
+      source_id: sourceId,
+    });
   };
 
   const handleStartAnalyze = (): void => {
-    void sendWizardCommand(client, { type: 'wizard_analyze' });
+    void runWizardCommand('Run analysis', { type: 'wizard_analyze' });
   };
 
   const handleRetryAnalysis = (_sourceId: string): void => {
     // For Phase 2, retry simply re-runs the whole analyze pipeline. The backend skips
     // jobs already in 'ok' status. We deliberately ignore the per-source id here — the
     // protocol doesn't include a retry-one command yet.
-    void sendWizardCommand(client, { type: 'wizard_analyze' });
+    void runWizardCommand('Retry analysis', { type: 'wizard_analyze' });
   };
 
   const handleReview = (): void => {
-    void sendWizardCommand(client, { type: 'wizard_review' });
+    void runWizardCommand('Build review', { type: 'wizard_review' });
     setActiveStep('review');
   };
 
   const handleSave = (): void => {
-    void sendWizardCommand(client, { type: 'wizard_save' });
+    void runWizardCommand('Save profile', { type: 'wizard_save' });
   };
 
-  const goToAdd = (): void => setActiveStep('add');
-  const goToName = (): void => setActiveStep('name');
+  const goToAdd = (): void => {
+    setCommandError(null);
+    setActiveStep('add');
+  };
+  const goToName = (): void => {
+    setCommandError(null);
+    setActiveStep('name');
+  };
   const goToAnalyze = (): void => {
+    setCommandError(null);
     setActiveStep('analyze');
   };
   const startAnalyzeFromAdd = (): void => {
     setActiveStep('analyze');
-    void sendWizardCommand(client, { type: 'wizard_analyze' });
+    void runWizardCommand('Run analysis', { type: 'wizard_analyze' });
   };
 
   return (
@@ -199,6 +243,7 @@ export function Wizard({
             onRemoveSource={handleRemoveSource}
             onBack={goToName}
             onNext={startAnalyzeFromAdd}
+            submitError={commandError}
             {...(openDialog === undefined ? {} : { openDialog })}
           />
         ) : null}
@@ -210,6 +255,7 @@ export function Wizard({
             onRetry={handleRetryAnalysis}
             onBack={goToAdd}
             onNext={handleReview}
+            commandError={commandError}
           />
         ) : null}
         {activeStep === 'review' ? (

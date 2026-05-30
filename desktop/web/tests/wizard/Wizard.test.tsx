@@ -8,7 +8,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { Wizard } from '../../src/wizard/Wizard';
 import {
@@ -98,6 +98,8 @@ const stateReview: WizardState = {
 
 class FakeClient {
   readonly handlers = new Map<string, Set<EventHandler>>();
+  readonly ackQueue: CommandAck[] = [];
+  readonly rejectionQueue: unknown[] = [];
   readonly sent: WizardCommand[] = [];
   unsubCalls = 0;
 
@@ -119,7 +121,12 @@ class FakeClient {
 
   send(cmd: WizardCommand): Promise<CommandAck> {
     this.sent.push(cmd);
-    return Promise.resolve({ request_id: `req-${this.sent.length}`, ok: true });
+    if (this.rejectionQueue.length > 0) {
+      return Promise.reject(this.rejectionQueue.shift());
+    }
+    return Promise.resolve(
+      this.ackQueue.shift() ?? { request_id: `req-${this.sent.length}`, ok: true },
+    );
   }
 
   fire(type: string, event: unknown): void {
@@ -355,6 +362,36 @@ describe('Wizard container — step handlers', () => {
     expect(openDialog).toHaveBeenCalledWith('file');
   });
 
+  it('AddStep keeps the draft open and surfaces a rejected add-source ack', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAdd });
+    const { client } = renderWizard({ store });
+    client.ackQueue.push({
+      request_id: 'reject-add-source',
+      ok: false,
+      error: 'source path rejected by policy',
+    });
+
+    fireEvent.click(screen.getByTestId('wizard-add-song'));
+    fireEvent.change(screen.getByTestId('wizard-draft-location'), {
+      target: { value: 'C:\\Users\\Jose Buzzi\\Downloads\\The Bells.wav' },
+    });
+    fireEvent.change(screen.getByTestId('wizard-draft-display-name'), {
+      target: { value: 'The Bells' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-draft-confirm'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'source path rejected by policy',
+      );
+    });
+    expect(screen.getByTestId('wizard-draft')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-draft-location')).toHaveFocus();
+  });
+
   it('AnalyzeStep: Run analysis emits wizard_analyze; Retry also emits wizard_analyze', () => {
     const store = createWizardStore();
     store.getState().handleEvent({
@@ -368,6 +405,87 @@ describe('Wizard container — step handlers', () => {
     fireEvent.click(screen.getByTestId('wizard-analyze-start'));
     fireEvent.click(screen.getByTestId('wizard-job-retry-src_A'));
     expect(client.sent.filter((c) => c.type === 'wizard_analyze')).toHaveLength(2);
+  });
+
+  it('AnalyzeStep surfaces a rejected run-analysis ack without leaving the step', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+    client.ackQueue.push({
+      request_id: 'reject-analyze',
+      ok: false,
+      error: 'no active wizard session',
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'no active wizard session',
+      );
+    });
+    expect(screen.getByTestId('wizard-analyze-step')).toBeInTheDocument();
+  });
+
+  it('AnalyzeStep surfaces socket send failures with useful fallbacks', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+
+    client.rejectionQueue.push(new Error('socket closed'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'socket closed',
+      );
+    });
+
+    client.rejectionQueue.push(null);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'connection unavailable',
+      );
+    });
+  });
+
+  it('AnalyzeStep falls back to ack codes and generic rejection text', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+
+    client.ackQueue.push({
+      request_id: 'reject-analyze-code',
+      ok: false,
+      code: 'wizard_source_path_rejected',
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'wizard_source_path_rejected',
+      );
+    });
+
+    client.ackQueue.push({
+      request_id: 'reject-analyze-generic',
+      ok: false,
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'command rejected',
+      );
+    });
   });
 
   it('AnalyzeStep: Review emits wizard_review and optimistically jumps to review', () => {
