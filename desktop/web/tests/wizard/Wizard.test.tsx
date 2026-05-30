@@ -8,7 +8,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import { Wizard } from '../../src/wizard/Wizard';
 import {
@@ -98,6 +98,8 @@ const stateReview: WizardState = {
 
 class FakeClient {
   readonly handlers = new Map<string, Set<EventHandler>>();
+  readonly ackQueue: CommandAck[] = [];
+  readonly rejectionQueue: unknown[] = [];
   readonly sent: WizardCommand[] = [];
   unsubCalls = 0;
 
@@ -119,7 +121,12 @@ class FakeClient {
 
   send(cmd: WizardCommand): Promise<CommandAck> {
     this.sent.push(cmd);
-    return Promise.resolve({ request_id: `req-${this.sent.length}`, ok: true });
+    if (this.rejectionQueue.length > 0) {
+      return Promise.reject(this.rejectionQueue.shift());
+    }
+    return Promise.resolve(
+      this.ackQueue.shift() ?? { request_id: `req-${this.sent.length}`, ok: true },
+    );
   }
 
   fire(type: string, event: unknown): void {
@@ -355,7 +362,37 @@ describe('Wizard container — step handlers', () => {
     expect(openDialog).toHaveBeenCalledWith('file');
   });
 
-  it('AnalyzeStep: Run analysis emits wizard_analyze; Retry also emits wizard_analyze', () => {
+  it('AddStep keeps the draft open and surfaces a rejected add-source ack', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAdd });
+    const { client } = renderWizard({ store });
+    client.ackQueue.push({
+      request_id: 'reject-add-source',
+      ok: false,
+      error: 'source path rejected by policy',
+    });
+
+    fireEvent.click(screen.getByTestId('wizard-add-song'));
+    fireEvent.change(screen.getByTestId('wizard-draft-location'), {
+      target: { value: 'C:\\Users\\Jose Buzzi\\Downloads\\The Bells.wav' },
+    });
+    fireEvent.change(screen.getByTestId('wizard-draft-display-name'), {
+      target: { value: 'The Bells' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-draft-confirm'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'source path rejected by policy',
+      );
+    });
+    expect(screen.getByTestId('wizard-draft')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-draft-location')).toHaveFocus();
+  });
+
+  it('AnalyzeStep: Run analysis emits wizard_analyze; Retry also emits wizard_analyze', async () => {
     const store = createWizardStore();
     store.getState().handleEvent({
       type: 'wizard_state_changed',
@@ -365,9 +402,97 @@ describe('Wizard container — step handlers', () => {
       },
     });
     const { client } = renderWizard({ store });
-    fireEvent.click(screen.getByTestId('wizard-analyze-start'));
-    fireEvent.click(screen.getByTestId('wizard-job-retry-src_A'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    // Yield to let the first command's microtask resolve so the per-command
+    // inflight guard releases before the retry click. Without this await, the
+    // retry would be dropped — which is the LOW double-dispatch protection.
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-job-retry-src_A'));
+    });
     expect(client.sent.filter((c) => c.type === 'wizard_analyze')).toHaveLength(2);
+  });
+
+  it('AnalyzeStep surfaces a rejected run-analysis ack without leaving the step', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+    client.ackQueue.push({
+      request_id: 'reject-analyze',
+      ok: false,
+      error: 'no active wizard session',
+    });
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'no active wizard session',
+      );
+    });
+    expect(screen.getByTestId('wizard-analyze-step')).toBeInTheDocument();
+  });
+
+  it('AnalyzeStep surfaces socket send failures with useful fallbacks', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+
+    client.rejectionQueue.push(new Error('socket closed'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'socket closed',
+      );
+    });
+
+    client.rejectionQueue.push(null);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'connection unavailable',
+      );
+    });
+  });
+
+  it('AnalyzeStep falls back to ack codes and generic rejection text', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+
+    client.ackQueue.push({
+      request_id: 'reject-analyze-code',
+      ok: false,
+      code: 'wizard_source_path_rejected',
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'wizard_source_path_rejected',
+      );
+    });
+
+    client.ackQueue.push({
+      request_id: 'reject-analyze-generic',
+      ok: false,
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-analyze-start'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-command-error')).toHaveTextContent(
+        'command rejected',
+      );
+    });
   });
 
   it('AnalyzeStep: Review emits wizard_review and optimistically jumps to review', () => {
@@ -436,5 +561,145 @@ describe('Wizard container — step handlers', () => {
     renderWizard({ store });
     fireEvent.click(screen.getByTestId('wizard-back'));
     expect(screen.getByTestId('wizard-analyze-step')).toBeInTheDocument();
+  });
+
+  it('NameStep: rejected wizard_set_metadata renders an alert and keeps the operator on the Name step', async () => {
+    const { client } = renderWizard();
+    client.ackQueue.push({
+      request_id: 'reject-set-metadata',
+      ok: false,
+      error: 'name conflicts with existing profile',
+    });
+    fireEvent.change(screen.getByTestId('wizard-name-input'), {
+      target: { value: 'buzzi' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-next'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-name-command-error')).toHaveTextContent(
+        'name conflicts with existing profile',
+      );
+    });
+    expect(screen.getByTestId('wizard-name-step')).toBeInTheDocument();
+  });
+
+  it('NameStep: rejected wizard_set_metadata via thrown send error surfaces the fallback message', async () => {
+    const { client } = renderWizard();
+    client.rejectionQueue.push(new Error('socket closed'));
+    fireEvent.change(screen.getByTestId('wizard-name-input'), {
+      target: { value: 'buzzi' },
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-next'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-name-command-error')).toHaveTextContent(
+        'socket closed',
+      );
+    });
+    expect(screen.getByTestId('wizard-name-step')).toBeInTheDocument();
+  });
+
+  it('AnalyzeStep: rejected wizard_review surfaces on the optimistically-mounted ReviewStep', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateAnalyze });
+    const { client } = renderWizard({ store });
+    client.ackQueue.push({
+      request_id: 'reject-review',
+      ok: false,
+      error: 'candidate not buildable',
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-next'));
+    });
+    // Optimistic nav already happened; the ReviewStep is mounted and renders
+    // the rejection via its commandError prop (its candidate is non-null from
+    // the seeded stateAnalyze, but the same path holds for a null candidate
+    // — verified by the empty-state branch in ReviewStep.tsx).
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-review-error')).toHaveTextContent(
+        'candidate not buildable',
+      );
+    });
+    expect(screen.getByTestId('wizard-review-step')).toBeInTheDocument();
+  });
+
+  it('ReviewStep: rejected wizard_save renders an alert and does NOT navigate', async () => {
+    const navigate = vi.fn();
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateReview });
+    const { client } = renderWizard({ store, navigate });
+    client.ackQueue.push({
+      request_id: 'reject-save',
+      ok: false,
+      error: 'profile registry refused write',
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-save'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-review-error')).toHaveTextContent(
+        'profile registry refused write',
+      );
+    });
+    expect(navigate).not.toHaveBeenCalled();
+    expect(screen.getByTestId('wizard-review-step')).toBeInTheDocument();
+  });
+
+  it('ReviewStep: rejected wizard_save via thrown send error surfaces the fallback message', async () => {
+    const navigate = vi.fn();
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateReview });
+    const { client } = renderWizard({ store, navigate });
+    client.rejectionQueue.push(new Error('socket closed'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-save'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-review-error')).toHaveTextContent(
+        'socket closed',
+      );
+    });
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('AddStep: rejected wizard_remove_source renders a panel-level alert and keeps the source visible', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({
+      type: 'wizard_state_changed',
+      state: { ...stateAnalyze, step: 'add' },
+    });
+    const { client } = renderWizard({ store });
+    client.ackQueue.push({
+      request_id: 'reject-remove-source',
+      ok: false,
+      error: 'source is locked',
+    });
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('wizard-source-remove-src_A'));
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('wizard-add-panel-error')).toHaveTextContent(
+        'source is locked',
+      );
+    });
+    expect(screen.getByTestId('wizard-add-step')).toBeInTheDocument();
+  });
+
+  it('rapid double-click on Save dispatches wizard_save exactly once (inflight guard)', async () => {
+    const store = createWizardStore();
+    store.getState().handleEvent({ type: 'wizard_state_changed', state: stateReview });
+    const { client } = renderWizard({ store });
+    // First click starts an in-flight save; the FakeClient default ack does not resolve
+    // until the microtask queue drains. The second click within the same synchronous
+    // batch must be dropped by the inflight guard.
+    fireEvent.click(screen.getByTestId('wizard-save'));
+    fireEvent.click(screen.getByTestId('wizard-save'));
+    await act(async () => {
+      await Promise.resolve();
+    });
+    const saveCalls = client.sent.filter((c) => c.type === 'wizard_save');
+    expect(saveCalls).toHaveLength(1);
   });
 });

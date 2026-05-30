@@ -3,10 +3,10 @@
  *
  *   + kit · + sound · + song · + album · + artist
  *
- *   For file / folder kinds we open the Tauri dialog plugin via dynamic import. The plugin
- *   is injected at runtime by the Tauri shell; in browser / test environments the import
- *   fails and we fall back to a plain text input. Reference picker is ALWAYS a text input
- *   (matches the spec — references are textual names, no file backing).
+ *   For file / folder kinds we open the bundled Tauri dialog plugin. If the call
+ *   is unavailable (test or browser without a Tauri shell), we fall back to a
+ *   plain text input. Reference picker is ALWAYS a text input (matches the spec —
+ *   references are textual names, no file backing).
  *
  *   The accumulated source list renders below with a remove button per row. The "Analyze"
  *   action below is disabled until at least one source is added.
@@ -18,6 +18,7 @@
  */
 
 import { useRef, useState, type ChangeEvent } from 'react';
+import { open as openTauriDialog } from '@tauri-apps/plugin-dialog';
 
 import type {
   InspirationSource,
@@ -35,10 +36,11 @@ export interface AddStepProps {
     mode: WizardSourceMode;
     location: string;
     display_name: string;
-  }) => void;
+  }) => boolean | void | Promise<boolean | void>;
   onRemoveSource: (sourceId: string) => void;
   onBack: () => void;
   onNext: () => void;
+  submitError?: string | null;
   /**
    * Optional injection point for tests. Returns the picked path, or null if the user
    * cancelled. The production path dynamically imports `@tauri-apps/plugin-dialog`.
@@ -52,9 +54,9 @@ interface PickerDraft {
 }
 
 /**
- * Default dialog opener — dynamic-imports the Tauri plugin. When the plugin isn't
- * available (test or browser without Tauri shell) returns null so the caller falls back
- * to the manual text input.
+ * Default dialog opener — calls the bundled Tauri dialog plugin. When the plugin
+ * is unavailable (test or browser without Tauri shell) returns null so the
+ * caller falls back to the manual text input.
  */
 interface TauriDialogModule {
   open: (opts: {
@@ -64,19 +66,11 @@ interface TauriDialogModule {
 }
 
 /**
- * Module specifier kept in a variable + tagged with `/* @vite-ignore *\/` so neither
- * Vite nor TypeScript's static analyser tries to resolve `@tauri-apps/plugin-dialog`
- * at build time. The Tauri shell injects the plugin into the runtime module graph;
- * everywhere else (jsdom / plain browser) the dynamic import throws and we return
- * null so the AddStep falls back to the manual text input.
- */
-const TAURI_DIALOG_MODULE = '@tauri-apps/plugin-dialog';
-
-/**
- * Indirected dynamic-import. Exported only for tests so they can stub the import.
+ * Indirected opener module. Exported only for tests so they can stub the Tauri
+ * call while production keeps the plugin statically reachable for Vite.
  */
 export const __tauriDialogImporter: { import: () => Promise<TauriDialogModule> } = {
-  import: () => import(/* @vite-ignore */ TAURI_DIALOG_MODULE) as Promise<TauriDialogModule>,
+  import: async () => ({ open: openTauriDialog }),
 };
 
 /**
@@ -112,6 +106,7 @@ export function AddStep({
   onRemoveSource,
   onBack,
   onNext,
+  submitError = null,
   openDialog,
 }: AddStepProps): JSX.Element {
   const [draft, setDraft] = useState<PickerDraft | null>(null);
@@ -166,7 +161,7 @@ export function AddStep({
    * single `role="alert"` region rendered below the draft. This is the WCAG
    * 2.2 §3.3.1 / §3.3.3 error-identification pattern.
    */
-  const handleConfirm = (currentDraft: PickerDraft): void => {
+  const handleConfirm = async (currentDraft: PickerDraft): Promise<void> => {
     const trimmedLocation = location.trim();
     const trimmedName = displayName.trim();
     if (trimmedLocation === '') {
@@ -180,12 +175,23 @@ export function AddStep({
       return;
     }
     setError(null);
-    onAddSource({
+    const payload = {
       kind: currentDraft.kind,
       mode: currentDraft.mode,
       location: trimmedLocation,
       display_name: trimmedName,
-    });
+    };
+    const result = onAddSource(payload);
+    if (result instanceof Promise) {
+      const accepted = await result;
+      if (accepted === false) {
+        locationRef.current?.focus();
+        return;
+      }
+    } else if (result === false) {
+      locationRef.current?.focus();
+      return;
+    }
     closeDraft();
   };
 
@@ -198,11 +204,36 @@ export function AddStep({
 
   const locationInvalid = error === 'Location is required.';
   const displayNameInvalid = error === 'Display name is required.';
-  const hasError = error !== null;
+  const visibleError = error ?? submitError;
+  const hasError = visibleError !== null;
+  // Field-level association for the alert region: when the error is a
+  // client-side validation message, only the offending input describes itself.
+  // For backend (submitError) rejections, the alert isn't tied to a specific
+  // field, so both inputs point at it so screen readers reach the explanation
+  // when traversing either control.
+  const submitErrorOnly = error === null && submitError !== null;
+  const locationDescribed = locationInvalid || submitErrorOnly;
+  const displayNameDescribed = displayNameInvalid || submitErrorOnly;
+
+  // Panel-level surface for backend rejections that arrive while no draft is
+  // open (e.g., wizard_remove_source rejection, or a wizard_set_metadata that
+  // was sent before the operator left the Name step but ack-ed after they
+  // optimistically arrived here). The in-draft alert below stays the canonical
+  // surface for add-source rejections so it stays attached to the inputs.
+  const panelLevelError = draft === null ? submitError : null;
 
   return (
     <section className="wizard-panel" data-testid="wizard-add-step">
       <h2>Add inspiration sources</h2>
+      {panelLevelError === null ? null : (
+        <div
+          role="alert"
+          className="wizard-field-error"
+          data-testid="wizard-add-panel-error"
+        >
+          {panelLevelError}
+        </div>
+      )}
       <div className="wizard-add-buttons" data-testid="wizard-add-buttons">
         {KIND_DISPLAY_ORDER.map((kind) => (
           <button
@@ -249,7 +280,7 @@ export function AddStep({
                 ref={locationRef}
                 aria-required="true"
                 aria-invalid={locationInvalid}
-                aria-describedby={locationInvalid ? DRAFT_ERROR_ID : undefined}
+                aria-describedby={locationDescribed ? DRAFT_ERROR_ID : undefined}
               />
             </label>
           ) : (
@@ -299,12 +330,12 @@ export function AddStep({
               ref={displayNameRef}
               aria-required="true"
               aria-invalid={displayNameInvalid}
-              aria-describedby={displayNameInvalid ? DRAFT_ERROR_ID : undefined}
+              aria-describedby={displayNameDescribed ? DRAFT_ERROR_ID : undefined}
             />
           </label>
           {hasError && (
             <div id={DRAFT_ERROR_ID} role="alert" className="wizard-field-error">
-              {error}
+              {visibleError}
             </div>
           )}
           <div className="wizard-draft-actions">
@@ -320,7 +351,9 @@ export function AddStep({
               type="button"
               className="wizard-button primary"
               data-testid="wizard-draft-confirm"
-              onClick={() => handleConfirm(draft)}
+              onClick={() => {
+                void handleConfirm(draft);
+              }}
             >
               Add source
             </button>

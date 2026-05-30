@@ -268,6 +268,7 @@ export interface CommandAck {
   model_bytes?: string; // base64 for binary, raw json otherwise
   model_bytes_b64?: string; // Python sidecar's explicit base64 field name
   error?: string;
+  code?: string;
 }
 
 /**

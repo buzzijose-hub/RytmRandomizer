@@ -28,6 +28,7 @@ export interface AnalyzeStepProps {
   onRetry: (sourceId: string) => void;
   onBack: () => void;
   onNext: () => void;
+  commandError?: string | null;
 }
 
 export function AnalyzeStep({
@@ -37,6 +38,7 @@ export function AnalyzeStep({
   onRetry,
   onBack,
   onNext,
+  commandError = null,
 }: AnalyzeStepProps): JSX.Element {
   const hasJobs = jobs.length > 0;
   const allTerminal = hasJobs && jobs.every((j) => j.status === 'ok' || j.status === 'failed');
@@ -54,6 +56,15 @@ export function AnalyzeStep({
   return (
     <section className="wizard-panel" data-testid="wizard-analyze-step">
       <h2>Analyze sources</h2>
+      {commandError === null ? null : (
+        <div
+          role="alert"
+          className="wizard-field-error"
+          data-testid="wizard-command-error"
+        >
+          {commandError}
+        </div>
+      )}
       {hasJobs ? null : (
         <p className="wizard-empty-hint" data-testid="wizard-analyze-empty">
           Tap Analyze to run all sources through the analysis pipeline.
