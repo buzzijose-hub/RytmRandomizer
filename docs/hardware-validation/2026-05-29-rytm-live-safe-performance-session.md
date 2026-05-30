@@ -258,6 +258,39 @@ send
 Listen specifically for whether Pad 2 BD Acoustic waveform changes feel like
 useful kick-shape discovery or too much identity drift.
 
+## Hardware Lesson: Selector Discovery Validation
+
+Follow-up hardware testing confirmed that explicit `amount wide` selector
+discovery now moves BD Acoustic waveform choices during live snapshot
+randomization while still restoring cleanly to the captured anchor.
+
+KIT `SIDECHN05` (`0e1ce3fd186e4b92`) was captured again on hardware:
+
+- MIDI input index: `0`, `Elektron Analog Rytm MKII 0`.
+- MIDI output index: `1`, `Elektron Analog Rytm MKII 1`.
+- Commands used:
+  `preset live`, `lane lfo off`, `lane fx micro`, `pad 2 amount wide`,
+  `pad 2 density full`, `pad 2 bias looser`, `pad 3 amount wide`,
+  `pad 3 density full`, `pad 3 bias grittier`, then repeated
+  `randomize` / `go`, `changes`, and `send`.
+- First `randomize` showed Pad 2 `bd_acoustic Waveform: 6 -> 11` and sent
+  `242` messages.
+- First `go` showed Pad 2 `bd_acoustic Waveform: 6 -> 8` and sent `242`
+  messages.
+- Second `go` showed Pad 2 `bd_acoustic Waveform: 6 -> 1` and sent `242`
+  messages.
+- Pad 3 `sd_fm` also moved as intended under its wide/grittier contract,
+  including FM/noise rows and filter-mode changes.
+- `Z`, `send`, and `changes` restored the captured anchor; the shell reported
+  `no parameter changes staged`.
+- Total shell send count for this validation run: `1452` messages.
+
+Conclusion: selector discovery is hardware-validated for the original concern:
+Pad 2 BD Acoustic `Waveform` can now change during explicit wide discovery
+without requiring default live selector behavior to become riskier. This keeps
+the live-performance model intact: wide per-pad contracts are discovery moves,
+while `preset live` defaults remain trustworthy for repeated section changes.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.

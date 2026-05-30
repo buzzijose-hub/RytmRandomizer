@@ -1,9 +1,16 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-29. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
+- 2026-05-30: Hardware validation confirmed selector-aware wide discovery on
+  KIT `SIDECHN05` (`0e1ce3fd186e4b92`). With `preset live`, `lane lfo off`,
+  `lane fx micro`, `pad 2 amount wide`, and `pad 2 density full`, Pad 2
+  BD Acoustic `Waveform` moved across repeated variations (`6 -> 11`,
+  `6 -> 8`, `6 -> 1`) while `Z` plus `send` restored the captured anchor and
+  ended with `no parameter changes staged`. This validates the original
+  waveform-edge concern without making default live selector movement riskier.
 - 2026-05-30: Selector-aware discovery added for explicit Analog Rytm snapshot
   shell randomizer contracts. Default live selector movement remains cautious,
   but `pad N amount wide` plus `randomize` can now choose a different legal
