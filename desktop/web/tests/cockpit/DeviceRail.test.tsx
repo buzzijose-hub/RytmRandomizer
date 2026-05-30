@@ -171,7 +171,7 @@ describe('DeviceRail', () => {
   });
 
   it('renders planned Rytm pads as locked before a snapshot is loaded', () => {
-    render(<DeviceRail />);
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
 
     const rytm = screen.getByTestId('device-card-analog-rytm-mk2');
     expect(within(rytm).getAllByTestId(/device-rail-rytm-pad-/)).toHaveLength(12);
