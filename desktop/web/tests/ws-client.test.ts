@@ -145,6 +145,8 @@ interface HarnessOpts {
   logger?: ClientLogger;
   authToken?: string | null;
   authTokenResolver?: () => string | null;
+  setTimeoutImpl?: typeof setTimeout;
+  clearTimeoutImpl?: typeof clearTimeout;
 }
 
 function makeHarness(opts: HarnessOpts = {}): Harness {
@@ -157,6 +159,8 @@ function makeHarness(opts: HarnessOpts = {}): Harness {
     initialReconnectDelayMs: opts.initialReconnectDelayMs,
     maxReconnectDelayMs: opts.maxReconnectDelayMs,
     ackTimeoutMs: opts.ackTimeoutMs,
+    setTimeoutImpl: opts.setTimeoutImpl,
+    clearTimeoutImpl: opts.clearTimeoutImpl,
     authToken: opts.authToken,
     authTokenResolver: opts.authTokenResolver,
     requestIdGenerator: () => `r${++counter}`,
@@ -577,6 +581,30 @@ describe('CockpitClient — send / ack correlation', () => {
     await expect(promise).rejects.toThrow(/ack timeout/);
   });
 
+  it('ignores stale ack-timeout callbacks after an ack already resolved', async () => {
+    const timeoutCallbacks: Array<() => void> = [];
+    const captureTimeout = ((callback: TimerHandler): ReturnType<typeof setTimeout> => {
+      timeoutCallbacks.push(callback as () => void);
+      return 1 as unknown as ReturnType<typeof setTimeout>;
+    }) as unknown as typeof setTimeout;
+    const h = makeHarness({
+      ackTimeoutMs: 100,
+      setTimeoutImpl: captureTimeout,
+      clearTimeoutImpl: () => undefined,
+    });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const promise = h.client.send({ type: 'regen' });
+    const sent = JSON.parse(h.currentSocket().sent[0] ?? '') as { request_id: string };
+    h.currentSocket().emitMessage(ack(sent.request_id));
+    await expect(promise).resolves.toMatchObject({ ok: true });
+    expect(timeoutCallbacks).toHaveLength(1);
+    const staleTimeoutCallback = timeoutCallbacks[0];
+    if (staleTimeoutCallback === undefined) throw new Error('timeout callback was not captured');
+    staleTimeoutCallback();
+    expect(h.client.getStatus()).toBe('connected');
+  });
+
   it('warns when an ack arrives with an unknown request_id', () => {
     const warnings: unknown[] = [];
     const h = makeHarness({ logger: { warn: (...args) => warnings.push(args) } });
@@ -614,6 +642,30 @@ describe('CockpitClient — send / ack correlation', () => {
 });
 
 describe('CockpitClient — close & reconnect', () => {
+  it('allows multiple subscribers per event and ignores stale unsubscribe handles', () => {
+    const h = makeHarness();
+    const first = vi.fn();
+    const second = vi.fn();
+    const unsubscribeFirst = h.client.on('session_status', first);
+    const unsubscribeSecond = h.client.on('session_status', second);
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    h.currentSocket().emitMessage(sessionStatusEvent);
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+
+    unsubscribeFirst();
+    h.currentSocket().emitMessage(sessionStatusEvent);
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(2);
+
+    const internals = h.client as unknown as {
+      eventHandlers: Map<string, Set<unknown>>;
+    };
+    internals.eventHandlers.delete('session_status');
+    expect(() => unsubscribeSecond()).not.toThrow();
+  });
+
   it('close() prevents reconnect and rejects in-flight commands', async () => {
     const h = makeHarness();
     h.client.connect();

@@ -155,14 +155,14 @@ def _valid_rytm_sysex() -> bytes:
     payload of 7-data-byte groups. ``unpack_elektron_7bit`` rejects a lone
     trailing header byte (per the codex-P2 envelope fix), so we ship four
     full groups (header + 7 data bytes) = 32 wire bytes of payload, which
-    unpack to 28 data bytes -- enough to carry the real-layout 16-NUL
+    unpack to 28 data bytes -- enough to carry the 16-NUL real-layout
     kit-name field at offset 8.
     """
 
     # 4 groups x (1 header + 7 data) = 32 wire bytes after the kit-type
     # byte. Headers all-zero -> high bit of every data byte clears -> the
     # unpacked payload is all NULs. read_ascii_name then sees a 16-byte
-    # NUL kit-name field and returns "".
+    # NUL kit-name field at the real-layout offset and returns "".
     payload = bytes([0x00] * 32)  # 4 zero-header groups of 7 NUL data bytes each.
     return bytes([0x00, 0x20, 0x3C, 0x07]) + payload
 

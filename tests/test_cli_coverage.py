@@ -79,6 +79,11 @@ def test_resolve_help_text_supports_static_and_dynamic_help_entries():
 
     top_level_help = resolve_help_text("--help")
     snapshot_help = resolve_help_text("rytm-snapshot-pad-compatibility-report")
+
+    assert top_level_help.startswith("RytmRandomizer passive CLI")
+    assert snapshot_help.startswith(
+        "RytmRandomizer passive CLI: rytm-snapshot-pad-compatibility-report"
+    )
     intelligence_help = resolve_help_text("rytm-snapshot-intelligence-report")
     mutation_preview_help = resolve_help_text("rytm-snapshot-mutation-preview-report")
     style_routing_help = resolve_help_text("rytm-style-snapshot-routing-report")

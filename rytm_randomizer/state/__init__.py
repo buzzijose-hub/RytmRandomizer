@@ -16,10 +16,12 @@ hardware.
 from __future__ import annotations
 
 from . import (
+    a4_soft_capture,
     anchor,
     anchor_validation,
     group,
     pad_mode,
+    rytm_cc_observe,
     scene,
     selected_isolated_pad_validation,
     selected_target_validation,
@@ -27,10 +29,12 @@ from . import (
 )
 
 __all__ = [
+    "a4_soft_capture",
     "anchor",
     "anchor_validation",
     "group",
     "pad_mode",
+    "rytm_cc_observe",
     "scene",
     "selected_isolated_pad_validation",
     "selected_target_validation",

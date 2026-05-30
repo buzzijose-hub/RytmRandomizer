@@ -40,7 +40,7 @@ USAGE = (
     "anchor-profile-report | behavior-parity-report | rytm-12-pad-machine-matrix-report | "
     "manual-feedback-packet-report "
     "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
-    "rytm-snapshot-pad-compatibility-report | "
+    "rytm-snapshot-pad-compatibility-report | analog-rytm-midi-catalog-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
@@ -755,10 +755,32 @@ def test_rytm_snapshot_pad_compatibility_report_help_exits_zero_and_matches_fixt
     assert result.stderr == ""
 
 
+def test_analog_rytm_midi_catalog_report_help_exits_zero_and_matches_fixture():
+    result = run_cli("analog-rytm-midi-catalog-report", "--help")
+
+    assert result.returncode == 0
+    assert normalize_newlines(result.stdout) == fixture_text(
+        "cli_analog_rytm_midi_catalog_report_help_expected.txt"
+    )
+    assert result.stderr == ""
+
+
 def test_rytm_snapshot_pad_compatibility_help_safety_matches_report_source():
     from rytm_randomizer.reports.rytm_snapshot_pad_compatibility import SAFETY_LINES
 
     result = run_cli("rytm-snapshot-pad-compatibility-report", "--help")
+
+    assert result.returncode == 0
+    help_text = normalize_newlines(result.stdout)
+    safety_block = help_text.split("Safety:\n", 1)[1]
+    assert safety_block.splitlines() == [f"  {line}" for line in SAFETY_LINES]
+    assert result.stderr == ""
+
+
+def test_analog_rytm_midi_catalog_help_safety_matches_report_source():
+    from rytm_randomizer.reports.analog_rytm_midi_catalog import SAFETY_LINES
+
+    result = run_cli("analog-rytm-midi-catalog-report", "--help")
 
     assert result.returncode == 0
     help_text = normalize_newlines(result.stdout)
@@ -1336,6 +1358,19 @@ def test_rytm_snapshot_pad_compatibility_report_command_exits_zero_and_describes
     assert "- Blocked pads: 8" in output
     assert "Pad 10 / OH / Open Hihat:" in output
     assert "Snapshot ready: False" in output
+    assert result.stderr == ""
+
+
+def test_analog_rytm_midi_catalog_report_command_exits_zero_and_describes_coverage():
+    result = run_cli("analog-rytm-midi-catalog-report")
+
+    output = normalize_newlines(result.stdout)
+    assert result.returncode == 0
+    assert "RytmRandomizer passive Analog Rytm MIDI catalog" in output
+    assert "- Total CC/NRPN rows: 323" in output
+    assert "- Machine SRC rows: 224" in output
+    assert "- Machine profiles with SRC rows: 33 / 33" in output
+    assert "Validated runtime rows stay limited to the existing V1.34 mutation maps." in output
     assert result.stderr == ""
 
 
@@ -2175,6 +2210,13 @@ def test_readme_mentions_rytm_snapshot_pad_compatibility_report_command():
     assert "snapshot-pad compatibility" in text
 
 
+def test_readme_mentions_analog_rytm_midi_catalog_report_command():
+    text = _operator_docs_text()
+
+    assert "analog-rytm-midi-catalog-report" in text
+    assert "Analog Rytm MIDI catalog" in text
+
+
 def test_readme_mentions_rytm_snapshot_intelligence_report_command():
     text = _operator_docs_text()
 
@@ -2667,6 +2709,17 @@ def test_behavior_parity_report_command_is_deterministic():
 def test_rytm_snapshot_pad_compatibility_report_command_is_deterministic():
     first = run_cli("rytm-snapshot-pad-compatibility-report")
     second = run_cli("rytm-snapshot-pad-compatibility-report")
+
+    assert first.returncode == 0
+    assert second.returncode == 0
+    assert normalize_newlines(first.stdout) == normalize_newlines(second.stdout)
+    assert first.stderr == ""
+    assert second.stderr == ""
+
+
+def test_analog_rytm_midi_catalog_report_command_is_deterministic():
+    first = run_cli("analog-rytm-midi-catalog-report")
+    second = run_cli("analog-rytm-midi-catalog-report")
 
     assert first.returncode == 0
     assert second.returncode == 0

@@ -44,6 +44,10 @@ def _registered_command_exit_code(args):
             "rytm_randomizer.reports.rytm_snapshot_pad_compatibility",
             "RYTM_SNAPSHOT_PAD_COMPATIBILITY_CLI_COMMAND",
         ),
+        "analog-rytm-midi-catalog-report": (
+            "rytm_randomizer.reports.analog_rytm_midi_catalog",
+            "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
+        ),
         "rytm-snapshot-intelligence-report": (
             "rytm_randomizer.reports.rytm_snapshot_intelligence",
             "RYTM_SNAPSHOT_INTELLIGENCE_CLI_COMMAND",
