@@ -4,6 +4,12 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Live snapshot shell `drum-core` macro added for the current
+  performance recipe. It applies `preset live`, keeps LFO off and FX micro,
+  locks Pad 1 as the kick anchor, sets pads 2-4 to wide/full drum discovery
+  with Pad 2 looser and pads 3-4 grittier, then stages `randomize` without
+  sending. The operator can inspect with `changes`, send once, and use `go` for
+  the next drum-core variation.
 - 2026-05-30: Live snapshot shell pad bias shorthand added after hardware
   testing showed `pad 4 grittier` was the natural command during drum-core
   discovery. `pad N darker|brighter|tighter|looser|grittier|neutral` now routes

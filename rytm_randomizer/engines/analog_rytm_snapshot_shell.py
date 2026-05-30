@@ -91,6 +91,7 @@ _CMD_RESET: Final[str] = "z"
 _CMD_FRESH: Final[str] = "fresh"
 _CMD_KIT: Final[str] = "kit"
 _CMD_RESNAPSHOT: Final[str] = "resnapshot"
+_CMD_DRUM_CORE: Final[str] = "drum-core"
 _CMD_QUIT: Final[str] = "q"
 _CMD_HELP: Final[str] = "help"
 _CMD_S1A: Final[str] = "s1a"
@@ -1766,6 +1767,7 @@ def _help_text() -> str:
             "again / next = repeat last mutation and make a new variation",
             "go = make the next variation and send it",
             "randomize / rand / r = OXI-style kit variation respecting pad contracts",
+            "drum-core = lock Pad 1 and stage wide pads 2-4 drum discovery",
             "kit / resnapshot = receive a new live KIT SysEx anchor",
             "mode live|studio = choose session guardrail range",
             "depth gentle|normal|strong|wild = set global session depth",
@@ -2133,6 +2135,23 @@ class AnalogRytmSnapshotShell:
             self._repeat_last_command()
         self._send()
 
+    def _apply_drum_core_macro(self) -> None:
+        self._write_line("macro applied: drum-core")
+        self._set_preset(("preset", _PRESET_LIVE))
+        self._set_lane_policy(("lane", _LANE_LFO, _LANE_POLICY_OFF))
+        self._set_lane_policy(("lane", _LANE_FX, _LANE_POLICY_MICRO))
+        self._set_lock(("lock", "1"), locked=True)
+        for pad, bias in (
+            (2, _RANDOMIZER_BIAS_LOOSER),
+            (3, _RANDOMIZER_BIAS_GRITTIER),
+            (4, _RANDOMIZER_BIAS_GRITTIER),
+        ):
+            raw_pad = str(pad)
+            self._set_pad_randomizer_policy(("pad", raw_pad, "amount", _RANDOMIZER_AMOUNT_WIDE))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "density", _RANDOMIZER_DENSITY_FULL))
+            self._set_pad_randomizer_policy(("pad", raw_pad, "bias", bias))
+        self._apply_command(SNAPSHOT_SHELL_COMMANDS[_CMD_RANDOMIZE])
+
     def _resnapshot_anchor(self) -> None:
         if self._resnapshot_func is None:
             self._write_line(
@@ -2234,6 +2253,9 @@ class AnalogRytmSnapshotShell:
             return True
         if normalized in {"rand", "r"}:
             self._apply_command(SNAPSHOT_SHELL_COMMANDS[_CMD_RANDOMIZE])
+            return True
+        if normalized in {_CMD_DRUM_CORE, "drumcore"}:
+            self._apply_drum_core_macro()
             return True
         if normalized == _CMD_UNDO:
             self._undo()

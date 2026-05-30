@@ -303,6 +303,26 @@ Follow-up code makes `pad N darker|brighter|tighter|looser|grittier|neutral`
 an operator shorthand for `pad N bias VALUE`. This is a live-UX improvement
 only; it changes the command surface, not the randomizer contract semantics.
 
+The follow-up `drum-core` macro captures the same performance recipe as a
+single staging command:
+
+```text
+drum-core
+changes
+send
+go
+changes
+send
+Z
+send
+changes
+```
+
+It applies `preset live`, `lane lfo off`, `lane fx micro`, `lock 1`, Pad 2
+wide/full/looser, Pad 3 wide/full/grittier, and Pad 4 wide/full/grittier, then
+stages `randomize` without sending. This keeps the same live safety ritual:
+inspect first, send intentionally, then use `go` for later variations.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.

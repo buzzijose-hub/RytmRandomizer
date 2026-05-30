@@ -800,6 +800,47 @@ def test_snapshot_shell_pad_bias_shorthand_sets_randomizer_bias(capsys) -> None:
     assert "pad 4 randomizer bias: grittier" in captured.out
 
 
+def test_snapshot_shell_drum_core_macro_stages_locked_kick_discovery(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), sender)
+
+    assert shell.dispatch("drum-core") is True
+
+    captured = capsys.readouterr()
+    guardrails = shell.state.guardrails
+    assert guardrails.mode == "live"
+    assert guardrails.locked_pads == frozenset({1})
+    assert guardrails.lane_policies["lfo"] == "off"
+    assert guardrails.lane_policies["fx"] == "micro"
+    assert guardrails.randomizer_overrides[2].amount == "wide"
+    assert guardrails.randomizer_overrides[2].density == "full"
+    assert guardrails.randomizer_overrides[2].bias == "looser"
+    assert guardrails.randomizer_overrides[3].amount == "wide"
+    assert guardrails.randomizer_overrides[3].density == "full"
+    assert guardrails.randomizer_overrides[3].bias == "grittier"
+    assert guardrails.randomizer_overrides[4].amount == "wide"
+    assert guardrails.randomizer_overrides[4].density == "full"
+    assert guardrails.randomizer_overrides[4].bias == "grittier"
+    assert shell.state.last_command_name == "randomize"
+    assert _pad_values_unchanged(shell.state.anchor.events, shell.state.current_events, pad=1)
+    assert (
+        _changed_event_count_for_pad(
+            shell.state.anchor.events,
+            shell.state.current_events,
+            pad=2,
+        )
+        > 0
+    )
+    assert len(sender.sent_messages) == 0
+    assert "macro applied: drum-core" in captured.out
+    assert "mutation applied: Randomize" in captured.out
+
+
 def test_snapshot_shell_randomize_density_low_touches_fewer_pad_rows_than_full() -> None:
     from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
         AnalogRytmSnapshotShell,
