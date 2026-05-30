@@ -485,11 +485,23 @@ Follow-up outbound isolation on KIT 14 then proved a narrow centered live band:
 - Pad 2 one-step `CC20` movement to `78` produced no visible `ERR`.
 - Pad 2 return `CC20` send to `79` produced no visible `ERR`.
 
+Second follow-up on the current loaded KIT 14 captured a fresh live snapshot
+with Pad 2 Dual VCO `Osc 2 Detune` at anchor `66`. The passive observer reported
+direct `CC20` value `66`, zero NRPN messages, and the verdict that the raw
+snapshot and emitted CC share the same scale. Outbound isolation from that exact
+anchor then proved the one-step center-band lane:
+
+- Pad 2 same-value `CC20` send at `66` produced no visible `ERR`.
+- Pad 2 one-step `CC20` movement to `65` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+- Pad 2 one-step `CC20` movement to `67` produced no visible `ERR`.
+- Pad 2 return `CC20` send to `66` produced no visible `ERR`.
+
 Conclusion: Dual VCO detune is not globally unusable over live CC. The unsafe
-KIT 13 low values remain guarded, but centered values `78..79` are now allowed
-as a deliberately narrow live lane so the parameter can participate in sound
-design without re-opening the earlier `ERR` path. The passive observer also saw
-the hardware emit `80`, but outbound `80` has not yet been separately proven.
+KIT 13 low values remain guarded, but captured center-band anchors can now move
+one step within `65..79` so the parameter can participate in sound design
+without re-opening the earlier `ERR` path. The passive observer also saw the
+hardware emit `80`, but outbound `80` has not yet been separately proven.
 
 ## Safe Resume Steps For Tomorrow
 

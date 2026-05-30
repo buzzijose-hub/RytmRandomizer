@@ -166,7 +166,8 @@ _AMP_ATTACK_TIME: Final[str] = "Amp Attack Time"
 _PAD_1_TUNE_WINDOW: Final[int] = 3
 _LEVEL_PARAMETERS: Final[frozenset[str]] = frozenset({"Level", "Track Level", "Amp Volume"})
 _DUAL_VCO_DETUNE_PARAMETER: Final[str] = "Osc 2 Detune"
-_DUAL_VCO_DETUNE_LIVE_SAFE_RANGE: Final[tuple[int, int]] = (78, 79)
+_DUAL_VCO_DETUNE_LIVE_SAFE_RANGE: Final[tuple[int, int]] = (65, 79)
+_DUAL_VCO_DETUNE_LIVE_MUTATION_RADIUS: Final[int] = 1
 _GENERAL_SCOPES: Final[frozenset[str]] = frozenset({"filter", "amp", "lfo"})
 _PROMOTED_SRC_MUTATION_STATUSES: Final[frozenset[str]] = frozenset(
     {"validated_runtime", "documented_only"}
@@ -937,22 +938,39 @@ def _is_live_dual_vco_detune_safe_value(value: int) -> bool:
     return low <= value <= high
 
 
+def _live_dual_vco_detune_window(
+    anchor_event: AnalogRytmRenderedStyleEvent,
+) -> tuple[int, int] | None:
+    if not _is_live_dual_vco_detune_event(anchor_event):
+        return None
+    if not _is_live_dual_vco_detune_safe_value(anchor_event.value):
+        return None
+
+    low, high = _DUAL_VCO_DETUNE_LIVE_SAFE_RANGE
+    return (
+        max(low, anchor_event.value - _DUAL_VCO_DETUNE_LIVE_MUTATION_RADIUS),
+        min(high, anchor_event.value + _DUAL_VCO_DETUNE_LIVE_MUTATION_RADIUS),
+    )
+
+
 def _live_dual_vco_detune_limited_value(
+    anchor_event: AnalogRytmRenderedStyleEvent,
     event: AnalogRytmRenderedStyleEvent,
     proposed_value: int,
 ) -> int:
     if not _is_live_dual_vco_detune_event(event):
         return proposed_value
 
-    low, high = _DUAL_VCO_DETUNE_LIVE_SAFE_RANGE
+    window = _live_dual_vco_detune_window(anchor_event)
+    if window is None:
+        return anchor_event.value
+    low, high = window
     limited_value = _value_limited_value(proposed_value, low, high)
     if limited_value != event.value:
         return limited_value
-    if event.value == high:
+    if event.value >= high:
         return low
-    if event.value == low:
-        return high
-    return limited_value
+    return high
 
 
 def _is_machine_source_tune_event(event: AnalogRytmRenderedStyleEvent) -> bool:
@@ -1614,7 +1632,11 @@ def _mutate_snapshot_event(
             anchor_event.value_min,
             anchor_event.value_max,
         )
-        proposed_value = _live_dual_vco_detune_limited_value(current_event, proposed_value)
+        proposed_value = _live_dual_vco_detune_limited_value(
+            anchor_event,
+            current_event,
+            proposed_value,
+        )
         return replace(
             current_event,
             value=proposed_value,
