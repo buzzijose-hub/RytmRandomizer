@@ -218,6 +218,46 @@ push expressiveness through explicit performer controls such as per-pad
 amount/density/bias and optional saved performance presets, not by making the
 default live profile riskier.
 
+## Hardware Lesson: Selector Discovery Target
+
+Follow-up listening on `SIDECHN05` found that `pad 2 amount wide` and `pad 2
+density full` produced excellent BD Acoustic variations, but the BD Acoustic
+`Waveform` selector did not move when it sat at the edge of its legal range.
+This is expected from the first live-safe selector rule: selector rows moved one
+step without wrapping, so a top-edge selector could clamp back to the same
+value.
+
+The next selector-discovery behavior is intentionally opt-in. Default live
+commands and non-wide randomizer contracts stay cautious, but explicit
+`amount wide` randomizer contracts may pick a different legal selector value
+when lane policy allows it. Lane `micro` remains stronger than amount-wide
+discovery for lane-owned selectors such as LFO waveform.
+
+Hardware target for the next pass:
+
+```text
+preset live
+lane lfo off
+lane fx micro
+pad 2 amount wide
+pad 2 density full
+pad 2 bias looser
+pad 3 amount wide
+pad 3 density full
+pad 3 bias grittier
+randomize
+changes
+send
+go
+changes
+send
+Z
+send
+```
+
+Listen specifically for whether Pad 2 BD Acoustic waveform changes feel like
+useful kick-shape discovery or too much identity drift.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
@@ -260,6 +300,8 @@ default live profile riskier.
 - Collect amount/density/bias listening notes for hats, cymbals, synth voices,
   and noise pads so performer-friendly randomizer presets can be derived from
   real outcomes.
+- Validate selector discovery on BD Acoustic `Waveform`, SY Raw waveform rows,
+  filter mode, and LFO waveform before making any named `discover` macro.
 - Add a plan-inspection CLI/report that prints Pad 1 planned values before armed
   send.
 - Consider whether `send` should optionally support changed-only sends. The

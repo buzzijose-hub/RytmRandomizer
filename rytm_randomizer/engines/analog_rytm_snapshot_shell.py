@@ -844,6 +844,26 @@ def _selector_mutated_value(
     return low + ((normalized_anchor - low + (direction * step)) % span)
 
 
+def _wide_selector_discovery_value(
+    event: AnalogRytmRenderedStyleEvent,
+    command: SnapshotShellCommand,
+    generation: int,
+    selector_range: SelectorValueRange,
+) -> int:
+    low, high = selector_range
+    span = (high - low) + 1
+    if span <= 1:
+        return low
+    normalized_anchor = _normalized_selector_value(event.value, selector_range)
+    payload = (
+        f"selector|{command.name}|{generation}|{event.pad}|{event.machine_key}|"
+        f"{event.section}|{event.parameter}|{event.value}"
+    ).encode()
+    value = int.from_bytes(hashlib.blake2s(payload, digest_size=2).digest(), "big")
+    step = 1 + (value % (span - 1))
+    return low + ((normalized_anchor - low + step) % span)
+
+
 def _is_snapshot_omitted_mapping(mapping: AnalogRytmCcMapping) -> bool:
     return (
         mapping.machine_key is not None
@@ -1488,13 +1508,26 @@ def _mutate_snapshot_event(
     else:
         event_lane = _lane_for_event(current_event)
         lane_policy = guardrails.lane_policies[event_lane] if event_lane is not None else None
-        proposed_value = _selector_mutated_value(
-            anchor_event.value,
-            delta,
-            selector_range,
-            wrap=guardrails.mode == _SESSION_MODE_STUDIO and lane_policy != _LANE_POLICY_MICRO,
-            single_step=guardrails.mode == _SESSION_MODE_LIVE or lane_policy == _LANE_POLICY_MICRO,
-        )
+        if (
+            randomizer_contract is not None
+            and randomizer_contract.amount == _RANDOMIZER_AMOUNT_WIDE
+            and lane_policy != _LANE_POLICY_MICRO
+        ):
+            proposed_value = _wide_selector_discovery_value(
+                anchor_event,
+                command,
+                generation,
+                selector_range,
+            )
+        else:
+            proposed_value = _selector_mutated_value(
+                anchor_event.value,
+                delta,
+                selector_range,
+                wrap=guardrails.mode == _SESSION_MODE_STUDIO and lane_policy != _LANE_POLICY_MICRO,
+                single_step=guardrails.mode == _SESSION_MODE_LIVE
+                or lane_policy == _LANE_POLICY_MICRO,
+            )
 
     return replace(
         current_event,

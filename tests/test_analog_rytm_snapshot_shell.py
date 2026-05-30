@@ -915,6 +915,89 @@ def test_snapshot_shell_randomize_amount_wide_moves_farther_than_micro() -> None
     assert 0 < micro_delta < wide_delta
 
 
+def test_snapshot_shell_randomize_amount_micro_keeps_live_selector_edge_cautious() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_values(
+            pad=2,
+            machine_value=30,
+            values_by_lsb={7: 11},
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("pad 2 amount micro") is True
+    assert shell.dispatch("pad 2 density full") is True
+    assert shell.dispatch("randomize") is True
+
+    anchor_waveform = _event_for(anchor.events, pad=2, parameter="Waveform")
+    current_waveform = _event_for(shell.state.current_events, pad=2, parameter="Waveform")
+    assert anchor_waveform.value == 11
+    assert current_waveform.value == 11
+
+
+def test_snapshot_shell_randomize_amount_wide_discovers_selector_at_edge() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_values(
+            pad=2,
+            machine_value=30,
+            values_by_lsb={7: 11},
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("pad 2 amount wide") is True
+    assert shell.dispatch("pad 2 density full") is True
+    assert shell.dispatch("randomize") is True
+
+    anchor_waveform = _event_for(anchor.events, pad=2, parameter="Waveform")
+    current_waveform = _event_for(shell.state.current_events, pad=2, parameter="Waveform")
+    assert anchor_waveform.value == 11
+    assert current_waveform.value != anchor_waveform.value
+    assert 0 <= current_waveform.value <= 11
+
+
+def test_snapshot_shell_lane_micro_keeps_wide_selector_discovery_cautious() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_values(
+            pad=2,
+            machine_value=32,
+            values_by_lsb={36: 6},
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("lane lfo micro") is True
+    assert shell.dispatch("pad 2 amount wide") is True
+    assert shell.dispatch("pad 2 density full") is True
+    assert shell.dispatch("randomize") is True
+
+    anchor_waveform = _event_for(anchor.events, pad=2, parameter="LFO Waveform")
+    current_waveform = _event_for(shell.state.current_events, pad=2, parameter="LFO Waveform")
+    assert anchor_waveform.value == 6
+    assert current_waveform.value == 6
+
+
 def test_snapshot_shell_invalid_randomizer_pad_commands_do_not_mutate_or_send(
     capsys,
 ) -> None:

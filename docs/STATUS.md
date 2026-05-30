@@ -4,6 +4,12 @@ Last updated: 2026-05-29. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Selector-aware discovery added for explicit Analog Rytm snapshot
+  shell randomizer contracts. Default live selector movement remains cautious,
+  but `pad N amount wide` plus `randomize` can now choose a different legal
+  selector value for rows such as BD Acoustic `Waveform` when density and lane
+  guardrails allow it. Lane `micro` still keeps lane-owned selectors, such as
+  LFO waveform, in one-step live behavior.
 - 2026-05-29: Live lane guardrails added to the Analog Rytm snapshot shell so
   RytmRandomizer can act as a second performer beside an OXI or other
   sequencer: the sequencer decides when notes happen, while the shell changes
