@@ -1774,6 +1774,7 @@ def _help_text() -> str:
             "lock N / unlock N = exclude or re-enable a pad this session",
             "pad N gentle|normal|strong|wild|off = set a pad override",
             "pad N role|amount|density|bias VALUE = set OXI-style randomizer guardrails",
+            "pad N BIAS = shorthand for pad N bias BIAS",
             "preset live|kick-safe|all-gentle|studio = apply session guardrails",
             "guards reset = clear locks/overrides and restore default live guardrails",
             "status = show session guardrails",
@@ -1992,13 +1993,17 @@ class AnalogRytmSnapshotShell:
         if len(parts) != 3:
             self._write_line(
                 "usage: pad 1-12 gentle|normal|strong|wild|off "
-                "or pad 1-12 role|amount|density|bias VALUE"
+                "or pad 1-12 role|amount|density|bias VALUE "
+                "or pad 1-12 BIAS"
             )
             return
         pad = self._parse_pad(parts[1])
         if pad is None:
             return
         policy = parts[2]
+        if policy in _RANDOMIZER_BIASES:
+            self._set_pad_randomizer_policy(("pad", parts[1], "bias", policy))
+            return
         if policy == "off":
             current_events = _reset_pad_to_anchor(
                 self.state.anchor.events,

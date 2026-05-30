@@ -4,6 +4,11 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Live snapshot shell pad bias shorthand added after hardware
+  testing showed `pad 4 grittier` was the natural command during drum-core
+  discovery. `pad N darker|brighter|tighter|looser|grittier|neutral` now routes
+  to the same randomizer contract as `pad N bias VALUE`, while explicit
+  `pad N bias VALUE` remains supported.
 - 2026-05-30: Hardware validation confirmed selector-aware wide discovery on
   KIT `SIDECHN05` (`0e1ce3fd186e4b92`). With `preset live`, `lane lfo off`,
   `lane fx micro`, `pad 2 amount wide`, and `pad 2 density full`, Pad 2

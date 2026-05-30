@@ -783,6 +783,23 @@ def test_snapshot_shell_status_reports_default_randomizer_contracts(capsys) -> N
     assert "9=hat/normal/high/brighter" in captured.out
 
 
+def test_snapshot_shell_pad_bias_shorthand_sets_randomizer_bias(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), sender)
+
+    assert shell.dispatch("pad 4 grittier") is True
+
+    captured = capsys.readouterr()
+    assert shell.state.guardrails.randomizer_overrides[4].bias == "grittier"
+    assert len(sender.sent_messages) == 0
+    assert "pad 4 randomizer bias: grittier" in captured.out
+
+
 def test_snapshot_shell_randomize_density_low_touches_fewer_pad_rows_than_full() -> None:
     from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
         AnalogRytmSnapshotShell,

@@ -291,6 +291,18 @@ without requiring default live selector behavior to become riskier. This keeps
 the live-performance model intact: wide per-pad contracts are discovery moves,
 while `preset live` defaults remain trustworthy for repeated section changes.
 
+## Hardware Lesson: Drum-Core Bias Shorthand
+
+The first drum-core discovery pass added Pad 4 to the explicit wide-discovery
+target beside pads 2 and 3. The shell correctly applied `pad 4 amount wide` and
+`pad 4 density full`, but the natural performance command `pad 4 grittier` was
+rejected because the shell previously required the longer `pad 4 bias grittier`
+form.
+
+Follow-up code makes `pad N darker|brighter|tighter|looser|grittier|neutral`
+an operator shorthand for `pad N bias VALUE`. This is a live-UX improvement
+only; it changes the command surface, not the randomizer contract semantics.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
