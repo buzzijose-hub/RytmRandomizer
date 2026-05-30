@@ -1,10 +1,9 @@
 /**
  * Tests for the AddStep — second wizard panel.
  *
- * The default dialog opener uses dynamic-import to fetch the Tauri plugin. We mock that
- * module per-test via `vi.mock(...)` and exercise both the "picked a path" and
- * "user cancelled" branches. We also exercise the failure branch by tearing down the
- * mock and letting `import` reject in jsdom.
+ * The default dialog opener uses a bundled Tauri plugin import behind a small
+ * indirection. Tests stub that indirection and exercise the "picked a path",
+ * "user cancelled", and plugin-unavailable branches.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -337,7 +336,8 @@ describe('AddStep — dialog opener (injected for determinism)', () => {
   });
 
   it('default dialog opener (no injection) shows a paste-path fallback when the Tauri plugin is unavailable', async () => {
-    // No injection: production path runs the dynamic import, which throws in jsdom.
+    // No injection: production path calls the Tauri plugin, which is unavailable
+    // in jsdom and resolves through the paste-path fallback.
     render(
       <AddStep
         sources={[]}
@@ -419,7 +419,7 @@ describe('defaultOpenDialog — stubbed Tauri importer', () => {
     expect(await defaultOpenDialog('folder')).toBeNull();
   });
 
-  it('returns null when the dynamic import itself rejects', async () => {
+  it('returns null when the Tauri opener module itself rejects', async () => {
     __tauriDialogImporter.import = vi.fn().mockRejectedValue(new Error('no plugin'));
     expect(await defaultOpenDialog('folder')).toBeNull();
   });

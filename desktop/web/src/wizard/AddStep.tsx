@@ -3,10 +3,10 @@
  *
  *   + kit · + sound · + song · + album · + artist
  *
- *   For file / folder kinds we open the Tauri dialog plugin via dynamic import. The plugin
- *   is injected at runtime by the Tauri shell; in browser / test environments the import
- *   fails and we fall back to a plain text input. Reference picker is ALWAYS a text input
- *   (matches the spec — references are textual names, no file backing).
+ *   For file / folder kinds we open the bundled Tauri dialog plugin. If the call
+ *   is unavailable (test or browser without a Tauri shell), we fall back to a
+ *   plain text input. Reference picker is ALWAYS a text input (matches the spec —
+ *   references are textual names, no file backing).
  *
  *   The accumulated source list renders below with a remove button per row. The "Analyze"
  *   action below is disabled until at least one source is added.
@@ -18,6 +18,7 @@
  */
 
 import { useRef, useState, type ChangeEvent } from 'react';
+import { open as openTauriDialog } from '@tauri-apps/plugin-dialog';
 
 import type {
   InspirationSource,
@@ -53,9 +54,9 @@ interface PickerDraft {
 }
 
 /**
- * Default dialog opener — dynamic-imports the Tauri plugin. When the plugin isn't
- * available (test or browser without Tauri shell) returns null so the caller falls back
- * to the manual text input.
+ * Default dialog opener — calls the bundled Tauri dialog plugin. When the plugin
+ * is unavailable (test or browser without Tauri shell) returns null so the
+ * caller falls back to the manual text input.
  */
 interface TauriDialogModule {
   open: (opts: {
@@ -65,19 +66,11 @@ interface TauriDialogModule {
 }
 
 /**
- * Module specifier kept in a variable + tagged with `/* @vite-ignore *\/` so neither
- * Vite nor TypeScript's static analyser tries to resolve `@tauri-apps/plugin-dialog`
- * at build time. The Tauri shell injects the plugin into the runtime module graph;
- * everywhere else (jsdom / plain browser) the dynamic import throws and we return
- * null so the AddStep falls back to the manual text input.
- */
-const TAURI_DIALOG_MODULE = '@tauri-apps/plugin-dialog';
-
-/**
- * Indirected dynamic-import. Exported only for tests so they can stub the import.
+ * Indirected opener module. Exported only for tests so they can stub the Tauri
+ * call while production keeps the plugin statically reachable for Vite.
  */
 export const __tauriDialogImporter: { import: () => Promise<TauriDialogModule> } = {
-  import: () => import(/* @vite-ignore */ TAURI_DIALOG_MODULE) as Promise<TauriDialogModule>,
+  import: async () => ({ open: openTauriDialog }),
 };
 
 /**
