@@ -203,6 +203,41 @@ every CC for every machine, scenes, group mutation, pattern changes, transport,
 clock, kit-save, project writes, SysEx, unattended sends, or Analog Four
 behavior.
 
+## Analog Rytm Passive CC Observe Validation
+
+This validation is input-only. It opens the Analog Rytm MIDI input port, sends
+no MIDI, opens no output port, requests no SysEx, and writes no kit/project
+data.
+
+Command:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-cc-observe
+```
+
+Expected:
+
+- Select the Analog Rytm MIDI input port.
+- Move one or more Rytm controls.
+- Press Enter to capture observed pending CCs.
+- Confirm the report lists raw pad/channel/control/value observations.
+- Confirm candidate labels include Rytm manual labels when known. For SRC rows,
+  expect multiple candidates unless a separate snapshot anchor proves the active
+  machine.
+- Confirm standard NRPN-style CC99/CC98/CC6/CC38 sequences are summarized as
+  decoded NRPN observations.
+- Confirm the report says `Opened output: False` and `Sent MIDI: False`.
+
+Dual VCO detune diagnostic:
+
+- Reload the known-good kit on the Rytm first.
+- Run `--arm --rytm-cc-observe`.
+- Select Pad 2, open the Dual VCO SRC page, turn encoder B a tiny amount, then
+  press Enter in PowerShell.
+- Repeat for Pad 3.
+- Record whether encoder B emits direct CC20, an NRPN sequence, a different CC,
+  or no MIDI at all.
+
 ## Passive OS 1.72 MIDI Catalog Boundary
 
 The Analog Rytm MIDI catalog is manual-backed and read-only:

@@ -107,6 +107,7 @@ on one line for an existing module, you probably need a new module instead.
 | `state/scene.py`      | Frozen current-scene-name state + transitions.                                  |
 | `state/selection.py`  | Frozen target-pad / channel / isolated-pad selection state + transitions.       |
 | `state/a4_soft_capture.py` | Frozen Analog Four passive CC-observation state + pure reducer.          |
+| `state/rytm_cc_observe.py` | Frozen Analog Rytm passive CC/NRPN observation state + pure reducer.    |
 
 ### Middle (runtime core)
 
@@ -134,7 +135,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe. |
+| `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input; `--arm --a4-soft-capture` opens only A4 input; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe. |
 | `reports/`            | Consolidated passive in-memory reports and shared formatter helpers.             |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
 

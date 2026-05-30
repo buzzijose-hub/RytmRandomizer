@@ -136,6 +136,14 @@ def _build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--rytm-cc-observe",
+        action="store_true",
+        help=(
+            "Armed passive Analog Rytm CC observer. Opens one MIDI input, "
+            "observes pending CCs, prints raw CC labels, and sends no MIDI."
+        ),
+    )
+    parser.add_argument(
         "--a4-send-param",
         action="store_true",
         help=(
@@ -501,7 +509,11 @@ def _choose_input_port_name(input_names: Sequence[str]) -> str | None:
     return input_names[chosen_index]
 
 
-def _choose_rytm_input_port_name(input_names: Sequence[str]) -> str | None:
+def _choose_rytm_input_port_name(
+    input_names: Sequence[str],
+    *,
+    error_prefix: str = "--arm --rytm-live-snapshot-shell",
+) -> str | None:
     """Prompt the user for the Analog Rytm MIDI input port."""
 
     sys.stdout.write("\nAvailable MIDI inputs:\n\n")
@@ -511,21 +523,94 @@ def _choose_rytm_input_port_name(input_names: Sequence[str]) -> str | None:
     try:
         raw = input("\nChoose the Analog Rytm MIDI input number: ").strip()
     except (EOFError, KeyboardInterrupt, OSError):
-        sys.stderr.write(
-            "--arm --rytm-live-snapshot-shell failed: no MIDI input choice provided.\n"
-        )
+        sys.stderr.write(f"{error_prefix} failed: no MIDI input choice provided.\n")
         return None
 
     try:
         chosen_index = int(raw)
     except ValueError:
-        sys.stderr.write("--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.\n")
+        sys.stderr.write(f"{error_prefix} failed: invalid MIDI input choice.\n")
         return None
 
     if chosen_index < 0 or chosen_index >= len(input_names):
-        sys.stderr.write("--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.\n")
+        sys.stderr.write(f"{error_prefix} failed: invalid MIDI input choice.\n")
         return None
     return input_names[chosen_index]
+
+
+def _run_rytm_cc_observe(args: argparse.Namespace) -> int:
+    """Open one MIDI input, observe pending Rytm CCs, print a passive report."""
+
+    if not args.arm:
+        sys.stderr.write("--rytm-cc-observe requires --arm.\n")
+        return 1
+
+    from time import monotonic
+
+    from .data import ANALOG_RYTM_MANUAL_CC
+    from .mido_provider import build_mido_midi_port_provider
+    from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError
+    from .reports.rytm_cc_observe import format_rytm_cc_observe_report
+    from .state.rytm_cc_observe import (
+        build_rytm_cc_label_lookup,
+        empty_rytm_cc_observe_snapshot,
+        observe_rytm_cc_message,
+    )
+
+    provider = build_mido_midi_port_provider()
+    try:
+        input_names = provider.list_input_names()
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --rytm-cc-observe failed: {exc}\n")
+        return 1
+
+    if not input_names:
+        sys.stderr.write("--arm --rytm-cc-observe failed: no real MIDI input ports available.\n")
+        return 1
+
+    port_name = _choose_rytm_input_port_name(
+        input_names,
+        error_prefix="--arm --rytm-cc-observe",
+    )
+    if port_name is None:
+        return 1
+
+    try:
+        port = provider.open_input(port_name)
+    except (RealMidiDependencyError, RealMidiPortError) as exc:
+        sys.stderr.write(f"--arm --rytm-cc-observe failed: {exc}\n")
+        return 1
+
+    sys.stdout.write(f"\nOpening MIDI input: {port_name}\n")
+    sys.stdout.write("Move Rytm controls, then press Enter to capture observed CCs.\n")
+
+    snapshot = empty_rytm_cc_observe_snapshot()
+    cc_lookup = build_rytm_cc_label_lookup(ANALOG_RYTM_MANUAL_CC.values())
+    try:
+        try:
+            input("")
+        except (EOFError, KeyboardInterrupt, OSError):
+            pass
+
+        for message in port.iter_pending():
+            snapshot = observe_rytm_cc_message(
+                snapshot,
+                message,
+                observed_at=monotonic(),
+                cc_lookup=cc_lookup,
+            )
+    finally:
+        close = getattr(port, "close", None)
+        if callable(close):
+            try:
+                close()
+            except (OSError, RuntimeError, AttributeError):  # pragma: no cover - best-effort
+                _shutdown_logger = _observability_get_logger(__name__)
+                _shutdown_logger.debug("rytm_cc_observe_port_close_failed_best_effort")
+
+    sys.stdout.write("\n".join(format_rytm_cc_observe_report(snapshot, input_name=port_name)))
+    sys.stdout.write("\n")
+    return 0
 
 
 def _run_a4_soft_capture(args: argparse.Namespace) -> int:
@@ -1836,6 +1921,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.a4_soft_capture and args.validate_one_cc:
         sys.stderr.write("--a4-soft-capture cannot be combined with --validate-one-cc.\n")
         return 1
+    if args.rytm_cc_observe:
+        conflicts = (
+            ("validate-one-cc", args.validate_one_cc),
+            ("rytm-live-snapshot-shell", args.rytm_live_snapshot_shell),
+            ("rytm-snapshot-shell", args.rytm_snapshot_shell),
+            ("rytm-12-pad-shell", args.rytm_12_pad_shell),
+            ("rytm-performance-snapshot", args.rytm_performance_snapshot),
+            ("rytm-kit-style", args.rytm_kit_style),
+            ("a4-soft-capture", args.a4_soft_capture),
+            ("a4-send-param", args.a4_send_param),
+            ("a4-send-nrpn-param", args.a4_send_nrpn_param),
+            ("a4-kit-recipe", args.a4_kit_recipe),
+        )
+        for option_name, is_active in conflicts:
+            if is_active:
+                sys.stderr.write(f"--rytm-cc-observe cannot be combined with --{option_name}.\n")
+                return 1
     if args.rytm_live_snapshot_shell and args.validate_one_cc:
         sys.stderr.write("--rytm-live-snapshot-shell cannot be combined with --validate-one-cc.\n")
         return 1
@@ -2040,6 +2142,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     if args.rytm_live_snapshot_shell:
         return _run_rytm_live_snapshot_shell(args)
+    if args.rytm_cc_observe:
+        return _run_rytm_cc_observe(args)
     if args.rytm_snapshot_shell:
         return _run_rytm_snapshot_shell(args)
     if args.rytm_12_pad_shell:

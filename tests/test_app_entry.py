@@ -325,6 +325,102 @@ def test_app_main_a4_soft_capture_requires_arm(capsys):
     assert "--a4-soft-capture requires --arm" in captured.err
 
 
+def test_app_main_rytm_cc_observe_requires_arm(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--rytm-cc-observe"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-cc-observe requires --arm" in captured.err
+
+
+def test_app_main_arm_rytm_cc_observe_opens_only_input_and_reports(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    message = types.SimpleNamespace(
+        type="control_change",
+        channel=1,
+        control=20,
+        value=25,
+    )
+    fake_input = _FakeInputPort((message,))
+
+    def fake_list_input_names(self):
+        return ("Fake Rytm In",)
+
+    def fake_open_input(self, port_name):
+        assert port_name == "Fake Rytm In"
+        return fake_input
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("Rytm CC observe must not touch MIDI outputs")
+
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        fake_list_input_names,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fake_open_input)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fail_output_call,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(["--arm", "--rytm-cc-observe"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "Rytm CC observe" in captured.out
+    assert "Input: Fake Rytm In" in captured.out
+    assert "Opened output: False" in captured.out
+    assert "Sent MIDI: False" in captured.out
+    assert "- Pad 2 (channel 1) CC20 value 25" in captured.out
+    assert "machine:dual_vco:Osc 2 Detune" in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_rytm_cc_observe_rejects_validate_one_cc_before_output(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-cc-observe",
+            "--validate-one-cc",
+            "--channel",
+            "1",
+            "--control",
+            "20",
+            "--value",
+            "25",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-cc-observe cannot be combined with --validate-one-cc" in captured.err
+
+
 def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, capsys):
     _seed()
     from rytm_randomizer import app, mido_provider

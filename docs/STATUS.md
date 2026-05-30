@@ -4,6 +4,12 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Passive Analog Rytm CC observation path added for the next Dual
+  VCO detune investigation. `--arm --rytm-cc-observe` opens only a Rytm MIDI
+  input, sends no MIDI, drains pending CCs after Enter, reports raw
+  channel/control/value, candidate Rytm labels such as
+  `machine:dual_vco:Osc 2 Detune`, and decodes standard NRPN-style
+  CC99/CC98/CC6/CC38 sequences when the hardware emits them.
 - 2026-05-30: Direct one-CC isolation confirmed the Dual VCO detune guard is the
   right live-CC safety boundary for KIT 13. Sending CC20 to Pad 2 and Pad 3,
   including the captured same values, produced `ERR` on encoder B and did not

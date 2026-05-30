@@ -403,6 +403,19 @@ itself. Keeping those two CC20 rows out of `drum-core` is correct. Future Dual
 VCO detune discovery should only be revisited if it uses a different transport
 or a separately proven hardware procedure.
 
+Follow-up tooling: add a passive Rytm CC observer before the next hardware
+session. The observer command is:
+
+```powershell
+python -m rytm_randomizer.app --arm --rytm-cc-observe
+```
+
+It opens only the Rytm MIDI input, sends no MIDI, and reports raw CC
+channel/control/value observations plus candidate manual labels. If encoder B
+emits a standard NRPN-style CC99/CC98/CC6/CC38 sequence instead of direct CC20,
+the report summarizes the decoded NRPN address and value. This should be the
+next diagnostic before any renewed attempt to randomize Dual VCO detune.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.

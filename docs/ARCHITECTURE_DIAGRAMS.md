@@ -14,7 +14,7 @@ Current baseline used while creating / refreshing this document:
 
 - Branch: `governance/enforce-abstractions-and-policy` (PR #43), built on `modularize-v1.34` at `df54b3f` (Wave-1 simplification bundle merged).
 - Protected reference: `tests/fixtures/v134_parity/*.json` (the retired V1.34 monolith's behavior, captured as 505 byte-frozen JSON golden files; parametrized into 685 pytest parity test items).
-- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 98 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
+- Current package: `rytm_randomizer/` — 26 top-level Python files + 12 subpackages = 100 total modules. The 12 subpackages: `behavior/`, `data/`, `devices/` (with nested `devices/strategies/`), `dual_machine/`, `engines/`, `guardrails/`, `observability/`, `reports/`, `senders/`, `snapshot/`, `state/`, `style_analysis/`.
 - Closeout scripts: `Scripts/closeout_check.ps1` (PowerShell, Windows) and `scripts/closeout_check.py` (Python, cross-platform).
 - This file was audited and refreshed as part of PR #43; ~6 of the original 12 diagrams were stale relative to the current subpackage layout and have been redrawn.
 
@@ -26,9 +26,9 @@ Current baseline used while creating / refreshing this document:
 | Passive metadata | `rytm_randomizer/constants.py`, `rytm_randomizer/commands.py`, `rytm_randomizer/scenes.py`, `rytm_randomizer/profiles.py` |
 | Data layer (single source of truth) | `rytm_randomizer/data/{param_maps,plans,profiles,scenes,scene_display,modes,rytm_machine_catalog}.py` |
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
-| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,rytm_machine_matrix}.py` (subpackage; was the old top-level `reports.py`) |
+| Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{formatter,rytm_machine_matrix,rytm_cc_observe}.py` (subpackage; was the old top-level `reports.py`) |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
-| Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
+| Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,a4_soft_capture,rytm_cc_observe,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
 | Mock MIDI + mapping | `rytm_randomizer/mock_midi.py`, `rytm_randomizer/mock_message_mapper.py`, `rytm_randomizer/mock_runtime_active_bridge.py` |
 | Active / real MIDI boundaries | `rytm_randomizer/active_boundary.py`, `rytm_randomizer/real_midi_adapter.py`, `rytm_randomizer/mido_provider.py`, `rytm_randomizer/midi_io.py` |
 | Engines (per-pad runtime cores) | `rytm_randomizer/engines/{_runtime,pad1,pad2,pad3,pad4}.py`, `rytm_randomizer/randomization.py`, `rytm_randomizer/scene_runner.py`, `rytm_randomizer/group_runner.py`, `rytm_randomizer/runtime_plan.py` |
@@ -48,7 +48,7 @@ Current baseline used while creating / refreshing this document:
 flowchart TB
     User["Operator / developer"]
     V134["V1.34 reference behavior<br/>tests/fixtures/v134_parity/<br/>(505 JSON goldens; 685 parity test items)"]
-    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 98 modules)"]
+    Package["Modular package<br/>rytm_randomizer/<br/>(12 subpackages, 100 modules)"]
     Tests["Tests<br/>2370+ pytest tests<br/>tests/, tests/architecture/"]
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]

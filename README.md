@@ -195,6 +195,16 @@ python -m rytm_randomizer.app --arm --a4-soft-capture
 
 It opens an Analog Four MIDI input port, observes pending CC messages, labels manual-backed Appendix D CCs, prints a known/unknown state report for tracks 1-4, and sends no MIDI.
 
+Analog Rytm CC observe is also input-only:
+
+```bash
+python -m rytm_randomizer.app --arm --rytm-cc-observe
+```
+
+It opens an Analog Rytm MIDI input port, observes pending CC messages, prints
+raw pad/channel/control/value observations, lists known candidate Rytm labels,
+decodes standard NRPN-style CC99/CC98/CC6/CC38 sequences, and sends no MIDI.
+
 Analog Four named parameter sends are active and require an explicit armed
 output-port choice:
 
@@ -326,6 +336,7 @@ Pad 4 = BD Acoustic / body + accent pressure lane
 - Four-pad scene/global commands auto-load anchors if needed.
 - Free-form all-row mutation, samples, performance macros, source level, track level, amp volume, NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project writes remain out of scope.
 - Analog Four sends are candidate/manifest-gated and require an explicit `--arm` path plus a ready plan; the passive default touches no hardware.
+- Analog Rytm CC observe is input-only: `python -m rytm_randomizer.app --arm --rytm-cc-observe` opens a Rytm MIDI input port, observes pending CC messages, prints raw CC/NRPN observations with candidate labels, and sends no MIDI.
 - Analog Four soft live capture is input-only: `python -m rytm_randomizer.app --arm --a4-soft-capture` opens an A4 MIDI input port, observes pending CC messages, prints a known/unknown state report, and sends no MIDI.
 - Analog Four named parameter sends are active: `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32` prompts for an A4 output port, sends one manual-backed CC MSB message, closes the port, and exits.
 - Analog Four kit recipes are active: `python -m rytm_randomizer.app --arm --a4-kit-recipe bell-techno-grid` prompts for an A4 output port, sends a coordinated manual-backed four-track CC recipe, closes the port, and exits.
