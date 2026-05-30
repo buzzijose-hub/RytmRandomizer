@@ -17,6 +17,8 @@ Here the dependencies are *injected* instead of global:
 
 Import-safety: ``mido`` is imported lazily inside :func:`send_cc` only, so
 ``import rytm_randomizer.midi_io`` opens no ports and pulls in no MIDI library.
+The NRPN helper delegates to :func:`send_cc`, preserving that same lazy
+boundary.
 """
 
 from __future__ import annotations
@@ -37,6 +39,7 @@ __all__ = [
     "clamp",
     "send_cc",
     "send_machine",
+    "send_nrpn",
     "send_param",
 ]
 
@@ -167,6 +170,30 @@ def send_cc(
     )
     out.send(msg)
     sleep(0.02)
+
+
+def send_nrpn(
+    out: Sender,
+    nrpn_msb: int,
+    nrpn_lsb: int,
+    value_msb: int,
+    *,
+    value_lsb: int | None = None,
+    channel: int = 0,
+    sleep: SleepFunc = time.sleep,
+) -> None:
+    """Send one NRPN parameter update as control-change messages.
+
+    The standard NRPN address sequence is CC99 (parameter MSB), CC98
+    (parameter LSB), then CC6 (Data Entry MSB). When a fine value is supplied,
+    CC38 (Data Entry LSB) follows as the optional 14-bit data component.
+    """
+
+    send_cc(out, 99, nrpn_msb, channel=channel, sleep=sleep)
+    send_cc(out, 98, nrpn_lsb, channel=channel, sleep=sleep)
+    send_cc(out, 6, value_msb, channel=channel, sleep=sleep)
+    if value_lsb is not None:
+        send_cc(out, 38, value_lsb, channel=channel, sleep=sleep)
 
 
 def send_machine(

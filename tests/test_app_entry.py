@@ -291,6 +291,20 @@ class _FakeOutputPort:
         self.closed = True
 
 
+class _FakeInputPort:
+    """Duck-types a ``mido`` input port with ``iter_pending`` + ``close``."""
+
+    def __init__(self, messages) -> None:
+        self._messages = tuple(messages)
+        self.closed = False
+
+    def iter_pending(self):
+        return iter(self._messages)
+
+    def close(self) -> None:
+        self.closed = True
+
+
 def _restore_provider_methods(saved):
     """Helper to restore previously monkey-patched provider class attributes."""
 
@@ -298,6 +312,666 @@ def _restore_provider_methods(saved):
 
     for name, value in saved.items():
         setattr(mido_provider.MidoMidiPortProvider, name, value)
+
+
+def test_app_main_a4_soft_capture_requires_arm(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-soft-capture requires --arm" in captured.err
+
+
+def test_app_main_rytm_cc_observe_requires_arm(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--rytm-cc-observe"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-cc-observe requires --arm" in captured.err
+
+
+def test_app_main_rytm_cc_observe_live_snapshot_requires_observe(capsys):
+    _seed()
+    from rytm_randomizer import app
+
+    exit_code = app.main(["--arm", "--rytm-cc-observe-live-snapshot"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-cc-observe-live-snapshot requires --rytm-cc-observe" in captured.err
+
+
+def test_app_main_arm_rytm_cc_observe_opens_only_input_and_reports(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    message = types.SimpleNamespace(
+        type="control_change",
+        channel=1,
+        control=20,
+        value=25,
+    )
+    fake_input = _FakeInputPort((message,))
+
+    def fake_list_input_names(self):
+        return ("Fake Rytm In",)
+
+    def fake_open_input(self, port_name):
+        assert port_name == "Fake Rytm In"
+        return fake_input
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("Rytm CC observe must not touch MIDI outputs")
+
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        fake_list_input_names,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fake_open_input)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fail_output_call,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(["--arm", "--rytm-cc-observe"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "Rytm CC observe" in captured.out
+    assert "Input: Fake Rytm In" in captured.out
+    assert "Opened output: False" in captured.out
+    assert "Sent MIDI: False" in captured.out
+    assert "- Pad 2 (channel 1) CC20 value 25" in captured.out
+    assert "machine:dual_vco:Osc 2 Detune" in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_rytm_cc_observe_rejects_validate_one_cc_before_output(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-cc-observe",
+            "--validate-one-cc",
+            "--channel",
+            "1",
+            "--control",
+            "20",
+            "--value",
+            "25",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--rytm-cc-observe cannot be combined with --validate-one-cc" in captured.err
+
+
+def test_app_main_rytm_cc_observe_rejects_two_snapshot_label_sources(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--rytm-cc-observe",
+            "--rytm-cc-observe-snapshot",
+            "current-kit.syx",
+            "--rytm-cc-observe-live-snapshot",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    expected = (
+        "--rytm-cc-observe-live-snapshot cannot be combined with " "--rytm-cc-observe-snapshot"
+    )
+    assert expected in captured.err
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected"),
+    (
+        (
+            ["--rytm-cc-observe-snapshot", "current-kit.syx"],
+            "--rytm-cc-observe-snapshot requires --rytm-cc-observe",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--validate-one-cc"],
+            "--rytm-live-snapshot-shell cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--rytm-12-pad-shell"],
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-12-pad-shell",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--rytm-kit-style", "industrial"],
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-kit-style",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--rytm-performance-snapshot", "kit.syx"],
+            "--rytm-live-snapshot-shell cannot be combined with --rytm-performance-snapshot",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-soft-capture"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-send-param"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-send-nrpn-param"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-kit-recipe", "acid-core"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--rytm-live-snapshot-shell", "--a4-kit-recipe-nrpn"],
+            "--rytm-live-snapshot-shell cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--validate-one-cc"],
+            "--rytm-snapshot-shell cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--rytm-kit-style", "industrial"],
+            "--rytm-snapshot-shell cannot be combined with --rytm-kit-style",
+        ),
+        (
+            [
+                "--dry-run",
+                "--rytm-snapshot-shell",
+                "kit.syx",
+                "--rytm-performance-snapshot",
+                "kit.syx",
+            ],
+            "--rytm-snapshot-shell cannot be combined with --rytm-performance-snapshot",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-soft-capture"],
+            "--rytm-snapshot-shell cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-send-param"],
+            "--rytm-snapshot-shell cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-send-nrpn-param"],
+            "--rytm-snapshot-shell cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-kit-recipe", "acid-core"],
+            "--rytm-snapshot-shell cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-snapshot-shell", "kit.syx", "--a4-kit-recipe-nrpn"],
+            "--rytm-snapshot-shell cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-snapshot-shell-send"],
+            "--confirm-rytm-snapshot-shell-send requires --rytm-snapshot-shell",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--rytm-performance-snapshot", "kit.syx"],
+            "--rytm-12-pad-shell cannot be combined with --rytm-performance-snapshot",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-soft-capture"],
+            "--rytm-12-pad-shell cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-send-param"],
+            "--rytm-12-pad-shell cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-send-nrpn-param"],
+            "--rytm-12-pad-shell cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-kit-recipe", "acid-core"],
+            "--rytm-12-pad-shell cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-12-pad-shell", "--a4-kit-recipe-nrpn"],
+            "--rytm-12-pad-shell cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-12-pad-send"],
+            "--confirm-rytm-12-pad-send requires --rytm-12-pad-shell",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--validate-one-cc"],
+            "--rytm-performance-snapshot cannot be combined with --validate-one-cc",
+        ),
+        (
+            [
+                "--dry-run",
+                "--rytm-performance-snapshot",
+                "kit.syx",
+                "--rytm-kit-style",
+                "industrial",
+            ],
+            "--rytm-performance-snapshot cannot be combined with --rytm-kit-style",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-soft-capture"],
+            "--rytm-performance-snapshot cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-send-param"],
+            "--rytm-performance-snapshot cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-send-nrpn-param"],
+            "--rytm-performance-snapshot cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            [
+                "--dry-run",
+                "--rytm-performance-snapshot",
+                "kit.syx",
+                "--a4-kit-recipe",
+                "acid-core",
+            ],
+            "--rytm-performance-snapshot cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-performance-snapshot", "kit.syx", "--a4-kit-recipe-nrpn"],
+            "--rytm-performance-snapshot cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-performance-send"],
+            "--confirm-rytm-performance-send requires --rytm-performance-snapshot",
+        ),
+        (
+            ["--rytm-performance-mode", "live-safe"],
+            "--rytm-performance-mode requires --rytm-performance-snapshot",
+        ),
+        (
+            ["--rytm-performance-style", "flow-shift"],
+            "--rytm-performance-style requires --rytm-performance-snapshot",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-soft-capture"],
+            "--rytm-kit-style cannot be combined with --a4-soft-capture",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-send-param"],
+            "--rytm-kit-style cannot be combined with --a4-send-param",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-send-nrpn-param"],
+            "--rytm-kit-style cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-kit-recipe", "acid-core"],
+            "--rytm-kit-style cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--dry-run", "--rytm-kit-style", "industrial", "--a4-kit-recipe-nrpn"],
+            "--rytm-kit-style cannot be combined with --a4-kit-recipe-nrpn",
+        ),
+        (
+            ["--confirm-rytm-kit-send"],
+            "--confirm-rytm-kit-send requires --rytm-kit-style",
+        ),
+        (
+            ["--arm", "--a4-soft-capture", "--a4-send-nrpn-param"],
+            "--a4-soft-capture cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--arm", "--a4-soft-capture", "--a4-kit-recipe", "acid-core"],
+            "--a4-soft-capture cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--a4-send-nrpn-param", "--validate-one-cc"],
+            "--a4-send-nrpn-param cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--arm", "--a4-send-param", "--a4-send-nrpn-param"],
+            "--a4-send-param cannot be combined with --a4-send-nrpn-param",
+        ),
+        (
+            ["--arm", "--a4-send-param", "--a4-kit-recipe", "acid-core"],
+            "--a4-send-param cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--a4-send-nrpn-param", "--a4-kit-recipe", "acid-core"],
+            "--a4-send-nrpn-param cannot be combined with --a4-kit-recipe",
+        ),
+        (
+            ["--arm", "--a4-kit-recipe", "acid-core", "--validate-one-cc"],
+            "--a4-kit-recipe cannot be combined with --validate-one-cc",
+        ),
+        (
+            ["--a4-kit-recipe-nrpn"],
+            "--a4-kit-recipe-nrpn requires --a4-kit-recipe",
+        ),
+        (
+            ["--value-lsb", "1"],
+            "--value-lsb requires --a4-send-nrpn-param",
+        ),
+    ),
+)
+def test_app_main_rejects_unsafe_surface_combinations_before_midi(
+    argv,
+    expected,
+    capsys,
+    monkeypatch,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(argv)
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert expected in captured.err
+
+
+@pytest.mark.parametrize(
+    ("chooser_name", "inputs", "input_error", "expected_error"),
+    (
+        (
+            "_choose_input_port_name",
+            ("Fake A4 In",),
+            EOFError,
+            "--arm --a4-soft-capture failed: no MIDI input choice provided.",
+        ),
+        (
+            "_choose_rytm_input_port_name",
+            ("Fake Rytm In",),
+            EOFError,
+            "--arm --rytm-live-snapshot-shell failed: no MIDI input choice provided.",
+        ),
+        (
+            "_choose_rytm_input_port_name",
+            ("Fake Rytm In",),
+            "not-a-number",
+            "--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.",
+        ),
+        (
+            "_choose_rytm_input_port_name",
+            ("Fake Rytm In",),
+            "99",
+            "--arm --rytm-live-snapshot-shell failed: invalid MIDI input choice.",
+        ),
+    ),
+)
+def test_app_input_port_choosers_report_invalid_or_missing_choices(
+    chooser_name,
+    inputs,
+    input_error,
+    expected_error,
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app
+
+    if isinstance(input_error, type) and issubclass(input_error, BaseException):
+
+        def raise_input(_prompt=""):
+            raise input_error
+
+        monkeypatch.setattr("builtins.input", raise_input)
+    else:
+        monkeypatch.setattr("builtins.input", lambda _prompt="": input_error)
+
+    chooser = getattr(app, chooser_name)
+
+    assert chooser(inputs) is None
+    captured = capsys.readouterr()
+    assert expected_error in captured.err
+
+
+def test_app_a4_resolvers_accept_display_labels() -> None:
+    _seed()
+    from rytm_randomizer import app
+
+    cc_mapping = app._resolve_a4_manual_cc("OSC1 Pulsewidth")
+    nrpn_mapping = app._resolve_a4_synth_track_nrpn(" osc1 pitch ")
+    recipe = app._resolve_a4_kit_recipe("Detroit Minimal")
+
+    assert cc_mapping is not None
+    assert cc_mapping.parameter == "OSC1 Pulsewidth"
+    assert nrpn_mapping is not None
+    assert nrpn_mapping.parameter == "OSC1 Pitch"
+    assert recipe is not None
+    assert recipe.label == "Detroit Minimal"
+
+
+def test_app_main_arm_a4_soft_capture_opens_only_input_and_reports(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    message = types.SimpleNamespace(
+        type="control_change",
+        channel=0,
+        control=72,
+        value=96,
+    )
+    fake_input = _FakeInputPort((message,))
+
+    def fake_list_input_names(self):
+        return ("Fake A4 In",)
+
+    def fake_open_input(self, port_name):
+        assert port_name == "Fake A4 In"
+        return fake_input
+
+    def fail_output_call(self, *_args):
+        raise AssertionError("A4 soft capture must not touch MIDI outputs")
+
+    scripted_inputs = iter(["0", ""])
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        fake_list_input_names,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fake_open_input)
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_output_names",
+        fail_output_call,
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_output_call)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": next(scripted_inputs))
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert fake_input.closed is True
+    assert "A4 soft live capture" in captured.out
+    assert "Input: Fake A4 In" in captured.out
+    assert "Opened output: False" in captured.out
+    assert "Sent MIDI: False" in captured.out
+    assert "Track 1: 1 observed params" in captured.out
+    assert "- OSC1 Pulsewidth: 96" in captured.out
+    assert captured.err == ""
+
+
+def test_app_main_arm_a4_soft_capture_no_input_ports_returns_one(monkeypatch, capsys):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda _self: (),
+    )
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "no real MIDI input ports available" in captured.err
+
+
+def test_app_main_arm_a4_soft_capture_invalid_input_choice_returns_one(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_open_input(self, *_args):
+        raise AssertionError("invalid choice must not open input")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda _self: ("Fake A4 In",),
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_open_input)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "not-a-number")
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "invalid MIDI input choice" in captured.err
+
+
+def test_app_main_arm_a4_soft_capture_negative_input_choice_returns_one(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_open_input(self, *_args):
+        raise AssertionError("negative choice must not open input")
+
+    monkeypatch.setattr(
+        mido_provider.MidoMidiPortProvider,
+        "list_input_names",
+        lambda _self: ("Fake A4 In",),
+    )
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_open_input)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "-1")
+
+    exit_code = app.main(["--arm", "--a4-soft-capture"])
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "invalid MIDI input choice" in captured.err
+
+
+def test_app_main_a4_soft_capture_rejects_validate_one_cc_before_output(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-soft-capture",
+            "--validate-one-cc",
+            "--channel",
+            "0",
+            "--control",
+            "72",
+            "--value",
+            "96",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-soft-capture cannot be combined with --validate-one-cc" in captured.err
+
+
+def test_app_main_a4_soft_capture_rejects_a4_send_param_before_output(
+    monkeypatch,
+    capsys,
+):
+    _seed()
+    from rytm_randomizer import app, mido_provider
+
+    def fail_midi_call(self, *_args):
+        raise AssertionError("flag conflict must not touch MIDI ports")
+
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_input_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_input", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "list_output_names", fail_midi_call)
+    monkeypatch.setattr(mido_provider.MidoMidiPortProvider, "open_output", fail_midi_call)
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-soft-capture",
+            "--a4-send-param",
+            "--parameter",
+            "OSC1 PWM Depth",
+            "--channel",
+            "0",
+            "--value",
+            "32",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 1
+    assert "--a4-soft-capture cannot be combined with --a4-send-param" in captured.err
 
 
 def test_app_main_arm_list_output_names_dependency_error_exits_one(capsys):
@@ -520,6 +1194,39 @@ def test_app_main_arm_port_choice_out_of_range_returns_one(monkeypatch, capsys):
 
     mido_provider.MidoMidiPortProvider.list_output_names = fake_list
     monkeypatch.setattr("builtins.input", lambda _prompt="": "42")
+
+    try:
+        exit_code = app.main(["--arm"])
+    finally:
+        _restore_provider_methods(saved)
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "invalid MIDI output choice" in captured.err
+
+
+def test_app_main_arm_port_choice_negative_input_returns_one(monkeypatch, capsys):
+    """Negative output choices must not select from the end of the port list."""
+
+    _seed()
+    sys.modules.pop("rytm_hybrid_randomizer_v134", None)
+
+    from rytm_randomizer import app, mido_provider
+
+    saved = {
+        "list_output_names": mido_provider.MidoMidiPortProvider.list_output_names,
+        "open_output": mido_provider.MidoMidiPortProvider.open_output,
+    }
+
+    def fake_list(self):
+        return ("Fake Rytm Out",)
+
+    def fail_open(self, *_args):
+        raise AssertionError("negative output choice must not open output")
+
+    mido_provider.MidoMidiPortProvider.list_output_names = fake_list
+    mido_provider.MidoMidiPortProvider.open_output = fail_open
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "-1")
 
     try:
         exit_code = app.main(["--arm"])

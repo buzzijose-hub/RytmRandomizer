@@ -14,6 +14,7 @@ USAGE = (
     "manual-feedback-packet-report "
     "[--scenario full|installer|profile|mock|hardware|review] [--json] | "
     "rytm-snapshot-pad-compatibility-report | "
+    "analog-rytm-midi-catalog-report | "
     "rytm-snapshot-intelligence-report <syx-path> [--slot N|--list] | "
     "rytm-snapshot-mutation-preview-report <syx-path> [--slot N] [--depth N] "
     "[--events] [--limit N] | "
@@ -599,6 +600,22 @@ Usage:
 
 Behavior:
   Prints the passive Analog Rytm MK2 snapshot-pad compatibility report.
+
+Safety:
+{_safety_block(SAFETY_LINES)}"""
+
+
+def _analog_rytm_midi_catalog_report_help():
+    from .reports.analog_rytm_midi_catalog import SAFETY_LINES
+
+    return f"""RytmRandomizer passive CLI: analog-rytm-midi-catalog-report
+
+Usage:
+  python -m rytm_randomizer.cli analog-rytm-midi-catalog-report
+  python -m rytm_randomizer.cli analog-rytm-midi-catalog-report --help
+
+Behavior:
+  Prints the passive Analog Rytm MKII OS 1.72 MIDI CC/NRPN catalog report.
 
 Safety:
 {_safety_block(SAFETY_LINES)}"""
@@ -2536,6 +2553,8 @@ Usage:
   python -m rytm_randomizer.cli anchor-profile-report
   python -m rytm_randomizer.cli behavior-parity-report
   python -m rytm_randomizer.cli rytm-12-pad-machine-matrix-report
+  python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
+  python -m rytm_randomizer.cli analog-rytm-midi-catalog-report
   python -m rytm_randomizer.cli manual-validation-kit-report [--phase <slug>] [--json]
   python -m rytm_randomizer.cli manual-feedback-packet-report [--scenario full|installer|profile|mock|hardware|review] [--json]
   python -m rytm_randomizer.cli rytm-snapshot-pad-compatibility-report
@@ -2658,6 +2677,10 @@ Commands:
                      Print the read-only behavior-parity coverage report.
   rytm-12-pad-machine-matrix-report
                      Print the passive Rytm 12-pad machine matrix report.
+  rytm-snapshot-pad-compatibility-report
+                     Print the passive Rytm snapshot-pad compatibility report.
+  analog-rytm-midi-catalog-report
+                     Print the passive Analog Rytm MIDI catalog report.
   manual-validation-kit-report
                      Print the passive installer/UI/profile/manual validation kit.
   manual-feedback-packet-report
@@ -3018,6 +3041,8 @@ Safety:
   no command execution
   no hardware mutation
   no hardware required""",
+    "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
+    "analog-rytm-midi-catalog-report": _analog_rytm_midi_catalog_report_help,
     "rytm-outbound-cc-repeatability-report": """RytmRandomizer passive CLI: rytm-outbound-cc-repeatability-report
 
 Usage:
@@ -3076,7 +3101,6 @@ Safety:
   no port opening
   no hardware mutation
   no hardware required""",
-    "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "rytm-snapshot-intelligence-report": _rytm_snapshot_intelligence_report_help,
     "rytm-snapshot-mutation-preview-report": _rytm_snapshot_mutation_preview_report_help,
     "rytm-style-snapshot-routing-report": _rytm_style_snapshot_routing_report_help,

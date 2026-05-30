@@ -24,15 +24,23 @@ export interface NameStepProps {
   initialDescription: string | null;
   onSubmit: (payload: { name: string; description: string | null }) => void;
   onCancel: () => void;
+  /**
+   * Most recent backend rejection of `wizard_set_metadata`. Rendered as a
+   * `role="alert"` region so screen readers announce it on insertion and sighted
+   * operators see why the expected advance to the Add step didn't happen.
+   */
+  commandError?: string | null;
 }
 
 const NAME_ERROR_ID = 'wizard-name-error';
+const NAME_COMMAND_ERROR_ID = 'wizard-name-command-error';
 
 export function NameStep({
   initialName,
   initialDescription,
   onSubmit,
   onCancel,
+  commandError = null,
 }: NameStepProps): JSX.Element {
   const [name, setName] = useState<string>(initialName ?? '');
   const [description, setDescription] = useState<string>(initialDescription ?? '');
@@ -83,6 +91,16 @@ export function NameStep({
       {hasError && (
         <div id={NAME_ERROR_ID} role="alert" className="wizard-field-error">
           {error}
+        </div>
+      )}
+      {commandError !== null && (
+        <div
+          id={NAME_COMMAND_ERROR_ID}
+          role="alert"
+          className="wizard-field-error"
+          data-testid="wizard-name-command-error"
+        >
+          {commandError}
         </div>
       )}
       <label className="wizard-field">

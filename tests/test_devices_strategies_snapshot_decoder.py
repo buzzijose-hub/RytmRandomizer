@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import rytm_real_layout_kit_payload
+from conftest import pack_elektron_7bit, rytm_real_layout_kit_payload
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.
@@ -88,6 +88,15 @@ def test_decode_extracts_kit_name_from_real_layout_offset() -> None:
     assert snap.kit_name == "KIT 12"
 
 
+def test_decode_removes_embedded_nuls_from_operator_kit_name() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    decoder = AnalogRytmSnapshotDecoder()
+    snap = decoder.decode(_real_layout_kit_payload(name=b"KIT\x00 1"), slot=0)
+
+    assert snap.kit_name == "KIT 1"
+
+
 def test_decode_strips_trailing_nuls_from_kit_name() -> None:
     """Elektron pads kit names with NULs; the decoded string must be clean."""
 
@@ -111,14 +120,15 @@ def test_decode_preserves_raw_payload_on_snapshot() -> None:
 
 
 def test_decode_unpacks_payload_so_planner_can_slice_it() -> None:
-    """``snapshot.unpacked`` must be the 7-bit-unstuffed payload."""
+    """``snapshot.unpacked`` must be the decoded raw kit payload."""
 
     from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
 
     decoder = AnalogRytmSnapshotDecoder()
     snap = decoder.decode(_kit_payload(name=b"X"), slot=0)
 
-    assert len(snap.unpacked) >= 174 + (162 * 11) + 1
+    assert len(snap.unpacked) == 0x0A32
+    assert snap.unpacked[4:5] == b"X"
 
 
 def test_snapshot_exports_machine_fact_types() -> None:
@@ -197,6 +207,35 @@ def test_decode_rejects_payload_without_rytm_kit_type_byte() -> None:
 
     with pytest.raises(ValueError, match="kit_type_byte 0x07 not"):
         decoder.decode(payload, slot=0)
+
+
+def test_decode_rejects_full_kit_dump_with_wrong_unpacked_size() -> None:
+    from rytm_randomizer.data.analog_rytm_kit_layout import (
+        RYTM_KIT_DUMP_ID,
+        RYTM_SYSEX_PRODUCT_ID,
+    )
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    header = bytes(
+        [
+            0x00,
+            0x20,
+            0x3C,
+            RYTM_SYSEX_PRODUCT_ID,
+            0x00,
+            RYTM_KIT_DUMP_ID,
+            0x01,
+            0x01,
+            0x00,
+        ]
+    )
+    truncated_packed_payload = pack_elektron_7bit(bytes([0x00] * 32))
+    zeroed_checksum_and_size = bytes([0x00, 0x00, 0x00, 0x00])
+
+    payload = header + truncated_packed_payload + zeroed_checksum_and_size
+
+    with pytest.raises(ValueError, match="decoded kit payload has 32 byte"):
+        AnalogRytmSnapshotDecoder().decode(payload, slot=0)
 
 
 # ---------------------------------------------------------------------------

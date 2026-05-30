@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-05-28. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Recent Cleanup
 
@@ -13,6 +13,189 @@ Last updated: 2026-05-28. This file is a hand-authored snapshot and is meant to 
   locks, preview state, mutation panel, and safety rail. This is UI visibility
   only: no A4 SEND path, no MIDI renderer change, no port opening, no real MIDI
   send, and no hardware validation.
+- 2026-05-30: Passive observer follow-up completed the Pad 2/Pad 3 Dual VCO
+  detune diagnostic without opening an output or sending MIDI. KIT 15 showed
+  Pad 3 encoder B as direct `CC20` on channel 2, and KIT 14 showed Pad 2
+  encoder B as direct `CC20` on channel 1; both were labeled
+  `machine:dual_vco:Osc 2 Detune`, both reported zero NRPN messages, and both
+  had zero unknown CC observations. This confirms there is no observed NRPN
+  workaround for the earlier outbound CC20 `ERR`, so Pad 2/3 Dual VCO detune
+  stays guarded out of live CC sends by
+  `_is_live_dual_vco_detune_guarded_event`. This is a live-CC circuit breaker
+  while a safe detune transport remains unproven, not a claim that the
+  parameter is musically disposable.
+- 2026-05-30: Passive Analog Rytm CC observation path added for the next Dual
+  VCO detune investigation. `--arm --rytm-cc-observe` opens only a Rytm MIDI
+  input, sends no MIDI, drains pending CCs after Enter, reports raw
+  channel/control/value, candidate Rytm labels such as
+  `machine:dual_vco:Osc 2 Detune`, and decodes standard NRPN-style
+  CC99/CC98/CC6/CC38 sequences when the hardware emits them. Optional
+  `--rytm-cc-observe-live-snapshot` receives one current-kit SysEx first so the
+  same command can print exact pad/machine labels. The file-based
+  `--rytm-cc-observe-snapshot current-kit.syx` path remains available.
+- 2026-05-30: Direct one-CC isolation confirmed the Dual VCO detune guard is the
+  right live-CC safety boundary for KIT 13. Sending CC20 to Pad 2 and Pad 3,
+  including the captured same values, produced `ERR` on encoder B and did not
+  recover by sending the captured values back. For now, Dual VCO detune must
+  stay out of the live CC send path; detune discovery would need a different
+  transport than one-off CC sends.
+- 2026-05-30: Dual VCO detune guard hardware validation completed on KIT 13
+  (`0d0be6fd4494d754`). After the guard, `drum-core` omitted Pad 2 and Pad 3
+  `dual_vco Osc 2 Detune` from `changes` and active sends; `send` transmitted
+  `230` messages instead of `232`, matching the two omitted CC20 rows, and
+  `Z` plus `send` restored the captured anchor cleanly.
+- 2026-05-30: Pads 2-3 Dual VCO `Osc 2 Detune` are now guarded in the live
+  snapshot shell after KIT 13 showed `ERR` on encoder B for both Dual VCO pads.
+  The row stays anchored during mutation and is omitted from active sends, so
+  `drum-core` can keep moving the rest of pads 2-4 without transmitting CC20
+  for Pad 2 or Pad 3 Dual VCO detune.
+- 2026-05-30: `drum-core` macro hardware validation completed on KIT 13
+  (`3cfbacd60b029d57`). The macro applied the expected live setup, locked Pad 1
+  so `changes` showed no `Pad 01` lines, staged wide/full variations on pads
+  2-4, sent `232` messages for the first variation and `232` for `go`, then
+  restored cleanly with `Z` plus `send` to `no parameter changes staged`.
+- 2026-05-30: Live snapshot shell `drum-core` macro added for the current
+  performance recipe. It applies `preset live`, keeps LFO off and FX micro,
+  locks Pad 1 as the kick anchor, sets pads 2-4 to wide/full drum discovery
+  with Pad 2 looser and pads 3-4 grittier, then stages `randomize` without
+  sending. The operator can inspect with `changes`, send once, and use `go` for
+  the next drum-core variation.
+- 2026-05-30: Live snapshot shell pad bias shorthand added after hardware
+  testing showed `pad 4 grittier` was the natural command during drum-core
+  discovery. `pad N darker|brighter|tighter|looser|grittier|neutral` now routes
+  to the same randomizer contract as `pad N bias VALUE`, while explicit
+  `pad N bias VALUE` remains supported.
+- 2026-05-30: Hardware validation confirmed selector-aware wide discovery on
+  KIT `SIDECHN05` (`0e1ce3fd186e4b92`). With `preset live`, `lane lfo off`,
+  `lane fx micro`, `pad 2 amount wide`, and `pad 2 density full`, Pad 2
+  BD Acoustic `Waveform` moved across repeated variations (`6 -> 11`,
+  `6 -> 8`, `6 -> 1`) while `Z` plus `send` restored the captured anchor and
+  ended with `no parameter changes staged`. This validates the original
+  waveform-edge concern without making default live selector movement riskier.
+- 2026-05-30: Selector-aware discovery added for explicit Analog Rytm snapshot
+  shell randomizer contracts. Default live selector movement remains cautious,
+  but `pad N amount wide` plus `randomize` can now choose a different legal
+  selector value for rows such as BD Acoustic `Waveform` when density and lane
+  guardrails allow it. Lane `micro` still keeps lane-owned selectors, such as
+  LFO waveform, in one-step live behavior.
+- 2026-05-29: Live lane guardrails added to the Analog Rytm snapshot shell so
+  RytmRandomizer can act as a second performer beside an OXI or other
+  sequencer: the sequencer decides when notes happen, while the shell changes
+  what the captured Rytm sounds become. The `lane` command now controls
+  session-only tune/noise/fx/filter/amp/lfo lanes with off, micro, normal, and
+  wide policies. Live defaults are `tune=micro`, `noise=normal`, `fx=micro`,
+  `filter=normal`, `amp=normal`, and `lfo=off`. Lane-off rows stay anchored and
+  are omitted from active sends; micro/normal/wide lanes cap mutation depth
+  before pad and live-session guardrails finish clamping the variation.
+- 2026-05-29: Pad 1 kick-foundation policy added to the Analog Rytm snapshot
+  shell. Pad 1 filter-page events, LFO-page events, and `AMP Amp Attack Time`
+  are now omitted from active sends even when Pad 1 is not locked, and Pad 1
+  source tuning parameters are clamped to plus or minus 3 from the captured kit
+  value in live and studio modes. KIT 13 hardware validation covered live,
+  studio, kick-safe, all-gentle, SRC, and filter-zone flows. `fresh` is now a
+  readable alias for `Z`, and zone commands tell operators they layer on the
+  current staged plan unless reset first. `go` now repeats the last mutation
+  variation, or defaults to `4` if none exists, and immediately sends the staged
+  result for one-command audition loops. The armed live snapshot shell also
+  accepts `kit` / `resnapshot` inside `snapshot-12>` to receive one fresh KIT
+  SysEx from the same selected input, replace the captured anchor, clear the
+  staged mutation, and preserve the current session guardrails.
+- 2026-05-29: Session-only Analog Rytm snapshot shell guardrails added. Inside
+  `snapshot-12>`, `mode live|studio`, `depth gentle|normal|strong|wild`,
+  `lock N`, `unlock N`, `pad N gentle|normal|strong|wild|off`, and `status`
+  now let global mutations respect per-pad lanes during the current shell
+  session. Locked pads are omitted from armed `send` messages. Live mode
+  defaults Pad 1, toms, and hats to gentle movement while leaving stronger
+  per-pad overrides available for intentional performance moments. Repeated
+  mutations are clamped to anchor-relative lane envelopes so long live sessions
+  do not drift away from the captured kit by accumulation.
+- 2026-05-29: Snapshot shell current-machine SRC coverage expanded across all
+  12 pads. The captured-kit anchor now includes the loaded machine's documented
+  SRC rows on later pads as well as the V1.34-validated rows, while still
+  excluding source level, track level, amp volume, and machine switching.
+  `changes` now prints those later-pad SRC deltas, and `again` / `next` repeat
+  the last mutation so a live performer can send, generate the next variation,
+  and send again without restarting the SysEx receive flow.
+- 2026-05-29: Live Analog Rytm current-kit receive shell added:
+  `python -m rytm_randomizer.app --arm --rytm-live-snapshot-shell --confirm-rytm-snapshot-shell-send`.
+  The app now opens a Rytm input, waits for the operator to send
+  `SYSEX DUMP > SYSEX SEND > KIT` from the hardware, decodes that received KIT
+  SysEx into the existing all-12-pad snapshot shell anchor, and only then opens
+  the selected Rytm output for explicit `send` commands inside `snapshot-12>`.
+- 2026-05-29: First all-12-pad Analog Rytm current-kit snapshot shell added:
+  `python -m rytm_randomizer.app --dry-run --rytm-snapshot-shell <kit.syx>` and
+  `python -m rytm_randomizer.app --arm --rytm-snapshot-shell <kit.syx> --confirm-rytm-snapshot-shell-send`.
+  The shell anchors to the captured kit dump, exposes old V1.34-feel commands
+  (`S1A`, `S3A`, `S3B`, `S4B`, `4`, `Y`, `V`, `N`, `Z`, `U`, `preview`,
+  `changes`, `send`, `again`, `next`, `q`), covers all 12 pads, and keeps
+  machine switching off by default.
+  It sends CC MSB messages only and leaves samples, performance macros, source
+  level, track level, amp volume, SysEx writes, transport, pattern changes, and
+  kit/project writes out of scope. The Rytm kit decoder now strips the real
+  dump header/trailer and anchors those sends to the 2610-byte raw kit payload
+  fields for SRC, filter, amp, and LFO rows.
+- 2026-05-29: First Analog Rytm `live-safe` hardware performance mutation
+  session documented at
+  `docs/hardware-validation/2026-05-29-rytm-live-safe-performance-session.md`.
+  The key lesson was that Pad 1 kick filter frequency must stay anchored near
+  the low current/style value during live-safe sends. Seed `890002068` initially
+  pushed Pad 1 filter frequency to `62`, which killed kick punch; the guardrail
+  was corrected so the same seed now sends `24`, with a regression test locking
+  the safe-depth Pad 1 kick filter window to `21..29`.
+- 2026-05-29: All-12-pad Analog Rytm interactive shell added:
+  `python -m rytm_randomizer.app --dry-run --rytm-12-pad-shell` and
+  `python -m rytm_randomizer.app --arm --rytm-12-pad-shell --confirm-rytm-12-pad-send`.
+  The shell loads curated 12-pad style anchors, previews staged plans, sends on
+  explicit `send`, and supports deterministic role-aware `roll`, `deep`,
+  `grit`, `intense`, and `warehouse` mutations with `undo` and `reset`.
+  Kick filter-frequency mutations are clamped to the sub-safe range; samples,
+  performance macros, source level, track level, amp volume, SysEx, transport,
+  pattern changes, and kit/project writes remain out of scope.
+- 2026-05-29: Snapshot-grounded Analog Rytm performance mutation added for
+  current-kit SysEx captures:
+  `python -m rytm_randomizer.app --dry-run --rytm-performance-snapshot <kit.syx> --rytm-performance-mode live-safe`.
+  `live-safe` skips machine switching, varies values by repeatable seed, supports
+  `--rytm-performance-depth safe|balanced|studio`, covers all 12 pads when the
+  filtered plan has legal events, and uses extra Pad 1 kick guardrails to avoid
+  losing punch. Armed sends still require `--arm` plus
+  `--confirm-rytm-performance-send`; the path sends CC MSB messages only, with
+  no SysEx write, kit save, project write, transport, or pattern change.
+- 2026-05-29: Curated Analog Rytm full-kit style recipes added as an explicit
+  active path:
+  `python -m rytm_randomizer.app --arm --rytm-kit-style detroit-deep --confirm-rytm-kit-send`.
+  The dry-run path renders the same recipes through `MockMidiSender`; the armed
+  path prompts for one Rytm output port, sends legal 12-pad machine selections
+  plus manual-backed CC MSB tone/filter/amp-send values, closes the port, and
+  exits. Samples, performance macros, source level, track level, amp volume,
+  NRPN style-kit sends, SysEx, transport, pattern changes, and kit/project
+  writes remain out of scope.
+- 2026-05-29: Analog Rytm OS 1.72 MIDI catalog added as passive/manual-backed
+  data plus `analog-rytm-midi-catalog-report`. The report covers the Appendix C
+  CC/NRPN rows, all machine-specific SRC rows for the 33 known machine
+  profiles, and MIDI note-trigger rows. It opens no port, sends no MIDI, and
+  keeps documented-only rows out of runtime mutation until a separate approved
+  hardware-validation pass.
+- 2026-05-29: Analog Four `bell-techno-grid` kit recipe added as the more
+  controlled initialized-kit target after the broader `detroit-minimal` pass
+  proved too heavy in hardware listening. It uses 32 manual-backed CC events
+  across tracks 1-4.
+- 2026-05-29: Analog Four `detroit-minimal` kit recipe added as an explicit
+  active armed path:
+  `python -m rytm_randomizer.app --arm --a4-kit-recipe detroit-minimal`. It
+  prompts for an A4 output port, sends a coordinated manual-backed four-track
+  CC recipe, closes the output port, and exits without SysEx or kit/project
+  writes.
+- 2026-05-29: Analog Four named parameter send added as an explicit active
+  armed path:
+  `python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel 0 --value 32`.
+  It resolves the parameter through the manual-backed Appendix D CC table,
+  prompts for an output port, sends exactly one CC MSB message, closes the
+  output port, and exits.
+- 2026-05-29: Analog Four soft live capture added as an explicit input-only
+  armed path: `python -m rytm_randomizer.app --arm --a4-soft-capture`. It opens
+  only an A4 MIDI input port, observes pending CC messages for tracks 1-4,
+  reports known manual-backed parameters plus unknown/ignored counts, closes
+  the input port, and sends no MIDI.
 - 2026-05-27: Style crate rehearsal deck prepared locally. The new
   `style-crate-rehearsal-deck-report` command consumes the passive Style
   Crates, staged queue, and Mutation Journal metadata and emits GUI-ready crate
@@ -264,7 +447,9 @@ Each step is locked against the V1.34 reference by characterization tests.
 - **Phase 4 hardware runtime:** dedicated device loads `.rymp` from flash, embedded C-port of the cockpit mutation engine, emits CC back to the Rytm.
 - A more detailed `docs/ARCHITECTURE.md` map of the post-decomposition package (planned).
 - Further hardening: coverage policy, lint baseline, type-check baseline.
-- Out of scope for the current runtime: armed pads 5-12 mutation, GUI/capture, audio analysis, and ungated Analog Four hardware sends.
+- Out of scope for the current runtime: GUI/capture, audio analysis,
+  free-text all-row mutation, samples/performance macros, and ungated Analog
+  Four hardware sends.
 
 ## Reference Docs
 

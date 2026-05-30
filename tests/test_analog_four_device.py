@@ -69,6 +69,20 @@ def test_analog_four_device_renders_ready_plan_messages() -> None:
     assert len(tuple(a4.to_cc_messages(plan))) == len(plan.events)
 
 
+def test_analog_four_ready_plan_uses_manual_backed_osc1_pwm_depth_mapping() -> None:
+    from rytm_randomizer import data
+    from rytm_randomizer.devices import get_device
+    from rytm_randomizer.devices.strategies import AnalogFourKitSnapshot
+
+    a4 = get_device("analog_four_mk2")
+    snapshot = AnalogFourKitSnapshot(slot=1, kit_name="A4", raw=b"", offsets_promoted=True)
+    plan = a4.plan_mutation(snapshot, depth=1)
+    mapping = data.ANALOG_FOUR_SYNTH_TRACK_CC["OSC1 PWM Depth"]
+
+    assert {event.parameter for event in plan.events} == {"OSC1 PWM Depth"}
+    assert {event.control for event in plan.events} == {mapping.cc_msb}
+
+
 def test_analog_four_device_rejects_wrong_plan_type_for_mock_messages() -> None:
     from rytm_randomizer.devices import get_device
 
