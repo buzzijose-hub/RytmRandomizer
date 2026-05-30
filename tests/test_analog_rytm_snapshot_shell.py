@@ -131,6 +131,46 @@ def _snapshot_payload_with_track_values(
     )
 
 
+def _snapshot_payload_with_track_overrides(
+    *,
+    overrides_by_pad: dict[int, tuple[int, dict[int, int]]],
+    name: bytes = b"LIVE",
+) -> bytes:
+    unpacked = bytearray(bytes([0x00] * RYTM_KIT_RAW_SIZE))
+    unpacked[0:4] = bytes([0x00, 0x00, 0x00, 0x06])
+    unpacked[4:20] = name.ljust(16, b"\x00")
+    for base_pad, base_machine_value in _MACHINE_VALUES_BY_PAD.items():
+        stride = RYTM_KIT_TRACK_SOUND_SIZE * (base_pad - 1)
+        unpacked[RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET + stride] = base_machine_value
+        unpacked[_track_offset(base_pad, _FILTER_FREQUENCY_LSB)] = 24 + base_pad
+        unpacked[_track_offset(base_pad, _FILTER_RESONANCE_LSB)] = 10 + base_pad
+        unpacked[_track_offset(base_pad, _FILTER_MODE_LSB)] = 4 + base_pad
+        unpacked[_track_offset(base_pad, _AMP_OVERDRIVE_LSB)] = 18 + base_pad
+        unpacked[_track_offset(base_pad, _AMP_DELAY_SEND_LSB)] = base_pad
+        unpacked[_track_offset(base_pad, _AMP_REVERB_SEND_LSB)] = base_pad + 2
+        unpacked[_track_offset(base_pad, _SRC_LEVEL_LSB)] = 31 + base_pad
+        unpacked[_track_offset(base_pad, _SRC_TUNE_LSB)] = 40 + base_pad
+        unpacked[_track_offset(base_pad, _SRC_DECAY_LSB)] = 56 + base_pad
+        for nrpn_lsb in _SRC_EXTRA_PARAMETER_LSBS:
+            unpacked[_track_offset(base_pad, nrpn_lsb)] = 70 + base_pad + nrpn_lsb
+
+    for pad, (machine_value, values_by_lsb) in overrides_by_pad.items():
+        stride = RYTM_KIT_TRACK_SOUND_SIZE * (pad - 1)
+        unpacked[RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET + stride] = machine_value
+        for nrpn_lsb, value in values_by_lsb.items():
+            unpacked[_track_offset(pad, nrpn_lsb)] = value
+
+    packed = pack_elektron_7bit(bytes(unpacked))
+    checksum = sum(packed) & 0x3FFF
+    size = (len(packed) + 5) & 0x3FFF
+    return (
+        bytes([0x00, 0x20, 0x3C, RYTM_SYSEX_PRODUCT_ID, 0x00, RYTM_KIT_DUMP_ID, 0x01, 0x01, 0x00])
+        + packed
+        + _u14_bytes(checksum)
+        + _u14_bytes(size)
+    )
+
+
 def _snapshot(name: bytes = b"LIVE") -> RytmKitSnapshot:
     return AnalogRytmSnapshotDecoder().decode(_snapshot_payload(name=name), slot=0)
 
@@ -839,6 +879,50 @@ def test_snapshot_shell_drum_core_macro_stages_locked_kick_discovery(capsys) -> 
     assert len(sender.sent_messages) == 0
     assert "macro applied: drum-core" in captured.out
     assert "mutation applied: Randomize" in captured.out
+
+
+def test_snapshot_shell_drum_core_omits_dual_vco_osc_2_detune_for_pads_2_and_3(
+    capsys,
+) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(
+        _snapshot_payload_with_track_overrides(
+            overrides_by_pad={
+                2: (28, {4: 25, 5: 64}),
+                3: (28, {4: 4, 5: 51}),
+            },
+        ),
+        slot=0,
+    )
+    anchor = build_snapshot_shell_anchor(snapshot)
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("drum-core") is True
+    assert shell.dispatch("changes") is True
+    assert shell.dispatch("send") is True
+
+    captured = capsys.readouterr()
+    assert "Pad 02 dual_vco Osc 2 Detune" not in captured.out
+    assert "Pad 03 dual_vco Osc 2 Detune" not in captured.out
+    assert "Pad 02 dual_vco Osc Config" in captured.out
+    assert "Pad 03 dual_vco Osc Config" in captured.out
+    assert (
+        _event_for(shell.state.current_events, pad=2, parameter="Osc 2 Detune").value
+        == _event_for(anchor.events, pad=2, parameter="Osc 2 Detune").value
+    )
+    assert (
+        _event_for(shell.state.current_events, pad=3, parameter="Osc 2 Detune").value
+        == _event_for(anchor.events, pad=3, parameter="Osc 2 Detune").value
+    )
+    assert all(
+        not (message.channel in {1, 2} and message.control == 20)
+        for message in sender.sent_messages
+    )
 
 
 def test_snapshot_shell_randomize_density_low_touches_fewer_pad_rows_than_full() -> None:

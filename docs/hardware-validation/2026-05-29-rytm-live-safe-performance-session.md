@@ -350,6 +350,26 @@ staging macro. The remaining question is musical feel on different kits:
 whether this should stay specifically "pads 2-4 drum-core" or become the first
 of several named performance macros.
 
+## Hardware Lesson: Dual VCO Detune Guard
+
+Follow-up inspection on KIT 13 found that both Dual VCO pads showed `ERR` on
+encoder B, which corresponds to `Osc 2 Detune`. The staged plans had been
+moving those rows by small amounts, for example Pad 2 `25 -> 24` and Pad 3
+`4 -> 3`, but the hardware display made the row untrustworthy for live use.
+
+Adopted guardrail:
+
+- Pads 2 and 3 `dual_vco Osc 2 Detune` stay anchored during live snapshot
+  mutation.
+- The same rows are omitted from active sends, so the shell does not transmit
+  CC20 for Pad 2 or Pad 3 when those pads are Dual VCO.
+- Other Dual VCO rows, including oscillator config, oscillator decay, balance,
+  bend, filter, and amp rows, remain available for `drum-core` discovery.
+
+Next validation target: rerun `drum-core`, confirm `changes` no longer shows
+Pad 2 or Pad 3 `dual_vco Osc 2 Detune`, then send and check that encoder B no
+longer flips into `ERR`.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.

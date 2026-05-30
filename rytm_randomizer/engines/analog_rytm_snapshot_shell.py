@@ -897,6 +897,14 @@ def _is_pad_1_tune_event(event: AnalogRytmRenderedStyleEvent) -> bool:
     return event.pad == 1 and event.source == "machine_src" and "tune" in event.parameter.casefold()
 
 
+def _is_live_dual_vco_detune_guarded_event(event: AnalogRytmRenderedStyleEvent) -> bool:
+    return (
+        event.pad in {2, 3}
+        and event.machine_key == "dual_vco"
+        and event.parameter == "Osc 2 Detune"
+    )
+
+
 def _is_machine_source_tune_event(event: AnalogRytmRenderedStyleEvent) -> bool:
     return event.source == "machine_src" and "tune" in event.parameter.casefold()
 
@@ -937,6 +945,8 @@ def _is_snapshot_shell_event_active(
     guardrails: SnapshotSessionGuardrails,
 ) -> bool:
     if event.pad in guardrails.locked_pads:
+        return False
+    if _is_live_dual_vco_detune_guarded_event(event):
         return False
     if guardrails.tune_policy == _TUNE_POLICY_OFF and _is_machine_source_tune_event(event):
         return False
@@ -1432,6 +1442,9 @@ def _mutate_snapshot_event(
     randomizer_contract: SnapshotPadRandomizerContract | None = None,
 ) -> AnalogRytmRenderedStyleEvent:
     if _is_pad_1_foundation_protected_event(current_event):
+        return anchor_event
+
+    if _is_live_dual_vco_detune_guarded_event(current_event):
         return anchor_event
 
     if not _event_matches_zone(current_event, command.zone):

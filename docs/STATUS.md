@@ -4,6 +4,11 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Pads 2-3 Dual VCO `Osc 2 Detune` are now guarded in the live
+  snapshot shell after KIT 13 showed `ERR` on encoder B for both Dual VCO pads.
+  The row stays anchored during mutation and is omitted from active sends, so
+  `drum-core` can keep moving the rest of pads 2-4 without transmitting CC20
+  for Pad 2 or Pad 3 Dual VCO detune.
 - 2026-05-30: `drum-core` macro hardware validation completed on KIT 13
   (`3cfbacd60b029d57`). The macro applied the expected live setup, locked Pad 1
   so `changes` showed no `Pad 01` lines, staged wide/full variations on pads
