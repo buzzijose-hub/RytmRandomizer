@@ -130,7 +130,7 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = [".worktrees", "Backups", "Exports", "LegacyScripts"]
+skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts"]
 
 [tool.ruff]
 line-length = 100

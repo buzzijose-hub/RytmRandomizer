@@ -4,6 +4,15 @@ Last updated: 2026-05-29. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-29: Live lane guardrails added to the Analog Rytm snapshot shell so
+  RytmRandomizer can act as a second performer beside an OXI or other
+  sequencer: the sequencer decides when notes happen, while the shell changes
+  what the captured Rytm sounds become. The `lane` command now controls
+  session-only tune/noise/fx/filter/amp/lfo lanes with off, micro, normal, and
+  wide policies. Live defaults are `tune=micro`, `noise=normal`, `fx=micro`,
+  `filter=normal`, `amp=normal`, and `lfo=off`. Lane-off rows stay anchored and
+  are omitted from active sends; micro/normal/wide lanes cap mutation depth
+  before pad and live-session guardrails finish clamping the variation.
 - 2026-05-29: Pad 1 kick-foundation policy added to the Analog Rytm snapshot
   shell. Pad 1 filter-page events, LFO-page events, and `AMP Amp Attack Time`
   are now omitted from active sends even when Pad 1 is not locked, and Pad 1

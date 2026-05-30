@@ -183,6 +183,41 @@ KIT 13 (`4e32243208cc7fe5`) validated the policy on hardware:
 - Zone commands were observed to layer on the current staged plan. Use `fresh`
   or `Z` before `Y`, `V`, or `N` when testing an anchor-only zone mutation.
 
+## Hardware Lesson: Live Lane Guardrails
+
+Follow-up live testing validated the tune/noise/fx/filter/amp/lfo lane
+guardrail model as a musical performance layer, not just a mechanical safety
+layer.
+
+KIT `SIDECHN05` (`0e1ce3fd186e4b92`) validated the current defaults on hardware:
+
+- MIDI input index: `0`, `Elektron Analog Rytm MKII 0`.
+- MIDI output index: `1`, `Elektron Analog Rytm MKII 1`.
+- `preset live`, `lane lfo off`, `lane fx micro`, `randomize`, `send` sent
+  `242` messages and was reported as musical and usable on the first pass.
+- `fresh`, `lane fx normal`, `randomize`, `changes`, `send` still sent `242`
+  messages because LFO remained off; FX movement behaved as a controlled
+  section-change lane.
+- `fresh`, `lane fx micro`, `lane lfo micro`, `randomize`, `send` sent `319`
+  messages. The added LFO rows were small micro moves and stayed musically
+  usable.
+- Repeated `go` with LFO micro enabled sent `319` messages per variation and
+  stayed inside the live-performance trust envelope.
+- `Z`, `send`, `changes` restored the captured anchor; `changes` ended with
+  `no parameter changes staged`.
+- Total shell send count for this validation run: `2717` messages.
+
+User feedback was the strongest acceptance signal so far: repeated `go`
+auditioning was fun enough that generated kits were saved on the Analog Rytm for
+future performances. The current live model feels performance-usable beside the
+OXI: OXI controls note, trigger, mute, and pattern motion while RytmRandomizer
+rides sound-design variation between sections.
+
+Conclusion: keep the current live lane defaults for this PR. Further work should
+push expressiveness through explicit performer controls such as per-pad
+amount/density/bias and optional saved performance presets, not by making the
+default live profile riskier.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
@@ -209,17 +244,22 @@ KIT 13 (`4e32243208cc7fe5`) validated the policy on hardware:
    `pad N wild` only for intentional performance moments, and `guards reset`
    when you want to clear the session guardrails. Locked pads are omitted from
    the next `send`.
-10. Send one variation at a time and listen.
-11. If the kick loses punch again, stop sending and record the exact command plus
+10. Use `lane lfo off` as the trusted default. Open `lane lfo micro` when you
+    want subtle motion and use `Z` plus `send` to return those LFO rows to the
+    captured anchor.
+11. Use `lane fx micro` for normal variation and `lane fx normal` for deliberate
+    section changes.
+12. Send one variation at a time and listen.
+13. If the kick loses punch again, stop sending and record the exact command plus
    Pad 1 planned values before changing code.
-12. Do not use `flow-shift` live unless explicitly testing machine switching;
+14. Do not use `flow-shift` live unless explicitly testing machine switching;
    it is a discovery/studio mode until separately validated.
 
 ## Next Engineering Work
 
-- Collect listening notes for accepted/rejected `preset live`, `preset
-  kick-safe`, `preset all-gentle`, and `preset studio` variations so future
-  ranges can be tightened from real outcomes.
+- Collect amount/density/bias listening notes for hats, cymbals, synth voices,
+  and noise pads so performer-friendly randomizer presets can be derived from
+  real outcomes.
 - Add a plan-inspection CLI/report that prints Pad 1 planned values before armed
   send.
 - Consider whether `send` should optionally support changed-only sends. The

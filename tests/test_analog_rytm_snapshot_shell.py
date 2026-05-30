@@ -223,7 +223,16 @@ def _active_snapshot_shell_events(
     events: Sequence[AnalogRytmRenderedStyleEvent],
     *,
     locked_pads: frozenset[int] = frozenset(),
+    guardrails: object | None = None,
 ) -> tuple[AnalogRytmRenderedStyleEvent, ...]:
+    if guardrails is not None:
+        from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+            _is_snapshot_shell_event_active,
+        )
+
+        return tuple(
+            event for event in events if _is_snapshot_shell_event_active(event, guardrails)
+        )
     return tuple(
         event
         for event in events
@@ -285,6 +294,24 @@ def test_snapshot_shell_live_guardrails_default_to_controlled_pad_lanes() -> Non
     assert shell.state.guardrails.live_pad_caps[10] == "gentle"
     assert shell.state.guardrails.live_pad_caps[2] == "normal"
     assert shell.state.guardrails.live_pad_caps[11] == "normal"
+
+
+def test_snapshot_shell_lane_guardrails_default_to_live_trust_profile() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), MockMidiSender())
+
+    assert shell.state.guardrails.lane_policies == {
+        "tune": "micro",
+        "noise": "normal",
+        "fx": "micro",
+        "filter": "normal",
+        "amp": "normal",
+        "lfo": "off",
+    }
 
 
 def test_snapshot_shell_s1a_mutates_all_12_pads_from_current_anchor() -> None:
@@ -556,6 +583,78 @@ def test_snapshot_shell_skips_sy_raw_noise_level_sends() -> None:
 
     assert all(
         not (message.channel == 1 and message.control == 19) for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_lane_lfo_off_omits_lfo_mutation_and_send() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.state.guardrails.lane_policies["lfo"] == "off"
+    assert shell.dispatch("4") is True
+    assert all(
+        old.value == new.value
+        for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+        if new.section == "LFO"
+    )
+
+    assert shell.dispatch("send") is True
+
+    lfo_addresses = {
+        (event.channel, event.cc_msb) for event in anchor.events if event.section == "LFO"
+    }
+    assert all(
+        (message.channel, message.control) not in lfo_addresses for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_lane_fx_off_omits_delay_and_reverb_sends() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(anchor, sender)
+
+    assert shell.dispatch("lane fx off") is True
+    assert shell.dispatch("4") is True
+    assert shell.dispatch("send") is True
+
+    fx_addresses = {
+        (event.channel, event.cc_msb)
+        for event in anchor.events
+        if event.parameter in {"Amp Delay Send", "Amp Reverb Send"}
+    }
+    assert all(
+        (message.channel, message.control) not in fx_addresses for message in sender.sent_messages
+    )
+
+
+def test_snapshot_shell_lane_filter_micro_caps_filter_movement() -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    anchor = build_snapshot_shell_anchor(_snapshot())
+    shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
+
+    assert shell.dispatch("preset studio") is True
+    assert shell.dispatch("lane filter micro") is True
+    assert shell.dispatch("S3A") is True
+
+    assert all(
+        abs(new.value - old.value) <= 3
+        for old, new in zip(anchor.events, shell.state.current_events, strict=True)
+        if new.section == "FILTER"
     )
 
 
@@ -868,6 +967,7 @@ def test_snapshot_shell_live_selector_mutations_do_not_wrap() -> None:
     anchor = build_snapshot_shell_anchor(snapshot)
     shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
 
+    assert shell.dispatch("lane lfo micro") is True
     assert shell.dispatch("4") is True
 
     current_multiplier = _event_for(
@@ -900,6 +1000,7 @@ def test_snapshot_shell_live_selector_mutations_step_once() -> None:
     anchor = build_snapshot_shell_anchor(snapshot)
     shell = AnalogRytmSnapshotShell(anchor, MockMidiSender())
 
+    assert shell.dispatch("lane lfo micro") is True
     assert shell.dispatch("4") is True
 
     current_waveform = _event_for(
@@ -1058,6 +1159,7 @@ def test_snapshot_shell_help_mentions_fresh_and_zone_layering(capsys) -> None:
     captured = capsys.readouterr()
     assert "Z / fresh = return all 12 pads to captured anchor" in captured.out
     assert "kit / resnapshot = receive a new live KIT SysEx anchor" in captured.out
+    assert "lane tune|noise|fx|filter|amp|lfo off|micro|normal|wide" in captured.out
     assert "go = make the next variation and send it" in captured.out
     assert (
         "Y/V/N zone commands layer on the current staged plan; use fresh first for anchor-only zone changes"
@@ -1098,6 +1200,8 @@ def test_snapshot_shell_resnapshot_replaces_anchor_and_preserves_guardrails(caps
 
     shell.dispatch("preset studio")
     shell.dispatch("pad 3 strong")
+    shell.dispatch("lane fx off")
+    shell.dispatch("lane lfo micro")
     shell.dispatch("4")
 
     assert shell.dispatch("resnapshot") is True
@@ -1111,6 +1215,8 @@ def test_snapshot_shell_resnapshot_replaces_anchor_and_preserves_guardrails(caps
     assert shell.state.mutation_generation == 0
     assert shell.state.guardrails.mode == "studio"
     assert shell.state.guardrails.pad_overrides[3] == "strong"
+    assert shell.state.guardrails.lane_policies["fx"] == "off"
+    assert shell.state.guardrails.lane_policies["lfo"] == "micro"
     assert "replaced captured 12-pad anchor" in captured.out
     assert "kit: NEXT" in captured.out
     assert f"fingerprint: {next_anchor.fingerprint}" in captured.out
@@ -1201,7 +1307,10 @@ def test_snapshot_shell_send_writes_current_plan_to_sender() -> None:
     assert shell.dispatch("send") is True
 
     assert len(sender.sent_messages) == len(
-        _active_snapshot_shell_events(shell.state.current_events)
+        _active_snapshot_shell_events(
+            shell.state.current_events,
+            guardrails=shell.state.guardrails,
+        )
     )
     assert {message.channel for message in sender.sent_messages} == set(range(12))
     assert all(message.control != 15 for message in sender.sent_messages)
@@ -1302,7 +1411,10 @@ def test_snapshot_shell_go_defaults_to_command_4_and_sends(capsys) -> None:
     assert shell.state.last_command_name == "4"
     assert shell.state.mutation_name == "Command 4"
     assert len(sender.sent_messages) == len(
-        _active_snapshot_shell_events(shell.state.current_events)
+        _active_snapshot_shell_events(
+            shell.state.current_events,
+            guardrails=shell.state.guardrails,
+        )
     )
     assert "mutation applied: Command 4" in captured.out
     assert "sent current snapshot plan" in captured.out
@@ -1326,7 +1438,10 @@ def test_snapshot_shell_go_repeats_last_mutation_and_sends(capsys) -> None:
     assert shell.state.current_events != first_plan
     assert shell.state.previous_events == first_plan
     assert len(sender.sent_messages) == len(
-        _active_snapshot_shell_events(shell.state.current_events)
+        _active_snapshot_shell_events(
+            shell.state.current_events,
+            guardrails=shell.state.guardrails,
+        )
     )
     assert "mutation applied: Command 4 again" in captured.out
     assert "sent current snapshot plan" in captured.out
@@ -1355,7 +1470,10 @@ def test_snapshot_shell_go_repeats_zone_mutation_and_sends(capsys) -> None:
     assert shell.state.current_events != first_plan
     assert shell.state.previous_events == first_plan
     assert len(sender.sent_messages) == len(
-        _active_snapshot_shell_events(shell.state.current_events)
+        _active_snapshot_shell_events(
+            shell.state.current_events,
+            guardrails=shell.state.guardrails,
+        )
     )
     assert "mutation applied: Filter micro again" in captured.out
     assert "sent current snapshot plan" in captured.out
@@ -1384,6 +1502,70 @@ def test_snapshot_shell_status_reports_session_guardrails(capsys) -> None:
     assert "locked pads: 5" in captured.out
     assert "active pad overrides: 3=strong" in captured.out
     assert "inactive pad overrides: none" in captured.out
+
+
+def test_snapshot_shell_status_reports_lane_guardrails(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), MockMidiSender())
+
+    assert shell.dispatch("status") is True
+
+    captured = capsys.readouterr()
+    assert (
+        "lanes: tune=micro, noise=normal, fx=micro, filter=normal, amp=normal, lfo=off"
+        in captured.out
+    )
+
+
+def test_snapshot_shell_lane_command_updates_policy_and_preserves_tune_alias(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), MockMidiSender())
+
+    assert shell.dispatch("lane fx off") is True
+    assert shell.dispatch("lane tune wide") is True
+    assert shell.dispatch("status") is True
+
+    captured = capsys.readouterr()
+    assert shell.state.guardrails.lane_policies["fx"] == "off"
+    assert shell.state.guardrails.lane_policies["tune"] == "wide"
+    assert shell.state.guardrails.tune_policy == "wide"
+    assert "lane fx: off" in captured.out
+    assert "lane tune: wide" in captured.out
+    assert (
+        "lanes: tune=wide, noise=normal, fx=off, filter=normal, amp=normal, lfo=off" in captured.out
+    )
+
+
+def test_snapshot_shell_invalid_lane_commands_do_not_mutate_or_send(capsys) -> None:
+    from rytm_randomizer.engines.analog_rytm_snapshot_shell import (
+        AnalogRytmSnapshotShell,
+        build_snapshot_shell_anchor,
+    )
+
+    sender = MockMidiSender()
+    shell = AnalogRytmSnapshotShell(build_snapshot_shell_anchor(_snapshot()), sender)
+    before_events = shell.state.current_events
+    before_guardrails = shell.state.guardrails
+
+    assert shell.dispatch("lane") is True
+    assert shell.dispatch("lane pitch micro") is True
+    assert shell.dispatch("lane fx huge") is True
+
+    captured = capsys.readouterr()
+    assert shell.state.current_events == before_events
+    assert shell.state.guardrails == before_guardrails
+    assert len(sender.sent_messages) == 0
+    assert "usage: lane tune|noise|fx|filter|amp|lfo off|micro|normal|wide" in captured.out
+    assert "unknown snapshot shell lane: pitch" in captured.out
+    assert "unknown snapshot shell lane policy: huge" in captured.out
 
 
 def test_snapshot_shell_status_separates_inactive_locked_pad_overrides(capsys) -> None:
@@ -1511,7 +1693,8 @@ def test_snapshot_shell_preview_reports_sendable_event_count(capsys) -> None:
     assert "kit: LIVE" in captured.out
     assert "pads: 12" in captured.out
     assert (
-        f"event count: {len(_active_snapshot_shell_events(shell.state.current_events))}"
+        "event count: "
+        f"{len(_active_snapshot_shell_events(shell.state.current_events, guardrails=shell.state.guardrails))}"
         in captured.out
     )
     assert "Pad 01 filter frequency" not in captured.out

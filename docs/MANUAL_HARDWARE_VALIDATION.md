@@ -326,8 +326,9 @@ Fresh live receive flow:
 3. Press YES on the Rytm to send the KIT dump.
 4. Confirm the app prints received KIT SysEx, kit name, and fingerprint.
 5. Select the Analog Rytm MIDI output.
-6. Use mode live, depth gentle, status, 4, changes, send, go, changes,
-   send, Z, send, q inside snapshot-12>.
+6. Use mode live, depth gentle, lane lfo off, lane fx micro, status,
+   randomize, changes, send, go, changes, send, Z, send, q inside
+   snapshot-12>.
 7. To validate a freshly loaded hardware kit without restarting, load the new
    kit on the Rytm, type `kit` or `resnapshot`, send
    GLOBAL SETTINGS > SYSEX DUMP > SYSEX SEND > KIT again, then confirm the app
@@ -347,8 +348,11 @@ S1A
 preview
 mode live
 depth gentle
+lane lfo off
+lane fx micro
 pad 1 gentle
 status
+randomize
 changes
 send
 again
@@ -374,13 +378,15 @@ Suggested armed commands:
 preview
 mode live
 depth gentle
+lane lfo off
+lane fx micro
 pad 1 gentle
 status
-S1A
+randomize
 preview
 changes
 send
-again
+go
 changes
 send
 Z
@@ -398,7 +404,9 @@ Expected:
 - Select the Analog Rytm output port.
 - Confirm startup prints `Loaded kit anchor` with the captured kit name.
 - Confirm `status` shows `mode: live`, the selected global depth, locked pads,
-  and any pad overrides.
+  any pad overrides, and the lane guardrail summary. The default live profile
+  should show `tune=micro, noise=normal, fx=micro, filter=normal, amp=normal,
+  lfo=off`.
 - Confirm `preview` shows `RytmRandomizer snapshot shell preview`.
 - Confirm `changes` shows Pad 1 allowed source/AMP deltas and later-pad source
   deltas before the first send, with no Pad 1 filter, LFO, or AMP attack-time
@@ -410,6 +418,10 @@ Expected:
 - Confirm `go` applies the next variation from the last mutation and sends it in
   one command.
 - Confirm `Z` and `fresh` restore the captured anchor values for promoted rows.
+- Confirm lane guardrails behave like a live sound-design permission layer:
+  `lane lfo off` leaves LFO rows anchored and out of sends, `lane fx micro`
+  keeps delay/reverb movement small, and wider lane settings are intentional
+  section-change choices rather than defaults.
 - Confirm `Y`, `V`, and `N` print the zone-layering hint, and use `fresh` first
   when validating an anchor-only zone mutation.
 - Audition all 12 pads after the first send and again after a mutation send.

@@ -37,6 +37,8 @@ SnapshotZone: TypeAlias = Literal["full", "src", "filter", "grit"]
 SnapshotSessionMode: TypeAlias = Literal["live", "studio"]
 SnapshotSessionDepth: TypeAlias = Literal["gentle", "normal", "strong", "wild"]
 SnapshotTunePolicy: TypeAlias = Literal["off", "micro", "normal", "wide"]
+SnapshotLane: TypeAlias = Literal["tune", "noise", "fx", "filter", "amp", "lfo"]
+SnapshotLanePolicy: TypeAlias = Literal["off", "micro", "normal", "wide"]
 SnapshotRandomizerRole: TypeAlias = Literal[
     "kick",
     "snare",
@@ -83,6 +85,7 @@ _CMD_PAD: Final[str] = "pad"
 _CMD_PRESET: Final[str] = "preset"
 _CMD_GUARDS: Final[str] = "guards"
 _CMD_TUNE: Final[str] = "tune"
+_CMD_LANE: Final[str] = "lane"
 _CMD_UNDO: Final[str] = "u"
 _CMD_RESET: Final[str] = "z"
 _CMD_FRESH: Final[str] = "fresh"
@@ -111,6 +114,16 @@ _TUNE_POLICY_OFF: Final[SnapshotTunePolicy] = "off"
 _TUNE_POLICY_MICRO: Final[SnapshotTunePolicy] = "micro"
 _TUNE_POLICY_NORMAL: Final[SnapshotTunePolicy] = "normal"
 _TUNE_POLICY_WIDE: Final[SnapshotTunePolicy] = "wide"
+_LANE_TUNE: Final[SnapshotLane] = "tune"
+_LANE_NOISE: Final[SnapshotLane] = "noise"
+_LANE_FX: Final[SnapshotLane] = "fx"
+_LANE_FILTER: Final[SnapshotLane] = "filter"
+_LANE_AMP: Final[SnapshotLane] = "amp"
+_LANE_LFO: Final[SnapshotLane] = "lfo"
+_LANE_POLICY_OFF: Final[SnapshotLanePolicy] = "off"
+_LANE_POLICY_MICRO: Final[SnapshotLanePolicy] = "micro"
+_LANE_POLICY_NORMAL: Final[SnapshotLanePolicy] = "normal"
+_LANE_POLICY_WIDE: Final[SnapshotLanePolicy] = "wide"
 _RANDOMIZER_ROLE_KICK: Final[SnapshotRandomizerRole] = "kick"
 _RANDOMIZER_ROLE_SNARE: Final[SnapshotRandomizerRole] = "snare"
 _RANDOMIZER_ROLE_TOM: Final[SnapshotRandomizerRole] = "tom"
@@ -222,6 +235,42 @@ _TUNE_POLICIES: Final[frozenset[SnapshotTunePolicy]] = frozenset(
         _TUNE_POLICY_WIDE,
     }
 )
+_LANES: Final[tuple[SnapshotLane, ...]] = (
+    _LANE_TUNE,
+    _LANE_NOISE,
+    _LANE_FX,
+    _LANE_FILTER,
+    _LANE_AMP,
+    _LANE_LFO,
+)
+_LANE_POLICIES: Final[frozenset[SnapshotLanePolicy]] = frozenset(
+    {
+        _LANE_POLICY_OFF,
+        _LANE_POLICY_MICRO,
+        _LANE_POLICY_NORMAL,
+        _LANE_POLICY_WIDE,
+    }
+)
+_LIVE_LANE_POLICIES: Final[Mapping[SnapshotLane, SnapshotLanePolicy]] = MappingProxyType(
+    {
+        _LANE_TUNE: _LANE_POLICY_MICRO,
+        _LANE_NOISE: _LANE_POLICY_NORMAL,
+        _LANE_FX: _LANE_POLICY_MICRO,
+        _LANE_FILTER: _LANE_POLICY_NORMAL,
+        _LANE_AMP: _LANE_POLICY_NORMAL,
+        _LANE_LFO: _LANE_POLICY_OFF,
+    }
+)
+_STUDIO_LANE_POLICIES: Final[Mapping[SnapshotLane, SnapshotLanePolicy]] = MappingProxyType(
+    {
+        _LANE_TUNE: _LANE_POLICY_WIDE,
+        _LANE_NOISE: _LANE_POLICY_WIDE,
+        _LANE_FX: _LANE_POLICY_WIDE,
+        _LANE_FILTER: _LANE_POLICY_WIDE,
+        _LANE_AMP: _LANE_POLICY_WIDE,
+        _LANE_LFO: _LANE_POLICY_WIDE,
+    }
+)
 _TUNE_POLICY_MAX_STEPS: Final[Mapping[SnapshotTunePolicy, int]] = MappingProxyType(
     {
         _TUNE_POLICY_OFF: 0,
@@ -285,6 +334,15 @@ _RANDOMIZER_DENSITY_PERCENT: Final[Mapping[SnapshotRandomizerDensity, int]] = Ma
         _RANDOMIZER_DENSITY_HIGH: 75,
         _RANDOMIZER_DENSITY_FULL: 100,
     }
+)
+_LANE_POLICY_SESSION_DEPTH: Final[Mapping[SnapshotLanePolicy, SnapshotSessionDepth]] = (
+    MappingProxyType(
+        {
+            _LANE_POLICY_MICRO: _SESSION_DEPTH_GENTLE,
+            _LANE_POLICY_NORMAL: _SESSION_DEPTH_NORMAL,
+            _LANE_POLICY_WIDE: _SESSION_DEPTH_WILD,
+        }
+    )
 )
 _PRESET_LIVE: Final[str] = "live"
 _PRESET_KICK_SAFE: Final[str] = "kick-safe"
@@ -447,6 +505,7 @@ class SnapshotSessionGuardrails:
     locked_pads: frozenset[int]
     live_pad_caps: Mapping[int, SnapshotSessionDepth]
     tune_policy: SnapshotTunePolicy
+    lane_policies: Mapping[SnapshotLane, SnapshotLanePolicy]
     randomizer_overrides: Mapping[int, SnapshotPadRandomizerContract]
 
 
@@ -460,6 +519,7 @@ def default_snapshot_session_guardrails() -> SnapshotSessionGuardrails:
         locked_pads=frozenset(),
         live_pad_caps=_LIVE_PAD_CAPS,
         tune_policy=_TUNE_POLICY_MICRO,
+        lane_policies=_LIVE_LANE_POLICIES,
         randomizer_overrides=MappingProxyType({}),
     )
 
@@ -471,9 +531,13 @@ def _snapshot_session_guardrails(
     pad_overrides: Mapping[int, SnapshotSessionDepth] | None = None,
     locked_pads: frozenset[int] = frozenset(),
     tune_policy: SnapshotTunePolicy | None = None,
+    lane_policies: Mapping[SnapshotLane, SnapshotLanePolicy] | None = None,
     randomizer_overrides: Mapping[int, SnapshotPadRandomizerContract] | None = None,
 ) -> SnapshotSessionGuardrails:
     selected_tune_policy = tune_policy or _default_tune_policy_for_mode(mode)
+    selected_lane_policies = lane_policies or _default_lane_policies_for_mode(mode)
+    selected_lane_policies_dict = dict(selected_lane_policies)
+    selected_lane_policies_dict[_LANE_TUNE] = selected_tune_policy
     return SnapshotSessionGuardrails(
         mode=mode,
         global_depth=global_depth,
@@ -481,6 +545,7 @@ def _snapshot_session_guardrails(
         locked_pads=locked_pads,
         live_pad_caps=_LIVE_PAD_CAPS,
         tune_policy=selected_tune_policy,
+        lane_policies=MappingProxyType(selected_lane_policies_dict),
         randomizer_overrides=MappingProxyType(dict(randomizer_overrides or {})),
     )
 
@@ -619,6 +684,14 @@ def _default_tune_policy_for_mode(mode: SnapshotSessionMode) -> SnapshotTunePoli
     if mode == _SESSION_MODE_STUDIO:
         return _TUNE_POLICY_WIDE
     return _TUNE_POLICY_MICRO
+
+
+def _default_lane_policies_for_mode(
+    mode: SnapshotSessionMode,
+) -> Mapping[SnapshotLane, SnapshotLanePolicy]:
+    if mode == _SESSION_MODE_STUDIO:
+        return _STUDIO_LANE_POLICIES
+    return _LIVE_LANE_POLICIES
 
 
 def _randomizer_role_for_machine(machine_key: str) -> SnapshotRandomizerRole:
@@ -807,6 +880,37 @@ def _is_machine_source_tune_event(event: AnalogRytmRenderedStyleEvent) -> bool:
     return event.source == "machine_src" and "tune" in event.parameter.casefold()
 
 
+def _lane_for_event(event: AnalogRytmRenderedStyleEvent) -> SnapshotLane | None:
+    if _is_machine_source_tune_event(event):
+        return _LANE_TUNE
+    family = _parameter_family(event.parameter)
+    if family == _LANE_NOISE:
+        return _LANE_NOISE
+    if family in {"delay", "reverb"}:
+        return _LANE_FX
+    if event.section == _FILTER_SECTION:
+        return _LANE_FILTER
+    if event.section == _AMP_SECTION:
+        return _LANE_AMP
+    if event.section == _LFO_SECTION:
+        return _LANE_LFO
+    return None
+
+
+def _lane_limited_session_depth(
+    event: AnalogRytmRenderedStyleEvent,
+    session_depth: SnapshotSessionDepth,
+    guardrails: SnapshotSessionGuardrails,
+) -> SnapshotSessionDepth | None:
+    lane = _lane_for_event(event)
+    if lane is None:
+        return session_depth
+    policy = guardrails.lane_policies[lane]
+    if policy == _LANE_POLICY_OFF:
+        return None
+    return _min_session_depth(session_depth, _LANE_POLICY_SESSION_DEPTH[policy])
+
+
 def _is_snapshot_shell_event_active(
     event: AnalogRytmRenderedStyleEvent,
     guardrails: SnapshotSessionGuardrails,
@@ -814,6 +918,9 @@ def _is_snapshot_shell_event_active(
     if event.pad in guardrails.locked_pads:
         return False
     if guardrails.tune_policy == _TUNE_POLICY_OFF and _is_machine_source_tune_event(event):
+        return False
+    lane = _lane_for_event(event)
+    if lane is not None and guardrails.lane_policies[lane] == _LANE_POLICY_OFF:
         return False
     return not _is_pad_1_foundation_protected_event(event)
 
@@ -826,6 +933,21 @@ def _replace_pad_override(
     pad_overrides = dict(guardrails.pad_overrides)
     pad_overrides[pad] = depth
     return replace(guardrails, pad_overrides=MappingProxyType(pad_overrides))
+
+
+def _replace_lane_policy(
+    guardrails: SnapshotSessionGuardrails,
+    lane: SnapshotLane,
+    policy: SnapshotLanePolicy,
+) -> SnapshotSessionGuardrails:
+    lane_policies = dict(guardrails.lane_policies)
+    lane_policies[lane] = policy
+    tune_policy = policy if lane == _LANE_TUNE else guardrails.tune_policy
+    return replace(
+        guardrails,
+        lane_policies=MappingProxyType(lane_policies),
+        tune_policy=tune_policy,
+    )
 
 
 def _replace_randomizer_override(
@@ -899,6 +1021,17 @@ def _reset_tune_events_to_anchor(
 ) -> tuple[AnalogRytmRenderedStyleEvent, ...]:
     return tuple(
         anchor_event if _is_machine_source_tune_event(current_event) else current_event
+        for anchor_event, current_event in zip(anchor_events, current_events, strict=True)
+    )
+
+
+def _reset_lane_events_to_anchor(
+    anchor_events: Sequence[AnalogRytmRenderedStyleEvent],
+    current_events: Sequence[AnalogRytmRenderedStyleEvent],
+    lane: SnapshotLane,
+) -> tuple[AnalogRytmRenderedStyleEvent, ...]:
+    return tuple(
+        anchor_event if _lane_for_event(current_event) == lane else current_event
         for anchor_event, current_event in zip(anchor_events, current_events, strict=True)
     )
 
@@ -1291,6 +1424,10 @@ def _mutate_snapshot_event(
     if session_depth is None:
         return current_event
 
+    session_depth = _lane_limited_session_depth(current_event, session_depth, guardrails)
+    if session_depth is None:
+        return current_event
+
     if randomizer_contract is not None:
         if not _randomizer_density_allows_event(
             anchor_event,
@@ -1304,6 +1441,9 @@ def _mutate_snapshot_event(
             amount_depth,
             _pad_caps_for_mode(guardrails.mode)[current_event.pad],
         )
+        session_depth = _lane_limited_session_depth(current_event, session_depth, guardrails)
+        if session_depth is None:
+            return current_event
 
     window = _session_depth_window(guardrails.mode, session_depth)
     if _is_machine_source_tune_event(current_event):
@@ -1346,12 +1486,14 @@ def _mutate_snapshot_event(
             anchor_event.value_max,
         )
     else:
+        event_lane = _lane_for_event(current_event)
+        lane_policy = guardrails.lane_policies[event_lane] if event_lane is not None else None
         proposed_value = _selector_mutated_value(
             anchor_event.value,
             delta,
             selector_range,
-            wrap=guardrails.mode == _SESSION_MODE_STUDIO,
-            single_step=guardrails.mode == _SESSION_MODE_LIVE,
+            wrap=guardrails.mode == _SESSION_MODE_STUDIO and lane_policy != _LANE_POLICY_MICRO,
+            single_step=guardrails.mode == _SESSION_MODE_LIVE or lane_policy == _LANE_POLICY_MICRO,
         )
 
     return replace(
@@ -1505,6 +1647,10 @@ def _format_pad_overrides(overrides: Mapping[int, SnapshotSessionDepth]) -> str:
     return ", ".join(f"{pad}={overrides[pad]}" for pad in sorted(overrides))
 
 
+def _format_lane_policies(policies: Mapping[SnapshotLane, SnapshotLanePolicy]) -> str:
+    return ", ".join(f"{lane}={policies[lane]}" for lane in _LANES)
+
+
 def _format_randomizer_contract(contract: SnapshotPadRandomizerContract) -> str:
     return f"{contract.role}/{contract.amount}/{contract.density}/{contract.bias}"
 
@@ -1555,6 +1701,7 @@ def format_snapshot_shell_status(state: RytmSnapshotShellState) -> str:
             f"mode: {guardrails.mode}",
             f"global depth: {guardrails.global_depth}",
             f"tune lane: {guardrails.tune_policy}",
+            f"lanes: {_format_lane_policies(guardrails.lane_policies)}",
             f"locked pads: {_format_pad_list(sorted(guardrails.locked_pads))}",
             f"active pad overrides: {_format_pad_overrides(_active_pad_overrides(guardrails))}",
             f"inactive pad overrides: {_format_pad_overrides(_inactive_pad_overrides(guardrails))}",
@@ -1590,6 +1737,7 @@ def _help_text() -> str:
             "mode live|studio = choose session guardrail range",
             "depth gentle|normal|strong|wild = set global session depth",
             "tune off|micro|normal|wide = set source-page tune lane",
+            "lane tune|noise|fx|filter|amp|lfo off|micro|normal|wide = set a sound-design lane",
             "lock N / unlock N = exclude or re-enable a pad this session",
             "pad N gentle|normal|strong|wild|off = set a pad override",
             "pad N role|amount|density|bias VALUE = set OXI-style randomizer guardrails",
@@ -1657,6 +1805,7 @@ class AnalogRytmSnapshotShell:
                 self.state.guardrails,
                 mode=mode,
                 tune_policy=_default_tune_policy_for_mode(mode),
+                lane_policies=MappingProxyType(dict(_default_lane_policies_for_mode(mode))),
             ),
         )
         self._write_line(f"session mode: {mode}")
@@ -1693,10 +1842,38 @@ class AnalogRytmSnapshotShell:
         )
         self.state = replace(
             self.state,
-            guardrails=replace(self.state.guardrails, tune_policy=policy),
+            guardrails=_replace_lane_policy(self.state.guardrails, _LANE_TUNE, policy),
             current_events=current_events,
         )
         self._write_line(f"tune lane: {policy}")
+
+    def _set_lane_policy(self, parts: Sequence[str]) -> None:
+        if len(parts) != 3:
+            self._write_line("usage: lane tune|noise|fx|filter|amp|lfo off|micro|normal|wide")
+            return
+        lane = parts[1]
+        if lane not in _LANES:
+            self._write_line(f"unknown snapshot shell lane: {lane}")
+            return
+        policy = parts[2]
+        if policy not in _LANE_POLICIES:
+            self._write_line(f"unknown snapshot shell lane policy: {policy}")
+            return
+        current_events = (
+            _reset_lane_events_to_anchor(
+                self.state.anchor.events,
+                self.state.current_events,
+                lane,
+            )
+            if policy == _LANE_POLICY_OFF
+            else self.state.current_events
+        )
+        self.state = replace(
+            self.state,
+            guardrails=_replace_lane_policy(self.state.guardrails, lane, policy),
+            current_events=current_events,
+        )
+        self._write_line(f"lane {lane}: {policy}")
 
     def _set_lock(self, parts: Sequence[str], *, locked: bool) -> None:
         if len(parts) != 2:
@@ -2037,6 +2214,9 @@ class AnalogRytmSnapshotShell:
             return True
         if parts and parts[0] == _CMD_TUNE:
             self._set_tune_policy(parts)
+            return True
+        if parts and parts[0] == _CMD_LANE:
+            self._set_lane_policy(parts)
             return True
         if parts and parts[0] == _CMD_LOCK:
             self._set_lock(parts, locked=True)

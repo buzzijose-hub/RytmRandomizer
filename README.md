@@ -116,21 +116,36 @@ clears the staged mutation, and keeps the current session guardrails.
 
 Inside the shell, use `S1A`, `S3A`, `S3B`, `S4B`, `4`, `Y`, `V`, `N`, `Z`,
 `U`, `preview`, `changes`, `send`, `go`, `again`, `next`, `kit`,
-`resnapshot`, `mode`, `depth`, `lock`, `unlock`, `pad`, `preset`,
+`resnapshot`, `mode`, `depth`, `lane`, `lock`, `unlock`, `pad`, `preset`,
 `guards reset`, `status`, and `q`. `Y`, `V`, and `N` ask for depth (`micro`,
 `groove`, or `strong`). `send` repeats the currently staged plan; type `go` to
 make the next variation and send it in one step, or type the same mutation
 command again, `again`, or `next` to stage the next variation before sending.
+
+In live use, treat the shell as a second performer beside an OXI or another
+sequencer. The OXI decides when notes, triggers, mutes, and pattern motion
+happen; RytmRandomizer changes what the captured Rytm sounds become when those
+events happen. `randomize` proposes a safe staged sound-design variation, `go`
+generates and sends the next variation, `kit` captures a newly loaded Rytm kit
+as the new anchor, and `Z` plus `send` returns the hardware to the captured
+safe kit.
 
 Session guardrails are live-only settings that reset when the shell exits:
 
 ```text
 mode live
 depth gentle
+lane tune micro
+lane noise normal
+lane fx micro
+lane filter normal
+lane amp normal
+lane lfo off
 pad 1 gentle
 pad 3 strong
 lock 5
 status
+randomize
 4
 changes
 send
@@ -159,9 +174,15 @@ the kit inside the selected lane instead of walking farther away from the
 received snapshot. Pad 1 has an additional kick-foundation policy: its filter
 page, LFO page, and AMP attack time are omitted from active sends, while Pad 1
 source tuning parameters stay within plus or minus 3 of their captured-kit
-values. The snapshot shell mutates manual-backed CC MSB rows from the captured
-kit, including the current-machine SRC rows on pads 1-12, keeps machine
-switching off, and avoids samples, performance macros, source level, track
+values. Lane guardrails add a second permission layer over those pad controls:
+`lane tune|noise|fx|filter|amp|lfo off|micro|normal|wide` can freeze a lane,
+keep it tiny, allow normal live movement, or open it for studio-width
+variation. Live defaults are `tune=micro`, `noise=normal`, `fx=micro`,
+`filter=normal`, `amp=normal`, and `lfo=off`, so anchors like kick and snare
+stay trustworthy while hats, synth voices, and section-change effects can move
+more deliberately. The snapshot shell mutates manual-backed CC MSB rows from
+the captured kit, including the current-machine SRC rows on pads 1-12, does not
+switch machines, and avoids samples, performance macros, source level, track
 level, amp volume, SysEx writes, transport, pattern changes, and kit/project
 writes. Zone commands (`Y`, `V`, and `N`) layer on the current staged plan; use
 `fresh` or `Z` first when you want an anchor-only zone mutation.
