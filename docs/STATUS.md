@@ -4,6 +4,14 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Passive observer follow-up completed the Pad 2/Pad 3 Dual VCO
+  detune diagnostic without opening an output or sending MIDI. KIT 15 showed
+  Pad 3 encoder B as direct `CC20` on channel 2, and KIT 14 showed Pad 2
+  encoder B as direct `CC20` on channel 1; both were labeled
+  `machine:dual_vco:Osc 2 Detune`, both reported zero NRPN messages, and both
+  had zero unknown CC observations. This confirms there is no observed NRPN
+  workaround for the earlier outbound CC20 `ERR`, so Pad 2/3 Dual VCO detune
+  stays guarded out of live CC sends.
 - 2026-05-30: Passive Analog Rytm CC observation path added for the next Dual
   VCO detune investigation. `--arm --rytm-cc-observe` opens only a Rytm MIDI
   input, sends no MIDI, drains pending CCs after Enter, reports raw

@@ -431,6 +431,23 @@ next diagnostic before any renewed attempt to randomize Dual VCO detune. The
 live snapshot and file snapshot options sharpen SRC rows to exact pad/machine
 labels when available.
 
+Passive observer follow-up on 2026-05-30 completed the Pad 2/Pad 3 diagnostic
+without opening an output or sending MIDI:
+
+- KIT 15 (`d0ffff4fda2125d7`) observed Pad 3 Dual VCO encoder B as direct
+  `CC20` on channel 2, labeled `machine:dual_vco:Osc 2 Detune`.
+- KIT 14 (`0ab99453d687ef65`) observed Pad 2 Dual VCO encoder B as direct
+  `CC20` on channel 1, labeled `machine:dual_vco:Osc 2 Detune`.
+- Both runs reported `Observed NRPN messages: 0`,
+  `Unknown CC observations: 0`, `Opened output: False`, and
+  `Sent MIDI: False`.
+
+Conclusion: for these live KIT states, the Rytm emits Dual VCO encoder B as
+direct CC20 rather than NRPN. Since outbound CC20 to Pad 2/3 Dual VCO
+`Osc 2 Detune` already produced `ERR`, there is no observed NRPN workaround to
+try. Keep Pad 2/3 Dual VCO detune guarded out of live CC sends unless a future
+hardware procedure proves a different transport safe.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
