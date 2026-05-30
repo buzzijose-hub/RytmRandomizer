@@ -245,7 +245,7 @@ def test_atomic_write_replace_failure_raises_write_error_and_cleans_temp(
 ) -> None:
     dest = tmp_path / "out.bin"
 
-    def boom_replace(src: str, dst: str) -> None:
+    def boom_replace(src: str, _dst: str) -> None:
         raise OSError("replace failed")
 
     monkeypatch.setattr("os.replace", boom_replace)
@@ -269,7 +269,7 @@ def test_atomic_write_cleanup_failure_does_not_mask_write_error(
 
     dest = tmp_path / "out.bin"
 
-    def boom_replace(src: str, dst: str) -> None:
+    def boom_replace(src: str, _dst: str) -> None:
         raise OSError("replace failed")
 
     def boom_unlink(path: str, *args: object, **kwargs: object) -> None:

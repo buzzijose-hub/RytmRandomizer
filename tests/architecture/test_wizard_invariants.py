@@ -57,9 +57,8 @@ def test_tauri_dialog_plugin_dependency_is_declared() -> None:
 
     Regression guard: in the original Phase 2 bundle CONTRIBUTING.md claimed
     "no extra Rust crate is required" — that was wrong; Tauri 2 needs an
-    explicit crate dep. Without this, the dynamic ``import('@tauri-apps/plugin-dialog')``
-    on the web side resolves but the IPC handler doesn't exist at runtime in
-    the production bundle.
+    explicit crate dep. Without this, the web-side dialog package can load but
+    the IPC handler doesn't exist at runtime in the production bundle.
     """
 
     cargo_toml = (SHELL_ROOT / "Cargo.toml").read_text(encoding="utf-8")
@@ -190,11 +189,10 @@ def test_app_routes_hash_to_wizard_surface() -> None:
 def test_tauri_dialog_plugin_is_declared_as_web_runtime_dependency() -> None:
     """@tauri-apps/plugin-dialog must be a real npm dependency, not an implicit one.
 
-    Regression guard: the original AddStep.tsx loaded the plugin via a
-    Vite-ignored dynamic import with no package.json entry. TypeScript
-    had no type signature for the module and npm install never resolved
-    it; a typo in the plugin name would only surface at runtime in the
-    bundled app.
+    Regression guard: the original AddStep.tsx referenced the plugin without a
+    package.json entry. TypeScript had no type signature for the module and npm
+    install never resolved it; a typo in the plugin name would only surface at
+    runtime in the bundled app.
     """
 
     pkg = json.loads((WEB_ROOT / "package.json").read_text(encoding="utf-8"))
@@ -202,6 +200,28 @@ def test_tauri_dialog_plugin_is_declared_as_web_runtime_dependency() -> None:
     assert "@tauri-apps/plugin-dialog" in deps, (
         "desktop/web/package.json must declare @tauri-apps/plugin-dialog under "
         "'dependencies' (NOT devDependencies — it's a runtime dep)."
+    )
+
+
+def test_tauri_dialog_plugin_is_bundled_not_vite_ignored() -> None:
+    """The web picker must let Vite bundle the Tauri dialog JS package.
+
+    Regression guard: a Vite-ignored dynamic import leaves the bare
+    ``@tauri-apps/plugin-dialog`` specifier in the browser bundle. The package is
+    not injected by Tauri at runtime; the Rust plugin only exposes the IPC
+    command. The JS package must be statically reachable so the release bundle's
+    Browse button can actually call ``open(...)``.
+    """
+
+    add_step = (WEB_ROOT / "src" / "wizard" / "AddStep.tsx").read_text(encoding="utf-8")
+    assert "@vite-ignore" not in add_step, (
+        "AddStep.tsx must not hide @tauri-apps/plugin-dialog behind "
+        "@vite-ignore. Let Vite bundle the npm package so the desktop release "
+        "can resolve the wizard Browse opener."
+    )
+    assert "from '@tauri-apps/plugin-dialog'" in add_step, (
+        "AddStep.tsx must statically import from @tauri-apps/plugin-dialog so "
+        "Vite includes the dialog opener in the web bundle."
     )
 
 

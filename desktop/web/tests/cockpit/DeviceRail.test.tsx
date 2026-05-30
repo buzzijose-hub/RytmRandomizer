@@ -2,6 +2,7 @@ import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DeviceRail, buildDeviceRailReadinessModel } from '../../src/cockpit/DeviceRail';
+import { ANALOG_FOUR_DEVICE_ID, RYTM_DEVICE_ID } from '../../src/cockpit/devices';
 import { useCockpitStore } from '../../src/state';
 
 import { sessionMock, snapshot } from './_fixtures';
@@ -25,7 +26,7 @@ describe('DeviceRail', () => {
       useCockpitStore.getState().setSnapshot(snapshot);
     });
 
-    render(<DeviceRail />);
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
 
     const rail = screen.getByTestId('device-rail');
     const rytm = within(rail).getByTestId('device-card-analog-rytm-mk2');
@@ -42,11 +43,32 @@ describe('DeviceRail', () => {
     expect(analogFour).toHaveTextContent('4 tracks staged');
     expect(within(analogFour).getAllByTestId(/device-rail-a4-track-/)).toHaveLength(4);
     expect(within(analogFour).getByTestId('device-rail-a4-track-1')).toHaveTextContent(
-      'Bass movement',
+      'Bass / low pulse',
     );
     expect(within(analogFour).getByTestId('device-rail-a4-track-4')).toHaveTextContent(
-      'FX / texture',
+      'Space / accent',
     );
+  });
+
+  it('marks the selected device and emits selection changes', () => {
+    const selected: string[] = [];
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
+
+    render(
+      <DeviceRail
+        activeDeviceId={ANALOG_FOUR_DEVICE_ID}
+        onSelectDevice={(deviceId) => selected.push(deviceId)}
+      />,
+    );
+
+    expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveClass('active');
+    expect(screen.getByTestId('device-card-analog-rytm-mk2')).not.toHaveClass('active');
+
+    screen.getByTestId('device-select-analog-rytm-mk2').click();
+    expect(selected).toEqual([RYTM_DEVICE_ID]);
   });
 
   it('builds the rendered rail from the dual-device readiness model contract', () => {
@@ -96,7 +118,7 @@ describe('DeviceRail', () => {
     expect(model.tracks[15]).toMatchObject({
       device_id: 'analog_four_mk2',
       track_number: 4,
-      role: 'FX / texture',
+      role: 'Space / accent',
       source: 'analog-four-staged-plan',
       test_id: 'device-rail-a4-track-4',
     });
@@ -141,7 +163,7 @@ describe('DeviceRail', () => {
       useCockpitStore.getState().setSnapshot(snapshot);
     });
 
-    render(<DeviceRail />);
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
 
     expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Mock Safe');
     expect(screen.getByTestId('device-card-analog-four-mk2')).toHaveTextContent('Mock Staged');
@@ -149,7 +171,7 @@ describe('DeviceRail', () => {
   });
 
   it('renders planned Rytm pads as locked before a snapshot is loaded', () => {
-    render(<DeviceRail />);
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
 
     const rytm = screen.getByTestId('device-card-analog-rytm-mk2');
     expect(within(rytm).getAllByTestId(/device-rail-rytm-pad-/)).toHaveLength(12);

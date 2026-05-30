@@ -1946,9 +1946,11 @@ flowchart TB
   ship in `cockpit/profiles/builtin.py`; user `kind="user"` profiles are
   flat JSON files under the platform-appropriate config directory
   (`XDG_CONFIG_HOME` honored on Linux).
-- **No new device family.** Phase 1 targets the Analog Rytm MK2 only;
-  Analog Four MK2 plugs in once its `MutationPlanner` promotes out of
-  candidate state — no parallel registry, no new top-level subpackage.
+- **Device surfaces stay behind the shared device layer.** Phase 1 originally
+  targeted the Analog Rytm MK2 only. The cockpit can now switch the center
+  view to a four-track Analog Four MK2 staged surface, but A4 SEND remains
+  separately gated and no parallel registry or top-level device subpackage is
+  allowed.
 
 ---
 

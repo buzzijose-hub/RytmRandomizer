@@ -32,6 +32,7 @@ import pytest
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS = 1.0
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -57,7 +58,11 @@ def _restore_sys_modules():
     finally:
         for name in list(sys.modules):
             if name not in snapshot:
-                del sys.modules[name]
+                module = sys.modules.pop(name)
+                parent_name, _, attribute = name.rpartition(".")
+                parent_module = sys.modules.get(parent_name)
+                if parent_module is not None and getattr(parent_module, attribute, None) is module:
+                    delattr(parent_module, attribute)
         for name, module in snapshot.items():
             sys.modules[name] = module
 
@@ -77,19 +82,36 @@ class _FakePort:
         self.closed = True
 
 
+class _FakeInputPort:
+    """Stand-in for a ``mido`` input port: exposes ``iter_pending``."""
+
+    def __init__(self, name: str = "FakeInputPort") -> None:
+        self.name = name
+        self.closed = False
+
+    def iter_pending(self):
+        return iter(())
+
+    def close(self) -> None:  # parity with real mido ports, never asserted
+        self.closed = True
+
+
 def _install_fake_mido(
     *,
     output_names: tuple[str, ...] = ("Fake Rytm",),
+    input_names: tuple[str, ...] = ("Fake A4 Input",),
     open_factory=None,
+    open_input_factory=None,
     get_output_names_raises: BaseException | None = None,
+    get_input_names_raises: BaseException | None = None,
     open_output_raises: BaseException | None = None,
+    open_input_raises: BaseException | None = None,
 ) -> types.ModuleType:
     """Install a minimal fake ``mido`` module into ``sys.modules``.
 
-    The fake exposes the two attributes the provider uses --
-    ``get_output_names`` and ``open_output`` -- and lets the caller configure
-    the returned names, the factory used to mint ports, and optional errors
-    to raise from each surface (for boundary tests).
+    The fake exposes the output and input attributes the provider uses and
+    lets the caller configure the returned names, the factories used to mint
+    ports, and optional errors to raise from each surface (for boundary tests).
     """
 
     fake = types.ModuleType("mido")
@@ -99,6 +121,11 @@ def _install_fake_mido(
             raise get_output_names_raises
         return list(output_names)
 
+    def _get_input_names() -> list[str]:
+        if get_input_names_raises is not None:
+            raise get_input_names_raises
+        return list(input_names)
+
     def _open_output(port_name: str):
         if open_output_raises is not None:
             raise open_output_raises
@@ -106,9 +133,68 @@ def _install_fake_mido(
             return _FakePort(port_name)
         return open_factory(port_name)
 
+    def _open_input(port_name: str):
+        if open_input_raises is not None:
+            raise open_input_raises
+        if open_input_factory is None:
+            return _FakeInputPort(port_name)
+        return open_input_factory(port_name)
+
     fake.get_output_names = _get_output_names  # type: ignore[attr-defined]
+    fake.get_input_names = _get_input_names  # type: ignore[attr-defined]
     fake.open_output = _open_output  # type: ignore[attr-defined]
+    fake.open_input = _open_input  # type: ignore[attr-defined]
     sys.modules["mido"] = fake
+    return fake
+
+
+def _install_fake_rtmidi(
+    *,
+    input_names: tuple[str, ...] = ("Fake Rytm Input",),
+    messages: tuple[object, ...] = (),
+    open_raises: BaseException | None = None,
+) -> types.ModuleType:
+    """Install a minimal fake ``rtmidi`` module into ``sys.modules``."""
+
+    fake = types.ModuleType("rtmidi")
+    instances: list[object] = []
+
+    class FakeMidiIn:
+        def __init__(self) -> None:
+            self.ignore_calls: list[tuple[bool, bool, bool]] = []
+            self.opened_index: int | None = None
+            self.closed = False
+            self._messages = list(messages)
+            instances.append(self)
+
+        def get_ports(self) -> list[str]:
+            return list(input_names)
+
+        def ignore_types(
+            self,
+            *,
+            sysex: bool = True,
+            timing: bool = True,
+            active_sense: bool = True,
+        ) -> None:
+            self.ignore_calls.append((sysex, timing, active_sense))
+
+        def open_port(self, port_index: int) -> None:
+            if open_raises is not None:
+                raise open_raises
+            self.opened_index = port_index
+
+        def get_message(self) -> object | None:
+            if not self._messages:
+                return None
+            return self._messages.pop(0)
+
+        def close_port(self) -> None:
+            self.closed = True
+
+    fake.MidiIn = FakeMidiIn  # type: ignore[attr-defined]
+    fake.instances = instances  # type: ignore[attr-defined]
+    sys.modules["rtmidi"] = fake
     return fake
 
 
@@ -234,6 +320,59 @@ def test_list_output_names_propagates_dependency_error_when_mido_missing(
 
 
 # ---------------------------------------------------------------------------
+# list_input_names()
+# ---------------------------------------------------------------------------
+
+
+def test_list_input_names_returns_tuple_from_fake_mido() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+
+    _install_fake_mido(input_names=("Fake A4 Input", "Other Input"))
+    provider = MidoMidiPortProvider()
+
+    names = provider.list_input_names()
+
+    assert names == ("Fake A4 Input", "Other Input")
+    assert isinstance(names, tuple)
+
+
+def test_list_input_names_backend_error_raises_port_error() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_mido(get_input_names_raises=RuntimeError("backend down"))
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.list_input_names()
+
+    assert str(excinfo.value).startswith("midi_input_discovery_failed")
+    assert excinfo.value.context == {"underlying": "RuntimeError('backend down')"}
+
+
+def test_list_input_names_propagates_dependency_error_when_mido_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiDependencyError
+
+    sys.modules.pop("mido", None)
+
+    real_import = builtins.__import__
+
+    def _block_mido(name, *args, **kwargs):
+        if name == "mido":
+            raise ImportError("forced-missing: mido")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _block_mido)
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiDependencyError):
+        provider.list_input_names()
+
+
+# ---------------------------------------------------------------------------
 # open_output() defensive paths (no real backend touched)
 # ---------------------------------------------------------------------------
 
@@ -343,3 +482,186 @@ def test_open_output_propagates_dependency_error_when_mido_missing(
 
     with pytest.raises(RealMidiDependencyError):
         provider.open_output("Fake Rytm")
+
+
+# ---------------------------------------------------------------------------
+# open_input() defensive paths (no real backend touched)
+# ---------------------------------------------------------------------------
+
+
+def test_open_input_rejects_non_string_port_name() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.open_input(123)  # type: ignore[arg-type]
+
+    assert str(excinfo.value) == "midi_input_port_required"
+
+
+def test_open_input_rejects_empty_port_name() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.open_input("")
+
+    assert str(excinfo.value) == "midi_input_port_required"
+
+
+def test_open_input_rejects_unknown_port_name() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_mido(input_names=("Fake A4 Input",))
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.open_input("Missing Input")
+
+    assert str(excinfo.value) == "unknown_midi_input_port: Missing Input"
+
+
+def test_open_input_rejects_port_without_iter_pending_method() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_mido(
+        input_names=("Fake A4 Input",),
+        open_input_factory=lambda _name: object(),
+    )
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.open_input("Fake A4 Input")
+
+    assert str(excinfo.value) == "invalid_midi_input_port: Fake A4 Input"
+
+
+def test_open_input_returns_port_with_iter_pending_method() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+
+    fake_port = _FakeInputPort("Fake A4 Input")
+    _install_fake_mido(
+        input_names=("Fake A4 Input",),
+        open_input_factory=lambda _name: fake_port,
+    )
+    provider = MidoMidiPortProvider()
+
+    result = provider.open_input("Fake A4 Input")
+
+    assert result is fake_port
+    assert list(result.iter_pending()) == []
+
+
+def test_open_input_backend_error_raises_port_error() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_mido(
+        input_names=("Fake A4 Input",),
+        open_input_raises=OSError("device busy"),
+    )
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.open_input("Fake A4 Input")
+
+    assert str(excinfo.value).startswith("unavailable_midi_input_port: Fake A4 Input")
+    assert excinfo.value.context == {"underlying": "OSError('device busy')"}
+
+
+def test_open_input_propagates_dependency_error_when_mido_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiDependencyError
+
+    sys.modules.pop("mido", None)
+
+    real_import = builtins.__import__
+
+    def _block_mido(name, *args, **kwargs):
+        if name == "mido":
+            raise ImportError("forced-missing: mido")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _block_mido)
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiDependencyError):
+        provider.open_input("Fake A4 Input")
+
+
+# ---------------------------------------------------------------------------
+# capture_sysex_messages() raw rtmidi path
+# ---------------------------------------------------------------------------
+
+
+def test_capture_sysex_messages_returns_first_complete_frame_from_fake_rtmidi() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+
+    frame = bytes([0xF0, 0x00, 0x20, 0x3C, 0x07, 0x52, 0xF7])
+    fake = _install_fake_rtmidi(messages=((list(frame), 0.0),))
+    provider = MidoMidiPortProvider()
+
+    frames = provider.capture_sysex_messages(
+        "Fake Rytm Input",
+        timeout_seconds=FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS,
+    )
+
+    assert frames == (frame,)
+    midi_in = fake.instances[0]  # type: ignore[attr-defined]
+    assert midi_in.ignore_calls == [(False, True, True)]
+    assert midi_in.opened_index == 0
+    assert midi_in.closed is True
+
+
+def test_capture_sysex_messages_reassembles_chunked_frame_from_fake_rtmidi() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+
+    full_frame = bytes([0xF0, 0x00, 0x20, 0x3C, 0x07, 0x52, 0x01, 0x02, 0xF7])
+    messages = (
+        (full_frame[:4], 0.0),
+        (full_frame[4:7], 0.0),
+        (full_frame[7:], 0.0),
+    )
+    _install_fake_rtmidi(messages=messages)
+    provider = MidoMidiPortProvider()
+
+    frames = provider.capture_sysex_messages(
+        "Fake Rytm Input",
+        timeout_seconds=FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS,
+    )
+
+    assert frames == (full_frame,)
+
+
+def test_capture_sysex_messages_rejects_unknown_input_name() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_rtmidi(input_names=("Fake Rytm Input",))
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.capture_sysex_messages("Missing Input", timeout_seconds=0.05)
+
+    assert str(excinfo.value) == "unknown_midi_input_port: Missing Input"
+
+
+def test_capture_sysex_messages_timeout_when_no_sysex_frame_arrives() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_rtmidi(messages=((bytes([0x90, 0x40, 0x7F]), 0.0),))
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        provider.capture_sysex_messages("Fake Rytm Input", timeout_seconds=0.001)
+
+    assert str(excinfo.value) == "midi_sysex_capture_timeout"

@@ -120,6 +120,237 @@ def test_sy_raw_cc_numbers_are_known_good():
     assert data.SY_RAW_PARAMS["FLT Type"] == 76
 
 
+def test_analog_rytm_manual_catalog_pins_os172_rows_and_safety_statuses():
+    """Rytm OS 1.72 manual rows are documented without widening live mutation."""
+
+    assert len(data.ANALOG_RYTM_MANUAL_CC) == 323
+    assert len(data.ANALOG_RYTM_VALIDATED_RUNTIME_CC) == 99
+    assert len(data.ANALOG_RYTM_MANUAL_NOTE_TRIGGERS) == 13
+
+    track_machine = data.ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("COMMON", "Track Machine Type")]
+    assert track_machine.cc_msb == 15
+    assert track_machine.nrpn_msb == 1
+    assert track_machine.nrpn_lsb == 103
+    assert track_machine.risk == "high"
+    assert track_machine.mutation_status == "locked_default"
+
+    delay_feedback = data.ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("DELAY", "Delay Feedback")]
+    assert delay_feedback.cc_msb == 19
+    assert delay_feedback.risk == "high"
+    assert delay_feedback.mutation_status == "locked_default"
+
+    bd_hard_tune = data.ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["bd_hard"][1]
+    assert bd_hard_tune.parameter == "Tune"
+    assert bd_hard_tune.cc_msb == 17
+    assert bd_hard_tune.mutation_status == "validated_runtime"
+
+
+def test_analog_rytm_kit_layout_pins_current_sound_offsets():
+    """Raw-kit offsets must stay aligned with the Rytm track sound layout."""
+
+    assert data.RYTM_KIT_RAW_SIZE == 0x0A32
+    assert data.RYTM_KIT_TRACKS_OFFSET == 0x002E
+    assert data.RYTM_KIT_TRACK_SOUND_SIZE == 162
+    assert data.RYTM_KIT_TRACK_MACHINE_VALUE_OFFSET == 0x00AA
+    assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[1].sound_offset == 0x001E
+    assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[20].sound_offset == 0x0044
+    assert data.RYTM_SOUND_FIELD_BY_NRPN_LSB[27].sound_offset == 0x0052
+
+
+def test_analog_four_manual_cc_mapping_matches_pwm_depth_and_filter_frequency():
+    """A4 CC labels must follow the Analog Four MKII manual, not MIDI convention."""
+
+    pulsewidth = data.ANALOG_FOUR_SYNTH_TRACK_CC["OSC1 Pulsewidth"]
+    assert pulsewidth.section == "OSC 1"
+    assert pulsewidth.encoder == "H"
+    assert pulsewidth.cc_msb == 72
+    assert pulsewidth.cc_lsb is None
+    assert pulsewidth.nrpn_msb == 1
+    assert pulsewidth.nrpn_lsb == 7
+
+    pwm_speed = data.ANALOG_FOUR_SYNTH_TRACK_CC["OSC1 PWM Speed"]
+    assert pwm_speed.section == "OSC 1"
+    assert pwm_speed.encoder == "I"
+    assert pwm_speed.cc_msb == 73
+    assert pwm_speed.cc_lsb is None
+    assert pwm_speed.nrpn_msb == 1
+    assert pwm_speed.nrpn_lsb == 8
+
+    pwm_depth = data.ANALOG_FOUR_SYNTH_TRACK_CC["OSC1 PWM Depth"]
+    assert pwm_depth.section == "OSC 1"
+    assert pwm_depth.encoder == "J"
+    assert pwm_depth.cc_msb == 74
+    assert pwm_depth.cc_lsb is None
+    assert pwm_depth.nrpn_msb == 1
+    assert pwm_depth.nrpn_lsb == 9
+
+    filter_frequency = data.ANALOG_FOUR_SYNTH_TRACK_CC["Filter1 Frequency"]
+    assert filter_frequency.section == "FILTERS"
+    assert filter_frequency.encoder == "A"
+    assert filter_frequency.cc_msb == 18
+    assert filter_frequency.cc_lsb == 50
+    assert filter_frequency.nrpn_msb == 1
+    assert filter_frequency.nrpn_lsb == 40
+
+
+def test_analog_four_cc_lookup_maps_msb_to_manual_entry():
+    pulsewidth = data.ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB[72]
+    pwm_speed = data.ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB[73]
+    pwm_depth = data.ANALOG_FOUR_SYNTH_TRACK_CC_BY_MSB[74]
+
+    assert pulsewidth.parameter == "OSC1 Pulsewidth"
+    assert pwm_speed.parameter == "OSC1 PWM Speed"
+    assert pwm_depth.parameter == "OSC1 PWM Depth"
+
+
+def test_analog_four_manual_cc_table_covers_all_manual_cc_rows():
+    """Appendix D rows with CC MSB values are represented exactly once."""
+
+    assert len(data.ANALOG_FOUR_SYNTH_TRACK_CC) == 58
+    assert len(data.ANALOG_FOUR_MANUAL_CC) == 72
+    assert len(data.ANALOG_FOUR_MANUAL_CC_BY_MSB) == 72
+    assert set(data.ANALOG_FOUR_SYNTH_TRACK_CC).issubset(data.ANALOG_FOUR_MANUAL_CC)
+    assert {mapping.cc_msb for mapping in data.ANALOG_FOUR_MANUAL_CC.values()} == set(
+        data.ANALOG_FOUR_MANUAL_CC_BY_MSB
+    )
+
+    track_mute = data.ANALOG_FOUR_MANUAL_CC["Track Mute"]
+    assert track_mute.section == "TRACK"
+    assert track_mute.cc_msb == 94
+    assert track_mute.nrpn_msb == 1
+    assert track_mute.nrpn_lsb == 101
+
+    performance_a = data.ANALOG_FOUR_MANUAL_CC["Performance Parameter A"]
+    assert performance_a.section == "PERFORMANCE"
+    assert performance_a.encoder == "A"
+    assert performance_a.cc_msb == 3
+    assert performance_a.nrpn_msb == 0
+    assert performance_a.nrpn_lsb == 0
+
+    modwheel = data.ANALOG_FOUR_MANUAL_CC["Modwheel"]
+    assert modwheel.section == "MODULATION"
+    assert modwheel.cc_msb == 1
+    assert modwheel.cc_lsb == 33
+    assert modwheel.nrpn_msb is None
+    assert modwheel.nrpn_lsb is None
+
+    osc2_pwm_speed = data.ANALOG_FOUR_MANUAL_CC["OSC2 PWM Speed"]
+    assert osc2_pwm_speed.section == "OSC 2"
+    assert osc2_pwm_speed.cc_msb == 82
+    assert osc2_pwm_speed.nrpn_msb == 1
+    assert osc2_pwm_speed.nrpn_lsb == 28
+
+    envf_depth_a = data.ANALOG_FOUR_MANUAL_CC["EnvF Depth A"]
+    assert envf_depth_a.section == "ENVF"
+    assert envf_depth_a.cc_msb == 20
+    assert envf_depth_a.cc_lsb == 52
+    assert envf_depth_a.nrpn_msb == 1
+    assert envf_depth_a.nrpn_lsb == 67
+
+    lfo2_depth_b = data.ANALOG_FOUR_MANUAL_CC["LFO2 Depth B"]
+    assert lfo2_depth_b.section == "LFO2"
+    assert lfo2_depth_b.cc_msb == 27
+    assert lfo2_depth_b.cc_lsb == 59
+    assert lfo2_depth_b.nrpn_msb == 1
+    assert lfo2_depth_b.nrpn_lsb == 99
+
+
+def test_analog_four_synth_track_nrpn_table_includes_nrpn_only_subpage_rows():
+    """NRPN unlock exposes synth-track rows that have no direct CC MSB."""
+
+    assert set(data.ANALOG_FOUR_SYNTH_TRACK_CC).issubset(data.ANALOG_FOUR_SYNTH_TRACK_NRPN)
+    assert len(data.ANALOG_FOUR_SYNTH_TRACK_NRPN) > len(data.ANALOG_FOUR_SYNTH_TRACK_CC)
+
+    sync_mode = data.ANALOG_FOUR_SYNTH_TRACK_NRPN["Sync Mode"]
+    assert sync_mode.section == "OSC COMMON"
+    assert sync_mode.encoder == "B"
+    assert sync_mode.cc_msb is None
+    assert sync_mode.nrpn_msb == 1
+    assert sync_mode.nrpn_lsb == 31
+
+    lfo1_waveform = data.ANALOG_FOUR_SYNTH_TRACK_NRPN["LFO1 Waveform"]
+    assert lfo1_waveform.section == "LFO1"
+    assert lfo1_waveform.encoder == "F"
+    assert lfo1_waveform.cc_msb is None
+    assert lfo1_waveform.nrpn_msb == 1
+    assert lfo1_waveform.nrpn_lsb == 85
+
+    assert data.ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS[(1, 31)].parameter == "Sync Mode"
+    assert data.ANALOG_FOUR_SYNTH_TRACK_NRPN_BY_ADDRESS[(1, 85)].parameter == "LFO1 Waveform"
+
+
+def test_analog_four_detroit_minimal_recipe_is_manual_backed():
+    recipe = data.ANALOG_FOUR_KIT_RECIPES["detroit-minimal"]
+
+    assert recipe.name == "detroit-minimal"
+    assert recipe.label == "Detroit Minimal"
+    assert {event.track for event in recipe.events} == {1, 2, 3, 4}
+    assert len(recipe.events) >= 32
+    for event in recipe.events:
+        assert 1 <= event.track <= 4
+        assert 0 <= event.value <= 127
+        assert event.parameter in data.ANALOG_FOUR_MANUAL_CC
+
+    first_event = recipe.events[0]
+    assert first_event.track == 1
+    assert first_event.parameter == "OSC1 Level"
+    assert first_event.value == 110
+
+
+def test_analog_four_bell_techno_grid_recipe_is_manual_backed_and_controlled():
+    recipe = data.ANALOG_FOUR_KIT_RECIPES["bell-techno-grid"]
+
+    assert recipe.name == "bell-techno-grid"
+    assert recipe.label == "Bell Techno Grid"
+    assert {event.track for event in recipe.events} == {1, 2, 3, 4}
+    assert 24 <= len(recipe.events) <= 32
+    for event in recipe.events:
+        assert 1 <= event.track <= 4
+        assert 0 <= event.value <= 127
+        assert event.parameter in data.ANALOG_FOUR_MANUAL_CC
+
+    track_2_events = [event for event in recipe.events if event.track == 2]
+    assert [event.parameter for event in track_2_events[:3]] == [
+        "OSC1 Waveform",
+        "OSC2 Level",
+        "Sync Amount",
+    ]
+
+
+def test_analog_four_bell_techno_expanded_recipe_uses_full_cc_surface():
+    recipe = data.ANALOG_FOUR_KIT_RECIPES["bell-techno-expanded"]
+
+    assert recipe.name == "bell-techno-expanded"
+    assert recipe.label == "Bell Techno Expanded"
+    assert {event.track for event in recipe.events} == {1, 2, 3, 4}
+    assert len(recipe.events) >= 96
+    for event in recipe.events:
+        assert 1 <= event.track <= 4
+        assert 0 <= event.value <= 127
+        assert event.parameter in data.ANALOG_FOUR_MANUAL_CC
+
+    section_by_parameter = {
+        mapping.parameter: mapping.section for mapping in data.ANALOG_FOUR_MANUAL_CC.values()
+    }
+    assert {section_by_parameter[event.parameter] for event in recipe.events}.issuperset(
+        {
+            "OSC 1",
+            "NOISE",
+            "OSC 2",
+            "OSC COMMON",
+            "FILTERS",
+            "AMP",
+            "ENVF",
+            "ENV2",
+            "LFO1",
+            "LFO2",
+        }
+    )
+    assert all(
+        sum(1 for event in recipe.events if event.track == track) >= 20 for track in (1, 2, 3, 4)
+    )
+
+
 def test_scene_presets_has_14_entries_with_known_keys():
     assert len(data.SCENE_PRESETS) == 14
     assert set(data.SCENE_PRESETS) == {

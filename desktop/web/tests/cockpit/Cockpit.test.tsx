@@ -80,4 +80,22 @@ describe('Cockpit', () => {
     // And the ActionBar reflects the new state.
     expect(screen.getByTestId('action-preview')).toHaveTextContent('PREVIEW (on)');
   });
+
+  it('switches the cockpit center view from Rytm pads to Analog Four tracks', () => {
+    const fake = new FakeCockpitClient();
+    act(() => {
+      useCockpitStore.getState().setSessionStatus(sessionMock);
+      useCockpitStore.getState().setSnapshot(snapshot);
+    });
+
+    render(<Cockpit client={fake.asClient()} availableProfiles={availableProfiles} />);
+
+    expect(screen.getByTestId('pad-card-1')).toHaveTextContent('BD Hard');
+    fireEvent.click(screen.getByTestId('device-select-analog-four-mk2'));
+
+    expect(screen.queryByTestId('pad-card-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('a4-track-card-1')).toHaveTextContent('Bass / low pulse');
+    expect(screen.getByTestId('mutation-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('safety-rail')).toHaveTextContent('Mock Safe');
+  });
 });

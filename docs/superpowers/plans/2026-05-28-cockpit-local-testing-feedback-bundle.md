@@ -105,6 +105,21 @@ This plan addresses the locally reproduced issues from the May 28 cockpit testin
 
 ## Verification Notes
 
+- 2026-05-30 follow-up on `codex/cockpit-operator-quality-bundle`: profile-wizard command
+  rejections/transport failures now stay visible in the wizard instead of closing
+  the draft or appearing to do nothing, and the Tauri Browse opener is statically
+  bundled so the packaged app can resolve `@tauri-apps/plugin-dialog`.
+- `python -m pytest tests/architecture/test_wizard_invariants.py -q -n 0` -> 23 passed.
+- `desktop/web`: `vitest --run tests/wizard/AddStep.test.tsx` -> 30 passed.
+- `desktop/web`: `npm run test:coverage` -> 35 files passed / 342 tests passed /
+  100% statements, branches, functions, and lines.
+- `desktop/web`: `node .\node_modules\typescript\bin\tsc -b --noEmit` -> passed.
+- `desktop/web`: `node .\node_modules\eslint\bin\eslint.js . --ext .ts,.tsx --max-warnings 0` -> passed.
+- `desktop/web`: `npm run build` -> passed.
+- Pre-push on `codex/cockpit-operator-quality-bundle` -> ruff, black, isort,
+  architecture (548 passed, 1 warn-only Gate 17 warning), and V1.34 parity
+  (685 passed) all passed.
+
 - `python -m pytest tests/cockpit -q -n 0` -> 1333 passed, 3 skipped.
 - `python -m pytest tests/architecture/ -q` -> 546 passed, 1 warning.
 - `python -m pytest -m fast` -> 4485 passed, 3 skipped.

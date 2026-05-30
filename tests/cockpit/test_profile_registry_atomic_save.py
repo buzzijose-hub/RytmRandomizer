@@ -213,7 +213,7 @@ def test_failed_overwrite_leaves_original_file_intact(
 
     real_replace = os.replace
 
-    def failing_replace(src: str, dst: str) -> None:
+    def failing_replace(src: str, _dst: str) -> None:
         # Mid-flight failure during the rename — the new bytes are
         # already written to ``src`` (the temp file) but never made it
         # to ``dst`` (the destination).
@@ -244,7 +244,7 @@ def test_write_error_bubbles_up_unwrapped(monkeypatch: pytest.MonkeyPatch, tmp_p
 
     registry = ProfileRegistry(profiles_dir=tmp_path)
 
-    def failing_replace(src: str, dst: str) -> None:
+    def failing_replace(src: str, _dst: str) -> None:
         raise OSError("ENOSPC simulated")
 
     monkeypatch.setattr(os, "replace", failing_replace)
