@@ -49,12 +49,15 @@ test.describe('SR-equivalent journey', () => {
     await expect(page.getByText('12 pads ready for dry-run review').first()).toBeVisible();
 
     // Switch to the Analog Four center panel: click the rail's View button,
-    // verify the Analog Four MKII heading mounts, and verify all four track
+    // verify the Analog Four MKII heading mounts in the snapshot panel (the
+    // device rail card carries the same name as its aria-label, so we scope
+    // the heading lookup to the snapshot panel), and verify all four track
     // cards land with their accessible safe-depth meters and role-key
     // diagnostic attributes. This closes the E2E gap from the PR review.
     await page.getByTestId('device-select-analog-four-mk2').click();
+    const snapshotPanel = page.getByTestId('snapshot-panel');
     await expect(
-      page.getByRole('heading', { exact: true, level: 2, name: 'Analog Four MKII' }),
+      snapshotPanel.getByRole('heading', { exact: true, level: 2, name: 'Analog Four MKII' }),
     ).toBeVisible();
     for (const track of [1, 2, 3, 4]) {
       const card = page.getByTestId(`a4-track-card-${track}`);
@@ -71,7 +74,7 @@ test.describe('SR-equivalent journey', () => {
     // the surface the original spec was scoped to.
     await page.getByTestId('device-select-analog-rytm-mk2').click();
     await expect(
-      page.getByRole('heading', { exact: true, level: 2, name: 'Snapshot' }),
+      snapshotPanel.getByRole('heading', { exact: true, level: 2, name: 'Snapshot' }),
     ).toBeVisible();
 
     const liveReadiness = page.getByRole('region', { name: 'Live Readiness' });
