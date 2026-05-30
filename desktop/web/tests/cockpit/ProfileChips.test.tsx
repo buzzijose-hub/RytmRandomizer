@@ -147,6 +147,26 @@ describe('ProfileChips', () => {
     expect(screen.getByText(/4 bytes/)).toBeInTheDocument();
   });
 
+  it('reports ready bytes without a download line when blob APIs are unavailable', async () => {
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: undefined,
+    });
+    setActiveProfile();
+    const fake = renderWith();
+    fake.ackQueue.push({
+      request_id: 'export-no-blob-api',
+      ok: true,
+      model_bytes_b64: 'YWI=',
+    });
+
+    fireEvent.click(screen.getByTestId('profile-export-button'));
+
+    const status = await screen.findByTestId('profile-export-status');
+    expect(status).toHaveTextContent('Export ready (2 bytes)');
+    expect(status).not.toHaveTextContent('Exported');
+  });
+
   it('reports the byte count for unpadded base64 export payloads', async () => {
     setActiveProfile();
     const fake = renderWith();
