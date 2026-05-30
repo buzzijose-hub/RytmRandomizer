@@ -4,6 +4,11 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: Dual VCO detune guard hardware validation completed on KIT 13
+  (`0d0be6fd4494d754`). After the guard, `drum-core` omitted Pad 2 and Pad 3
+  `dual_vco Osc 2 Detune` from `changes` and active sends; `send` transmitted
+  `230` messages instead of `232`, matching the two omitted CC20 rows, and
+  `Z` plus `send` restored the captured anchor cleanly.
 - 2026-05-30: Pads 2-3 Dual VCO `Osc 2 Detune` are now guarded in the live
   snapshot shell after KIT 13 showed `ERR` on encoder B for both Dual VCO pads.
   The row stays anchored during mutation and is omitted from active sends, so

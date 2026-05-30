@@ -370,6 +370,24 @@ Next validation target: rerun `drum-core`, confirm `changes` no longer shows
 Pad 2 or Pad 3 `dual_vco Osc 2 Detune`, then send and check that encoder B no
 longer flips into `ERR`.
 
+Follow-up validation on the guarded build used the same KIT 13 fingerprint
+`0d0be6fd4494d754`:
+
+- `drum-core` staged the macro normally.
+- `changes` omitted both `Pad 02 dual_vco Osc 2 Detune` and
+  `Pad 03 dual_vco Osc 2 Detune`.
+- Pad 2 and Pad 3 still moved other Dual VCO rows, including `Osc Config`,
+  oscillator decay, balance, bend, filter, and amp rows.
+- `send` transmitted `230` messages instead of the previous `232`, matching
+  the two omitted Dual VCO detune CC20 rows.
+- `Z`, `send`, and `changes` restored the captured anchor and ended with
+  `no parameter changes staged`.
+
+Conclusion: the Dual VCO detune guard is mechanically validated. Continue
+listening for whether `Osc Config` remains musically useful or needs its own
+range narrowing later, but encoder-B detune is no longer part of the live send
+plan for pads 2-3 Dual VCO.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.
