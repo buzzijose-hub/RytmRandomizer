@@ -206,10 +206,34 @@ export function AddStep({
   const displayNameInvalid = error === 'Display name is required.';
   const visibleError = error ?? submitError;
   const hasError = visibleError !== null;
+  // Field-level association for the alert region: when the error is a
+  // client-side validation message, only the offending input describes itself.
+  // For backend (submitError) rejections, the alert isn't tied to a specific
+  // field, so both inputs point at it so screen readers reach the explanation
+  // when traversing either control.
+  const submitErrorOnly = error === null && submitError !== null;
+  const locationDescribed = locationInvalid || submitErrorOnly;
+  const displayNameDescribed = displayNameInvalid || submitErrorOnly;
+
+  // Panel-level surface for backend rejections that arrive while no draft is
+  // open (e.g., wizard_remove_source rejection, or a wizard_set_metadata that
+  // was sent before the operator left the Name step but ack-ed after they
+  // optimistically arrived here). The in-draft alert below stays the canonical
+  // surface for add-source rejections so it stays attached to the inputs.
+  const panelLevelError = draft === null ? submitError : null;
 
   return (
     <section className="wizard-panel" data-testid="wizard-add-step">
       <h2>Add inspiration sources</h2>
+      {panelLevelError === null ? null : (
+        <div
+          role="alert"
+          className="wizard-field-error"
+          data-testid="wizard-add-panel-error"
+        >
+          {panelLevelError}
+        </div>
+      )}
       <div className="wizard-add-buttons" data-testid="wizard-add-buttons">
         {KIND_DISPLAY_ORDER.map((kind) => (
           <button
@@ -256,7 +280,7 @@ export function AddStep({
                 ref={locationRef}
                 aria-required="true"
                 aria-invalid={locationInvalid}
-                aria-describedby={locationInvalid ? DRAFT_ERROR_ID : undefined}
+                aria-describedby={locationDescribed ? DRAFT_ERROR_ID : undefined}
               />
             </label>
           ) : (
@@ -306,7 +330,7 @@ export function AddStep({
               ref={displayNameRef}
               aria-required="true"
               aria-invalid={displayNameInvalid}
-              aria-describedby={displayNameInvalid ? DRAFT_ERROR_ID : undefined}
+              aria-describedby={displayNameDescribed ? DRAFT_ERROR_ID : undefined}
             />
           </label>
           {hasError && (

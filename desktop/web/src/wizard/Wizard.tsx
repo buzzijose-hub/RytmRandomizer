@@ -9,8 +9,9 @@
  *   - On unmount: detach the binding (no implicit cancel — the cancel button does it).
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
+import { useCockpitStore } from '../state';
 import type { CockpitClient } from '../ws/client';
 import type { CommandAck } from '../ws/protocol';
 import {
@@ -95,22 +96,44 @@ export function Wizard({
     sliceStep !== null,
   );
   const [commandError, setCommandError] = useState<string | null>(null);
+  // Per-action inflight set tracks WizardCommand types (not action labels) that
+  // are currently awaiting an ack. A rapid double-click on the same surface
+  // (same command.type) is dropped; different commands run concurrently.
+  // Stored in a ref so the guard reads the current value synchronously inside
+  // event handlers without waiting for a re-render.
+  const inflightCommandsRef = useRef<Set<string>>(new Set());
+  const appendOperatorLog = useCockpitStore((s) => s.appendOperatorLog);
 
   const runWizardCommand = async (
     action: string,
     command: WizardCommand,
   ): Promise<boolean> => {
+    // Drop a re-dispatch of the same command type while the previous one is
+    // still in flight (LOW finding from review: rapid double-click on Save).
+    if (inflightCommandsRef.current.has(command.type)) {
+      return false;
+    }
+    inflightCommandsRef.current.add(command.type);
     setCommandError(null);
     try {
       const ack = await sendWizardCommand(client, command);
       if (!ack.ok) {
-        setCommandError(ackErrorMessage(action, ack));
+        const message = ackErrorMessage(action, ack);
+        setCommandError(message);
+        // Persist to the cockpit operator log for post-session debug. The UI
+        // shows the error to the operator now; the log keeps it discoverable
+        // after navigation or remount.
+        appendOperatorLog({ level: 'error', message });
         return false;
       }
       return true;
     } catch (error) {
-      setCommandError(thrownErrorMessage(action, error));
+      const message = thrownErrorMessage(action, error);
+      setCommandError(message);
+      appendOperatorLog({ level: 'error', message });
       return false;
+    } finally {
+      inflightCommandsRef.current.delete(command.type);
     }
   };
 
@@ -153,13 +176,23 @@ export function Wizard({
     go('/');
   };
 
-  const handleNameSubmit = (payload: { name: string; description: string | null }): void => {
-    void runWizardCommand('Set profile metadata', {
+  const handleNameSubmit = async (payload: {
+    name: string;
+    description: string | null;
+  }): Promise<void> => {
+    // wizard_set_metadata is validation-style: the operator is at a form input
+    // and a rejection (e.g., name conflicts with an existing profile) means
+    // they need to correct the value. Wait for ack-ok before advancing to the
+    // Add step. The new NameStep `commandError` prop renders the rejection
+    // text in place so the operator sees what to fix.
+    const ok = await runWizardCommand('Set profile metadata', {
       type: 'wizard_set_metadata',
       name: payload.name,
       ...(payload.description === null ? {} : { description: payload.description }),
     });
-    setActiveStep('add');
+    if (ok) {
+      setActiveStep('add');
+    }
   };
 
   const handleAddSource = (payload: {
@@ -196,8 +229,11 @@ export function Wizard({
   };
 
   const handleReview = (): void => {
-    void runWizardCommand('Build review', { type: 'wizard_review' });
+    // Optimistic transition: jump to the Review step immediately. If the backend
+    // rejects `wizard_review`, ReviewStep renders the error via `commandError`.
+    setCommandError(null);
     setActiveStep('review');
+    void runWizardCommand('Build review', { type: 'wizard_review' });
   };
 
   const handleSave = (): void => {
@@ -217,6 +253,7 @@ export function Wizard({
     setActiveStep('analyze');
   };
   const startAnalyzeFromAdd = (): void => {
+    setCommandError(null);
     setActiveStep('analyze');
     void runWizardCommand('Run analysis', { type: 'wizard_analyze' });
   };
@@ -232,8 +269,11 @@ export function Wizard({
           <NameStep
             initialName={name}
             initialDescription={description}
-            onSubmit={handleNameSubmit}
+            onSubmit={(payload) => {
+              void handleNameSubmit(payload);
+            }}
             onCancel={handleCancel}
+            commandError={commandError}
           />
         ) : null}
         {activeStep === 'add' ? (
@@ -263,6 +303,7 @@ export function Wizard({
             candidate={candidateProfile}
             onBack={goToAnalyze}
             onSave={handleSave}
+            commandError={commandError}
           />
         ) : null}
       </main>

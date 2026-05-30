@@ -26,9 +26,22 @@ export interface ReviewStepProps {
   candidate: CandidateProfileModel | null;
   onBack: () => void;
   onSave: () => void;
+  /**
+   * Most recent backend rejection of `wizard_review` or `wizard_save`.
+   * Rendered as a `role="alert"` region so screen readers announce it on insertion
+   * and sighted operators see why the expected post-save navigation didn't happen.
+   */
+  commandError?: string | null;
 }
 
-export function ReviewStep({ candidate, onBack, onSave }: ReviewStepProps): JSX.Element {
+const REVIEW_ERROR_ID = 'wizard-review-error';
+
+export function ReviewStep({
+  candidate,
+  onBack,
+  onSave,
+  commandError = null,
+}: ReviewStepProps): JSX.Element {
   // Group pad_mappings by trait name once per candidate reference. The candidate is
   // an immutable wire value, so the Map only rebuilds when a new candidate arrives.
   const mappingsByTrait = useMemo<Map<string, TraitPadWeight[]>>(() => {
@@ -45,10 +58,22 @@ export function ReviewStep({ candidate, onBack, onSave }: ReviewStepProps): JSX.
     return map;
   }, [candidate]);
 
+  const errorRegion = commandError === null ? null : (
+    <div
+      id={REVIEW_ERROR_ID}
+      role="alert"
+      className="wizard-field-error"
+      data-testid="wizard-review-error"
+    >
+      {commandError}
+    </div>
+  );
+
   if (candidate === null) {
     return (
       <section className="wizard-panel" data-testid="wizard-review-step">
         <h2>Review</h2>
+        {errorRegion}
         <p className="wizard-empty-hint" data-testid="wizard-review-empty">
           No candidate profile yet — finish analysis first.
         </p>
@@ -74,6 +99,7 @@ export function ReviewStep({ candidate, onBack, onSave }: ReviewStepProps): JSX.
           v{candidate.model_version}
         </span>
       </header>
+      {errorRegion}
 
       <ul className="wizard-trait-list" data-testid="wizard-trait-list">
         {candidate.traits.map((trait) => {
