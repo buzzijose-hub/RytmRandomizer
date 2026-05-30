@@ -323,6 +323,33 @@ wide/full/looser, Pad 3 wide/full/grittier, and Pad 4 wide/full/grittier, then
 stages `randomize` without sending. This keeps the same live safety ritual:
 inspect first, send intentionally, then use `go` for later variations.
 
+## Hardware Lesson: Drum-Core Macro Validation
+
+Follow-up hardware testing validated the `drum-core` macro mechanics on a fresh
+KIT 13 capture.
+
+- Live receive: `KIT 13`, fingerprint `3cfbacd60b029d57`.
+- MIDI input index: `0`, `Elektron Analog Rytm MKII 0`.
+- MIDI output index: `1`, `Elektron Analog Rytm MKII 1`.
+- `drum-core` printed the expected setup: `preset live`, `lane lfo: off`,
+  `lane fx: micro`, `pad 1 locked`, pads 2-4 amount `wide`, density `full`,
+  Pad 2 bias `looser`, and pads 3-4 bias `grittier`.
+- `changes` after `drum-core` showed no `Pad 01` lines, confirming the kick
+  anchor was omitted from the staged variation.
+- Pad 2 and Pad 3 were both `dual_vco` on this kit and moved through oscillator,
+  filter, and amp rows under their explicit wide contracts.
+- Pad 4 was `rs_classic` and moved through tune, decay, symmetry, noise, tick,
+  filter, and amp rows under the wide/grittier contract.
+- The first `send` sent `232` messages.
+- `go` generated and sent the next drum-core variation, also `232` messages.
+- `Z`, `send`, and `changes` restored the captured anchor; the shell reported
+  `no parameter changes staged`.
+
+Conclusion: `drum-core` is mechanically hardware-validated as a one-command
+staging macro. The remaining question is musical feel on different kits:
+whether this should stay specifically "pads 2-4 drum-core" or become the first
+of several named performance macros.
+
 ## Safe Resume Steps For Tomorrow
 
 1. Start with a fresh current-kit SysEx capture from the Rytm.

@@ -4,6 +4,11 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-30: `drum-core` macro hardware validation completed on KIT 13
+  (`3cfbacd60b029d57`). The macro applied the expected live setup, locked Pad 1
+  so `changes` showed no `Pad 01` lines, staged wide/full variations on pads
+  2-4, sent `232` messages for the first variation and `232` for `go`, then
+  restored cleanly with `Z` plus `send` to `no parameter changes staged`.
 - 2026-05-30: Live snapshot shell `drum-core` macro added for the current
   performance recipe. It applies `preset live`, keeps LFO off and FX micro,
   locks Pad 1 as the kick anchor, sets pads 2-4 to wide/full drum discovery
