@@ -169,7 +169,7 @@ extend-exclude = '''
 [tool.isort]
 profile = "black"
 line_length = 100
-skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts", "venv"]
+skip = [".venv", ".worktrees", "Backups", "Exports", "LegacyScripts", "node_modules", "venv"]
 
 [tool.ruff]
 line-length = 100

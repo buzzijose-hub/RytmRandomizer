@@ -27,6 +27,7 @@ import '../a11y/srOnly.css';
 
 import { CockpitClientProvider } from './context';
 import { DeviceRail } from './DeviceRail';
+import { type CockpitDeviceId, RYTM_DEVICE_ID } from './devices';
 import { HeaderBar } from './HeaderBar';
 import { LiveReadinessPanel } from './LiveReadinessPanel';
 import { MutationPanel } from './MutationPanel';
@@ -64,6 +65,7 @@ export function Cockpit({
   availableProfiles = DEFAULT_AVAILABLE_PROFILES,
 }: CockpitProps): JSX.Element {
   const [previewOn, setPreviewOn] = useState<boolean>(false);
+  const [activeDeviceId, setActiveDeviceId] = useState<CockpitDeviceId>(RYTM_DEVICE_ID);
 
   return (
     <CockpitClientProvider client={client}>
@@ -71,9 +73,9 @@ export function Cockpit({
         <h1 className="sr-only">RytmRandomizer · Cockpit</h1>
         <HeaderBar />
         <div className="cockpit-main">
-          <DeviceRail />
+          <DeviceRail activeDeviceId={activeDeviceId} onSelectDevice={setActiveDeviceId} />
           <div className="cockpit-center-stack">
-            <SnapshotPanel previewOn={previewOn} />
+            <SnapshotPanel activeDeviceId={activeDeviceId} previewOn={previewOn} />
             <LiveReadinessPanel />
           </div>
           <div className="cockpit-side-stack">

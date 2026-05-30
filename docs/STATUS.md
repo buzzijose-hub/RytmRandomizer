@@ -4,6 +4,15 @@ Last updated: 2026-05-30. This file is a hand-authored snapshot and is meant to 
 
 ## Recent Cleanup
 
+- 2026-05-28: Analog Four cockpit UI surface prepared locally. The cockpit
+  device rail can switch the center panel from the default Analog Rytm MKII
+  12-pad snapshot view to an Analog Four MKII four-track view. The A4 surface
+  shows the existing track roles plus manual-backed mutation zones
+  (oscillators, filters, envelopes, LFO/modulation, effects sends, and deferred
+  drive/NRPN-only work) while preserving the same mock-safe cockpit chrome,
+  locks, preview state, mutation panel, and safety rail. This is UI visibility
+  only: no A4 SEND path, no MIDI renderer change, no port opening, no real MIDI
+  send, and no hardware validation.
 - 2026-05-30: Passive observer follow-up completed the Pad 2/Pad 3 Dual VCO
   detune diagnostic without opening an output or sending MIDI. KIT 15 showed
   Pad 3 encoder B as direct `CC20` on channel 2, and KIT 14 showed Pad 2
